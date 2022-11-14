@@ -5,7 +5,7 @@ tag: class
 source: spacy/tokens/token.pyx
 ---
 
-## Token.\_\_init\_\_ {#init tag="method"}
+## Token.\_\_init\_\_ {id="init",tag="method"}
 
 Construct a `Token` object.
 
@@ -23,7 +23,7 @@ Construct a `Token` object.
 | `doc`    | The parent document. ~~Doc~~                        |
 | `offset` | The index of the token within the document. ~~int~~ |
 
-## Token.\_\_len\_\_ {#len tag="method"}
+## Token.\_\_len\_\_ {id="len",tag="method"}
 
 The number of unicode characters in the token, i.e. `token.text`.
 
@@ -39,7 +39,7 @@ The number of unicode characters in the token, i.e. `token.text`.
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The number of unicode characters in the token. ~~int~~ |
 
-## Token.set_extension {#set_extension tag="classmethod" new="2"}
+## Token.set_extension {id="set_extension",tag="classmethod",new="2"}
 
 Define a custom attribute on the `Token` which becomes available via `Token._`.
 For details, see the documentation on
@@ -64,7 +64,7 @@ For details, see the documentation on
 | `setter`  | Setter function that takes the `Token` and a value, and modifies the object. Is called when the user writes to the `Token._` attribute. ~~Optional[Callable[[Token, Any], None]]~~ |
 | `force`   | Force overwriting existing attribute. ~~bool~~                                                                                                                                     |
 
-## Token.get_extension {#get_extension tag="classmethod" new="2"}
+## Token.get_extension {id="get_extension",tag="classmethod",new="2"}
 
 Look up a previously registered extension by name. Returns a 4-tuple
 `(default, method, getter, setter)` if the extension is registered. Raises a
@@ -84,7 +84,7 @@ Look up a previously registered extension by name. Returns a 4-tuple
 | `name`      | Name of the extension. ~~str~~                                                                                                                     |
 | **RETURNS** | A `(default, method, getter, setter)` tuple of the extension. ~~Tuple[Optional[Any], Optional[Callable], Optional[Callable], Optional[Callable]]~~ |
 
-## Token.has_extension {#has_extension tag="classmethod" new="2"}
+## Token.has_extension {id="has_extension",tag="classmethod",new="2"}
 
 Check whether an extension has been registered on the `Token` class.
 
@@ -101,7 +101,7 @@ Check whether an extension has been registered on the `Token` class.
 | `name`      | Name of the extension to check. ~~str~~             |
 | **RETURNS** | Whether the extension has been registered. ~~bool~~ |
 
-## Token.remove_extension {#remove_extension tag="classmethod" new="2.0.11"}
+## Token.remove_extension {id="remove_extension",tag="classmethod",new="2.0.11"}
 
 Remove a previously registered extension.
 
@@ -119,7 +119,7 @@ Remove a previously registered extension.
 | `name`      | Name of the extension. ~~str~~                                                                                                                             |
 | **RETURNS** | A `(default, method, getter, setter)` tuple of the removed extension. ~~Tuple[Optional[Any], Optional[Callable], Optional[Callable], Optional[Callable]]~~ |
 
-## Token.check_flag {#check_flag tag="method"}
+## Token.check_flag {id="check_flag",tag="method"}
 
 Check the value of a boolean flag.
 
@@ -137,7 +137,7 @@ Check the value of a boolean flag.
 | `flag_id`   | The attribute ID of the flag to check. ~~int~~ |
 | **RETURNS** | Whether the flag is set. ~~bool~~              |
 
-## Token.similarity {#similarity tag="method" model="vectors"}
+## Token.similarity {id="similarity",tag="method",model="vectors"}
 
 Compute a semantic similarity estimate. Defaults to cosine over vectors.
 
@@ -155,7 +155,7 @@ Compute a semantic similarity estimate. Defaults to cosine over vectors.
 | other       | The object to compare with. By default, accepts `Doc`, `Span`, `Token` and `Lexeme` objects. ~~Union[Doc, Span, Token, Lexeme]~~ |
 | **RETURNS** | A scalar similarity score. Higher is more similar. ~~float~~                                                                     |
 
-## Token.nbor {#nbor tag="method"}
+## Token.nbor {id="nbor",tag="method"}
 
 Get a neighboring token.
 
@@ -172,7 +172,7 @@ Get a neighboring token.
 | `i`         | The relative position of the token to get. Defaults to `1`. ~~int~~ |
 | **RETURNS** | The token at position `self.doc[self.i+i]`. ~~Token~~               |
 
-## Token.set_morph {#set_morph tag="method"}
+## Token.set_morph {id="set_morph",tag="method"}
 
 Set the morphological analysis from a UD FEATS string, hash value of a UD FEATS
 string, features dict or `MorphAnalysis`. The value `None` can be used to reset
@@ -191,7 +191,7 @@ the morph to an unset state.
 | -------- | --------------------------------------------------------------------------------- |
 | features | The morphological features to set. ~~Union[int, dict, str, MorphAnalysis, None]~~ |
 
-## Token.has_morph {#has_morph tag="method"}
+## Token.has_morph {id="has_morph",tag="method"}
 
 Check whether the token has annotated morph information. Return `False` when the
 morph annotation is unset/missing.
@@ -200,7 +200,7 @@ morph annotation is unset/missing.
 | ----------- | --------------------------------------------- |
 | **RETURNS** | Whether the morph annotation is set. ~~bool~~ |
 
-## Token.is_ancestor {#is_ancestor tag="method" model="parser"}
+## Token.is_ancestor {id="is_ancestor",tag="method",model="parser"}
 
 Check whether this token is a parent, grandparent, etc. of another in the
 dependency tree.
@@ -219,7 +219,7 @@ dependency tree.
 | descendant  | Another token. ~~Token~~                                       |
 | **RETURNS** | Whether this token is the ancestor of the descendant. ~~bool~~ |
 
-## Token.ancestors {#ancestors tag="property" model="parser"}
+## Token.ancestors {id="ancestors",tag="property",model="parser"}
 
 A sequence of the token's syntactic ancestors (parents, grandparents, etc).
 
@@ -237,7 +237,7 @@ A sequence of the token's syntactic ancestors (parents, grandparents, etc).
 | ---------- | ------------------------------------------------------------------------------- |
 | **YIELDS** | A sequence of ancestor tokens such that `ancestor.is_ancestor(self)`. ~~Token~~ |
 
-## Token.conjuncts {#conjuncts tag="property" model="parser"}
+## Token.conjuncts {id="conjuncts",tag="property",model="parser"}
 
 A tuple of coordinated tokens, not including the token itself.
 
@@ -253,7 +253,7 @@ A tuple of coordinated tokens, not including the token itself.
 | ----------- | --------------------------------------------- |
 | **RETURNS** | The coordinated tokens. ~~Tuple[Token, ...]~~ |
 
-## Token.children {#children tag="property" model="parser"}
+## Token.children {id="children",tag="property",model="parser"}
 
 A sequence of the token's immediate syntactic children.
 
@@ -269,7 +269,7 @@ A sequence of the token's immediate syntactic children.
 | ---------- | ------------------------------------------------------- |
 | **YIELDS** | A child token such that `child.head == self`. ~~Token~~ |
 
-## Token.lefts {#lefts tag="property" model="parser"}
+## Token.lefts {id="lefts",tag="property",model="parser"}
 
 The leftward immediate children of the word in the syntactic dependency parse.
 
@@ -285,7 +285,7 @@ The leftward immediate children of the word in the syntactic dependency parse.
 | ---------- | ------------------------------------ |
 | **YIELDS** | A left-child of the token. ~~Token~~ |
 
-## Token.rights {#rights tag="property" model="parser"}
+## Token.rights {id="rights",tag="property",model="parser"}
 
 The rightward immediate children of the word in the syntactic dependency parse.
 
@@ -301,7 +301,7 @@ The rightward immediate children of the word in the syntactic dependency parse.
 | ---------- | ------------------------------------- |
 | **YIELDS** | A right-child of the token. ~~Token~~ |
 
-## Token.n_lefts {#n_lefts tag="property" model="parser"}
+## Token.n_lefts {id="n_lefts",tag="property",model="parser"}
 
 The number of leftward immediate children of the word in the syntactic
 dependency parse.
@@ -317,7 +317,7 @@ dependency parse.
 | ----------- | ---------------------------------------- |
 | **RETURNS** | The number of left-child tokens. ~~int~~ |
 
-## Token.n_rights {#n_rights tag="property" model="parser"}
+## Token.n_rights {id="n_rights",tag="property",model="parser"}
 
 The number of rightward immediate children of the word in the syntactic
 dependency parse.
@@ -333,7 +333,7 @@ dependency parse.
 | ----------- | ----------------------------------------- |
 | **RETURNS** | The number of right-child tokens. ~~int~~ |
 
-## Token.subtree {#subtree tag="property" model="parser"}
+## Token.subtree {id="subtree",tag="property",model="parser"}
 
 A sequence containing the token and all the token's syntactic descendants.
 
@@ -349,7 +349,7 @@ A sequence containing the token and all the token's syntactic descendants.
 | ---------- | ------------------------------------------------------------------------------------ |
 | **YIELDS** | A descendant token such that `self.is_ancestor(token)` or `token == self`. ~~Token~~ |
 
-## Token.has_vector {#has_vector tag="property" model="vectors"}
+## Token.has_vector {id="has_vector",tag="property",model="vectors"}
 
 A boolean value indicating whether a word vector is associated with the token.
 
@@ -365,7 +365,7 @@ A boolean value indicating whether a word vector is associated with the token.
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | Whether the token has a vector data attached. ~~bool~~ |
 
-## Token.vector {#vector tag="property" model="vectors"}
+## Token.vector {id="vector",tag="property",model="vectors"}
 
 A real-valued meaning representation.
 
@@ -382,7 +382,7 @@ A real-valued meaning representation.
 | ----------- | ----------------------------------------------------------------------------------------------- |
 | **RETURNS** | A 1-dimensional array representing the token's vector. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
-## Token.vector_norm {#vector_norm tag="property" model="vectors"}
+## Token.vector_norm {id="vector_norm",tag="property",model="vectors"}
 
 The L2 norm of the token's vector representation.
 
@@ -401,7 +401,7 @@ The L2 norm of the token's vector representation.
 | ----------- | --------------------------------------------------- |
 | **RETURNS** | The L2 norm of the vector representation. ~~float~~ |
 
-## Attributes {#attributes}
+## Attributes {id="attributes"}
 
 | Name                                         | Description                                                                                                                                                                                                                                                          |
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

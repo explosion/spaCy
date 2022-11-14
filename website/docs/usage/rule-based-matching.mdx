@@ -60,7 +60,7 @@ another token that's at least 10 characters long.
 
 </Accordion>
 
-## Token-based matching {#matcher}
+## Token-based matching {id="matcher"}
 
 spaCy features a rule-matching engine, the [`Matcher`](/api/matcher), that
 operates over tokens, similar to regular expressions. The rules can refer to
@@ -72,7 +72,7 @@ To match large terminology lists, you can use the
 [`PhraseMatcher`](/api/phrasematcher), which accepts `Doc` objects as match
 patterns.
 
-### Adding patterns {#adding-patterns}
+### Adding patterns {id="adding-patterns"}
 
 Let's say we want to enable spaCy to find a combination of three tokens:
 
@@ -153,7 +153,7 @@ merge _some_ patterns into one token, while adding entity labels for other
 pattern types. You shouldn't have to create different matchers for each of those
 processes.
 
-#### Available token attributes {#adding-patterns-attributes}
+#### Available token attributes {id="adding-patterns-attributes"}
 
 The available token pattern keys correspond to a number of
 [`Token` attributes](/api/token#attributes). The supported attributes for
@@ -218,7 +218,7 @@ spaCy processes your text – and why your pattern matches, or why it doesn't.
 
 </Infobox>
 
-#### Extended pattern syntax and attributes {#adding-patterns-attributes-extended new="2.1"}
+#### Extended pattern syntax and attributes {id="adding-patterns-attributes-extended",new="2.1"}
 
 Instead of mapping to a single value, token patterns can also map to a
 **dictionary of properties**. For example, to specify that the value of a lemma
@@ -251,7 +251,7 @@ following rich comparison attributes are available:
 | `INTERSECTS`               | Attribute value (for `MORPH` or custom list attributes) has a non-empty intersection with a list. ~~Any~~ |
 | `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~   |
 
-#### Regular expressions {#regex new="2.1"}
+#### Regular expressions {id="regex",new="2.1"}
 
 In some cases, only matching tokens and token attributes isn't enough – for
 example, you might want to match different spellings of a word, without having
@@ -287,7 +287,7 @@ token. If you need to match on the whole text instead, see the details on
 
 </Infobox>
 
-##### Matching regular expressions on the full text {#regex-text}
+##### Matching regular expressions on the full text {id="regex-text"}
 
 If your expressions apply to multiple tokens, a simple solution is to match on
 the `doc.text` with `re.finditer` and use the
@@ -366,7 +366,7 @@ else:
 
 ---
 
-#### Operators and quantifiers {#quantifiers}
+#### Operators and quantifiers {id="quantifiers"}
 
 The matcher also lets you use quantifiers, specified as the `'OP'` key.
 Quantifiers let you define sequences of tokens to be matched, e.g. one or more
@@ -402,7 +402,7 @@ This quirk in the semantics is corrected in spaCy v2.1.0.
 
 </Infobox>
 
-#### Using wildcard token patterns {#adding-patterns-wildcard new="2"}
+#### Using wildcard token patterns {id="adding-patterns-wildcard",new="2"}
 
 While the token attributes offer many options to write highly specific patterns,
 you can also use an empty dictionary, `{}` as a wildcard representing **any
@@ -416,7 +416,7 @@ character, but no whitespace – so you'll know it will be handled as one token.
 [{"ORTH": "User"}, {"ORTH": "name"}, {"ORTH": ":"}, {}]
 ```
 
-#### Validating and debugging patterns {#pattern-validation new="2.1"}
+#### Validating and debugging patterns {id="pattern-validation",new="2.1"}
 
 The `Matcher` can validate patterns against a JSON schema with the option
 `validate=True`. This is useful for debugging patterns during development, in
@@ -439,7 +439,7 @@ matcher.add("HelloWorld", [pattern])
 
 ```
 
-### Adding on_match rules {#on_match}
+### Adding on_match rules {id="on_match"}
 
 To move on to a more realistic example, let's say you're working with a large
 corpus of blog articles, and you want to match all mentions of "Google I/O"
@@ -511,7 +511,7 @@ you prefer.
 | `i`       | Index of the current match (`matches[i`]). ~~int~~                                                                                                |
 | `matches` | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. ~~List[Tuple[int, int int]]~~ |
 
-### Creating spans from matches {#matcher-spans}
+### Creating spans from matches {id="matcher-spans"}
 
 Creating [`Span`](/api/span) objects from the returned matches is a very common
 use case. spaCy makes this easy by giving you access to the `start` and `end`
@@ -544,7 +544,7 @@ for span in matches:
     print(span.text, span.label_)
 ```
 
-### Using custom pipeline components {#matcher-pipeline}
+### Using custom pipeline components {id="matcher-pipeline"}
 
 Let's say your data also contains some annoying pre-processing artifacts, like
 leftover HTML line breaks (e.g. `<br>` or `<BR/>`). To make your text easier to
@@ -622,7 +622,7 @@ and **extension attributes**, see the
 
 </Infobox>
 
-### Example: Using linguistic annotations {#example1}
+### Example: Using linguistic annotations {id="example1"}
 
 Let's say you're analyzing user comments and you want to find out what people
 are saying about Facebook. You want to start off by finding adjectives following
@@ -688,7 +688,7 @@ matches = matcher(doc)
 displacy.render(matched_sents, style="ent", manual=True)
 ```
 
-### Example: Phone numbers {#example2}
+### Example: Phone numbers {id="example2"}
 
 Phone numbers can have many different formats and matching them is often tricky.
 During tokenization, spaCy will leave sequences of numbers intact and only split
@@ -742,7 +742,7 @@ for match_id, start, end in matches:
     print(span.text)
 ```
 
-### Example: Hashtags and emoji on social media {#example3}
+### Example: Hashtags and emoji on social media {id="example3"}
 
 Social media posts, especially tweets, can be difficult to work with. They're
 very short and often contain various emoji and hashtags. By only looking at the
@@ -874,14 +874,14 @@ for token in doc:
     print(token.text, token._.is_hashtag)
 ```
 
-## Efficient phrase matching {#phrasematcher}
+## Efficient phrase matching {id="phrasematcher"}
 
 If you need to match large terminology lists, you can also use the
 [`PhraseMatcher`](/api/phrasematcher) and create [`Doc`](/api/doc) objects
 instead of token patterns, which is much more efficient overall. The `Doc`
 patterns can contain single or multiple tokens.
 
-### Adding phrase patterns {#adding-phrase-patterns}
+### Adding phrase patterns {id="adding-phrase-patterns"}
 
 ```python
 ### {executable="true"}
@@ -927,7 +927,7 @@ as a stream.
 
 </Infobox>
 
-### Matching on other token attributes {#phrasematcher-attrs new="2.1"}
+### Matching on other token attributes {id="phrasematcher-attrs",new="2.1"}
 
 By default, the `PhraseMatcher` will match on the verbatim token text, e.g.
 `Token.text`. By setting the `attr` argument on initialization, you can change
@@ -991,7 +991,7 @@ to match phrases with the same sequence of punctuation and non-punctuation
 tokens as the pattern. But this can easily get confusing and doesn't have much
 of an advantage over writing one or two token patterns.
 
-## Dependency Matcher {#dependencymatcher new="3" model="parser"}
+## Dependency Matcher {id="dependencymatcher",new="3",model="parser"}
 
 The [`DependencyMatcher`](/api/dependencymatcher) lets you match patterns within
 the dependency parse using
@@ -1059,7 +1059,7 @@ can be used as `LEFT_ID` in another dict.
 
 </Infobox>
 
-### Dependency matcher operators {#dependencymatcher-operators}
+### Dependency matcher operators {id="dependencymatcher-operators"}
 
 The following operators are supported by the `DependencyMatcher`, most of which
 come directly from
@@ -1080,7 +1080,7 @@ come directly from
 | `A $++ B` | `B` is a right sibling of `A`, i.e. `A` and `B` have the same parent and `A.i < B.i`.                                |
 | `A $-- B` | `B` is a left sibling of `A`, i.e. `A` and `B` have the same parent and `A.i > B.i`.                                 |
 
-### Designing dependency matcher patterns {#dependencymatcher-patterns}
+### Designing dependency matcher patterns {id="dependencymatcher-patterns"}
 
 Let's say we want to find sentences describing who founded what kind of company:
 
@@ -1272,14 +1272,14 @@ of patterns such as `{}` that match any token in the sentence.
 
 </Infobox>
 
-## Rule-based entity recognition {#entityruler new="2.1"}
+## Rule-based entity recognition {id="entityruler",new="2.1"}
 
 The [`EntityRuler`](/api/entityruler) is a component that lets you add named
 entities based on pattern dictionaries, which makes it easy to combine
 rule-based and statistical named entity recognition for even more powerful
 pipelines.
 
-### Entity Patterns {#entityruler-patterns}
+### Entity Patterns {id="entityruler-patterns"}
 
 Entity patterns are dictionaries with two keys: `"label"`, specifying the label
 to assign to the entity if the pattern is matched, and `"pattern"`, the match
@@ -1297,7 +1297,7 @@ pattern. The entity ruler accepts two types of patterns:
    {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
    ```
 
-### Using the entity ruler {#entityruler-usage}
+### Using the entity ruler {id="entityruler-usage"}
 
 The [`EntityRuler`](/api/entityruler) is a pipeline component that's typically
 added via [`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is
@@ -1343,7 +1343,7 @@ doc = nlp("MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-#### Validating and debugging EntityRuler patterns {#entityruler-pattern-validation new="2.1.8"}
+#### Validating and debugging EntityRuler patterns {id="entityruler-pattern-validation",new="2.1.8"}
 
 The entity ruler can validate patterns against a JSON schema with the config
 setting `"validate"`. See details under
@@ -1353,7 +1353,7 @@ setting `"validate"`. See details under
 ruler = nlp.add_pipe("entity_ruler", config={"validate": True})
 ```
 
-### Adding IDs to patterns {#entityruler-ent-ids new="2.2.2"}
+### Adding IDs to patterns {id="entityruler-ent-ids",new="2.2.2"}
 
 The [`EntityRuler`](/api/entityruler) can also accept an `id` attribute for each
 pattern. Using the `id` attribute allows multiple patterns to be associated with
@@ -1382,7 +1382,7 @@ patterns, the `ent_id_` property of the matched entity is set to the `id` given
 in the patterns. So in the example above it's easy to identify that "San
 Francisco" and "San Fran" are both the same entity.
 
-### Using pattern files {#entityruler-files}
+### Using pattern files {id="entityruler-files"}
 
 The [`to_disk`](/api/entityruler#to_disk) and
 [`from_disk`](/api/entityruler#from_disk) let you save and load patterns to and
@@ -1427,7 +1427,7 @@ all pipeline components will be restored and deserialized – including the enti
 ruler. This lets you ship powerful pipeline packages with binary weights _and_
 rules included!
 
-### Using a large number of phrase patterns {#entityruler-large-phrase-patterns new="2.2.4"}
+### Using a large number of phrase patterns {id="entityruler-large-phrase-patterns",new="2.2.4"}
 
 <!-- TODO: double-check that this still works if the ruler is added to the pipeline on creation, and include suggestion if needed -->
 
@@ -1455,14 +1455,14 @@ with nlp.select_pipes(enable="tagger"):
     ruler.add_patterns(patterns)
 ```
 
-## Rule-based span matching {#spanruler new="3.3.1"}
+## Rule-based span matching {id="spanruler",new="3.3.1"}
 
 The [`SpanRuler`](/api/spanruler) is a generalized version of the entity ruler
 that lets you add spans to `doc.spans` or `doc.ents` based on pattern
 dictionaries, which makes it easy to combine rule-based and statistical pipeline
 components.
 
-### Span patterns {#spanruler-patterns}
+### Span patterns {id="spanruler-patterns"}
 
 The [pattern format](#entityruler-patterns) is the same as for the entity ruler:
 
@@ -1478,7 +1478,7 @@ The [pattern format](#entityruler-patterns) is the same as for the entity ruler:
    {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
    ```
 
-### Using the span ruler {#spanruler-usage}
+### Using the span ruler {id="spanruler-usage"}
 
 The [`SpanRuler`](/api/spanruler) is a pipeline component that's typically added
 via [`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is called on
@@ -1526,7 +1526,7 @@ doc = nlp("MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-### Using pattern files {#spanruler-files}
+### Using pattern files {id="spanruler-files"}
 
 You can save patterns in a JSONL file (newline-delimited JSON) to load with
 [`SpanRuler.initialize`](/api/spanruler#initialize) or
@@ -1557,7 +1557,7 @@ separately and then added through
 
 </Infobox>
 
-## Combining models and rules {#models-rules}
+## Combining models and rules {id="models-rules"}
 
 You can combine statistical and rule-based components in a variety of ways.
 Rule-based components can be used to improve the accuracy of statistical models,
@@ -1568,7 +1568,7 @@ components after a statistical model to correct common errors. Finally,
 rule-based components can reference the attributes set by statistical models, in
 order to implement more abstract logic.
 
-### Example: Expanding named entities {#models-rules-ner}
+### Example: Expanding named entities {id="models-rules-ner"}
 
 When using a trained
 [named entity recognition](/usage/linguistic-features/#named-entities) model to
@@ -1713,7 +1713,7 @@ doc = nlp("Dr Alex Smith chaired first board meeting of Acme Corp Inc.")
 print([(ent.text, ent.label_, ent._.person_title) for ent in doc.ents])
 ```
 
-### Example: Using entities, part-of-speech tags and the dependency parse {#models-rules-pos-dep}
+### Example: Using entities, part-of-speech tags and the dependency parse {id="models-rules-pos-dep"}
 
 > #### Linguistic features
 >

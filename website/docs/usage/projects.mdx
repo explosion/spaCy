@@ -9,7 +9,7 @@ menu:
   - ['Integrations', 'integrations']
 ---
 
-## Introduction and workflow {#intro hidden="true"}
+## Introduction and workflow {id="intro",hidden="true"}
 
 > #### 🪐 Project templates
 >
@@ -70,7 +70,7 @@ production.
   </Integration>
 </Grid>
 
-### 1. Clone a project template {#clone}
+### 1. Clone a project template {id="clone"}
 
 > #### Cloning under the hood
 >
@@ -92,7 +92,7 @@ can specify an optional second argument to define the output directory. The
 use the spaCy [`projects`](https://github.com/explosion/projects) repo. You can
 also use any private repo you have access to with Git.
 
-### 2. Fetch the project assets {#assets}
+### 2. Fetch the project assets {id="assets"}
 
 > #### project.yml
 >
@@ -130,7 +130,7 @@ necessarily want to download when you run `spacy project assets`. That's why
 assets can be marked as [`extra`](#data-assets-url) - by default, these assets
 are not downloaded. If they should be, run `spacy project assets --extra`.
 
-### 3. Run a command {#run}
+### 3. Run a command {id="run"}
 
 > #### project.yml
 >
@@ -173,7 +173,7 @@ detected, a corresponding warning is displayed. If you'd like to disable the
 dependency check, set `check_requirements: false` in your project's
 `project.yml`.
 
-### 4. Run a workflow {#run-workfow}
+### 4. Run a workflow {id="run-workfow"}
 
 > #### project.yml
 >
@@ -206,7 +206,7 @@ advanced data pipelines and track your changes in Git, check out the
 from a workflow defined in your `project.yml` so you can manage your spaCy
 project as a DVC repo.
 
-### 5. Optional: Push to remote storage {#push}
+### 5. Optional: Push to remote storage {id="push"}
 
 > ```yaml
 > ### project.yml
@@ -231,9 +231,9 @@ different storages. To download state from a remote storage, you can use the
 [`spacy project pull`](/api/cli#project-pull) command. For more details, see the
 docs on [remote storage](#remote).
 
-## Project directory and assets {#directory}
+## Project directory and assets {id="directory"}
 
-### project.yml {#project-yml}
+### project.yml {id="project-yml"}
 
 The `project.yml` defines the assets a project depends on, like datasets and
 pretrained weights, as well as a series of commands that can be run separately
@@ -295,7 +295,7 @@ pipelines.
 | `spacy_version`                                     | Optional spaCy version range like `>=3.0.0,<3.1.0` that the project is compatible with. If it's loaded with an incompatible version, an error is raised when the project is loaded.                                                                                                                                                                                                                                                                                                                          |
 | `check_requirements` <Tag variant="new">3.4.2</Tag> | A flag determining whether to verify that the installed dependencies align with the project's `requirements.txt`. Defaults to `true`.                                                                                                                                                                                                                                                                                                                                                                        |
 
-### Data assets {#data-assets}
+### Data assets {id="data-assets"}
 
 Assets are any files that your project might need, like training and development
 corpora or pretrained weights for initializing your model. Assets are defined in
@@ -306,7 +306,7 @@ Asset URLs can be a number of different **protocols**: HTTP, HTTPS, FTP, SSH,
 and even **cloud storage** such as GCS and S3. You can also download assets from
 a **Git repo** instead.
 
-#### Downloading from a URL or cloud storage {#data-assets-url}
+#### Downloading from a URL or cloud storage {id="data-assets-url"}
 
 Under the hood, spaCy uses the
 [`smart-open`](https://github.com/RaRe-Technologies/smart_open) library so you
@@ -336,7 +336,7 @@ dependencies to use certain protocols.
 | `checksum`    | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists. |
 | `description` | Optional asset description, used in [auto-generated docs](#custom-docs).                                                                                                         |
 
-#### Downloading from a Git repo {#data-assets-git}
+#### Downloading from a Git repo {id="data-assets-git"}
 
 If a `git` block is provided, the asset is downloaded from the given Git
 repository. You can download from any repo that you have access to. Under the
@@ -363,7 +363,7 @@ files you need and not the whole repo.
 | `checksum`    | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists.                                                      |
 | `description` | Optional asset description, used in [auto-generated docs](#custom-docs).                                                                                                                                                              |
 
-#### Working with private assets {#data-asets-private}
+#### Working with private assets {id="data-asets-private"}
 
 > #### project.yml
 >
@@ -383,7 +383,7 @@ directory themselves. The [`project assets`](/api/cli#project-assets) command
 will alert you about missing files and mismatched checksums, so you can ensure
 that others are running your project with the same data.
 
-### Dependencies and outputs {#deps-outputs}
+### Dependencies and outputs {id="deps-outputs"}
 
 Each command defined in the `project.yml` can optionally define a list of
 dependencies and outputs. These are the files the command requires and creates.
@@ -433,7 +433,7 @@ If you're planning on integrating your spaCy project with DVC, you can also use
 `outputs_no_cache` instead of `outputs` to define outputs that won't be cached
 or tracked.
 
-### Files and directory structure {#project-files}
+### Files and directory structure {id="project-files"}
 
 The `project.yml` can define a list of `directories` that should be created
 within a project – for instance, `assets`, `training`, `corpus` and so on. spaCy
@@ -473,7 +473,7 @@ the only file that's required for a project is the `project.yml`.
 
 ---
 
-## Custom scripts and projects {#custom}
+## Custom scripts and projects {id="custom"}
 
 The `project.yml` lets you define any custom commands and run them as part of
 your training, evaluation or deployment workflows. The `script` section defines
@@ -506,7 +506,7 @@ Setting `no_skip: true` means that the command will always run, even if the
 dependencies (the trained pipeline) haven't changed. This makes sense here,
 because you typically don't want to skip your tests.
 
-### Writing custom scripts {#custom-scripts}
+### Writing custom scripts {id="custom-scripts"}
 
 Your project commands can include any custom scripts – essentially, anything you
 can run from the command line. Here's an example of a custom script that uses
@@ -587,7 +587,7 @@ commands:
       - 'python scripts/custom_evaluation.py ${env.batch_size}'
 ```
 
-### Documenting your project {#custom-docs}
+### Documenting your project {id="custom-docs"}
 
 > #### Readme Example
 >
@@ -623,7 +623,7 @@ your markup.
 
 </Infobox>
 
-### Cloning from your own repo {#custom-repo}
+### Cloning from your own repo {id="custom-repo"}
 
 The [`spacy project clone`](/api/cli#project-clone) command lets you customize
 the repo to clone from using the `--repo` option. It calls into `git`, so you'll
@@ -650,7 +650,7 @@ projects.
 
 </Infobox>
 
-## Remote Storage {#remote}
+## Remote Storage {id="remote"}
 
 You can persist your project outputs to a remote storage using the
 [`project push`](/api/cli#project-push) command. This can help you **export**
@@ -758,9 +758,9 @@ state, and you don't have to come up with names or version numbers. However,
 it's up to you to manage the size of your remote storage, and to remove files
 that are no longer relevant to you.
 
-## Integrations {#integrations}
+## Integrations {id="integrations"}
 
-### Data Version Control (DVC) {#dvc} <IntegrationLogo name="dvc" title="DVC" width={70} height="auto" align="right" />
+### Data Version Control (DVC) {id="dvc"} <IntegrationLogo name="dvc" title="DVC" width={70} height="auto" align="right",/>
 
 Data assets like training corpora or pretrained weights are at the core of any
 NLP project, but they're often difficult to manage: you can't just check them
@@ -824,7 +824,7 @@ workflows, but only one can be tracked by DVC.
 
 ---
 
-### Prodigy {#prodigy} <IntegrationLogo name="prodigy" width={100} height="auto" align="right" />
+### Prodigy {id="prodigy"} <IntegrationLogo name="prodigy" width={100} height="auto" align="right",/>
 
 [Prodigy](https://prodi.gy) is a modern annotation tool for creating training
 data for machine learning models, developed by us. It integrates with spaCy
@@ -926,7 +926,7 @@ improve performance.
 
 ---
 
-### Streamlit {#streamlit} <IntegrationLogo name="streamlit" width={150} height="auto" align="right" />
+### Streamlit {id="streamlit"} <IntegrationLogo name="streamlit" width={150} height="auto" align="right",/>
 
 [Streamlit](https://streamlit.io) is a Python framework for building interactive
 data apps. The [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit)
@@ -985,7 +985,7 @@ https://github.com/explosion/projects/blob/v3/integrations/streamlit/scripts/vis
 
 ---
 
-### FastAPI {#fastapi} <IntegrationLogo name="fastapi" width={100} height="auto" align="right" />
+### FastAPI {id="fastapi"} <IntegrationLogo name="fastapi" width={100} height="auto" align="right",/>
 
 [FastAPI](https://fastapi.tiangolo.com/) is a modern high-performance framework
 for building REST APIs with Python, based on Python
@@ -1032,7 +1032,7 @@ https://github.com/explosion/projects/blob/v3/integrations/fastapi/scripts/main.
 
 ---
 
-### Ray {#ray} <IntegrationLogo name="ray" width={100} height="auto" align="right" />
+### Ray {id="ray"} <IntegrationLogo name="ray" width={100} height="auto" align="right",/>
 
 > #### Installation
 >
@@ -1080,7 +1080,7 @@ commands:
 
 ---
 
-### Weights & Biases {#wandb} <IntegrationLogo name="wandb" width={175} height="auto" align="right" />
+### Weights & Biases {id="wandb"} <IntegrationLogo name="wandb" width={175} height="auto" align="right",/>
 
 [Weights & Biases](https://www.wandb.com/) is a popular platform for experiment
 tracking. spaCy integrates with it out-of-the-box via the
@@ -1118,7 +1118,7 @@ logging the results.
 
 ---
 
-### Hugging Face Hub {#huggingface_hub} <IntegrationLogo name="huggingface_hub" width={175} height="auto" align="right" />
+### Hugging Face Hub {id="huggingface_hub"} <IntegrationLogo name="huggingface_hub" width={175} height="auto" align="right",/>
 
 The [Hugging Face Hub](https://huggingface.co/) lets you upload models and share
 them with others. It hosts models as Git-based repositories which are storage

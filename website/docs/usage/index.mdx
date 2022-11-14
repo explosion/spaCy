@@ -20,14 +20,14 @@ import QuickstartInstall from 'widgets/quickstart-install.js'
 
 <QuickstartInstall id="quickstart" />
 
-## Installation instructions {#installation}
+## Installation instructions {id="installation"}
 
 spaCy is compatible with **64-bit CPython 3.6+** and runs on **Unix/Linux**,
 **macOS/OS X** and **Windows**. The latest spaCy releases are available over
 [pip](https://pypi.python.org/pypi/spacy) and
 [conda](https://anaconda.org/conda-forge/spacy).
 
-### pip {#pip}
+### pip {id="pip"}
 
 Using pip, spaCy releases are available as source packages and binary wheels.
 Before you install spaCy and its dependencies, make sure that your `pip`,
@@ -80,7 +80,7 @@ spaCy's [`setup.cfg`](%%GITHUB_SPACY/setup.cfg) for details on what's included.
 | `apple`          | Install [`thinc-apple-ops`](https://github.com/explosion/thinc-apple-ops) to improve performance on an Apple M1.                                                                                                                                               |
 | `ja`, `ko`, `th` | Install additional dependencies required for tokenization for the [languages](/usage/models#languages).                                                                                                                                                        |
 
-### conda {#conda}
+### conda {id="conda"}
 
 Thanks to our great community, we've been able to re-add conda support. You can
 also install spaCy via `conda-forge`:
@@ -93,7 +93,7 @@ For the feedstock including the build recipe and configuration, check out
 [this repository](https://github.com/conda-forge/spacy-feedstock). Note that we
 currently don't publish any [pre-releases](#changelog-pre) on conda.
 
-### Upgrading spaCy {#upgrading}
+### Upgrading spaCy {id="upgrading"}
 
 > #### Upgrading from v2 to v3
 >
@@ -122,7 +122,7 @@ $ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
 $ python -m spacy validate
 ```
 
-### Run spaCy with GPU {#gpu new="2.0.14"}
+### Run spaCy with GPU {id="gpu",new="2.0.14"}
 
 As of v2.0, spaCy comes with neural network models that are implemented in our
 machine learning library, [Thinc](https://thinc.ai). For GPU support, we've been
@@ -152,7 +152,7 @@ spacy.prefer_gpu()
 nlp = spacy.load("en_core_web_sm")
 ```
 
-### Compile from source {#source}
+### Compile from source {id="source"}
 
 The other way to install spaCy is to clone its
 [GitHub repository](https://github.com/explosion/spaCy) and build it from
@@ -233,7 +233,7 @@ package to see what the oldest recommended versions of `numpy` are.
 (_Warning_: don't use `pip install -c constraints.txt` instead of
 `PIP_CONSTRAINT`, since this isn't applied to the isolated build environments.)
 
-#### Additional options for developers {#source-developers}
+#### Additional options for developers {id="source-developers"}
 
 Some additional options may be useful for spaCy developers who are editing the
 source code and recompiling frequently.
@@ -267,7 +267,7 @@ source code and recompiling frequently.
   $ python setup.py develop
   ```
 
-### Building an executable {#executable}
+### Building an executable {id="executable"}
 
 The spaCy repository includes a [`Makefile`](%%GITHUB_SPACY/Makefile) that
 builds an executable zip file using [`pex`](https://github.com/pantsbuild/pex)
@@ -301,7 +301,7 @@ You can configure the build process with the following environment variables:
 | `PYVER`        | The Python version to build against. This version needs to be available on your build and runtime machines. Defaults to `3.6`.                                                                              |
 | `WHEELHOUSE`   | Directory to store the wheel files during compilation. Defaults to `./wheelhouse`.                                                                                                                          |
 
-### Run tests {#run-tests}
+### Run tests {id="run-tests"}
 
 spaCy comes with an [extensive test suite](%%GITHUB_SPACY/spacy/tests). In order
 to run the tests, you'll usually want to clone the [repository](%%GITHUB_SPACY)
@@ -327,7 +327,7 @@ $ python -m pytest --pyargs %%SPACY_PKG_NAME               # basic tests
 $ python -m pytest --pyargs %%SPACY_PKG_NAME --slow        # basic and slow tests
 ```
 
-## Troubleshooting guide {#troubleshooting}
+## Troubleshooting guide {id="troubleshooting"}
 
 This section collects some of the most common errors you may come across when
 installing, loading and using spaCy, as well as their solutions. Also see the
@@ -453,7 +453,7 @@ either of these, clone your repository again.
 
 </Accordion>
 
-## Changelog {#changelog}
+## Changelog {id="changelog"}
 
 import Changelog from 'widgets/changelog.js'
 

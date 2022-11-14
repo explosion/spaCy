@@ -9,7 +9,7 @@ A `Lexeme` has no string context – it's a word type, as opposed to a word toke
 It therefore has no part-of-speech tag, dependency parse, or lemma (if
 lemmatization depends on the part-of-speech tag).
 
-## Lexeme.\_\_init\_\_ {#init tag="method"}
+## Lexeme.\_\_init\_\_ {id="init",tag="method"}
 
 Create a `Lexeme` object.
 
@@ -18,7 +18,7 @@ Create a `Lexeme` object.
 | `vocab` | The parent vocabulary. ~~Vocab~~   |
 | `orth`  | The orth id of the lexeme. ~~int~~ |
 
-## Lexeme.set_flag {#set_flag tag="method"}
+## Lexeme.set_flag {id="set_flag",tag="method"}
 
 Change the value of a boolean flag.
 
@@ -34,7 +34,7 @@ Change the value of a boolean flag.
 | `flag_id` | The attribute ID of the flag to set. ~~int~~ |
 | `value`   | The new value of the flag. ~~bool~~          |
 
-## Lexeme.check_flag {#check_flag tag="method"}
+## Lexeme.check_flag {id="check_flag",tag="method"}
 
 Check the value of a boolean flag.
 
@@ -51,7 +51,7 @@ Check the value of a boolean flag.
 | `flag_id`   | The attribute ID of the flag to query. ~~int~~ |
 | **RETURNS** | The value of the flag. ~~bool~~                |
 
-## Lexeme.similarity {#similarity tag="method" model="vectors"}
+## Lexeme.similarity {id="similarity",tag="method",model="vectors"}
 
 Compute a semantic similarity estimate. Defaults to cosine over vectors.
 
@@ -70,7 +70,7 @@ Compute a semantic similarity estimate. Defaults to cosine over vectors.
 | other       | The object to compare with. By default, accepts `Doc`, `Span`, `Token` and `Lexeme` objects. ~~Union[Doc, Span, Token, Lexeme]~~ |
 | **RETURNS** | A scalar similarity score. Higher is more similar. ~~float~~                                                                     |
 
-## Lexeme.has_vector {#has_vector tag="property" model="vectors"}
+## Lexeme.has_vector {id="has_vector",tag="property",model="vectors"}
 
 A boolean value indicating whether a word vector is associated with the lexeme.
 
@@ -85,7 +85,7 @@ A boolean value indicating whether a word vector is associated with the lexeme.
 | ----------- | ------------------------------------------------------- |
 | **RETURNS** | Whether the lexeme has a vector data attached. ~~bool~~ |
 
-## Lexeme.vector {#vector tag="property" model="vectors"}
+## Lexeme.vector {id="vector",tag="property",model="vectors"}
 
 A real-valued meaning representation.
 
@@ -101,7 +101,7 @@ A real-valued meaning representation.
 | ----------- | ------------------------------------------------------------------------------------------------ |
 | **RETURNS** | A 1-dimensional array representing the lexeme's vector. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
-## Lexeme.vector_norm {#vector_norm tag="property" model="vectors"}
+## Lexeme.vector_norm {id="vector_norm",tag="property",model="vectors"}
 
 The L2 norm of the lexeme's vector representation.
 
@@ -119,7 +119,7 @@ The L2 norm of the lexeme's vector representation.
 | ----------- | --------------------------------------------------- |
 | **RETURNS** | The L2 norm of the vector representation. ~~float~~ |
 
-## Attributes {#attributes}
+## Attributes {id="attributes"}
 
 | Name                                         | Description                                                                                                                                                                                                                                                          |
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

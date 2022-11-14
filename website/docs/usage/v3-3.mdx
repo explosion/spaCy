@@ -6,12 +6,12 @@ menu:
   - ['Upgrading Notes', 'upgrading']
 ---
 
-## New features {#features hidden="true"}
+## New features {id="features",hidden="true"}
 
 spaCy v3.3 improves the speed of core pipeline components, adds a new trainable
 lemmatizer, and introduces trained pipelines for Finnish, Korean and Swedish.
 
-### Speed improvements {#speed}
+### Speed improvements {id="speed"}
 
 v3.3 includes a slew of speed improvements:
 
@@ -50,14 +50,14 @@ sizes on Linux (Intel Xeon W-2265) and OS X (M1) to compare spaCy v3.2 vs. v3.3:
 | (+v3.3 trainable lemmatizer)                     |           1000 |          20047 |          20628 |  2.90% |
 |                                                  |          10000 |          15921 |          18546 | 16.49% |
 
-### Trainable lemmatizer {#trainable-lemmatizer}
+### Trainable lemmatizer {id="trainable-lemmatizer"}
 
 The new [trainable lemmatizer](/api/edittreelemmatizer) component uses
 [edit trees](https://explosion.ai/blog/edit-tree-lemmatizer) to transform tokens
 into lemmas. Try out the trainable lemmatizer with the
 [training quickstart](/usage/training#quickstart)!
 
-### displaCy support for overlapping spans and arcs {#displacy}
+### displaCy support for overlapping spans and arcs {id="displacy"}
 
 displaCy now supports overlapping spans with a new
 [`span`](/usage/visualizers#span) style and multiple arcs with different labels
@@ -98,9 +98,9 @@ import DisplacySpanHtml from 'images/displacy-span.html'
   Russian, Slovenian, Spanish, Turkish, Ukrainian and Vietnamese.
 - New noun chunks for Finnish.
 
-## Trained pipelines {#pipelines}
+## Trained pipelines {id="pipelines"}
 
-### New trained pipelines {#new-pipelines}
+### New trained pipelines {id="new-pipelines"}
 
 v3.3 introduces new CPU/CNN pipelines for Finnish, Korean and Swedish, which use
 the new trainable lemmatizer and
@@ -120,7 +120,7 @@ pipelines have compact vectors with no out-of-vocabulary words.
 | [`sv_core_news_md`](/models/sv#sv_core_news_md) | Swedish  | 96.3 |       78.5 |  79.3 |
 | [`sv_core_news_lg`](/models/sv#sv_core_news_lg) | Swedish  | 96.3 |       79.1 |  81.1 |
 
-### Pipeline updates {#pipeline-updates}
+### Pipeline updates {id="pipeline-updates"}
 
 The following languages switch from lookup or rule-based lemmatizers to the new
 trainable lemmatizer: Danish, Dutch, German, Greek, Italian, Lithuanian,
@@ -153,7 +153,7 @@ continue using the previous lemmatizer, you can
 In addition, the vectors in the English pipelines are deduplicated to improve
 the pruned vectors in the `md` models and reduce the `lg` model size.
 
-## Notes about upgrading from v3.2 {#upgrading}
+## Notes about upgrading from v3.2 {id="upgrading"}
 
 ### Span comparisons
 
@@ -203,7 +203,7 @@ word list similar to the list of in-vocabulary vector keys with default vectors.
 - `Vectors.most_similar` is not supported because there's no fixed list of
   vectors to compare your vectors to.
 
-### Pipeline package version compatibility {#version-compat}
+### Pipeline package version compatibility {id="version-compat"}
 
 > #### Using legacy implementations
 >

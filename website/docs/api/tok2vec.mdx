@@ -23,7 +23,7 @@ components can backpropagate to the shared weights. This implementation is used
 because it allows us to avoid relying on object identity within the models to
 achieve the parameter sharing.
 
-## Config and implementation {#config}
+## Config and implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -48,7 +48,7 @@ architectures and their arguments and hyperparameters.
 %%GITHUB_SPACY/spacy/pipeline/tok2vec.py
 ```
 
-## Tok2Vec.\_\_init\_\_ {#init tag="method"}
+## Tok2Vec.\_\_init\_\_ {id="init",tag="method"}
 
 > #### Example
 >
@@ -75,7 +75,7 @@ shortcut for this and instantiate the component using its string name and
 | `model` | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]~~ |
 | `name`  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                       |
 
-## Tok2Vec.\_\_call\_\_ {#call tag="method"}
+## Tok2Vec.\_\_call\_\_ {id="call",tag="method"}
 
 Apply the pipe to one document and add context-sensitive embeddings to the
 `Doc.tensor` attribute, allowing them to be used as features by downstream
@@ -100,7 +100,7 @@ pipeline components are applied to the `Doc` in order. Both
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## Tok2Vec.pipe {#pipe tag="method"}
+## Tok2Vec.pipe {id="pipe",tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
@@ -123,7 +123,7 @@ and [`set_annotations`](/api/tok2vec#set_annotations) methods.
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## Tok2Vec.initialize {#initialize tag="method"}
+## Tok2Vec.initialize {id="initialize",tag="method"}
 
 Initialize the component for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
@@ -148,7 +148,7 @@ by [`Language.initialize`](/api/language#initialize).
 | _keyword-only_ |                                                                                                                                                                            |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                       |
 
-## Tok2Vec.predict {#predict tag="method"}
+## Tok2Vec.predict {id="predict",tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects without
 modifying them.
@@ -165,7 +165,7 @@ modifying them.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
 | **RETURNS** | The model's prediction for each document.   |
 
-## Tok2Vec.set_annotations {#set_annotations tag="method"}
+## Tok2Vec.set_annotations {id="set_annotations",tag="method"}
 
 Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
@@ -182,7 +182,7 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 | `docs`   | The documents to modify. ~~Iterable[Doc]~~        |
 | `scores` | The scores to set, produced by `Tok2Vec.predict`. |
 
-## Tok2Vec.update {#update tag="method"}
+## Tok2Vec.update {id="update",tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
@@ -205,7 +205,7 @@ Delegates to [`predict`](/api/tok2vec#predict).
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## Tok2Vec.create_optimizer {#create_optimizer tag="method"}
+## Tok2Vec.create_optimizer {id="create_optimizer",tag="method"}
 
 Create an optimizer for the pipeline component.
 
@@ -220,7 +220,7 @@ Create an optimizer for the pipeline component.
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## Tok2Vec.use_params {#use_params tag="method, contextmanager"}
+## Tok2Vec.use_params {id="use_params",tag="method, contextmanager"}
 
 Modify the pipe's model to use the given parameter values. At the end of the
 context, the original parameters are restored.
@@ -237,7 +237,7 @@ context, the original parameters are restored.
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## Tok2Vec.to_disk {#to_disk tag="method"}
+## Tok2Vec.to_disk {id="to_disk",tag="method"}
 
 Serialize the pipe to disk.
 
@@ -254,7 +254,7 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## Tok2Vec.from_disk {#from_disk tag="method"}
+## Tok2Vec.from_disk {id="from_disk",tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
@@ -272,7 +272,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `Tok2Vec` object. ~~Tok2Vec~~                                                      |
 
-## Tok2Vec.to_bytes {#to_bytes tag="method"}
+## Tok2Vec.to_bytes {id="to_bytes",tag="method"}
 
 > #### Example
 >
@@ -289,7 +289,7 @@ Serialize the pipe to a bytestring.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the `Tok2Vec` object. ~~bytes~~                                      |
 
-## Tok2Vec.from_bytes {#from_bytes tag="method"}
+## Tok2Vec.from_bytes {id="from_bytes",tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -308,7 +308,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `Tok2Vec` object. ~~Tok2Vec~~                                                           |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from

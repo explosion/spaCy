@@ -44,7 +44,7 @@ enough, JSX components can be used.
 > For more details on editing the site locally, see the installation
 > instructions and markdown reference below.
 
-## Logo {#logo source="website/src/images/logo.svg"}
+## Logo {id="logo",source="website/src/images/logo.svg"}
 
 import { Logos } from 'widgets/styleguide'
 
@@ -55,7 +55,7 @@ project is using spaCy, you can grab one of our
 
 <Logos />
 
-## Colors {#colors}
+## Colors {id="colors"}
 
 import { Colors, Patterns } from 'widgets/styleguide'
 
@@ -65,7 +65,7 @@ import { Colors, Patterns } from 'widgets/styleguide'
 
 <Patterns />
 
-## Typography {#typography}
+## Typography {id="typography"}
 
 import { H1, H2, H3, H4, H5, Label } from 'components/typography'
 
@@ -73,8 +73,8 @@ import { H1, H2, H3, H4, H5, Label } from 'components/typography'
 >
 > ```markdown_
 > ## Headline 2
-> ## Headline 2 {#some_id}
-> ## Headline 2 {#some_id tag="method"}
+> ## Headline 2 {id="some_id"}
+> ## Headline 2 {id="some_id" tag="method"}
 > ```
 >
 > #### JSX
@@ -127,9 +127,9 @@ Tags are also available as standalone `<Tag />` components.
 | `model`  | `{model="tagger, parser"}` | <Tag variant="model">tagger, parser</Tag> |
 | `hidden` | `{hidden="true"}`          |                                           |
 
-## Elements {#elements}
+## Elements {id="elements"}
 
-### Links {#links}
+### Links {id="links"}
 
 > #### Markdown
 >
@@ -151,7 +151,7 @@ Special link styles are used depending on the link URL.
 - [I am a link to a model](/models/en#en_core_web_sm)
 - [I am a link to GitHub](https://github.com/explosion/spaCy)
 
-### Abbreviations {#abbr}
+### Abbreviations {id="abbr"}
 
 import { Abbr } from 'components/typography'
 
@@ -165,7 +165,7 @@ Some text with <Abbr title="Explanation here">an abbreviation</Abbr>. On small
 screens, I collapse and the explanation text is displayed next to the
 abbreviation.
 
-### Tags {#tags}
+### Tags {id="tags"}
 
 import Tag from 'components/tag'
 
@@ -190,7 +190,7 @@ installed.
   <Tag variant="model">tagger, parser</Tag>
 </p>
 
-### Buttons {#buttons}
+### Buttons {id="buttons"}
 
 import Button from 'components/button'
 
@@ -217,7 +217,7 @@ the buttons are implemented as styled links instead of native button elements.
 
 ## Components
 
-### Table {#table}
+### Table {id="table"}
 
 > #### Markdown
 >
@@ -269,7 +269,7 @@ be italicized:
 | _Hello_  |          |          |
 | Column 1 | Column 2 | Column 3 |
 
-### Type Annotations {#type-annotations}
+### Type Annotations {id="type-annotations"}
 
 > #### Markdown
 >
@@ -314,7 +314,7 @@ always be the **last element** in the row.
 | `model`                 | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. ~~Model[List[Doc], FullTransformerBatch]~~                                                   |
 | `set_extra_annotations` | Function that takes a batch of `Doc` objects and transformer outputs and can set additional annotations on the `Doc`. ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
 
-### List {#list}
+### List {id="list"}
 
 > #### Markdown
 >
@@ -345,7 +345,7 @@ automatically.
 3. Lorem ipsum dolor
 4. consectetur adipiscing elit
 
-### Aside {#aside}
+### Aside {id="aside"}
 
 > #### Markdown
 >
@@ -370,7 +370,7 @@ To make them easier to use in Markdown, paragraphs formatted as blockquotes will
 turn into asides by default. Level 4 headlines (with a leading `####`) will
 become aside titles.
 
-### Code Block {#code-block}
+### Code Block {id="code-block"}
 
 > #### Markdown
 >
@@ -477,7 +477,7 @@ original file is shown at the top of the widget.
 https://github.com/explosion/spaCy/tree/master/spacy/language.py
 ```
 
-### Infobox {#infobox}
+### Infobox {id="infobox"}
 
 import Infobox from 'components/infobox'
 
@@ -515,7 +515,7 @@ blocks.
 
 </Infobox>
 
-### Accordion {#accordion}
+### Accordion {id="accordion"}
 
 import Accordion from 'components/accordion'
 
@@ -544,7 +544,7 @@ sit amet dignissim justo congue.
 
 </Accordion>
 
-## Setup and installation {#setup}
+## Setup and installation {id="setup"}
 
 ```bash
 # Clone the repository
@@ -572,7 +572,7 @@ extensions for your code editor. The
 [`.prettierrc`](https://github.com/explosion/spaCy/tree/master/website/.prettierrc)
 file in the root defines the settings used in this codebase.
 
-## Building & developing the site with Docker {#docker}
+## Building & developing the site with Docker {id="docker"}
 
 Sometimes it's hard to get a local environment working due to rapid updates to
 node dependencies, so it may be easier to use docker for building the docs.
@@ -598,7 +598,7 @@ segfault errors from `qemu` if you use the default image. To fix this use the
 `arm64` tagged image in the `docker run` command
 (ghcr.io/explosion/spacy-io:arm64).
 
-### Building the Docker image {#docker-build}
+### Building the Docker image {id="docker-build"}
 
 If you'd like to build the image locally, you can do so like this:
 
@@ -609,7 +609,7 @@ docker build -t spacy-io .
 This will take some time, so if you want to use the prebuilt image you'll save a
 bit of time.
 
-## Markdown reference {#markdown}
+## Markdown reference {id="markdown"}
 
 All page content and page meta lives in the `.md` files in the `/docs`
 directory. The frontmatter block at the top of each file defines the page title
@@ -620,7 +620,7 @@ and other settings like the sidebar menu.
 title: Page title
 ---
 
-## Headline starting a section {#some_id}
+## Headline starting a section {id="some_id"}
 
 This is a regular paragraph with a [link](https://spacy.io) and **bold text**.
 
@@ -657,7 +657,7 @@ In addition to the native markdown elements, you can use the components
 [abbr]: https://spacy.io/styleguide#abbr
 [tag]: https://spacy.io/styleguide#tag
 
-## Project structure {#structure}
+## Project structure {id="structure"}
 
 ```yaml
 ### Directory structure
@@ -686,7 +686,7 @@ In addition to the native markdown elements, you can use the components
 └── package.json         # package settings and dependencies
 ```
 
-## Editorial {#editorial}
+## Editorial {id="editorial"}
 
 - "spaCy" should always be spelled with a lowercase "s" and a capital "C",
   unless it specifically refers to the Python package or Python import `spacy`

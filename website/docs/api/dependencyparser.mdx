@@ -25,7 +25,7 @@ current state. The weights are updated such that the scores assigned to the set
 of optimal actions is increased, while scores assigned to other actions are
 decreased. Note that more than one action may be optimal for a given state.
 
-## Assigned Attributes {#assigned-attributes}
+## Assigned Attributes {id="assigned-attributes"}
 
 Dependency predictions are assigned to the `Token.dep` and `Token.head` fields.
 Beside the dependencies themselves, the parser decides sentence boundaries,
@@ -39,7 +39,7 @@ which are saved in `Token.is_sent_start` and accessible via `Doc.sents`.
 | `Token.is_sent_start` | A boolean value indicating whether the token starts a sentence. After the parser runs this will be `True` or `False` for all tokens. ~~bool~~ |
 | `Doc.sents`           | An iterator over sentences in the `Doc`, determined by `Token.is_sent_start` values. ~~Iterator[Span]~~                                       |
 
-## Config and implementation {#config}
+## Config and implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -74,7 +74,7 @@ architectures and their arguments and hyperparameters.
 %%GITHUB_SPACY/spacy/pipeline/dep_parser.pyx
 ```
 
-## DependencyParser.\_\_init\_\_ {#init tag="method"}
+## DependencyParser.\_\_init\_\_ {id="init",tag="method"}
 
 > #### Example
 >
@@ -107,7 +107,7 @@ shortcut for this and instantiate the component using its string name and
 | `min_action_freq`             | The minimum frequency of labelled actions to retain. Rarer labelled actions have their label backed-off to "dep". While this primarily affects the label accuracy, it can also affect the attachment structure, as the labels are used to represent the pseudo-projectivity transformation. ~~int~~ |
 | `scorer`                      | The scoring method. Defaults to [`Scorer.score_deps`](/api/scorer#score_deps) for the attribute `"dep"` ignoring the labels `p` and `punct` and [`Scorer.score_spans`](/api/scorer/#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~                                                |
 
-## DependencyParser.\_\_call\_\_ {#call tag="method"}
+## DependencyParser.\_\_call\_\_ {id="call",tag="method"}
 
 Apply the pipe to one document. The document is modified in place, and returned.
 This usually happens under the hood when the `nlp` object is called on a text
@@ -131,7 +131,7 @@ and all pipeline components are applied to the `Doc` in order. Both
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## DependencyParser.pipe {#pipe tag="method"}
+## DependencyParser.pipe {id="pipe",tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
@@ -155,7 +155,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/dependencyparser#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## DependencyParser.initialize {#initialize tag="method" new="3"}
+## DependencyParser.initialize {id="initialize",tag="method",new="3"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. **At least one example
@@ -198,7 +198,7 @@ This method was previously called `begin_training`.
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                                   |
 | `labels`       | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Dict[str, Dict[str, int]]]~~ |
 
-## DependencyParser.predict {#predict tag="method"}
+## DependencyParser.predict {id="predict",tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
 modifying them.
@@ -215,7 +215,7 @@ modifying them.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~                   |
 | **RETURNS** | A helper class for the parse state (internal). ~~StateClass~~ |
 
-## DependencyParser.set_annotations {#set_annotations tag="method"}
+## DependencyParser.set_annotations {id="set_annotations",tag="method"}
 
 Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
@@ -232,7 +232,7 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 | `docs`   | The documents to modify. ~~Iterable[Doc]~~                                                                                            |
 | `scores` | The scores to set, produced by `DependencyParser.predict`. Returns an internal helper class for the parse state. ~~List[StateClass]~~ |
 
-## DependencyParser.update {#update tag="method"}
+## DependencyParser.update {id="update",tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects, updating the pipe's
 model. Delegates to [`predict`](/api/dependencyparser#predict) and
@@ -255,7 +255,7 @@ model. Delegates to [`predict`](/api/dependencyparser#predict) and
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## DependencyParser.get_loss {#get_loss tag="method"}
+## DependencyParser.get_loss {id="get_loss",tag="method"}
 
 Find the loss and gradient of loss for the batch of documents and their
 predicted scores.
@@ -274,7 +274,7 @@ predicted scores.
 | `scores`    | Scores representing the model's predictions. ~~StateClass~~                 |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
-## DependencyParser.create_optimizer {#create_optimizer tag="method"}
+## DependencyParser.create_optimizer {id="create_optimizer",tag="method"}
 
 Create an [`Optimizer`](https://thinc.ai/docs/api-optimizers) for the pipeline
 component.
@@ -290,7 +290,7 @@ component.
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## DependencyParser.use_params {#use_params tag="method, contextmanager"}
+## DependencyParser.use_params {id="use_params",tag="method, contextmanager"}
 
 Modify the pipe's model, to use the given parameter values. At the end of the
 context, the original parameters are restored.
@@ -307,7 +307,7 @@ context, the original parameters are restored.
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## DependencyParser.add_label {#add_label tag="method"}
+## DependencyParser.add_label {id="add_label",tag="method"}
 
 Add a new label to the pipe. Note that you don't have to call this method if you
 provide a **representative data sample** to the [`initialize`](#initialize)
@@ -327,7 +327,7 @@ to the model, and the output dimension will be
 | `label`     | The label to add. ~~str~~                                   |
 | **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
 
-## DependencyParser.set_output {#set_output tag="method"}
+## DependencyParser.set_output {id="set_output",tag="method"}
 
 Change the output dimension of the component's model by calling the model's
 attribute `resize_output`. This is a function that takes the original model and
@@ -346,7 +346,7 @@ forgetting" problem.
 | ---- | --------------------------------- |
 | `nO` | The new output dimension. ~~int~~ |
 
-## DependencyParser.to_disk {#to_disk tag="method"}
+## DependencyParser.to_disk {id="to_disk",tag="method"}
 
 Serialize the pipe to disk.
 
@@ -363,7 +363,7 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## DependencyParser.from_disk {#from_disk tag="method"}
+## DependencyParser.from_disk {id="from_disk",tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
@@ -381,7 +381,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `DependencyParser` object. ~~DependencyParser~~                                    |
 
-## DependencyParser.to_bytes {#to_bytes tag="method"}
+## DependencyParser.to_bytes {id="to_bytes",tag="method"}
 
 > #### Example
 >
@@ -398,7 +398,7 @@ Serialize the pipe to a bytestring.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the `DependencyParser` object. ~~bytes~~                             |
 
-## DependencyParser.from_bytes {#from_bytes tag="method"}
+## DependencyParser.from_bytes {id="from_bytes",tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -417,7 +417,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `DependencyParser` object. ~~DependencyParser~~                                         |
 
-## DependencyParser.labels {#labels tag="property"}
+## DependencyParser.labels {id="labels",tag="property"}
 
 The labels currently added to the component.
 
@@ -432,7 +432,7 @@ The labels currently added to the component.
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
 
-## DependencyParser.label_data {#label_data tag="property" new="3"}
+## DependencyParser.label_data {id="label_data",tag="property",new="3"}
 
 The labels currently added to the component and their internal meta information.
 This is the data generated by [`init labels`](/api/cli#init-labels) and used by
@@ -450,7 +450,7 @@ the model with a pre-defined label set.
 | ----------- | ------------------------------------------------------------------------------- |
 | **RETURNS** | The label data added to the component. ~~Dict[str, Dict[str, Dict[str, int]]]~~ |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from

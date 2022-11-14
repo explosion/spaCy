@@ -7,7 +7,7 @@ menu:
   - ['Migrating from v2.2', 'migrating']
 ---
 
-## New Features {#features hidden="true"}
+## New Features {id="features",hidden="true"}
 
 spaCy v2.3 features new pretrained models for five languages, word vectors for
 all language models, and decreased model size and loading times for models with
@@ -19,7 +19,7 @@ Model packages with vectors are about **2&times** smaller on disk and load
 For more details and a behind-the-scenes look at the new release,
 [see our blog post](https://explosion.ai/blog/spacy-v2-3).
 
-### Expanded model families with vectors {#models}
+### Expanded model families with vectors {id="models"}
 
 > #### Example
 >
@@ -45,7 +45,7 @@ and Dutch has been extended to include both UD Dutch Alpino and LassySmall.
 
 </Infobox>
 
-### Chinese {#chinese}
+### Chinese {id="chinese"}
 
 > #### Example
 >
@@ -77,7 +77,7 @@ Python 3.8.
 
 </Infobox>
 
-### Japanese {#japanese}
+### Japanese {id="japanese"}
 
 The updated Japanese language class switches to
 [`SudachiPy`](https://github.com/WorksApplications/SudachiPy) for word
@@ -102,7 +102,7 @@ installing spaCy for Japanese, which is now possible with a single command:
 - [`spacy train`](/api/cli#train) on GPU restricts the CPU timing evaluation to
   the first iteration
 
-## Backwards incompatibilities {#incompat}
+## Backwards incompatibilities {id="incompat"}
 
 <Infobox title="Important note on models" variant="warning">
 
@@ -140,7 +140,7 @@ the [`spacy validate`](/api/cli#validate) command.
   spaCy's tokenization and Universal Dependencies multi-word tokens used for
   contractions.
 
-### Migrating from spaCy 2.2 {#migrating}
+### Migrating from spaCy 2.2 {id="migrating"}
 
 #### Tokenizer settings
 

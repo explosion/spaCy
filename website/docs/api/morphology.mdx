@@ -10,7 +10,7 @@ morphological analysis, so queries of morphological attributes are delegated to
 this class. See [`MorphAnalysis`](/api/morphology#morphanalysis) for the
 container storing a single morphological analysis.
 
-## Morphology.\_\_init\_\_ {#init tag="method"}
+## Morphology.\_\_init\_\_ {id="init",tag="method"}
 
 Create a `Morphology` object.
 
@@ -26,7 +26,7 @@ Create a `Morphology` object.
 | --------- | --------------------------------- |
 | `strings` | The string store. ~~StringStore~~ |
 
-## Morphology.add {#add tag="method"}
+## Morphology.add {id="add",tag="method"}
 
 Insert a morphological analysis in the morphology table, if not already present.
 The morphological analysis may be provided in the Universal Dependencies
@@ -46,7 +46,7 @@ new analysis.
 | ---------- | ------------------------------------------------ |
 | `features` | The morphological features. ~~Union[Dict, str]~~ |
 
-## Morphology.get {#get tag="method"}
+## Morphology.get {id="get",tag="method"}
 
 > #### Example
 >
@@ -64,7 +64,7 @@ string for the hash of the morphological analysis.
 | ------- | ----------------------------------------------- |
 | `morph` | The hash of the morphological analysis. ~~int~~ |
 
-## Morphology.feats_to_dict {#feats_to_dict tag="staticmethod"}
+## Morphology.feats_to_dict {id="feats_to_dict",tag="staticmethod"}
 
 Convert a string
 [FEATS](https://universaldependencies.org/format.html#morphological-annotation)
@@ -84,7 +84,7 @@ tag map.
 | `feats`     | The morphological features in Universal Dependencies [FEATS](https://universaldependencies.org/format.html#morphological-annotation) format. ~~str~~ |
 | **RETURNS** | The morphological features as a dictionary. ~~Dict[str, str]~~                                                                                       |
 
-## Morphology.dict_to_feats {#dict_to_feats tag="staticmethod"}
+## Morphology.dict_to_feats {id="dict_to_feats",tag="staticmethod"}
 
 Convert a dictionary of features and values to a string
 [FEATS](https://universaldependencies.org/format.html#morphological-annotation)
@@ -103,7 +103,7 @@ representation.
 | `feats_dict` | The morphological features as a dictionary. ~~Dict[str, str]~~                                                                                       |
 | **RETURNS**  | The morphological features in Universal Dependencies [FEATS](https://universaldependencies.org/format.html#morphological-annotation) format. ~~str~~ |
 
-## Attributes {#attributes}
+## Attributes {id="attributes"}
 
 | Name          | Description                                                                                                                  |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------- |
@@ -111,11 +111,11 @@ representation.
 | `FIELD_SEP`   | The [FEATS](https://universaldependencies.org/format.html#morphological-annotation) field separator. Default is `=`. ~~str~~ |
 | `VALUE_SEP`   | The [FEATS](https://universaldependencies.org/format.html#morphological-annotation) value separator. Default is `,`. ~~str~~ |
 
-## MorphAnalysis {#morphanalysis tag="class" source="spacy/tokens/morphanalysis.pyx"}
+## MorphAnalysis {id="morphanalysis",tag="class",source="spacy/tokens/morphanalysis.pyx"}
 
 Stores a single morphological analysis.
 
-### MorphAnalysis.\_\_init\_\_ {#morphanalysis-init tag="method"}
+### MorphAnalysis.\_\_init\_\_ {id="morphanalysis-init",tag="method"}
 
 Initialize a MorphAnalysis object from a Universal Dependencies
 [FEATS](https://universaldependencies.org/format.html#morphological-annotation)
@@ -135,7 +135,7 @@ string or a dictionary of morphological features.
 | `vocab`    | The vocab. ~~Vocab~~                                       |
 | `features` | The morphological features. ~~Union[Dict[str, str], str]~~ |
 
-### MorphAnalysis.\_\_contains\_\_ {#morphanalysis-contains tag="method"}
+### MorphAnalysis.\_\_contains\_\_ {id="morphanalysis-contains",tag="method"}
 
 Whether a feature/value pair is in the analysis.
 
@@ -151,7 +151,7 @@ Whether a feature/value pair is in the analysis.
 | ----------- | --------------------------------------------- |
 | **RETURNS** | A feature/value pair in the analysis. ~~str~~ |
 
-### MorphAnalysis.\_\_iter\_\_ {#morphanalysis-iter tag="method"}
+### MorphAnalysis.\_\_iter\_\_ {id="morphanalysis-iter",tag="method"}
 
 Iterate over the feature/value pairs in the analysis.
 
@@ -167,7 +167,7 @@ Iterate over the feature/value pairs in the analysis.
 | ---------- | --------------------------------------------- |
 | **YIELDS** | A feature/value pair in the analysis. ~~str~~ |
 
-### MorphAnalysis.\_\_len\_\_ {#morphanalysis-len tag="method"}
+### MorphAnalysis.\_\_len\_\_ {id="morphanalysis-len",tag="method"}
 
 Returns the number of features in the analysis.
 
@@ -183,7 +183,7 @@ Returns the number of features in the analysis.
 | ----------- | ----------------------------------------------- |
 | **RETURNS** | The number of features in the analysis. ~~int~~ |
 
-### MorphAnalysis.\_\_str\_\_ {#morphanalysis-str tag="method"}
+### MorphAnalysis.\_\_str\_\_ {id="morphanalysis-str",tag="method"}
 
 Returns the morphological analysis in the Universal Dependencies
 [FEATS](https://universaldependencies.org/format.html#morphological-annotation)
@@ -201,7 +201,7 @@ string format.
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | **RETURNS** | The analysis in the Universal Dependencies [FEATS](https://universaldependencies.org/format.html#morphological-annotation) format. ~~str~~ |
 
-### MorphAnalysis.get {#morphanalysis-get tag="method"}
+### MorphAnalysis.get {id="morphanalysis-get",tag="method"}
 
 Retrieve values for a feature by field.
 
@@ -218,7 +218,7 @@ Retrieve values for a feature by field.
 | `field`     | The field to retrieve. ~~str~~                   |
 | **RETURNS** | A list of the individual features. ~~List[str]~~ |
 
-### MorphAnalysis.to_dict {#morphanalysis-to_dict tag="method"}
+### MorphAnalysis.to_dict {id="morphanalysis-to_dict",tag="method"}
 
 Produce a dict representation of the analysis, in the same format as the tag
 map.
@@ -235,7 +235,7 @@ map.
 | ----------- | ----------------------------------------------------------- |
 | **RETURNS** | The dict representation of the analysis. ~~Dict[str, str]~~ |
 
-### MorphAnalysis.from_id {#morphanalysis-from_id tag="classmethod"}
+### MorphAnalysis.from_id {id="morphanalysis-from_id",tag="classmethod"}
 
 Create a morphological analysis from a given hash ID.
 

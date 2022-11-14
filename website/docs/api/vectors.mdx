@@ -25,7 +25,7 @@ As of spaCy v3.2, `Vectors` supports two types of vector tables:
   the sum of one or more rows as determined by the settings related to character
   ngrams and the hash table.
 
-## Vectors.\_\_init\_\_ {#init tag="method"}
+## Vectors.\_\_init\_\_ {id="init",tag="method"}
 
 Create a new vector store. With the default mode, you can set the vector values
 and keys directly on initialization, or supply a `shape` keyword argument to
@@ -61,7 +61,7 @@ modified later.
 | `bow` <Tag variant="new">3.2</Tag>        | The floret BOW string (default: `"<"`). ~~str~~                                                                                                                                        |
 | `eow` <Tag variant="new">3.2</Tag>        | The floret EOW string (default: `">"`). ~~str~~                                                                                                                                        |
 
-## Vectors.\_\_getitem\_\_ {#getitem tag="method"}
+## Vectors.\_\_getitem\_\_ {id="getitem",tag="method"}
 
 Get a vector by key. If the key is not found in the table, a `KeyError` is
 raised.
@@ -79,7 +79,7 @@ raised.
 | `key`       | The key to get the vector for. ~~Union[int, str]~~               |
 | **RETURNS** | The vector for the key. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
-## Vectors.\_\_setitem\_\_ {#setitem tag="method"}
+## Vectors.\_\_setitem\_\_ {id="setitem",tag="method"}
 
 Set a vector for the given key. Not supported for `floret` mode.
 
@@ -96,7 +96,7 @@ Set a vector for the given key. Not supported for `floret` mode.
 | `key`    | The key to set the vector for. ~~int~~                      |
 | `vector` | The vector to set. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
-## Vectors.\_\_iter\_\_ {#iter tag="method"}
+## Vectors.\_\_iter\_\_ {id="iter",tag="method"}
 
 Iterate over the keys in the table. In `floret` mode, the keys table is not
 used.
@@ -112,7 +112,7 @@ used.
 | ---------- | --------------------------- |
 | **YIELDS** | A key in the table. ~~int~~ |
 
-## Vectors.\_\_len\_\_ {#len tag="method"}
+## Vectors.\_\_len\_\_ {id="len",tag="method"}
 
 Return the number of vectors in the table.
 
@@ -127,7 +127,7 @@ Return the number of vectors in the table.
 | ----------- | ------------------------------------------- |
 | **RETURNS** | The number of vectors in the table. ~~int~~ |
 
-## Vectors.\_\_contains\_\_ {#contains tag="method"}
+## Vectors.\_\_contains\_\_ {id="contains",tag="method"}
 
 Check whether a key has been mapped to a vector entry in the table. In `floret`
 mode, returns `True` for all keys.
@@ -145,7 +145,7 @@ mode, returns `True` for all keys.
 | `key`       | The key to check. ~~int~~                    |
 | **RETURNS** | Whether the key has a vector entry. ~~bool~~ |
 
-## Vectors.add {#add tag="method"}
+## Vectors.add {id="add",tag="method"}
 
 Add a key to the table, optionally setting a vector value as well. Keys can be
 mapped to an existing vector by setting `row`, or a new vector can be added. Not
@@ -168,7 +168,7 @@ supported for `floret` mode.
 | `row`          | An optional row number of a vector to map the key to. ~~int~~                   |
 | **RETURNS**    | The row the vector was added to. ~~int~~                                        |
 
-## Vectors.resize {#resize tag="method"}
+## Vectors.resize {id="resize",tag="method"}
 
 Resize the underlying vectors array. If `inplace=True`, the memory is
 reallocated. This may cause other references to the data to become invalid, so
@@ -189,7 +189,7 @@ for `floret` mode.
 | `inplace`   | Reallocate the memory. ~~bool~~                                                          |
 | **RETURNS** | The removed items as a list of `(key, row)` tuples. ~~List[Tuple[int, int]]~~            |
 
-## Vectors.keys {#keys tag="method"}
+## Vectors.keys {id="keys",tag="method"}
 
 A sequence of the keys in the table. In `floret` mode, the keys table is not
 used.
@@ -205,7 +205,7 @@ used.
 | ----------- | --------------------------- |
 | **RETURNS** | The keys. ~~Iterable[int]~~ |
 
-## Vectors.values {#values tag="method"}
+## Vectors.values {id="values",tag="method"}
 
 Iterate over vectors that have been assigned to at least one key. Note that some
 vectors may be unassigned, so the number of vectors returned may be less than
@@ -222,7 +222,7 @@ the length of the vectors table. In `floret` mode, the keys table is not used.
 | ---------- | --------------------------------------------------------------- |
 | **YIELDS** | A vector in the table. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
-## Vectors.items {#items tag="method"}
+## Vectors.items {id="items",tag="method"}
 
 Iterate over `(key, vector)` pairs, in order. In `floret` mode, the keys table
 is empty.
@@ -238,7 +238,7 @@ is empty.
 | ---------- | ------------------------------------------------------------------------------------- |
 | **YIELDS** | `(key, vector)` pairs, in order. ~~Tuple[int, numpy.ndarray[ndim=1, dtype=float32]]~~ |
 
-## Vectors.find {#find tag="method"}
+## Vectors.find {id="find",tag="method"}
 
 Look up one or more keys by row, or vice versa. Not supported for `floret` mode.
 
@@ -260,7 +260,7 @@ Look up one or more keys by row, or vice versa. Not supported for `floret` mode.
 | `rows`         | Find the keys that point to the rows. Returns `numpy.ndarray`. ~~Iterable[int]~~             |
 | **RETURNS**    | The requested key, keys, row or rows. ~~Union[int, numpy.ndarray[ndim=1, dtype=float32]]~~   |
 
-## Vectors.shape {#shape tag="property"}
+## Vectors.shape {id="shape",tag="property"}
 
 Get `(rows, dims)` tuples of number of rows and number of dimensions in the
 vector table.
@@ -279,7 +279,7 @@ vector table.
 | ----------- | ------------------------------------------ |
 | **RETURNS** | A `(rows, dims)` pair. ~~Tuple[int, int]~~ |
 
-## Vectors.size {#size tag="property"}
+## Vectors.size {id="size",tag="property"}
 
 The vector size, i.e. `rows * dims`.
 
@@ -294,7 +294,7 @@ The vector size, i.e. `rows * dims`.
 | ----------- | ------------------------ |
 | **RETURNS** | The vector size. ~~int~~ |
 
-## Vectors.is_full {#is_full tag="property"}
+## Vectors.is_full {id="is_full",tag="property"}
 
 Whether the vectors table is full and has no slots are available for new keys.
 If a table is full, it can be resized using
@@ -313,7 +313,7 @@ full and cannot be resized.
 | ----------- | ------------------------------------------- |
 | **RETURNS** | Whether the vectors table is full. ~~bool~~ |
 
-## Vectors.n_keys {#n_keys tag="property"}
+## Vectors.n_keys {id="n_keys",tag="property"}
 
 Get the number of keys in the table. Note that this is the number of _all_ keys,
 not just unique vectors. If several keys are mapped to the same vectors, they
@@ -331,7 +331,7 @@ will be counted individually. In `floret` mode, the keys table is not used.
 | ----------- | ----------------------------------------------------------------------------- |
 | **RETURNS** | The number of all keys in the table. Returns `-1` for floret vectors. ~~int~~ |
 
-## Vectors.most_similar {#most_similar tag="method"}
+## Vectors.most_similar {id="most_similar",tag="method"}
 
 For each of the given vectors, find the `n` most similar entries to it by
 cosine. Queries are by vector. Results are returned as a
@@ -356,7 +356,7 @@ supported for `floret` mode.
 | `sort`         | Whether to sort the entries returned by score. Defaults to `True`. ~~bool~~                                             |
 | **RETURNS**    | The most similar entries as a `(keys, best_rows, scores)` tuple. ~~Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]~~ |
 
-## Vectors.get_batch {#get_batch tag="method" new="3.2"}
+## Vectors.get_batch {id="get_batch",tag="method",new="3.2"}
 
 Get the vectors for the provided keys efficiently as a batch.
 
@@ -371,7 +371,7 @@ Get the vectors for the provided keys efficiently as a batch.
 | ------ | --------------------------------------- |
 | `keys` | The keys. ~~Iterable[Union[int, str]]~~ |
 
-## Vectors.to_ops {#to_ops tag="method"}
+## Vectors.to_ops {id="to_ops",tag="method"}
 
 Change the embedding matrix to use different Thinc ops.
 
@@ -388,7 +388,7 @@ Change the embedding matrix to use different Thinc ops.
 | ----- | -------------------------------------------------------- |
 | `ops` | The Thinc ops to switch the embedding matrix to. ~~Ops~~ |
 
-## Vectors.to_disk {#to_disk tag="method"}
+## Vectors.to_disk {id="to_disk",tag="method"}
 
 Save the current state to a directory.
 
@@ -403,7 +403,7 @@ Save the current state to a directory.
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 
-## Vectors.from_disk {#from_disk tag="method"}
+## Vectors.from_disk {id="from_disk",tag="method"}
 
 Loads state from a directory. Modifies the object in place and returns it.
 
@@ -419,7 +419,7 @@ Loads state from a directory. Modifies the object in place and returns it.
 | `path`      | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 | **RETURNS** | The modified `Vectors` object. ~~Vectors~~                                                      |
 
-## Vectors.to_bytes {#to_bytes tag="method"}
+## Vectors.to_bytes {id="to_bytes",tag="method"}
 
 Serialize the current state to a binary string.
 
@@ -433,7 +433,7 @@ Serialize the current state to a binary string.
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The serialized form of the `Vectors` object. ~~bytes~~ |
 
-## Vectors.from_bytes {#from_bytes tag="method"}
+## Vectors.from_bytes {id="from_bytes",tag="method"}
 
 Load state from a binary string.
 
@@ -451,7 +451,7 @@ Load state from a binary string.
 | `data`      | The data to load from. ~~bytes~~  |
 | **RETURNS** | The `Vectors` object. ~~Vectors~~ |
 
-## Attributes {#attributes}
+## Attributes {id="attributes"}
 
 | Name      | Description                                                                                                                                                          |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

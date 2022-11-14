@@ -9,7 +9,7 @@ menu:
   - ['StringStore', 'stringstore']
 ---
 
-## Doc {#doc tag="cdef class" source="spacy/tokens/doc.pxd"}
+## Doc {id="doc",tag="cdef class",source="spacy/tokens/doc.pxd"}
 
 The `Doc` object holds an array of [`TokenC`](/api/cython-structs#tokenc)
 structs.
@@ -21,7 +21,7 @@ accessed from Python. For the Python documentation, see [`Doc`](/api/doc).
 
 </Infobox>
 
-### Attributes {#doc_attributes}
+### Attributes {id="doc_attributes"}
 
 | Name         | Description                                                                                              |
 | ------------ | -------------------------------------------------------------------------------------------------------- |
@@ -31,7 +31,7 @@ accessed from Python. For the Python documentation, see [`Doc`](/api/doc).
 | `length`     | The number of tokens in the document. ~~int~~                                                            |
 | `max_length` | The underlying size of the `Doc.c` array. ~~int~~                                                        |
 
-### Doc.push_back {#doc_push_back tag="method"}
+### Doc.push_back {id="doc_push_back",tag="method"}
 
 Append a token to the `Doc`. The token can be provided as a
 [`LexemeC`](/api/cython-structs#lexemec) or
@@ -55,7 +55,7 @@ Append a token to the `Doc`. The token can be provided as a
 | `lex_or_tok` | The word to append to the `Doc`. ~~LexemeOrToken~~ |
 | `has_space`  | Whether the word has trailing whitespace. ~~bint~~ |
 
-## Token {#token tag="cdef class" source="spacy/tokens/token.pxd"}
+## Token {id="token",tag="cdef class",source="spacy/tokens/token.pxd"}
 
 A Cython class providing access and methods for a
 [`TokenC`](/api/cython-structs#tokenc) struct. Note that the `Token` object does
@@ -68,7 +68,7 @@ accessed from Python. For the Python documentation, see [`Token`](/api/token).
 
 </Infobox>
 
-### Attributes {#token_attributes}
+### Attributes {id="token_attributes"}
 
 | Name    | Description                                                                |
 | ------- | -------------------------------------------------------------------------- |
@@ -77,7 +77,7 @@ accessed from Python. For the Python documentation, see [`Token`](/api/token).
 | `i`     | The offset of the token within the document. ~~int~~                       |
 | `doc`   | The parent document. ~~Doc~~                                               |
 
-### Token.cinit {#token_cinit tag="method"}
+### Token.cinit {id="token_cinit",tag="method"}
 
 Create a `Token` object from a `TokenC*` pointer.
 
@@ -94,7 +94,7 @@ Create a `Token` object from a `TokenC*` pointer.
 | `offset` | The offset of the token within the document. ~~int~~                       |
 | `doc`    | The parent document. ~~int~~                                               |
 
-## Span {#span tag="cdef class" source="spacy/tokens/span.pxd"}
+## Span {id="span",tag="cdef class",source="spacy/tokens/span.pxd"}
 
 A Cython class providing access and methods for a slice of a `Doc` object.
 
@@ -105,7 +105,7 @@ accessed from Python. For the Python documentation, see [`Span`](/api/span).
 
 </Infobox>
 
-### Attributes {#span_attributes}
+### Attributes {id="span_attributes"}
 
 | Name         | Description                                                                   |
 | ------------ | ----------------------------------------------------------------------------- |
@@ -116,7 +116,7 @@ accessed from Python. For the Python documentation, see [`Span`](/api/span).
 | `end_char`   | The index of the last character of the span. ~~int~~                          |
 | `label`      | A label to attach to the span, e.g. for named entities. ~~attr_t (uint64_t)~~ |
 
-## Lexeme {#lexeme tag="cdef class" source="spacy/lexeme.pxd"}
+## Lexeme {id="lexeme",tag="cdef class",source="spacy/lexeme.pxd"}
 
 A Cython class providing access and methods for an entry in the vocabulary.
 
@@ -127,7 +127,7 @@ accessed from Python. For the Python documentation, see [`Lexeme`](/api/lexeme).
 
 </Infobox>
 
-### Attributes {#lexeme_attributes}
+### Attributes {id="lexeme_attributes"}
 
 | Name    | Description                                                                   |
 | ------- | ----------------------------------------------------------------------------- |
@@ -135,7 +135,7 @@ accessed from Python. For the Python documentation, see [`Lexeme`](/api/lexeme).
 | `vocab` | A reference to the shared `Vocab` object. ~~Vocab~~                           |
 | `orth`  | ID of the verbatim text content. ~~attr_t (uint64_t)~~                        |
 
-## Vocab {#vocab tag="cdef class" source="spacy/vocab.pxd"}
+## Vocab {id="vocab",tag="cdef class",source="spacy/vocab.pxd"}
 
 A Cython class providing access and methods for a vocabulary and other data
 shared across a language.
@@ -147,7 +147,7 @@ accessed from Python. For the Python documentation, see [`Vocab`](/api/vocab).
 
 </Infobox>
 
-### Attributes {#vocab_attributes}
+### Attributes {id="vocab_attributes"}
 
 | Name      | Description                                                                                                |
 | --------- | ---------------------------------------------------------------------------------------------------------- |
@@ -155,7 +155,7 @@ accessed from Python. For the Python documentation, see [`Vocab`](/api/vocab).
 | `strings` | A `StringStore` that maps string to hash values and vice versa. ~~StringStore~~                            |
 | `length`  | The number of entries in the vocabulary. ~~int~~                                                           |
 
-### Vocab.get {#vocab_get tag="method"}
+### Vocab.get {id="vocab_get",tag="method"}
 
 Retrieve a [`LexemeC*`](/api/cython-structs#lexemec) pointer from the
 vocabulary.
@@ -172,7 +172,7 @@ vocabulary.
 | `string`    | The string of the word to look up. ~~str~~                                                                 |
 | **RETURNS** | The lexeme in the vocabulary. ~~const LexemeC\*~~                                                          |
 
-### Vocab.get_by_orth {#vocab_get_by_orth tag="method"}
+### Vocab.get_by_orth {id="vocab_get_by_orth",tag="method"}
 
 Retrieve a [`LexemeC*`](/api/cython-structs#lexemec) pointer from the
 vocabulary.
@@ -189,7 +189,7 @@ vocabulary.
 | `orth`      | ID of the verbatim text content. ~~attr_t (uint64_t)~~                                                     |
 | **RETURNS** | The lexeme in the vocabulary. ~~const LexemeC\*~~                                                          |
 
-## StringStore {#stringstore tag="cdef class" source="spacy/strings.pxd"}
+## StringStore {id="stringstore",tag="cdef class",source="spacy/strings.pxd"}
 
 A lookup table to retrieve strings by 64-bit hashes.
 
@@ -201,7 +201,7 @@ accessed from Python. For the Python documentation, see
 
 </Infobox>
 
-### Attributes {#stringstore_attributes}
+### Attributes {id="stringstore_attributes"}
 
 | Name   | Description                                                                                                      |
 | ------ | ---------------------------------------------------------------------------------------------------------------- |

@@ -26,7 +26,7 @@ onwards.
 
 </Infobox>
 
-## KnowledgeBase.\_\_init\_\_ {#init tag="method"}
+## KnowledgeBase.\_\_init\_\_ {id="init",tag="method"}
 
 `KnowledgeBase` is an abstract class and cannot be instantiated. Its child
 classes should call `__init__()` to set up some necessary attributes.
@@ -50,7 +50,7 @@ classes should call `__init__()` to set up some necessary attributes.
 | `vocab`                | The shared vocabulary. ~~Vocab~~                 |
 | `entity_vector_length` | Length of the fixed-size entity vectors. ~~int~~ |
 
-## KnowledgeBase.entity_vector_length {#entity_vector_length tag="property"}
+## KnowledgeBase.entity_vector_length {id="entity_vector_length",tag="property"}
 
 The length of the fixed-size entity vectors in the knowledge base.
 
@@ -58,7 +58,7 @@ The length of the fixed-size entity vectors in the knowledge base.
 | ----------- | ------------------------------------------------ |
 | **RETURNS** | Length of the fixed-size entity vectors. ~~int~~ |
 
-## KnowledgeBase.get_candidates {#get_candidates tag="method"}
+## KnowledgeBase.get_candidates {id="get_candidates",tag="method"}
 
 Given a certain textual mention as input, retrieve a list of candidate entities
 of type [`Candidate`](/api/kb#candidate).
@@ -77,7 +77,7 @@ of type [`Candidate`](/api/kb#candidate).
 | `mention`   | The textual mention or alias. ~~Span~~                               |
 | **RETURNS** | An iterable of relevant `Candidate` objects. ~~Iterable[Candidate]~~ |
 
-## KnowledgeBase.get_candidates_batch {#get_candidates_batch tag="method"}
+## KnowledgeBase.get_candidates_batch {id="get_candidates_batch",tag="method"}
 
 Same as [`get_candidates()`](/api/kb#get_candidates), but for an arbitrary
 number of mentions. The [`EntityLinker`](/api/entitylinker) component will call
@@ -103,7 +103,7 @@ to you.
 | `mentions`  | The textual mention or alias. ~~Iterable[Span]~~                                             |
 | **RETURNS** | An iterable of iterable with relevant `Candidate` objects. ~~Iterable[Iterable[Candidate]]~~ |
 
-## KnowledgeBase.get_alias_candidates {#get_alias_candidates tag="method"}
+## KnowledgeBase.get_alias_candidates {id="get_alias_candidates",tag="method"}
 
 <Infobox variant="warning">
   This method is _not_ available from spaCy 3.5 onwards.
@@ -119,7 +119,7 @@ Note: [`InMemoryLookupKB.get_candidates()`](/api/kb_in_memory#get_candidates)
 defaults to
 [`InMemoryLookupKB.get_alias_candidates()`](/api/kb_in_memory#get_alias_candidates).
 
-## KnowledgeBase.get_vector {#get_vector tag="method"}
+## KnowledgeBase.get_vector {id="get_vector",tag="method"}
 
 Given a certain entity ID, retrieve its pretrained entity vector.
 
@@ -134,7 +134,7 @@ Given a certain entity ID, retrieve its pretrained entity vector.
 | `entity`    | The entity ID. ~~str~~                 |
 | **RETURNS** | The entity vector. ~~Iterable[float]~~ |
 
-## KnowledgeBase.get_vectors {#get_vectors tag="method"}
+## KnowledgeBase.get_vectors {id="get_vectors",tag="method"}
 
 Same as [`get_vector()`](/api/kb#get_vector), but for an arbitrary number of
 entity IDs.
@@ -154,7 +154,7 @@ entities at once, if performance is of concern to you.
 | `entities`  | The entity IDs. ~~Iterable[str]~~                         |
 | **RETURNS** | The entity vectors. ~~Iterable[Iterable[numpy.ndarray]]~~ |
 
-## KnowledgeBase.to_disk {#to_disk tag="method"}
+## KnowledgeBase.to_disk {id="to_disk",tag="method"}
 
 Save the current state of the knowledge base to a directory.
 
@@ -169,7 +169,7 @@ Save the current state of the knowledge base to a directory.
 | `path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 | `exclude` | List of components to exclude. ~~Iterable[str]~~                                                                                           |
 
-## KnowledgeBase.from_disk {#from_disk tag="method"}
+## KnowledgeBase.from_disk {id="from_disk",tag="method"}
 
 Restore the state of the knowledge base from a given directory. Note that the
 [`Vocab`](/api/vocab) should also be the same as the one used to create the KB.
@@ -189,7 +189,7 @@ Restore the state of the knowledge base from a given directory. Note that the
 | `exclude`   | List of components to exclude. ~~Iterable[str]~~                                                |
 | **RETURNS** | The modified `KnowledgeBase` object. ~~KnowledgeBase~~                                          |
 
-## Candidate {#candidate tag="class"}
+## Candidate {id="candidate",tag="class"}
 
 A `Candidate` object refers to a textual mention (alias) that may or may not be
 resolved to a specific entity from a `KnowledgeBase`. This will be used as input
@@ -197,7 +197,7 @@ for the entity linking algorithm which will disambiguate the various candidates
 to the correct one. Each candidate `(alias, entity)` pair is assigned to a
 certain prior probability.
 
-### Candidate.\_\_init\_\_ {#candidate-init tag="method"}
+### Candidate.\_\_init\_\_ {id="candidate-init",tag="method"}
 
 Construct a `Candidate` object. Usually this constructor is not called directly,
 but instead these objects are returned by the `get_candidates` method of the
@@ -218,7 +218,7 @@ but instead these objects are returned by the `get_candidates` method of the
 | `alias_hash`  | The hash of the textual mention or alias. ~~int~~                         |
 | `prior_prob`  | The prior probability of the `alias` referring to the `entity`. ~~float~~ |
 
-## Candidate attributes {#candidate-attributes}
+## Candidate attributes {id="candidate-attributes"}
 
 | Name            | Description                                                              |
 | --------------- | ------------------------------------------------------------------------ |

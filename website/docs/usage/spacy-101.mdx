@@ -45,7 +45,7 @@ questions and slide decks.
 
 </Infobox>
 
-## What's spaCy? {#whats-spacy}
+## What's spaCy? {id="whats-spacy"}
 
 <Grid cols={2}>
 
@@ -86,7 +86,7 @@ systems, or to pre-process text for **deep learning**.
 
 </Grid>
 
-### What spaCy isn't {#what-spacy-isnt}
+### What spaCy isn't {id="what-spacy-isnt"}
 
 - ❌ **spaCy is not a platform or "an API"**. Unlike a platform, spaCy does not
   provide a software as a service, or a web application. It's an open-source
@@ -107,7 +107,7 @@ systems, or to pre-process text for **deep learning**.
   publishing spaCy and other software is called
   [Explosion](https://explosion.ai).
 
-## Features {#features}
+## Features {id="features"}
 
 In the documentation, you'll come across mentions of spaCy's features and
 capabilities. Some of them refer to linguistic concepts, while others are
@@ -128,7 +128,7 @@ related to more general machine learning functionality.
 | **Training**                          | Updating and improving a statistical model's predictions.                                                          |
 | **Serialization**                     | Saving objects to files or byte strings.                                                                           |
 
-### Statistical models {#statistical-models}
+### Statistical models {id="statistical-models"}
 
 While some of spaCy's features work independently, others require
 [trained pipelines](/models) to be loaded, which enable spaCy to **predict**
@@ -152,7 +152,7 @@ are always a good start. They typically include the following components:
   and model implementations to use, to put spaCy in the correct state when you
   load the pipeline.
 
-## Linguistic annotations {#annotations}
+## Linguistic annotations {id="annotations"}
 
 spaCy provides a variety of linguistic annotations to give you **insights into a
 text's grammatical structure**. This includes the word types, like the parts of
@@ -193,7 +193,7 @@ original string, or reconstruct the original by joining the tokens and their
 trailing whitespace. This way, you'll never lose any information when processing
 text with spaCy.
 
-### Tokenization {#annotations-token}
+### Tokenization {id="annotations-token"}
 
 import Tokenization101 from 'usage/101/_tokenization.md'
 
@@ -209,7 +209,7 @@ language-specific data**, see the usage guides on
 
 </Infobox>
 
-### Part-of-speech tags and dependencies {#annotations-pos-deps model="parser"}
+### Part-of-speech tags and dependencies {id="annotations-pos-deps",model="parser"}
 
 import PosDeps101 from 'usage/101/_pos-deps.md'
 
@@ -224,7 +224,7 @@ how to **navigate and use the parse tree** effectively, see the usage guides on
 
 </Infobox>
 
-### Named Entities {#annotations-ner model="ner"}
+### Named Entities {id="annotations-ner",model="ner"}
 
 import NER101 from 'usage/101/_named-entities.md'
 
@@ -240,7 +240,7 @@ of a model, see the usage guides on
 
 </Infobox>
 
-### Word vectors and similarity {#vectors-similarity model="vectors"}
+### Word vectors and similarity {id="vectors-similarity",model="vectors"}
 
 import Vectors101 from 'usage/101/_vectors-similarity.md'
 
@@ -254,7 +254,7 @@ To learn more about word vectors, how to **customize them** and how to load
 
 </Infobox>
 
-## Pipelines {#pipelines}
+## Pipelines {id="pipelines"}
 
 import Pipelines101 from 'usage/101/_pipelines.md'
 
@@ -268,13 +268,13 @@ guide on [language processing pipelines](/usage/processing-pipelines).
 
 </Infobox>
 
-## Architecture {#architecture}
+## Architecture {id="architecture"}
 
 import Architecture101 from 'usage/101/_architecture.md'
 
 <Architecture101 />
 
-## Vocab, hashes and lexemes {#vocab}
+## Vocab, hashes and lexemes {id="vocab"}
 
 Whenever possible, spaCy tries to store data in a vocabulary, the
 [`Vocab`](/api/vocab), that will be **shared by multiple documents**. To save
@@ -386,7 +386,7 @@ spaCy will also export the `Vocab` when you save a `Doc` or `nlp` object. This
 will give you the object and its encoded annotations, plus the "key" to decode
 it.
 
-## Serialization {#serialization}
+## Serialization {id="serialization"}
 
 import Serialization101 from 'usage/101/_serialization.md'
 
@@ -399,7 +399,7 @@ guide on [saving and loading](/usage/saving-loading#models).
 
 </Infobox>
 
-## Training {#training}
+## Training {id="training"}
 
 import Training101 from 'usage/101/_training.md'
 
@@ -413,7 +413,7 @@ data and how to improve spaCy's named models, see the usage guides on
 
 </Infobox>
 
-### Training config and lifecycle {#training-config}
+### Training config and lifecycle {id="training-config"}
 
 Training config files include all **settings and hyperparameters** for training
 your pipeline. Instead of providing lots of arguments on the command line, you
@@ -447,7 +447,7 @@ hyperparameters, see the [training config](/usage/training#config) usage guide.
 
 </Infobox>
 
-### Trainable components {#training-components}
+### Trainable components {id="training-components"}
 
 spaCy's [`Pipe`](/api/pipe) class helps you implement your own trainable
 components that have their own model instance, make predictions over `Doc`
@@ -478,13 +478,13 @@ for trainable components.
 
 </Infobox>
 
-## Language data {#language-data}
+## Language data {id="language-data"}
 
 import LanguageData101 from 'usage/101/_language-data.md'
 
 <LanguageData101 />
 
-## Community & FAQ {#community-faq}
+## Community & FAQ {id="community-faq"}
 
 We're very happy to see the spaCy community grow and include a mix of people
 from all kinds of different backgrounds – computational linguistics, data
@@ -492,7 +492,7 @@ science, deep learning, research and more. If you'd like to get involved, below
 are some answers to the most important questions and resources for further
 reading.
 
-### Help, my code isn't working! {#faq-help-code}
+### Help, my code isn't working! {id="faq-help-code"}
 
 Bugs suck, and we're doing our best to continuously improve the tests and fix
 bugs as soon as possible. Before you submit an issue, do a quick search and
@@ -538,7 +538,7 @@ and the next time you need help, they might repay the favor.
 
 </Infobox>
 
-### How can I contribute to spaCy? {#faq-contributing}
+### How can I contribute to spaCy? {id="faq-contributing"}
 
 You don't have to be an NLP expert or Python pro to contribute, and we're happy
 to help you get started. If you're new to spaCy, a good place to start is the
@@ -572,7 +572,7 @@ By participating, you are expected to uphold this code.
 
 </Infobox>
 
-### I've built something cool with spaCy – how can I get the word out? {#faq-project-with-spacy}
+### I've built something cool with spaCy – how can I get the word out? {id="faq-project-with-spacy"}
 
 First, congrats – we'd love to check it out! When you share your project on
 Twitter, don't forget to tag [@spacy_io](https://twitter.com/spacy_io) so we

@@ -33,7 +33,7 @@ object. This means the storage is more efficient if you pack more documents
 together, because you have less duplication in the strings. For usage examples,
 see the docs on [serializing `Doc` objects](/usage/saving-loading#docs).
 
-## DocBin.\_\_init\_\_ {#init tag="method"}
+## DocBin.\_\_init\_\_ {id="init",tag="method"}
 
 Create a `DocBin` object to hold serialized annotations.
 
@@ -50,7 +50,7 @@ Create a `DocBin` object to hold serialized annotations.
 | `store_user_data` | Whether to write the `Doc.user_data` and the values of custom extension attributes to file/bytes. Defaults to `False`. ~~bool~~                                                                                                                                                                     |
 | `docs`            | `Doc` objects to add on initialization. ~~Iterable[Doc]~~                                                                                                                                                                                                                                           |
 
-## DocBin.\_\len\_\_ {#len tag="method"}
+## DocBin.\_\len\_\_ {id="len",tag="method"}
 
 Get the number of `Doc` objects that were added to the `DocBin`.
 
@@ -67,7 +67,7 @@ Get the number of `Doc` objects that were added to the `DocBin`.
 | ----------- | --------------------------------------------------- |
 | **RETURNS** | The number of `Doc`s added to the `DocBin`. ~~int~~ |
 
-## DocBin.add {#add tag="method"}
+## DocBin.add {id="add",tag="method"}
 
 Add a `Doc`'s annotations to the `DocBin` for serialization.
 
@@ -83,7 +83,7 @@ Add a `Doc`'s annotations to the `DocBin` for serialization.
 | -------- | -------------------------------- |
 | `doc`    | The `Doc` object to add. ~~Doc~~ |
 
-## DocBin.get_docs {#get_docs tag="method"}
+## DocBin.get_docs {id="get_docs",tag="method"}
 
 Recover `Doc` objects from the annotations, using the given vocab.
 
@@ -98,7 +98,7 @@ Recover `Doc` objects from the annotations, using the given vocab.
 | `vocab`    | The shared vocab. ~~Vocab~~ |
 | **YIELDS** | The `Doc` objects. ~~Doc~~  |
 
-## DocBin.merge {#merge tag="method"}
+## DocBin.merge {id="merge",tag="method"}
 
 Extend the annotations of this `DocBin` with the annotations from another. Will
 raise an error if the pre-defined `attrs` of the two `DocBin`s don't match.
@@ -118,7 +118,7 @@ raise an error if the pre-defined `attrs` of the two `DocBin`s don't match.
 | -------- | ------------------------------------------------------ |
 | `other`  | The `DocBin` to merge into the current bin. ~~DocBin~~ |
 
-## DocBin.to_bytes {#to_bytes tag="method"}
+## DocBin.to_bytes {id="to_bytes",tag="method"}
 
 Serialize the `DocBin`'s annotations to a bytestring.
 
@@ -134,7 +134,7 @@ Serialize the `DocBin`'s annotations to a bytestring.
 | ----------- | ---------------------------------- |
 | **RETURNS** | The serialized `DocBin`. ~~bytes~~ |
 
-## DocBin.from_bytes {#from_bytes tag="method"}
+## DocBin.from_bytes {id="from_bytes",tag="method"}
 
 Deserialize the `DocBin`'s annotations from a bytestring.
 
@@ -150,7 +150,7 @@ Deserialize the `DocBin`'s annotations from a bytestring.
 | `bytes_data` | The data to load from. ~~bytes~~ |
 | **RETURNS**  | The loaded `DocBin`. ~~DocBin~~  |
 
-## DocBin.to_disk {#to_disk tag="method" new="3"}
+## DocBin.to_disk {id="to_disk",tag="method",new="3"}
 
 Save the serialized `DocBin` to a file. Typically uses the `.spacy` extension
 and the result can be used as the input data for
@@ -168,7 +168,7 @@ and the result can be used as the input data for
 | -------- | -------------------------------------------------------------------------- |
 | `path`   | The file path, typically with the `.spacy` extension. ~~Union[str, Path]~~ |
 
-## DocBin.from_disk {#from_disk tag="method" new="3"}
+## DocBin.from_disk {id="from_disk",tag="method",new="3"}
 
 Load a serialized `DocBin` from a file. Typically uses the `.spacy` extension.
 
