@@ -66,14 +66,14 @@ export default function Link({
         }
         return (
             <Wrapper>
-                <GatsbyLink
-                    to={dest}
+                <a
+                    href={dest}
                     className={linkClassNames}
                     activeClassName={activeClassName}
                     {...other}
                 >
                     {content}
-                </GatsbyLink>
+                </a>
             </Wrapper>
         )
     }
