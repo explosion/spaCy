@@ -392,7 +392,7 @@ For example, a command for training a pipeline may depend on a
 it will export a directory `model-best`, which you can then re-use in other
 commands.
 
-<!-- prettier-ignore -->
+{/* prettier-ignore */}
 ```yaml
 ### project.yml
 commands:
@@ -445,7 +445,7 @@ directory:
 
 > #### project.yml
 >
-> <!-- prettier-ignore -->
+> {/* prettier-ignore */}
 > ```yaml
 > directories: ['assets', 'configs', 'corpus', 'metas', 'metrics', 'notebooks', 'packages', 'scripts', 'training']
 > ```
@@ -549,7 +549,7 @@ override settings on the command line – for example using `--vars.batch_size`.
 > everything with the same Python (not some other Python installed on your
 > system). It also normalizes references to `python3`, `pip3` and `pip`.
 
-<!-- prettier-ignore -->
+{/* prettier-ignore */}
 ```yaml
 ### project.yml
 vars:
@@ -618,7 +618,7 @@ up to date.
 
 Note that the contents of an existing file will be **replaced** if no existing
 auto-generated docs are found. If you want spaCy to ignore a file and not update
-it, you can add the comment marker `<!-- SPACY PROJECT: IGNORE -->` anywhere in
+it, you can add the comment marker `{/* SPACY PROJECT: IGNORE */}` anywhere in
 your markup.
 
 </Infobox>
@@ -691,9 +691,9 @@ according to a hash of the command string and the command's dependencies.
 Finally, within those directories are files, named according to an MD5 hash of
 their contents.
 
-<!-- TODO: update with actual real example? -->
+{/* TODO: update with actual real example? */}
 
-<!-- prettier-ignore -->
+{/* prettier-ignore */}
 ```yaml
 └── urlencoded_file_path            # Path of original file
     ├── some_command_hash           # Hash of command you ran
@@ -818,9 +818,7 @@ workflows, but only one can be tracked by DVC.
 
 </Infobox>
 
-<!-- TODO: <Project id="integrations/dvc">
-
-</Project> -->
+{/* { TODO: <Project id="integrations/dvc"></Project>} */}
 
 ---
 
@@ -853,7 +851,7 @@ collected with Prodigy and training a spaCy pipeline:
 > $ python -m spacy project run all
 > ```
 
-<!-- prettier-ignore -->
+{/* prettier-ignore */}
 ```yaml
 ### project.yml
 vars:
@@ -895,7 +893,7 @@ different portions of the data, e.g. 25%, 50%, 75% and 100%. As a rule of thumb,
 if accuracy increases in the last segment, this could indicate that collecting
 more annotations of the same type might improve the model further.
 
-<!-- prettier-ignore -->
+{/* prettier-ignore */}
 ```yaml
 ### project.yml (excerpt)
 - name: "train_curve"
@@ -934,7 +932,7 @@ package helps you integrate spaCy visualizations into your Streamlit apps and
 quickly spin up demos to explore your pipelines interactively. It includes a
 full embedded visualizer, as well as individual components.
 
-<!-- TODO: update once version is stable -->
+{/* TODO: update once version is stable */}
 
 > #### Installation
 >
@@ -963,7 +961,7 @@ and explore your own custom trained pipelines.
 > $ python -m spacy project run visualize
 > ```
 
-<!-- prettier-ignore -->
+{/* prettier-ignore */}
 ```yaml
 ### project.yml
 commands:
@@ -1008,7 +1006,7 @@ query your API from Python and JavaScript (Vanilla JS and React).
 > $ python -m spacy project run serve
 > ```
 
-<!-- prettier-ignore -->
+{/* prettier-ignore */}
 ```yaml
 ### project.yml
   - name: "serve"
@@ -1114,7 +1112,7 @@ packaged pipeline to the hub. You can either run this as a manual step, or
 automatically as part of a workflow. Make sure to set `--build wheel` when
 running `spacy package` to build a wheel file for your pipeline package.
 
-<!-- prettier-ignore -->
+{/* prettier-ignore */}
 ```yaml
 ### project.yml
 - name: "push_to_hub"
