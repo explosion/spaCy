@@ -13,7 +13,7 @@ import Icon from '../icon'
 import Link, { OptionalLink } from '../link'
 import Infobox from '../infobox'
 import Accordion from '../accordion'
-import { join, arrayToObj, abbrNum, markdownToReact, isString, isEmptyObj } from '../util'
+import { join, arrayToObj, abbrNum, MarkdownToReact, isString, isEmptyObj } from '../util'
 
 import siteMetadata from '../../../meta/site.json'
 import languages from '../../../meta/languages.json'
@@ -295,7 +295,7 @@ const Model = ({
                     python -m spacy download {name}
                 </CodeBlock>
             </Aside>
-            {meta.description && markdownToReact(meta.description, MARKDOWN_COMPONENTS)}
+            {meta.description & <MarkdownToReact markdown={meta.description} />}
             {isError && error}
             <Table>
                 <tbody>
@@ -317,7 +317,7 @@ const Model = ({
                     )}
                 </tbody>
             </Table>
-            {meta.notes && markdownToReact(meta.notes, MARKDOWN_COMPONENTS)}
+            {meta.notes & <MarkdownToReact markdown={meta.notes} />}
             {hasInteractiveCode && (
                 <CodeBlock title="Try out the model" lang="python" executable={true}>
                     {[
