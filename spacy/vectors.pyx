@@ -243,7 +243,6 @@ cdef class Vectors:
         else:
             return key in self.key2row
 
-
     def __eq__(self, other):
         # Check for equality, with faster checks first
         return (
@@ -252,7 +251,6 @@ cdef class Vectors:
                 and self.to_bytes(exclude=["strings"])
                   == other.to_bytes(exclude=["strings"])
                )
-
 
     def resize(self, shape, inplace=False):
         """Resize the underlying vectors array. If inplace=True, the memory
