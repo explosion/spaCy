@@ -17,9 +17,7 @@ type ApiDetails = {
     trainable: string | null
 }
 
-type PropsPage = {
-    mdx: MDXRemoteSerializeResult
-
+export type PropsPageBase = {
     /**
      * TODO: This is only here for legacy support of the old code base
      * It should be refactort to pass the file path and page path instead.
@@ -28,8 +26,12 @@ type PropsPage = {
     sectionTitle: string | null
     theme: string | null
     section: string
-    apiDetails: ApiDetails
     isIndex: boolean
+}
+
+export type PropsPage = PropsPageBase & {
+    mdx: MDXRemoteSerializeResult
+    apiDetails: ApiDetails
 }
 
 const PostPage = ({ mdx: mdx, ...props }: PropsPage) => {
