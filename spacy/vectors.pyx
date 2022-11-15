@@ -245,6 +245,7 @@ cdef class Vectors:
 
 
     def __eq__(self, other):
+        # Check for equality, with faster checks first
         return (
                 self.shape == other.shape
                 and self.key2row == other.key2row
