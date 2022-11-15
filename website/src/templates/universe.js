@@ -16,7 +16,7 @@ import Main from '../components/main'
 import Footer from '../components/footer'
 import { H3, H5, Label, InlineList } from '../components/typography'
 import { YouTube, SoundCloud, Iframe } from '../components/embed'
-import { github, markdownToReact } from '../components/util'
+import { github, MarkdownToReact } from '../components/util'
 
 import { nightly, legacy } from '../../meta/dynamicMeta'
 import universe from '../../meta/universe.json'
@@ -258,7 +258,11 @@ const Project = ({ data, components }) => (
                 />
             )}
 
-            {data.description && <section>{markdownToReact(data.description, components)}</section>}
+            {data.description && (
+                <section>
+                    <MarkdownToReact markdown={data.description} />
+                </section>
+            )}
 
             {data.code_example && (
                 <CodeBlock title="Example" lang={data.code_language || 'python'}>
