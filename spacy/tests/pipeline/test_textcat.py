@@ -823,10 +823,10 @@ def test_textcat_loss(multi_label: bool, expected_loss: float):
     assert loss == expected_loss
 
 
-def test_textcat_threshold():
+def test_textcat_multilabel_threshold():
     # Ensure the scorer can be called with a different threshold
     nlp = English()
-    nlp.add_pipe("textcat")
+    nlp.add_pipe("textcat_multilabel")
 
     train_examples = []
     for text, annotations in TRAIN_DATA_SINGLE_LABEL:
@@ -849,7 +849,7 @@ def test_textcat_threshold():
     )
     pos_f = scores["cats_score"]
     assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 1.0
-    assert pos_f > macro_f
+    assert pos_f >= macro_f
 
 
 def test_textcat_multi_threshold():

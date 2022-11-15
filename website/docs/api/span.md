@@ -186,14 +186,14 @@ the character indices don't map to a valid span.
 > assert span.text == "New York"
 > ```
 
-| Name                                 | Description                                                                               |
-| ------------------------------------ | ----------------------------------------------------------------------------------------- |
-| `start`                              | The index of the first character of the span. ~~int~~                                     |
-| `end`                                | The index of the last character after the span. ~~int~~                                   |
-| `label`                              | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~               |
-| `kb_id` <Tag variant="new">2.2</Tag> | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~ |
-| `vector`                             | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~            |
-| **RETURNS**                          | The newly constructed object or `None`. ~~Optional[Span]~~                                |
+| Name        | Description                                                                               |
+| ----------- | ----------------------------------------------------------------------------------------- |
+| `start`     | The index of the first character of the span. ~~int~~                                     |
+| `end`       | The index of the last character after the span. ~~int~~                                   |
+| `label`     | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~               |
+| `kb_id`     | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~ |
+| `vector`    | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~            |
+| **RETURNS** | The newly constructed object or `None`. ~~Optional[Span]~~                                |
 
 ## Span.similarity {#similarity tag="method" model="vectors"}
 
@@ -544,26 +544,26 @@ overlaps with will be returned.
 
 ## Attributes {#attributes}
 
-| Name                                    | Description                                                                                                                   |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `doc`                                   | The parent document. ~~Doc~~                                                                                                  |
-| `tensor` <Tag variant="new">2.1.7</Tag> | The span's slice of the parent `Doc`'s tensor. ~~numpy.ndarray~~                                                              |
-| `start`                                 | The token offset for the start of the span. ~~int~~                                                                           |
-| `end`                                   | The token offset for the end of the span. ~~int~~                                                                             |
-| `start_char`                            | The character offset for the start of the span. ~~int~~                                                                       |
-| `end_char`                              | The character offset for the end of the span. ~~int~~                                                                         |
-| `text`                                  | A string representation of the span text. ~~str~~                                                                             |
-| `text_with_ws`                          | The text content of the span with a trailing whitespace character if the last token has one. ~~str~~                          |
-| `orth`                                  | ID of the verbatim text content. ~~int~~                                                                                      |
-| `orth_`                                 | Verbatim text content (identical to `Span.text`). Exists mostly for consistency with the other attributes. ~~str~~            |
-| `label`                                 | The hash value of the span's label. ~~int~~                                                                                   |
-| `label_`                                | The span's label. ~~str~~                                                                                                     |
-| `lemma_`                                | The span's lemma. Equivalent to `"".join(token.text_with_ws for token in span)`. ~~str~~                                      |
-| `kb_id`                                 | The hash value of the knowledge base ID referred to by the span. ~~int~~                                                      |
-| `kb_id_`                                | The knowledge base ID referred to by the span. ~~str~~                                                                        |
-| `ent_id`                                | The hash value of the named entity the root token is an instance of. ~~int~~                                                  |
-| `ent_id_`                               | The string ID of the named entity the root token is an instance of. ~~str~~                                                   |
-| `id`                                    | The hash value of the span's ID. ~~int~~                                                                                      |
-| `id_`                                   | The span's ID. ~~str~~                                                                                                        |
-| `sentiment`                             | A scalar value indicating the positivity or negativity of the span. ~~float~~                                                 |
-| `_`                                     | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~ |
+| Name           | Description                                                                                                                   |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `doc`          | The parent document. ~~Doc~~                                                                                                  |
+| `tensor`       | The span's slice of the parent `Doc`'s tensor. ~~numpy.ndarray~~                                                              |
+| `start`        | The token offset for the start of the span. ~~int~~                                                                           |
+| `end`          | The token offset for the end of the span. ~~int~~                                                                             |
+| `start_char`   | The character offset for the start of the span. ~~int~~                                                                       |
+| `end_char`     | The character offset for the end of the span. ~~int~~                                                                         |
+| `text`         | A string representation of the span text. ~~str~~                                                                             |
+| `text_with_ws` | The text content of the span with a trailing whitespace character if the last token has one. ~~str~~                          |
+| `orth`         | ID of the verbatim text content. ~~int~~                                                                                      |
+| `orth_`        | Verbatim text content (identical to `Span.text`). Exists mostly for consistency with the other attributes. ~~str~~            |
+| `label`        | The hash value of the span's label. ~~int~~                                                                                   |
+| `label_`       | The span's label. ~~str~~                                                                                                     |
+| `lemma_`       | The span's lemma. Equivalent to `"".join(token.text_with_ws for token in span)`. ~~str~~                                      |
+| `kb_id`        | The hash value of the knowledge base ID referred to by the span. ~~int~~                                                      |
+| `kb_id_`       | The knowledge base ID referred to by the span. ~~str~~                                                                        |
+| `ent_id`       | The hash value of the named entity the root token is an instance of. ~~int~~                                                  |
+| `ent_id_`      | The string ID of the named entity the root token is an instance of. ~~str~~                                                   |
+| `id`           | The hash value of the span's ID. ~~int~~                                                                                      |
+| `id_`          | The span's ID. ~~str~~                                                                                                        |
+| `sentiment`    | A scalar value indicating the positivity or negativity of the span. ~~float~~                                                 |
+| `_`            | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~ |
