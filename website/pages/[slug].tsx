@@ -28,12 +28,21 @@ export const getStaticPaths: GetStaticPaths<ParsedUrlQuery> = async () => {
     // This function needs to be defined inside `getStaticPath` to be executed in executed in the correct context
     const loadFolder = (): Array<{ params: ParsedUrlQuery }> =>
         fs
-            .readdirSync(path.join('docs'))
-            .map((filename) => ({
-                params: {
-                    slug: filename.replace('.mdx', ''),
-                },
-            }))
+            .readdirSync(path.join('docs'), { withFileTypes: true })
+            .flatMap((dirent: fs.Dirent) => {
+                if (dirent.isDirectory()) {
+                    return []
+                }
+                if (!dirent.name.includes('.mdx')) {
+                    return []
+                }
+
+                return {
+                    params: {
+                        slug: dirent.name.replace('.mdx', ''),
+                    },
+                }
+            })
 
     return {
         paths: loadFolder(),
