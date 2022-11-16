@@ -21,17 +21,17 @@ const PostPage = ({ mdx: mdx }: PropsPage) => {
 export default PostPage
 
 type ParsedUrlQuery = {
-    slug: string
+    slug: Array<string>
 }
 
 export const getStaticPaths: GetStaticPaths<ParsedUrlQuery> = async () => {
     // This function needs to be defined inside `getStaticPath` to be executed in executed in the correct context
-    const loadFolder = (): Array<{ params: ParsedUrlQuery }> =>
+    const loadFolder = (pathBase: Array<string> = []): Array<{ params: ParsedUrlQuery }> =>
         fs
-            .readdirSync(path.join('docs'), { withFileTypes: true })
+            .readdirSync(path.join('docs', ...pathBase), { withFileTypes: true })
             .flatMap((dirent: fs.Dirent) => {
                 if (dirent.isDirectory()) {
-                    return []
+                    return loadFolder([...pathBase, dirent.name])
                 }
                 if (!dirent.name.includes('.mdx')) {
                     return []
@@ -39,7 +39,7 @@ export const getStaticPaths: GetStaticPaths<ParsedUrlQuery> = async () => {
 
                 return {
                     params: {
-                        slug: dirent.name.replace('.mdx', ''),
+                        slug: [...pathBase, dirent.name.replace('.mdx', '')],
                     },
                 }
             })
@@ -58,7 +58,7 @@ export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (
         props: {
             slug: args.params.slug,
             mdx: await serialize(
-                fs.readFileSync(`${path.join('docs', args.params.slug)}.mdx`, 'utf-8'),
+                fs.readFileSync(`${path.join('docs', ...args.params.slug)}.mdx`, 'utf-8'),
                 {
                     parseFrontmatter: true,
                     mdxOptions: {
