@@ -13,6 +13,8 @@ from ..tokens import Doc, DocBin
 from ..training.converters import iob_to_docs, conll_ner_to_docs, json_to_docs
 from ..training.converters import conllu_to_docs
 
+import warnings
+from ..errors import Warnings
 
 # Converters are matched by file extension except for ner/iob, which are
 # matched by file extension and content. To add a converter, add a new
@@ -110,6 +112,14 @@ def convert(
     input_path = Path(input_path)
     if not msg:
         msg = Printer(no_print=silent)
+
+    # Add warnings for renamed language code in v4
+    renamed_lang_codes = {"xx": "mul", "is": "isl"}
+    if lang in renamed_lang_codes:
+        warnings.warn(
+            Warnings.W124.format(lang=lang, renamed_lang=renamed_lang_codes[lang])
+        )
+
     ner_map = srsly.read_json(ner_map) if ner_map is not None else None
     doc_files = []
     for input_loc in walk_directory(input_path, converter):

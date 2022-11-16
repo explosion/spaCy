@@ -327,8 +327,6 @@ def get_lang_class(lang: str) -> Type["Language"]:
                 match = None
 
             if match:
-                if match != lang:
-                    warnings.warn(Warnings.W124.format(lang=lang, renamed_lang=match))
                 lang = match
                 module = importlib.import_module(f".lang.{lang}", "spacy")
             else:

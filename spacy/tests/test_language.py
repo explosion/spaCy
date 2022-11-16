@@ -590,13 +590,8 @@ def test_blank_languages(lang, target):
     Test that we can get spacy.blank in various languages, including codes
     that are defined to be equivalent or that match by CLDR language matching.
     """
-    if lang == "en":
-        nlp = spacy.blank(lang)
-        assert nlp.lang == target
-    else:
-        with pytest.warns(UserWarning):
-            nlp = spacy.blank(lang)
-            assert nlp.lang == target
+    nlp = spacy.blank(lang)
+    assert nlp.lang == target
 
 
 @pytest.mark.parametrize("value", [False, None, ["x", "y"], Language, Vocab])
