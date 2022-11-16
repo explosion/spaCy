@@ -96,8 +96,8 @@ class Layout extends React.Component {
 
     render() {
         const { location, children } = this.props
-        const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = this.props
-        const uiTheme = nightly ? 'nightly' : legacy ? 'legacy' : theme
+        const { title, section, sectionTitle, teaser, theme, searchExclude } = this.props
+        const uiTheme = nightly ? 'nightly' : legacy ? 'legacy' : theme ?? 'blue'
         const bodyClass = classNames(`theme-${uiTheme}`, { 'search-exclude': !!searchExclude })
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
 
