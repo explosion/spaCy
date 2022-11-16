@@ -39,7 +39,10 @@ export const getStaticPaths: GetStaticPaths<ParsedUrlQuery> = async () => {
 
                 return {
                     params: {
-                        listPathPage: [...pathBase, dirent.name.replace('.mdx', '')],
+                        listPathPage:
+                            dirent.name === 'index.mdx'
+                                ? pathBase
+                                : [...pathBase, dirent.name.replace('.mdx', '')],
                     },
                 }
             })
@@ -50,20 +53,25 @@ export const getStaticPaths: GetStaticPaths<ParsedUrlQuery> = async () => {
     }
 }
 
+const getPathFileWithExtension = (listPathFile: ReadonlyArray<string>) =>
+    `${path.join(...listPathFile)}.mdx`
+
 export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (args) => {
     if (!args.params) {
         return { notFound: true }
     }
 
-    const mdx = await serialize(
-        fs.readFileSync(`${path.join('docs', ...args.params.listPathPage)}.mdx`, 'utf-8'),
-        {
-            parseFrontmatter: true,
-            mdxOptions: {
-                remarkPlugins,
-            },
-        }
-    )
+    const listPathFile = ['docs', ...args.params.listPathPage]
+    const isIndex = fs.existsSync(getPathFileWithExtension(listPathFile)) !== true
+    const listPathFileWithIndex = isIndex ? [...listPathFile, 'index'] : listPathFile
+    const listPathFileWithIndexAndExtension = getPathFileWithExtension(listPathFileWithIndex)
+
+    const mdx = await serialize(fs.readFileSync(listPathFileWithIndexAndExtension, 'utf-8'), {
+        parseFrontmatter: true,
+        mdxOptions: {
+            remarkPlugins,
+        },
+    })
 
     return {
         props: {
