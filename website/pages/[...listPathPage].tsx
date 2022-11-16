@@ -54,17 +54,20 @@ export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (
     if (!args.params) {
         return { notFound: true }
     }
+
+    const mdx = await serialize(
+        fs.readFileSync(`${path.join('docs', ...args.params.listPathPage)}.mdx`, 'utf-8'),
+        {
+            parseFrontmatter: true,
+            mdxOptions: {
+                remarkPlugins,
+            },
+        }
+    )
+
     return {
         props: {
-            mdx: await serialize(
-                fs.readFileSync(`${path.join('docs', ...args.params.listPathPage)}.mdx`, 'utf-8'),
-                {
-                    parseFrontmatter: true,
-                    mdxOptions: {
-                        remarkPlugins,
-                    },
-                }
-            ),
+            mdx,
         },
     }
 }
