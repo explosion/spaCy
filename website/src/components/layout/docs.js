@@ -76,7 +76,7 @@ const Docs = ({ pageContext, children }) => {
             {sidebar && <Sidebar items={sidebar.items} pageMenu={pageMenu} slug={slug} />}
             <Main
                 section={section}
-                theme={nightly ? 'nightly' : legacy ? 'legacy' : theme}
+                theme={nightly ? 'nightly' : legacy ? 'legacy' : theme ?? 'blue'}
                 sidebar
                 asides
                 wrapContent
