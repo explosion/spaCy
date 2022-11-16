@@ -25,12 +25,18 @@ type ParsedUrlQuery = {
 }
 
 export const getStaticPaths: GetStaticPaths<ParsedUrlQuery> = async () => {
+    // This function needs to be defined inside `getStaticPath` to be executed in executed in the correct context
+    const loadFolder = (): Array<{ params: ParsedUrlQuery }> =>
+        fs
+            .readdirSync(path.join('docs'))
+            .map((filename) => ({
+                params: {
+                    slug: filename.replace('.mdx', ''),
+                },
+            }))
+
     return {
-        paths: fs.readdirSync(path.join('docs')).map((filename) => ({
-            params: {
-                slug: filename.replace('.mdx', ''),
-            },
-        })),
+        paths: loadFolder(),
         fallback: false,
     }
 }
