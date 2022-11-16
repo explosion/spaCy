@@ -6,13 +6,35 @@ import path from 'path'
 import Layout from '../components/layout'
 import remarkPlugins from '../plugins/index.mjs'
 
-type PropsPage = {
-    mdx: MDXRemoteSerializeResult
+import recordSection from '../meta/recordSections'
+
+type ApiDetails = {
+    stringName: string | null
+    baseClass: {
+        title: string
+        slug: string
+    } | null
+    trainable: string | null
 }
 
-const PostPage = ({ mdx: mdx }: PropsPage) => {
+type PropsPage = {
+    mdx: MDXRemoteSerializeResult
+
+    /**
+     * TODO: This is only here for legacy support of the old code base
+     * It should be refactort to pass the file path and page path instead.
+     */
+    slug: string
+    sectionTitle: string | null
+    theme: string | null
+    section: string
+    apiDetails: ApiDetails
+    isIndex: boolean
+}
+
+const PostPage = ({ mdx: mdx, ...props }: PropsPage) => {
     return (
-        <Layout>
+        <Layout {...props}>
             <MDXRemote {...mdx} />
         </Layout>
     )
@@ -64,18 +86,47 @@ export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (
     const listPathFile = ['docs', ...args.params.listPathPage]
     const isIndex = fs.existsSync(getPathFileWithExtension(listPathFile)) !== true
     const listPathFileWithIndex = isIndex ? [...listPathFile, 'index'] : listPathFile
-    const listPathFileWithIndexAndExtension = getPathFileWithExtension(listPathFileWithIndex)
+    const pathFileWithIndexAndExtension = getPathFileWithExtension(listPathFileWithIndex)
 
-    const mdx = await serialize(fs.readFileSync(listPathFileWithIndexAndExtension, 'utf-8'), {
+    const mdx = await serialize(fs.readFileSync(pathFileWithIndexAndExtension, 'utf-8'), {
         parseFrontmatter: true,
         mdxOptions: {
             remarkPlugins,
         },
     })
 
+    if (!mdx.frontmatter) {
+        throw new Error(`Frontmatter missing for ${pathFileWithIndexAndExtension}`)
+    }
+
+    const parentFolder =
+        listPathFileWithIndex.length > 1
+            ? listPathFileWithIndex[listPathFileWithIndex.length - 2]
+            : null
+    const section = mdx.frontmatter.section ?? parentFolder
+    const sectionMeta = section ? recordSection[section] ?? null : null
+    const baseClass = null
+    const apiDetails: ApiDetails = {
+        stringName: mdx.frontmatter.api_string_name ?? null,
+        baseClass: baseClass
+            ? {
+                  title: mdx.frontmatter.title,
+                  slug: mdx.frontmatter.api_base_class,
+              }
+            : null,
+        trainable: mdx.frontmatter.api_trainable ?? null,
+    }
+
     return {
         props: {
+            ...mdx.frontmatter,
+            slug: `/${args.params.listPathPage.join('/')}`,
             mdx,
+            sectionTitle: sectionMeta?.title ?? null,
+            theme: sectionMeta?.theme ?? null,
+            section: section,
+            apiDetails: apiDetails,
+            isIndex,
         },
     }
 }
