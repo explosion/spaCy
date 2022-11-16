@@ -39,7 +39,10 @@ export const getStaticPaths: GetStaticPaths<ParsedUrlQuery> = async () => {
 
                 return {
                     params: {
-                        slug: [...pathBase, dirent.name.replace('.mdx', '')],
+                        slug:
+                            dirent.name === 'index.mdx'
+                                ? pathBase
+                                : [...pathBase, dirent.name.replace('.mdx', '')],
                     },
                 }
             })
@@ -50,16 +53,22 @@ export const getStaticPaths: GetStaticPaths<ParsedUrlQuery> = async () => {
     }
 }
 
-const getPathFull = (slug: ReadonlyArray<string>): ReadonlyArray<string> => slug
+const getPathWithExtension = (slug: ReadonlyArray<string>) => `${path.join(...slug)}.mdx`
+
+const getIsIndex = (slug: ReadonlyArray<string>): boolean =>
+    fs.existsSync(getPathWithExtension(slug)) !== true
+
+const getPathFull = (slug: ReadonlyArray<string>): ReadonlyArray<string> =>
+    getIsIndex(slug) ? [...slug, 'index'] : slug
 
 export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (args) => {
     if (!args.params) {
         return { notFound: true }
     }
 
-    const pathFull = getPathFull(args.params.slug)
+    const pathFull = getPathFull(['docs', ...args.params.slug])
 
-    const mdx = await serialize(fs.readFileSync(`${path.join('docs', ...pathFull)}.mdx`, 'utf-8'), {
+    const mdx = await serialize(fs.readFileSync(getPathWithExtension(pathFull), 'utf-8'), {
         parseFrontmatter: true,
         mdxOptions: {
             remarkPlugins,
