@@ -7,4 +7,4 @@ from ..vocab cimport Vocab
 cdef class KnowledgeBase:
     cdef Pool mem
     cdef readonly Vocab vocab
-    cdef readonly int64_t entity_vector_length
+    cdef int64_t entity_vector_length
