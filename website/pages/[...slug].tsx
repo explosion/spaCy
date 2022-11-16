@@ -50,22 +50,26 @@ export const getStaticPaths: GetStaticPaths<ParsedUrlQuery> = async () => {
     }
 }
 
+const getPathFull = (slug: ReadonlyArray<string>): ReadonlyArray<string> => slug
+
 export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (args) => {
     if (!args.params) {
         return { notFound: true }
     }
+
+    const pathFull = getPathFull(args.params.slug)
+
+    const mdx = await serialize(fs.readFileSync(`${path.join('docs', ...pathFull)}.mdx`, 'utf-8'), {
+        parseFrontmatter: true,
+        mdxOptions: {
+            remarkPlugins,
+        },
+    })
+
     return {
         props: {
             slug: args.params.slug,
-            mdx: await serialize(
-                fs.readFileSync(`${path.join('docs', ...args.params.slug)}.mdx`, 'utf-8'),
-                {
-                    parseFrontmatter: true,
-                    mdxOptions: {
-                        remarkPlugins,
-                    },
-                }
-            ),
+            mdx,
         },
     }
 }
