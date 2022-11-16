@@ -25,11 +25,11 @@ export default function Main({
     sidebar = false,
     asides = false,
     wrapContent = false,
-    theme = 'blue',
+    theme,
     footer,
     children,
 }) {
-    const pattern = patterns[theme]
+    const pattern = patterns[theme ?? 'blue']
     const mainClassNames = classNames(classes.root, {
         [classes['with-sidebar']]: sidebar,
         [classes['with-asides']]: asides,
@@ -50,6 +50,6 @@ Main.propTypes = {
     sidebar: PropTypes.bool,
     asides: PropTypes.bool,
     wrapContent: PropTypes.bool,
-    theme: PropTypes.string.isRequired,
+    theme: PropTypes.string,
     footer: PropTypes.node,
 }
