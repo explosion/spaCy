@@ -21,12 +21,6 @@ import { github, MarkdownToReact } from '../util'
 import { nightly, legacy } from '../../../meta/dynamicMeta'
 import universe from '../../../meta/universe.json'
 
-function getSlug(data) {
-    if (data.isCategory) return `/universe/category/${data.id}`
-    if (data.isProject) return `/universe/project/${data.id}`
-    return `/universe`
-}
-
 function filterResources(resources, data) {
     const sorted = resources.sort((a, b) => a.id.localeCompare(b.id))
     if (!data || !data.isCategory) return sorted
@@ -38,7 +32,7 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
     const filteredResources = filterResources(content, data)
     const activeData = data ? content.find(({ id }) => id === data.id) : null
     const markdownComponents = { ...mdxComponents, code: InlineCode }
-    const slug = getSlug(data)
+    const slug = pageContext.slug
     const isHome = !data.isCategory && !data.isProject
 
     const sidebar = [
