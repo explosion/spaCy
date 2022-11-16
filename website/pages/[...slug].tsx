@@ -6,13 +6,30 @@ import path from 'path'
 import Layout from '../components/layout'
 import remarkPlugins from '../plugins/index.mjs'
 
-type PropsPage = {
-    mdx: MDXRemoteSerializeResult
+import recordSection from '../meta/recordSections'
+
+type ApiDetails = {
+    stringName: string | null
+    baseClass: {
+        title: string
+        slug: string
+    } | null
+    trainable: string | null
 }
 
-const PostPage = ({ mdx: mdx }: PropsPage) => {
+type PropsPage = {
+    mdx: MDXRemoteSerializeResult
+    slug: ReadonlyArray<string>
+    sectionTitle: string | null
+    theme: string | null
+    section: string
+    apiDetails: ApiDetails
+    isIndex: boolean
+}
+
+const PostPage = ({ mdx: mdx, ...props }: PropsPage) => {
     return (
-        <Layout>
+        <Layout {...props}>
             <MDXRemote {...mdx} />
         </Layout>
     )
@@ -75,10 +92,35 @@ export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (
         },
     })
 
+    if (!mdx.frontmatter) {
+        throw new Error(`Frontmatter missing for ${getPathWithExtension(pathFull)}`)
+    }
+
+    const parentFolder = pathFull.length > 1 ? pathFull[pathFull.length - 2] : null
+    const section = mdx.frontmatter.section ?? parentFolder
+    const sectionMeta = section ? recordSection[section] ?? null : null
+    const baseClass = null
+    const apiDetails: ApiDetails = {
+        stringName: mdx.frontmatter.api_string_name ?? null,
+        baseClass: baseClass
+            ? {
+                  title: mdx.frontmatter.title,
+                  slug: mdx.frontmatter.api_base_class,
+              }
+            : null,
+        trainable: mdx.frontmatter.api_trainable ?? null,
+    }
+
     return {
         props: {
+            ...mdx.frontmatter,
             slug: args.params.slug,
             mdx,
+            sectionTitle: sectionMeta?.title ?? null,
+            theme: sectionMeta?.theme ?? null,
+            section: section,
+            apiDetails: apiDetails,
+            isIndex: getIsIndex(args.params.slug),
         },
     }
 }
