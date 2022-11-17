@@ -192,7 +192,7 @@ def find_threshold(
             wasabi.msg.fail(
                 title=f"Failed to look up score `{scores_key}` in evaluation results.",
                 text=f"Make sure you specified the correct value for `scores_key`. The following scores are "
-                f"available: {eval_scores.keys()}",
+                f"available: {list(eval_scores.keys())}",
                 exits=1,
             )
         scores[threshold] = eval_scores[scores_key]
