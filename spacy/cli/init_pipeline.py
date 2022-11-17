@@ -11,6 +11,8 @@ from ..language import Language
 from ._util import init_cli, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code, setup_gpu
 
+from ..errors import RENAMED_LANGUAGE_CODES
+
 
 @init_cli.command("vectors")
 def init_vectors_cli(
@@ -31,6 +33,13 @@ def init_vectors_cli(
     a model with vectors.
     """
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    # Add warnings for renamed language code in v4
+    if lang in RENAMED_LANGUAGE_CODES:
+        msg.fail(
+            title="Renamed language code",
+            text=f"Language code '{lang}' was replaced with '{RENAMED_LANGUAGE_CODES[lang]}' in v4. Please change your current defined language code from '{lang}' to '{RENAMED_LANGUAGE_CODES[lang]}'.",
+            exits=1,
+        )
     msg.info(f"Creating blank nlp object for language '{lang}'")
     nlp = util.get_lang_class(lang)()
     if jsonl_loc is not None:

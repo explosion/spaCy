@@ -1736,24 +1736,13 @@ class Language:
             raise ValueError(Errors.E985.format(config=config))
         config_lang = config["nlp"].get("lang")
         if config_lang is not None and config_lang != cls.lang:
-                # Set of language codes that were renamed in v4
-                renamed_lang_codes = set(["xx","is"])
-                if config_lang in renamed_lang_codes:
-                    raise ValueError(
-                        Errors.E4002.format(
-                            bad_lang_code=config["nlp"]["lang"],
-                            lang_code=cls.lang,
-                            lang=util.get_object_name(cls),
-                        )
-                    )
-                else:
-                    raise ValueError(
-                        Errors.E958.format(
-                            bad_lang_code=config["nlp"]["lang"],
-                            lang_code=cls.lang,
-                            lang=util.get_object_name(cls),
-                        )
-                    )
+            raise ValueError(
+                Errors.E958.format(
+                    bad_lang_code=config["nlp"]["lang"],
+                    lang_code=cls.lang,
+                    lang=util.get_object_name(cls),
+                )
+            )
         config["nlp"]["lang"] = cls.lang
         # This isn't very elegant, but we remove the [components] block here to prevent
         # it from getting resolved (causes problems because we expect to pass in

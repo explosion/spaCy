@@ -14,6 +14,8 @@ from ..util import SimpleFrozenList
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
 from ._util import string_to_list, import_code
 
+from ..errors import RENAMED_LANGUAGE_CODES
+
 
 ROOT = Path(__file__).parent / "templates"
 TEMPLATE_PATH = ROOT / "quickstart_training.jinja"
@@ -158,6 +160,13 @@ def init_config(
     msg = Printer(no_print=silent)
     with TEMPLATE_PATH.open("r") as f:
         template = Template(f.read())
+    # Add warnings for renamed language code in v4
+    if lang in RENAMED_LANGUAGE_CODES:
+        msg.fail(
+            title="Renamed language code",
+            text=f"Language code '{lang}' was replaced with '{RENAMED_LANGUAGE_CODES[lang]}' in v4. Please change your current defined language code from '{lang}' to '{RENAMED_LANGUAGE_CODES[lang]}'.",
+            exits=1,
+        )
     # Filter out duplicates since tok2vec and transformer are added by template
     pipeline = [pipe for pipe in pipeline if pipe not in ("tok2vec", "transformer")]
     defaults = RECOMMENDATIONS["__default__"]

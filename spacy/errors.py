@@ -214,8 +214,6 @@ class Warnings(metaclass=ErrorsWithCodes):
             "is a Cython extension type.")
     W123 = ("Argument {arg} with value {arg_value} is used instead of {config_value} as specified in the config. Be "
             "aware that this might affect other components in your pipeline.")
-# New warnings added in v4.x
-    W124 = ("Language code '{lang}' was replaced with '{renamed_lang}' in v4.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -957,10 +955,6 @@ class Errors(metaclass=ErrorsWithCodes):
     E4000 = ("Expected a Doc as input, but got: '{type}'")
     E4001 = ("Expected input to be one of the following types: ({expected_types}), "
              "but got '{received_type}'")
-    E4002 = ("Language code defined in config ({bad_lang_code}) does not match "
-            "language code of current Language subclass {lang} ({lang_code}) because it was renamed in v4. "
-            "Please change your current defined language code from ({bad_lang_code}) to ({lang_code}).")
-
 
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {
@@ -968,6 +962,11 @@ OLD_MODEL_SHORTCUTS = {
     "pt": "pt_core_news_sm", "fr": "fr_core_news_sm", "it": "it_core_news_sm",
     "nl": "nl_core_news_sm", "el": "el_core_news_sm", "nb": "nb_core_news_sm",
     "lt": "lt_core_news_sm", "xx": "xx_ent_wiki_sm"
+}
+
+# Renamed language codes in v4
+RENAMED_LANGUAGE_CODES = {
+        "xx":"mul", "is":"isl"
 }
 
 
