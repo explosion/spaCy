@@ -16,7 +16,6 @@ import { Integration, IntegrationLogo } from './widgets/integration.js'
 import { Logos, Colors, Patterns } from './widgets/styleguide'
 import Changelog from './widgets/changelog.js'
 import Features from './widgets/features.js'
-import Landing from './widgets/landing.js'
 import Languages from './widgets/languages.js'
 import QuickstartInstall from './widgets/quickstart-install.js'
 import QuickstartTraining from './widgets/quickstart-training.js'
@@ -85,7 +84,6 @@ export const remarkComponents = {
 
     Changelog,
     Features,
-    Landing,
     Languages,
     QuickstartInstall,
     QuickstartTraining,
