@@ -77,6 +77,12 @@ export const remarkComponents = {
     Integration,
     IntegrationLogo,
 
+    /**
+     * This is readded as `Image` it can be explicitly used in MDX files.
+     * For regular img elements it is not possible to pass properties
+     */
+    Image,
+
     Label,
     Logos,
     Colors,
