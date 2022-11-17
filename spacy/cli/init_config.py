@@ -160,7 +160,7 @@ def init_config(
     msg = Printer(no_print=silent)
     with TEMPLATE_PATH.open("r") as f:
         template = Template(f.read())
-    # Add warnings for renamed language code in v4
+    # Throw error for renamed language codes in v4
     if lang in RENAMED_LANGUAGE_CODES:
         msg.fail(
             title="Renamed language code",

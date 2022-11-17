@@ -112,7 +112,7 @@ def convert(
     if not msg:
         msg = Printer(no_print=silent)
 
-    # Add warnings for renamed language code in v4
+    # Throw error for renamed language codes in v4
     if lang in RENAMED_LANGUAGE_CODES:
         msg.fail(
             title="Renamed language code",
