@@ -130,7 +130,7 @@ export const LandingBanner = ({
                     </Heading>
                 )}
                 <div className={textClassNames}>
-                    <p>{children}</p>
+                    {children}
 
                     {button && (
                         <LandingBannerButton to={to} small={small}>
