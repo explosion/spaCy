@@ -413,8 +413,9 @@ you can also use an empty dictionary, `{}` as a wildcard representing **any
 token**. This is useful if you know the context of what you're trying to match,
 but very little about the specific token and its characters. For example, let's
 say you're trying to extract people's user names from your data. All you know is
-that they are listed as "User name: {username}". The name itself may contain any
-character, but no whitespace – so you'll know it will be handled as one token.
+that they are listed as "User name: \{username\}". The name itself may contain
+any character, but no whitespace – so you'll know it will be handled as one
+token.
 
 ```python
 [{"ORTH": "User"}, {"ORTH": "name"}, {"ORTH": ":"}, {}]
