@@ -1,4 +1,5 @@
 import { remarkComponents } from '../src/markdown'
+import Benchmarks from '../docs/usage/_benchmarks-models.mdx'
 import Architecture101 from '../docs/usage/101/_architecture.mdx'
 import LanguageData101 from '../docs/usage/101/_language-data.mdx'
 import NER101 from '../docs/usage/101/_named-entities.mdx'
@@ -30,6 +31,7 @@ const mdxComponents = {
     QuickstartTraining,
     QuickstartModels,
 
+    Benchmarks,
     Architecture101,
     LanguageData101,
     NER101,
