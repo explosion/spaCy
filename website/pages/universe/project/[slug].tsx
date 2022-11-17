@@ -36,7 +36,7 @@ export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (
         props: {
             id: resource.id,
             title: resource.title || resource.id,
-            teaser: resource.slogan,
+            teaser: resource.slogan || null,
             slug: args.params.slug.split('/'),
             isIndex: false,
             data: { ...resource, isProject: true },
