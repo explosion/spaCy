@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import Link from './link'
 import Button from './button'
 import { InlineCode } from './code'
-import { markdownToReact } from './util'
+import { MarkdownToReact } from './util'
 
 import * as classes from '../styles/embed.module.sass'
 
@@ -92,7 +92,7 @@ const Image = ({ src, alt, title, ...props }) => {
             </Link>
             {title && (
                 <figcaption className="gatsby-resp-image-figcaption">
-                    {markdownToReact(title, markdownComponents)}
+                    <MarkdownToReact markdown={title} />
                 </figcaption>
             )}
         </figure>
