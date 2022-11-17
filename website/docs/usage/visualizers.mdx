@@ -116,11 +116,9 @@ doc = nlp(text)
 displacy.serve(doc, style="ent")
 ```
 
-import DisplacyEntHtml from 'images/displacy-ent2.html'
-
 <Iframe
   title="displaCy visualizer for entities"
-  html={DisplacyEntHtml}
+  src="/images/displacy-ent2.html"
   height={180}
 />
 
@@ -147,11 +145,9 @@ use the `colors` setting to add your own colors for them.
 > displacy.serve(doc, style="ent", options=options)
 > ```
 
-import DisplacyEntCustomHtml from 'images/displacy-ent-custom.html'
-
 <Iframe
   title="displaCy visualizer for entities (custom styling)"
-  html={DisplacyEntCustomHtml}
+  src="/images/displacy-ent-custom.html"
   height={225}
 />
 
@@ -199,11 +195,9 @@ doc.spans["sc"] = [
 displacy.serve(doc, style="span")
 ```
 
-import DisplacySpanHtml from 'images/displacy-span.html'
-
 <Iframe
   title="displaCy visualizer for overlapping spans"
-  html={DisplacySpanHtml}
+  src="/images/displacy-span.html"
   height={180}
 />
 
@@ -227,11 +221,9 @@ specify which one displaCy should use with `spans_key` (`sc` is the default).
 > displacy.serve(doc, style="span", options=options)
 > ```
 
-import DisplacySpanCustomHtml from 'images/displacy-span-custom.html'
-
 <Iframe
   title="displaCy visualizer for spans (custom spans_key)"
-  html={DisplacySpanCustomHtml}
+  src="images/displacy-span-custom.html"
   height={225}
 />
 
