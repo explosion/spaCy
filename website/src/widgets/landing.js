@@ -111,15 +111,17 @@ const Landing = () => {
                     color="#1e1935"
                     small
                 >
-                    <Link to="https://explosion.ai/custom-solutions" hidden>
-                        <img src={tailoredPipelinesImage.src} alt="spaCy Tailored Pipelines" />
-                    </Link>
-                    <strong>
-                        Get a custom spaCy pipeline, tailor-made for your NLP problem by
-                        spaCy&apos;s core developers.
-                    </strong>
-                    <br />
-                    <br />
+                    <p>
+                        <Link to="https://explosion.ai/custom-solutions" hidden>
+                            <img src={tailoredPipelinesImage.src} alt="spaCy Tailored Pipelines" />
+                        </Link>
+                    </p>
+                    <p>
+                        <strong>
+                            Get a custom spaCy pipeline, tailor-made for your NLP problem by
+                            spaCy&apos;s core developers.
+                        </strong>
+                    </p>
                     <Ul>
                         <Li emoji="🔥">
                             <strong>Streamlined.</strong> Nobody knows spaCy better than we do. Send
@@ -155,20 +157,22 @@ const Landing = () => {
                     color="#000"
                     small
                 >
-                    <Link to="https://prodi.gy" hidden>
-                        {/** Update image */}
-                        <img
-                            src={prodigyImage.src}
-                            alt="Prodigy: Radically efficient machine teaching"
-                        />
-                    </Link>
-                    <br />
-                    <br />
-                    Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
-                    can do the annotation themselves, enabling a new level of rapid iteration.
-                    Whether you&apos;re working on entity recognition, intent detection or image
-                    classification, Prodigy can help you <strong>train and evaluate</strong> your
-                    models faster.
+                    <p>
+                        <Link to="https://prodi.gy" hidden>
+                            {/** Update image */}
+                            <img
+                                src={prodigyImage.src}
+                                alt="Prodigy: Radically efficient machine teaching"
+                            />
+                        </Link>
+                    </p>
+                    <p>
+                        Prodigy is an <strong>annotation tool</strong> so efficient that data
+                        scientists can do the annotation themselves, enabling a new level of rapid
+                        iteration. Whether you&apos;re working on entity recognition, intent
+                        detection or image classification, Prodigy can help you{' '}
+                        <strong>train and evaluate</strong> your models faster.
+                    </p>
                 </LandingBanner>
             </LandingBannerGrid>
 
@@ -236,13 +240,15 @@ const Landing = () => {
                     button="See what's new"
                     small
                 >
-                    spaCy v3.0 features all new <strong>transformer-based pipelines</strong> that
-                    bring spaCy&apos;s accuracy right up to the current{' '}
-                    <strong>state-of-the-art</strong>. You can use any pretrained transformer to
-                    train your own pipelines, and even share one transformer between multiple
-                    components with <strong>multi-task learning</strong>. Training is now fully
-                    configurable and extensible, and you can define your own custom models using{' '}
-                    <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks.
+                    <p>
+                        spaCy v3.0 features all new <strong>transformer-based pipelines</strong>{' '}
+                        that bring spaCy&apos;s accuracy right up to the current{' '}
+                        <strong>state-of-the-art</strong>. You can use any pretrained transformer to
+                        train your own pipelines, and even share one transformer between multiple
+                        components with <strong>multi-task learning</strong>. Training is now fully
+                        configurable and extensible, and you can define your own custom models using{' '}
+                        <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks.
+                    </p>
                 </LandingBanner>
                 <LandingBanner
                     to="https://course.spacy.io"
@@ -251,19 +257,21 @@ const Landing = () => {
                     color="#252a33"
                     small
                 >
-                    <Link to="https://course.spacy.io" hidden>
-                        <img
-                            src={courseImage.src}
-                            alt="Advanced NLP with spaCy: A free online course"
-                        />
-                    </Link>
-                    <br />
-                    <br />
-                    In this <strong>free and interactive online course</strong> you’ll learn how to
-                    use spaCy to build advanced natural language understanding systems, using both
-                    rule-based and machine learning approaches. It includes{' '}
-                    <strong>55 exercises</strong> featuring videos, slide decks, multiple-choice
-                    questions and interactive coding practice in the browser.
+                    <p>
+                        <Link to="https://course.spacy.io" hidden>
+                            <img
+                                src={courseImage.src}
+                                alt="Advanced NLP with spaCy: A free online course"
+                            />
+                        </Link>
+                    </p>
+                    <p>
+                        In this <strong>free and interactive online course</strong> you’ll learn how
+                        to use spaCy to build advanced natural language understanding systems, using
+                        both rule-based and machine learning approaches. It includes{' '}
+                        <strong>55 exercises</strong> featuring videos, slide decks, multiple-choice
+                        questions and interactive coding practice in the browser.
+                    </p>
                 </LandingBanner>
             </LandingBannerGrid>
 
