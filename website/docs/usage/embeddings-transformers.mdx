@@ -218,8 +218,8 @@ $ pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0+c
 
 Next, install spaCy with the extras for your CUDA version and transformers. The
 CUDA extra (e.g., `cuda102`, `cuda113`) installs the correct version of
-[`cupy`](https://docs.cupy.dev/en/stable/install.html#installing-cupy), which
-is just like `numpy`, but for GPU. You may also need to set the `CUDA_PATH`
+[`cupy`](https://docs.cupy.dev/en/stable/install.html#installing-cupy), which is
+just like `numpy`, but for GPU. You may also need to set the `CUDA_PATH`
 environment variable if your CUDA runtime is installed in a non-standard
 location. Putting it all together, if you had installed CUDA 11.3 in
 `/opt/nvidia/cuda`, you would run:
@@ -531,8 +531,7 @@ Word vectors in spaCy are "static" in the sense that they are not learned
 parameters of the statistical models, and spaCy itself does not feature any
 algorithms for learning word vector tables. You can train a word vectors table
 using tools such as [floret](https://github.com/explosion/floret),
-[Gensim](https://radimrehurek.com/gensim/),
-[FastText](https://fasttext.cc/) or
+[Gensim](https://radimrehurek.com/gensim/), [FastText](https://fasttext.cc/) or
 [GloVe](https://nlp.stanford.edu/projects/glove/), or download existing
 pretrained vectors. The [`init vectors`](/api/cli#init-vectors) command lets you
 convert vectors for use with spaCy and will give you a directory you can load or

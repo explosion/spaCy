@@ -38,18 +38,18 @@ const Docs = ({ pageContext, children }) => {
     const isModels = section === 'models'
     const sidebar = pageContext.sidebar
         ? { items: pageContext.sidebar }
-        : sidebars.find(bar => bar.section === section)
+        : sidebars.find((bar) => bar.section === section)
     let pageMenu = menu ? menu.map(([text, id]) => ({ text, id })) : []
 
     if (isModels) {
         sidebar.items[1].items = languages
             .filter(({ models }) => models && models.length)
             .sort((a, b) => a.name.localeCompare(b.name))
-            .map(lang => ({
+            .map((lang) => ({
                 text: lang.name,
                 url: `/models/${lang.code}`,
                 isActive: id === lang.code,
-                menu: lang.models.map(model => ({
+                menu: lang.models.map((model) => ({
                     text: model,
                     id: model,
                 })),

@@ -7,7 +7,8 @@ import Icon from './icon'
 import * as classes from '../styles/link.module.sass'
 import { isString, isImage } from './util'
 
-const internalRegex = /(http(s?)):\/\/(prodi.gy|spacy.io|irl.spacy.io|explosion.ai|course.spacy.io)/gi
+const internalRegex =
+    /(http(s?)):\/\/(prodi.gy|spacy.io|irl.spacy.io|explosion.ai|course.spacy.io)/gi
 
 const Whitespace = ({ children }) => (
     // Ensure that links are always wrapped in spaces

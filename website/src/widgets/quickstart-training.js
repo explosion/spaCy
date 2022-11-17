@@ -34,7 +34,7 @@ const DATA = [
         id: 'components',
         title: 'Components',
         help: 'Pipeline components to train. Requires training data for those annotations.',
-        options: COMPONENTS.map(id => ({ id, title: id })),
+        options: COMPONENTS.map((id) => ({ id, title: id })),
         multiple: true,
     },
     {
@@ -61,8 +61,7 @@ const DATA = [
     {
         id: 'optimize',
         title: 'Optimize for',
-        help:
-            'Optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger & slower model). Will impact the choice of architecture, pretrained weights and hyperparameters.',
+        help: 'Optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger & slower model). Will impact the choice of architecture, pretrained weights and hyperparameters.',
         options: [
             { id: 'efficiency', title: 'efficiency', checked: DEFAULT_OPT === 'efficiency' },
             { id: 'accuracy', title: 'accuracy', checked: DEFAULT_OPT === 'accuracy' },
@@ -80,16 +79,18 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
 
     function updateComponents(value, isExclusive) {
         _setComponents(value)
-        const updated = value.map(c => (c === 'textcat' && !isExclusive ? 'textcat_multilabel' : c))
+        const updated = value.map((c) =>
+            c === 'textcat' && !isExclusive ? 'textcat_multilabel' : c
+        )
         setComponents(updated)
     }
 
     const setters = {
         lang: setLang,
-        components: v => updateComponents(v, textcatExclusive),
+        components: (v) => updateComponents(v, textcatExclusive),
         hardware: setHardware,
         optimize: setOptimize,
-        textcat: v => {
+        textcat: (v) => {
             const isExclusive = v.includes('exclusive')
             setTextcatExclusive(isExclusive)
             updateComponents(_components, isExclusive)
@@ -110,7 +111,7 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
     const rawContent = `${COMMENT}\n${rawStr}`
     const displayContent = highlightCode('ini', rawContent)
         .split('\n')
-        .map(line => (line.startsWith('#') ? `<span class="token comment">${line}</span>` : line))
+        .map((line) => (line.startsWith('#') ? `<span class="token comment">${line}</span>` : line))
         .join('\n')
 
     let data = DATA
@@ -121,7 +122,7 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
         }))
         .sort((a, b) => a.title.localeCompare(b.title))
     if (!_components.includes('textcat')) {
-        data = data.map(field => (field.id === 'textcat' ? { ...field, hidden: true } : field))
+        data = data.map((field) => (field.id === 'textcat' ? { ...field, hidden: true } : field))
     }
     return (
         <Quickstart

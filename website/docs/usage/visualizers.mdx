@@ -118,12 +118,16 @@ displacy.serve(doc, style="ent")
 
 import DisplacyEntHtml from 'images/displacy-ent2.html'
 
-<Iframe title="displaCy visualizer for entities" html={DisplacyEntHtml} height={180} />
+<Iframe
+  title="displaCy visualizer for entities"
+  html={DisplacyEntHtml}
+  height={180}
+/>
 
 The entity visualizer lets you customize the following `options`:
 
 | Argument | Description                                                                                                   |
-| -------- | ------------------------------------------------------------------------------------------------------------- |
+| -------- | ------------------------------------------------------------------------------------------------------------- | ------ |
 | `ents`   | Entity types to highlight (`None` for all types). Defaults to `None`. ~~Optional[List[str]]~~                 | `None` |
 | `colors` | Color overrides. Entity types should be mapped to color names or values. Defaults to `{}`. ~~Dict[str, str]~~ |
 
@@ -145,7 +149,11 @@ use the `colors` setting to add your own colors for them.
 
 import DisplacyEntCustomHtml from 'images/displacy-ent-custom.html'
 
-<Iframe title="displaCy visualizer for entities (custom styling)" html={DisplacyEntCustomHtml} height={225} />
+<Iframe
+  title="displaCy visualizer for entities (custom styling)"
+  html={DisplacyEntCustomHtml}
+  height={225}
+/>
 
 The above example uses a little trick: Since the background color values are
 added as the `background` style attribute, you can use any
@@ -184,7 +192,7 @@ nlp = spacy.blank("en")
 doc = nlp(text)
 
 doc.spans["sc"] = [
-    Span(doc, 3, 6, "ORG"), 
+    Span(doc, 3, 6, "ORG"),
     Span(doc, 5, 6, "GPE"),
 ]
 
@@ -193,8 +201,11 @@ displacy.serve(doc, style="span")
 
 import DisplacySpanHtml from 'images/displacy-span.html'
 
-<Iframe title="displaCy visualizer for overlapping spans" html={DisplacySpanHtml} height={180} />
-
+<Iframe
+  title="displaCy visualizer for overlapping spans"
+  html={DisplacySpanHtml}
+  height={180}
+/>
 
 The span visualizer lets you customize the following `options`:
 
@@ -205,8 +216,8 @@ The span visualizer lets you customize the following `options`:
 | `kb_url_template` | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in ~~Optional[str]~~                                      |
 | `colors`          | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                               |
 
-Because spans can be stored across different keys in `doc.spans`, you need to specify
-which one displaCy should use with `spans_key` (`sc` is the default). 
+Because spans can be stored across different keys in `doc.spans`, you need to
+specify which one displaCy should use with `spans_key` (`sc` is the default).
 
 > #### Options example
 >
@@ -214,12 +225,15 @@ which one displaCy should use with `spans_key` (`sc` is the default).
 > doc.spans["custom"] = [Span(doc, 3, 6, "BANK")]
 > options = {"spans_key": "custom"}
 > displacy.serve(doc, style="span", options=options)
+> ```
 
 import DisplacySpanCustomHtml from 'images/displacy-span-custom.html'
 
-<Iframe title="displaCy visualizer for spans (custom spans_key)" html={DisplacySpanCustomHtml} height={225} />
-
-
+<Iframe
+  title="displaCy visualizer for spans (custom spans_key)"
+  html={DisplacySpanCustomHtml}
+  height={225}
+/>
 
 ## Using displaCy in Jupyter notebooks {#jupyter}
 
@@ -343,11 +357,11 @@ want to visualize output from other libraries, like [NLTK](http://www.nltk.org)
 or
 [SyntaxNet](https://github.com/tensorflow/models/tree/master/research/syntaxnet).
 If you set `manual=True` on either `render()` or `serve()`, you can pass in data
-in displaCy's format as a dictionary (instead of `Doc` objects). There are helper 
-functions for converting `Doc` objects to displaCy's format for use with `manual=True`: 
-[`displacy.parse_deps`](/api/top-level#displacy.parse_deps), 
-[`displacy.parse_ents`](/api/top-level#displacy.parse_ents), 
-and [`displacy.parse_spans`](/api/top-level#displacy.parse_spans).
+in displaCy's format as a dictionary (instead of `Doc` objects). There are
+helper functions for converting `Doc` objects to displaCy's format for use with
+`manual=True`: [`displacy.parse_deps`](/api/top-level#displacy.parse_deps),
+[`displacy.parse_ents`](/api/top-level#displacy.parse_ents), and
+[`displacy.parse_spans`](/api/top-level#displacy.parse_spans).
 
 > #### Example with parse function
 >
@@ -365,7 +379,6 @@ and [`displacy.parse_spans`](/api/top-level#displacy.parse_spans).
 >        "title": None}]
 > html = displacy.render(ex, style="ent", manual=True)
 > ```
-
 
 ```python
 ### DEP input

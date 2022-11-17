@@ -61,7 +61,7 @@ const QuickstartInstall = ({ id, title, description, children }) => {
     const [efficiency, setEfficiency] = useState(DEFAULT_OPT === 'efficiency')
     const setters = {
         lang: setLang,
-        optimize: v => setEfficiency(v.includes('efficiency')),
+        optimize: (v) => setEfficiency(v.includes('efficiency')),
     }
 
     const languages = models.languages.filter(({ models }) => models !== null)

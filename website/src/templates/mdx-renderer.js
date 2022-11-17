@@ -12,7 +12,7 @@ const WrappedComponent = React.memo(({ scope = {}, components = {}, children, ..
     if (!children) return null
     const fullScope = { React, MDXTag, ...scope }
     const keys = Object.keys(fullScope)
-    const values = keys.map(key => fullScope[key])
+    const values = keys.map((key) => fullScope[key])
     const fn = new Function('_fn', ...keys, `${children}`) // eslint-disable-line no-new-func
     const End = fn({}, ...values)
     return React.createElement(End, { components, ...props })

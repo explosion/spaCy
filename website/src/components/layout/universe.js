@@ -30,7 +30,7 @@ function getSlug(data) {
 function filterResources(resources, data) {
     const sorted = resources.sort((a, b) => a.id.localeCompare(b.id))
     if (!data || !data.isCategory) return sorted
-    return sorted.filter(res => (res.category || []).includes(data.id))
+    return sorted.filter((res) => (res.category || []).includes(data.id))
 }
 
 const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComponents }) => {
@@ -324,7 +324,7 @@ const Project = ({ data, components }) => (
             {data.category && (
                 <p style={{ marginBottom: 0 }}>
                     <Label>Categories</Label>
-                    {data.category.map(cat => (
+                    {data.category.map((cat) => (
                         <Link to={`/universe/category/${cat}`} key={cat} ws>
                             <InlineCode>{cat}</InlineCode>
                         </Link>

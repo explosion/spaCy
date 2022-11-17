@@ -53,7 +53,7 @@ const Card = ({ style = {}, children }) => (
 
 export const Colors = () => (
     <Grid cols={4} narrow>
-        {Object.keys(colors).map(name => (
+        {Object.keys(colors).map((name) => (
             <Card key={name} style={{ height: 80, background: colors[name] }}>
                 <Label>{name}</Label>
             </Card>
@@ -62,7 +62,7 @@ export const Colors = () => (
 )
 
 export const Patterns = () => {
-    const imgStyle = name => ({
+    const imgStyle = (name) => ({
         height: 125,
         background: `url(${patterns[name]}) center/150% repeat`,
     })
@@ -70,7 +70,7 @@ export const Patterns = () => {
     const linkStyle = { color: 'var(--color-dark)' }
     return (
         <Grid cols={3} narrow>
-            {Object.keys(patterns).map(name => (
+            {Object.keys(patterns).map((name) => (
                 <Card key={name} style={imgStyle(name)}>
                     <Label>{name}</Label>
                     <span style={textStyle}>

@@ -375,7 +375,7 @@ scoped quantifiers – instead, you can build those behaviors with `on_match`
 callbacks.
 
 | OP      | Description                                                            |
-|---------|------------------------------------------------------------------------|
+| ------- | ---------------------------------------------------------------------- |
 | `!`     | Negate the pattern, by requiring it to match exactly 0 times.          |
 | `?`     | Make the pattern optional, by allowing it to match 0 or 1 times.       |
 | `+`     | Require the pattern to match 1 or more times.                          |
@@ -1107,7 +1107,11 @@ relations and tokens we want to match:
 
 import DisplaCyDepFoundedHtml from 'images/displacy-dep-founded.html'
 
-<Iframe title="displaCy visualization of dependencies" html={DisplaCyDepFoundedHtml} height={450} />
+<Iframe
+  title="displaCy visualization of dependencies"
+  html={DisplaCyDepFoundedHtml}
+  height={450}
+/>
 
 The relations we're interested in are:
 
