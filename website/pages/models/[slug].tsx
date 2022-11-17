@@ -56,9 +56,9 @@ export const getStaticProps: GetStaticProps<
                 ? { title: language.next.name, slug: `/models/${language.next.code}` }
                 : null,
             meta: {
-                models: language.models,
-                example: language.example,
-                hasExamples: language.has_examples,
+                models: language.models || null,
+                example: language.example || null,
+                hasExamples: language.has_examples || null,
             },
         },
     }
