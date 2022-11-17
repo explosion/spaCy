@@ -153,7 +153,7 @@ def find_threshold(
             wasabi.msg.fail(
                 title=f"Failed to look up `{full_key}` in config: sub-key {[keys[0]]} not found.",
                 text=f"Make sure you specified {[keys[0]]} correctly. The following sub-keys are available instead: "
-                f"{config.keys()}",
+                f"{list(config.keys())}",
                 exits=1,
             )
         return {
