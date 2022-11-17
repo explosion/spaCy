@@ -67,7 +67,7 @@ import { Colors, Patterns } from 'widgets/styleguide'
 
 ## Typography {#typography}
 
-import { H1, H2, H3, H4, H5, Label, InlineList, Comment } from
+import { H1, H2, H3, H4, H5, Label, InlineList } from
 'components/typography'
 
 > #### Markdown
