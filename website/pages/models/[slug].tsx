@@ -2,8 +2,8 @@ import type { GetStaticPaths, GetStaticProps } from 'next'
 import models from '../../meta/languages.json'
 import recordSection from '../../meta/recordSections'
 import recordLanguages from '../../meta/recordLanguages'
-import Layout from '../../src/components/layout'
-import { PropsPageBase } from '../[...listPath]'
+import Layout from '../../src/templates'
+import { PropsPageBase } from '../[...listPathPage]'
 
 type PropsPageModel = PropsPageBase & {
     next: { title: string; slug: string } | null
