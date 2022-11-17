@@ -10,16 +10,12 @@ Tests for spaCy modules and classes live in their own directories of the same na
 
 ## Table of contents
 
-- [spaCy tests](#spacy-tests)
-  - [Table of contents](#table-of-contents)
-  - [Running the tests](#running-the-tests)
-  - [Dos and don'ts](#dos-and-donts)
-  - [Parameters](#parameters)
-  - [Fixtures](#fixtures)
-  - [Helpers and utilities](#helpers-and-utilities)
-    - [Constructing a `Doc` object manually](#constructing-a-doc-object-manually)
-    - [Other utilities](#other-utilities)
-  - [Contributing to the tests](#contributing-to-the-tests)
+1. [Running the tests](#running-the-tests)
+2. [Dos and don'ts](#dos-and-donts)
+3. [Parameters](#parameters)
+4. [Fixtures](#fixtures)
+5. [Helpers and utilities](#helpers-and-utilities)
+6. [Contributing to the tests](#contributing-to-the-tests)
 
 ## Running the tests
 

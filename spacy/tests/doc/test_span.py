@@ -304,6 +304,7 @@ def test_span_similarity_match():
         assert span1.similarity(doc) == 0.0
         assert span1[:1].similarity(doc.vocab["a"]) == 1.0
 
+
 def test_spans_are_hashable(en_tokenizer):
     """Test spans can be hashed."""
     text = "good stuff bad stuff"
