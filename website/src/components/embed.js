@@ -79,7 +79,7 @@ Iframe.propTypes = {
     height: PropTypes.number,
 }
 
-const Image = ({ src, alt, title, ...props }) => {
+const Image = ({ src, alt, title, href, ...props }) => {
     // This is only needed for image types that are NOT handled by
     // gatsby-remark-images, i.e. mostly SVGs. The plugin adds formatting
     // and support for captions, so this normalises that behaviour.
@@ -87,7 +87,7 @@ const Image = ({ src, alt, title, ...props }) => {
     const markdownComponents = { code: InlineCode, p: Fragment, a: Link }
     return (
         <figure className="gatsby-resp-image-figure">
-            <Link className={linkClassNames} href={src} hidden forceExternal>
+            <Link className={linkClassNames} href={href ?? src} hidden forceExternal>
                 <img className={classes.image} src={src} alt={alt} width={650} height="auto" />
             </Link>
             {title && (
