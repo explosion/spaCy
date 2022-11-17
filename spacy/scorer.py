@@ -134,7 +134,11 @@ class Scorer:
             scores.update(self.nlp.tokenizer.score(examples, **self.cfg))  # type: ignore
         for name, component in self.nlp.pipeline:
             if hasattr(component, "score"):
-                scores.update(component.score(examples, **self.cfg))
+                comp_sc = component.score(examples, **self.cfg)
+                for k, v in comp_sc.items():
+                    if isinstance(v, dict):
+                        scores[k] = {**scores.get(k, {}), **v}
+                scores.update({k: v for k, v in comp_sc.items() if not isinstance(v, dict)})
         return scores
 
     @staticmethod
