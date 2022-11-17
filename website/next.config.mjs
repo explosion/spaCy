@@ -18,6 +18,9 @@ const nextConfig = withMDX({
     reactStrictMode: true,
     swcMinify: true,
     pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
+    eslint: {
+        ignoreDuringBuilds: true,
+    },
 })
 
 export default nextConfig
