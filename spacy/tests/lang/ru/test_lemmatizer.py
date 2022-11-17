@@ -103,7 +103,7 @@ def test_ru_doc_lookup_lemmatization(ru_lookup_lemmatizer):
         ("какая-то", "какой-то"),
     ),
 )
-def test_ruk_lookup_lemmatizer(ru_lookup_lemmatizer, word, lemma):
+def test_ru_lookup_lemmatizer(ru_lookup_lemmatizer, word, lemma):
     assert ru_lookup_lemmatizer.mode == "pymorphy3_lookup"
     doc = Doc(ru_lookup_lemmatizer.vocab, words=[word])
     assert ru_lookup_lemmatizer(doc)[0].lemma_ == lemma
