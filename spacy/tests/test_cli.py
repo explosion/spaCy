@@ -966,7 +966,7 @@ def test_cli_find_threshold(capsys):
         nlp, _ = init_nlp()
         with make_tempdir() as nlp_dir:
             nlp.to_disk(nlp_dir)
-            with pytest.raises(SystemExit) as error:
+            with pytest.raises(AttributeError):
                 find_threshold(
                     model=nlp_dir,
                     data_path=docs_dir / "docs.spacy",
@@ -975,7 +975,6 @@ def test_cli_find_threshold(capsys):
                     scores_key="cats_macro_f",
                     silent=True,
                 )
-            assert error.value.code == 1
 
 
 @pytest.mark.parametrize(
