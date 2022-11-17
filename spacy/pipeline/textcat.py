@@ -293,7 +293,7 @@ class TextCategorizer(TrainablePipe):
         bp_scores(gradient)
         if sgd is not None:
             self.finish_update(sgd)
-        losses[self.name] += (gradient**2).sum()
+        losses[self.name] += (gradient ** 2).sum()
         return losses
 
     def _examples_to_truth(
@@ -327,7 +327,7 @@ class TextCategorizer(TrainablePipe):
         not_missing = self.model.ops.asarray(not_missing)  # type: ignore
         d_scores = scores - truths
         d_scores *= not_missing
-        mean_square_error = (d_scores**2).mean()
+        mean_square_error = (d_scores ** 2).mean()
         return float(mean_square_error), d_scores
 
     def add_label(self, label: str) -> int:
@@ -401,5 +401,9 @@ class TextCategorizer(TrainablePipe):
     def _validate_categories(self, examples: Iterable[Example]):
         """Check whether the provided examples all have single-label cats annotations."""
         for ex in examples:
-            if list(ex.reference.cats.values()).count(1.0) > 1:
+            vals = list(ex.reference.cats.values())
+            if vals.count(1.0) > 1:
                 raise ValueError(Errors.E895.format(value=ex.reference.cats))
+            for val in vals:
+                if not (val == 1.0 or val == 0.0):
+                    raise ValueError(Errors.E851.format(val=val))
