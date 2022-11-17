@@ -189,7 +189,11 @@ def convert_asset_url(url: str) -> str:
     RETURNS (str): The converted URL.
     """
     # If the asset URL is a regular GitHub URL it's likely a mistake
-    if re.match(r"(http(s?)):\/\/github.com", url) and "releases/download" not in url:
+    if (
+        re.match(r"(http(s?)):\/\/github.com", url)
+        and "releases/download" not in url
+        and "/raw/" not in url
+    ):
         converted = url.replace("github.com", "raw.githubusercontent.com")
         converted = re.sub(r"/(tree|blob)/", "/", converted)
         msg.warn(

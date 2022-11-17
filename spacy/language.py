@@ -706,13 +706,7 @@ class Language:
         # Check source type
         if not isinstance(source, Language):
             raise ValueError(Errors.E945.format(name=source_name, source=type(source)))
-        # Check vectors, with faster checks first
-        if (
-            self.vocab.vectors.shape != source.vocab.vectors.shape
-            or self.vocab.vectors.key2row != source.vocab.vectors.key2row
-            or self.vocab.vectors.to_bytes(exclude=["strings"])
-            != source.vocab.vectors.to_bytes(exclude=["strings"])
-        ):
+        if self.vocab.vectors != source.vocab.vectors:
             warnings.warn(Warnings.W113.format(name=source_name))
         if source_name not in source.component_names:
             raise KeyError(

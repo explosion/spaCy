@@ -558,17 +558,6 @@
             "spacy_version": 3
         },
         {
-            "id": "spacy-ray",
-            "title": "spacy-ray",
-            "slogan": "Parallel and distributed training with spaCy and Ray",
-            "description": "[Ray](https://ray.io/) is a fast and simple framework for building and running **distributed applications**. This very lightweight extension package lets you use Ray for parallel and distributed training with spaCy. If `spacy-ray` is installed in the same environment as spaCy, it will automatically add `spacy ray` commands to your spaCy CLI.",
-            "github": "explosion/spacy-ray",
-            "pip": "spacy-ray",
-            "category": ["training"],
-            "author": "Explosion / Anyscale",
-            "thumb": "https://i.imgur.com/7so6ZpS.png"
-        },
-        {
             "id": "spacy-sentence-bert",
             "title": "spaCy - sentence-transformers",
             "slogan": "Pipelines for pretrained sentence-transformers (BERT, RoBERTa, XLM-RoBERTa & Co.) directly within spaCy",
