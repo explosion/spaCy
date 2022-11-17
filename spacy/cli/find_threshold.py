@@ -207,7 +207,7 @@ def find_threshold(
     else:
         if not silent:
             print(
-                f"\nBest threshold: {round(best_threshold, ndigits=4)} with value of {scores[best_threshold]}."
+                f"\nBest threshold: {round(best_threshold, ndigits=4)} with {scores_key} value of {scores[best_threshold]}."
             )
 
     return best_threshold, scores[best_threshold], scores
