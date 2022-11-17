@@ -57,18 +57,12 @@ SoundCloud.propTypes = {
     color: PropTypes.string,
 }
 
-function formatHTML(html) {
-    const encoded = encodeURIComponent(html)
-    return `<html><head><meta charset="UTF-8"></head><body>${encoded}</body></html>`
-}
-
-const Iframe = ({ title, src, html, width = 800, height = 300 }) => {
-    const source = html ? `data:text/html,${formatHTML(html)}` : src
+const Iframe = ({ title, src, width = 800, height = 300 }) => {
     return (
         <iframe
             className={classes.standalone}
             title={title}
-            src={source}
+            src={src}
             width={width}
             height={height}
             allowFullScreen
