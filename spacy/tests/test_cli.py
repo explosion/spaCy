@@ -883,7 +883,7 @@ def test_cli_find_threshold(capsys):
                 },
             ),
         ]:
-            doc = _nlp.make_doc(t[0])
+            doc = nlp.make_doc(t[0])
             docs.append(Example.from_dict(doc, t[1]))
 
         return docs

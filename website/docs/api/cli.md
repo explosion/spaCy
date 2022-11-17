@@ -1175,9 +1175,18 @@ thresholds - e.g. `textcat_multilabel` and `spancat`, but not `textcat`. Note
 that the full path to the corresponding threshold attribute in the config has to
 be provided.
 
-```cli
-$ python -m spacy find-threshold [model] [data_path] [pipe_name] [threshold_key] [scores_key] [--n_trials] [--code] [--use-gpu] [--gold-preproc] [--verbose]
-```
+> #### Examples
+>
+> ```cli
+> # For textcat_multilabel:
+> $ python -m spacy find-threshold my_nlp data.spacy textcat_multilabel threshold cats_macro_f
+> ```
+>
+> ```cli
+> # For spancat:
+> $ python -m spacy find-threshold my_nlp data.spacy spancat threshold spans_sc_f
+> ```
+
 
 | Name                    | Description                                                                                                                                                                          |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
