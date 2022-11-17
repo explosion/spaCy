@@ -256,7 +256,7 @@ shape `(N, M)`, where `N` is the length of the document. The values will be
 | `attr_ids`  | A list of attributes (int IDs or string names) or a single attribute (int ID or string name). ~~Union[int, str, List[Union[int, str]]]~~ |
 | **RETURNS** | The exported attributes as a numpy array. ~~Union[numpy.ndarray[ndim=2, dtype=uint64], numpy.ndarray[ndim=1, dtype=uint64]]~~            |
 
-## Span.ents {id="ents",tag="property" version="2.0.13",model="ner"}
+## Span.ents {id="ents",tag="property",version="2.0.13",model="ner"}
 
 The named entities that fall completely within the span. Returns a tuple of
 `Span` objects.
@@ -520,7 +520,7 @@ sent = doc[sent.start : max(sent.end, span.end)]
 | ----------- | ------------------------------------------------------- |
 | **RETURNS** | The sentence span that this span is a part of. ~~Span~~ |
 
-## Span.sents {id="sents",tag="property" model="sentences",version="3.2.1"}
+## Span.sents {id="sents",tag="property",model="sentences",version="3.2.1"}
 
 Returns a generator over the sentences the span belongs to. This property is
 only available when [sentence boundaries](/usage/linguistic-features#sbd) have
