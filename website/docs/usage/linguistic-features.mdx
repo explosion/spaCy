@@ -298,11 +298,9 @@ for token in doc:
 | toward        | `prep`     | shift     | `NOUN`   | manufacturers           |
 | manufacturers | `pobj`     | toward    | `ADP`    |                         |
 
-import DisplaCyLong2Html from 'images/displacy-long2.html'
-
 <Iframe
   title="displaCy visualization of dependencies and entities 2"
-  html={DisplaCyLong2Html}
+  src="/images/displacy-long2.html"
   height={450}
 />
 
@@ -732,11 +730,9 @@ doc = nlp(text)
 displacy.serve(doc, style="ent")
 ```
 
-import DisplacyEntHtml from 'images/displacy-ent2.html'
-
 <Iframe
   title="displaCy visualizer for entities"
-  html={DisplacyEntHtml}
+  src="/images/displacy-ent2.html"
   height={180}
 />
 
