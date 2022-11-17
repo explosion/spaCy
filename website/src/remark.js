@@ -56,6 +56,11 @@ export const remarkComponents = {
     wrapper: ({ children }) => children,
     hr: Hr,
 
+    H2,
+    H3,
+    H4,
+    H5,
+
     Infobox,
     Table,
     Tr,
