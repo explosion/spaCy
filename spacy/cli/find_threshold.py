@@ -39,15 +39,16 @@ def find_threshold_cli(
     # fmt: on
 ):
     """
-    Runs prediction trials for models with varying tresholds to maximize the
-    specified metric. The search space for the threshold is traversed
-    linearly from 0 to 1 in n_trials steps.
+    Runs prediction trials for a trained model with varying tresholds to maximize
+    the specified metric. The search space for the threshold is traversed linearly
+    from 0 to 1 in `n_trials` steps. Results are displayed in a table on `stdout`
+    (the corresponding API call to `spacy.cli.find_threshold.find_threshold()`
+    returns all results).
 
-    This is applicable only for components whose predictions are influenced
-    by thresholds (e.g. textcat_multilabel and spancat, but not textcat).
-
-    Note that the full path to the corresponding threshold attribute in the
-    config has to be provided.
+    This is applicable only for components whose predictions are influenced by
+    thresholds - e.g. `textcat_multilabel` and `spancat`, but not `textcat`. Note
+    that the full path to the corresponding threshold attribute in the config has to
+    be provided.
 
     DOCS: https://spacy.io/api/cli#find-threshold
     """
@@ -81,8 +82,8 @@ def find_threshold(
 ) -> Tuple[float, float, Dict[float, float]]:
     """
     Runs prediction trials for models with varying tresholds to maximize the specified metric.
-    model (Union[str, Path]): Path to file with trained model.
-    data_path (Union[str, Path]): Path to file with DocBin with docs to use for threshold search.
+    model (Union[str, Path]): Pipeline to evaluate. Can be a package or a path to a data directory.
+    data_path (Path): Path to file with DocBin with docs to use for threshold search.
     pipe_name (str): Name of pipe to examine thresholds for.
     threshold_key (str): Key of threshold attribute in component's configuration.
     scores_key (str): Name of score to metric to optimize.
