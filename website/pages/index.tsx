@@ -11,24 +11,24 @@ import {
     LandingDemo,
     LandingBannerGrid,
     LandingBanner,
-} from '../components/landing'
-import { H2 } from '../components/typography'
-import { InlineCode } from '../components/code'
-import { Ul, Li } from '../components/list'
-import Button from '../components/button'
-import Link from '../components/link'
+} from '../src/components/landing'
+import { H2 } from '../src/components/typography'
+import { InlineCode } from '../src/components/code'
+import { Ul, Li } from '../src/components/list'
+import Button from '../src/components/button'
+import Link from '../src/components/link'
 
-import QuickstartTraining from '../widgets/quickstart-training'
-import Project from '../widgets/project'
-import Features from '../widgets/features'
-import Layout from '../components/layout'
-import courseImage from '../../public/images/course.jpg'
-import prodigyImage from '../../public/images/prodigy_overview.jpg'
-import projectsImage from '../../public/images/projects.png'
-import tailoredPipelinesImage from '../../public/images/spacy-tailored-pipelines_wide.png'
-import { nightly, legacy } from '../../meta/dynamicMeta'
+import QuickstartTraining from '../src/widgets/quickstart-training'
+import Project from '../src/widgets/project'
+import Features from '../src/widgets/features'
+import Layout from '../src/components/layout'
+import courseImage from '../public/images/course.jpg'
+import prodigyImage from '../public/images/prodigy_overview.jpg'
+import projectsImage from '../public/images/projects.png'
+import tailoredPipelinesImage from '../public/images/spacy-tailored-pipelines_wide.png'
+import { nightly, legacy } from '../meta/dynamicMeta'
 
-import Benchmarks from '../../docs/usage/_benchmarks-models.mdx'
+import Benchmarks from '../docs/usage/_benchmarks-models.mdx'
 
 function getCodeExample(nightly) {
     return `# pip install -U ${nightly ? 'spacy-nightly --pre' : 'spacy'}

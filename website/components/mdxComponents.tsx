@@ -11,7 +11,6 @@ import Vectors101 from '../docs/usage/101/_vectors-similarity.mdx'
 import Changelog from '../src/widgets/changelog.js'
 import Features from '../src/widgets/features.js'
 import { IntegrationLogo, Integration } from '../src/widgets/integration.js'
-import Landing from '../src/widgets/landing.js'
 import Languages from '../src/widgets/languages.js'
 import Project from '../src/widgets/project.js'
 import QuickstartInstall from '../src/widgets/quickstart-install.js'
@@ -25,7 +24,6 @@ const mdxComponents = {
     Features,
     IntegrationLogo,
     Integration,
-    Landing,
     Languages,
     Project,
     QuickstartInstall,
