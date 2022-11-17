@@ -864,7 +864,7 @@ def test_span_length_freq_dist_output_must_be_correct():
 def test_cli_find_threshold(capsys):
     thresholds = numpy.linspace(0, 1, 10)
 
-    def make_examples(_nlp: Language) -> List[Example]:
+    def make_examples(nlp: Language) -> List[Example]:
         docs: List[Example] = []
 
         for t in [
