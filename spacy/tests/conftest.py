@@ -48,12 +48,6 @@ def pytest_runtest_setup(item):
             pytest.skip("not referencing any issues")
 
 
-@pytest.fixture
-def test_dir(request):
-    print(request.fspath)
-    return Path(request.fspath).parent
-
-
 # Fixtures for language tokenizers (languages sorted alphabetically)
 
 
