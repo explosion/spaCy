@@ -60,7 +60,7 @@ class RussianLemmatizer(Lemmatizer):
         if univ_pos == "PUNCT":
             return [PUNCT_RULES.get(string, string)]
         if univ_pos not in ("ADJ", "DET", "NOUN", "NUM", "PRON", "PROPN", "VERB"):
-            return self.pymorphy2_lookup_lemmatize(token)
+            return self._pymorphy_lookup_lemmatize(token)
         analyses = self._morph.parse(string)
         filtered_analyses = []
         for analysis in analyses:
