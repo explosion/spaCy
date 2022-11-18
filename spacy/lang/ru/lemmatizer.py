@@ -53,7 +53,7 @@ class RussianLemmatizer(Lemmatizer):
             vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
         )
 
-    def pymorphy2_lemmatize(self, token: Token) -> List[str]:
+    def _pymorphy_lemmatize(self, token: Token) -> List[str]:
         string = token.text
         univ_pos = token.pos_
         morphology = token.morph.to_dict()
@@ -114,7 +114,7 @@ class RussianLemmatizer(Lemmatizer):
             dict.fromkeys([analysis.normal_form for analysis in filtered_analyses])
         )
 
-    def pymorphy2_lookup_lemmatize(self, token: Token) -> List[str]:
+    def _pymorphy_lookup_lemmatize(self, token: Token) -> List[str]:
         string = token.text
         analyses = self._morph.parse(string)
         # often multiple forms would derive from the same normal form
@@ -124,11 +124,17 @@ class RussianLemmatizer(Lemmatizer):
             return [next(iter(normal_forms))]
         return [string]
 
+    def pymorphy2_lemmatize(self, token: Token) -> List[str]:
+        return self._pymorphy_lemmatize(token)
+
+    def pymorphy2_lookup_lemmatize(self, token: Token) -> List[str]:
+        return self._pymorphy_lookup_lemmatize(token)
+
     def pymorphy3_lemmatize(self, token: Token) -> List[str]:
-        return self.pymorphy2_lemmatize(token)
+        return self._pymorphy_lemmatize(token)
 
     def pymorphy3_lookup_lemmatize(self, token: Token) -> List[str]:
-        return self.pymorphy2_lookup_lemmatize(token)
+        return self._pymorphy_lookup_lemmatize(token)
 
 
 def oc2ud(oc_tag: str) -> Tuple[str, Dict[str, str]]:
