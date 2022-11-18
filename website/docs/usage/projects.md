@@ -1014,54 +1014,6 @@ https://github.com/explosion/projects/blob/v3/integrations/fastapi/scripts/main.
 
 ---
 
-### Ray {#ray} <IntegrationLogo name="ray" width={100} height="auto" align="right" />
-
-> #### Installation
->
-> ```cli
-> $ pip install -U %%SPACY_PKG_NAME[ray]%%SPACY_PKG_FLAGS
-> # Check that the CLI is registered
-> $ python -m spacy ray --help
-> ```
-
-[Ray](https://ray.io/) is a fast and simple framework for building and running
-**distributed applications**. You can use Ray for parallel and distributed
-training with spaCy via our lightweight
-[`spacy-ray`](https://github.com/explosion/spacy-ray) extension package. If the
-package is installed in the same environment as spaCy, it will automatically add
-[`spacy ray`](/api/cli#ray) commands to your spaCy CLI. See the usage guide on
-[parallel training](/usage/training#parallel-training) for more details on how
-it works under the hood.
-
-<Project id="integrations/ray">
-
-Get started with parallel training using our project template. It trains a
-simple model on a Universal Dependencies Treebank and lets you parallelize the
-training with Ray.
-
-</Project>
-
-You can integrate [`spacy ray train`](/api/cli#ray-train) into your
-`project.yml` just like the regular training command and pass it the config, and
-optional output directory or remote storage URL and config overrides if needed.
-
-<!-- prettier-ignore -->
-```yaml
-### project.yml
-commands:
-  - name: "ray"
-    help: "Train a model via parallel training with Ray"
-    script:
-      - "python -m spacy ray train configs/config.cfg -o training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
-    deps:
-      - "corpus/train.spacy"
-      - "corpus/dev.spacy"
-    outputs:
-      - "training/model-best"
-```
-
----
-
 ### Weights & Biases {#wandb} <IntegrationLogo name="wandb" width={175} height="auto" align="right" />
 
 [Weights & Biases](https://www.wandb.com/) is a popular platform for experiment
