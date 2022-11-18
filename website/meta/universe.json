@@ -462,37 +462,6 @@
             "category": ["standalone"]
         },
         {
-            "id": "spikex",
-            "title": "SpikeX - SpaCy Pipes for Knowledge Extraction",
-            "slogan": "Use SpikeX to build knowledge extraction tools with almost-zero effort",
-            "description": "SpikeX is a collection of pipes ready to be plugged in a spaCy pipeline. It aims to help in building knowledge extraction tools with almost-zero effort.",
-            "github": "erre-quadro/spikex",
-            "pip": "spikex",
-            "code_example": [
-                "from spacy import load as spacy_load",
-                "from spikex.wikigraph import load as wg_load",
-                "from spikex.pipes import WikiPageX",
-                "",
-                "# load a spacy model and get a doc",
-                "nlp = spacy_load('en_core_web_sm')",
-                "doc = nlp('An apple a day keeps the doctor away')",
-                "# load a WikiGraph",
-                "wg = wg_load('simplewiki_core')",
-                "# get a WikiPageX and extract all pages",
-                "wikipagex = WikiPageX(wg)",
-                "doc = wikipagex(doc)",
-                "# see all pages extracted from the doc",
-                "for span in doc._.wiki_spans:",
-                "   print(span._.wiki_pages)"
-            ],
-            "category": ["pipeline", "standalone"],
-            "author": "Erre Quadro",
-            "author_links": {
-                "github": "erre-quadro",
-                "website": "https://www.errequadrosrl.com"
-            }
-        },
-        {
             "id": "spacy-dbpedia-spotlight",
             "title": "DBpedia Spotlight for SpaCy",
             "slogan": "Use DBpedia Spotlight to link entities inside SpaCy",
