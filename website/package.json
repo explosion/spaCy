@@ -5,6 +5,7 @@
     "scripts": {
         "dev": "next dev",
         "build": "next build && next export",
+        "prebuild": "pip install -r setup/requirements.txt && sh setup/setup.sh",
         "start": "next start",
         "lint": "next lint",
         "prettier": "prettier . --write"
