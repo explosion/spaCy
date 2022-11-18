@@ -27,9 +27,7 @@ cdef class Morphology:
         self.strings = strings
 
     def __reduce__(self):
-        tags = set([self.get(self.strings[s]) for s in self.strings])
-        tags -= set([""])
-        return (unpickle_morphology, (self.strings, sorted(tags)), None, None)
+        return (unpickle_morphology, (self.strings,), None, None)
 
     cdef shared_ptr[MorphAnalysisC] _lookup_tag(self, hash_t tag_hash):
         match = self.tags.find(tag_hash)
@@ -244,8 +242,9 @@ cdef int get_n_by_field(attr_t* results, const shared_ptr[MorphAnalysisC] morph,
             n_results += 1
     return n_results
 
-def unpickle_morphology(strings, tags):
+def unpickle_morphology(strings):
     cdef Morphology morphology = Morphology(strings)
-    for tag in tags:
-        morphology.add(tag)
+    # Repopulate the tag map.
+    for string in strings:
+        morphology.add(string)
     return morphology
