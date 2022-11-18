@@ -3,6 +3,7 @@ from confection import Config
 
 import numpy
 import pytest
+import spacy
 import srsly
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
@@ -14,7 +15,7 @@ from spacy.training.align import get_alignments
 from spacy.training.converters import json_to_docs
 from spacy.training.loop import train_while_improving
 from spacy.util import get_words_and_spaces, load_model_from_path, minibatch
-from spacy.util import load_config_from_str, load_model_from_config
+from spacy.util import load_config_from_str
 from thinc.api import compounding, Adam
 
 from ..util import make_tempdir
@@ -1116,38 +1117,6 @@ def test_retokenized_docs(doc):
     assert example.get_aligned("ORTH", as_string=True) == expected2
 
 
-training_config_string = """
-[nlp]
-lang = "en"
-pipeline = ["tok2vec", "tagger"]
-
-[components]
-
-[components.tok2vec]
-factory = "tok2vec"
-
-[components.tok2vec.model]
-@architectures = "spacy.HashEmbedCNN.v1"
-pretrained_vectors = null
-width = 342
-depth = 4
-window_size = 1
-embed_size = 2000
-maxout_pieces = 3
-subword_features = true
-
-[components.tagger]
-factory = "tagger"
-
-[components.tagger.model]
-@architectures = "spacy.Tagger.v2"
-
-[components.tagger.model.tok2vec]
-@architectures = "spacy.Tok2VecListener.v1"
-width = ${components.tok2vec.model.width}
-"""
-
-
 def test_training_before_update(doc):
     def before_update(nlp, args):
         assert args["step"] == 0
@@ -1161,8 +1130,8 @@ def test_training_before_update(doc):
     def generate_batch():
         yield 1, [Example(doc, doc)]
 
-    config = Config().from_str(training_config_string, interpolate=False)
-    nlp = load_model_from_config(config, auto_fill=True, validate=True)
+    nlp = spacy.blank("en", config={"training": {}})
+    nlp.add_pipe("tagger")
     optimizer = Adam()
     generator = train_while_improving(
         nlp,
