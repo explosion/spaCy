@@ -20,7 +20,7 @@ path_help = ("Location of the documents to predict on."
              "If a directory is provided each "
              "text file in the directory will be treated "
              "as a single document.")
-out_help = "Path where to save the result .spacy file"
+out_help = "Path where to save the resulting .spacy file"
 code_help = ("Path to Python file with additional "
              "code (registered functions) to be imported")
 gold_help = "Use gold preprocessing provided in the .spacy files"
