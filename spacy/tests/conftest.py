@@ -1,3 +1,4 @@
+from pathlib import Path
 import pytest
 from spacy.util import get_lang_class
 from hypothesis import settings
@@ -45,6 +46,12 @@ def pytest_runtest_setup(item):
                 pytest.skip(f"not referencing specified issues: {issue_nos}")
         else:
             pytest.skip("not referencing any issues")
+
+
+@pytest.fixture
+def test_dir(request):
+    print(request.fspath)
+    return Path(request.fspath).parent
 
 
 # Fixtures for language tokenizers (languages sorted alphabetically)
