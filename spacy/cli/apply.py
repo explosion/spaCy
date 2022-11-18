@@ -75,7 +75,7 @@ def apply_cli(
     """
     Apply a trained pipeline to documents to get predictions.
     Expects a loadable spaCy pipeline and some data as input.
-    The data can be provided multiple formats. It can be a single
+    The data can be provided in multiple formats. It can be a single
     .spacy file or a single text file with one document per line.
     A directory can also be provided in which case the 'suffix'
     argument is required. All paths pointing to files with the
