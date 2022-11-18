@@ -18,6 +18,12 @@ spancat_exclusive_default_config = """
 @architectures = "spacy.SpanCategorizer.v1"
 scorer = {"@layers": "Softmax.v2"}
 
+[model.scorer.init_W]
+@initializers = "zero_init.v1"
+
+[model.scorer.init_b]
+@initializers = "zero_init.v1"
+
 [model.reducer]
 @layers = spacy.mean_max_reducer.v1
 hidden_size = 128
