@@ -17,10 +17,8 @@ def test_uk_lemmatizer(uk_lemmatizer):
     "word,lemma",
     (
         ("якийсь", "якийсь"),
-        pytest.param("зеленої", "зелений", marks=pytest.mark.xfail()),
         ("розповідають", "розповідати"),
         ("розповіси", "розповісти"),
-        pytest.param("телятові", "теля", marks=pytest.mark.xfail()),
     ),
 )
 def test_uk_lookup_lemmatizer(uk_lookup_lemmatizer, word, lemma):
