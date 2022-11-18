@@ -45,12 +45,6 @@ depth = 4
 DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_exclusive_default_config)["model"]
 
 
-@runtime_checkable
-class Suggester(Protocol):
-    def __call__(self, docs: Iterable[Doc], *, ops: Optional[Ops] = None) -> Ragged:
-        ...
-
-
 @Language.factory(
     "spancat_exclusive",
     assigns=["doc.spans"],
