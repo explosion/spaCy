@@ -1,18 +1,15 @@
-from dataclasses import dataclass
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, cast
+from dataclasses import dataclass
 
 import numpy
-from thinc.api import Config, Model, Ops, Optimizer
-from thinc.api import set_dropout_rate
+from thinc.api import Config, Model
 from thinc.types import Floats2d, Ints2d, Ragged
 
-from ..compat import Protocol, runtime_checkable
-from ..errors import Errors
 from ..language import Language
 from ..tokens import Doc, Span, SpanGroup
-from ..training import Example, validate_examples
+from ..training import Example
 from ..vocab import Vocab
-from .spancat import spancat_score, build_ngram_suggester
+from .spancat import spancat_score, Suggester
 from .spancat import SpanCategorizer
 
 
