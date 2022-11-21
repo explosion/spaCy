@@ -58,7 +58,7 @@ function remarkWrapSection(userOptions = {}) {
                     const headingId = index === 0 ? 0 : headingsMap[index - 1].id
                     const sectionId = headingId ? options.prefix + headingId : undefined
                     const wrapperNode = {
-                        type: 'paragraph',
+                        type: 'section',
                         children,
                         data: { hName: options.element, hProperties: { id: sectionId } },
                     }
