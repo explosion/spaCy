@@ -13,7 +13,6 @@
         "@mdx-js/loader": "^2.1.5",
         "@mdx-js/react": "^2.1.5",
         "@next/mdx": "^13.0.2",
-        "@sindresorhus/slugify": "^2.1.1",
         "@types/node": "18.11.9",
         "@types/react": "18.0.25",
         "@types/react-dom": "18.0.8",

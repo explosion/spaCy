@@ -5,20 +5,12 @@
  */
 
 import { visit } from 'unist-util-visit'
-import slugify from '@sindresorhus/slugify'
 
 const defaultOptions = {
     element: 'section',
     prefix: 'section-',
     depth: 2,
     slugify: true,
-}
-
-function slugifyNode(node) {
-    if (node.children.length && node.children[0].type === 'text') {
-        return slugify(node.children[0].value)
-    }
-    return null
 }
 
 function remarkWrapSection(userOptions = {}) {
@@ -40,7 +32,6 @@ function remarkWrapSection(userOptions = {}) {
             if (node.depth === options.depth) {
                 const data = node.data || (node.data = {})
                 const hProps = data.hProperties || (data.hProperties = {})
-                hProps.id = hProps.id ? hProps.id : slugifyNode(node)
                 headingsMap.push({ index, id: hProps.id })
             }
         })
