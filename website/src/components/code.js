@@ -16,11 +16,13 @@ import classes from '../styles/code.module.sass'
 const WRAP_THRESHOLD = 30
 const CLI_GROUPS = ['init', 'debug', 'project', 'ray', 'huggingface-hub']
 
-export default props => (
+const CodeBlock = props => (
     <Pre>
         <Code {...props} />
     </Pre>
 )
+
+export default CodeBlock
 
 export const Pre = props => {
     return <pre className={classes.pre}>{props.children}</pre>
