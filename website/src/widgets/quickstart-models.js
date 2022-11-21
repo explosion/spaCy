@@ -93,7 +93,7 @@ const QuickstartInstall = ({ id, title, description, children }) => {
                                         import spacy
                                     </QS>
                                     <QS load="spacy" prompt="python">
-                                        nlp = spacy.load("{pkg}")
+                                        nlp = spacy.load(&quot;{pkg}&quot;)
                                     </QS>
                                     <QS load="module" prompt="python">
                                         import {pkg}
@@ -102,7 +102,7 @@ const QuickstartInstall = ({ id, title, description, children }) => {
                                         nlp = {pkg}.load()
                                     </QS>
                                     <QS config="example" prompt="python">
-                                        doc = nlp("{exampleText}")
+                                        doc = nlp(&quot;{exampleText}&quot;)
                                     </QS>
                                     <QS config="example" prompt="python">
                                         print([

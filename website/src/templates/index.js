@@ -112,7 +112,7 @@ const AlertSpace = ({ nightly, legacy }) => {
             )}
             {!isOnline && (
                 <Alert title="Looks like you're offline." icon="offline" variant="warning">
-                    But don't worry, your visited pages should be saved for you.
+                    But don&apos;t worry, your visited pages should be saved for you.
                 </Alert>
             )}
         </>

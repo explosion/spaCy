@@ -123,9 +123,9 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                     </Section>
                 )}
                 <section className="search-exclude">
-                    <H3>Found a mistake or something isn't working?</H3>
+                    <H3>Found a mistake or something isn&apos;t working?</H3>
                     <p>
-                        If you've come across a universe project that isn't working or is
+                        If you&apos;ve come across a universe project that isn&apos;t working or is
                         incompatible with the reported spaCy version, let us know by{' '}
                         <Link to="https://github.com/explosion/spaCy/discussions/new">
                             opening a discussion thread
@@ -228,7 +228,7 @@ const Project = ({ data, components }) => (
         )}
         {data.cran && (
             <Aside title="Installation">
-                <CodeBlock lang="r">install.packages("{data.cran}")</CodeBlock>
+                <CodeBlock lang="r">install.packages(&quot;{data.cran}&quot;)</CodeBlock>
             </Aside>
         )}
 
