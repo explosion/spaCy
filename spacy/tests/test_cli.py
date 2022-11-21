@@ -906,6 +906,15 @@ def test_local_remote_storage():
                 assert file_.read() == content
 
 
+def test_local_remote_storage_pull_missing():
+    # pulling from a non-existent remote pulls nothing gracefully
+    with make_tempdir() as d:
+        filename = "a.txt"
+        remote = RemoteStorage(d / "root", str(d / "remote"))
+        assert remote.pull(filename, command_hash="aaaa") is None
+        assert remote.pull(filename) is None
+
+
 @pytest.mark.parametrize(
     "reqs,output",
     [

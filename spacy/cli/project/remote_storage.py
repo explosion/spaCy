@@ -119,17 +119,19 @@ class RemoteStorage:
         recent matching file is preferred.
         """
         name = self.encode_name(str(path))
+        urls = []
         if command_hash is not None and content_hash is not None:
-            url = self.make_url(path, command_hash, content_hash)
+            url = self.url / name / command_hash / content_hash
             urls = [url] if url.exists() else []
         elif command_hash is not None:
-            urls = list((self.url / name / command_hash).iterdir())
+            if (self.url / name / command_hash).exists():
+                urls = list((self.url / name / command_hash).iterdir())
         else:
-            urls = []
-            for sub_dir in (self.url / name).iterdir():
-                urls.extend(sub_dir.iterdir())
-            if content_hash is not None:
-                urls = [url for url in urls if url.parts[-1] == content_hash]
+            if (self.url / name).exists():
+                for sub_dir in (self.url / name).iterdir():
+                    urls.extend(sub_dir.iterdir())
+                if content_hash is not None:
+                    urls = [url for url in urls if url.parts[-1] == content_hash]
         if len(urls) >= 2:
             try:
                 urls.sort(key=lambda x: x.stat().st_mtime)  # type: ignore
