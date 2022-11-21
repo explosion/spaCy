@@ -71,7 +71,9 @@ const Languages = () => (
                                     <strong>{name}:</strong>{' '}
                                     {join(
                                         dependencies.map((dep, i) => (
-                                            <Link to={dep.url}>{dep.name}</Link>
+                                            <Link key={i} to={dep.url}>
+                                                {dep.name}
+                                            </Link>
                                         ))
                                     )}
                                 </Li>

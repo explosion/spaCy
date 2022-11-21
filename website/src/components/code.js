@@ -174,7 +174,7 @@ function formatCode(html, lang, prompt) {
                     .split(' | ')
                     .map((l, i) => convertLine(l, i))
                     .map((l, j) => (
-                        <Fragment>
+                        <Fragment key={j}>
                             {j !== 0 && <span> | </span>}
                             {l}
                         </Fragment>
