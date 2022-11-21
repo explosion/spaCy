@@ -75,15 +75,15 @@ const Landing = ({ data }) => {
                 <LandingCard title="Get things done" url="/usage/spacy-101" button="Get started">
                     spaCy is designed to help you do real work — to build real products, or gather
                     real insights. The library respects your time, and tries to avoid wasting it.
-                    It's easy to install, and its API is simple and productive.
+                    It&apos;s easy to install, and its API is simple and productive.
                 </LandingCard>
                 <LandingCard
                     title="Blazing fast"
                     url="/usage/facts-figures"
                     button="Facts &amp; Figures"
                 >
-                    spaCy excels at large-scale information extraction tasks. It's written from the
-                    ground up in carefully memory-managed Cython. If your application needs to
+                    spaCy excels at large-scale information extraction tasks. It&apos;s written from
+                    the ground up in carefully memory-managed Cython. If your application needs to
                     process entire web dumps, spaCy is the library you want to be using.
                 </LandingCard>
 
@@ -115,33 +115,33 @@ const Landing = ({ data }) => {
                         <img src={tailoredPipelinesImage} alt="spaCy Tailored Pipelines" />
                     </Link>
                     <strong>
-                        Get a custom spaCy pipeline, tailor-made for your NLP problem by spaCy's
-                        core developers.
+                        Get a custom spaCy pipeline, tailor-made for your NLP problem by
+                        spaCy&apos;s core developers.
                     </strong>
                     <br />
                     <br />
                     <Ul>
                         <Li emoji="🔥">
                             <strong>Streamlined.</strong> Nobody knows spaCy better than we do. Send
-                            us your pipeline requirements and we'll be ready to start producing your
-                            solution in no time at all.
+                            us your pipeline requirements and we&apos;ll be ready to start producing
+                            your solution in no time at all.
                         </Li>
                         <Li emoji="🐿 ">
                             <strong>Production ready.</strong> spaCy pipelines are robust and easy
-                            to deploy. You'll get a complete spaCy project folder which is ready to{' '}
-                            <InlineCode>spacy project run</InlineCode>.
+                            to deploy. You&apos;ll get a complete spaCy project folder which is
+                            ready to <InlineCode>spacy project run</InlineCode>.
                         </Li>
                         <Li emoji="🔮">
-                            <strong>Predictable.</strong> You'll know exactly what you're going to
-                            get and what it's going to cost. We quote fees up-front, let you try
-                            before you buy, and don't charge for over-runs at our end — all the risk
-                            is on us.
+                            <strong>Predictable.</strong> You&apos;ll know exactly what you&apos;re
+                            going to get and what it&apos;s going to cost. We quote fees up-front,
+                            let you try before you buy, and don&apos;t charge for over-runs at our
+                            end — all the risk is on us.
                         </Li>
                         <Li emoji="🛠">
-                            <strong>Maintainable.</strong> spaCy is an industry standard, and we'll
-                            deliver your pipeline with full code, data, tests and documentation, so
-                            your team can retrain, update and extend the solution as your
-                            requirements change.
+                            <strong>Maintainable.</strong> spaCy is an industry standard, and
+                            we&apos;ll deliver your pipeline with full code, data, tests and
+                            documentation, so your team can retrain, update and extend the solution
+                            as your requirements change.
                         </Li>
                     </Ul>
                 </LandingBanner>
@@ -166,7 +166,7 @@ const Landing = ({ data }) => {
                     <br />
                     Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
                     can do the annotation themselves, enabling a new level of rapid iteration.
-                    Whether you're working on entity recognition, intent detection or image
+                    Whether you&apos;re working on entity recognition, intent detection or image
                     classification, Prodigy can help you <strong>train and evaluate</strong> your
                     models faster.
                 </LandingBanner>
@@ -214,7 +214,7 @@ const Landing = ({ data }) => {
                 <LandingCol>
                     <H2>End-to-end workflows from prototype to production</H2>
                     <p>
-                        spaCy's new project system gives you a smooth path from prototype to
+                        spaCy&apos;s new project system gives you a smooth path from prototype to
                         production. It lets you keep track of all those{' '}
                         <strong>data transformation</strong>, preprocessing and{' '}
                         <strong>training steps</strong>, so you can make sure your project is always
@@ -237,11 +237,11 @@ const Landing = ({ data }) => {
                     small
                 >
                     spaCy v3.0 features all new <strong>transformer-based pipelines</strong> that
-                    bring spaCy's accuracy right up to the current <strong>state-of-the-art</strong>
-                    . You can use any pretrained transformer to train your own pipelines, and even
-                    share one transformer between multiple components with{' '}
-                    <strong>multi-task learning</strong>. Training is now fully configurable and
-                    extensible, and you can define your own custom models using{' '}
+                    bring spaCy&apos;s accuracy right up to the current{' '}
+                    <strong>state-of-the-art</strong>. You can use any pretrained transformer to
+                    train your own pipelines, and even share one transformer between multiple
+                    components with <strong>multi-task learning</strong>. Training is now fully
+                    configurable and extensible, and you can define your own custom models using{' '}
                     <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks.
                 </LandingBanner>
                 <LandingBanner
@@ -271,7 +271,7 @@ const Landing = ({ data }) => {
                 <LandingCol>
                     <H2>Benchmarks</H2>
                     <p>
-                        spaCy v3.0 introduces transformer-based pipelines that bring spaCy's
+                        spaCy v3.0 introduces transformer-based pipelines that bring spaCy&apos;s
                         accuracy right up to the current <strong>state-of-the-art</strong>. You can
                         also use a CPU-optimized pipeline, which is less accurate but much cheaper
                         to run.
