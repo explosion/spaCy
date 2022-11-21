@@ -20,7 +20,7 @@ export default function CopyInput({ text, prefix }) {
 
     useEffect(() => {
         setSupportsCopy(isClient && document.queryCommandSupported('copy'))
-    }, [])
+    }, [isClient])
     const textareaRef = useRef()
     const [copySuccess, setCopySuccess] = useState(false)
     const onClick = () => copyToClipboard(textareaRef, setCopySuccess)
