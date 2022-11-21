@@ -78,10 +78,10 @@ export default function Link({
         )
     }
     const isInternal = internalRegex.test(dest)
-    const rel = isInternal ? null : 'noopener nofollow noreferrer'
+    const relTarget = isInternal ? {} : { rel: 'noopener nofollow noreferrer', target: '_blank' }
     return (
         <Wrapper>
-            <a href={dest} className={linkClassNames} target="_blank" rel={rel} {...other}>
+            <a href={dest} className={linkClassNames} {...relTarget} {...other}>
                 {content}
             </a>
         </Wrapper>
