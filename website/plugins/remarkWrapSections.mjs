@@ -4,8 +4,8 @@
  * Based on: https://github.com/luhmann/tufte-markdown
  */
 
-const visit = require('unist-util-visit')
-const slugify = require('@sindresorhus/slugify')
+import visit from 'unist-util-visit'
+import slugify from '@sindresorhus/slugify'
 
 const defaultOptions = {
     element: 'section',
@@ -72,4 +72,4 @@ function remarkWrapSection(userOptions = {}) {
     return transformer
 }
 
-module.exports = remarkWrapSection
+export default remarkWrapSection
