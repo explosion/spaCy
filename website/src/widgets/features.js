@@ -3,7 +3,7 @@ import { graphql, StaticQuery } from 'gatsby'
 
 import { Ul, Li } from '../components/list'
 
-export default () => (
+const Features = () => (
     <StaticQuery
         query={query}
         render={({ site }) => {
@@ -56,6 +56,8 @@ export default () => (
         }}
     />
 )
+
+export default Features
 
 const query = graphql`
     query FeaturesQuery {

@@ -6,7 +6,7 @@ import Template from '../templates/index'
 import { LandingHeader, LandingTitle } from '../components/landing'
 import Button from '../components/button'
 
-export default ({ data, location }) => {
+const page404 = ({ data, location }) => {
     const { nightly, legacy } = data.site.siteMetadata
     const pageContext = { title: '404 Error', searchExclude: true, isIndex: false }
     return (
@@ -25,6 +25,8 @@ export default ({ data, location }) => {
         </Template>
     )
 }
+
+export default page404
 
 export const pageQuery = graphql`
     query {

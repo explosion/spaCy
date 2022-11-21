@@ -300,9 +300,11 @@ Landing.propTypes = {
     }),
 }
 
-export default () => (
+const PageLanding = () => (
     <StaticQuery query={landingQuery} render={({ site }) => <Landing data={site.siteMetadata} />} />
 )
+
+export default PageLanding
 
 const landingQuery = graphql`
     query LandingQuery {
