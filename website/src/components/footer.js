@@ -1,11 +1,12 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
+import SVG from 'react-inlinesvg'
 
 import Link from './link'
 import Grid from './grid'
 import Newsletter from './newsletter'
-import ExplosionLogo from '-!svg-react-loader!../images/explosion.svg'
+import explosionLogo from '../images/explosion.svg'
 import classes from '../styles/footer.module.sass'
 import siteMetadata from '../../meta/site.json'
 
@@ -46,7 +47,7 @@ export default function Footer({ wide = false }) {
                     </Link>
                 </span>
                 <Link to={companyUrl} aria-label={company} hidden className={classes.logo}>
-                    <ExplosionLogo width={45} height={45} />
+                    <SVG src={explosionLogo.src} width={45} height={45} />
                 </Link>
                 <Link to={`${companyUrl}/legal`} hidden>
                     Legal / Imprint

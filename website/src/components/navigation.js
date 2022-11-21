@@ -2,12 +2,13 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import GitHubButton from 'react-github-btn'
+import SVG from 'react-inlinesvg'
 
 import Link from './link'
 import Icon from './icon'
 import Dropdown from './dropdown'
 import { github } from './util'
-import Logo from '-!svg-react-loader!../images/logo.svg'
+import logoSpacy from '../images/logo.svg'
 import classes from '../styles/navigation.module.sass'
 
 const NavigationDropdown = ({ items = [], section }) => {
@@ -31,7 +32,7 @@ export default function Navigation({ title, items = [], section, search, alert, 
     const logo = (
         <Link to="/" aria-label={title} hidden>
             <h1 className={classes.title}>{title}</h1>
-            <Logo className={classes.logo} width={300} height={96} />
+            <SVG src={logoSpacy.src} className={classes.logo} width={300} height={96} />
         </Link>
     )
 
