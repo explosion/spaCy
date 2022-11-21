@@ -4,7 +4,7 @@
  * Based on: https://github.com/luhmann/tufte-markdown
  */
 
-import visit from 'unist-util-visit'
+import { visit } from 'unist-util-visit'
 import slugify from '@sindresorhus/slugify'
 
 const defaultOptions = {
