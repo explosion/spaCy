@@ -115,7 +115,7 @@ class Layout extends React.Component {
                     title={siteMetadata.title}
                     items={siteMetadata.navigation}
                     section={section}
-                    search={<Search settings={siteMetadata.docSearch} />}
+                    search={<Search />}
                     alert={nightly ? null : navAlert}
                 >
                     <Progress />

@@ -1,4 +1,6 @@
 import '../src/styles/layout.sass'
+import '../src/styles/search.sass'
+
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import PlausibleProvider from 'next-plausible'
