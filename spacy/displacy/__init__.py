@@ -228,7 +228,7 @@ def parse_spans(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
             "kb_id": span.kb_id_ if span.kb_id_ else "",
             "kb_url": kb_url_template.format(span.kb_id_) if kb_url_template else "#",
         }
-        for span in doc.spans[spans_key]
+        for span in doc.spans.get(spans_key, [])
     ]
     tokens = [token.text for token in doc]
 
