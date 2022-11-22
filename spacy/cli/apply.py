@@ -29,7 +29,7 @@ code_help = ("Path to Python file with additional "
              "code (registered functions) to be imported")
 gold_help = "Use gold preprocessing provided in the .spacy files"
 force_msg = ("The provided output file already exists. "
-             "To force overwriting the config file, set the --force or -F flag.")
+             "To force overwriting the output file, set the --force or -F flag.")
 
 
 DocOrStrStream = Union[Iterable[str], Iterable[Doc]]
