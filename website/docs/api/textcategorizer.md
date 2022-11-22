@@ -63,7 +63,6 @@ architectures and their arguments and hyperparameters.
 > ```python
 > from spacy.pipeline.textcat import DEFAULT_SINGLE_TEXTCAT_MODEL
 > config = {
->    "threshold": 0.5,
 >    "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
 > }
 > nlp.add_pipe("textcat", config=config)
@@ -82,7 +81,7 @@ architectures and their arguments and hyperparameters.
 
 | Setting     | Description                                                                                                                                                      |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `threshold` | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                                                                   |
+| `threshold` | Cutoff to consider a prediction "positive", relevant for `textcat_multilabel` when calculating accuracy scores. ~~float~~                                        |
 | `model`     | A model instance that predicts scores for each category. Defaults to [TextCatEnsemble](/api/architectures#TextCatEnsemble). ~~Model[List[Doc], List[Floats2d]]~~ |
 | `scorer`    | The scoring method. Defaults to [`Scorer.score_cats`](/api/scorer#score_cats) for the attribute `"cats"`. ~~Optional[Callable]~~                                 |
 
@@ -123,7 +122,7 @@ shortcut for this and instantiate the component using its string name and
 | `model`        | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~       |
 | `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                              |
 | _keyword-only_ |                                                                                                                                  |
-| `threshold`    | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                                   |
+| `threshold`    | Cutoff to consider a prediction "positive", relevant for `textcat_multilabel` when calculating accuracy scores. ~~float~~        |
 | `scorer`       | The scoring method. Defaults to [`Scorer.score_cats`](/api/scorer#score_cats) for the attribute `"cats"`. ~~Optional[Callable]~~ |
 
 ## TextCategorizer.\_\_call\_\_ {#call tag="method"}

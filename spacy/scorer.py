@@ -446,7 +446,7 @@ class Scorer:
         labels (Iterable[str]): The set of possible labels. Defaults to [].
         multi_label (bool): Whether the attribute allows multiple labels.
             Defaults to True. When set to False (exclusive labels), missing
-            gold labels are interpreted as 0.0.
+            gold labels are interpreted as 0.0 and the threshold is set to 0.0.
         positive_label (str): The positive label for a binary task with
             exclusive classes. Defaults to None.
         threshold (float): Cutoff to consider a prediction "positive". Defaults
@@ -471,6 +471,8 @@ class Scorer:
         """
         if threshold is None:
             threshold = 0.5 if multi_label else 0.0
+        if not multi_label:
+            threshold = 0.0
         f_per_type = {label: PRFScore() for label in labels}
         auc_per_type = {label: ROCAUCScore() for label in labels}
         labels = set(labels)
@@ -505,20 +507,18 @@ class Scorer:
                 # Get the highest-scoring for each.
                 pred_label, pred_score = max(pred_cats.items(), key=lambda it: it[1])
                 gold_label, gold_score = max(gold_cats.items(), key=lambda it: it[1])
-                if pred_label == gold_label and pred_score >= threshold:
+                if pred_label == gold_label:
                     f_per_type[pred_label].tp += 1
                 else:
                     f_per_type[gold_label].fn += 1
-                    if pred_score >= threshold:
-                        f_per_type[pred_label].fp += 1
+                    f_per_type[pred_label].fp += 1
             elif gold_cats:
                 gold_label, gold_score = max(gold_cats, key=lambda it: it[1])
                 if gold_score > 0:
                     f_per_type[gold_label].fn += 1
             elif pred_cats:
                 pred_label, pred_score = max(pred_cats.items(), key=lambda it: it[1])
-                if pred_score >= threshold:
-                    f_per_type[pred_label].fp += 1
+                f_per_type[pred_label].fp += 1
         micro_prf = PRFScore()
         for label_prf in f_per_type.values():
             micro_prf.tp += label_prf.tp

@@ -16,10 +16,14 @@ from ..util import ensure_path, load_model
 
 path_help = ("Location of the documents to predict on."
              "Can be a single file in .spacy format or "
-             "a text file with one document per line."
-             "If a directory is provided each "
-             "text file in the directory will be treated "
-             "as a single document.")
+             ".jsonl file and files with other extensions"
+             "are treated as single plain text documents."
+             "If a directory is provided "
+             "it is traversed recursively to grab all files to "
+             "be processed. The files can be a mixture of .spacy"
+             ".jsonl and text files. If .jsonl is provided the "
+             "specified field is going to be grabbed ('text') "
+             "by default.")
 out_help = "Path where to save the result .spacy file"
 code_help = ("Path to Python file with additional "
              "code (registered functions) to be imported")
@@ -37,15 +41,16 @@ def _stream_docbin(path: Path, vocab: Vocab) -> Iterable[Doc]:
         yield doc
 
 
-def _stream_jsonl(path: Path) -> Iterable[str]:
+def _stream_jsonl(path: Path, field) -> Iterable[str]:
     """
     Stream "text" field from JSONL. If the field "text" is
     not found it raises error.
     """
     for entry in srsly.read_jsonl(path):
-        if "text" not in entry:
-            raise ValueError(
-                f"{path} does not contain the required 'text' field."
+        if field not in entry:
+            raise msg.fail(
+                f"{path} does not contain the required '{field}' field.",
+                exits=1
             )
         else:
             yield entry["text"]
@@ -66,21 +71,22 @@ def apply_cli(
     # fmt: off
     model: str = Arg(..., help="Model name or path"),
     data_path: Path = Arg(..., help=path_help, exists=True),
-    output: Path = Arg(..., help=out_help, dir_okay=False),
+    output_file: Path = Arg(..., help=out_help, dir_okay=False),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help=code_help),
+    field: str = Opt("text", "--field", "-f", help="Field to grab from .jsonl"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU."),
     batch_size: int = Opt(1, "--batch-size", "-b", help="Batch size."),
     n_process: int = Opt(1, "--n-process", "-n", help="number of processors to use.")
 ):
     """
     Apply a trained pipeline to documents to get predictions.
-    Expects a loadable spaCy pipeline and some data as input.
-    The data can be provided multiple formats. It can be a single
-    .spacy file or a single text file with one document per line.
-    A directory can also be provided in which case the 'suffix'
-    argument is required. All paths pointing to files with the
-    provided suffix will be recursively collected and processed.
-
+    Expects a loadable spaCy pipeline and path to the data, which
+    can be a directory or a file.
+    The data files can be provided multiple formats: 
+        1. .spacy files
+        2. .jsonl files with a specified "field" to read the text from.
+        3. Files with any other extension are assumed to be containing
+           a single document.
     DOCS: https://spacy.io/api/cli#tba
     """
     import_code(code_path)
@@ -110,7 +116,7 @@ def apply(
         if path.suffix == ".spacy":
             streams.append(_stream_docbin(path, vocab))
         elif path.suffix == ".jsonl":
-            streams.append(_stream_jsonl(path))
+            streams.append(_stream_jsonl(path, field))
         else:
             text_files.append(path)
     if len(text_files) > 0:
@@ -118,6 +124,6 @@ def apply(
     datagen = cast(DocOrStrStream, chain(*streams))
     for doc in tqdm.tqdm(nlp.pipe(datagen, batch_size=batch_size, n_process=n_process)):
         docbin.add(doc)
-    if output_path.is_dir():
-        output_path = output_path / "predictions.spacy"
-    docbin.to_disk(output_path)
+    if not output_file.endswith(".spacy"):
+        output_file += ".spacy"
+    docbin.to_disk(output_file)

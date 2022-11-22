@@ -155,7 +155,7 @@ import Tag from 'components/tag'
 
 > ```jsx
 > <Tag>method</Tag>
-> <Tag variant="new">2.1</Tag>
+> <Tag variant="new">4</Tag>
 > <Tag variant="model">tagger, parser</Tag>
 > ```
 
@@ -170,7 +170,7 @@ installed.
 
 <InlineList>
 
-<Tag>method</Tag> <Tag variant="new">2</Tag> <Tag variant="model">tagger,
+<Tag>method</Tag> <Tag variant="new">4</Tag> <Tag variant="model">tagger,
 parser</Tag>
 
 </InlineList>
