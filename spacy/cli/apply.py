@@ -133,5 +133,5 @@ def apply(
     for doc in tqdm.tqdm(nlp.pipe(datagen, batch_size=batch_size, n_process=n_process)):
         docbin.add(doc)
     if output_file.suffix == "":
-        output_file += ".spacy"
+        output_file = output_file.with_suffix(".spacy")
     docbin.to_disk(output_file)
