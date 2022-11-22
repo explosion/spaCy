@@ -47,13 +47,15 @@ def _stream_jsonl(path: Path, field) -> Iterable[str]:
     not found it raises error.
     """
     for entry in srsly.read_jsonl(path):
+        print(entry)
+        print(field)
         if field not in entry:
             raise msg.fail(
                 f"{path} does not contain the required '{field}' field.",
                 exits=1
             )
         else:
-            yield entry["text"]
+            yield entry[field]
 
 
 def _stream_texts(paths: Iterable[Path]) -> Iterable[str]:
@@ -73,7 +75,7 @@ def apply_cli(
     data_path: Path = Arg(..., help=path_help, exists=True),
     output_file: Path = Arg(..., help=out_help, dir_okay=False),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help=code_help),
-    field: str = Opt("text", "--field", "-f", help="Field to grab from .jsonl"),
+    json_field: str = Opt("text", "--field", "-f", help="Field to grab from .jsonl"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU."),
     batch_size: int = Opt(1, "--batch-size", "-b", help="Batch size."),
     n_process: int = Opt(1, "--n-process", "-n", help="number of processors to use.")
@@ -82,7 +84,7 @@ def apply_cli(
     Apply a trained pipeline to documents to get predictions.
     Expects a loadable spaCy pipeline and path to the data, which
     can be a directory or a file.
-    The data files can be provided multiple formats: 
+    The data files can be provided multiple formats:
         1. .spacy files
         2. .jsonl files with a specified "field" to read the text from.
         3. Files with any other extension are assumed to be containing
@@ -91,18 +93,19 @@ def apply_cli(
     """
     import_code(code_path)
     setup_gpu(use_gpu)
-    apply(data_path, output, model, batch_size, n_process)
+    apply(data_path, output_file, model, json_field, batch_size, n_process)
 
 
 def apply(
     data_path: Path,
-    output: Path,
+    output_file: Path,
     model: str,
+    json_field: str,
     batch_size: int,
     n_process: int,
 ):
     data_path = ensure_path(data_path)
-    output_path = ensure_path(output)
+    output_file = ensure_path(output_file)
     if not data_path.exists():
         msg.fail("Couldn't find data path.", data_path, exits=1)
     nlp = load_model(model)
@@ -116,7 +119,7 @@ def apply(
         if path.suffix == ".spacy":
             streams.append(_stream_docbin(path, vocab))
         elif path.suffix == ".jsonl":
-            streams.append(_stream_jsonl(path, field))
+            streams.append(_stream_jsonl(path, json_field))
         else:
             text_files.append(path)
     if len(text_files) > 0:
@@ -124,6 +127,6 @@ def apply(
     datagen = cast(DocOrStrStream, chain(*streams))
     for doc in tqdm.tqdm(nlp.pipe(datagen, batch_size=batch_size, n_process=n_process)):
         docbin.add(doc)
-    if not output_file.endswith(".spacy"):
+    if output_file.suffix == "":
         output_file += ".spacy"
     docbin.to_disk(output_file)

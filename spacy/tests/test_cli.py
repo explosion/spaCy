@@ -864,7 +864,7 @@ def test_span_length_freq_dist_output_must_be_correct():
 def test_applycli_empty_dir():
     with make_tempdir() as data_path:
         output = data_path / "test.spacy"
-        apply(data_path, output, "blank:en", 1, 1)
+        apply(data_path, output, "blank:en", "text", 1, 1)
 
 
 def test_applycli_docbin():
@@ -875,35 +875,29 @@ def test_applycli_docbin():
         # test empty DocBin case
         docbin = DocBin()
         docbin.to_disk(data_path / "testin.spacy")
-        apply(data_path, output, "blank:en", 1, 1)
+        apply(data_path, output, "blank:en", "text", 1, 1)
         docbin.add(doc)
         docbin.to_disk(data_path / "testin.spacy")
-        apply(data_path, output, "blank:en", 1, 1)
+        apply(data_path, output, "blank:en", "text", 1, 1)
 
 
 def test_applycli_jsonl():
     with make_tempdir() as data_path:
         output = data_path / "testout.spacy"
-        data = [{"text": "Testing apply cli.", "key": 234}]
+        data = [{"field": "Testing apply cli.", "key": 234}]
         srsly.write_jsonl(data_path / "test.jsonl", data)
-        apply(data_path, output, "blank:en", 1, 1)
-        data = [{"key": 234}]
+        apply(data_path, output, "blank:en", "field", 1, 1)
+        data = [{"field": "234"}]
         srsly.write_jsonl(data_path / "test2.jsonl", data)
-        # test no "text" field case
-        with pytest.raises(ValueError, match="test2.jsonl"):
-            apply(data_path, output, "blank:en", 1, 1)
+        apply(data_path, output, "blank:en", "field", 1, 1)
 
 
 def test_applycli_txt():
     with make_tempdir() as data_path:
         output = data_path / "testout.spacy"
-        data = [{"text": "Testing apply cli.", "key": 234}]
-        srsly.write_jsonl(data_path / "test.jsonl", data)
-        apply(data_path, output, "blank:en", 1, 1)
-        data = [{"key": 234}]
-        srsly.write_jsonl(data_path / "test2.jsonl", data)
-        with pytest.raises(ValueError, match="test2.jsonl"):
-            apply(data_path, output, "blank:en", 1, 1)
+        with open(data_path / "test.foo", "w") as ftest:
+            ftest.write("Testing apply cli.")
+        apply(data_path, output, "blank:en", "text", 1, 1)
 
 
 def test_applycli_mixed():
@@ -919,7 +913,7 @@ def test_applycli_mixed():
         docbin.to_disk(data_path / "testin.spacy")
         with open(data_path / "test.txt", "w") as ftest:
             ftest.write(text)
-        apply(data_path, output, "blank:en", 1, 1)
+        apply(data_path, output, "blank:en", "text", 1, 1)
         # Check whether it worked
         result = list(DocBin().from_disk(output).get_docs(nlp.vocab))
         assert len(result) == 3
