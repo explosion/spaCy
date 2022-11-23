@@ -1,5 +1,4 @@
 import random
-from confection import Config
 
 import numpy
 import pytest
