@@ -1,4 +1,3 @@
-from pathlib import Path
 import pytest
 from spacy.util import get_lang_class
 from hypothesis import settings

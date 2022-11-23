@@ -1130,7 +1130,7 @@ def test_training_before_update(doc):
     def generate_batch():
         yield 1, [Example(doc, doc)]
 
-    nlp = spacy.blank("en", config={"training": {}})
+    nlp = spacy.blank("en")
     nlp.add_pipe("tagger")
     optimizer = Adam()
     generator = train_while_improving(
