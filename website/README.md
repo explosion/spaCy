@@ -648,8 +648,10 @@ In addition to the native markdown elements, you can use the components
 |   ├── languages.json   # supported languages and statistical models
 |   ├── sidebars.json    # sidebar navigations for different sections
 |   ├── site.json        # general site metadata
+|   ├── type-annotations.json # Type annotations
 |   └── universe.json    # data for the spaCy universe section
 ├── public               # compiled site
+├── setup                # Jinja setup
 ├── src                  # source
 |   ├── components       # React components
 |   ├── fonts            # webfonts
@@ -662,6 +664,8 @@ In addition to the native markdown elements, you can use the components
 |   |   ├── models.js    # layout template for model pages
 |   |   └── universe.js  # layout templates for universe
 |   └── widgets          # non-reusable components with content, e.g. changelog
+├── .eslintrc.json       # ESLint config file
+├── .prettierrc          # Prettier config file
 ├── gatsby-browser.js    # browser-specific hooks for Gatsby
 ├── gatsby-config.js     # Gatsby configuration
 ├── gatsby-node.js       # Node-specific hooks for Gatsby
