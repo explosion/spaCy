@@ -44,7 +44,7 @@ def _stream_docbin(path: Path, vocab: Vocab) -> Iterable[Doc]:
         yield doc
 
 
-def _stream_jsonl(path: Path, field) -> Iterable[str]:
+def _stream_jsonl(path: Path, field: str) -> Iterable[str]:
     """
     Stream "text" field from JSONL. If the field "text" is
     not found it raises error.
