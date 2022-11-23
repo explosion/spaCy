@@ -133,7 +133,7 @@ def _parse_override(value: Any) -> Any:
         return str(value)
 
 
-def _handle_renamed_language_codes(lang: str) -> None:
+def _handle_renamed_language_codes(lang: Optional[str]) -> None:
     # Throw error for renamed language codes in v4
     if lang in RENAMED_LANGUAGE_CODES:
         msg.fail(
