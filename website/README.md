@@ -11,7 +11,7 @@ rendered version is available at https://spacy.io/styleguide._
 
 </Comment>
 
-## Setup and installation {#setup}
+## Setup and installation
 
 Before running the setup, make sure your versions of
 [Node](https://nodejs.org/en/) and [npm](https://www.npmjs.com/) are up to date.
@@ -40,7 +40,7 @@ extensions for your code editor. The
 [`.prettierrc`](https://github.com/explosion/spaCy/tree/master/website/.prettierrc)
 file in the root defines the settings used in this codebase.
 
-## Building & developing the site with Docker {#docker}
+## Building & developing the site with Docker
 
 Sometimes it's hard to get a local environment working due to rapid updates to
 node dependencies, so it may be easier to use docker for building the docs.
@@ -66,7 +66,7 @@ segfault errors from `qemu` if you use the default image. To fix this use the
 `arm64` tagged image in the `docker run` command
 (ghcr.io/explosion/spacy-io:arm64).
 
-### Building the Docker image {#docker-build}
+### Building the Docker image
 
 If you'd like to build the image locally, you can do so like this:
 
@@ -77,10 +77,9 @@ docker build -t spacy-io .
 This will take some time, so if you want to use the prebuilt image you'll save a
 bit of time.
 
-## Project structure {#structure}
+## Project structure
 
 ```yaml
-### Directory structure
 ├── docs                 # the actual markdown content
 ├── meta                 # JSON-formatted site metadata
 |   ├── languages.json   # supported languages and statistical models
