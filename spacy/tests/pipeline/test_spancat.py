@@ -397,6 +397,7 @@ def test_zero_suggestions():
     assert set(spancat.labels) == {"LOC", "PERSON"}
 
     nlp.update(train_examples, sgd=optimizer)
+    nlp("zero")
 
 
 def test_set_candidates():
