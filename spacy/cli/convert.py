@@ -7,13 +7,12 @@ import re
 import sys
 import itertools
 
-from ._util import app, Arg, Opt
+from ._util import app, Arg, Opt, _handle_renamed_language_codes
 from ..training import docs_to_json
 from ..tokens import Doc, DocBin
 from ..training.converters import iob_to_docs, conll_ner_to_docs, json_to_docs
 from ..training.converters import conllu_to_docs
 
-from ..errors import RENAMED_LANGUAGE_CODES
 
 # Converters are matched by file extension except for ner/iob, which are
 # matched by file extension and content. To add a converter, add a new
@@ -113,12 +112,7 @@ def convert(
         msg = Printer(no_print=silent)
 
     # Throw error for renamed language codes in v4
-    if lang in RENAMED_LANGUAGE_CODES:
-        msg.fail(
-            title="Renamed language code",
-            text=f"Language code '{lang}' was replaced with '{RENAMED_LANGUAGE_CODES[lang]}' in v4. Please change your current defined language code from '{lang}' to '{RENAMED_LANGUAGE_CODES[lang]}'.",
-            exits=1,
-        )
+    _handle_renamed_language_codes(lang)
 
     ner_map = srsly.read_json(ner_map) if ner_map is not None else None
     doc_files = []

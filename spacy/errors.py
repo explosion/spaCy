@@ -965,10 +965,7 @@ OLD_MODEL_SHORTCUTS = {
 }
 
 # Renamed language codes in v4
-RENAMED_LANGUAGE_CODES = {
-        "xx":"mul", "is":"isl"
-}
-
+RENAMED_LANGUAGE_CODES = {"xx":"mul", "is":"isl"}
 
 # fmt: on
 
