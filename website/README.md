@@ -80,7 +80,8 @@ bit of time.
 |   ├── site.json        # general site metadata
 |   ├── type-annotations.json # Type annotations
 |   └── universe.json    # data for the spaCy universe section
-├── public               # compiled site
+├── pages                # Next router pages
+├── public               # static images and other assets
 ├── setup                # Jinja setup
 ├── src                  # source
 |   ├── components       # React components
@@ -99,8 +100,7 @@ bit of time.
 |                        # (to support "nvm use" to switch to correct Node version)
 |
 ├── .prettierrc          # Prettier config file
-├── gatsby-browser.js    # browser-specific hooks for Gatsby
-├── gatsby-config.js     # Gatsby configuration
-├── gatsby-node.js       # Node-specific hooks for Gatsby
-└── package.json         # package settings and dependencies
+├── next.config.mjs      # Next config file
+├── package.json         # package settings and dependencies
+└── tsconfig.json        # TypeScript config file
 ```
