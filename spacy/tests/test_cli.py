@@ -885,10 +885,10 @@ def test_applycli_jsonl():
     with make_tempdir() as data_path:
         output = data_path / "testout.spacy"
         data = [{"field": "Testing apply cli.", "key": 234}]
+        data2 = [{"field": "234"}]
         srsly.write_jsonl(data_path / "test.jsonl", data)
         apply(data_path, output, "blank:en", "field", 1, 1)
-        data = [{"field": "234"}]
-        srsly.write_jsonl(data_path / "test2.jsonl", data)
+        srsly.write_jsonl(data_path / "test2.jsonl", data2)
         apply(data_path, output, "blank:en", "field", 1, 1)
 
 
@@ -919,6 +919,22 @@ def test_applycli_mixed():
         assert len(result) == 3
         for doc in result:
             assert doc.text == text
+
+
+def test_applycli_user_data():
+    Doc.set_extension("ext", default=0)
+    val = ("ext", 0)
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        nlp = spacy.blank("en")
+        doc = nlp("testing apply cli.")
+        doc._.ext = val
+        docbin = DocBin(store_user_data=True)
+        docbin.add(doc)
+        docbin.to_disk(data_path / "testin.spacy")
+        apply(data_path, output, "blank:en", "", 1, 1)
+        result = list(DocBin().from_disk(output).get_docs(nlp.vocab))
+        assert result[0]._.ext == val
 
 
 @pytest.mark.parametrize(
