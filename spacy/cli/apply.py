@@ -76,7 +76,7 @@ def apply_cli(
     data_path: Path = Arg(..., help=path_help, exists=True),
     output_file: Path = Arg(..., help=out_help, dir_okay=False),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help=code_help),
-    text_key: str = Opt("text", "--text-key", "-tk", help="Field to grab from .jsonl"),
+    text_key: str = Opt("text", "--text-key", "-tk", help="Key containing text string for JSONL"),
     force_overwrite: bool = Opt(False, "--force", "-F", help="Force overwriting the output file"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU."),
     batch_size: int = Opt(1, "--batch-size", "-b", help="Batch size."),
