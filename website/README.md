@@ -35,8 +35,7 @@ file in the root defines the settings used in this codebase.
 
 ## Building & developing the site with Docker
 
-Sometimes it's hard to get a local environment working due to rapid updates to
-node dependencies, so it may be easier to use docker for building the docs.
+While it shouldn't be necessary and is not recommended you can run this site in a Docker container.
 
 If you'd like to do this, **be sure you do _not_ include your local
 `node_modules` folder**, since there are some dependencies that need to be built
