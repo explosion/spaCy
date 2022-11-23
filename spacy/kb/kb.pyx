@@ -90,8 +90,7 @@ cdef class KnowledgeBase:
         )
 
     def to_disk(self, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()) -> None:
-        """
-        Write KnowledgeBase content to disk.
+        """Write KnowledgeBase content to disk.
         path (Union[str, Path]): Target file path.
         exclude (Iterable[str]): List of components to exclude.
         """
@@ -100,11 +99,18 @@ cdef class KnowledgeBase:
         )
 
     def from_disk(self, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()) -> None:
-        """
-        Load KnowledgeBase content from disk.
+        """Load KnowledgeBase content from disk.
         path (Union[str, Path]): Target file path.
         exclude (Iterable[str]): List of components to exclude.
         """
         raise NotImplementedError(
             Errors.E1044.format(parent="KnowledgeBase", method="from_disk", name=self.__name__)
+        )
+
+    def __len__(self) -> int:
+        """Returns number of entities in the KnowledgeBase.
+        RETURNS (int): Number of entities in the KnowledgeBase.
+        """
+        raise NotImplementedError(
+            Errors.E1044.format(parent="KnowledgeBase", method="__len__", name=self.__name__)
         )
