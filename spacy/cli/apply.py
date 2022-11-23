@@ -76,7 +76,7 @@ def apply_cli(
     data_path: Path = Arg(..., help=path_help, exists=True),
     output_file: Path = Arg(..., help=out_help, dir_okay=False),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help=code_help),
-    json_field: str = Opt("text", "--field", "-f", help="Field to grab from .jsonl"),
+    json_field: str = Opt("text", "--json-field", "-jf", help="Field to grab from .jsonl"),
     force_overwrite: bool = Opt(False, "--force", "-F", help="Force overwriting the output file"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU."),
     batch_size: int = Opt(1, "--batch-size", "-b", help="Batch size."),
@@ -116,7 +116,7 @@ def apply(
     nlp = load_model(model)
     msg.good(f"Loaded model {model}")
     vocab = nlp.vocab
-    docbin = DocBin()
+    docbin = DocBin(store_user_data=True)
     paths = walk_directory(data_path)
     streams: List[DocOrStrStream] = []
     text_files = []
