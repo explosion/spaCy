@@ -401,5 +401,9 @@ class TextCategorizer(TrainablePipe):
     def _validate_categories(self, examples: Iterable[Example]):
         """Check whether the provided examples all have single-label cats annotations."""
         for ex in examples:
-            if list(ex.reference.cats.values()).count(1.0) > 1:
+            vals = list(ex.reference.cats.values())
+            if vals.count(1.0) > 1:
                 raise ValueError(Errors.E895.format(value=ex.reference.cats))
+            for val in vals:
+                if not (val == 1.0 or val == 0.0):
+                    raise ValueError(Errors.E851.format(val=val))

@@ -212,8 +212,8 @@ class Warnings(metaclass=ErrorsWithCodes):
     W121 = ("Attempting to trace non-existent method '{method}' in pipe '{pipe}'")
     W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
             "is a Cython extension type.")
-    W123 = ("Argument {arg} with value {arg_value} is used instead of {config_value} as specified in the config. Be "
-            "aware that this might affect other components in your pipeline.")
+    W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
+            "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -544,6 +544,10 @@ class Errors(metaclass=ErrorsWithCodes):
             "during training, make sure to include it in 'annotating components'")
 
     # New errors added in v3.x
+    E851 = ("The 'textcat' component labels should only have values of 0 or 1, "
+            "but found value of '{val}'.")
+    E852 = ("The tar file pulled from the remote attempted an unsafe path "
+            "traversal.")
     E853 = ("Unsupported component factory name '{name}'. The character '.' is "
             "not permitted in factory names.")
     E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
