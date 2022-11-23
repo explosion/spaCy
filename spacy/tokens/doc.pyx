@@ -243,7 +243,6 @@ cdef class Doc:
         self.c = data_start + PADDING
         self.max_length = size
         self.length = 0
-        self.sentiment = 0.0
         self.cats = {}
         self.activations = {}
         self.user_hooks = {}
@@ -1270,7 +1269,6 @@ cdef class Doc:
         other.tensor = copy.deepcopy(self.tensor)
         other.cats = copy.deepcopy(self.cats)
         other.user_data = copy.deepcopy(self.user_data)
-        other.sentiment = self.sentiment
         other.has_unknown_spaces = self.has_unknown_spaces
         other.user_hooks = dict(self.user_hooks)
         other.user_token_hooks = dict(self.user_token_hooks)
@@ -1367,7 +1365,6 @@ cdef class Doc:
             "text": lambda: self.text,
             "array_head": lambda: array_head,
             "array_body": lambda: self.to_array(array_head),
-            "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
             "cats": lambda: self.cats,
             "spans": lambda: self.spans.to_bytes(),
@@ -1405,8 +1402,6 @@ cdef class Doc:
             for key, value in zip(user_data_keys, user_data_values):
                 self.user_data[key] = value
         cdef int i, start, end, has_space
-        if "sentiment" not in exclude and "sentiment" in msg:
-            self.sentiment = msg["sentiment"]
         if "tensor" not in exclude and "tensor" in msg:
             self.tensor = msg["tensor"]
         if "cats" not in exclude and "cats" in msg:

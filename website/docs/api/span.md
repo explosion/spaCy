@@ -565,5 +565,4 @@ overlaps with will be returned.
 | `ent_id_`                               | Alias for `id_`: the span's ID. ~~str~~                                                                                       |
 | `id`                                    | The hash value of the span's ID. ~~int~~                                                                                      |
 | `id_`                                   | The span's ID. ~~str~~                                                                                                        |
-| `sentiment`                             | A scalar value indicating the positivity or negativity of the span. ~~float~~                                                 |
 | `_`                                     | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~ |

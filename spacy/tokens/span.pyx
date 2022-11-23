@@ -567,16 +567,6 @@ cdef class Span:
         return self.doc.tensor[self.start : self.end]
 
     @property
-    def sentiment(self):
-        """RETURNS (float): A scalar value indicating the positivity or
-            negativity of the span.
-        """
-        if "sentiment" in self.doc.user_span_hooks:
-            return self.doc.user_span_hooks["sentiment"](self)
-        else:
-            return sum([token.sentiment for token in self]) / len(self)
-
-    @property
     def text(self):
         """RETURNS (str): The original verbatim text of the span."""
         text = self.text_with_ws
