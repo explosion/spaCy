@@ -18,9 +18,6 @@ cd spaCy/website
 # stated in /.nvmrc and skip this step
 nvm use
 
-# Install Gatsby's command-line tool
-npm install --global gatsby-cli
-
 # Install the dependencies
 npm install
 
