@@ -14,16 +14,16 @@ from ..vocab import Vocab
 from ..util import ensure_path, load_model
 
 
-path_help = ("Location of the documents to predict on."
-             "Can be a single file in .spacy format or "
-             ".jsonl file and files with other extensions"
-             "are treated as single plain text documents."
+path_help = ("Location of the documents to predict on. "
+             "Can be a single file in .spacy format or a "
+             ".jsonl file. Files with other extensions "
+             "are treated as single plain text documents. "
              "If a directory is provided "
              "it is traversed recursively to grab all files to "
-             "be processed. The files can be a mixture of .spacy"
+             "be processed. The files can be a mixture of .spacy, "
              ".jsonl and text files. If .jsonl is provided the "
-             "specified field is going to be grabbed ('text') "
-             "by default.")
+             "specified field is going to be grabbed ('text' "
+             "by default).")
 out_help = "Path where to save the result .spacy file"
 code_help = ("Path to Python file with additional "
              "code (registered functions) to be imported")
@@ -44,7 +44,7 @@ def _stream_docbin(path: Path, vocab: Vocab) -> Iterable[Doc]:
         yield doc
 
 
-def _stream_jsonl(path: Path, field) -> Iterable[str]:
+def _stream_jsonl(path: Path, field: str) -> Iterable[str]:
     """
     Stream "text" field from JSONL. If the field "text" is
     not found it raises error.
@@ -86,7 +86,7 @@ def apply_cli(
     Apply a trained pipeline to documents to get predictions.
     Expects a loadable spaCy pipeline and path to the data, which
     can be a directory or a file.
-    The data files can be provided multiple formats:
+    The data files can be provided in multiple formats:
         1. .spacy files
         2. .jsonl files with a specified "field" to read the text from.
         3. Files with any other extension are assumed to be containing
