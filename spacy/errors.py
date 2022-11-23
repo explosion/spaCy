@@ -963,11 +963,11 @@ OLD_MODEL_SHORTCUTS = {
     "nl": "nl_core_news_sm", "el": "el_core_news_sm", "nb": "nb_core_news_sm",
     "lt": "lt_core_news_sm", "xx": "xx_ent_wiki_sm"
 }
+# fmt: on
 
 # Renamed language codes in v4
-RENAMED_LANGUAGE_CODES = {"xx":"mul", "is":"isl"}
+RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}
 
-# fmt: on
 
 
 class MatchPatternError(ValueError):
