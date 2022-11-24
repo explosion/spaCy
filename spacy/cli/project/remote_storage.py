@@ -5,6 +5,7 @@ import hashlib
 import urllib.parse
 import tarfile
 from pathlib import Path
+from wasabi import msg
 
 from .._util import get_hash, get_checksum, upload_file, download_file
 from .._util import ensure_pathy, make_tempdir, _file_exists
