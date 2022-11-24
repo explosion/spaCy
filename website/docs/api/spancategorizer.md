@@ -11,10 +11,18 @@ api_trainable: true
 
 A span categorizer consists of two parts: a [suggester function](#suggesters)
 that proposes candidate spans, which may or may not overlap, and a labeler model
-that predicts zero or more labels for each candidate.
+that predicts zero or more labels for each candidate. 
+
+This component comes in two forms: `spancat` and `spancat_exclusive`.  When you
+need to perform multi-label classification on your spans, use `spancat`.  The
+`spancat` component uses a `Logistic` layer where the output class probabilities
+are independent for each class.  However, if you need to predict exactly one true
+class for a span, then use `spancat_exclusive`. It uses a `Softmax` layer and treats
+the entities as a multi-class problem.
 
 Predicted spans will be saved in a [`SpanGroup`](/api/spangroup) on the doc.
 Individual span scores can be found in `spangroup.attrs["scores"]`.
+
 
 ## Assigned Attributes {#assigned-attributes}
 
@@ -38,7 +46,7 @@ how the component should be configured. You can override its settings via the
 [model architectures](/api/architectures) documentation for details on the
 architectures and their arguments and hyperparameters.
 
-> #### Example
+> #### Example (spancat)
 >
 > ```python
 > from spacy.pipeline.spancat import DEFAULT_SPANCAT_MODEL
@@ -52,6 +60,25 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("spancat", config=config)
 > ```
 
+
+> #### Example (spancat_exclusive)
+>
+> ```python
+> from spacy.pipeline.spancat import DEFAULT_SPANCAT_MODEL
+> config = {
+>     "threshold": 0.5,
+>     "spans_key": "labeled_spans",
+>     "max_positive": None,
+>     "model": DEFAULT_SPANCAT_MODEL,
+>     "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
+>     # Additional spancat_exclusive parameters
+>     "negative_weight": 1.0,
+>     "allow_overlap": True,
+> }
+> nlp.add_pipe("spancat_exclusive", config=config)
+> ```
+
+
 | Setting        | Description                                                                                                                                                                                                                                                                                             |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `suggester`    | A function that [suggests spans](#suggesters). Spans are returned as a ragged array with two integer columns, for the start and end positions. Defaults to [`ngram_suggester`](#ngram_suggester). ~~Callable[[Iterable[Doc], Optional[Ops]], Ragged]~~                                                  |
@@ -60,9 +87,17 @@ architectures and their arguments and hyperparameters.
 | `threshold`    | Minimum probability to consider a prediction positive. Spans with a positive prediction will be saved on the Doc. Defaults to `0.5`. ~~float~~                                                                                                                                                          |
 | `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~Optional[int]~~                                                                                                                                                                                      |
 | `scorer`       | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                                                                                                       |
+| `negative_weight`    | Multiplier for the loss terms. It can be used to down weigh the negative samples if there are too many. It is only available when using the `spancat_exclusive` component. ~~float~~                                                  |
+| `allow_overlap`        | If `True`, the data is assumed to contain overlapping spans. It is only available when using the `spancat_exclusive` component. ~~bool~~ |
+
+
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/spancat.py
+```
+
+```python
+%%GITHUB_SPACY/spacy/pipeline/spancat_exclusive.py
 ```
 
 ## SpanCategorizer.\_\_init\_\_ {#init tag="method"}
@@ -71,6 +106,7 @@ architectures and their arguments and hyperparameters.
 >
 > ```python
 > # Construction via add_pipe with default model
+> # Use 'spancat_exclusive' for exclusive clases
 > spancat = nlp.add_pipe("spancat")
 >
 > # Construction via add_pipe with custom model
