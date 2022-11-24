@@ -358,7 +358,7 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
     if dest.exists() and not force:
         return None
     src = str(src)
-    with smart_open.open(src, mode="rb", ignore_ext=True) as input_file:
+    with smart_open.open(src, mode="rb", compression="disable") as input_file:
         with dest.open(mode="wb") as output_file:
             shutil.copyfileobj(input_file, output_file)
 
