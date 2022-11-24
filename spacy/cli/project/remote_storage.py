@@ -116,18 +116,27 @@ class RemoteStorage:
         recent matching file is preferred.
         """
         name = self.encode_name(str(path))
+        urls = []
         if command_hash is not None and content_hash is not None:
-            url = self.make_url(path, command_hash, content_hash)
-            urls = [url] if _file_exists(url) else []
+            url = self.url / name / command_hash / content_hash
+            urls = [url] if url.exists() else []
         elif command_hash is not None:
-            urls = list((self.url / name / command_hash).iterdir())
+            if (self.url / name / command_hash).exists():
+                urls = list((self.url / name / command_hash).iterdir())
         else:
-            urls = []
-            for command_hash_dir in (self.url / name).iterdir():
-                urls.extend(command_hash_dir.iterdir())
-            if content_hash is not None:
-                urls = [url for url in urls if url.parts[-1] == content_hash]
-        # TODO: URLs should be sorted by last modified
+            if (self.url / name).exists():
+                for sub_dir in (self.url / name).iterdir():
+                    urls.extend(sub_dir.iterdir())
+                if content_hash is not None:
+                    urls = [url for url in urls if url.parts[-1] == content_hash]
+        if len(urls) >= 2:
+            try:
+                urls.sort(key=lambda x: x.stat().last_modified)  # type: ignore
+            except Exception:
+                msg.warn(
+                    "Unable to sort remote files by last modified. The file(s) "
+                    "pulled from the cache may not be the most recent."
+                )
         return urls[-1] if urls else None
 
     def make_url(self, path: Path, command_hash: str, content_hash: str) -> "FluidPath":

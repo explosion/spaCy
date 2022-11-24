@@ -3,6 +3,7 @@ import math
 import pkg_resources
 from random import sample
 from typing import Counter
+import time
 
 import pytest
 import srsly
@@ -863,40 +864,55 @@ def test_span_length_freq_dist_output_must_be_correct():
 def test_local_remote_storage():
     with make_tempdir() as d:
         filename = "a.txt"
-        content = "a"
 
-        loc_file = d / "root" / filename
-        loc_file.parent.mkdir(parents=True)
-        with loc_file.open(mode="w") as file_:
-            file_.write(content)
+        content_hashes = ("aaaa", "cccc", "bbbb")
+        for i, content_hash in enumerate(content_hashes):
+            # make sure that each subsequent file has a later timestamp
+            if i > 0:
+                time.sleep(1)
+            content = f"{content_hash} content"
+            loc_file = d / "root" / filename
+            if not loc_file.parent.exists():
+                loc_file.parent.mkdir(parents=True)
+            with loc_file.open(mode="w") as file_:
+                file_.write(content)
 
-        # push to remote storage
+            # push first version to remote storage
+            remote = RemoteStorage(d / "root", str(d / "remote"))
+            remote.push(filename, "aaaa", content_hash)
+
+            # retrieve with full hashes
+            loc_file.unlink()
+            remote.pull(filename, command_hash="aaaa", content_hash=content_hash)
+            with loc_file.open(mode="r") as file_:
+                assert file_.read() == content
+
+            # retrieve with command hash
+            loc_file.unlink()
+            remote.pull(filename, command_hash="aaaa")
+            with loc_file.open(mode="r") as file_:
+                assert file_.read() == content
+
+            # retrieve with content hash
+            loc_file.unlink()
+            remote.pull(filename, content_hash=content_hash)
+            with loc_file.open(mode="r") as file_:
+                assert file_.read() == content
+
+            # retrieve with no hashes
+            loc_file.unlink()
+            remote.pull(filename)
+            with loc_file.open(mode="r") as file_:
+                assert file_.read() == content
+
+
+def test_local_remote_storage_pull_missing():
+    # pulling from a non-existent remote pulls nothing gracefully
+    with make_tempdir() as d:
+        filename = "a.txt"
         remote = RemoteStorage(d / "root", str(d / "remote"))
-        remote.push(filename, "aaaa", "bbbb")
-
-        # retrieve with full hashes
-        loc_file.unlink()
-        remote.pull(filename, command_hash="aaaa", content_hash="bbbb")
-        with loc_file.open(mode="r") as file_:
-            assert file_.read() == content
-
-        # retrieve with command hash
-        loc_file.unlink()
-        remote.pull(filename, command_hash="aaaa")
-        with loc_file.open(mode="r") as file_:
-            assert file_.read() == content
-
-        # retrieve with content hash
-        loc_file.unlink()
-        remote.pull(filename, content_hash="bbbb")
-        with loc_file.open(mode="r") as file_:
-            assert file_.read() == content
-
-        # retrieve with no hashes
-        loc_file.unlink()
-        remote.pull(filename)
-        with loc_file.open(mode="r") as file_:
-            assert file_.read() == content
+        assert remote.pull(filename, command_hash="aaaa") is None
+        assert remote.pull(filename) is None
 
 
 @pytest.mark.parametrize(
