@@ -117,6 +117,7 @@ class Span:
     end_char: int
     label: int
     kb_id: int
+    id: int
     ent_id: int
     ent_id_: str
     @property
@@ -125,3 +126,4 @@ class Span:
     def lemma_(self) -> str: ...
     label_: str
     kb_id_: str
+    id_: str

@@ -24,8 +24,8 @@ single_label_default_config = """
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v2"
 width = 64
-rows = [2000, 2000, 1000, 1000, 1000, 1000]
-attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
+rows = [2000, 2000, 500, 1000, 500]
+attrs = ["NORM", "LOWER", "PREFIX", "SUFFIX", "SHAPE"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
@@ -72,7 +72,7 @@ subword_features = true
     "textcat",
     assigns=["doc.cats"],
     default_config={
-        "threshold": 0.5,
+        "threshold": 0.0,
         "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
         "scorer": {"@scorers": "spacy.textcat_scorer.v1"},
     },
@@ -144,7 +144,8 @@ class TextCategorizer(TrainablePipe):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        threshold (float): Cutoff to consider a prediction "positive".
+        threshold (float): Unused, not needed for single-label (exclusive
+            classes) classification.
         scorer (Optional[Callable]): The scoring method. Defaults to
                 Scorer.score_cats for the attribute "cats".
 
@@ -154,7 +155,11 @@ class TextCategorizer(TrainablePipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg = {"labels": [], "threshold": threshold, "positive_label": None}
+        cfg: Dict[str, Any] = {
+            "labels": [],
+            "threshold": threshold,
+            "positive_label": None,
+        }
         self.cfg = dict(cfg)
         self.scorer = scorer
 
@@ -192,7 +197,7 @@ class TextCategorizer(TrainablePipe):
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             tensors = [doc.tensor for doc in docs]
-            xp = get_array_module(tensors)
+            xp = self.model.ops.xp
             scores = xp.zeros((len(list(docs)), len(self.labels)))
             return scores
         scores = self.model.predict(docs)
@@ -396,5 +401,9 @@ class TextCategorizer(TrainablePipe):
     def _validate_categories(self, examples: Iterable[Example]):
         """Check whether the provided examples all have single-label cats annotations."""
         for ex in examples:
-            if list(ex.reference.cats.values()).count(1.0) > 1:
+            vals = list(ex.reference.cats.values())
+            if vals.count(1.0) > 1:
                 raise ValueError(Errors.E895.format(value=ex.reference.cats))
+            for val in vals:
+                if not (val == 1.0 or val == 0.0):
+                    raise ValueError(Errors.E851.format(val=val))

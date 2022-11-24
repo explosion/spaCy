@@ -30,7 +30,9 @@ MOD_NAMES = [
     "spacy.lexeme",
     "spacy.vocab",
     "spacy.attrs",
-    "spacy.kb",
+    "spacy.kb.candidate",
+    "spacy.kb.kb",
+    "spacy.kb.kb_in_memory",
     "spacy.ml.parser_model",
     "spacy.morphology",
     "spacy.pipeline.dep_parser",
@@ -126,6 +128,8 @@ class build_ext_options:
 
 class build_ext_subclass(build_ext, build_ext_options):
     def build_extensions(self):
+        if self.parallel is None and os.environ.get("SPACY_NUM_BUILD_JOBS") is not None:
+            self.parallel = int(os.environ.get("SPACY_NUM_BUILD_JOBS"))
         build_ext_options.build_options(self)
         build_ext.build_extensions(self)
 
@@ -203,10 +207,25 @@ def setup_package():
         get_python_inc(plat_specific=True),
     ]
     ext_modules = []
+    ext_modules.append(
+        Extension(
+            "spacy.matcher.levenshtein",
+            [
+                "spacy/matcher/levenshtein.pyx",
+                "spacy/matcher/polyleven.c",
+            ],
+            language="c",
+            include_dirs=include_dirs,
+        )
+    )
     for name in MOD_NAMES:
         mod_path = name.replace(".", "/") + ".pyx"
         ext = Extension(
-            name, [mod_path], language="c++", include_dirs=include_dirs, extra_compile_args=["-std=c++11"]
+            name,
+            [mod_path],
+            language="c++",
+            include_dirs=include_dirs,
+            extra_compile_args=["-std=c++11"],
         )
         ext_modules.append(ext)
     print("Cythonizing sources")

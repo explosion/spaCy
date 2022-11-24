@@ -7,7 +7,7 @@ from pathlib import Path
 from itertools import islice
 import srsly
 import random
-from thinc.api import CosineDistance, Model, Optimizer, Config
+from thinc.api import CosineDistance, Model, Optimizer
 from thinc.api import set_dropout_rate
 import warnings
 
@@ -20,7 +20,7 @@ from ...language import Language
 from ...vocab import Vocab
 from ...training import Example, validate_examples, validate_get_examples
 from ...errors import Errors, Warnings
-from ...util import SimpleFrozenList, registry
+from ...util import SimpleFrozenList
 from ... import util
 from ...scorer import Scorer
 
@@ -68,9 +68,7 @@ class EntityLinker_v1(TrainablePipe):
         entity_vector_length (int): Size of encoding vectors in the KB.
         get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
-        scorer (Optional[Callable]): The scoring method. Defaults to
-            Scorer.score_links.
-
+        scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
         DOCS: https://spacy.io/api/entitylinker#init
         """
         self.vocab = vocab
@@ -116,7 +114,7 @@ class EntityLinker_v1(TrainablePipe):
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
-        kb_loader (Callable[[Vocab], KnowledgeBase]): A function that creates a KnowledgeBase from a Vocab instance.
+        kb_loader (Callable[[Vocab], KnowledgeBase]): A function that creates an InMemoryLookupKB from a Vocab instance.
             Note that providing this argument, will overwrite all data accumulated in the current KB.
             Use this only when loading a KB as-such from file.
 
@@ -272,7 +270,6 @@ class EntityLinker_v1(TrainablePipe):
                             final_kb_ids.append(self.NIL)
                         elif len(candidates) == 1:
                             # shortcut for efficiency reasons: take the 1 candidate
-                            # TODO: thresholding
                             final_kb_ids.append(candidates[0].entity_)
                         else:
                             random.shuffle(candidates)
@@ -301,7 +298,6 @@ class EntityLinker_v1(TrainablePipe):
                                 if sims.shape != prior_probs.shape:
                                     raise ValueError(Errors.E161)
                                 scores = prior_probs + sims - (prior_probs * sims)
-                            # TODO: thresholding
                             best_index = scores.argmax().item()
                             best_candidate = candidates[best_index]
                             final_kb_ids.append(best_candidate.entity_)

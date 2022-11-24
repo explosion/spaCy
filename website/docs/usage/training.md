@@ -480,7 +480,7 @@ as-is. They are also excluded when calling
 > parse. So the evaluation results should always reflect what your pipeline will
 > produce at runtime. If you want a frozen component to run (without updating)
 > during training as well, so that downstream components can use its
-> **predictions**, you can add it to the list of
+> **predictions**, you should add it to the list of
 > [`annotating_components`](/usage/training#annotating-components).
 
 ```ini
@@ -1571,77 +1571,6 @@ Note that if your data augmentation strategy involves changing the tokenization
 token-based annotations like the dependency parse or entity labels, you'll need
 to take care to adjust the `Example` object so its annotations match and remain
 valid.
-
-## Parallel & distributed training with Ray {#parallel-training}
-
-> #### Installation
->
-> ```cli
-> $ pip install -U %%SPACY_PKG_NAME[ray]%%SPACY_PKG_FLAGS
-> # Check that the CLI is registered
-> $ python -m spacy ray --help
-> ```
-
-[Ray](https://ray.io/) is a fast and simple framework for building and running
-**distributed applications**. You can use Ray to train spaCy on one or more
-remote machines, potentially speeding up your training process. Parallel
-training won't always be faster though – it depends on your batch size, models,
-and hardware.
-
-<Infobox variant="warning">
-
-To use Ray with spaCy, you need the
-[`spacy-ray`](https://github.com/explosion/spacy-ray) package installed.
-Installing the package will automatically add the `ray` command to the spaCy
-CLI.
-
-</Infobox>
-
-The [`spacy ray train`](/api/cli#ray-train) command follows the same API as
-[`spacy train`](/api/cli#train), with a few extra options to configure the Ray
-setup. You can optionally set the `--address` option to point to your Ray
-cluster. If it's not set, Ray will run locally.
-
-```cli
-python -m spacy ray train config.cfg --n-workers 2
-```
-
-<Project id="integrations/ray">
-
-Get started with parallel training using our project template. It trains a
-simple model on a Universal Dependencies Treebank and lets you parallelize the
-training with Ray.
-
-</Project>
-
-### How parallel training works {#parallel-training-details}
-
-Each worker receives a shard of the **data** and builds a copy of the **model
-and optimizer** from the [`config.cfg`](#config). It also has a communication
-channel to **pass gradients and parameters** to the other workers. Additionally,
-each worker is given ownership of a subset of the parameter arrays. Every
-parameter array is owned by exactly one worker, and the workers are given a
-mapping so they know which worker owns which parameter.
-
-![Illustration of setup](../images/spacy-ray.svg)
-
-As training proceeds, every worker will be computing gradients for **all** of
-the model parameters. When they compute gradients for parameters they don't own,
-they'll **send them to the worker** that does own that parameter, along with a
-version identifier so that the owner can decide whether to discard the gradient.
-Workers use the gradients they receive and the ones they compute locally to
-update the parameters they own, and then broadcast the updated array and a new
-version ID to the other workers.
-
-This training procedure is **asynchronous** and **non-blocking**. Workers always
-push their gradient increments and parameter updates, they do not have to pull
-them and block on the result, so the transfers can happen in the background,
-overlapped with the actual training work. The workers also do not have to stop
-and wait for each other ("synchronize") at the start of each batch. This is very
-useful for spaCy, because spaCy is often trained on long documents, which means
-**batches can vary in size** significantly. Uneven workloads make synchronous
-gradient descent inefficient, because if one batch is slow, all of the other
-workers are stuck waiting for it to complete before they can continue.
 
 ## Internal training API {#api}
 

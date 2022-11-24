@@ -186,6 +186,7 @@ process that are used when you run [`spacy train`](/api/cli#train).
 | `accumulate_gradient`                                | Whether to divide the batch up into substeps. Defaults to `1`. ~~int~~                                                                                                                                                                                                                                                              |
 | `batcher`                                            | Callable that takes an iterator of [`Doc`](/api/doc) objects and yields batches of `Doc`s. Defaults to [`batch_by_words`](/api/top-level#batch_by_words). ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~                                                                                                                        |
 | `before_to_disk`                                     | Optional callback to modify `nlp` object right before it is saved to disk during and after training. Can be used to remove or reset config values or disable components. Defaults to `null`. ~~Optional[Callable[[Language], Language]]~~                                                                                           |
+| `before_update`                                      | Optional callback that is invoked at the start of each training step with the `nlp` object and a `Dict` containing the following entries: `step`, `epoch`. Can be used to make deferred changes to components. Defaults to `null`. ~~Optional[Callable[[Language, Dict[str, Any]], None]]~~                                         |
 | `dev_corpus`                                         | Dot notation of the config location defining the dev corpus. Defaults to `corpora.dev`. ~~str~~                                                                                                                                                                                                                                     |
 | `dropout`                                            | The dropout rate. Defaults to `0.1`. ~~float~~                                                                                                                                                                                                                                                                                      |
 | `eval_frequency`                                     | How often to evaluate during training (steps). Defaults to `200`. ~~int~~                                                                                                                                                                                                                                                           |
@@ -395,12 +396,13 @@ file to keep track of your settings and hyperparameters and your own
 >    "pos": List[str],
 >    "morphs": List[str],
 >    "sent_starts": List[Optional[bool]],
->    "deps": List[string],
+>    "deps": List[str],
 >    "heads": List[int],
 >    "entities": List[str],
 >    "entities": List[(int, int, str)],
 >    "cats": Dict[str, float],
 >    "links": Dict[(int, int), dict],
+>    "spans": Dict[str, List[Tuple]],
 > }
 > ```
 
@@ -417,9 +419,10 @@ file to keep track of your settings and hyperparameters and your own
 | `deps`        | List of string values indicating the [dependency relation](/usage/linguistic-features#dependency-parse) of a token to its head. ~~List[str]~~                                                                                  |
 | `heads`       | List of integer values indicating the dependency head of each token, referring to the absolute index of each token in the text. ~~List[int]~~                                                                                  |
 | `entities`    | **Option 1:** List of [BILUO tags](/usage/linguistic-features#accessing-ner) per token of the format `"{action}-{label}"`, or `None` for unannotated tokens. ~~List[str]~~                                                     |
-| `entities`    | **Option 2:** List of `"(start, end, label)"` tuples defining all entities in the text. ~~List[Tuple[int, int, str]]~~                                                                                                         |
+| `entities`    | **Option 2:** List of `(start_char, end_char, label)` tuples defining all entities in the text. ~~List[Tuple[int, int, str]]~~                                                                                                 |
 | `cats`        | Dictionary of `label`/`value` pairs indicating how relevant a certain [text category](/api/textcategorizer) is for the text. ~~Dict[str, float]~~                                                                              |
 | `links`       | Dictionary of `offset`/`dict` pairs defining [named entity links](/usage/linguistic-features#entity-linking). The character offsets are linked to a dictionary of relevant knowledge base IDs. ~~Dict[Tuple[int, int], Dict]~~ |
+| `spans`       | Dictionary of `spans_key`/`List[Tuple]` pairs defining the spans for each spans key as `(start_char, end_char, label, kb_id)` tuples. ~~Dict[str, List[Tuple[int, int, str, str]]~~                                            |
 
 <Infobox title="Notes and caveats">
 

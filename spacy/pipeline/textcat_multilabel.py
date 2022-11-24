@@ -19,17 +19,17 @@ multi_label_default_config = """
 @architectures = "spacy.TextCatEnsemble.v2"
 
 [model.tok2vec]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v2"
 width = 64
-rows = [2000, 2000, 1000, 1000, 1000, 1000]
-attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
+rows = [2000, 2000, 500, 1000, 500]
+attrs = ["NORM", "LOWER", "PREFIX", "SUFFIX", "SHAPE"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 width = ${model.tok2vec.embed.width}
 window_size = 1
 maxout_pieces = 3
@@ -96,8 +96,8 @@ def make_multilabel_textcat(
     model: Model[List[Doc], List[Floats2d]],
     threshold: float,
     scorer: Optional[Callable],
-) -> "TextCategorizer":
-    """Create a TextCategorizer component. The text categorizer predicts categories
+) -> "MultiLabel_TextCategorizer":
+    """Create a MultiLabel_TextCategorizer component. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels are considered
     to be non-mutually exclusive, which means that there can be zero or more labels
     per doc).
@@ -105,6 +105,7 @@ def make_multilabel_textcat(
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
         scores for each category.
     threshold (float): Cutoff to consider a prediction "positive".
+    scorer (Optional[Callable]): The scoring method.
     """
     return MultiLabel_TextCategorizer(
         nlp.vocab, model, name, threshold=threshold, scorer=scorer
@@ -147,6 +148,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         name (str): The component instance name, used to add entries to the
             losses during training.
         threshold (float): Cutoff to consider a prediction "positive".
+        scorer (Optional[Callable]): The scoring method.
 
         DOCS: https://spacy.io/api/textcategorizer#init
         """
@@ -190,6 +192,8 @@ class MultiLabel_TextCategorizer(TextCategorizer):
             for label in labels:
                 self.add_label(label)
         subbatch = list(islice(get_examples(), 10))
+        self._validate_categories(subbatch)
+
         doc_sample = [eg.reference for eg in subbatch]
         label_sample, _ = self._examples_to_truth(subbatch)
         self._require_labels()
@@ -200,4 +204,8 @@ class MultiLabel_TextCategorizer(TextCategorizer):
     def _validate_categories(self, examples: Iterable[Example]):
         """This component allows any type of single- or multi-label annotations.
         This method overwrites the more strict one from 'textcat'."""
-        pass
+        # check that annotation values are valid
+        for ex in examples:
+            for val in ex.reference.cats.values():
+                if not (val == 1.0 or val == 0.0):
+                    raise ValueError(Errors.E851.format(val=val))

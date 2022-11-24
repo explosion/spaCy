@@ -1,5 +1,8 @@
-from typing import Optional, List, Dict, Sequence, Any, Iterable
+from typing import Optional, List, Dict, Sequence, Any, Iterable, Tuple
+import os.path
 from pathlib import Path
+
+import pkg_resources
 from wasabi import msg
 from wasabi.util import locale_escape
 import sys
@@ -50,6 +53,7 @@ def project_run(
     force: bool = False,
     dry: bool = False,
     capture: bool = False,
+    skip_requirements_check: bool = False,
 ) -> None:
     """Run a named script defined in the project.yml. If the script is part
     of the default pipeline (defined in the "run" section), DVC is used to
@@ -66,11 +70,19 @@ def project_run(
         sys.exit will be called with the return code. You should use capture=False
         when you want to turn over execution to the command, and capture=True
         when you want to run the command more like a function.
+    skip_requirements_check (bool): Whether to skip the requirements check.
     """
     config = load_project_config(project_dir, overrides=overrides)
     commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
     workflows = config.get("workflows", {})
     validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
+
+    req_path = project_dir / "requirements.txt"
+    if not skip_requirements_check:
+        if config.get("check_requirements", True) and os.path.exists(req_path):
+            with req_path.open() as requirements_file:
+                _check_requirements([req.strip() for req in requirements_file])
+
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
         for cmd in workflows[subcommand]:
@@ -81,6 +93,7 @@ def project_run(
                 force=force,
                 dry=dry,
                 capture=capture,
+                skip_requirements_check=True,
             )
     else:
         cmd = commands[subcommand]
@@ -195,6 +208,8 @@ def validate_subcommand(
         msg.fail(f"No commands or workflows defined in {PROJECT_FILE}", exits=1)
     if subcommand not in commands and subcommand not in workflows:
         help_msg = []
+        if subcommand in ["assets", "asset"]:
+            help_msg.append("Did you mean to run: python -m spacy project assets?")
         if commands:
             help_msg.append(f"Available commands: {', '.join(commands)}")
         if workflows:
@@ -308,3 +323,38 @@ def get_fileinfo(project_dir: Path, paths: List[str]) -> List[Dict[str, Optional
         md5 = get_checksum(file_path) if file_path.exists() else None
         data.append({"path": path, "md5": md5})
     return data
+
+
+def _check_requirements(requirements: List[str]) -> Tuple[bool, bool]:
+    """Checks whether requirements are installed and free of version conflicts.
+    requirements (List[str]): List of requirements.
+    RETURNS (Tuple[bool, bool]): Whether (1) any packages couldn't be imported, (2) any packages with version conflicts
+        exist.
+    """
+
+    failed_pkgs_msgs: List[str] = []
+    conflicting_pkgs_msgs: List[str] = []
+
+    for req in requirements:
+        try:
+            pkg_resources.require(req)
+        except pkg_resources.DistributionNotFound as dnf:
+            failed_pkgs_msgs.append(dnf.report())
+        except pkg_resources.VersionConflict as vc:
+            conflicting_pkgs_msgs.append(vc.report())
+        except Exception:
+            msg.warn(
+                f"Unable to check requirement: {req} "
+                "Checks are currently limited to requirement specifiers "
+                "(PEP 508)"
+            )
+
+    if len(failed_pkgs_msgs) or len(conflicting_pkgs_msgs):
+        msg.warn(
+            title="Missing requirements or requirement conflicts detected. Make sure your Python environment is set up "
+            "correctly and you installed all requirements specified in your project's requirements.txt: "
+        )
+        for pgk_msg in failed_pkgs_msgs + conflicting_pkgs_msgs:
+            msg.text(pgk_msg)
+
+    return len(failed_pkgs_msgs) > 0, len(conflicting_pkgs_msgs) > 0

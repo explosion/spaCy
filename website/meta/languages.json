@@ -5,9 +5,19 @@
             "name": "Afrikaans"
         },
         {
+            "code": "am",
+            "name": "Amharic",
+            "has_examples": true
+        },
+        {
             "code": "ar",
             "name": "Arabic",
             "example": "هذه جملة",
+            "has_examples": true
+        },
+        {
+            "code": "az",
+            "name": "Azerbaijani",
             "has_examples": true
         },
         {
@@ -65,7 +75,7 @@
         {
             "code": "dsb",
             "name": "Lower Sorbian",
-	    "has_examples": true
+            "has_examples": true
         },
         {
             "code": "el",
@@ -143,6 +153,11 @@
             "name": "Irish"
         },
         {
+            "code": "grc",
+            "name": "Ancient Greek",
+            "has_examples": true
+        },
+        {
             "code": "gu",
             "name": "Gujarati",
             "has_examples": true
@@ -162,12 +177,17 @@
         {
             "code": "hr",
             "name": "Croatian",
-            "has_examples": true
+            "has_examples": true,
+            "models": [
+                "hr_core_news_sm",
+                "hr_core_news_md",
+                "hr_core_news_lg"
+            ]
         },
         {
             "code": "hsb",
             "name": "Upper Sorbian",
-	    "has_examples": true
+            "has_examples": true
         },
         {
             "code": "hu",
@@ -256,8 +276,17 @@
             "has_examples": true
         },
         {
+            "code": "la",
+            "name": "Latin"
+        },
+        {
             "code": "lb",
             "name": "Luxembourgish",
+            "has_examples": true
+        },
+        {
+            "code": "lg",
+            "name": "Luganda",
             "has_examples": true
         },
         {
@@ -364,8 +393,8 @@
             "has_examples": true,
             "dependencies": [
                 {
-                    "name": "pymorphy2",
-                    "url": "https://github.com/kmike/pymorphy2"
+                    "name": "pymorphy3",
+                    "url": "https://github.com/no-plagiarism/pymorphy3"
                 }
             ],
             "models": [
@@ -439,6 +468,11 @@
             "has_examples": true
         },
         {
+            "code": "ti",
+            "name": "Tigrinya",
+            "has_examples": true
+        },
+        {
             "code": "tl",
             "name": "Tagalog"
         },
@@ -462,10 +496,20 @@
             "code": "uk",
             "name": "Ukrainian",
             "has_examples": true,
+            "models": [
+                "uk_core_news_sm",
+                "uk_core_news_md",
+                "uk_core_news_lg",
+                "uk_core_news_trf"
+            ],
             "dependencies": [
                 {
-                    "name": "pymorphy2",
-                    "url": "https://github.com/kmike/pymorphy2"
+                    "name": "pymorphy3",
+                    "url": "https://github.com/no-plagiarism/pymorphy3"
+                },
+                {
+                    "name": "pymorphy3-dicts-uk",
+                    "url": "https://github.com/no-plagiarism/pymorphy3-dicts"
                 }
             ]
         },

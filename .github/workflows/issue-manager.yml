@@ -15,7 +15,7 @@ jobs:
   issue-manager:
     runs-on: ubuntu-latest
     steps:
-      - uses: tiangolo/issue-manager@0.2.1
+      - uses: tiangolo/issue-manager@0.4.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config: >
@@ -23,6 +23,12 @@ jobs:
               "resolved": {
                 "delay": "P7D",
                 "message": "This issue has been automatically closed because it was answered and there was no follow-up discussion.",
+                "remove_label_on_comment": true,
+                "remove_label_on_close": true
+              },
+              "more-info-needed": {
+                "delay": "P7D",
+                "message": "This issue has been automatically closed because there has been no response to a request for more information from the original author. With only the information that is currently in the issue, there's not enough information to take action. If you're the original author, feel free to reopen the issue if you have or find the answers needed to investigate further.",
                 "remove_label_on_comment": true,
                 "remove_label_on_close": true
               }
