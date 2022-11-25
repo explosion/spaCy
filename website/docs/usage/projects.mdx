@@ -82,7 +82,7 @@ project template and copies the files to a local directory. You can then run the
 project, e.g. to train a pipeline and edit the commands and scripts to build
 fully custom workflows.
 
-```cli
+```bash
 python -m spacy project clone pipelines/tagger_parser_ud
 ```
 
@@ -115,7 +115,7 @@ with. Each project template comes with a `project.yml` that defines the assets
 to download and where to put them. The [`spacy project assets`](/api/cli#run)
 will fetch the project assets for you:
 
-```cli
+```bash
 $ cd some_example_project
 $ python -m spacy project assets
 ```
@@ -153,7 +153,7 @@ Commands consist of one or more steps and can be run with
 [`spacy project run`](/api/cli#project-run). The following will run the command
 `preprocess` defined in the `project.yml`:
 
-```cli
+```bash
 $ python -m spacy project run preprocess
 ```
 
@@ -193,7 +193,7 @@ pipeline on the converted data and if that's successful, run
 installable Python package. The following command runs the workflow named `all`
 defined in the `project.yml`, and executes the commands it specifies, in order:
 
-```cli
+```bash
 $ python -m spacy project run all
 ```
 
@@ -222,7 +222,7 @@ a remote storage, using protocols like [S3](https://aws.amazon.com/s3/),
 you **export** your pipeline packages, **share** work with your team, or **cache
 results** to avoid repeating work.
 
-```cli
+```bash
 $ python -m spacy project push
 ```
 
@@ -604,7 +604,7 @@ in the project and include details on how to run the project, as well as links
 to the relevant spaCy documentation to make it easy for others to get started
 using your project.
 
-```cli
+```bash
 $ python -m spacy project document --output README.md
 ```
 
@@ -629,7 +629,7 @@ The [`spacy project clone`](/api/cli#project-clone) command lets you customize
 the repo to clone from using the `--repo` option. It calls into `git`, so you'll
 be able to clone from any repo that you have access to, including private repos.
 
-```cli
+```bash
 python -m spacy project clone your_project --repo https://github.com/you/repo
 ```
 
@@ -671,7 +671,7 @@ protocols.
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy project pull local
 > ```
 
@@ -737,7 +737,7 @@ execution context of your output. It would then compute an MD5 hash of the
 `training/model-best` directory, and use those three pieces of information to
 construct the storage URL.
 
-```cli
+```bash
 $ python -m spacy project run train
 $ python -m spacy project push
 ```
@@ -808,7 +808,7 @@ can then manage your spaCy project like any other DVC project, run
 and [`dvc repro`](https://dvc.org/doc/command-reference/repro) to reproduce the
 workflow or individual commands.
 
-```cli
+```bash
 $ python -m spacy project dvc [project_dir] [workflow_name]
 ```
 
@@ -853,7 +853,7 @@ collected with Prodigy and training a spaCy pipeline:
 
 > #### Example usage
 >
-> ```cli
+> ```bash
 > $ python -m spacy project run all
 > ```
 
@@ -970,7 +970,7 @@ and explore your own custom trained pipelines.
 
 > #### Example usage
 >
-> ```cli
+> ```bash
 > $ python -m spacy project run visualize
 > ```
 
@@ -1018,7 +1018,7 @@ query your API from Python and JavaScript (Vanilla JS and React).
 
 > #### Example usage
 >
-> ```cli
+> ```bash
 > $ python -m spacy project run serve
 > ```
 
@@ -1103,7 +1103,7 @@ it's installed.
 
 > #### Installation
 >
-> ```cli
+> ```bash
 > $ pip install spacy-huggingface-hub
 > # Check that the CLI is registered
 > $ python -m spacy huggingface-hub --help
@@ -1116,7 +1116,7 @@ package, including the auto-generated pretty `README.md` and the model details
 available in the `meta.json`. For examples, check out the
 [spaCy pipelines](https://huggingface.co/spacy) we've uploaded.
 
-```cli
+```bash
 $ huggingface-cli login
 $ python -m spacy package ./en_ner_fashion ./output --build wheel
 $ cd ./output/en_ner_fashion-0.0.0/dist

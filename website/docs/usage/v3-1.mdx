@@ -159,7 +159,7 @@ from a config file without additional training. It can be especially useful for
 creating a blank pipeline with a custom tokenizer, rule-based components or word
 vectors.
 
-```cli
+```bash
 $ python -m spacy assemble config.cfg ./output
 ```
 
@@ -222,7 +222,7 @@ details, files and interactive visualizers, as well as a direct URL to the wheel
 file that you can install via `pip install`. For examples, check out the
 [spaCy pipelines](https://huggingface.co/spacy) we've uploaded.
 
-```cli
+```bash
 $ pip install spacy-huggingface-hub
 $ huggingface-cli login
 $ python -m spacy package ./en_ner_fashion ./output --build wheel
