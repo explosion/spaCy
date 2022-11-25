@@ -17,6 +17,7 @@ from spacy.cli._util import is_subpath_of, load_project_config
 from spacy.cli._util import parse_config_overrides, string_to_list
 from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
+from spacy.cli._util import upload_file, download_file
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.debug_data import _get_distribution, _get_kl_divergence
@@ -1014,3 +1015,18 @@ def test_project_check_requirements(reqs, output):
         pkg_resources.require("spacyunknowndoesnotexist12345")
     except pkg_resources.DistributionNotFound:
         assert output == _check_requirements([req.strip() for req in reqs.split("\n")])
+
+
+def test_upload_download_local_file():
+    with make_tempdir() as d1, make_tempdir() as d2:
+        filename = "f.txt"
+        content = "content"
+        local_file = d1 / filename
+        remote_file = d2 / filename
+        with local_file.open(mode="w") as file_:
+            file_.write(content)
+        upload_file(local_file, remote_file)
+        local_file.unlink()
+        download_file(remote_file, local_file)
+        with local_file.open(mode="r") as file_:
+            assert file_.read() == content
