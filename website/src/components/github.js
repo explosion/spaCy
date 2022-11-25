@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
+import Prism from 'prismjs'
+
+// We manually load all the languages that are needed, which are currently only those:
+import 'prismjs/components/prism-json.min.js'
+import 'prismjs/components/prism-python.min.js'
+import 'prismjs/components/prism-yaml.min.js'
+import 'prismjs/components/prism-ini.min.js'
 
 import Icon from './icon'
 import Link from './link'
@@ -39,7 +45,8 @@ const GitHubCode = ({ url, lang, errorMsg = defaultErrorMsg, className }) => {
         }
     }, [initialized, rawUrl, errorMsg])
 
-    const highlighted = lang === 'none' || !code ? code : highlightCode(lang, code)
+    const highlighted =
+        lang === 'none' || !code ? code : Prism.highlight(code, Prism.languages[lang], lang)
 
     return (
         <>

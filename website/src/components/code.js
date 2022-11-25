@@ -207,14 +207,13 @@ export class Code extends React.Component {
     static defaultProps = {
         lang: 'none',
         executable: null,
-        github: false,
     }
 
     static propTypes = {
         lang: PropTypes.string,
         title: PropTypes.string,
         executable: PropTypes.oneOf(['true', 'false', true, false, null]),
-        github: PropTypes.oneOf(['true', 'false', true, false, null]),
+        github: PropTypes.string,
         prompt: PropTypes.string,
         highlight: PropTypes.string,
         className: PropTypes.string,
@@ -246,7 +245,7 @@ export class Code extends React.Component {
         const { Juniper } = this.state
 
         if (github) {
-            return <GitHubCode url={children} className={ghClassNames} lang={lang} />
+            return <GitHubCode url={github} className={ghClassNames} lang={lang} />
         }
         if (!!executable && Juniper) {
             return (

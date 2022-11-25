@@ -43,7 +43,7 @@ function remarkCodeBlocks(userOptions = {}) {
                     firstLine.startsWith('%%GITHUB_')
                 ) {
                     // GitHub URL
-                    attrs.github = 'true'
+                    attrs.github = node.value
                 }
                 // If it's a bash code block and single line, check for prompts
                 if (lang === 'bash') {
