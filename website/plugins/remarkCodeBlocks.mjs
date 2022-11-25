@@ -66,6 +66,19 @@ function remarkCodeBlocks(userOptions = {}) {
                 node.data.hProperties = Object.assign({}, hProps, attrs)
             }
         })
+
+        visit(tree, 'inlineCode', (node) => {
+            node.type = 'mdxJsxTextElement'
+            node.name = 'InlineCode'
+            node.children = [
+                {
+                    type: 'text',
+                    value: node.value,
+                },
+            ]
+            node.data = { _mdxExplicitJsx: true }
+        })
+
         return tree
     }
     return transformer
