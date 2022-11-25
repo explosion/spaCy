@@ -257,7 +257,7 @@ which lets you access the transformers outputs at runtime. The trained
 transformer-based [pipelines](/models) provided by spaCy end on `_trf`, e.g.
 [`en_core_web_trf`](/models/en#en_core_web_trf).
 
-```cli
+```bash
 $ python -m spacy download en_core_web_trf
 ```
 
@@ -453,7 +453,7 @@ function. You can make it available via the `--code` argument that can point to
 a Python file. For more details on training with custom code, see the
 [training documentation](/usage/training#custom-functions).
 
-```cli
+```bash
 python -m spacy train ./config.cfg --code ./code.py
 ```
 
@@ -677,14 +677,14 @@ You can add a `[pretraining]` block to your config by setting the
 `--pretraining` flag on [`init config`](/api/cli#init-config) or
 [`init fill-config`](/api/cli#init-fill-config):
 
-```cli
+```bash
 $ python -m spacy init fill-config config.cfg config_pretrain.cfg --pretraining
 ```
 
 You can then run [`spacy pretrain`](/api/cli#pretrain) with the updated config
 and pass in optional config overrides, like the path to the raw text file:
 
-```cli
+```bash
 $ python -m spacy pretrain config_pretrain.cfg ./output --paths.raw_text text.jsonl
 ```
 

@@ -1894,7 +1894,7 @@ access to some nice Latin vectors. You can then pass the directory path to
 > doc1.similarity(doc2)
 > ```
 
-```cli
+```bash
 $ wget https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.la.300.vec.gz
 $ python -m spacy init vectors en cc.la.300.vec.gz /tmp/la_vectors_wiki_lg
 ```
@@ -1954,7 +1954,7 @@ the vector of "leaving", which is identical. If you're using the
 option to easily reduce the size of the vectors as you add them to a spaCy
 pipeline:
 
-```cli
+```bash
 $ python -m spacy init vectors en la.300d.vec.tgz /tmp/la_vectors_web_md --prune 10000
 ```
 
@@ -2044,7 +2044,7 @@ language name, and even train pipelines with it and refer to it in your
 > needs to be available during training. You can load a Python file containing
 > the code using the `--code` argument:
 >
-> ```cli
+> ```bash
 > python -m spacy train config.cfg --code code.py
 > ```
 

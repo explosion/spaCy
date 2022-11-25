@@ -74,7 +74,7 @@ tag <Tag variant="new">3</Tag>.
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy download en_core_web_trf
 > ```
 
@@ -215,7 +215,7 @@ freely combine implementations from different frameworks into a single model.
 
 > #### Example
 >
-> ```cli
+> ```bash
 > # Clone a project template
 > $ python -m spacy project clone pipelines/tagger_parser_ud
 > $ cd tagger_parser_ud
@@ -264,7 +264,7 @@ treebank.
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ pip install -U %%SPACY_PKG_NAME[ray]%%SPACY_PKG_FLAGS
 > # Check that the CLI is registered
 > $ python -m spacy ray --help
@@ -927,7 +927,7 @@ storage**, especially when packing multiple documents together. You can convert
 your existing JSON-formatted data using the [`spacy convert`](/api/cli#convert)
 command, which outputs `.spacy` files:
 
-```cli
+```bash
 $ python -m spacy convert ./training.json ./output
 ```
 
@@ -939,7 +939,7 @@ The easiest way to get started with a training config is to use the
 requirements, and it will auto-generate a starter config with the best-matching
 default settings.
 
-```cli
+```bash
 $ python -m spacy init config ./config.cfg --lang en --pipeline tagger,parser
 ```
 
@@ -1001,7 +1001,7 @@ def make_customize_tokenizer():
 
 When training, provide the function above with the `--code` option:
 
-```cli
+```bash
 $ python -m spacy train config.cfg --code ./functions.py
 ```
 

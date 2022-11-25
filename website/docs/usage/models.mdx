@@ -327,7 +327,7 @@ best-matching package compatible with your spaCy installation.
 > + nlp = spacy.load("en_core_web_sm")
 > ```
 
-```cli
+```bash
 # Download best-matching version of a package for your spaCy installation
 $ python -m spacy download en_core_web_sm
 
@@ -338,7 +338,7 @@ $ python -m spacy download en_core_web_sm-3.0.0 --direct
 The download command will [install the package](/usage/models#download-pip) via
 pip and place the package in your `site-packages` directory.
 
-```cli
+```bash
 $ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
 $ python -m spacy download en_core_web_sm
 ```
@@ -356,7 +356,7 @@ Make sure to **restart your kernel** or runtime after installation (just like
 you would when installing other Python packages) to make sure that the installed
 pipeline package can be found.
 
-```cli
+```bash
 !python -m spacy download en_core_web_sm
 ```
 

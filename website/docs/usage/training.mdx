@@ -78,7 +78,7 @@ the [`init fill-config`](/api/cli#init-fill-config) command to fill in the
 remaining defaults. Training configs should always be **complete and without
 hidden defaults**, to keep your experiments reproducible.
 
-```cli
+```bash
 $ python -m spacy init fill-config base_config.cfg config.cfg
 ```
 
@@ -88,7 +88,7 @@ $ python -m spacy init fill-config base_config.cfg config.cfg
 > your training and development data, get useful stats, and find problems like
 > invalid entity annotations, cyclic dependencies, low data labels and more.
 >
-> ```cli
+> ```bash
 > $ python -m spacy debug data config.cfg
 > ```
 
@@ -100,7 +100,7 @@ add your data and run [`train`](/api/cli#train) with your config. See the
 spaCy's binary `.spacy` format. You can either include the data paths in the
 `[paths]` section of your config, or pass them in via the command line.
 
-```cli
+```bash
 $ python -m spacy train config.cfg --output ./output --paths.train ./train.spacy --paths.dev ./dev.spacy
 ```
 
@@ -108,7 +108,7 @@ $ python -m spacy train config.cfg --output ./output --paths.train ./train.spacy
 >
 > Use the `--gpu-id` option to select the GPU:
 >
-> ```cli
+> ```bash
 > $ python -m spacy train config.cfg --gpu-id 0
 > ```
 
@@ -254,7 +254,7 @@ For cases like this, you can set additional command-line options starting with
 `--paths.train ./corpus/train.spacy` sets the `train` value in the `[paths]`
 block.
 
-```cli
+```bash
 $ python -m spacy train config.cfg --paths.train ./corpus/train.spacy --paths.dev ./corpus/dev.spacy --training.batch_size 128
 ```
 
@@ -279,7 +279,7 @@ This is especially useful if you're training models as part of an automated
 process. Environment variables **take precedence** over CLI overrides and values
 defined in the config file.
 
-```cli
+```bash
 $ SPACY_CONFIG_OVERRIDES="--system.gpu_allocator pytorch --training.batch_size 128" ./your_script.sh
 ```
 
@@ -297,7 +297,7 @@ fly without having to save to and load from disk.
 > stdout. In a custom script, you can print the string config, e.g.
 > `print(nlp.config.to_str())`.
 
-```cli
+```bash
 $ python -m spacy init config - --lang en --pipeline ner,textcat --optimize accuracy | python -m spacy train - --paths.train ./corpus/train.spacy --paths.dev ./corpus/dev.spacy
 ```
 
@@ -742,12 +742,12 @@ value for it.
 
 ### Training with custom code {id="custom-code"}
 
-> ```cli
+> ```bash
 > ### Training
 > $ python -m spacy train config.cfg --code functions.py
 > ```
 >
-> ```cli
+> ```bash
 > ### Packaging
 > $ python -m spacy package ./model-best ./packages --code functions.py
 > ```
@@ -873,7 +873,7 @@ you can now run [`spacy train`](/api/cli#train) and point the argument `--code`
 to your Python file. Before loading the config, spaCy will import the
 `functions.py` module and your custom functions will be registered.
 
-```cli
+```bash
 $ python -m spacy train config.cfg --output ./output --code ./functions.py
 ```
 
@@ -912,7 +912,7 @@ def make_customize_tokenizer():
 
 When training, provide the function above with the `--code` option:
 
-```cli
+```bash
 $ python -m spacy train config.cfg --code ./functions.py
 ```
 
@@ -1157,7 +1157,7 @@ allow them to initialize faster.
 > path = "corpus/labels/ner.json
 > ```
 
-```cli
+```bash
 $ python -m spacy init labels config.cfg ./corpus --paths.train ./corpus/train.spacy
 ```
 
@@ -1187,7 +1187,7 @@ easiest way to convert it for use with spaCy is to run
 [`spacy convert`](/api/cli#convert) and pass it a file and an output directory.
 By default, the command will pick the converter based on the file extension.
 
-```cli
+```bash
 $ python -m spacy convert ./train.gold.conll ./corpus
 ```
 
@@ -1572,7 +1572,7 @@ valid.
 
 > #### Installation
 >
-> ```cli
+> ```bash
 > $ pip install -U %%SPACY_PKG_NAME[ray]%%SPACY_PKG_FLAGS
 > # Check that the CLI is registered
 > $ python -m spacy ray --help
@@ -1598,7 +1598,7 @@ The [`spacy ray train`](/api/cli#ray-train) command follows the same API as
 setup. You can optionally set the `--address` option to point to your Ray
 cluster. If it's not set, Ray will run locally.
 
-```cli
+```bash
 python -m spacy ray train config.cfg --n-workers 2
 ```
 
