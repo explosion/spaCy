@@ -27,6 +27,7 @@
         "eslint-config-next": "13.0.2",
         "html-to-react": "^1.5.0",
         "jinja-to-js": "^3.2.3",
+        "md-attr-parser": "^1.3.0",
         "next": "13.0.2",
         "next-mdx-remote": "^4.2.0",
         "prettier": "^2.7.1",
