@@ -1,10 +1,11 @@
 import React, { Fragment, useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
-import 'prismjs-bibtex'
 import rangeParser from 'parse-numeric-range'
 import { window } from 'browser-monads'
+import Prism from 'prismjs'
+
+import 'prismjs/components/prism-python.min.js'
 
 import CUSTOM_TYPES from '../../meta/type-annotations.json'
 import { isString, htmlToReact } from './util'
@@ -71,7 +72,8 @@ export const TypeAnnotation = ({ lang = 'python', link = true, children }) => {
     const code = Array.isArray(children) ? children.join('') : children || ''
     const [rawText, meta] = code.split(/(?= \(.+\)$)/)
     const rawStr = rawText.replace(/\./g, TMP_DOT)
-    const rawHtml = lang === 'none' || !code ? code : highlightCode(lang, rawStr)
+    const rawHtml =
+        lang === 'none' || !code ? code : Prism.highlight(rawStr, Prism.languages[lang], lang)
     const html = rawHtml.replace(new RegExp(TMP_DOT, 'g'), '.').replace(/\n/g, ' ')
     const result = htmlToReact(html)
     const elements = Array.isArray(result) ? result : [result]
