@@ -10,6 +10,7 @@ from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
 from spacy.cli._util import string_to_list
+from spacy.cli._util import upload_file, download_file
 from thinc.api import ConfigValidationError, Config
 import srsly
 import os
@@ -474,3 +475,18 @@ def test_string_to_list(value):
 def test_string_to_list_intify(value):
     assert string_to_list(value, intify=False) == ["1", "2", "3"]
     assert string_to_list(value, intify=True) == [1, 2, 3]
+
+
+def test_upload_download_local_file():
+    with make_tempdir() as d1, make_tempdir() as d2:
+        filename = "f.txt"
+        content = "content"
+        local_file = d1 / filename
+        remote_file = d2 / filename
+        with local_file.open(mode="w") as file_:
+            file_.write(content)
+        upload_file(local_file, remote_file)
+        local_file.unlink()
+        download_file(remote_file, local_file)
+        with local_file.open(mode="r") as file_:
+            assert file_.read() == content
