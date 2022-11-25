@@ -476,7 +476,6 @@ the tokens are with respect to the rest of the corpus using the KL-divergence of
 the token distributions. To learn more, you can check out Papay et al.'s work on
 [*Dissecting Span Identification Tasks with Performance Prediction* (EMNLP 2020)](https://aclanthology.org/2020.emnlp-main.396/).
 
-
 </Infobox>
 
 ```cli
