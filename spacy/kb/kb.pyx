@@ -1,7 +1,7 @@
 # cython: infer_types=True, profile=True
 
 from pathlib import Path
-from typing import Iterable, Tuple, Union, Iterator
+from typing import Iterable, Tuple, Union, Iterator, TypeVar, Type
 from cymem.cymem cimport Pool
 
 from .candidate import Candidate
@@ -105,6 +105,21 @@ cdef class KnowledgeBase:
         """
         raise NotImplementedError(
             Errors.E1044.format(parent="KnowledgeBase", method="from_disk", name=self.__name__)
+        )
+
+    KBType = TypeVar("KBType", bound=KnowledgeBase)
+    @classmethod
+    def generate_from_disk(
+        cls: Type[KBType], path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()
+    ) -> KBType:
+        """
+        Factory method for generating KnowledgeBase instance from file.
+        path (Union[str, Path]): Target file path.
+        exclude (Iterable[str]): List of components to exclude.
+        return (KBType): Instance of KnowledgeBase generated from file.
+        """
+        raise NotImplementedError(
+            Errors.E1044.format(parent="KnowledgeBase", method="generate_from_disk", name=cls.__name__)
         )
 
     def __len__(self) -> int:

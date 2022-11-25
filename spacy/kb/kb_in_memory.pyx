@@ -46,6 +46,14 @@ cdef class InMemoryLookupKB(KnowledgeBase):
         self._alias_index = PreshMap(nr_aliases + 1)
         self._aliases_table = alias_vec(nr_aliases + 1)
 
+    @classmethod
+    def generate_from_disk(
+        cls, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()
+    ) -> "InMemoryLookupKB":
+        kb = InMemoryLookupKB(vocab=Vocab(strings=["."]), entity_vector_length=1)
+        kb.from_disk(path)
+        return kb
+
     def __len__(self):
         return self.get_size_entities()
 
