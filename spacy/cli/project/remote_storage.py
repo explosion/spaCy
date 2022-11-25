@@ -8,7 +8,7 @@ from pathlib import Path
 from wasabi import msg
 
 from .._util import get_hash, get_checksum, upload_file, download_file
-from .._util import ensure_pathy, make_tempdir, _file_exists
+from .._util import ensure_pathy, make_tempdir
 from ...util import get_minor_version, ENV_VARS, check_bool_env_var
 from ...git_info import GIT_VERSION
 from ... import about
@@ -43,7 +43,7 @@ class RemoteStorage:
         if not loc.exists():
             raise IOError(f"Cannot push {loc}: does not exist.")
         url = self.make_url(path, command_hash, content_hash)
-        if _file_exists(url):
+        if url.exists():
             return url
         tmp: Path
         with make_tempdir() as tmp:

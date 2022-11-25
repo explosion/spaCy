@@ -331,32 +331,6 @@ def import_code(code_path: Optional[Union[Path, str]]) -> None:
             msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
 
 
-def _file_exists(src: Union[str, "FluidPath"]) -> bool:
-    """Check if a (remote) file exists, if possible.
-
-    src (str / FluidPath): The URL to check.
-    """
-    try:
-        from pathy import Pathy
-
-        if isinstance(src, (Pathy, Path)):
-            if src.exists():
-                return True
-    except Exception:
-        pass
-
-    try:
-        import smart_open
-
-        with smart_open.open(src, mode="rb", compression="disable") as input_file:
-            pass
-        return True
-    except Exception:
-        pass
-
-    return False
-
-
 def upload_file(src: Path, dest: Union[str, "FluidPath"]) -> None:
     """Upload a file.
 
