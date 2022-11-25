@@ -2,8 +2,8 @@
  * Support titles, line highlights and more for code blocks
  */
 
-const visit = require('unist-util-visit')
-const parseAttr = require('md-attr-parser')
+import { visit } from 'unist-util-visit'
+import parseAttr from 'md-attr-parser'
 
 const defaultOptions = {
     defaultPrefix: '###',
@@ -71,4 +71,4 @@ function remarkCodeBlocks(userOptions = {}) {
     return transformer
 }
 
-module.exports = remarkCodeBlocks
+export default remarkCodeBlocks
