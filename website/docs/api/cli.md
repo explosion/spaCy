@@ -12,6 +12,7 @@ menu:
   - ['train', 'train']
   - ['pretrain', 'pretrain']
   - ['evaluate', 'evaluate']
+  - ['find-threshold', 'find-threshold']
   - ['assemble', 'assemble']
   - ['package', 'package']
   - ['project', 'project']
@@ -1160,6 +1161,46 @@ $ python -m spacy evaluate [model] [data_path] [--output] [--code] [--gold-prepr
 | `--displacy-limit`, `-dl`                 | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. ~~int (option)~~            |
 | `--help`, `-h`                            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                               | Training results and optional metrics and visualizations.                                                                                                                            |
+
+## find-threshold {#find-threshold new="3.5" tag="command"}
+
+Runs prediction trials for a trained model with varying tresholds to maximize
+the specified metric. The search space for the threshold is traversed linearly
+from 0 to 1 in `n_trials` steps. Results are displayed in a table on `stdout`
+(the corresponding API call to `spacy.cli.find_threshold.find_threshold()`
+returns all results).
+
+This is applicable only for components whose predictions are influenced by
+thresholds - e.g. `textcat_multilabel` and `spancat`, but not `textcat`. Note
+that the full path to the corresponding threshold attribute in the config has to
+be provided.
+
+> #### Examples
+>
+> ```cli
+> # For textcat_multilabel:
+> $ python -m spacy find-threshold my_nlp data.spacy textcat_multilabel threshold cats_macro_f
+> ```
+>
+> ```cli
+> # For spancat:
+> $ python -m spacy find-threshold my_nlp data.spacy spancat threshold spans_sc_f
+> ```
+
+
+| Name                    | Description                                                                                                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`                 | Pipeline to evaluate. Can be a package or a path to a data directory. ~~str (positional)~~                                                                                           |
+| `data_path`             | Path to file with DocBin with docs to use for threshold search. ~~Path (positional)~~                                                                                                |
+| `pipe_name`             | Name of pipe to examine thresholds for. ~~str (positional)~~                                                                                                                         |
+| `threshold_key`         | Key of threshold attribute in component's configuration. ~~str (positional)~~                                                                                                        |
+| `scores_key`            | Name of score to metric to optimize. ~~str (positional)~~                                                                                                                            |
+| `--n_trials`, `-n`      | Number of trials to determine optimal thresholds. ~~int (option)~~                                                                                                                   |
+| `--code`, `-c`          | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~ |
+| `--gpu-id`, `-g`        | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                                       |
+| `--gold-preproc`, `-G`  | Use gold preprocessing. ~~bool (flag)~~                                                                                                                                              |
+| `--silent`, `-V`, `-VV` | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                                       |
+| `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 
 ## assemble {#assemble tag="command"}
 

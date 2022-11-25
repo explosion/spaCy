@@ -1,9 +1,10 @@
 import os
 import math
+from collections import Counter
+from typing import Tuple, List, Dict, Any
 import pkg_resources
-from random import sample
-from typing import Counter
 
+import numpy
 import pytest
 import srsly
 from click import NoSuchOption
@@ -28,11 +29,12 @@ from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.project.run import _check_requirements
 from spacy.cli.validate import get_model_pkgs
+from spacy.cli.find_threshold import find_threshold
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import Language
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
-from spacy.tokens import Doc
+from spacy.tokens import Doc, DocBin
 from spacy.tokens.span import Span
 from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
@@ -857,6 +859,122 @@ def test_span_length_freq_dist_output_must_be_correct():
     span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
     assert sum(span_freqs.values()) >= threshold
     assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
+
+
+def test_cli_find_threshold(capsys):
+    thresholds = numpy.linspace(0, 1, 10)
+
+    def make_examples(nlp: Language) -> List[Example]:
+        docs: List[Example] = []
+
+        for t in [
+            (
+                "I am angry and confused in the Bank of America.",
+                {
+                    "cats": {"ANGRY": 1.0, "CONFUSED": 1.0, "HAPPY": 0.0},
+                    "spans": {"sc": [(31, 46, "ORG")]},
+                },
+            ),
+            (
+                "I am confused but happy in New York.",
+                {
+                    "cats": {"ANGRY": 0.0, "CONFUSED": 1.0, "HAPPY": 1.0},
+                    "spans": {"sc": [(27, 35, "GPE")]},
+                },
+            ),
+        ]:
+            doc = nlp.make_doc(t[0])
+            docs.append(Example.from_dict(doc, t[1]))
+
+        return docs
+
+    def init_nlp(
+        components: Tuple[Tuple[str, Dict[str, Any]], ...] = ()
+    ) -> Tuple[Language, List[Example]]:
+        new_nlp = English()
+        new_nlp.add_pipe(  # type: ignore
+            factory_name="textcat_multilabel",
+            name="tc_multi",
+            config={"threshold": 0.9},
+        )
+
+        # Append additional components to pipeline.
+        for cfn, comp_config in components:
+            new_nlp.add_pipe(cfn, config=comp_config)
+
+        new_examples = make_examples(new_nlp)
+        new_nlp.initialize(get_examples=lambda: new_examples)
+        for i in range(5):
+            new_nlp.update(new_examples)
+
+        return new_nlp, new_examples
+
+    with make_tempdir() as docs_dir:
+        # Check whether find_threshold() identifies lowest threshold above 0 as (first) ideal threshold, as this matches
+        # the current model behavior with the examples above. This can break once the model behavior changes and serves
+        # mostly as a smoke test.
+        nlp, examples = init_nlp()
+        DocBin(docs=[example.reference for example in examples]).to_disk(
+            docs_dir / "docs.spacy"
+        )
+        with make_tempdir() as nlp_dir:
+            nlp.to_disk(nlp_dir)
+            res = find_threshold(
+                model=nlp_dir,
+                data_path=docs_dir / "docs.spacy",
+                pipe_name="tc_multi",
+                threshold_key="threshold",
+                scores_key="cats_macro_f",
+                silent=True,
+            )
+            assert res[0] != thresholds[0]
+            assert thresholds[0] < res[0] < thresholds[9]
+            assert res[1] == 1.0
+            assert res[2][1.0] == 0.0
+
+        # Test with spancat.
+        nlp, _ = init_nlp((("spancat", {}),))
+        with make_tempdir() as nlp_dir:
+            nlp.to_disk(nlp_dir)
+            res = find_threshold(
+                model=nlp_dir,
+                data_path=docs_dir / "docs.spacy",
+                pipe_name="spancat",
+                threshold_key="threshold",
+                scores_key="spans_sc_f",
+                silent=True,
+            )
+            assert res[0] != thresholds[0]
+            assert thresholds[0] < res[0] < thresholds[8]
+            assert res[1] >= 0.6
+            assert res[2][1.0] == 0.0
+
+        # Having multiple textcat_multilabel components should work, since the name has to be specified.
+        nlp, _ = init_nlp((("textcat_multilabel", {}),))
+        with make_tempdir() as nlp_dir:
+            nlp.to_disk(nlp_dir)
+            assert find_threshold(
+                model=nlp_dir,
+                data_path=docs_dir / "docs.spacy",
+                pipe_name="tc_multi",
+                threshold_key="threshold",
+                scores_key="cats_macro_f",
+                silent=True,
+            )
+
+        # Specifying the name of an non-existing pipe should fail.
+        nlp, _ = init_nlp()
+        with make_tempdir() as nlp_dir:
+            nlp.to_disk(nlp_dir)
+            with pytest.raises(AttributeError):
+                find_threshold(
+                    model=nlp_dir,
+                    data_path=docs_dir / "docs.spacy",
+                    pipe_name="_",
+                    threshold_key="threshold",
+                    scores_key="cats_macro_f",
+                    silent=True,
+                )
 
 
 @pytest.mark.parametrize(
