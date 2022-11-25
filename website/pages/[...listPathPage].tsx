@@ -92,9 +92,7 @@ export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (
 
     const mdx = await serialize(fs.readFileSync(pathFileWithIndexAndExtension, 'utf-8'), {
         parseFrontmatter: true,
-        mdxOptions: {
-            remarkPlugins,
-        },
+        mdxOptions: { remarkPlugins },
     })
 
     if (!mdx.frontmatter) {

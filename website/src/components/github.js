@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
 
 import Icon from './icon'
 import Link from './link'
 import classes from '../styles/code.module.sass'
+import { Code } from './code'
 
 const defaultErrorMsg = `Can't fetch code example from GitHub :(
 
@@ -39,8 +39,6 @@ const GitHubCode = ({ url, lang, errorMsg = defaultErrorMsg, className }) => {
         }
     }, [initialized, rawUrl, errorMsg])
 
-    const highlighted = lang === 'none' || !code ? code : highlightCode(lang, code)
-
     return (
         <>
             <header className={classes.header}>
@@ -53,7 +51,11 @@ const GitHubCode = ({ url, lang, errorMsg = defaultErrorMsg, className }) => {
                     </code>
                 </Link>
             </header>
-            <code className={codeClassNames} dangerouslySetInnerHTML={{ __html: highlighted }} />
+            {code && (
+                <Code className={codeClassNames} lang={lang}>
+                    {code}
+                </Code>
+            )}
         </>
     )
 }
