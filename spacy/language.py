@@ -326,7 +326,7 @@ class Language:
         components are called on the Doc in order as it passes through the
         pipeline.
 
-        RETURNS (List[Tuple[str, Pipe]]): The pipeline.
+        RETURNS (List[Tuple[str, Callable[[Doc], Doc]]]): The pipeline.
         """
         pipes = [(n, p) for n, p in self._components if n not in self._disabled]
         return SimpleFrozenList(pipes, error=Errors.E926.format(attr="pipeline"))
@@ -541,7 +541,7 @@ class Language:
             e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
-        func (Optional[Callable]): Factory function if not used as a decorator.
+        func (Optional[Callable[[Doc], Doc]): Factory function if not used as a decorator.
 
         DOCS: https://spacy.io/api/language#component
         """
@@ -639,7 +639,7 @@ class Language:
         raw_config (Optional[Config]): Internals: the non-interpolated config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
-        RETURNS (Pipe): The pipeline component.
+        RETURNS (Callable[[Doc], Doc]): The pipeline component.
 
         DOCS: https://spacy.io/api/language#create_pipe
         """
@@ -700,7 +700,7 @@ class Language:
         source_name (str): Name of the component in the source pipeline.
         source (Language): The source nlp object to copy from.
         name (str): Optional alternative name to use in current pipeline.
-        RETURNS (Tuple[Callable, str]): The component and its factory name.
+        RETURNS (Tuple[Callable[[Doc], Doc], str]): The component and its factory name.
         """
         # Check source type
         if not isinstance(source, Language):
@@ -768,7 +768,7 @@ class Language:
         raw_config (Optional[Config]): Internals: the non-interpolated config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
-        RETURNS (Pipe): The pipeline component.
+        RETURNS (Callable[[Doc], Doc]): The pipeline component.
 
         DOCS: https://spacy.io/api/language#add_pipe
         """
@@ -891,7 +891,7 @@ class Language:
             component. Will be merged with default config, if available.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
-        RETURNS (Pipe): The new pipeline component.
+        RETURNS (Callable[[Doc], Doc]): The new pipeline component.
 
         DOCS: https://spacy.io/api/language#replace_pipe
         """
@@ -947,7 +947,7 @@ class Language:
         """Remove a component from the pipeline.
 
         name (str): Name of the component to remove.
-        RETURNS (tuple): A `(name, component)` tuple of the removed component.
+        RETURNS (Tuple[str, Callable[[Doc], Doc]]): A `(name, component)` tuple of the removed component.
 
         DOCS: https://spacy.io/api/language#remove_pipe
         """
@@ -1364,13 +1364,13 @@ class Language:
         self,
         error_handler: Callable[[str, PipeCallable, List[Doc], Exception], NoReturn],
     ):
-        """Set an error handler object for all the components in the pipeline that implement
-        a set_error_handler function.
+        """Set an error handler object for all the components in the pipeline
+        that implement a set_error_handler function.
 
-        error_handler (Callable[[str, Pipe, List[Doc], Exception], NoReturn]):
-            Function that deals with a failing batch of documents. This callable function should take in
-            the component's name, the component itself, the offending batch of documents, and the exception
-            that was thrown.
+        error_handler (Callable[[str, Callable[[Doc], Doc], List[Doc], Exception], NoReturn]):
+            Function that deals with a failing batch of documents. This callable
+            function should take in the component's name, the component itself,
+            the offending batch of documents, and the exception that was thrown.
         DOCS: https://spacy.io/api/language#set_error_handler
         """
         self.default_error_handler = error_handler
