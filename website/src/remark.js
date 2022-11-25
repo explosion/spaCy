@@ -37,7 +37,6 @@ export const remarkComponents = {
     p: P,
     pre: Pre,
     code: Code,
-    inlineCode: InlineCode,
     del: TypeAnnotation,
     table: Table,
     img: Image,
