@@ -45,21 +45,6 @@ function remarkCodeBlocks(userOptions = {}) {
                     // GitHub URL
                     attrs.github = 'true'
                 }
-                // If it's a bash code block and single line, check for prompts
-                if (lang === 'bash') {
-                    const [trueFirstLine, ...trueLines] = node.value.split('\n')
-                    for (let prompt of options.prompts) {
-                        if (trueFirstLine.startsWith(prompt)) {
-                            const content = [
-                                trueFirstLine.slice(prompt.length).trim(),
-                                ...trueLines,
-                            ]
-                            attrs.prompt = prompt
-                            node.value = content.join('\n')
-                            break
-                        }
-                    }
-                }
 
                 const data = node.data || (node.data = {})
                 const hProps = data.hProperties || (data.hProperties = {})
