@@ -1,9 +1,11 @@
 /**
  * Support titles, line highlights and more for code blocks
  */
-
+import { Parser } from 'acorn'
 import { visit } from 'unist-util-visit'
 import parseAttr from 'md-attr-parser'
+
+import getProps from './getProps.mjs'
 
 const defaultOptions = {
     defaultPrefix: '###',
@@ -48,7 +50,13 @@ function remarkCodeBlocks(userOptions = {}) {
 
                 const data = node.data || (node.data = {})
                 const hProps = data.hProperties || (data.hProperties = {})
-                node.data.hProperties = Object.assign({}, hProps, attrs)
+
+                node.data.hProperties = Object.assign(
+                    {},
+                    hProps,
+                    attrs,
+                    getProps(Parser.parse(node.meta, { ecmaVersion: 'latest' }))
+                )
             }
         })
 

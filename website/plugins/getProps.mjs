@@ -17,7 +17,8 @@ const getProps = (estree) => {
         return {}
     }
 
-    const estreeBodyFirstNode = estree.body[0]
+    const estreeBodyFirstNode =
+        estree.body[0].type === 'BlockStatement' ? estree.body[0].body[0] : estree.body[0]
 
     if (estreeBodyFirstNode.type !== 'ExpressionStatement' || !estreeBodyFirstNode.expression) {
         return {}
