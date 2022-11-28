@@ -33,7 +33,7 @@ rule-based matching are:
 | Attribute                                      | Description                                                                                                               |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `ORTH`                                         | The exact verbatim text of a token. ~~str~~                                                                               |
-| `TEXT` <Tag variant="new">2.1</Tag>            | The exact verbatim text of a token. ~~str~~                                                                               |
+| `TEXT`                                         | The exact verbatim text of a token. ~~str~~                                                                               |
 | `NORM`                                         | The normalized form of the token text. ~~str~~                                                                            |
 | `LOWER`                                        | The lowercase form of the token text. ~~str~~                                                                             |
 | `LENGTH`                                       | The length of the token text. ~~int~~                                                                                     |
@@ -48,7 +48,7 @@ rule-based matching are:
 | `ENT_IOB`                                      | The IOB part of the token's entity tag. ~~str~~                                                                           |
 | `ENT_ID`                                       | The token's entity ID (`ent_id`). ~~str~~                                                                                 |
 | `ENT_KB_ID`                                    | The token's entity knowledge base ID (`ent_kb_id`). ~~str~~                                                               |
-| `_` <Tag variant="new">2.1</Tag>               | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
+| `_`                                            | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
 | `OP`                                           | Operator or quantifier to determine how often to match a token pattern. ~~str~~                                           |
 
 Operators and quantifiers define **how often** a token pattern should be
@@ -64,7 +64,7 @@ matched:
 > ```
 
 | OP      | Description                                                            |
-|---------|------------------------------------------------------------------------|
+| ------- | ---------------------------------------------------------------------- |
 | `!`     | Negate the pattern, by requiring it to match exactly 0 times.          |
 | `?`     | Make the pattern optional, by allowing it to match 0 or 1 times.       |
 | `+`     | Require the pattern to match 1 or more times.                          |
@@ -109,10 +109,10 @@ string where an integer is expected) or unexpected property names.
 > matcher = Matcher(nlp.vocab)
 > ```
 
-| Name                                    | Description                                                                                           |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `vocab`                                 | The vocabulary object, which must be shared with the documents the matcher will operate on. ~~Vocab~~ |
-| `validate` <Tag variant="new">2.1</Tag> | Validate all patterns added to this matcher. ~~bool~~                                                 |
+| Name       | Description                                                                                           |
+| ---------- | ----------------------------------------------------------------------------------------------------- |
+| `vocab`    | The vocabulary object, which must be shared with the documents the matcher will operate on. ~~Vocab~~ |
+| `validate` | Validate all patterns added to this matcher. ~~bool~~                                                 |
 
 ## Matcher.\_\_call\_\_ {#call tag="method"}
 
