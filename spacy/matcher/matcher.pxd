@@ -77,6 +77,6 @@ cdef class Matcher:
     cdef public object _extensions
     cdef public object _extra_predicates
     cdef public object _seen_attrs
-    cdef public object _fuzzy_match
+    cdef public object _fuzzy_compare
 
-cpdef bint _default_fuzzy_match(s1: str, s2: str, fuzzy: int)
+cpdef bint _default_fuzzy_compare(s1: str, s2: str, fuzzy: int)
