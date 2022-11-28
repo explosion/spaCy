@@ -532,9 +532,12 @@ class EntityLinker(TrainablePipe):
                     else:
                         random.shuffle(candidates)
                         # set all prior probabilities to 0 if incl_prior=False
-                        prior_probs = xp.asarray([c.prior_prob for c in candidates])
-                        if not self.incl_prior:
-                            prior_probs = xp.asarray([0.0 for _ in candidates])
+                        prior_probs = xp.asarray(
+                            [
+                                0.0 if self.incl_prior else c.prior_prob
+                                for c in candidates
+                            ]
+                        )
                         scores = prior_probs
                         # add in similarity from the context
                         if self.incl_context:
