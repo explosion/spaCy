@@ -672,7 +672,7 @@ cdef action_t get_action(PatternStateC state,
       if is_match and is_final:
           # Yes, final: 1000
           return MATCH
-      elif is_non_greedy_plus(state) and has_star_tail(state) and is_match and not is_final:
+      elif is_match and not is_final and is_non_greedy_plus(state) and has_star_tail(state):
           # Yes, non-final: 1100
           # Modification for +?:
           # Having MATCH_ADVANCE handles the match at the 'ONE' part of the token instead of relying on MATCH_REJECT
