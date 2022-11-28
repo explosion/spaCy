@@ -1150,7 +1150,7 @@ def _get_extensions(spec, string_store, name2index):
     return attr_values
 
 
-cpdef bint _default_fuzzy_compare(s1: str, s2: str, fuzzy: int):
+cpdef bint _default_fuzzy_compare(s1: str, s2: str, fuzzy: int = -1):
     distance = min(len(s1), len(s2))
     distance -= 1 # don't allow completely different tokens
     if fuzzy == -1: # FUZZY operator with unspecified fuzzy
