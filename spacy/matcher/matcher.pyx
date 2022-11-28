@@ -566,12 +566,13 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states,
     cdef vector[MatchAlignmentC] align_state
     for i in range(states.size()):
         state = states[i]
-        if is_non_greedy_star(state):
+        quantifier = get_quantifier(state)
+        if is_non_greedy_star(state, quantifier):
             # if the final pattern token is a *?, remove the match by skipping it.
             continue
         if with_alignments != 0:
             align_state = align_states[i]
-        while get_quantifier(state) in (ZERO_PLUS, ZERO_MINUS, ZERO_ONE):
+        while quantifier in (ZERO_PLUS, ZERO_MINUS, ZERO_ONE):
             # Update alignment before the transition of current state
             if with_alignments != 0:
                 align_state.push_back(MatchAlignmentC(state.pattern.token_idx, state.length))
@@ -586,6 +587,7 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states,
                 break
             else:
                 state.pattern += 1
+                quantifier = get_quantifier(state)
 
 
 cdef action_t get_action(PatternStateC state,
@@ -672,7 +674,7 @@ cdef action_t get_action(PatternStateC state,
       if is_match and is_final:
           # Yes, final: 1000
           return MATCH
-      elif is_match and not is_final and is_non_greedy_plus(state) and has_star_tail(state):
+      elif is_match and not is_final and is_non_greedy_plus(state, quantifier) and has_star_tail(state):
           # Yes, non-final: 1100
           # Modification for +?:
           # Having MATCH_ADVANCE handles the match at the 'ONE' part of the token instead of relying on MATCH_REJECT
@@ -819,17 +821,18 @@ cdef inline int8_t get_is_final(PatternStateC state) nogil:
 cdef inline int8_t get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
 
-cdef inline int8_t is_non_greedy_plus(PatternStateC state) nogil:
+
+cdef inline int8_t is_non_greedy_plus(PatternStateC state, int8_t quantifier) nogil:
     """Verify whether current state pattern is '+?'"""
-    if (state.pattern + 1).quantifier == ZERO_MINUS and get_quantifier(state) == ONE \
+    if (state.pattern + 1).quantifier == ZERO_MINUS and quantifier == ONE \
             and (state.pattern + 1).token_idx == state.pattern.token_idx:
         return 1
     else:
         return 0
 
-cdef inline int8_t is_non_greedy_star(PatternStateC state) nogil:
+cdef inline int8_t is_non_greedy_star(PatternStateC state, int8_t quantifier) nogil:
     """Verify whether current state pattern is '*?'"""
-    if (state.pattern - 1).quantifier != ONE and get_quantifier(state) == ZERO_MINUS:
+    if (state.pattern - 1).quantifier != ONE and quantifier == ZERO_MINUS:
         return 1
     else:
         return 0
