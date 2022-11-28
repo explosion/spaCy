@@ -813,11 +813,11 @@ def test_matcher_non_greedy_operator(en_vocab):
         (7, "aabbab", "a*? b*", ["a a b", "a b", "b", "a a b b", "a b b", "b b", "b", "a b", "b"]),
         (8, "aabbc", "a* b*? c*?", ["a", "a a", "a"]),
         (9, "aabbc", "a* b*? c", ["a a b b c", "a b b c", "b b c", "b c", "c"]),
-
         (10, "abc", "a* b*? c*", ["a", "a b c", "b c", "c"]),
         # in spaCy, quantifier "*" returns __all__possible__ matches which is
         # different from regex
-        # quantifier "*?" is designed to return only the non-greedy results from        # all possible matches
+        # quantifier "*?" is designed to return only the non-greedy results from
+        # all possible matches
         # Result 1: a
         # Result 2: a b c
         # Result 3: c
