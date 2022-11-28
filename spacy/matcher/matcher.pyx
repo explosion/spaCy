@@ -755,6 +755,7 @@ cdef int8_t get_is_match(PatternStateC state,
             return 0
     return True
 
+
 cdef action_t cast_to_non_greedy_action(action_t action, action_t next_action, vector[PatternStateC]& new_states,
                                         vector[vector[MatchAlignmentC]]& align_new_states, bint with_alignments) nogil:
     """Cast "next_action" to another "action" that demonstrates non-greedy behaviour.
@@ -811,6 +812,7 @@ cdef action_t cast_to_non_greedy_action(action_t action, action_t next_action, v
     else:
         return next_action
 
+
 cdef inline int8_t get_is_final(PatternStateC state) nogil:
     if state.pattern[1].quantifier == FINAL_ID:
         return 1
@@ -830,12 +832,14 @@ cdef inline int8_t is_non_greedy_plus(PatternStateC state, int8_t quantifier) no
     else:
         return 0
 
+
 cdef inline int8_t is_non_greedy_star(PatternStateC state, int8_t quantifier) nogil:
     """Verify whether current state pattern is '*?'"""
     if (state.pattern - 1).quantifier != ONE and quantifier == ZERO_MINUS:
         return 1
     else:
         return 0
+
 
 cdef inline int8_t has_star_tail(PatternStateC state) nogil:
     """Verify whether all remaining patterns are either '*' or '*?'"""
@@ -845,6 +849,7 @@ cdef inline int8_t has_star_tail(PatternStateC state) nogil:
             return 0
     return 1
 
+
 cdef inline int8_t has_non_greedy_tail(PatternStateC state) nogil:
     """Verify whether all remaining patterns are '*?'"""
     while not get_is_final(state):
@@ -852,6 +857,7 @@ cdef inline int8_t has_non_greedy_tail(PatternStateC state) nogil:
         if state.pattern.quantifier != ZERO_MINUS:
             return 0
     return 1
+
 
 cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs) except NULL:
     pattern = <TokenPatternC*>mem.alloc(len(token_specs) + 1, sizeof(TokenPatternC))
