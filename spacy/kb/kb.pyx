@@ -18,6 +18,8 @@ cdef class KnowledgeBase:
     DOCS: https://spacy.io/api/kb
     """
 
+    _KBType = TypeVar("_KBType", bound=KnowledgeBase)
+
     def __init__(self, vocab: Vocab, entity_vector_length: int):
         """Create a KnowledgeBase."""
         # Make sure abstract KB is not instantiated.
@@ -107,16 +109,15 @@ cdef class KnowledgeBase:
             Errors.E1044.format(parent="KnowledgeBase", method="from_disk", name=self.__name__)
         )
 
-    KBType = TypeVar("KBType", bound=KnowledgeBase)
     @classmethod
     def generate_from_disk(
-        cls: Type[KBType], path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()
-    ) -> KBType:
+        cls: Type[_KBType], path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()
+    ) -> _KBType:
         """
-        Factory method for generating KnowledgeBase instance from file.
+        Factory method for generating KnowledgeBase subclass instance from file.
         path (Union[str, Path]): Target file path.
         exclude (Iterable[str]): List of components to exclude.
-        return (KBType): Instance of KnowledgeBase generated from file.
+        return (_KBType): Instance of KnowledgeBase subclass generated from file.
         """
         raise NotImplementedError(
             Errors.E1044.format(parent="KnowledgeBase", method="generate_from_disk", name=cls.__name__)
