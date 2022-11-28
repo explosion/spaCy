@@ -562,6 +562,7 @@
                     "url": "https://github.com/explosion/spacy-pkuseg"
                 }
             ],
+            "example": "这是一个用于示例的句子。",
             "has_examples": true
         }
     ],
