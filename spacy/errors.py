@@ -199,7 +199,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W117 = ("No spans to visualize found in Doc object with spans_key: '{spans_key}'. If this is "
             "surprising to you, make sure the Doc was processed using a model "
             "that supports span categorization, and check the `doc.spans[spans_key]` "
-            "property manually if necessary.")
+            "property manually if necessary.\n\nAvailable keys: {keys}")
     W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
             "for the corpora used to train the language. Please check "
             "`nlp.meta[\"sources\"]` for any relevant links.")

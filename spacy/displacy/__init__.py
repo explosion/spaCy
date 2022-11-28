@@ -233,7 +233,8 @@ def parse_spans(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
     tokens = [token.text for token in doc]
 
     if not spans:
-        warnings.warn(Warnings.W117.format(spans_key=spans_key))
+        keys = list(doc.spans.keys())
+        warnings.warn(Warnings.W117.format(spans_key=spans_key, keys=keys))
     title = doc.user_data.get("title", None) if hasattr(doc, "user_data") else None
     settings = get_doc_settings(doc)
     return {
