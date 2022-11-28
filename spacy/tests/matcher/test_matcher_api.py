@@ -736,10 +736,7 @@ def test_matcher_min_max_operator(en_vocab):
 
 
 def test_matcher_non_greedy_operator(en_vocab):
-
-    doc = Doc(
-        en_vocab, words=["a", "a", "a", "B", "B", "a", "B"]
-    )
+    doc = Doc(en_vocab, words=["a", "a", "a", "B", "B", "a", "B"])
     matcher = Matcher(en_vocab)
     pattern = [{"ORTH": "a", "OP": "*?"}, {"ORTH": "B", "OP": "+?"}]
     matcher.add("Non-greedy", [pattern])
