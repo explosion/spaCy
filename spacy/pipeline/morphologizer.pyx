@@ -98,7 +98,7 @@ class Morphologizer(Tagger):
         name: str = "morphologizer",
         *,
         overwrite: bool = False,
-        extend: bool = True,
+        extend: bool = False,
         scorer: Optional[Callable] = morphologizer_score,
         save_activations: bool = False,
     ):
