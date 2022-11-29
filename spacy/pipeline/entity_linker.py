@@ -13,7 +13,6 @@ from ..kb import KnowledgeBase, Candidate
 from ..ml import empty_kb
 from ..tokens import Doc, Span
 from .pipe import deserialize_config
-from .legacy.entity_linker import EntityLinker_v1
 from .trainable_pipe import TrainablePipe
 from ..language import Language
 from ..vocab import Vocab
@@ -119,21 +118,6 @@ def make_entity_linker(
     save_activations (bool): save model activations in Doc when annotating.
     """
 
-    if not model.attrs.get("include_span_maker", False):
-        # The only difference in arguments here is that use_gold_ents and threshold aren't available.
-        return EntityLinker_v1(
-            nlp.vocab,
-            model,
-            name,
-            labels_discard=labels_discard,
-            n_sents=n_sents,
-            incl_prior=incl_prior,
-            incl_context=incl_context,
-            entity_vector_length=entity_vector_length,
-            get_candidates=get_candidates,
-            overwrite=overwrite,
-            scorer=scorer,
-        )
     return EntityLinker(
         nlp.vocab,
         model,
