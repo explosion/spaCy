@@ -1,4 +1,4 @@
-# cython: infer_types=True, profile=True
+# cython: binding=True, infer_types=True, profile=True
 from typing import List, Iterable
 
 from libcpp.vector cimport vector
@@ -24,11 +24,27 @@ from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
 from ..strings import get_string_id
 from ..attrs import IDS
+from ..util import registry
 
 from .levenshtein import levenshtein
 
 
 DEF PADDING = 5
+
+
+cpdef bint _default_fuzzy_compare(s1: str, s2: str, fuzzy: int = -1):
+    distance = min(len(s1), len(s2))
+    distance -= 1 # don't allow completely different tokens
+    if fuzzy == -1: # FUZZY operator with unspecified fuzzy
+        fuzzy = 5 # default max fuzzy
+        distance -= 1 # be more restrictive
+    distance = min(fuzzy, distance if distance > 0 else 1)
+    return levenshtein(s1, s2, distance) <= distance
+
+
+@registry.misc("spacy.fuzzy_compare.v1")
+def make_fuzzy_compare():
+    return _default_fuzzy_compare
 
 
 cdef class Matcher:
@@ -1148,13 +1164,3 @@ def _get_extensions(spec, string_store, name2index):
             name2index[name] = len(name2index)
         attr_values.append((name2index[name], value))
     return attr_values
-
-
-cpdef bint _default_fuzzy_compare(s1: str, s2: str, fuzzy: int = -1):
-    distance = min(len(s1), len(s2))
-    distance -= 1 # don't allow completely different tokens
-    if fuzzy == -1: # FUZZY operator with unspecified fuzzy
-        fuzzy = 5 # default max fuzzy
-        distance -= 1 # be more restrictive
-    distance = min(fuzzy, distance if distance > 0 else 1)
-    return levenshtein(s1, s2, distance) <= distance

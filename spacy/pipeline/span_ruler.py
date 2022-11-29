@@ -12,7 +12,7 @@ from ..errors import Errors, Warnings
 from ..util import ensure_path, SimpleFrozenList, registry
 from ..tokens import Doc, Span
 from ..scorer import Scorer
-from ..matcher import Matcher, PhraseMatcher
+from ..matcher import Matcher, PhraseMatcher, _default_fuzzy_compare
 from .. import util
 
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
@@ -28,6 +28,7 @@ DEFAULT_SPANS_KEY = "ruler"
         "overwrite_ents": False,
         "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
         "ent_id_sep": "__unused__",
+        "fuzzy_compare": {"@misc": "spacy.fuzzy_compare.v1"},
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -44,6 +45,7 @@ def make_entity_ruler(
     overwrite_ents: bool,
     scorer: Optional[Callable],
     ent_id_sep: str,
+    fuzzy_compare: Callable,
 ):
     if overwrite_ents:
         ents_filter = prioritize_new_ents_filter
@@ -60,6 +62,7 @@ def make_entity_ruler(
         validate=validate,
         overwrite=False,
         scorer=scorer,
+        fuzzy_compare=fuzzy_compare,
     )
 
 
@@ -78,6 +81,7 @@ def make_entity_ruler(
             "@scorers": "spacy.overlapping_labeled_spans_scorer.v1",
             "spans_key": DEFAULT_SPANS_KEY,
         },
+        "fuzzy_compare": {"@misc": "spacy.fuzzy_compare.v1"},
     },
     default_score_weights={
         f"spans_{DEFAULT_SPANS_KEY}_f": 1.0,
@@ -97,6 +101,7 @@ def make_span_ruler(
     validate: bool,
     overwrite: bool,
     scorer: Optional[Callable],
+    fuzzy_compare: Callable,
 ):
     return SpanRuler(
         nlp,
@@ -109,6 +114,7 @@ def make_span_ruler(
         validate=validate,
         overwrite=overwrite,
         scorer=scorer,
+        fuzzy_compare=fuzzy_compare,
     )
 
 
@@ -221,6 +227,7 @@ class SpanRuler(Pipe):
         scorer: Optional[Callable] = partial(
             overlapping_labeled_spans_score, spans_key=DEFAULT_SPANS_KEY
         ),
+        fuzzy_compare: Callable = _default_fuzzy_compare,
     ) -> None:
         """Initialize the span ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
@@ -253,6 +260,7 @@ class SpanRuler(Pipe):
             `annotate_ents` is set. Defaults to `True`.
         scorer (Optional[Callable]): The scoring method. Defaults to
             spacy.pipeline.span_ruler.overlapping_labeled_spans_score.
+        fuzzy_compare (Callable): The default fuzzy comparison method.
 
         DOCS: https://spacy.io/api/spanruler#init
         """
@@ -266,6 +274,7 @@ class SpanRuler(Pipe):
         self.spans_filter = spans_filter
         self.ents_filter = ents_filter
         self.scorer = scorer
+        self.fuzzy_compare = fuzzy_compare
         self._match_label_id_map: Dict[int, Dict[str, str]] = {}
         self.clear()
 
@@ -451,7 +460,11 @@ class SpanRuler(Pipe):
         DOCS: https://spacy.io/api/spanruler#clear
         """
         self._patterns: List[PatternType] = []
-        self.matcher: Matcher = Matcher(self.nlp.vocab, validate=self.validate)
+        self.matcher: Matcher = Matcher(
+            self.nlp.vocab,
+            validate=self.validate,
+            fuzzy_compare=self.fuzzy_compare,
+        )
         self.phrase_matcher: PhraseMatcher = PhraseMatcher(
             self.nlp.vocab,
             attr=self.phrase_matcher_attr,

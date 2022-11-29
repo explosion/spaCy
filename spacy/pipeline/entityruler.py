@@ -27,6 +27,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
         "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
+        "fuzzy_compare": {"@misc": "spacy.fuzzy_compare.v1"},
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -43,6 +44,7 @@ def make_entity_ruler(
     overwrite_ents: bool,
     ent_id_sep: str,
     scorer: Optional[Callable],
+    fuzzy_compare: Callable,
 ):
     return EntityRuler(
         nlp,
@@ -52,6 +54,7 @@ def make_entity_ruler(
         overwrite_ents=overwrite_ents,
         ent_id_sep=ent_id_sep,
         scorer=scorer,
+        fuzzy_compare=fuzzy_compare,
     )
 
 
@@ -86,7 +89,7 @@ class EntityRuler(Pipe):
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
         scorer: Optional[Callable] = entity_ruler_score,
-        fuzzy_compare: Optional[Callable] = _default_fuzzy_compare
+        fuzzy_compare: Callable = _default_fuzzy_compare,
     ) -> None:
         """Initialize the entity ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
@@ -109,6 +112,7 @@ class EntityRuler(Pipe):
         ent_id_sep (str): Separator used internally for entity IDs.
         scorer (Optional[Callable]): The scoring method. Defaults to
             spacy.scorer.get_ner_prf.
+        fuzzy_compare (Callable): The fuzzy comparison method.
 
         DOCS: https://spacy.io/api/entityruler#init
         """
@@ -119,7 +123,9 @@ class EntityRuler(Pipe):
         self.phrase_patterns = defaultdict(list)  # type: ignore
         self._validate = validate
         self._fuzzy_compare = fuzzy_compare
-        self.matcher = Matcher(nlp.vocab, validate=validate, fuzzy_compare=fuzzy_compare)
+        self.matcher = Matcher(
+            nlp.vocab, validate=validate, fuzzy_compare=fuzzy_compare
+        )
         self.phrase_matcher_attr = phrase_matcher_attr
         self.phrase_matcher = PhraseMatcher(
             nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
@@ -129,6 +135,7 @@ class EntityRuler(Pipe):
         if patterns is not None:
             self.add_patterns(patterns)
         self.scorer = scorer
+        self.fuzzy_compare = fuzzy_compare
 
     def __len__(self) -> int:
         """The number of all patterns added to the entity ruler."""
@@ -339,8 +346,9 @@ class EntityRuler(Pipe):
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
         self._ent_ids = defaultdict(tuple)
-        self.matcher = Matcher(self.nlp.vocab, validate=self._validate,
-                               fuzzy_compare=self._fuzzy_compare)
+        self.matcher = Matcher(
+            self.nlp.vocab, validate=self._validate, fuzzy_compare=self._fuzzy_compare
+        )
         self.phrase_matcher = PhraseMatcher(
             self.nlp.vocab, attr=self.phrase_matcher_attr, validate=self._validate
         )
@@ -434,7 +442,7 @@ class EntityRuler(Pipe):
             self.overwrite = cfg.get("overwrite", False)
             self.phrase_matcher_attr = cfg.get("phrase_matcher_attr", None)
             self.phrase_matcher = PhraseMatcher(
-                self.nlp.vocab, attr=self.phrase_matcher_attr
+                self.nlp.vocab, attr=self.phrase_matcher_attr,
             )
             self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
         else:
