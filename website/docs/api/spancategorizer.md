@@ -64,12 +64,11 @@ architectures and their arguments and hyperparameters.
 > #### Example (spancat_exclusive)
 >
 > ```python
-> from spacy.pipeline.spancat import DEFAULT_SPANCAT_MODEL
+> from spacy.pipeline.spancat_exclusive import DEFAULT_EXCL_SPANCAT_MODEL
 > config = {
 >     "threshold": 0.5,
 >     "spans_key": "labeled_spans",
->     "max_positive": None,
->     "model": DEFAULT_SPANCAT_MODEL,
+>     "model": DEFAULT_EXCL_SPANCAT_MODEL,
 >     "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
 >     # Additional spancat_exclusive parameters
 >     "negative_weight": 1.0,
@@ -85,7 +84,7 @@ architectures and their arguments and hyperparameters.
 | `model`        | A model instance that is given a a list of documents and `(start, end)` indices representing candidate span offsets. The model predicts a probability for each category for each span. Defaults to [SpanCategorizer](/api/architectures#SpanCategorizer). ~~Model[Tuple[List[Doc], Ragged], Floats2d]~~ |
 | `spans_key`    | Key of the [`Doc.spans`](/api/doc#spans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"sc"`. ~~str~~                                                                                  |
 | `threshold`    | Minimum probability to consider a prediction positive. Spans with a positive prediction will be saved on the Doc. Defaults to `0.5`. ~~float~~                                                                                                                                                          |
-| `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~Optional[int]~~                                                                                                                                                                                      |
+| `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. It is only available for the `spancat` component. ~~Optional[int]~~                                                                                                                                                                                      |
 | `scorer`       | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                                                                                                       |
 | `negative_weight`    | Multiplier for the loss terms. It can be used to downweight the negative samples if there are too many. It is only available for the `spancat_exclusive` component. ~~float~~                                                  |
 | `allow_overlap`        | If `True`, the data is assumed to contain overlapping spans. It is only available for the `spancat_exclusive` component. ~~bool~~ |
