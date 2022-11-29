@@ -10,7 +10,7 @@ from ..language import Language
 from ..errors import Errors, Warnings
 from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList, registry
 from ..tokens import Doc, Span
-from ..matcher import Matcher, PhraseMatcher
+from ..matcher import Matcher, PhraseMatcher, _default_fuzzy_compare
 from ..scorer import get_ner_prf
 
 
@@ -86,6 +86,7 @@ class EntityRuler(Pipe):
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
         scorer: Optional[Callable] = entity_ruler_score,
+        fuzzy_compare: Optional[Callable] = _default_fuzzy_compare
     ) -> None:
         """Initialize the entity ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
@@ -117,7 +118,8 @@ class EntityRuler(Pipe):
         self.token_patterns = defaultdict(list)  # type: ignore
         self.phrase_patterns = defaultdict(list)  # type: ignore
         self._validate = validate
-        self.matcher = Matcher(nlp.vocab, validate=validate)
+        self._fuzzy_compare = fuzzy_compare
+        self.matcher = Matcher(nlp.vocab, validate=validate, fuzzy_compare=fuzzy_compare)
         self.phrase_matcher_attr = phrase_matcher_attr
         self.phrase_matcher = PhraseMatcher(
             nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
@@ -337,7 +339,8 @@ class EntityRuler(Pipe):
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
         self._ent_ids = defaultdict(tuple)
-        self.matcher = Matcher(self.nlp.vocab, validate=self._validate)
+        self.matcher = Matcher(self.nlp.vocab, validate=self._validate,
+                               fuzzy_compare=self._fuzzy_compare)
         self.phrase_matcher = PhraseMatcher(
             self.nlp.vocab, attr=self.phrase_matcher_attr, validate=self._validate
         )
