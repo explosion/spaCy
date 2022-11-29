@@ -473,17 +473,17 @@ class Scorer:
             threshold = 0.5 if multi_label else 0.0
         if not multi_label:
             threshold = 0.0
+        labels = set(labels)
         f_per_type = {label: PRFScore() for label in labels}
         auc_per_type = {label: ROCAUCScore() for label in labels}
-        labels = set(labels)
-        if labels:
-            for eg in examples:
-                labels.update(eg.predicted.cats.keys())
-                labels.update(eg.reference.cats.keys())
         for example in examples:
             # Through this loop, None in the gold_cats indicates missing label.
-            pred_cats = getter(example.predicted, attr)
-            gold_cats = getter(example.reference, attr)
+            pred_cats = {
+                k: v for k, v in getter(example.predicted, attr).items() if k in labels
+            }
+            gold_cats = {
+                k: v for k, v in getter(example.reference, attr).items() if k in labels
+            }
 
             for label in labels:
                 pred_score = pred_cats.get(label, 0.0)
