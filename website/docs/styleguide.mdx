@@ -384,8 +384,7 @@ to raw text with no highlighting. An optional label can be added as the first
 line with the prefix `####` (Python-like) and `///` (JavaScript-like). the
 indented block as plain text and preserve whitespace.
 
-```python
-### Using spaCy
+```python {title="Using spaCy"}
 import spacy
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("This is a sentence.")
@@ -407,8 +406,7 @@ adding `{highlight="..."}` to the headline. Acceptable ranges are spans like
 > ```
 > ````
 
-```python
-### Using the matcher {highlight="5-7"}
+```python {title="Using the matcher",highlight="5-7"}
 import spacy
 from spacy.matcher import Matcher
 
@@ -435,8 +433,7 @@ interactive widget defaults to a regular code block.
 > ```
 > ````
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("This is a sentence.")
@@ -554,8 +551,7 @@ This is a regular paragraph with a [link](https://spacy.io) and **bold text**.
 | -------- | -------- |
 | Column 1 | Column 2 |
 
-```python
-### Code block title {highlight="2-3"}
+```python {title="Code block title",highlight="2-3"}
 import spacy
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("Hello world")

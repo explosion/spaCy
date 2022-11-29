@@ -40,8 +40,7 @@ this config, you won't be able to change it anymore. The architecture is like a
 recipe for the network, and you can't change the recipe once the dish has
 already been prepared. You have to make a new one.
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [components.tagger]
 factory = "tagger"
 
@@ -126,8 +125,7 @@ default. This architecture combines a simple bag-of-words model with a neural
 network, usually resulting in the most accurate results, but at the cost of
 speed. The config file for this model would look something like this:
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [components.textcat]
 factory = "textcat"
 labels = []
@@ -165,8 +163,7 @@ use those by swapping out the definition of the textcat's model. For instance,
 to use the simple and fast bag-of-words model
 [TextCatBOW](/api/architectures#TextCatBOW), you can change the config to:
 
-```ini
-### config.cfg (excerpt) {highlight="6-10"}
+```ini {title="config.cfg (excerpt)",highlight="6-10"}
 [components.textcat]
 factory = "textcat"
 labels = []
@@ -198,8 +195,7 @@ These steps together compute dense, context-sensitive representations of the
 tokens, and their combination forms a typical
 [`Tok2Vec`](/api/architectures#Tok2Vec) layer:
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [components.tok2vec]
 factory = "tok2vec"
 
@@ -220,8 +216,7 @@ a sublayer for another one, for instance changing the first sublayer to a
 character embedding with the [CharacterEmbed](/api/architectures#CharacterEmbed)
 architecture:
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [components.tok2vec.model.embed]
 @architectures = "spacy.CharacterEmbed.v2"
 # ...
@@ -260,8 +255,7 @@ Let's use PyTorch to define a very simple neural network consisting of two
 hidden `Linear` layers with `ReLU` activation and dropout, and a
 softmax-activated output layer:
 
-```python
-### PyTorch model
+```python {title="PyTorch model"}
 from torch import nn
 
 torch_model = nn.Sequential(
@@ -312,8 +306,7 @@ architecture a name so spaCy knows how to find it, and allows passing in
 arguments like hyperparameters via the [config](/usage/training#config). The
 full example then becomes:
 
-```python
-### Registering the architecture {highlight="9"}
+```python {title="Registering the architecture",highlight="9"}
 from typing import List
 from thinc.types import Floats2d
 from thinc.api import Model, PyTorchWrapper, chain, with_array
@@ -352,8 +345,7 @@ by specifying it in the config file. In this configuration, all required
 parameters for the various subcomponents of the custom architecture are passed
 in as settings via the config.
 
-```ini
-### config.cfg (excerpt) {highlight="5-5"}
+```ini {title="config.cfg (excerpt)",highlight="5-5"}
 [components.tagger]
 factory = "tagger"
 
@@ -381,8 +373,7 @@ GPU memory allocator accordingly. When `gpu_allocator` is set to "pytorch" or
 respective libraries, preventing OOM errors when there's available memory
 sitting in the other library's pool.
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [training]
 gpu_allocator = "pytorch"
 ```
@@ -461,8 +452,7 @@ you have to call
 [`Model.initialize`](https://thinc.ai/docs/api-model#initialize) with an **input
 sample** `X` and an **output sample** `Y` with the correct dimensions:
 
-```python
-### Shape inference with initialization {highlight="3,7,10"}
+```python {title="Shape inference with initialization",highlight="3,7,10"}
 with Model.define_operators({">>": chain}):
     layers = (
         Relu(hidden_width)
@@ -564,8 +554,7 @@ matrix** (~~Floats2d~~) of predictions:
 > type checks and validation. See the section on [type signatures](#type-sigs)
 > for details.
 
-```python
-### The model architecture
+```python {title="The model architecture"}
 @spacy.registry.architectures("rel_model.v1")
 def create_relation_model(...) -> Model[List[Doc], Floats2d]:
     model = ...  # 👈 model will go here
@@ -590,8 +579,7 @@ transforms the instance tensor into a final tensor holding the predictions:
 > # ...
 > ```
 
-```python
-### The model architecture {highlight="6"}
+```python {title="The model architecture",highlight="6"}
 @spacy.registry.architectures("rel_model.v1")
 def create_relation_model(
     create_instance_tensor: Model[List[Doc], Floats2d],
@@ -614,8 +602,7 @@ The `classification_layer` could be something like a
 > nO = null
 > ```
 
-```python
-### The classification layer
+```python {title="The classification layer"}
 @spacy.registry.architectures("rel_classification_layer.v1")
 def create_classification_layer(
     nO: int = None, nI: int = None
@@ -651,8 +638,7 @@ that has the full implementation.
 > # ...
 > ```
 
-```python
-### The layer that creates the instance tensor
+```python {title="The layer that creates the instance tensor"}
 @spacy.registry.architectures("rel_instance_tensor.v1")
 def create_tensors(
     tok2vec: Model[List[Doc], List[Floats2d]],
@@ -732,8 +718,7 @@ are within a **maximum distance** (in number of tokens) of each other:
 > max_length = 100
 > ```
 
-```python
-### Candidate generation
+```python {title="Candidate generation"}
 @spacy.registry.misc("rel_instance_generator.v1")
 def create_instances(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]]:
     def get_candidates(doc: "Doc") -> List[Tuple[Span, Span]]:
@@ -776,8 +761,7 @@ above 0.5 to be a `True` relation. The ~~Example~~ instances that we'll use as
 training data, will include their gold-standard relation annotations in
 `example.reference._.rel`.
 
-```python
-### Registering the extension attribute
+```python {title="Registering the extension attribute"}
 from spacy.tokens import Doc
 Doc.set_extension("rel", default={})
 ```
@@ -790,8 +774,7 @@ create a subclass of [`TrainablePipe`](/api/pipe) that holds the model.
 
 ![Illustration of Pipe methods](/images/trainable_component.svg)
 
-```python
-### Pipeline component skeleton
+```python {title="Pipeline component skeleton"}
 from spacy.pipeline import TrainablePipe
 
 class RelationExtractor(TrainablePipe):
@@ -828,8 +811,7 @@ and the name of this component. Additionally, this component, just like the
 will predict scores for each label. We add convenience methods to easily
 retrieve and add to them.
 
-```python
-### The constructor (continued)
+```python {title="The constructor (continued)"}
     def __init__(self, vocab, model, name="rel"):
         """Create a component instance."""
         # ...
@@ -858,8 +840,7 @@ will be used to do
 layers of the neural network. This is triggered by calling
 [`Model.initialize`](https://thinc.ai/api/model#initialize).
 
-```python
-### The initialize method {highlight="12,15,18,22"}
+```python {title="The initialize method",highlight="12,15,18,22"}
 from itertools import islice
 
 def initialize(
@@ -899,8 +880,7 @@ update the weights of the model layers. Thinc provides several
 [loss functions](https://thinc.ai/docs/api-loss) that can be used for the
 implementation of the `get_loss` function.
 
-```python
-### The update method {highlight="12-14"}
+```python {title="The update method",highlight="12-14"}
 def update(
     self,
     examples: Iterable[Example],
@@ -926,8 +906,7 @@ delegate to the internal model's
 [predict](https://thinc.ai/docs/api-model#predict) function that takes a batch
 of `Doc` objects and returns a ~~Floats2d~~ array:
 
-```python
-### The predict method
+```python {title="The predict method"}
 def predict(self, docs: Iterable[Doc]) -> Floats2d:
     predictions = self.model.predict(docs)
     return self.model.ops.asarray(predictions)
@@ -944,8 +923,7 @@ need to refer to the model's `get_instances` function that defined which pairs
 of entities were relevant candidates, so that the predictions can be linked to
 those exact entities:
 
-```python
-### The set_annotations method {highlight="5-6,10"}
+```python {title="The set_annotations method",highlight="5-6,10"}
 def set_annotations(self, docs: Iterable[Doc], predictions: Floats2d):
     c = 0
     get_instances = self.model.attrs["get_instances"]
@@ -962,8 +940,7 @@ def set_annotations(self, docs: Iterable[Doc], predictions: Floats2d):
 Under the hood, when the pipe is applied to a document, it delegates to the
 `predict` and `set_annotations` methods:
 
-```python
-### The __call__ method
+```python {title="The __call__ method"}
 def __call__(self, doc: Doc):
     predictions = self.predict([doc])
     self.set_annotations([doc], predictions)
@@ -974,8 +951,7 @@ There is one more optional method to implement: [`score`](/api/pipe#score)
 calculates the performance of your component on a set of examples, and returns
 the results as a dictionary:
 
-```python
-### The score method
+```python {title="The score method"}
 def score(self, examples: Iterable[Example]) -> Dict[str, Any]:
     prf = PRFScore()
     for example in examples:
@@ -1014,8 +990,7 @@ assigns it a name and lets you create the component with
 > rel_micro_f = 1.0
 > ```
 
-```python
-### Registering the pipeline component
+```python {title="Registering the pipeline component"}
 from spacy.language import Language
 
 @Language.factory("relation_extractor")
@@ -1027,8 +1002,7 @@ You can extend the decorator to include information such as the type of
 annotations that are required for this component to run, the type of annotations
 it produces, and the scores that can be calculated:
 
-```python
-### Factory annotations {highlight="5-11"}
+```python {title="Factory annotations",highlight="5-11"}
 from spacy.language import Language
 
 @Language.factory(

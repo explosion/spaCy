@@ -60,8 +60,7 @@ so we can iterate over them and access the named entity predictions:
 > 1. Also disable the `"ner"` component. You'll see that the `doc.ents` are now
 >    empty, because the entity recognizer didn't run.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 texts = [
@@ -95,8 +94,7 @@ the input should be a sequence of `(text, context)` tuples and the output will
 be a sequence of `(doc, context)` tuples. For example, you can pass metadata in
 the context and save it in a [custom attribute](#custom-components-attributes):
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.tokens import Doc
 
@@ -246,8 +244,7 @@ tagging pipeline. This is also why the pipeline state is always held by the
 together and returns an instance of `Language` with a pipeline set and access to
 the binary data:
 
-```python
-### spacy.load under the hood
+```python {title="spacy.load under the hood"}
 lang = "en"
 pipeline = ["tok2vec", "tagger", "parser", "ner", "attribute_ruler", "lemmatizer"]
 data_path = "path/to/en_core_web_sm/en_core_web_sm-3.0.0"
@@ -266,8 +263,7 @@ subsequently to the `Token` and `Span` which are only views of the `Doc`, and
 don't own any data themselves. All components return the modified document,
 which is then processed by the next component in the pipeline.
 
-```python
-### The pipeline under the hood
+```python {title="The pipeline under the hood"}
 doc = nlp.make_doc("This is a sentence")  # Create a Doc from raw text
 for name, proc in nlp.pipeline:           # Iterate over components in order
     doc = proc(doc)                       # Apply each component
@@ -390,8 +386,7 @@ call its `restore()` method to restore the disabled components when needed. This
 can be useful if you want to prevent unnecessary code indentation of large
 blocks.
 
-```python
-### Disable for block
+```python {title="Disable for block"}
 # 1. Use as a context manager
 with nlp.select_pipes(disable=["tagger", "parser", "lemmatizer"]):
     doc = nlp("I won't be tagged and parsed")
@@ -502,8 +497,7 @@ vectors available – otherwise, it won't be able to make the same predictions.
 > frozen_components = ["ner"]
 > ```
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 # The source pipeline with different components
@@ -533,8 +527,7 @@ table instead of only returning the structured data.
 >    `"entity_linker"`. The analysis should now show no problems, because
 >    requirements are met.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.blank("en")
@@ -546,8 +539,7 @@ analysis = nlp.analyze_pipes(pretty=True)
 
 <Accordion title="Example output">
 
-```json
-### Structured
+```json {title="Structured"}
 {
   "summary": {
     "tagger": {
@@ -565,7 +557,12 @@ analysis = nlp.analyze_pipes(pretty=True)
   },
   "problems": {
     "tagger": [],
-    "entity_linker": ["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"]
+    "entity_linker": [
+      "doc.ents",
+      "doc.sents",
+      "token.ent_iob",
+      "token.ent_type"
+    ]
   },
   "attrs": {
     "token.ent_iob": { "assigns": [], "requires": ["entity_linker"] },
@@ -698,8 +695,7 @@ component under the name `"info_component"`.
 >    else. spaCy should now complain that it doesn't know a component of the
 >    name `"info_component"`.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.language import Language
 
@@ -732,8 +728,7 @@ boundaries.
 >    to `None` (missing value), the parser will assign sentence boundaries in
 >    between.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.language import Language
 
@@ -786,8 +781,7 @@ All other settings can be passed in by the user via the `config` argument on
 [`@Language.factory`](/api/language#factory) decorator also lets you define a
 `default_config` that's used as a fallback.
 
-```python
-### With config {highlight="4,9"}
+```python {title="With config",highlight="4,9"}
 import spacy
 from spacy.language import Language
 
@@ -851,8 +845,7 @@ a token, the `Token.norm_` with an entry from a language-specific lookup table.
 It's registered twice under the name `"token_normalizer"` – once using
 `@English.factory` and once using `@German.factory`:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 from spacy.lang.en import English
 from spacy.lang.de import German
 
@@ -921,8 +914,7 @@ case-sensitive.
 >    should see an entry for the acronyms component, referencing the factory
 >    `acronyms` and the config settings.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 from spacy.language import Language
 from spacy.tokens import Doc
 from spacy.matcher import PhraseMatcher
@@ -1024,8 +1016,7 @@ argument, the name:
 > batchers. `misc` is intended for miscellaneous functions that don't fit
 > anywhere else.
 
-```python
-### Registered function for assets {highlight="1"}
+```python {title="Registered function for assets",highlight="1"}
 @spacy.registry.misc("acronyms.slang_dict.v1")
 def create_acronyms_slang_dict():
     dictionary = {"lol": "laughing out loud", "brb": "be right back"}
@@ -1093,8 +1084,7 @@ on [serialization methods](/usage/saving-loading/#serialization-methods).
 > receive the directory path `/path/acronyms` and can then create files in this
 > directory.
 
-```python
-### Custom serialization methods {highlight="7-11,13-15"}
+```python {title="Custom serialization methods",highlight="7-11,13-15"}
 import srsly
 from spacy.util import ensure_path
 
@@ -1176,8 +1166,7 @@ be defined via the config – in this case a dictionary `data`.
 > path = "/path/to/slang_dict.json"
 > ```
 
-```python
-### Custom initialize method {highlight="5-6"}
+```python {title="Custom initialize method",highlight="5-6"}
 class AcronymComponent:
     def __init__(self):
         self.data = {}
@@ -1240,8 +1229,7 @@ string value.
 >    and write a type hint for `log_level` that only accepts the exact string
 >    values `"DEBUG"`, `"INFO"` or `"CRITICAL"`.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.language import Language
 from spacy.tokens import Doc
@@ -1330,8 +1318,7 @@ components. It also makes the components more **modular** and lets you
 [swap](/usage/layers-architectures#swap-architectures) different architectures
 in your config, and re-use model definitions.
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [components]
 
 [components.textcat]
@@ -1465,8 +1452,7 @@ particular instance. If an attribute of the same name already exists, or if
 you're trying to access an attribute that hasn't been registered, spaCy will
 raise an `AttributeError`.
 
-```python
-### Example
+```python {title="Example"}
 from spacy.tokens import Doc, Span, Token
 
 fruits = ["apple", "pear", "banana", "orange", "strawberry"]
@@ -1501,8 +1487,7 @@ entity annotations for countries and sets custom attributes on the `Doc` and
 `Span` – for example, the capital, latitude/longitude coordinates and even the
 country flag.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import requests
 from spacy.lang.en import English
 from spacy.language import Language
@@ -1600,8 +1585,7 @@ to `Doc.user_span_hooks` and `Doc.user_token_hooks`.
 | `user_token_hooks` | [`Token.similarity`](/api/token#similarity), [`Token.vector`](/api/token#vector), [`Token.has_vector`](/api/token#has_vector), [`Token.vector_norm`](/api/token#vector_norm), [`Token.conjuncts`](/api/token#conjuncts) |
 | `user_span_hooks`  | [`Span.similarity`](/api/span#similarity), [`Span.vector`](/api/span#vector), [`Span.has_vector`](/api/span#has_vector), [`Span.vector_norm`](/api/span#vector_norm), [`Span.root`](/api/span#root)                     |
 
-```python
-### Add custom similarity hooks
+```python {title="Add custom similarity hooks"}
 from spacy.language import Language
 
 
@@ -1759,8 +1743,7 @@ wrapper has to do is compute the entity spans and overwrite the `doc.ents`.
 > attributes. By definition, each token can only be part of one entity, so
 > overlapping entity spans are not allowed.
 
-```python
-### {highlight="1,8-9"}
+```python {highlight="1,8-9"}
 import your_custom_entity_recognizer
 from spacy.training import biluo_tags_to_spans
 from spacy.language import Language
@@ -1798,8 +1781,7 @@ label scheme than spaCy's default models.
 > it fully replaces the `nlp` object instead of providing a pipeline component,
 > since it also needs to handle tokenization.
 
-```python
-### {highlight="1,11,17-19"}
+```python {highlight="1,11,17-19"}
 import your_custom_model
 from spacy.language import Language
 from spacy.symbols import POS, TAG, DEP, HEAD

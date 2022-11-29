@@ -317,8 +317,7 @@ $ python -m spacy convert ./data.json .
 > [`offsets_to_biluo_tags`](/api/top-level#offsets_to_biluo_tags) function can
 > help you convert entity offsets to the right format.
 
-```python
-### Example structure
+```python {title="Example structure"}
 [{
     "id": int,                      # ID of the document within the corpus
     "paragraphs": [{                # list of paragraphs in the corpus
@@ -436,8 +435,7 @@ file to keep track of your settings and hyperparameters and your own
 
 </Infobox>
 
-```python
-### Examples
+```python {title="Examples"}
 # Training data for a part-of-speech tagger
 doc = Doc(vocab, words=["I", "like", "stuff"])
 gold_dict = {"tags": ["NOUN", "VERB", "NOUN"]}
@@ -483,13 +481,11 @@ spaCy's [`Lexeme`](/api/lexeme#attributes) object.
 > vocab_data = "/path/to/vocab-data.jsonl"
 > ```
 
-```python
-### First line
+```python {title="First line"}
 {"lang": "en", "settings": {"oov_prob": -20.502029418945312}}
 ```
 
-```python
-### Entry structure
+```python {title="Entry structure"}
 {
     "orth": string,     # the word text
     "id": int,          # can correspond to row in vectors table
