@@ -496,7 +496,7 @@ def test_el_pipe_configuration(nlp):
     doc = nlp(text)
     assert doc[0].ent_kb_id_ == "NIL"
     assert doc[1].ent_kb_id_ == ""
-    assert doc[2].ent_kb_id_ in ("Q2", "Q3")
+    assert doc[2].ent_kb_id_ == "Q2"
 
     # Replace the pipe with a new one with with a different candidate generator.
 
@@ -540,9 +540,9 @@ def test_el_pipe_configuration(nlp):
         )
         _entity_linker.set_kb(create_kb)
         _doc = nlp(doc_text)
-        assert _doc[0].ent_kb_id_ in ("Q2", "Q3")
+        assert _doc[0].ent_kb_id_ == "Q2"
         assert _doc[1].ent_kb_id_ == ""
-        assert _doc[2].ent_kb_id_ in ("Q2", "Q3")
+        assert _doc[2].ent_kb_id_ == "Q2"
 
     # Test individual and doc-wise candidate generation.
     test_reconfigured_el(False, text)

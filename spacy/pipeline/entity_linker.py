@@ -529,7 +529,7 @@ class EntityLinker(TrainablePipe):
                         # set all prior probabilities to 0 if incl_prior=False
                         scores = prior_probs = xp.asarray(
                             [
-                                0.0 if self.incl_prior else c.prior_prob
+                                c.prior_prob if self.incl_prior else 0.0
                                 for c in candidates
                             ]
                         )
