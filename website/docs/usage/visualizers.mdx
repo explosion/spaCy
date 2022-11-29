@@ -34,8 +34,7 @@ package that helps you integrate spaCy visualizations into your apps!
 The dependency visualizer, `dep`, shows part-of-speech tags and syntactic
 dependencies.
 
-```python
-### Dependency example
+```python {title="Dependency example"}
 import spacy
 from spacy import displacy
 
@@ -104,8 +103,7 @@ displacy.serve(sentence_spans, style="dep")
 The entity visualizer, `ent`, highlights named entities and their labels in a
 text.
 
-```python
-### Named Entity example
+```python {title="Named Entity example"}
 import spacy
 from spacy import displacy
 
@@ -176,8 +174,7 @@ title for a brief description of the text example and the number of iterations.
 
 The span visualizer, `span`, highlights overlapping spans in a text.
 
-```python
-### Span example
+```python {title="Span example"}
 import spacy
 from spacy import displacy
 from spacy.tokens import Span
@@ -234,8 +231,7 @@ displaCy is able to detect whether you're working in a
 rendered in a cell straight away. When you export your notebook, the
 visualizations will be included as HTML.
 
-```python
-### Jupyter example
+```python {title="Jupyter example"}
 # Don't forget to install a trained pipeline, e.g.: python -m spacy download en
 
 # In[1]:
@@ -279,8 +275,7 @@ example, to export it to a file or serve it in a custom way – you can use
 [`displacy.render`](/api/top-level#displacy.render). It works the same way, but
 returns a string containing the markup.
 
-```python
-### Example
+```python {title="Example"}
 import spacy
 from spacy import displacy
 
@@ -323,8 +318,7 @@ rendering all `Doc`s at once, loop over them and export them separately.
 
 ### Example: Export SVG graphics of dependency parses {id="examples-export-svg"}
 
-```python
-### Example
+```python {title="Example"}
 import spacy
 from spacy import displacy
 from pathlib import Path
@@ -372,8 +366,7 @@ helper functions for converting `Doc` objects to displaCy's format for use with
 > html = displacy.render(ex, style="ent", manual=True)
 > ```
 
-```python
-### DEP input
+```python {title="DEP input"}
 {
     "words": [
         {"text": "This", "tag": "DT"},
@@ -389,8 +382,7 @@ helper functions for converting `Doc` objects to displaCy's format for use with
 }
 ```
 
-```python
-### ENT input
+```python {title="ENT input"}
 {
     "text": "But Google is starting from behind.",
     "ents": [{"start": 4, "end": 10, "label": "ORG"}],
@@ -398,8 +390,7 @@ helper functions for converting `Doc` objects to displaCy's format for use with
 }
 ```
 
-```python
-### ENT input with knowledge base links
+```python {title="ENT input with knowledge base links"}
 {
     "text": "But Google is starting from behind.",
     "ents": [{"start": 4, "end": 10, "label": "ORG", "kb_id": "Q95", "kb_url": "https://www.wikidata.org/entity/Q95"}],
@@ -407,8 +398,7 @@ helper functions for converting `Doc` objects to displaCy's format for use with
 }
 ```
 
-```python
-### SPANS input
+```python {title="SPANS input"}
 {
     "text": "Welcome to the Bank of China.",
     "spans": [

@@ -28,14 +28,12 @@ contains the pipeline configuration and all the relevant settings.
 > dictionary containing the training configuration, pipeline component factories
 > and other settings. It is saved out with a pipeline as the `config.cfg`.
 
-```python
-### Serialize
+```python {title="Serialize"}
 config = nlp.config
 bytes_data = nlp.to_bytes()
 ```
 
-```python
-### Deserialize
+```python {title="Deserialize"}
 lang_cls = spacy.util.get_lang_class(config["nlp"]["lang"])
 nlp = lang_cls.from_config(config)
 nlp.from_bytes(bytes_data)
@@ -62,8 +60,7 @@ collection of `Doc` objects together, and is much more efficient than calling
 also control what data gets saved, and you can merge pallets together for easy
 map/reduce-style processing.
 
-```python
-### {highlight="4,8,9,13,14"}
+```python {highlight="4,8,9,13,14"}
 import spacy
 from spacy.tokens import DocBin
 
@@ -122,8 +119,7 @@ the entire pipeline once. And instead of pickling several `Doc` objects
 separately, pickle a list of `Doc` objects. Since they all share a reference to
 the _same_ `Vocab` object, it will only be included once.
 
-```python
-### Pickling objects with shared data {highlight="8-9"}
+```python {title="Pickling objects with shared data",highlight="8-9"}
 doc1 = nlp("Hello world")
 doc2 = nlp("This is a test")
 
@@ -199,8 +195,7 @@ the data to and from a JSON file.
 > saving out a pipeline with a rule-based entity recognizer and including all
 > rules _with_ the component data.
 
-```python
-### {highlight="16-23,25-30"}
+```python {highlight="16-23,25-30"}
 import json
 from spacy import Language
 from spacy.util import ensure_path
@@ -240,8 +235,7 @@ After adding the component to the pipeline and adding some data to it, we can
 serialize the `nlp` object to a directory, which will call the custom
 component's `to_disk` method.
 
-```python
-### {highlight="2-4"}
+```python {highlight="2-4"}
 nlp = spacy.load("en_core_web_sm")
 my_component = nlp.add_pipe("my_component")
 my_component.add({"hello": "world"})
@@ -252,8 +246,7 @@ The contents of the directory would then look like this.
 `CustomComponent.to_disk` converted the data to a JSON string and saved it to a
 file `data.json` in its subdirectory:
 
-```yaml
-### Directory structure {highlight="2-3"}
+```yaml {title="Directory structure",highlight="2-3"}
 └── /path/to/pipeline
     ├── my_component     # data serialized by "my_component"
     │   └── data.json
@@ -341,8 +334,7 @@ snake when it's called:
 > └── setup.py  # setup file for pip installation
 > ```
 
-```python
-### snek.py
+```python {title="snek.py"}
 from spacy.language import Language
 
 snek = """
@@ -375,8 +367,7 @@ entry to the factories, you can now expose it in your `setup.py` via the
 > the created entry point is named `snek` and points to the function
 > `snek_component` in the module `snek`, i.e. `snek.py`.
 
-```python
-### setup.py {highlight="5-7"}
+```python {title="setup.py",highlight="5-7"}
 from setuptools import setup
 
 setup(
@@ -457,8 +448,7 @@ class SnekFactory:
         return doc
 ```
 
-```diff
-### setup.py
+```diff {title="setup.py"}
 entry_points={
 -   "spacy_factories": ["snek = snek:snek_component"]
 +   "spacy_factories": ["snek = snek:SnekFactory"]
@@ -503,8 +493,7 @@ custom pipeline – but you don't necessarily want to modify spaCy's code to ad
 language. In your package, you could then implement the following
 [custom language subclass](/usage/linguistic-features#language-subclass):
 
-```python
-### snek.py
+```python {title="snek.py"}
 from spacy.language import Language
 
 class SnekDefaults(Language.Defaults):
@@ -519,8 +508,7 @@ Alongside the `spacy_factories`, there's also an entry point option for
 `spacy_languages`, which maps language codes to language-specific `Language`
 subclasses:
 
-```diff
-### setup.py
+```diff {title="setup.py"}
 from setuptools import setup
 
 setup(
@@ -553,8 +541,7 @@ values.
 > [scispaCy](/universe/project/scispacy) and
 > [Blackstone](/universe/project/blackstone).
 
-```python
-### snek.py
+```python {title="snek.py"}
 displacy_colors = {"SNEK": "#3dff74", "HUMAN": "#cfc5ff"}
 ```
 
@@ -562,8 +549,7 @@ Given the above colors, the entry point can be defined as follows. Entry points
 need to have a name, so we use the key `colors`. However, the name doesn't
 matter and whatever is defined in the entry point group will be used.
 
-```diff
-### setup.py
+```diff {title="setup.py"}
 from setuptools import setup
 
 setup(
@@ -671,8 +657,7 @@ This command will create a pipeline package directory and will run
 `.tar.gz` archive of your package that can be installed using `pip install`.
 Installing the binary wheel is usually more efficient.
 
-```yaml
-### Directory structure
+```yaml {title="Directory structure"}
 └── /
     ├── MANIFEST.in                           # to include meta.json
     ├── meta.json                             # pipeline meta data

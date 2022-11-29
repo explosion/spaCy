@@ -29,8 +29,7 @@ on the predicted docs during training. This makes it easy to use the predictions
 of a previous component in the pipeline as features for a subsequent component,
 e.g. the dependency labels in the tagger:
 
-```ini
-### config.cfg (excerpt) {highlight="7,12"}
+```ini {title="config.cfg (excerpt)",highlight="7,12"}
 [nlp]
 pipeline = ["parser", "tagger"]
 
@@ -293,8 +292,7 @@ spaCy v3.0, a bug allowed vectors to be loaded implicitly through `source`,
 however in v3.1 this setting must be provided explicitly as
 `[initialize.vectors]`:
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [components.ner]
 source = "en_core_web_md"
 

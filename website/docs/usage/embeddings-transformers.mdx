@@ -123,8 +123,7 @@ the entity recognizer, use a
 [Tok2VecListener](/api/architectures#Tok2VecListener) layer as their model's
 `tok2vec` argument, which connects to the `tok2vec` component model.
 
-```ini
-### Shared {highlight="1-2,4-5,19-20"}
+```ini {title="Shared",highlight="1-2,4-5,19-20"}
 [components.tok2vec]
 factory = "tok2vec"
 
@@ -152,8 +151,7 @@ In the independent setup, the entity recognizer component defines its own
 same. This makes them fully independent and doesn't require an upstream
 [`Tok2Vec`](/api/tok2vec) component to be present in the pipeline.
 
-```ini
-### Independent {highlight="7-8"}
+```ini {title="Independent", highlight="7-8"}
 [components.ner]
 factory = "ner"
 
@@ -210,8 +208,7 @@ your package manager and CUDA version. If you skip this step, pip will install
 PyTorch as a dependency below, but it may not find the best version for your
 setup.
 
-```bash
-### Example: Install PyTorch 1.11.0 for CUDA 11.3 with pip
+```bash {title="Example: Install PyTorch 1.11.0 for CUDA 11.3 with pip"}
 # See: https://pytorch.org/get-started/locally/
 $ pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 ```
@@ -224,8 +221,7 @@ environment variable if your CUDA runtime is installed in a non-standard
 location. Putting it all together, if you had installed CUDA 11.3 in
 `/opt/nvidia/cuda`, you would run:
 
-```bash
-### Installation with CUDA
+```bash {title="Installation with CUDA"}
 $ export CUDA_PATH="/opt/nvidia/cuda"
 $ pip install -U %%SPACY_PKG_NAME[cuda113,transformers]%%SPACY_PKG_FLAGS
 ```
@@ -235,8 +231,7 @@ that require [`SentencePiece`](https://github.com/google/sentencepiece) (e.g.,
 ALBERT, CamemBERT, XLNet, Marian, and T5), install the additional dependencies
 with:
 
-```bash
-### Install sentencepiece
+```bash {title="Install sentencepiece"}
 $ pip install transformers[sentencepiece]
 ```
 
@@ -261,8 +256,7 @@ transformer-based [pipelines](/models) provided by spaCy end on `_trf`, e.g.
 $ python -m spacy download en_core_web_trf
 ```
 
-```python
-### Example
+```python {title="Example"}
 import spacy
 from thinc.api import set_gpu_allocator, require_gpu
 
@@ -343,8 +337,7 @@ component:
 > )
 > ```
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg",excerpt="true"}
 [components.transformer]
 factory = "transformer"
 max_batch_items = 4096
@@ -424,8 +417,7 @@ subsentences of at most `max_length` tokens are returned.
 > max_length = 25
 > ```
 
-```python
-### code.py
+```python {title="code.py"}
 import spacy_transformers
 
 @spacy_transformers.registry.span_getters("custom_sent_spans")
@@ -475,8 +467,7 @@ is where we'll plug in our transformer model, using the
 [TransformerListener](/api/architectures#TransformerListener) layer, which
 sneakily delegates to the `Transformer` pipeline component.
 
-```ini
-### config.cfg (excerpt) {highlight="12"}
+```ini {title="config.cfg (excerpt)",highlight="12"}
 [components.ner]
 factory = "ner"
 
@@ -735,8 +726,7 @@ whole model), or a
 spaCy's built-in model architectures have a reference named `"tok2vec"` that
 will refer to the right layer.
 
-```ini
-### config.cfg
+```ini {title="config.cfg"}
 # 1. Use the whole model of the "tok2vec" component
 [pretraining]
 component = "tok2vec"
@@ -759,8 +749,7 @@ A pretraining step that runs for 5 epochs with an output path of `pretrain/`, as
 an example, produces `pretrain/model0.bin` through `pretrain/model4.bin`. To
 make use of the final output, you could fill in this value in your config file:
 
-```ini
-### config.cfg
+```ini {title="config.cfg"}
 
 [paths]
 init_tok2vec = "pretrain/model4.bin"

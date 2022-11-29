@@ -310,8 +310,7 @@ define a setting once and can reference it across your config using the
 the `[training]` block, and the whole block of `[training.optimizer]` is reused
 in `[pretraining]` and will become `pretraining.optimizer`.
 
-```ini
-### config.cfg (excerpt) {highlight="5,18"}
+```ini {title="config.cfg (excerpt)",highlight="5,18"}
 [system]
 seed = 0
 
@@ -372,8 +371,7 @@ are handled automatically.
 
 Here's an example of creating a `.spacy` file from some NER annotations.
 
-```python
-### preprocess.py
+```python {title="preprocess.py"}
 import spacy
 from spacy.tokens import DocBin
 
@@ -438,8 +436,7 @@ existing weights. This lets you include an already trained component in your
 pipeline, or update a trained component with more data specific to your use
 case.
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [components]
 
 # "parser" and "ner" are sourced from a trained pipeline
@@ -532,8 +529,7 @@ list of components. For example, the feature `DEP` from the parser could be used
 as a tagger feature by including `DEP` in the tok2vec `attrs` and including
 `parser` in `annotating_components`:
 
-```ini
-### config.cfg (excerpt) {highlight="7,12"}
+```ini {title="config.cfg (excerpt)",highlight="7,12"}
 [nlp]
 pipeline = ["parser", "tagger"]
 
@@ -555,8 +551,7 @@ pipeline is run. The config excerpt below shows how a frozen `ner` component and
 a `sentencizer` can provide the required `doc.sents` and `doc.ents` for the
 entity linker during training:
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [nlp]
 pipeline = ["sentencizer", "ner", "entity_linker"]
 
@@ -588,8 +583,7 @@ the `batch_size` can be a number that doesn't change, or a schedule, like a
 sequence of compounding values, which has shown to be an effective trick (see
 [Smith et al., 2017](https://arxiv.org/abs/1711.00489)).
 
-```ini
-### With static value
+```ini {title="With static value"}
 [training]
 batch_size = 128
 ```
@@ -612,8 +606,7 @@ from your configs.
 > instance, a learning rate schedule can be provided as the an argument of an
 > optimizer.
 
-```ini
-### With registered function
+```ini {title="With registered function"}
 [training.batch_size]
 @schedules = "compounding.v1"
 start = 100
@@ -799,8 +792,7 @@ stop word to the defaults:
 > @callbacks = "customize_language_data"
 > ```
 
-```python
-### functions.py {highlight="3,6"}
+```python {title="functions.py",highlight="3,6"}
 import spacy
 
 @spacy.registry.callbacks("customize_language_data")
@@ -836,8 +828,7 @@ we're adding the arguments `extra_stop_words` (a list of strings) and `debug`
 > debug = true
 > ```
 
-```python
-### functions.py {highlight="5,7-9"}
+```python {title="functions.py",highlight="5,7-9"}
 from typing import List
 import spacy
 
@@ -892,8 +883,7 @@ settings and specify this callback in your config:
 > @callbacks = "customize_tokenizer"
 > ```
 
-```python
-### functions.py
+```python {title="functions.py"}
 from spacy.util import registry, compile_suffix_regex
 
 @registry.callbacks("customize_tokenizer")
@@ -966,8 +956,7 @@ tabular results to a file:
 > log_path = "my_file.tab"
 > ```
 
-```python
-### functions.py
+```python {title="functions.py"}
 import sys
 from typing import IO, Tuple, Callable, Dict, Any, Optional
 import spacy
@@ -1019,8 +1008,7 @@ You can also implement your own batch size schedule to use during training. The
 > know that a config referencing `v1` means a different function than a config
 > referencing `v2`.
 
-```python
-### functions.py
+```python {title="functions.py"}
 import spacy
 
 @spacy.registry.schedules("my_custom_schedule.v1")
@@ -1037,8 +1025,7 @@ settings in the block will be passed to the function as keyword arguments. Keep
 in mind that the config shouldn't have any hidden defaults and all arguments on
 the functions need to be represented in the config.
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [training.batch_size]
 @schedules = "my_custom_schedule.v1"
 start = 2
@@ -1064,8 +1051,7 @@ for more details.
 > output_width = 512
 > ```
 
-```python
-### functions.py
+```python {title="functions.py"}
 from typing import List
 from thinc.types import Floats2d
 from thinc.api import Model
@@ -1215,8 +1201,7 @@ especially when packing multiple documents together. You can also create `Doc`
 objects manually, so you can write your own custom logic to convert and store
 existing annotations for use in spaCy.
 
-```python
-### Training data from Doc objects {highlight="6-9"}
+```python {title="Training data from Doc objects",highlight="6-9"}
 import spacy
 from spacy.tokens import Doc, DocBin
 
@@ -1296,8 +1281,7 @@ as **config settings** – in this case, `source`.
 > source = "s3://your_bucket/path/data.csv"
 > ```
 
-```python
-### functions.py {highlight="7-8"}
+```python {title="functions.py",highlight="7-8"}
 from typing import Callable, Iterator, List
 import spacy
 from spacy.training import Example
@@ -1354,8 +1338,7 @@ training should stop.
 > max_steps = 2000
 > ```
 
-```python
-### functions.py
+```python {title="functions.py"}
 from typing import Callable, Iterable, Iterator
 from spacy import util
 import random
@@ -1418,8 +1401,7 @@ annotations are the same.
 > size = 150
 > ```
 
-```python
-### functions.py
+```python {title="functions.py"}
 from typing import Callable, Iterable, Iterator, List
 import spacy
 from spacy.training import Example
@@ -1455,8 +1437,7 @@ your config. The built-in [`orth_variants`](/api/top-level#orth_variants)
 augmenter creates a data augmentation callback that uses orth-variant
 replacement.
 
-```ini
-### config.cfg (excerpt) {highlight="8,14"}
+```ini {title="config.cfg (excerpt)",highlight="8,14"}
 [corpora.train]
 @readers = "spacy.Corpus.v1"
 path = ${paths.train}
@@ -1480,11 +1461,18 @@ typically loaded from a JSON file. There are two types of orth variant rules:
 `"single"` for single tokens that should be replaced (e.g. hyphens) and
 `"paired"` for pairs of tokens (e.g. quotes).
 
-```json
-### orth_variants.json
+```json {title="orth_variants.json"}
 {
   "single": [{ "tags": ["NFP"], "variants": ["…", "..."] }],
-  "paired": [{ "tags": ["``", "''"], "variants": [["'", "'"], ["‘", "’"]] }]
+  "paired": [
+    {
+      "tags": ["``", "''"],
+      "variants": [
+        ["'", "'"],
+        ["‘", "’"]
+      ]
+    }
+  ]
 }
 ```
 
@@ -1758,8 +1746,7 @@ of being dropped.
 > - [`nlp.to_disk`](/api/language#to_disk): Save the updated pipeline to a
 >   directory.
 
-```python
-### Example training loop
+```python {title="Example training loop"}
 optimizer = nlp.initialize()
 for itn in range(100):
     random.shuffle(train_data)

@@ -61,8 +61,7 @@ Essentially, `spacy.load()` is a convenience wrapper that reads the pipeline's
 information to construct a `Language` object, loads in the model data and
 weights, and returns it.
 
-```python
-### Abstract example
+```python {title="Abstract example"}
 cls = spacy.util.get_lang_class(lang)  # 1. Get Language class, e.g. English
 nlp = cls()                            # 2. Initialize it
 for name in pipeline:

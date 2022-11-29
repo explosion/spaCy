@@ -31,8 +31,7 @@ $ pip install spacy[apple]
 To customize the scoring, you can specify a scoring function for each component
 in your config from the new [`scorers` registry](/api/top-level#registry):
 
-```ini
-### config.cfg (excerpt) {highlight="3"}
+```ini {title="config.cfg (excerpt)",highlight="3"}
 [components.tagger]
 factory = "tagger"
 scorer = {"@scorers":"spacy.tagger_scorer.v1"}
@@ -43,8 +42,7 @@ scorer = {"@scorers":"spacy.tagger_scorer.v1"}
 Most pipeline components now include an `overwrite` setting in the config that
 determines whether existing annotation in the `Doc` is preserved or overwritten:
 
-```ini
-### config.cfg (excerpt) {highlight="3"}
+```ini {title="config.cfg (excerpt)",highlight="3"}
 [components.tagger]
 factory = "tagger"
 overwrite = false

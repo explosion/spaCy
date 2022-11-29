@@ -647,8 +647,7 @@ Custom pipeline components now have to be registered explicitly using the
 that take a `Doc` and return it, all you have to do is add the
 `@Language.component` decorator to it and assign it a name:
 
-```diff
-### Stateless function components
+```diff {title="Stateless function components"}
 + from spacy.language import Language
 
 + @Language.component("my_component")
@@ -662,8 +661,7 @@ the method used to initialize the factory has **two named arguments**: `nlp`
 (the current `nlp` object) and `name` (the string name of the component
 instance).
 
-```diff
-### Stateful class components
+```diff {title="Stateful class components"}
 + from spacy.language import Language
 
 + @Language.factory("my_component")
@@ -679,8 +677,7 @@ class MyComponent:
 Instead of decorating your class, you could also add a factory function that
 takes the arguments `nlp` and `name` and returns an instance of your component:
 
-```diff
-### Stateful class components with factory function
+```diff {title="Stateful class components with factory function"}
 + from spacy.language import Language
 
 + @Language.factory("my_component")
@@ -863,8 +860,7 @@ tables = ["lexeme_norm"]
 > details see the [config lifecycle](/usage/training/#config-lifecycle) and
 > [initialization](/usage/training/#initialization) docs.
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [initialize.components.attribute_ruler]
 
 [initialize.components.attribute_ruler.tag_map]
@@ -981,8 +977,7 @@ this callback in your config:
 > @callbacks = "customize_tokenizer"
 > ```
 
-```python
-### functions.py
+```python {title="functions.py"}
 from spacy.util import registry, compile_suffix_regex
 
 @registry.callbacks("customize_tokenizer")
@@ -1028,16 +1023,14 @@ classmethod takes a reference `Doc` and a
 [dictionary of annotations](/api/data-formats#dict-input), similar to the
 "simple training style" in spaCy v2.x:
 
-```diff
-### Migrating Doc and GoldParse
+```diff {title="Migrating Doc and GoldParse"}
 doc = nlp.make_doc("Mark Zuckerberg is the CEO of Facebook")
 entities = [(0, 15, "PERSON"), (30, 38, "ORG")]
 - gold = GoldParse(doc, entities=entities)
 + example = Example.from_dict(doc, {"entities": entities})
 ```
 
-```diff
-### Migrating simple training style
+```diff {title="Migrating simple training style"}
 text = "Mark Zuckerberg is the CEO of Facebook"
 annotations = {"entities": [(0, 15, "PERSON"), (30, 38, "ORG")]}
 + doc = nlp.make_doc(text)
@@ -1050,8 +1043,7 @@ The [`Language.update`](/api/language#update),
 [`Example`](/api/example) objects instead of `Doc` and `GoldParse` objects, or
 raw text and a dictionary of annotations.
 
-```python
-### Training loop {highlight="5-8,12"}
+```python {title="Training loop",highlight="5-8,12"}
 TRAIN_DATA = [
     ("Who is Shaka Khan?", {"entities": [(7, 17, "PERSON")]}),
     ("I like London.", {"entities": [(7, 13, "LOC")]}),
@@ -1130,8 +1122,7 @@ the following:
 - Update all references to [`nlp.add_pipe`](/api/language#add_pipe) in your docs
   to use **string names** instead of the component functions.
 
-```python
-### {highlight="1-5"}
+```python {highlight="1-5"}
 from spacy.language import Language
 
 @Language.factory("my_component", default_config={"some_setting": False})

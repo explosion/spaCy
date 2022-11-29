@@ -113,8 +113,7 @@ The Chinese language class supports three word segmentation options, `char`,
 > nlp.tokenizer.initialize(pkuseg_model="mixed")
 > ```
 
-```ini
-### config.cfg
+```ini {title="config.cfg"}
 [nlp.tokenizer]
 @tokenizers = "spacy.zh.ChineseTokenizer"
 segmenter = "char"
@@ -155,8 +154,7 @@ local path at runtime. See the usage guide on the
 [config lifecycle](/usage/training#config-lifecycle) for more background on
 this.
 
-```ini
-### config.cfg
+```ini {title="config.cfg"}
 [initialize]
 
 [initialize.tokenizer]
@@ -167,8 +165,7 @@ pkuseg_user_dict = "default"
 You can also initialize the tokenizer for a blank language class by calling its
 `initialize` method:
 
-```python
-### Examples
+```python {title="Examples"}
 # Initialize the pkuseg tokenizer
 cfg = {"segmenter": "pkuseg"}
 nlp = Chinese.from_config({"nlp": {"tokenizer": cfg}})
@@ -247,8 +244,7 @@ segmentation and part-of-speech tagging. The default Japanese language class and
 the provided Japanese pipelines use SudachiPy split mode `A`. The tokenizer
 config can be used to configure the split mode to `A`, `B` or `C`.
 
-```ini
-### config.cfg
+```ini {title="config.cfg"}
 [nlp.tokenizer]
 @tokenizers = "spacy.ja.JapaneseTokenizer"
 split_mode = "A"
@@ -291,8 +287,7 @@ than MeCab. To configure a Korean pipeline with the rule-based tokenizer:
 > nlp = spacy.blank("ko", config=config)
 > ```
 
-```ini
-### config.cfg
+```ini {title="config.cfg"}
 [nlp]
 lang = "ko"
 tokenizer = {"@tokenizers" = "spacy.Tokenizer.v1"}
@@ -416,8 +411,7 @@ or configure your own download script using the URL of the archive file. The
 archive consists of a package directory that contains another directory with the
 pipeline data.
 
-```yaml
-### Directory structure {highlight="6"}
+```yaml {title="Directory structure",highlight="6"}
 └── en_core_web_md-3.0.0.tar.gz       # downloaded archive
     ├── setup.py                      # setup file for pip installation
     ├── meta.json                     # copy of pipeline meta
@@ -493,8 +487,7 @@ If you've installed a trained pipeline via [`spacy download`](/api/cli#download)
 or directly via pip, you can also `import` it and then call its `load()` method
 with no arguments:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import en_core_web_sm
 
 nlp = en_core_web_sm.load()
@@ -535,8 +528,7 @@ installation, you can upload the pipeline packages there. pip's
 supports both package names to download via a PyPi server, as well as
 [direct URLs](#pipeline-urls).
 
-```text
-### requirements.txt
+```text {title="requirements.txt"}
 spacy>=3.0.0,<4.0.0
 en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.4.0/en_core_web_sm-3.4.0-py3-none-any.whl
 ```

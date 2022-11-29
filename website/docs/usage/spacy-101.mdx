@@ -180,8 +180,7 @@ can load it via [`spacy.load`](/api/top-level#spacy.load). This will return a
 usually call it `nlp`. Calling the `nlp` object on a string of text will return
 a processed `Doc`:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -293,8 +292,7 @@ way too much space. So instead, spaCy hashes the string and stores it in the
 **lookup table that works in both directions** – you can look up a string to get
 its hash, or a hash to get its string:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -311,8 +309,7 @@ a word. For example, no matter if "love" is used as a verb or a noun in some
 context, its spelling and whether it consists of alphabetic characters won't
 ever change. Its hash value will also always be the same.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -350,8 +347,7 @@ vocabulary. That's why you always need to make sure all objects you create have
 access to the same vocabulary. If they don't, spaCy might not be able to find
 the strings it needs.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.tokens import Doc
 from spacy.vocab import Vocab

@@ -62,8 +62,7 @@ allows you to access individual morphological features.
 >    and express that it's a pronoun in the third person.
 > 2. Inspect `token.morph` for the other tokens.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -80,8 +79,7 @@ spaCy's statistical [`Morphologizer`](/api/morphologizer) component assigns the
 morphological features and coarse-grained part-of-speech tags as `Token.morph`
 and `Token.pos`.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("de_core_news_sm")
@@ -106,8 +104,7 @@ coarse-grained part-of-speech tags and morphological features.
    [mapping table](#mappings-exceptions) maps the fine-grained tags to a
    coarse-grained POS tags and morphological features.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -126,8 +123,7 @@ spaCy provides two pipeline components for lemmatization:
 2. The [`EditTreeLemmatizer`](/api/edittreelemmatizer)
    <Tag variant="new">3.3</Tag> component provides a trainable lemmatizer.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 # English pipelines include a rule-based lemmatizer
@@ -238,8 +234,7 @@ head. You can think of noun chunks as a noun plus the words describing the noun
 get the noun chunks in a document, simply iterate over
 [`Doc.noun_chunks`](/api/doc#noun_chunks).
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -269,8 +264,7 @@ label, which describes the type of syntactic relation that connects the child to
 the head. As with other attributes, the value of `.dep` is a hash value. You can
 get the string value with `.dep_`.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -307,8 +301,7 @@ head**. You can therefore iterate over the arcs in the tree by iterating over
 the words in the sentence. This is usually the best way to match an arc of
 interest – from below:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.symbols import nsubj, VERB
 
@@ -351,8 +344,7 @@ order. There are also two integer-typed attributes,
 [`Token.n_rights`](/api/token#n_rights) that give the number of left and right
 children.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -363,8 +355,7 @@ print(doc[2].n_lefts)  # 2
 print(doc[2].n_rights)  # 1
 ```
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("de_core_news_sm")
@@ -387,8 +378,7 @@ sequence of tokens. You can walk up the tree with the
 > true for the German pipelines, which have many
 > [non-projective dependencies](https://explosion.ai/blog/german-model#word-order).
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -417,8 +407,7 @@ easiest way to create a `Span` object for a syntactic phrase. Note that
 `.right_edge` gives a token **within** the subtree – so if you use it as the
 end-point of a range, don't forget to `+1`!
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -445,8 +434,7 @@ currency values, i.e. entities labeled as `MONEY`, and then uses the dependency
 parse to find the noun phrase they are referring to – for example `"Net income"`
 &rarr; `"$9.4 million"`.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -491,8 +479,7 @@ If you want to know how to write rules that hook into some type of syntactic
 construction, just plug the sentence into the visualizer and see how spaCy
 annotates it.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy import displacy
 
@@ -567,8 +554,7 @@ on a token, it will return an empty string.
 > - `U` – Token is a single-token **unit** entity.
 > - `O` – Token is **outside** an entity.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -603,8 +589,7 @@ directly to the `token.ent_iob` or `token.ent_type` attributes, so the easiest
 way to set entities is to use the [`doc.set_ents`](/api/doc#set_ents) function
 and create the new entity as a [`Span`](/api/span).
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.tokens import Span
 
@@ -644,8 +629,7 @@ You can also assign entity annotations using the
 both the `ENT_TYPE` and the `ENT_IOB` attributes in the array you're importing
 from.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import numpy
 import spacy
 from spacy.attrs import ENT_IOB, ENT_TYPE
@@ -714,8 +698,7 @@ list of `Doc` objects to displaCy and run
 For more details and examples, see the
 [usage guide on visualizing spaCy](/usage/visualizers).
 
-```python
-### Named Entity example
+```python {title="Named Entity example"}
 import spacy
 from spacy import displacy
 
@@ -919,8 +902,7 @@ rules. This could be very certain expressions, or abbreviations only used in
 this specific field. Here's how to add a special case rule to an existing
 [`Tokenizer`](/api/tokenizer) instance:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.symbols import ORTH
 
@@ -967,8 +949,7 @@ tokens produced are identical to `nlp.tokenizer()` except for whitespace tokens:
 > "      SUFFIX
 > ```
 
-```python
-### {executable="true"}
+```python {executable="true"}
 from spacy.lang.en import English
 
 nlp = English()
@@ -1002,8 +983,7 @@ You shouldn't usually need to create a `Tokenizer` subclass. Standard usage is
 to use `re.compile()` to build a regular expression object, and pass its
 `.search()` and `.finditer()` methods:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import re
 import spacy
 from spacy.tokenizer import Tokenizer
@@ -1096,8 +1076,7 @@ letters as an infix. If you do not want the tokenizer to split on hyphens
 between letters, you can modify the existing infix definition from
 [`lang/punctuation.py`](%%GITHUB_SPACY/spacy/lang/punctuation.py):
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.lang.char_classes import ALPHA, ALPHA_LOWER, ALPHA_UPPER
 from spacy.lang.char_classes import CONCAT_QUOTES, LIST_ELLIPSES, LIST_ICONS
@@ -1181,8 +1160,7 @@ a `Doc` object consisting of the text split on single space characters. We can
 then overwrite the `nlp.tokenizer` attribute with an instance of our custom
 tokenizer.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.tokens import Doc
 
@@ -1232,8 +1210,7 @@ produced by the tokenizer.
 > **training transformer models** in spaCy, as well as helpful utilities for
 > aligning word pieces to linguistic tokenization.
 
-```python
-### Custom BERT word piece tokenizer
+```python {title="Custom BERT word piece tokenizer"}
 from tokenizers import BertWordPieceTokenizer
 from spacy.tokens import Doc
 import spacy
@@ -1295,8 +1272,7 @@ setting `--code functions.py` when you run [`spacy train`](/api/cli#train).
 > @tokenizers = "whitespace_tokenizer"
 > ```
 
-```python
-### functions.py {highlight="1"}
+```python {title="functions.py",highlight="1"}
 @spacy.registry.tokenizers("whitespace_tokenizer")
 def create_whitespace_tokenizer():
     def create_tokenizer(nlp):
@@ -1321,8 +1297,7 @@ correct type.
 > lowercase = true
 > ```
 
-```python
-### functions.py {highlight="1"}
+```python {title="functions.py",highlight="1"}
 @spacy.registry.tokenizers("bert_word_piece_tokenizer")
 def create_whitespace_tokenizer(vocab_file: str, lowercase: bool):
     def create_tokenizer(nlp):
@@ -1365,8 +1340,7 @@ boolean values, indicating whether each word is followed by a space.
 >    `Doc` with `words` and `spaces` so that the `doc.text` matches the original
 >    input text.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.tokens import Doc
 
@@ -1412,8 +1386,7 @@ token.
 > 3. Make `other_tokens` and `spacy_tokens` identical. You'll see that all
 >    tokens now correspond 1-to-1.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 from spacy.training import Alignment
 
 other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
@@ -1465,8 +1438,7 @@ root.
 >    recognized as a named entity, this change will also be reflected in the
 >    `doc.ents`.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -1535,8 +1507,7 @@ second split subtoken) and "York" should be attached to "in".
 > 3. Split the token into three tokens instead of two – for example,
 >    `["New", "Yo", "rk"]`.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy import displacy
 
@@ -1565,8 +1536,7 @@ the token indices after splitting.
 If you don't care about the heads (for example, if you're only running the
 tokenizer and not the parser), you can attach each subtoken to itself:
 
-```python
-### {highlight="3"}
+```python {highlight="3"}
 doc = nlp("I live in NewYorkCity")
 with doc.retokenize() as retokenizer:
     heads = [(doc[3], 0), (doc[3], 1), (doc[3], 2)]
@@ -1622,8 +1592,7 @@ values can't be overwritten. For more details, see the
 >    you need to provide a list of extension attribute values as the `"_"`
 >    property, one for each split subtoken.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.tokens import Token
 
@@ -1648,8 +1617,7 @@ has sentence boundaries by calling
 [`Doc.has_annotation`](/api/doc#has_annotation) with the attribute name
 `"SENT_START"`.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -1684,8 +1652,7 @@ with spaCy's provided trained pipelines. For social media or conversational text
 that doesn't follow the same rules, your application may benefit from a custom
 trained or rule-based component.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -1719,8 +1686,7 @@ without the parser and then enable the sentence recognizer explicitly with
 > which is better at predicting sentence boundaries when punctuation is not
 > present.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm", exclude=["parser"])
@@ -1737,8 +1703,7 @@ The [`Sentencizer`](/api/sentencizer) component is a
 punctuation like `.`, `!` or `?`. You can plug it into your pipeline if you only
 need sentence boundaries without dependency parses.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.lang.en import English
 
@@ -1777,8 +1742,7 @@ for unset sentence boundaries. This approach can be useful if you want to
 implement **additional** rules specific to your data, while still being able to
 take advantage of dependency-based sentence segmentation.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 from spacy.language import Language
 import spacy
 
@@ -1828,8 +1792,7 @@ The following example shows how the tag and POS `NNP`/`PROPN` can be specified
 for the phrase `"The Who"`, overriding the tags provided by the statistical
 tagger and the POS tag map.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -1932,8 +1895,7 @@ the removed words, mapped to `(string, score)` tuples, where `string` is the
 entry the removed word was mapped to and `score` the similarity score between
 the two words.
 
-```python
-### Removed words
+```python {title="Removed words"}
 {
     "Shore": ("coast", 0.732257),
     "Precautionary": ("caution", 0.490973),
@@ -1978,8 +1940,7 @@ be slower than approaches that work with the whole vectors table at once, but
 it's a great approach for once-off conversions before you save out your `nlp`
 object to disk.
 
-```python
-### Adding vectors
+```python {title="Adding vectors"}
 from spacy.vocab import Vocab
 
 vector_data = {
@@ -2005,8 +1966,7 @@ own language subclass. The subclass should define two attributes: the `lang`
 overview of the available attributes that can be overwritten, see the
 [`Language.Defaults`](/api/language#defaults) documentation.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 from spacy.lang.en import English
 
 class CustomEnglishDefaults(English.Defaults):
@@ -2048,8 +2008,7 @@ language name, and even train pipelines with it and refer to it in your
 > python -m spacy train config.cfg --code code.py
 > ```
 
-```python
-### Registering a custom language {highlight="7,12-13"}
+```python {title="Registering a custom language",highlight="7,12-13"}
 import spacy
 from spacy.lang.en import English
 
