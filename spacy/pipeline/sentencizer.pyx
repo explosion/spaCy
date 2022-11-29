@@ -10,9 +10,6 @@ from ..language import Language
 from ..scorer import Scorer
 from .. import util
 
-# see #9050
-BACKWARD_OVERWRITE = False
-
 @Language.factory(
     "sentencizer",
     assigns=["token.is_sent_start", "doc.sents"],
@@ -52,7 +49,7 @@ class Sentencizer(Pipe):
         name="sentencizer",
         *,
         punct_chars=None,
-        overwrite=BACKWARD_OVERWRITE,
+        overwrite=False,
         scorer=senter_score,
     ):
         """Initialize the sentencizer.
