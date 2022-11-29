@@ -25,9 +25,6 @@ from .. import util
 
 ActivationsT = Dict[str, Union[List[Floats2d], List[Ints1d]]]
 
-# See #9050
-BACKWARD_OVERWRITE = False
-
 default_model_config = """
 [model]
 @architectures = "spacy.Tagger.v2"
@@ -97,7 +94,7 @@ class Tagger(TrainablePipe):
         model,
         name="tagger",
         *,
-        overwrite=BACKWARD_OVERWRITE,
+        overwrite=False,
         scorer=tagger_score,
         neg_prefix="!",
         save_activations: bool = False,
