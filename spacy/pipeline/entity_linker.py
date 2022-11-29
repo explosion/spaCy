@@ -464,6 +464,7 @@ class EntityLinker(TrainablePipe):
         if isinstance(docs, Doc):
             docs = [docs]
 
+        docs = list(docs)
         # Determine which entities are to be ignored due to labels_discard.
         valid_ent_idx_per_doc = (
             [
@@ -474,6 +475,7 @@ class EntityLinker(TrainablePipe):
             for doc in docs
             if len(doc) and len(doc.ents)
         )
+
         # Call candidate generator.
         if self.candidates_doc_mode:
             all_ent_cands = self.get_candidates_all(
@@ -532,13 +534,12 @@ class EntityLinker(TrainablePipe):
                     else:
                         random.shuffle(candidates)
                         # set all prior probabilities to 0 if incl_prior=False
-                        prior_probs = xp.asarray(
+                        scores = prior_probs = xp.asarray(
                             [
                                 0.0 if self.incl_prior else c.prior_prob
                                 for c in candidates
                             ]
                         )
-                        scores = prior_probs
                         # add in similarity from the context
                         if self.incl_context:
                             entity_encodings = xp.asarray(

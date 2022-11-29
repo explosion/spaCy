@@ -6,7 +6,7 @@ from thinc.api import Model, Maxout, Linear, tuplify, Ragged
 
 from ...util import registry
 from ...kb import KnowledgeBase, InMemoryLookupKB
-from ...kb import Candidate, get_candidates, get_candidates_all
+from ...kb import Candidate
 from ...vocab import Vocab
 from ...tokens import Span, Doc
 from ..extract_spans import extract_spans
@@ -105,6 +105,28 @@ def empty_kb_for_config() -> Callable[[Vocab, int], KnowledgeBase]:
         return InMemoryLookupKB(vocab=vocab, entity_vector_length=entity_vector_length)
 
     return empty_kb_factory
+
+
+def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
+    """
+    Return candidate entities for a given mention and fetching appropriate entries from the index.
+    kb (KnowledgeBase): Knowledge base to query.
+    mention (Span): Entity mention for which to identify candidates.
+    RETURNS (Iterable[Candidate]): Identified candidates.
+    """
+    return kb.get_candidates(mention)
+
+
+def get_candidates_all(
+    kb: KnowledgeBase, mentions: Generator[Iterable[Span], None, None]
+) -> Iterator[Iterable[Iterable[Candidate]]]:
+    """
+    Return candidate entities for the given mentions and fetching appropriate entries from the index.
+    kb (KnowledgeBase): Knowledge base to query.
+    mention (Generator[Iterable[Span]]): Entity mentions per document for which to identify candidates.
+    RETURNS (Generator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
+    """
+    return kb.get_candidates_all(mentions)
 
 
 @registry.misc("spacy.CandidateGenerator.v1")
