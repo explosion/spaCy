@@ -203,6 +203,16 @@ def test_displacy_parse_spans_different_spans_key(en_vocab):
     ]
 
 
+def test_displacy_parse_empty_spans_key(en_vocab):
+    """Test that having an unset spans key doesn't raise an error"""
+    doc = Doc(en_vocab, words=["Welcome", "to", "the", "Bank", "of", "China"])
+    doc.spans["custom"] = [Span(doc, 3, 6, "BANK")]
+    with pytest.warns(UserWarning, match="W117"):
+        spans = displacy.parse_spans(doc)
+
+    assert isinstance(spans, dict)
+
+
 def test_displacy_parse_ents(en_vocab):
     """Test that named entities on a Doc are converted into displaCy's format."""
     doc = Doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])

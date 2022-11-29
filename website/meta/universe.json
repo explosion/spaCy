@@ -1995,17 +1995,6 @@
         },
         {
             "type": "education",
-            "id": "learning-path-spacy",
-            "title": "Learning Path: Mastering spaCy for Natural Language Processing",
-            "slogan": "O'Reilly, 2017",
-            "description": "spaCy, a fast, user-friendly library for teaching computers to understand text, simplifies NLP techniques, such as speech tagging and syntactic dependencies, so you can easily extract information, attributes, and objects from massive amounts of text to then document, measure, and analyze. This Learning Path is a hands-on introduction to using spaCy to discover insights through natural language processing. While end-to-end natural language processing solutions can be complex, you’ll learn the linguistics, algorithms, and machine learning skills to get the job done.",
-            "url": "https://www.safaribooksonline.com/library/view/learning-path-mastering/9781491986653/",
-            "thumb": "https://i.imgur.com/9MIgMAc.jpg",
-            "author": "Aaron Kramer",
-            "category": ["courses"]
-        },
-        {
-            "type": "education",
             "id": "introduction-into-spacy-3",
             "title": "Introduction to spaCy 3",
             "slogan": "A free course for beginners by Dr. W.J.B. Mattingly",
