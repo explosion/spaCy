@@ -64,7 +64,7 @@ def make_spancat(
     allow_overlap: bool = True,
 ) -> "Exclusive_SpanCategorizer":
     """Create a SpanCategorizerExclusive component. The span categorizer consists of two
-    parts: a suggester function that proposes candidate spans, and a labeller
+    parts: a suggester function that proposes candidate spans, and a labeler
     model that predicts a single label for each span.
 
     suggester (Callable[[Iterable[Doc], Optional[Ops]], Ragged]): A function that suggests spans.
@@ -81,7 +81,7 @@ def make_spancat(
         Scorer.score_spans for the Doc.spans[spans_key] with overlapping
         spans allowed.
     negative_weight (float): Multiplier for the loss terms.
-        Can be used to down weigh the negative samples if there are too many.
+        Can be used to downweight the negative samples if there are too many.
     allow_overlap (bool): If True the data is assumed to
         contain overlapping spans.
     """
@@ -100,7 +100,7 @@ def make_spancat(
 @dataclass
 class Ranges:
     """
-    Helper class help avoid storing overlapping span.
+    Helper class to avoid storing overlapping spans.
     """
 
     def __init__(self):
