@@ -32,7 +32,7 @@ from .levenshtein import levenshtein
 DEF PADDING = 5
 
 
-cpdef bint _default_fuzzy_compare(s1: str, s2: str, fuzzy: int = -1):
+cpdef bint fuzzy_compare(s1: str, s2: str, fuzzy: int = -1):
     distance = min(len(s1), len(s2))
     distance -= 1 # don't allow completely different tokens
     if fuzzy == -1: # FUZZY operator with unspecified fuzzy
@@ -44,7 +44,7 @@ cpdef bint _default_fuzzy_compare(s1: str, s2: str, fuzzy: int = -1):
 
 @registry.misc("spacy.fuzzy_compare.v1")
 def make_fuzzy_compare():
-    return _default_fuzzy_compare
+    return fuzzy_compare
 
 
 cdef class Matcher:
@@ -54,7 +54,7 @@ cdef class Matcher:
     USAGE: https://spacy.io/usage/rule-based-matching
     """
 
-    def __init__(self, vocab, validate=True, *, fuzzy_compare=_default_fuzzy_compare):
+    def __init__(self, vocab, validate=True, *, fuzzy_compare=fuzzy_compare):
         """Create the Matcher.
 
         vocab (Vocab): The vocabulary object, which must be shared with the

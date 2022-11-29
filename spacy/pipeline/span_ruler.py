@@ -12,7 +12,8 @@ from ..errors import Errors, Warnings
 from ..util import ensure_path, SimpleFrozenList, registry
 from ..tokens import Doc, Span
 from ..scorer import Scorer
-from ..matcher import Matcher, PhraseMatcher, _default_fuzzy_compare
+from ..matcher import Matcher, PhraseMatcher
+from ..matcher.matcher import fuzzy_compare
 from .. import util
 
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
@@ -227,7 +228,7 @@ class SpanRuler(Pipe):
         scorer: Optional[Callable] = partial(
             overlapping_labeled_spans_score, spans_key=DEFAULT_SPANS_KEY
         ),
-        fuzzy_compare: Callable = _default_fuzzy_compare,
+        fuzzy_compare: Callable = fuzzy_compare,
     ) -> None:
         """Initialize the span ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`

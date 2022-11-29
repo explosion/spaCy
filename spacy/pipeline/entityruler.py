@@ -10,7 +10,8 @@ from ..language import Language
 from ..errors import Errors, Warnings
 from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList, registry
 from ..tokens import Doc, Span
-from ..matcher import Matcher, PhraseMatcher, _default_fuzzy_compare
+from ..matcher import Matcher, PhraseMatcher
+from ..matcher.matcher import fuzzy_compare
 from ..scorer import get_ner_prf
 
 
@@ -89,7 +90,7 @@ class EntityRuler(Pipe):
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
         scorer: Optional[Callable] = entity_ruler_score,
-        fuzzy_compare: Callable = _default_fuzzy_compare,
+        fuzzy_compare: Callable = fuzzy_compare,
     ) -> None:
         """Initialize the entity ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
