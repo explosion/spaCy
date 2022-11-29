@@ -119,7 +119,7 @@ class Ranges:
 
 
 class Exclusive_SpanCategorizer(SpanCategorizer):
-    """Pipeline component to label non-overlapping spans of text.
+    """Pipeline component to label spans with exclusive classes.
 
     DOCS: https://spacy.io/api/spancatcategorizer
     """
