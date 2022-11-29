@@ -105,6 +105,7 @@ class Tagger(TrainablePipe):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
+        overwrite (bool): Whether to overwrite existing annotations.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_token_attr for the attribute "tag".
         save_activations (bool): save model activations in Doc when annotating.

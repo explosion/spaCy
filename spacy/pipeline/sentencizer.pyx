@@ -56,6 +56,7 @@ class Sentencizer(Pipe):
 
         punct_chars (list): Punctuation characters to split on. Will be
             serialized with the nlp object.
+        overwrite (bool): Whether to overwrite existing annotations.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_spans for the attribute "sents".
 
