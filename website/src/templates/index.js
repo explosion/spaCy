@@ -17,73 +17,13 @@ import Progress from '../components/progress'
 import Footer from '../components/footer'
 import SEO from '../components/seo'
 import Link from '../components/link'
-import Section, { Hr } from '../components/section'
-import { Table, Tr, Th, Tx, Td } from '../components/table'
-import { Pre, Code, InlineCode, TypeAnnotation } from '../components/code'
-import { Ol, Ul, Li } from '../components/list'
-import { H2, H3, H4, H5, P, Abbr, Help } from '../components/typography'
-import Accordion from '../components/accordion'
-import Infobox from '../components/infobox'
-import Aside from '../components/aside'
-import Button from '../components/button'
-import Tag from '../components/tag'
-import Grid from '../components/grid'
-import { YouTube, SoundCloud, Iframe, Image, GoogleSheet } from '../components/embed'
+import { InlineCode } from '../components/code'
 import Alert from '../components/alert'
 import Search from '../components/search'
-import Project from '../widgets/project'
-import { Integration, IntegrationLogo } from '../widgets/integration'
 
 import siteMetadata from '../../meta/site.json'
 import { nightly, legacy } from '../../meta/dynamicMeta'
-
-const mdxComponents = {
-    a: Link,
-    p: P,
-    pre: Pre,
-    code: Code,
-    inlineCode: InlineCode,
-    del: TypeAnnotation,
-    table: Table,
-    img: Image,
-    tr: Tr,
-    th: Th,
-    td: Td,
-    ol: Ol,
-    ul: Ul,
-    li: Li,
-    h2: H2,
-    h3: H3,
-    h4: H4,
-    h5: H5,
-    blockquote: Aside,
-    section: Section,
-    wrapper: ({ children }) => children,
-    hr: Hr,
-}
-
-const scopeComponents = {
-    Infobox,
-    Table,
-    Tr,
-    Tx,
-    Th,
-    Td,
-    Help,
-    Button,
-    YouTube,
-    SoundCloud,
-    Iframe,
-    GoogleSheet,
-    Abbr,
-    Tag,
-    Accordion,
-    Grid,
-    InlineCode,
-    Project,
-    Integration,
-    IntegrationLogo,
-}
+import { remarkComponents } from '../remark'
 
 const AlertSpace = ({ nightly, legacy }) => {
     const isOnline = useOnlineStatus()
@@ -162,7 +102,7 @@ class Layout extends React.Component {
         // NB: Compiling the scope here instead of in render() is super
         // important! Otherwise, it triggers unnecessary rerenders of ALL
         // consumers (e.g. mdx elements), even on anchor navigation!
-        this.state = { scope: { ...scopeComponents, ...props.scope } }
+        this.state = { scope: { ...remarkComponents, ...props.scope } }
     }
 
     render() {
@@ -174,7 +114,7 @@ class Layout extends React.Component {
         const bodyClass = classNames(`theme-${uiTheme}`, { 'search-exclude': !!searchExclude })
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
         const content = !mdx ? null : (
-            <MDXProvider components={mdxComponents}>
+            <MDXProvider components={remarkComponents}>
                 <MDXRenderer scope={this.state.scope}>{mdx.code.body}</MDXRenderer>
             </MDXProvider>
         )
