@@ -16,8 +16,6 @@ from ..training import validate_examples, validate_get_examples
 from ..util import registry
 from .. import util
 
-# See #9050
-BACKWARD_OVERWRITE = False
 
 default_model_config = """
 [model]
@@ -81,7 +79,7 @@ class SentenceRecognizer(Tagger):
         model,
         name="senter",
         *,
-        overwrite=BACKWARD_OVERWRITE,
+        overwrite=False,
         scorer=senter_score,
         save_activations: bool = False,
     ):
