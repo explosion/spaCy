@@ -23,7 +23,7 @@ from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
 from .. import about
 
 if TYPE_CHECKING:
-    from pathy import Pathy  # noqa: F401
+    from pathy import FluidPath  # noqa: F401
 
 
 SDIST_SUFFIX = ".tar.gz"
@@ -331,7 +331,7 @@ def import_code(code_path: Optional[Union[Path, str]]) -> None:
             msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
 
 
-def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
+def upload_file(src: Path, dest: Union[str, "FluidPath"]) -> None:
     """Upload a file.
 
     src (Path): The source path.
@@ -339,13 +339,20 @@ def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
     """
     import smart_open
 
+    # Create parent directories for local paths
+    if isinstance(dest, Path):
+        if not dest.parent.exists():
+            dest.parent.mkdir(parents=True)
+
     dest = str(dest)
     with smart_open.open(dest, mode="wb") as output_file:
         with src.open(mode="rb") as input_file:
             output_file.write(input_file.read())
 
 
-def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) -> None:
+def download_file(
+    src: Union[str, "FluidPath"], dest: Path, *, force: bool = False
+) -> None:
     """Download a file using smart_open.
 
     url (str): The URL of the file.
@@ -368,7 +375,7 @@ def ensure_pathy(path):
     slow and annoying Google Cloud warning)."""
     from pathy import Pathy  # noqa: F811
 
-    return Pathy(path)
+    return Pathy.fluid(path)
 
 
 def git_checkout(

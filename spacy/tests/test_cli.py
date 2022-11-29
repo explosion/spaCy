@@ -3,6 +3,7 @@ import math
 from collections import Counter
 from typing import Tuple, List, Dict, Any
 import pkg_resources
+import time
 
 import numpy
 import pytest
@@ -28,6 +29,7 @@ from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
+from spacy.cli.project.remote_storage import RemoteStorage
 from spacy.cli.project.run import _check_requirements
 from spacy.cli.validate import get_model_pkgs
 from spacy.cli.find_threshold import find_threshold
@@ -860,6 +862,60 @@ def test_span_length_freq_dist_output_must_be_correct():
     span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
     assert sum(span_freqs.values()) >= threshold
     assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
+
+
+def test_local_remote_storage():
+    with make_tempdir() as d:
+        filename = "a.txt"
+
+        content_hashes = ("aaaa", "cccc", "bbbb")
+        for i, content_hash in enumerate(content_hashes):
+            # make sure that each subsequent file has a later timestamp
+            if i > 0:
+                time.sleep(1)
+            content = f"{content_hash} content"
+            loc_file = d / "root" / filename
+            if not loc_file.parent.exists():
+                loc_file.parent.mkdir(parents=True)
+            with loc_file.open(mode="w") as file_:
+                file_.write(content)
+
+            # push first version to remote storage
+            remote = RemoteStorage(d / "root", str(d / "remote"))
+            remote.push(filename, "aaaa", content_hash)
+
+            # retrieve with full hashes
+            loc_file.unlink()
+            remote.pull(filename, command_hash="aaaa", content_hash=content_hash)
+            with loc_file.open(mode="r") as file_:
+                assert file_.read() == content
+
+            # retrieve with command hash
+            loc_file.unlink()
+            remote.pull(filename, command_hash="aaaa")
+            with loc_file.open(mode="r") as file_:
+                assert file_.read() == content
+
+            # retrieve with content hash
+            loc_file.unlink()
+            remote.pull(filename, content_hash=content_hash)
+            with loc_file.open(mode="r") as file_:
+                assert file_.read() == content
+
+            # retrieve with no hashes
+            loc_file.unlink()
+            remote.pull(filename)
+            with loc_file.open(mode="r") as file_:
+                assert file_.read() == content
+
+
+def test_local_remote_storage_pull_missing():
+    # pulling from a non-existent remote pulls nothing gracefully
+    with make_tempdir() as d:
+        filename = "a.txt"
+        remote = RemoteStorage(d / "root", str(d / "remote"))
+        assert remote.pull(filename, command_hash="aaaa") is None
+        assert remote.pull(filename) is None
 
 
 def test_cli_find_threshold(capsys):
