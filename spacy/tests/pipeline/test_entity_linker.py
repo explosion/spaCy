@@ -496,8 +496,6 @@ def test_el_pipe_configuration(nlp):
     doc = nlp(text)
     assert doc[0].ent_kb_id_ == "NIL"
     assert doc[1].ent_kb_id_ == ""
-    # todo It's unclear why EL doesn't learn properly for this test anymore (scores are 0). Seemed to work before, but
-    #  no relevant changes in EL code were made since these tests were added AFAIK (CG seems to work fine).
     assert doc[2].ent_kb_id_ in ("Q2", "Q3")
 
     # Replace the pipe with a new one with with a different candidate generator.

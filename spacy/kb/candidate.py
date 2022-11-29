@@ -47,11 +47,6 @@ class BaseCandidate(abc.ABC):
 class Candidate(BaseCandidate):
     """`Candidate` for InMemoryLookupKBCandidate."""
 
-    # todo
-    #  - glue together
-    #  - is candidate definition necessary for EL? as long as interface fulfills requirements, this shouldn't matter.
-    #    otherwise incorporate new argument.
-    #  - fix test failures (100% backwards-compatible should be possible after changing EntityLinker)
     def __init__(
         self,
         retrieve_string_from_hash: Callable[[int], str],
