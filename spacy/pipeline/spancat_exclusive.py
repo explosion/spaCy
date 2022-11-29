@@ -13,7 +13,7 @@ from .spancat import spancat_score, Suggester
 from .spancat import SpanCategorizer
 
 
-spancat_exclusive_default_config = """
+spancat_excl_default_config = """
 [model]
 @architectures = "spacy.SpanCategorizer.v1"
 scorer = {"@layers": "Softmax.v2"}
@@ -39,7 +39,7 @@ maxout_pieces = 3
 depth = 4
 """
 
-DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_exclusive_default_config)["model"]
+DEFAULT_EXCL_SPANCAT_MODEL = Config().from_str(spancat_excl_default_config)["model"]
 
 
 @Language.factory(
@@ -47,7 +47,7 @@ DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_exclusive_default_config)["mod
     assigns=["doc.spans"],
     default_config={
         "spans_key": "sc",
-        "model": DEFAULT_SPANCAT_MODEL,
+        "model": DEFAULT_EXCL_SPANCAT_MODEL,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
         "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
     },
