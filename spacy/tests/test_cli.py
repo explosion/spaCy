@@ -3,7 +3,6 @@ import math
 from collections import Counter
 from typing import Tuple, List, Dict, Any
 import pkg_resources
-from typing import Counter
 import time
 
 import numpy
