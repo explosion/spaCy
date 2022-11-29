@@ -56,19 +56,18 @@ def test_levenshtein(dist, a, b):
         ("a", "ab", -1, True),
         ("ab", "ac", 1, True),
         ("ab", "ac", -1, True),
-        ("abc", "cde", 4, False),  # 4 reduced because of token length
+        ("abc", "cde", 4, True),
         ("abc", "cde", -1, False),
-        ("abcdef", "cdefgh", 4, True),  # 4 not reduced because of token length
+        ("abcdef", "cdefgh", 4, True),
         ("abcdef", "cdefgh", 3, False),
-        ("abcdef", "cdefgh", -1, True),  # default equivalent to 4
+        ("abcdef", "cdefgh", -1, False),  # default (2 for length 6)
         ("abcdefgh", "cdefghijk", 5, True),
         ("abcdefgh", "cdefghijk", 4, False),
-        ("abcdefgh", "cdefghijk", -1, True),  # default equivalent to 5
+        ("abcdefgh", "cdefghijk", -1, False),  # default (2)
         ("abcdefgh", "cdefghijkl", 6, True),
         ("abcdefgh", "cdefghijkl", 5, False),
-        ("abcdefgh", "cdefghijkl", -1, False),  # default equivalent to 5 (max)
+        ("abcdefgh", "cdefghijkl", -1, False),  # default (2)
     ],
 )
 def test_fuzzy_compare(a, b, fuzzy, expected):
     assert fuzzy_compare(a, b, fuzzy) == expected
-    assert fuzzy_compare(b, a, fuzzy) == expected

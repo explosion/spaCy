@@ -7,6 +7,7 @@ from libc.string cimport memset, memcmp
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 
+from math import ceil
 import re
 import srsly
 import warnings
@@ -32,14 +33,13 @@ from .levenshtein import levenshtein
 DEF PADDING = 5
 
 
-cpdef bint fuzzy_compare(s1: str, s2: str, fuzzy: int = -1):
-    distance = min(len(s1), len(s2))
-    distance -= 1 # don't allow completely different tokens
-    if fuzzy == -1: # FUZZY operator with unspecified fuzzy
-        fuzzy = 5 # default max fuzzy
-        distance -= 1 # be more restrictive
-    distance = min(fuzzy, distance if distance > 0 else 1)
-    return levenshtein(s1, s2, distance) <= distance
+cpdef bint fuzzy_compare(input_text: str, pattern_text: str, fuzzy: int = -1):
+    if fuzzy >= 0:
+        max_edits = fuzzy
+    else:
+        # allow at least one edit and up to 20% of the pattern string length
+        max_edits = ceil(0.2 * len(pattern_text))
+    return levenshtein(input_text, pattern_text, max_edits) <= max_edits
 
 
 @registry.misc("spacy.fuzzy_compare.v1")
