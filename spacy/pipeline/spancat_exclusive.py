@@ -191,7 +191,7 @@ class Exclusive_SpanCategorizer(SpanCategorizer):
         DOCS: https://spacy.io/api/spancatcategorizer#set_annotations
         """
         allow_overlap = cast(bool, self.cfg["allow_overlap"])
-        labels = self.labels
+        labels = list(self.labels)
         indices, scores = indices_scores
         offset = 0
         for i, doc in enumerate(docs):
@@ -200,7 +200,7 @@ class Exclusive_SpanCategorizer(SpanCategorizer):
                 doc,
                 indices_i,
                 scores[offset : offset + indices.lengths[i]],
-                labels,  # type: ignore[arg-type]
+                labels,
                 allow_overlap,
             )
             offset += indices.lengths[i]
