@@ -27,8 +27,8 @@ hidden_size = 128
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
 width = 96
-rows = [5000, 2000, 1000, 1000]
-attrs = ["ORTH", "PREFIX", "SUFFIX", "SHAPE"]
+rows = [5000, 1000, 2500, 1000]
+attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
