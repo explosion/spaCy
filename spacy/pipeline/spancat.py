@@ -230,15 +230,17 @@ class SpanCategorizer(TrainablePipe):
     def _allow_extra_label(self) -> None:
         """Raise an error if the component can not add any more labels."""
         nO = None
-        # fmt: off
         if self.model.has_dim("nO"):
             nO = self.model.get_dim("nO")
-        elif self.model.has_ref("output_layer") and self.model.get_ref("output_layer").has_dim("nO"):
+        elif self.model.has_ref("output_layer") and self.model.get_ref(
+            "output_layer"
+        ).has_dim("nO"):
             nO = self.model.get_ref("output_layer").get_dim("nO")
         if nO is not None and nO == self._n_labels:
             if not self.is_resizable:
-                raise ValueError(Errors.E922.format(name=self.name, nO=self.model.get_dim("nO")))
-        # fmt: on
+                raise ValueError(
+                    Errors.E922.format(name=self.name, nO=self.model.get_dim("nO"))
+                )
 
     def add_label(self, label: str) -> int:
         """Add a new label to the pipe.
