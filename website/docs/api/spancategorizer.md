@@ -87,8 +87,8 @@ architectures and their arguments and hyperparameters.
 | `threshold`    | Minimum probability to consider a prediction positive. Spans with a positive prediction will be saved on the Doc. Defaults to `0.5`. ~~float~~                                                                                                                                                          |
 | `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~Optional[int]~~                                                                                                                                                                                      |
 | `scorer`       | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                                                                                                       |
-| `negative_weight`    | Multiplier for the loss terms. It can be used to down weigh the negative samples if there are too many. It is only available when using the `spancat_exclusive` component. ~~float~~                                                  |
-| `allow_overlap`        | If `True`, the data is assumed to contain overlapping spans. It is only available when using the `spancat_exclusive` component. ~~bool~~ |
+| `negative_weight`    | Multiplier for the loss terms. It can be used to downweight the negative samples if there are too many. It is only available for the `spancat_exclusive` component. ~~float~~                                                  |
+| `allow_overlap`        | If `True`, the data is assumed to contain overlapping spans. It is only available for the `spancat_exclusive` component. ~~bool~~ |
 
 
 
@@ -106,7 +106,7 @@ architectures and their arguments and hyperparameters.
 >
 > ```python
 > # Construction via add_pipe with default model
-> # Use 'spancat_exclusive' for exclusive clases
+> # Use 'spancat_exclusive' for exclusive classes
 > spancat = nlp.add_pipe("spancat")
 >
 > # Construction via add_pipe with custom model
