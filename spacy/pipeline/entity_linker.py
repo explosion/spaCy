@@ -6,7 +6,6 @@ from typing import (
     Union,
     List,
     Any,
-    Generator,
     Iterator,
 )
 from thinc.types import Floats2d
@@ -88,7 +87,7 @@ def make_entity_linker(
     entity_vector_length: int,
     get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
     get_candidates_all: Callable[
-        [KnowledgeBase, Generator[Iterable[Span], None, None]],
+        [KnowledgeBase, Iterator[Iterable[Span]]],
         Iterator[Iterable[Iterable[Candidate]]],
     ],
     generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
@@ -110,11 +109,8 @@ def make_entity_linker(
     entity_vector_length (int): Size of encoding vectors in the KB.
     get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
         produces a list of candidates, given a certain knowledge base and a textual mention.
-    get_candidates_all (
-        Callable[
-            [KnowledgeBase, Generator[Iterable[Span], None, None]],
-            Iterator[Iterable[Iterable[Candidate]]]
-        ]): Function that produces a list of candidates per document, given a certain knowledge base and several textual
+    get_candidates_all (Callable[[KnowledgeBase, Iterator[Iterable[Span]]], Iterator[Iterable[Iterable[Candidate]]]]):
+        Function that produces a list of candidates per document, given a certain knowledge base and several textual
         documents with textual mentions.
     generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
     scorer (Optional[Callable]): The scoring method.
@@ -192,7 +188,7 @@ class EntityLinker(TrainablePipe):
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         get_candidates_all: Callable[
-            [KnowledgeBase, Generator[Iterable[Span], None, None]],
+            [KnowledgeBase, Iterator[Iterable[Span]]],
             Iterator[Iterable[Iterable[Candidate]]],
         ],
         generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
@@ -215,12 +211,9 @@ class EntityLinker(TrainablePipe):
         entity_vector_length (int): Size of encoding vectors in the KB.
         get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
-        get_candidates_all (
-            Callable[
-                [KnowledgeBase, Generator[Iterable[Span], None, None]],
-                Iterator[Iterable[Iterable[Candidate]]]
-            ]): Function that produces a list of candidates per document, given a certain knowledge base and several
-            textual documents with textual mentions.
+        get_candidates_all (Callable[[KnowledgeBase, Iterator[Iterable[Span]]], Iterator[Iterable[Iterable[Candidate]]]]):
+            Function that produces a list of candidates per document, given a certain knowledge base and several textual
+            documents with textual mentions.
         generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
         scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
         use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another

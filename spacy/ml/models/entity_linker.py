@@ -118,13 +118,13 @@ def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
 
 
 def get_candidates_all(
-    kb: KnowledgeBase, mentions: Generator[Iterable[Span], None, None]
+    kb: KnowledgeBase, mentions: Iterator[Iterable[Span]]
 ) -> Iterator[Iterable[Iterable[Candidate]]]:
     """
     Return candidate entities for the given mentions and fetching appropriate entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
-    mention (Generator[Iterable[Span]]): Entity mentions per document for which to identify candidates.
-    RETURNS (Generator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
+    mention (Iterator[Iterable[Span]]): Entity mentions per document for which to identify candidates.
+    RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
     """
     return kb.get_candidates_all(mentions)
 
