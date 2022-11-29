@@ -104,6 +104,7 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
         .map(line => (line.startsWith('#') ? `<span class="token comment">${line}</span>` : line))
         .join('\n')
     return (
+<<<<<<< Updated upstream
         <StaticQuery
             query={query}
             render={({ site }) => {
@@ -122,7 +123,6 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
                 }
                 return (
                     <Quickstart
-                        id="quickstart-widget"
                         Container="div"
                         download={download}
                         rawContent={rawContent}
@@ -139,6 +139,22 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
                 )
             }}
         />
+=======
+        <Quickstart
+            Container="div"
+            download={download}
+            rawContent={rawContent}
+            data={data}
+            title={title}
+            id={id}
+            setters={setters}
+            hidePrompts
+            small
+            codeLang="ini"
+        >
+            {htmlToReact(displayContent)}
+        </Quickstart>
+>>>>>>> Stashed changes
     )
 }
 
