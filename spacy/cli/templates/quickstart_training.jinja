@@ -221,10 +221,16 @@ no_output_layer = false
 
 {% else -%}
 [components.textcat.model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatCNN.v2"
 exclusive_classes = true
-ngram_size = 1
-no_output_layer = false
+nO = null
+
+[components.textcat.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.textcat.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
 {%- endif %}
 {%- endif %}
 
@@ -252,10 +258,16 @@ no_output_layer = false
 
 {% else -%}
 [components.textcat_multilabel.model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatCNN.v2"
 exclusive_classes = false
-ngram_size = 1
-no_output_layer = false
+nO = null
+
+[components.textcat_multilabel.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.textcat_multilabel.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
 {%- endif %}
 {%- endif %}
 
