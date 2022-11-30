@@ -7,7 +7,6 @@ from libc.string cimport memset, memcmp
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 
-from math import ceil
 import re
 import srsly
 import warnings
@@ -37,8 +36,9 @@ cpdef bint fuzzy_compare(input_text: str, pattern_text: str, fuzzy: int = -1):
     if fuzzy >= 0:
         max_edits = fuzzy
     else:
-        # allow at least one edit and up to 20% of the pattern string length
-        max_edits = ceil(0.2 * len(pattern_text))
+        # allow at least two edits (to allow at least one transposition) and up
+        # to 20% of the pattern string length
+        max_edits = max(2, int(0.2 * len(pattern_text)))
     return levenshtein(input_text, pattern_text, max_edits) <= max_edits
 
 
