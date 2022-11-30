@@ -1009,7 +1009,7 @@ This method was previously available as `spacy.gold.spans_from_biluo_tags`.
 Convert a sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags to
 [IOB](/usage/linguistic-features#accessing-ner) tags. This is useful if you want
 use the [BILUO](/usage/linguistic-features#accessing-ner) tags with a model that
-only support [IOB](/usage/linguistic-features#accessing-ner) tags.
+only supports [IOB](/usage/linguistic-features#accessing-ner) tags.
 
 > #### Example
 >
@@ -1031,7 +1031,7 @@ only support [IOB](/usage/linguistic-features#accessing-ner) tags.
 Convert a sequence of [IOB](/usage/linguistic-features#accessing-ner) tags to
 [BILUO](/usage/linguistic-features#accessing-ner) tags. This is useful if you
 want use the [IOB](/usage/linguistic-features#accessing-ner) tags with a model
-that only support [BILUO](/usage/linguistic-features#accessing-ner) tags.
+that only supports [BILUO](/usage/linguistic-features#accessing-ner) tags.
 
 <Infobox title="Changed in v3.0" variant="warning" id="iob_to_biluo">
 
