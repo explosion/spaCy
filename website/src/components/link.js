@@ -28,7 +28,6 @@ export default function Link({
     to,
     href,
     onClick,
-    activeClassName,
     hidden = false,
     hideIcon = false,
     ws = false,
@@ -66,12 +65,7 @@ export default function Link({
         }
         return (
             <Wrapper>
-                <NextLink
-                    href={dest}
-                    className={linkClassNames}
-                    activeClassName={activeClassName}
-                    {...other}
-                >
+                <NextLink href={dest} className={linkClassNames} {...other}>
                     {content}
                 </NextLink>
             </Wrapper>
@@ -104,7 +98,6 @@ Link.propTypes = {
     to: PropTypes.string,
     href: PropTypes.string,
     onClick: PropTypes.func,
-    activeClassName: PropTypes.string,
     hidden: PropTypes.bool,
     hideIcon: PropTypes.bool,
     ws: PropTypes.bool,
