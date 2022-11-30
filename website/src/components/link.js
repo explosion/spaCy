@@ -7,9 +7,7 @@ import Icon from './icon'
 import classes from '../styles/link.module.sass'
 import { isString, isImage } from './util'
 
-const internalRegex =
-    /(http(s?)):\/\/(prodi.gy|spacy.io|irl.spacy.io|explosion.ai|course.spacy.io)/gi
-
+const listUrlInternal = ['prodi.gy', 'spacy.io', 'explosion.ai']
 const Whitespace = ({ children }) => (
     // Ensure that links are always wrapped in spaces
     <> {children} </>
@@ -71,7 +69,8 @@ export default function Link({
             </Wrapper>
         )
     }
-    const isInternal = internalRegex.test(dest)
+
+    const isInternal = listUrlInternal.some((urlInternal) => dest.includes(urlInternal))
     const relTarget = isInternal ? {} : { rel: 'noopener nofollow noreferrer', target: '_blank' }
     return (
         <Wrapper>
