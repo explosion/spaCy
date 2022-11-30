@@ -102,13 +102,12 @@ class Layout extends React.Component {
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
 
         return (
-            <>
+            <div className={bodyClass}>
                 <SEO
                     title={title}
                     description={teaser || siteMetadata.description}
                     section={section}
                     sectionTitle={sectionTitle}
-                    bodyClass={bodyClass}
                     nightly={nightly}
                 />
                 <AlertSpace nightly={nightly} legacy={legacy} />
@@ -131,7 +130,7 @@ class Layout extends React.Component {
                         <Footer wide />
                     </div>
                 )}
-            </>
+            </div>
         )
     }
 }

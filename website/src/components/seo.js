@@ -1,6 +1,5 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import Helmet from 'react-helmet'
 
 import socialImageDefault from '../images/social_default.jpg'
 import socialImageApi from '../images/social_api.jpg'
@@ -8,6 +7,7 @@ import socialImageUniverse from '../images/social_universe.jpg'
 import socialImageNightly from '../images/social_nightly.jpg'
 import socialImageLegacy from '../images/social_legacy.jpg'
 import siteMetadata from '../../meta/site.json'
+import Head from 'next/head'
 
 function getPageTitle(title, sitename, slogan, sectionTitle, nightly, legacy) {
     if (sectionTitle && title) {
@@ -34,7 +34,6 @@ export default function SEO({
     title,
     section,
     sectionTitle,
-    bodyClass,
     nightly,
     legacy,
 }) {
@@ -104,19 +103,17 @@ export default function SEO({
     ]
 
     return (
-        <Helmet
-            defer={false}
-            htmlAttributes={{ lang }}
-            bodyAttributes={{ class: bodyClass }}
-            title={pageTitle}
-            meta={meta}
-        />
+        <Head>
+            <title>{pageTitle}</title>
+            {meta.map((item, index) => (
+                <meta key={index} {...item} />
+            ))}
+        </Head>
     )
 }
 
 SEO.propTypes = {
     description: PropTypes.string,
-    lang: PropTypes.string,
     meta: PropTypes.array,
     keywords: PropTypes.arrayOf(PropTypes.string),
     title: PropTypes.string,
