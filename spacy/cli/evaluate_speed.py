@@ -7,7 +7,8 @@ import time
 from tqdm import tqdm
 import typer
 
-from .. import Language, util
+from .. import util
+from ..language import Language
 from ..tokens import Doc
 from ..training import Corpus
 from ._util import Arg, Opt, evaluate_cli, setup_gpu
