@@ -715,7 +715,7 @@ def test_span_sentence_mapping(use_double_space: bool):
 
     # Test span-to-sentence mapping. Since the span in question doesn't cross sentence boundaries, there should only be
     # one sentence.
-    span_sents = list(span.sents)
+    span_sents = list(span.sents)  # type: ignore
     span_sent = span.sent
     assert len(span_sents) == 1
     assert span_sent.text == sents[1].text
