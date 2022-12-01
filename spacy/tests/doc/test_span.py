@@ -15,40 +15,13 @@ from .test_underscore import clean_underscore  # noqa: F401
 
 @pytest.fixture
 def doc(en_tokenizer):
+    # fmt: off
     text = "This is a sentence. This is another sentence. And a third."
     heads = [1, 1, 3, 1, 1, 6, 6, 8, 6, 6, 12, 12, 12, 12]
-    deps = [
-        "nsubj",
-        "ROOT",
-        "det",
-        "attr",
-        "punct",
-        "nsubj",
-        "ROOT",
-        "det",
-        "attr",
-        "punct",
-        "ROOT",
-        "det",
-        "npadvmod",
-        "punct",
-    ]
-    ents = [
-        "O",
-        "O",
-        "B-ENT",
-        "I-ENT",
-        "I-ENT",
-        "I-ENT",
-        "I-ENT",
-        "O",
-        "O",
-        "O",
-        "O",
-        "O",
-        "O",
-        "O",
-    ]
+    deps = ["nsubj", "ROOT", "det", "attr", "punct", "nsubj", "ROOT", "det",
+            "attr", "punct", "ROOT", "det", "npadvmod", "punct"]
+    ents = ["O", "O", "B-ENT", "I-ENT", "I-ENT", "I-ENT", "I-ENT", "O", "O",
+            "O", "O", "O", "O", "O"]
     # fmt: on
     tokens = en_tokenizer(text)
     lemmas = [t.text for t in tokens]  # this is not correct, just a placeholder
