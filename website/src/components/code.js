@@ -319,7 +319,7 @@ export class Code extends React.Component {
     render() {
         const { lang, title, executable, github, prompt, wrap, highlight, className, children } =
             this.props
-        const codeClassNames = classNames(classes['code'], className, `language-${lang}`, {
+        const codeClassNames = classNames(classes['code'], className, {
             [classes['wrap']]: !!highlight || !!wrap || lang === 'cli',
             [classes['cli']]: lang === 'cli',
         })
