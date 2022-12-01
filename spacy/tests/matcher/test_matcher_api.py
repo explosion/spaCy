@@ -141,6 +141,15 @@ def test_matcher_match_multi(matcher):
             },
             [(2, 4), (5, 6), (8, 9)],
         ),
+        # only the second pattern matches (check that predicate keys used for
+        # caching don't collide)
+        (
+            {
+                "A": [[{"ORTH": {"FUZZY": "Javascript"}}]],
+                "B": [[{"ORTH": {"FUZZY5": "Javascript"}}]],
+            },
+            [(8, 9)],
+        ),
     ],
 )
 def test_matcher_match_fuzzy(en_vocab, rules, match_locs):
