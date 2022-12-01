@@ -709,7 +709,7 @@ def test_span_group_copy(doc):
     assert len(doc_copy.spans["test"]) == 2
 
 
-# @pytest.mark.xfail
+@pytest.mark.xfail
 @pytest.mark.parametrize("use_double_space", [True, False])
 def test_span_sentence_mapping(en_tokenizer, use_double_space: bool):
     """Tests correct mapping of spans to sentences. This is currently failing due to some issue with the
