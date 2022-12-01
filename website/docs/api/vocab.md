@@ -315,7 +315,7 @@ Load state from a binary string.
 | `vectors_length`                               | Number of dimensions for each word vector. ~~int~~                                                                                                                     |
 | `lookups`                                      | The available lookup tables in this vocab. ~~Lookups~~                                                                                                                 |
 | `writing_system`                               | A dict with information about the language's writing system. ~~Dict[str, Any]~~                                                                                        |
-| `get_noun_chunks` <Tag variant="new">3.0</Tag> | A function that yields base noun phrases used for [`Doc.noun_chunks`](/ap/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Tuple[int, int, int]]]]]~~ |
+| `get_noun_chunks` <Tag variant="new">3.0</Tag> | A function that yields base noun phrases used for [`Doc.noun_chunks`](/api/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Tuple[int, int, int]]]]]~~ |
 
 ## Serialization fields {#serialization-fields}
 
