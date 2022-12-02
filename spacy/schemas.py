@@ -168,6 +168,10 @@ class TokenPatternString(BaseModel):
     FUZZY3: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy3")
     FUZZY4: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy4")
     FUZZY5: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy5")
+    FUZZY6: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy5")
+    FUZZY7: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy5")
+    FUZZY8: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy5")
+    FUZZY9: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy5")
 
     class Config:
         extra = "forbid"

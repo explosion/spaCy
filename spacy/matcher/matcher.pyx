@@ -1035,6 +1035,10 @@ def _get_extra_predicates(spec, extra_predicates, vocab, fuzzy_compare):
         "FUZZY3": _FuzzyPredicate,
         "FUZZY4": _FuzzyPredicate,
         "FUZZY5": _FuzzyPredicate,
+        "FUZZY6": _FuzzyPredicate,
+        "FUZZY7": _FuzzyPredicate,
+        "FUZZY8": _FuzzyPredicate,
+        "FUZZY9": _FuzzyPredicate,
     }
     seen_predicates = {pred.key: pred.i for pred in extra_predicates}
     output = []
