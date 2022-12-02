@@ -123,7 +123,7 @@ class Underscore:
             return "._.", name, self._start, self._end
 
     @staticmethod
-    def _replace_keys(old_underscore, new_underscore):
+    def _replace_keys(old_underscore: "Underscore", new_underscore: "Underscore"):
         """
         This function is called by Span when its kb_id or label are re-assigned.
         It checks if any user_data is stored for this span and replaces the keys
