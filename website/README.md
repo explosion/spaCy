@@ -7,14 +7,16 @@ The styleguide for the spaCy website is available at
 
 ## Setup and installation
 
-Before running the setup, make sure your versions of
-[Node](https://nodejs.org/en/) and [npm](https://www.npmjs.com/) are up to date.
-Node v10.15 or later is required.
-
 ```bash
 # Clone the repository
 git clone https://github.com/explosion/spaCy
 cd spaCy/website
+
+# Switch to the correct Node version
+#
+# If you don't have NVM and don't want to use it, you can manually switch to the Node version
+# stated in /.nvmrc and skip this step
+nvm use
 
 # Install Gatsby's command-line tool
 npm install --global gatsby-cli
@@ -96,6 +98,9 @@ bit of time.
 |   |   └── universe.js  # layout templates for universe
 |   └── widgets          # non-reusable components with content, e.g. changelog
 ├── .eslintrc.json       # ESLint config file
+├── .nvmrc               # NVM config file
+|                        # (to support "nvm use" to switch to correct Node version)
+|
 ├── .prettierrc          # Prettier config file
 ├── gatsby-browser.js    # browser-specific hooks for Gatsby
 ├── gatsby-config.js     # Gatsby configuration
