@@ -15,7 +15,7 @@ from ...training.example cimport Example
 from .stateclass cimport StateClass
 from ._state cimport StateC, ArcC
 from ...errors import Errors
-from thinc.extra.search cimport Beam
+from .search cimport Beam
 
 cdef weight_t MIN_SCORE = -90000
 cdef attr_t SUBTOK_LABEL = hash_string('subtok')
