@@ -120,7 +120,7 @@ class Underscore:
                 self._span_id,
             )
         else:
-            return ("._.", name, self._start, self._end)
+            return "._.", name, self._start, self._end
 
     @staticmethod
     def _replace_keys(old_underscore, new_underscore):
