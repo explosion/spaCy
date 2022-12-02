@@ -40,6 +40,7 @@ except ImportError:
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, is_windows, importlib_metadata
+from .errors import Errors, Warnings
 from . import about
 
 if TYPE_CHECKING:
