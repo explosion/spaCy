@@ -99,15 +99,7 @@ class Underscore:
         self, name: str
     ) -> Union[
         Tuple[str, str, Optional[int], Optional[int]],
-        Tuple[
-            str,
-            str,
-            Optional[int],
-            Optional[int],
-            Optional[Union[str, int]],
-            Optional[Union[str, int]],
-            Optional[Union[str, int]],
-        ],
+        Tuple[str, str, Optional[int], Optional[int], int, int, int],
     ]:
         if hasattr(self, "_label"):
             return (
