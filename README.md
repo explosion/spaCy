@@ -14,7 +14,7 @@ parsing, **named entity recognition**, **text classification** and more,
 multi-task learning with pretrained **transformers** like BERT, as well as a
 production-ready [**training system**](https://spacy.io/usage/training) and easy
 model packaging, deployment and workflow management. spaCy is commercial
-open-source software, released under the MIT license.
+open-source software, released under the [MIT license](https://github.com/explosion/spaCy/blob/master/LICENSE).
 
 💫 **Version 3.4 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
