@@ -24,8 +24,10 @@ gpu_allocator = null
 lang = "{{ lang }}"
 {%- set has_textcat = ("textcat" in components or "textcat_multilabel" in components) -%}
 {%- set with_accuracy = optimize == "accuracy" -%}
-{%- set has_accurate_textcat = has_textcat and with_accuracy -%}
-{%- if ("tagger" in components or "morphologizer" in components or "parser" in components or "ner" in components or "spancat" in components or "trainable_lemmatizer" in components or "entity_linker" in components or has_accurate_textcat) -%}
+{# The BOW textcat doesn't need a source of features, so it can omit the
+tok2vec/transformer. #}
+{%- set textcat_needs_features = has_textcat and (with_accuracy or use_transformer) -%}
+{%- if ("tagger" in components or "morphologizer" in components or "parser" in components or "ner" in components or "spancat" in components or "trainable_lemmatizer" in components or "entity_linker" in components or textcat_needs_features) -%}
 {%- set full_pipeline = ["transformer" if use_transformer else "tok2vec"] + components -%}
 {%- else -%}
 {%- set full_pipeline = components -%}
