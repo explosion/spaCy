@@ -12,17 +12,17 @@ function isNum(children) {
 }
 
 function isDividerRow(children) {
-    if (children.length && children[0].props && children[0].props.name == 'td') {
+    if (children.length && children[0].props && children[0].type.name == 'Td') {
         const tdChildren = children[0].props.children
         if (tdChildren && !Array.isArray(tdChildren) && tdChildren.props) {
-            return tdChildren.props.name === 'em'
+            return tdChildren.type === 'em'
         }
     }
     return false
 }
 
 function isFootRow(children) {
-    if (children.length && children[0].props.name === 'td') {
+    if (children.length && children[0].type.name === 'Td') {
         const cellChildren = children[0].props.children
         if (
             cellChildren &&
