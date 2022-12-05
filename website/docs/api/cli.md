@@ -474,7 +474,7 @@ report span characteristics such as the average span length and the span (or
 span boundary) distinctiveness. The distinctiveness measure shows how different
 the tokens are with respect to the rest of the corpus using the KL-divergence of
 the token distributions. To learn more, you can check out Papay et al.'s work on
-[*Dissecting Span Identification Tasks with Performance Prediction* (EMNLP 2020)](https://aclanthology.org/2020.emnlp-main.396/).
+[_Dissecting Span Identification Tasks with Performance Prediction_ (EMNLP 2020)](https://aclanthology.org/2020.emnlp-main.396/).
 
 </Infobox>
 
@@ -1186,7 +1186,6 @@ be provided.
 > # For spancat:
 > $ python -m spacy find-threshold my_nlp data.spacy spancat threshold spans_sc_f
 > ```
-
 
 | Name                    | Description                                                                                                                                                                          |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
