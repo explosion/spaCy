@@ -48,7 +48,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
 
     @classmethod
     def generate_from_disk(
-        cls, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList(), **kwargs
+        cls, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()
     ) -> "InMemoryLookupKB":
         kb = InMemoryLookupKB(vocab=Vocab(strings=["."]), entity_vector_length=1)
         kb.from_disk(path)

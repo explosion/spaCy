@@ -111,7 +111,7 @@ cdef class KnowledgeBase:
 
     @classmethod
     def generate_from_disk(
-        cls: Type[_KBType], path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList(), **kwargs
+        cls: Type[_KBType], path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()
     ) -> _KBType:
         """
         Factory method for generating KnowledgeBase subclass instance from file.
