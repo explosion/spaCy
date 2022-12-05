@@ -122,8 +122,9 @@ class Underscore:
         """
         for name in old_underscore._extensions:
             old_key = old_underscore._get_key(name)
+            old_doc = old_underscore._doc
             new_key = new_underscore._get_key(name)
-            if old_key in old_underscore._doc.user_data and old_key != new_key:
+            if old_key != new_key and old_key in old_doc.user_data:
                 old_underscore._doc.user_data[
                     new_key
                 ] = old_underscore._doc.user_data.pop(old_key)

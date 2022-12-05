@@ -280,12 +280,14 @@ cdef class Span:
                     end = key[3]
                     if start is not None or end is not None:
                         start -= char_offset
+                        # Check if Span object
                         if end is not None:
                             end -= char_offset
                             _label = key[4]
                             _kb_id = key[5]
                             _span_id = key[6]
                             user_data[(data_type, name, start, end, _label, _kb_id, _span_id)] = copy.copy(value)
+                        # Else Token object
                         else:
                             user_data[(data_type, name, start, end)] = copy.copy(value)
                 else:
@@ -804,8 +806,6 @@ cdef class Span:
                 new = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
                 old = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=old_label, kb_id=self.kb_id, span_id=self.id)
                 Underscore._replace_keys(old, new)
-            else:
-                self.span_c().label = label
 
     property kb_id:
         def __get__(self):
@@ -818,8 +818,6 @@ cdef class Span:
                 new = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
                 old = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=old_kb_id, span_id=self.id)
                 Underscore._replace_keys(old, new)
-            else:
-                self.span_c().kb_id = kb_id
 
     property id:
         def __get__(self):
@@ -832,8 +830,6 @@ cdef class Span:
                 new = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
                 old = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=old_id)
                 Underscore._replace_keys(old, new)
-            else:
-                self.span_c().id = id
 
     property ent_id:
         """Alias for the span's ID."""
