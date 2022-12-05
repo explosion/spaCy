@@ -41,7 +41,7 @@ jobs:
       matrix:
         # We're only running one platform per Python version to speed up builds
         Python36Linux:
-          imageName: "ubuntu-latest"
+          imageName: "ubuntu-20.04"
           python.version: "3.6"
         #        Python36Windows:
         #          imageName: "windows-latest"
@@ -50,7 +50,7 @@ jobs:
         #          imageName: "macos-latest"
         #          python.version: "3.6"
         #        Python37Linux:
-        #          imageName: "ubuntu-latest"
+        #          imageName: "ubuntu-20.04"
         #          python.version: "3.7"
         Python37Windows:
           imageName: "windows-latest"

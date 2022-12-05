@@ -2,6 +2,7 @@ import random
 
 import numpy
 import pytest
+import spacy
 import srsly
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
@@ -11,9 +12,10 @@ from spacy.training import offsets_to_biluo_tags
 from spacy.training.alignment_array import AlignmentArray
 from spacy.training.align import get_alignments
 from spacy.training.converters import json_to_docs
+from spacy.training.loop import train_while_improving
 from spacy.util import get_words_and_spaces, load_model_from_path, minibatch
 from spacy.util import load_config_from_str
-from thinc.api import compounding
+from thinc.api import compounding, Adam
 
 from ..util import make_tempdir
 
@@ -1112,3 +1114,39 @@ def test_retokenized_docs(doc):
         retokenizer.merge(doc1[0:2])
         retokenizer.merge(doc1[5:7])
     assert example.get_aligned("ORTH", as_string=True) == expected2
+
+
+def test_training_before_update(doc):
+    def before_update(nlp, args):
+        assert args["step"] == 0
+        assert args["epoch"] == 1
+
+        # Raise an error here as the rest of the loop
+        # will not run to completion due to uninitialized
+        # models.
+        raise ValueError("ran_before_update")
+
+    def generate_batch():
+        yield 1, [Example(doc, doc)]
+
+    nlp = spacy.blank("en")
+    nlp.add_pipe("tagger")
+    optimizer = Adam()
+    generator = train_while_improving(
+        nlp,
+        optimizer,
+        generate_batch(),
+        lambda: None,
+        dropout=0.1,
+        eval_frequency=100,
+        accumulate_gradient=10,
+        patience=10,
+        max_steps=100,
+        exclude=[],
+        annotating_components=[],
+        before_update=before_update,
+    )
+
+    with pytest.raises(ValueError, match="ran_before_update"):
+        for _ in generator:
+            pass

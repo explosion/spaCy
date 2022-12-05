@@ -1,7 +1,7 @@
-from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast
+from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
 from thinc.api import Optimizer
-from thinc.types import Ragged, Ints2d, Floats2d, Ints1d
+from thinc.types import Ragged, Ints2d, Floats2d
 
 import numpy
 
@@ -272,7 +272,10 @@ class SpanCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/spancategorizer#predict
         """
         indices = self.suggester(docs, ops=self.model.ops)
-        scores = self.model.predict((docs, indices))  # type: ignore
+        if indices.lengths.sum() == 0:
+            scores = self.model.ops.alloc2f(0, 0)
+        else:
+            scores = self.model.predict((docs, indices))  # type: ignore
         return indices, scores
 
     def set_candidates(
