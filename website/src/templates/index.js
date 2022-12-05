@@ -18,7 +18,7 @@ import Alert from '../components/alert'
 import Search from '../components/search'
 
 import siteMetadata from '../../meta/site.json'
-import { nightly, legacy } from '../../meta/dynamicMeta'
+import { nightly, legacy } from '../../meta/dynamicMeta.mjs'
 import { remarkComponents } from '../remark'
 
 const AlertSpace = ({ nightly, legacy }) => {

@@ -12,7 +12,7 @@ import Link, { OptionalLink } from './link'
 import GitHubCode from './github'
 import classes from '../styles/code.module.sass'
 import siteMetadata from '../../meta/site.json'
-import { binderBranch } from '../../meta/dynamicMeta'
+import { binderBranch } from '../../meta/dynamicMeta.mjs'
 
 const WRAP_THRESHOLD = 30
 const CLI_GROUPS = ['init', 'debug', 'project', 'ray', 'huggingface-hub']

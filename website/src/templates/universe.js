@@ -18,7 +18,7 @@ import { H3, H5, Label, InlineList } from '../components/typography'
 import { YouTube, SoundCloud, Iframe } from '../components/embed'
 import { github, MarkdownToReact } from '../components/util'
 
-import { nightly, legacy } from '../../meta/dynamicMeta'
+import { nightly, legacy } from '../../meta/dynamicMeta.mjs'
 import universe from '../../meta/universe.json'
 
 function filterResources(resources, data) {
