@@ -26,7 +26,7 @@ import courseImage from '../public/images/course.jpg'
 import prodigyImage from '../public/images/prodigy_overview.jpg'
 import projectsImage from '../public/images/projects.png'
 import tailoredPipelinesImage from '../public/images/spacy-tailored-pipelines_wide.png'
-import { nightly, legacy } from '../meta/dynamicMeta'
+import { nightly, legacy } from '../meta/dynamicMeta.mjs'
 
 import Benchmarks from '../docs/usage/_benchmarks-models.mdx'
 

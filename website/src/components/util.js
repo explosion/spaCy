@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from 'react'
 import { Parser as HtmlToReactParser } from 'html-to-react'
 import siteMetadata from '../../meta/site.json'
-import { domain } from '../../meta/dynamicMeta'
+import { domain } from '../../meta/dynamicMeta.mjs'
 import remarkPlugins from '../../plugins/index.mjs'
 import { serialize } from 'next-mdx-remote/serialize'
 import { MDXRemote } from 'next-mdx-remote'

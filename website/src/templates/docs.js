@@ -15,7 +15,7 @@ import { getCurrentSource, github } from '../components/util'
 import siteMetadata from '../../meta/site.json'
 import sidebars from '../../meta/sidebars.json'
 import models from '../../meta/languages.json'
-import { nightly, legacy } from '../../meta/dynamicMeta'
+import { nightly, legacy } from '../../meta/dynamicMeta.mjs'
 
 const Docs = ({ pageContext, children }) => {
     const {
