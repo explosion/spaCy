@@ -1,5 +1,31 @@
 {
     "resources": [
+         {
+            "id": "grecy",
+            "title": "greCy",
+            "slogan": "Ancient Greek pipelines for spaCy",
+            "description": "greCy offers state-of-the-art pipelines for ancient Greek NLP. The repository makes language models available in various sizes, some of them containing floret word vectors and a BERT transformer layer.",
+            "github": "jmyerston/greCy",
+            "code_example": [
+                "import spacy",
+                "#After installing the grc_ud_proiel_trf wheel package from the greCy repository",
+                "",
+                "nlp = spacy.load('grc_ud_proiel_trf')",
+                "doc = nlp('δοκῶ μοι περὶ ὧν πυνθάνεσθε οὐκ ἀμελέτητος εἶναι.')",
+                "",
+                "for token in doc:",
+                "   print(token.text, token.norm_, token.lemma_, token.pos_, token.tag_)"
+            ],
+            "code_language": "python",
+            "author": "Jacobo Myerston",
+            "author_links": {
+                "twitter": "@jcbmyrstn",
+                "github": "jmyerston",
+                "website": "https://huggingface.co/spaces/Jacobo/syntax"
+            },
+            "category": ["pipeline", "research"],
+            "tags": ["ancient Greek"]
+        },
         {
             "id": "spacy-cleaner",
             "title": "spacy-cleaner",
@@ -436,37 +462,6 @@
             "category": ["standalone"]
         },
         {
-            "id": "spikex",
-            "title": "SpikeX - SpaCy Pipes for Knowledge Extraction",
-            "slogan": "Use SpikeX to build knowledge extraction tools with almost-zero effort",
-            "description": "SpikeX is a collection of pipes ready to be plugged in a spaCy pipeline. It aims to help in building knowledge extraction tools with almost-zero effort.",
-            "github": "erre-quadro/spikex",
-            "pip": "spikex",
-            "code_example": [
-                "from spacy import load as spacy_load",
-                "from spikex.wikigraph import load as wg_load",
-                "from spikex.pipes import WikiPageX",
-                "",
-                "# load a spacy model and get a doc",
-                "nlp = spacy_load('en_core_web_sm')",
-                "doc = nlp('An apple a day keeps the doctor away')",
-                "# load a WikiGraph",
-                "wg = wg_load('simplewiki_core')",
-                "# get a WikiPageX and extract all pages",
-                "wikipagex = WikiPageX(wg)",
-                "doc = wikipagex(doc)",
-                "# see all pages extracted from the doc",
-                "for span in doc._.wiki_spans:",
-                "   print(span._.wiki_pages)"
-            ],
-            "category": ["pipeline", "standalone"],
-            "author": "Erre Quadro",
-            "author_links": {
-                "github": "erre-quadro",
-                "website": "https://www.errequadrosrl.com"
-            }
-        },
-        {
             "id": "spacy-dbpedia-spotlight",
             "title": "DBpedia Spotlight for SpaCy",
             "slogan": "Use DBpedia Spotlight to link entities inside SpaCy",
@@ -530,17 +525,6 @@
             "category": ["pipeline"],
             "tags": ["sentiment", "textblob"],
             "spacy_version": 3
-        },
-        {
-            "id": "spacy-ray",
-            "title": "spacy-ray",
-            "slogan": "Parallel and distributed training with spaCy and Ray",
-            "description": "[Ray](https://ray.io/) is a fast and simple framework for building and running **distributed applications**. This very lightweight extension package lets you use Ray for parallel and distributed training with spaCy. If `spacy-ray` is installed in the same environment as spaCy, it will automatically add `spacy ray` commands to your spaCy CLI.",
-            "github": "explosion/spacy-ray",
-            "pip": "spacy-ray",
-            "category": ["training"],
-            "author": "Explosion / Anyscale",
-            "thumb": "https://i.imgur.com/7so6ZpS.png"
         },
         {
             "id": "spacy-sentence-bert",
@@ -2008,17 +1992,6 @@
                 "website": "https://www.ankurapatel.io"
             },
             "category": ["books"]
-        },
-        {
-            "type": "education",
-            "id": "learning-path-spacy",
-            "title": "Learning Path: Mastering spaCy for Natural Language Processing",
-            "slogan": "O'Reilly, 2017",
-            "description": "spaCy, a fast, user-friendly library for teaching computers to understand text, simplifies NLP techniques, such as speech tagging and syntactic dependencies, so you can easily extract information, attributes, and objects from massive amounts of text to then document, measure, and analyze. This Learning Path is a hands-on introduction to using spaCy to discover insights through natural language processing. While end-to-end natural language processing solutions can be complex, you’ll learn the linguistics, algorithms, and machine learning skills to get the job done.",
-            "url": "https://www.safaribooksonline.com/library/view/learning-path-mastering/9781491986653/",
-            "thumb": "https://i.imgur.com/9MIgMAc.jpg",
-            "author": "Aaron Kramer",
-            "category": ["courses"]
         },
         {
             "type": "education",
