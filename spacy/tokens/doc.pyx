@@ -361,9 +361,9 @@ cdef class Doc:
                     if annot is heads or annot is sent_starts or annot is ent_iobs:
                         for i in range(len(words)):
                             if attrs.ndim == 1:
-                                attrs[i] = annot[i]
+                                attrs[i] = numpy.array(annot[i]).astype(numpy.uint64)
                             else:
-                                attrs[i, j] = annot[i]
+                                attrs[i, j] = numpy.array(annot[i]).astype(numpy.uint64)
                     elif annot is morphs:
                         for i in range(len(words)):
                             morph_key = vocab.morphology.add(morphs[i])
@@ -981,7 +981,7 @@ cdef class Doc:
         for i in range(self.length):
             token = &self.c[i]
             for j in range(nr_attr):
-                c_output[i*nr_attr + j] = get_token_attr(token, c_attr_ids[j])
+                c_output[i*nr_attr + j] = numpy.array(get_token_attr(token, c_attr_ids[j])).astype(numpy.uint64)
         # Handle 1d case
         return output if len(attr_ids) >= 2 else output.reshape((self.length,))
 
@@ -1559,7 +1559,7 @@ cdef class Doc:
             for j, (attr, annot) in enumerate(token_annotations.items()):
                 if attr is HEAD:
                     for i in range(len(words)):
-                        array[i, j] = annot[i]
+                        array[i, j] = numpy.array(annot[i]).astype(numpy.uint64)
                 elif attr is MORPH:
                     for i in range(len(words)):
                         array[i, j] = self.vocab.morphology.add(annot[i])
