@@ -981,7 +981,7 @@ cdef class Doc:
         for i in range(self.length):
             token = &self.c[i]
             for j in range(nr_attr):
-                c_output[i*nr_attr + j] = numpy.array(get_token_attr(token, c_attr_ids[j])).astype(numpy.uint64)
+                c_output[i*nr_attr + j] = get_token_attr(token, c_attr_ids[j])
         # Handle 1d case
         return output if len(attr_ids) >= 2 else output.reshape((self.length,))
 
