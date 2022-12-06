@@ -13,18 +13,19 @@ from ..errors import Errors, Warnings
 from ..util import is_in_jupyter
 from ..util import is_port_in_use
 
+
 _html = {}
 RENDER_WRAPPER = None
 
 
 def render(
-        docs: Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict],
-        style: str = "dep",
-        page: bool = False,
-        minify: bool = False,
-        jupyter: Optional[bool] = None,
-        options: Dict[str, Any] = {},
-        manual: bool = False,
+    docs: Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict],
+    style: str = "dep",
+    page: bool = False,
+    minify: bool = False,
+    jupyter: Optional[bool] = None,
+    options: Dict[str, Any] = {},
+    manual: bool = False,
 ) -> str:
     """Render displaCy visualisation.
 
