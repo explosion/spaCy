@@ -75,14 +75,14 @@ def render(
 
 
 def serve(
-        docs: Union[Iterable[Doc], Doc],
-        style: str = "dep",
-        page: bool = True,
-        minify: bool = False,
-        options: Dict[str, Any] = {},
-        manual: bool = False,
-        port: int = 5000,
-        host: str = "0.0.0.0",
+    docs: Union[Iterable[Doc], Doc],
+    style: str = "dep",
+    page: bool = True,
+    minify: bool = False,
+    options: Dict[str, Any] = {},
+    manual: bool = False,
+    port: int = 5000,
+    host: str = "0.0.0.0",
 ) -> None:
     """Serve displaCy visualisation.
 
@@ -100,22 +100,28 @@ def serve(
     """
     from wsgiref import simple_server
 
-    if is_port_in_use(port):
-        port += 1
-        while is_port_in_use(port) and port < 65535:
-            port += 1
+    # automatically switch to the next available port if the default / given port is taken
+    available_port = port
+    while is_port_in_use(available_port) and available_port <= 65535:
+        available_port += 1
 
     if is_in_jupyter():
         warnings.warn(Warnings.W011)
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
 
-    httpd = simple_server.make_server(host, port, app)
+    if port > 65535:
+        raise ValueError(Errors.E1048.format(host=host))
+
+    if available_port != port:
+        warnings.warn(Warnings.W124.format(host=host, port=port, available_port=available_port))
+
+    httpd = simple_server.make_server(host, available_port, app)
     print(f"\nUsing the '{style}' visualizer")
-    print(f"Serving on http://{host}:{port} ...\n")
+    print(f"Serving on http://{host}:{available_port} ...\n")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print(f"Shutting down server on port {port}.")
+        print(f"Shutting down server on port {available_port}.")
     finally:
         httpd.server_close()
 
