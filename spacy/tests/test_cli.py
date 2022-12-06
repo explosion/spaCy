@@ -123,6 +123,25 @@ def test_issue7055():
     assert "model" in filled_cfg["components"]["ner"]
 
 
+@pytest.mark.issue(11235)
+def test_issue11235():
+    """
+    Test that the cli handles interpolation in the directory names correctly when loading project config.
+    """
+    lang_var = "en"
+    variables = {"lang": lang_var}
+    commands = [{"name": "x", "script": ["hello ${vars.lang}"]}]
+    directories = ["cfg", "${vars.lang}_model"]
+    project = {"commands": commands, "vars": variables, "directories": directories}
+    with make_tempdir() as d:
+        srsly.write_yaml(d / "project.yml", project)
+        cfg = load_project_config(d)
+        # Check that the directories are interpolated and created correctly
+        assert os.path.exists(d / "cfg")
+        assert os.path.exists(d / f"{lang_var}_model")
+    assert cfg["commands"][0]["script"][0] == f"hello {lang_var}"
+    
+
 def test_cli_info():
     nlp = Dutch()
     nlp.add_pipe("textcat")
