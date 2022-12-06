@@ -252,7 +252,7 @@ def test_underscore_for_unique_span_from_docs(en_tokenizer):
     assert doc_1.user_data[_get_tuple(span_1b)] == "span_1b extension"
     assert doc_2.user_data[_get_tuple(span_2a)] == "span_2a extension"
 
-    # Check merged doc
+    # Check extensions on merged doc
     assert doc.user_data[_get_tuple(span_1a)] == "span_1a extension"
     assert doc.user_data[_get_tuple(span_1b)] == "span_1b extension"
     assert (
