@@ -31,7 +31,7 @@ import shlex
 import inspect
 import pkgutil
 import logging
-
+import socket
 try:
     import cupy.random
 except ImportError:
@@ -1736,3 +1736,8 @@ def all_equal(iterable):
     (or if the input is an empty sequence), False otherwise."""
     g = itertools.groupby(iterable)
     return next(g, True) and not next(g, False)
+
+
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
