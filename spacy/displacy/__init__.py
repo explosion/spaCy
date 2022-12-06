@@ -11,20 +11,20 @@ from .render import DependencyRenderer, EntityRenderer, SpanRenderer
 from ..tokens import Doc, Span
 from ..errors import Errors, Warnings
 from ..util import is_in_jupyter
-
+from ..util import is_port_in_use
 
 _html = {}
 RENDER_WRAPPER = None
 
 
 def render(
-    docs: Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict],
-    style: str = "dep",
-    page: bool = False,
-    minify: bool = False,
-    jupyter: Optional[bool] = None,
-    options: Dict[str, Any] = {},
-    manual: bool = False,
+        docs: Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict],
+        style: str = "dep",
+        page: bool = False,
+        minify: bool = False,
+        jupyter: Optional[bool] = None,
+        options: Dict[str, Any] = {},
+        manual: bool = False,
 ) -> str:
     """Render displaCy visualisation.
 
@@ -74,14 +74,14 @@ def render(
 
 
 def serve(
-    docs: Union[Iterable[Doc], Doc],
-    style: str = "dep",
-    page: bool = True,
-    minify: bool = False,
-    options: Dict[str, Any] = {},
-    manual: bool = False,
-    port: int = 5000,
-    host: str = "0.0.0.0",
+        docs: Union[Iterable[Doc], Doc],
+        style: str = "dep",
+        page: bool = True,
+        minify: bool = False,
+        options: Dict[str, Any] = {},
+        manual: bool = False,
+        port: int = 5000,
+        host: str = "0.0.0.0",
 ) -> None:
     """Serve displaCy visualisation.
 
@@ -99,9 +99,15 @@ def serve(
     """
     from wsgiref import simple_server
 
+    if is_port_in_use(port):
+        port += 1
+        while is_port_in_use(port) and port < 65535:
+            port += 1
+
     if is_in_jupyter():
         warnings.warn(Warnings.W011)
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
+
     httpd = simple_server.make_server(host, port, app)
     print(f"\nUsing the '{style}' visualizer")
     print(f"Serving on http://{host}:{port} ...\n")
