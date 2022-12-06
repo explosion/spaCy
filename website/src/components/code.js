@@ -94,12 +94,12 @@ export const TypeAnnotation = ({ lang = 'python', link = true, children }) => {
         }
     )
     return (
-        <code className={annotClassNames} aria-label="Type annotation">
+        <span className={annotClassNames} role="code" aria-label="Type annotation">
             {elements.map((el, i) => (
                 <Fragment key={i}>{linkType(el, !!link)}</Fragment>
             ))}
             {meta && <span className={classes['type-annotation-meta']}>{meta}</span>}
-        </code>
+        </span>
     )
 }
 
