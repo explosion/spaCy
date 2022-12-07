@@ -648,6 +648,43 @@ The other arguments are shared between all versions.
 
 </Accordion>
 
+### spacy.Lemmatizer.v1 {#Lemmatizer}
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.Lemmatizer.v1"
+> nO = null
+> normalize = false
+> lowercasing = true
+>
+> [model.tok2vec]
+> # ...
+> ```
+
+Build a model for the edit-tree lemmatizer, using a provided token-to-vector
+component. A linear layer with softmax activation is added to predict scores
+given the token vectors (this part corresponds to the
+[Tagger](/api/architectures#tagger) architecture).
+
+Additionally, if `lowercasing = true`, a single sigmoid output is learned for
+each token input: this is used in the context of the lemmatizer to determine
+when to convert inputs to lowercase before processing them with the edit trees.
+A single normalized linear layer is placed between the token-to-vector component
+and the sigmoid output neuron, as this has been found to produce slightly better
+results than a direct connection. A possible intuition explaining this is that
+it reduces the interference between the two learning goals, which are linked but
+nonetheless distinct.
+
+| Name          | Description                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------ |
+| `tok2vec`     | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
+| `nO`          | The number of tags to output. Inferred from the data if `None`. ~~Optional[int]~~          |
+| `normalize`   | Normalize probabilities during inference. Defaults to `False`. ~~bool~~                    |
+| `lowercasing` | If `True`, the additional sigmoid appendage is created. Defaults to `True`. ~~bool~~       |
+| **CREATES**   | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                     |
+
 ## Text classification architectures {#textcat source="spacy/ml/models/textcat.py"}
 
 A text classification architecture needs to take a [`Doc`](/api/doc) as input,

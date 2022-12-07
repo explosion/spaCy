@@ -1,4 +1,5 @@
 from .entity_linker import *  # noqa
+from .lemmatizer import * # noqa
 from .multi_task import *  # noqa
 from .parser import *  # noqa
 from .spancat import *  # noqa
