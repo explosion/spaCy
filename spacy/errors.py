@@ -131,13 +131,6 @@ class Warnings(metaclass=ErrorsWithCodes):
             "and make it independent. For example, `replace_listeners = "
             "[\"model.tok2vec\"]` See the documentation for details: "
             "https://spacy.io/usage/training#config-components-listeners")
-    W088 = ("The pipeline component {name} implements a `begin_training` "
-            "method, which won't be called by spaCy. As of v3.0, `begin_training` "
-            "has been renamed to `initialize`, so you likely want to rename the "
-            "component method. See the documentation for details: "
-            "https://spacy.io/api/language#initialize")
-    W089 = ("As of spaCy v3.0, the `nlp.begin_training` method has been renamed "
-            "to `nlp.initialize`.")
     W090 = ("Could not locate any {format} files in path '{path}'.")
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
     W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")

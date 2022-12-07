@@ -1239,15 +1239,6 @@ class Language:
             sgd(key, W, dW)  # type: ignore[call-arg, misc]
         return losses
 
-    def begin_training(
-        self,
-        get_examples: Optional[Callable[[], Iterable[Example]]] = None,
-        *,
-        sgd: Optional[Optimizer] = None,
-    ) -> Optimizer:
-        warnings.warn(Warnings.W089, DeprecationWarning)
-        return self.initialize(get_examples, sgd=sgd)
-
     def initialize(
         self,
         get_examples: Optional[Callable[[], Iterable[Example]]] = None,
