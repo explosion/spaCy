@@ -24,8 +24,6 @@ steps:
     displayName: "Build sdist"
 
   - script: |
-      # TEMP: test with newest wasabi
-      python -m pip install -U wasabi
       python -m mypy spacy
     displayName: 'Run mypy'
     condition: ne(variables['python_version'], '3.6')
@@ -102,8 +100,6 @@ steps:
 
   - script: |
       python -m pip install -U -r requirements.txt
-      # TEMP: test with newest wasabi
-      python -m pip install -U wasabi
     displayName: "Install test requirements"
 
   - script: |
