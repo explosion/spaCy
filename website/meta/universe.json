@@ -1037,7 +1037,8 @@
             "author_links": {
                 "github": "mholtzscher"
             },
-            "category": ["v2", "pipeline"]
+            "category": ["pipeline"],
+            "spacy_version": 2
         },
         {
             "id": "spacy-sentence-segmenter",
@@ -1081,7 +1082,8 @@
             "author_links": {
                 "github": "nickdavidhaynes"
             },
-            "category": ["pipeline", "v2"]
+            "category": ["pipeline"],
+            "spacy_version": 2
         },
         {
             "id": "spacy-iwnlp",
@@ -1155,7 +1157,8 @@
                 "github": "sammous"
             },
             "category": ["pipeline"],
-            "tags": ["pos", "lemmatizer", "french"]
+            "tags": ["pos", "lemmatizer", "french"],
+            "spacy_version": 2
         },
         {
             "id": "lemmy",
@@ -1371,7 +1374,8 @@
                 "github": "huggingface"
             },
             "category": ["standalone", "conversational", "models"],
-            "tags": ["coref", "v2"]
+            "tags": ["coref"],
+            "spacy_version": 2
         },
         {
             "id": "neuralcoref-vizualizer",
