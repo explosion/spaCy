@@ -462,7 +462,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
                 types = set([type(v) for v in value])
                 raise TypeError(Errors.E969.format(field=key, types=types)) from None
             row = [vocab.strings.add(v) for v in value]
-        values.append([numpy.array(v).astype(numpy.uint64) if v < 0 else v for v in row])
+        values.append([numpy.array(v, dtype=numpy.int32).astype(numpy.uint64) if v < 0 else v for v in row])
     array = numpy.array(values, dtype=numpy.uint64)
     return attrs, array.T
 
