@@ -1055,6 +1055,7 @@ def test_cli_find_threshold(capsys):
                 )
 
 
+@pytest.mark.skip(reason="wasabi test leads to version conflicts")
 @pytest.mark.parametrize(
     "reqs,output",
     [
