@@ -21,7 +21,6 @@ class Doc:
     spans: SpanGroups
     max_length: int
     length: int
-    sentiment: float
     activations: Dict[str, Dict[str, Union[ArrayXd, Ragged]]]
     cats: Dict[str, float]
     user_hooks: Dict[str, Callable[..., Any]]

@@ -91,7 +91,6 @@ subword_features = true
         "cats_macro_f": None,
         "cats_macro_auc": None,
         "cats_f_per_type": None,
-        "cats_macro_auc_per_type": None,
     },
 )
 def make_textcat(
@@ -169,7 +168,11 @@ class TextCategorizer(TrainablePipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg: Dict[str, Any] = {"labels": [], "threshold": threshold, "positive_label": None}
+        cfg: Dict[str, Any] = {
+            "labels": [],
+            "threshold": threshold,
+            "positive_label": None,
+        }
         self.cfg = dict(cfg)
         self.scorer = scorer
         self.save_activations = save_activations
@@ -416,5 +419,9 @@ class TextCategorizer(TrainablePipe):
     def _validate_categories(self, examples: Iterable[Example]):
         """Check whether the provided examples all have single-label cats annotations."""
         for ex in examples:
-            if list(ex.reference.cats.values()).count(1.0) > 1:
+            vals = list(ex.reference.cats.values())
+            if vals.count(1.0) > 1:
                 raise ValueError(Errors.E895.format(value=ex.reference.cats))
+            for val in vals:
+                if not (val == 1.0 or val == 0.0):
+                    raise ValueError(Errors.E851.format(val=val))
