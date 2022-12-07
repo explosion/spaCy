@@ -1024,25 +1024,6 @@
             "category": ["pipeline"]
         },
         {
-            "id": "spacy-sentence-segmenter",
-            "title": "Sentence Segmenter",
-            "slogan": "Custom sentence segmentation for spaCy",
-            "code_example": [
-                "from seg.newline.segmenter import NewLineSegmenter",
-                "import spacy",
-                "",
-                "nlseg = NewLineSegmenter()",
-                "nlp = spacy.load('en')",
-                "nlp.add_pipe(nlseg.set_sent_starts, name='sentence_segmenter', before='parser')",
-                "doc = nlp(my_doc_text)"
-            ],
-            "author": "tc64",
-            "author_links": {
-                "github": "tc64"
-            },
-            "category": ["pipeline"]
-        },
-        {
             "id": "spacy_cld",
             "title": "spaCy-CLD",
             "slogan": "Add language detection to your spaCy pipeline using CLD2",
