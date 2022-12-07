@@ -58,7 +58,7 @@ def get_doc(
         for annot in annotations:
             if annot:
                 if annot is heads:
-                    annot = numpy.array(heads).astype(numpy.uint64)
+                    annot = numpy.array(heads, dtype=numpy.int32).astype(numpy.uint64)
                     for i in range(len(words)):
                         if attrs.ndim == 1:
                             attrs[i] = annot[i]
