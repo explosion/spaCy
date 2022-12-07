@@ -370,3 +370,12 @@ def test_json_to_doc_validation_error(doc):
     doc_json.pop("tokens")
     with pytest.raises(ValueError):
         Doc(doc.vocab).from_json(doc_json, validate=True)
+
+
+def test_to_json_underscore_doc_getters(doc):
+    def get_text_length(doc):
+        return len(doc.text)
+
+    Doc.set_extension("text_length", getter=get_text_length)
+    doc_json = doc.to_json(underscore=["text_length"])
+    assert doc_json["_"]["text_length"] == get_text_length(doc)

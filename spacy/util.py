@@ -45,8 +45,7 @@ from . import about
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
-    from .language import Language  # noqa: F401
-    from .pipeline import Pipe  # noqa: F401
+    from .language import Language, PipeCallable  # noqa: F401
     from .tokens import Doc, Span  # noqa: F401
     from .vocab import Vocab  # noqa: F401
 
@@ -437,9 +436,9 @@ def load_model_from_package(
     name: str,
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Union[str, Iterable[str]] = SimpleFrozenList(),
-    enable: Union[str, Iterable[str]] = SimpleFrozenList(),
-    exclude: Union[str, Iterable[str]] = SimpleFrozenList(),
+    disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from an installed package.
@@ -613,9 +612,9 @@ def load_model_from_init_py(
     init_file: Union[Path, str],
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Union[str, Iterable[str]] = SimpleFrozenList(),
-    enable: Union[str, Iterable[str]] = SimpleFrozenList(),
-    exclude: Union[str, Iterable[str]] = SimpleFrozenList(),
+    disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Helper function to use in the `load()` method of a model package's
@@ -1636,9 +1635,11 @@ def check_bool_env_var(env_var: str) -> bool:
 
 def _pipe(
     docs: Iterable["Doc"],
-    proc: "Pipe",
+    proc: "PipeCallable",
     name: str,
-    default_error_handler: Callable[[str, "Pipe", List["Doc"], Exception], NoReturn],
+    default_error_handler: Callable[
+        [str, "PipeCallable", List["Doc"], Exception], NoReturn
+    ],
     kwargs: Mapping[str, Any],
 ) -> Iterator["Doc"]:
     if hasattr(proc, "pipe"):

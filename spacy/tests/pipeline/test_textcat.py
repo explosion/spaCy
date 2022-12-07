@@ -361,6 +361,30 @@ def test_label_types(name):
         nlp.initialize()
 
 
+@pytest.mark.parametrize(
+    "name,get_examples",
+    [
+        ("textcat", make_get_examples_single_label),
+        ("textcat_multilabel", make_get_examples_multi_label),
+    ],
+)
+def test_invalid_label_value(name, get_examples):
+    nlp = Language()
+    textcat = nlp.add_pipe(name)
+    example_getter = get_examples(nlp)
+
+    def invalid_examples():
+        # make one example with an invalid score
+        examples = example_getter()
+        ref = examples[0].reference
+        key = list(ref.cats.keys())[0]
+        ref.cats[key] = 2.0
+        return examples
+
+    with pytest.raises(ValueError):
+        nlp.initialize(get_examples=invalid_examples)
+
+
 @pytest.mark.parametrize("name", ["textcat", "textcat_multilabel"])
 def test_no_label(name):
     nlp = Language()
@@ -815,8 +839,8 @@ def test_textcat_loss(multi_label: bool, expected_loss: float):
         textcat = nlp.add_pipe("textcat_multilabel")
     else:
         textcat = nlp.add_pipe("textcat")
-    textcat.initialize(lambda: train_examples)
     assert isinstance(textcat, TextCategorizer)
+    textcat.initialize(lambda: train_examples)
     scores = textcat.model.ops.asarray(
         [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0]], dtype="f"  # type: ignore
     )
