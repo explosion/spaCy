@@ -14,22 +14,27 @@ from ..vocab import Vocab
 from ..util import ensure_path, load_model
 
 
-path_help = ("Location of the documents to predict on. "
-             "Can be a single file in .spacy format or a "
-             ".jsonl file. Files with other extensions "
-             "are treated as single plain text documents. "
-             "If a directory is provided "
-             "it is traversed recursively to grab all files to "
-             "be processed. The files can be a mixture of .spacy, "
-             ".jsonl and text files. If .jsonl is provided the "
-             "specified field is going to be grabbed ('text' "
-             "by default).")
+path_help = (
+    "Location of the documents to predict on. "
+    "Can be a single file in .spacy format or a "
+    ".jsonl file. Files with other extensions "
+    "are treated as single plain text documents. "
+    "If a directory is provided "
+    "it is traversed recursively to grab all files to "
+    "be processed. The files can be a mixture of .spacy, "
+    ".jsonl and text files. If .jsonl is provided the "
+    "specified field is going to be grabbed ('text' "
+    "by default)."
+)
 out_help = "Path where to save the result .spacy file"
-code_help = ("Path to Python file with additional "
-             "code (registered functions) to be imported")
+code_help = (
+    "Path to Python file with additional " "code (registered functions) to be imported"
+)
 gold_help = "Use gold preprocessing provided in the .spacy files"
-force_msg = ("The provided output file already exists. "
-             "To force overwriting the output file, set the --force or -F flag.")
+force_msg = (
+    "The provided output file already exists. "
+    "To force overwriting the output file, set the --force or -F flag."
+)
 
 
 DocOrStrStream = Union[Iterable[str], Iterable[Doc]]
@@ -52,8 +57,7 @@ def _stream_jsonl(path: Path, field: str) -> Iterable[str]:
     for entry in srsly.read_jsonl(path):
         if field not in entry:
             raise msg.fail(
-                f"{path} does not contain the required '{field}' field.",
-                exits=1
+                f"{path} does not contain the required '{field}' field.", exits=1
             )
         else:
             yield entry[field]
@@ -64,7 +68,7 @@ def _stream_texts(paths: Iterable[Path]) -> Iterable[str]:
     Yields strings from text files in paths.
     """
     for path in paths:
-        with open(path, 'r') as fin:
+        with open(path, "r") as fin:
             text = fin.read()
             yield text
 
