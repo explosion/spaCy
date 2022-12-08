@@ -378,7 +378,7 @@ pattern = [{"TEXT": {"FUZZY": "favorite"}},
 The `FUZZY` attribute allows fuzzy matches for any attribute string value,
 including custom attributes. Just like `REGEX`, it always needs to be applied to
 an attribute like `TEXT` or `LOWER`. By default `FUZZY` allows a Levenshtein
-edit distance of at least 2 and up to 20% of the pattern string length. Using
+edit distance of at least 2 and up to 30% of the pattern string length. Using
 the more specific attributes `FUZZY1`..`FUZZY9` you can specify the maximum
 allowed edit distance directly.
 

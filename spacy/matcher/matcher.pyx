@@ -38,7 +38,7 @@ cpdef bint fuzzy_compare(input_text: str, pattern_text: str, fuzzy: int = -1):
     else:
         # allow at least two edits (to allow at least one transposition) and up
         # to 20% of the pattern string length
-        max_edits = max(2, int(0.2 * len(pattern_text)))
+        max_edits = max(2, round(0.3 * len(pattern_text)))
     return levenshtein(input_text, pattern_text, max_edits) <= max_edits
 
 

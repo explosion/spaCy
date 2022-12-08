@@ -145,8 +145,8 @@ def test_matcher_match_multi(matcher):
         # caching don't collide)
         (
             {
-                "A": [[{"ORTH": {"FUZZY": "Javascript"}}]],
-                "B": [[{"ORTH": {"FUZZY5": "Javascript"}}]],
+                "A": [[{"ORTH": {"FUZZY": "Javascripts"}}]],
+                "B": [[{"ORTH": {"FUZZY5": "Javascripts"}}]],
             },
             [(8, 9)],
         ),
