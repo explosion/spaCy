@@ -100,8 +100,6 @@ steps:
 
   - script: |
       python -m pip install -U -r requirements.txt
-      # TEMP: upgrade to latest prerelease numpy for testing
-      python -m pip install -U --pre numpy
     displayName: "Install test requirements"
 
   - script: |
