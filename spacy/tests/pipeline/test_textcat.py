@@ -838,8 +838,8 @@ def test_textcat_loss(multi_label: bool, expected_loss: float):
         textcat = nlp.add_pipe("textcat_multilabel")
     else:
         textcat = nlp.add_pipe("textcat")
-    textcat.initialize(lambda: train_examples)
     assert isinstance(textcat, TextCategorizer)
+    textcat.initialize(lambda: train_examples)
     scores = textcat.model.ops.asarray(
         [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0]], dtype="f"  # type: ignore
     )
