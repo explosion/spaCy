@@ -123,14 +123,14 @@ def test_doc_from_array_heads_in_bounds(en_vocab):
 
     # head before start
     arr = doc.to_array(["HEAD"])
-    arr[0] = numpy.array(-1).astype(numpy.uint64)
+    arr[0] = numpy.int32(-1).astype(numpy.uint64)
     doc_from_array = Doc(en_vocab, words=words)
     with pytest.raises(ValueError):
         doc_from_array.from_array(["HEAD"], arr)
 
     # head after end
     arr = doc.to_array(["HEAD"])
-    arr[0] = numpy.array(5).astype(numpy.uint64)
+    arr[0] = numpy.int32(5).astype(numpy.uint64)
     doc_from_array = Doc(en_vocab, words=words)
     with pytest.raises(ValueError):
         doc_from_array.from_array(["HEAD"], arr)
