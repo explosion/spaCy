@@ -105,8 +105,6 @@ jobs:
 
   - script: |
       pip install -r requirements.txt
-      # TEMP: test with prerelease numpy 1.24 (if available)
-      pip install -U --pre numpy
       python -m pytest --pyargs spacy
     displayName: 'Run tests'
 
