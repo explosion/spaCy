@@ -243,8 +243,6 @@ class Errors(metaclass=ErrorsWithCodes):
             "https://spacy.io/usage/models")
     E011 = ("Unknown operator: '{op}'. Options: {opts}")
     E012 = ("Cannot add pattern for zero tokens to matcher.\nKey: {key}")
-    E016 = ("MultitaskObjective target should be function or one of: dep, "
-            "tag, ent, dep_tag_offset, ent_tag.")
     E017 = ("Can only add 'str' inputs to StringStore. Got type: {value_type}")
     E018 = ("Can't retrieve string for hash '{hash_value}'. This usually "
             "refers to an issue with the `Vocab` or `StringStore`.")

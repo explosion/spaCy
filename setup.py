@@ -38,7 +38,6 @@ MOD_NAMES = [
     "spacy.pipeline.dep_parser",
     "spacy.pipeline._edit_tree_internals.edit_trees",
     "spacy.pipeline.morphologizer",
-    "spacy.pipeline.multitask",
     "spacy.pipeline.ner",
     "spacy.pipeline.pipe",
     "spacy.pipeline.trainable_pipe",
