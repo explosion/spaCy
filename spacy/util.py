@@ -1739,5 +1739,12 @@ def all_equal(iterable):
 
 
 def is_port_in_use(port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', port)) == 0
+    """Check if localhost:port is in use."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(("localhost", port))
+        return False
+    except socket.error:
+        return True
+    finally:
+        s.close()

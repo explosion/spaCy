@@ -102,14 +102,15 @@ def serve(
 
     # automatically switch to the next available port if the default / given port is taken
     available_port = port
-    while is_port_in_use(available_port) and available_port <= 65535:
+
+    while is_port_in_use(available_port) and available_port < 65535:
         available_port += 1
 
     if is_in_jupyter():
         warnings.warn(Warnings.W011)
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
 
-    if port > 65535:
+    if available_port == 65535 and is_port_in_use(available_port):
         raise ValueError(Errors.E1048.format(host=host))
 
     if available_port != port:
