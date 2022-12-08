@@ -1719,7 +1719,7 @@ cdef class Doc:
                                     data["underscore_token"][attr] = []
                                 data["underscore_token"][attr].append({"start": start, "value": value})
                             # Else span attribute
-                            else:
+                            elif end is not None:
                                 _label = data_key[4]
                                 _kb_id = data_key[5]
                                 _span_id = data_key[6]
