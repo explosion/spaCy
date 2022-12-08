@@ -143,7 +143,7 @@ class EditTreeLemmatizer(TrainablePipe):
                         predicted.text, gold_lemma
                     ):
                         eg_lowercasing_truths.append([1])
-                        text = predicted.text.lower()
+                        text = predicted.lower_
                     else:
                         eg_lowercasing_truths.append([0])
                         text = predicted.text
@@ -216,11 +216,10 @@ class EditTreeLemmatizer(TrainablePipe):
 
             doc_compat_guesses = []
             for j, (token, candidates) in enumerate(zip(doc, doc_guesses)):
-                text = token.text
                 to_lowercase = False
                 if lowercasing_flags is not None and lowercasing_flags[i][j] > 0.5:
                     to_lowercase = True
-                    text = text.lower()
+                text = token.lower_ if to_lowercase else token.text
                 tree_id = -1
                 for candidate in candidates:
                     candidate_tree_id = self.cfg["labels"][candidate]
@@ -248,7 +247,7 @@ class EditTreeLemmatizer(TrainablePipe):
                         if self.backoff is not None:
                             doc[j].lemma = getattr(doc[j], self.backoff)
                     else:
-                        text = doc[j].text.lower() if to_lowercase else doc[j].text
+                        text = doc[j].lower_ if to_lowercase else doc[j].text
                         lemma = self.trees.apply(tree_id, text)
                         doc[j].lemma_ = lemma
 
@@ -404,7 +403,7 @@ class EditTreeLemmatizer(TrainablePipe):
                     if self.lowercasing and _should_lowercased(
                         token.text, token.lemma_
                     ):
-                        text = token.text.lower()
+                        text = token.lower_
                     else:
                         text = token.text
                     tree_id = trees.add(text, token.lemma_)
@@ -437,7 +436,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
 
 def _should_lowercased(form: str, lemma: str) -> bool:
-    return form.lower() != form and lemma.lower() == lemma
+    return (not form.islower()) and lemma.islower()
 
 
 def _split_predictions(
