@@ -1021,7 +1021,8 @@
             "author_links": {
                 "github": "mholtzscher"
             },
-            "category": ["pipeline"]
+            "category": ["pipeline"],
+            "spacy_version": 2
         },
         {
             "id": "spacy-sentence-segmenter",
@@ -1045,7 +1046,7 @@
         {
             "id": "spacy_cld",
             "title": "spaCy-CLD",
-            "slogan": "Add language detection to your spaCy pipeline using CLD2",
+            "slogan": "Add language detection to your spaCy v2 pipeline using CLD2",
             "description": "spaCy-CLD operates on `Doc` and `Span` spaCy objects. When called on a `Doc` or `Span`, the object is given two attributes: `languages` (a list of up to 3 language codes) and `language_scores` (a dictionary mapping language codes to confidence scores between 0 and 1).\n\nspacy-cld is a little extension that wraps the [PYCLD2](https://github.com/aboSamoor/pycld2) Python library, which in turn wraps the [Compact Language Detector 2](https://github.com/CLD2Owners/cld2) C library originally built at Google for the Chromium project. CLD2 uses character n-grams as features and a Naive Bayes classifier to identify 80+ languages from Unicode text strings (or XML/HTML). It can detect up to 3 different languages in a given document, and reports a confidence score (reported in with each language.",
             "github": "nickdavidhaynes/spacy-cld",
             "pip": "spacy_cld",
@@ -1065,7 +1066,8 @@
             "author_links": {
                 "github": "nickdavidhaynes"
             },
-            "category": ["pipeline"]
+            "category": ["pipeline"],
+            "spacy_version": 2
         },
         {
             "id": "spacy-iwnlp",
@@ -1139,7 +1141,8 @@
                 "github": "sammous"
             },
             "category": ["pipeline"],
-            "tags": ["pos", "lemmatizer", "french"]
+            "tags": ["pos", "lemmatizer", "french"],
+            "spacy_version": 2
         },
         {
             "id": "lemmy",
@@ -1333,8 +1336,8 @@
         },
         {
             "id": "neuralcoref",
-            "slogan": "State-of-the-art coreference resolution based on neural nets and spaCy",
-            "description": "This coreference resolution module is based on the super fast [spaCy](https://spacy.io/) parser and uses the neural net scoring model described in [Deep Reinforcement Learning for Mention-Ranking Coreference Models](http://cs.stanford.edu/people/kevclark/resources/clark-manning-emnlp2016-deep.pdf) by Kevin Clark and Christopher D. Manning, EMNLP 2016. Since ✨Neuralcoref v2.0, you can train the coreference resolution system on your own dataset — e.g., another language than English! — **provided you have an annotated dataset**. Note that to use neuralcoref with spaCy > 2.1.0, you'll have to install neuralcoref from source.",
+            "slogan": "State-of-the-art coreference resolution based on neural nets and spaCy v2",
+            "description": "This coreference resolution module is based on the super fast spaCy parser and uses the neural net scoring model described in [Deep Reinforcement Learning for Mention-Ranking Coreference Models](http://cs.stanford.edu/people/kevclark/resources/clark-manning-emnlp2016-deep.pdf) by Kevin Clark and Christopher D. Manning, EMNLP 2016. Since ✨Neuralcoref v2.0, you can train the coreference resolution system on your own dataset — e.g., another language than English! — **provided you have an annotated dataset**. Note that to use neuralcoref with spaCy > 2.1.0, you'll have to install neuralcoref from source, and v3+ is not supported.",
             "github": "huggingface/neuralcoref",
             "thumb": "https://i.imgur.com/j6FO9O6.jpg",
             "code_example": [
@@ -1355,7 +1358,8 @@
                 "github": "huggingface"
             },
             "category": ["standalone", "conversational", "models"],
-            "tags": ["coref"]
+            "tags": ["coref"],
+            "spacy_version": 2
         },
         {
             "id": "neuralcoref-vizualizer",
@@ -1431,7 +1435,7 @@
                 "import spacy",
                 "import explacy",
                 "",
-                "nlp = spacy.load('en')",
+                "nlp = spacy.load('en_core_web_sm')",
                 "explacy.print_parse_info(nlp, 'The salad was surprisingly tasty.')"
             ],
             "author": "Tyler Neylon",

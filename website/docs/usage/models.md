@@ -342,22 +342,6 @@ The easiest way to download a trained pipeline is via spaCy's
 [`download`](/api/cli#download) command. It takes care of finding the
 best-matching package compatible with your spaCy installation.
 
-> #### Important note for v3.0
->
-> Note that as of spaCy v3.0, shortcut links like `en` that create (potentially
-> brittle) symlinks in your spaCy installation are **deprecated**. To download
-> and load an installed pipeline package, use its full name:
->
-> ```diff
-> - python -m spacy download en
-> + python -m spacy download en_core_web_sm
-> ```
->
-> ```diff
-> - nlp = spacy.load("en")
-> + nlp = spacy.load("en_core_web_sm")
-> ```
-
 ```cli
 # Download best-matching version of a package for your spaCy installation
 $ python -m spacy download en_core_web_sm
@@ -488,17 +472,6 @@ spacy.cli.download("en_core_web_sm")
 
 To load a pipeline package, use [`spacy.load`](/api/top-level#spacy.load) with
 the package name or a path to the data directory:
-
-> #### Important note for v3.0
->
-> Note that as of spaCy v3.0, shortcut links like `en` that create (potentially
-> brittle) symlinks in your spaCy installation are **deprecated**. To download
-> and load an installed pipeline package, use its full name:
->
-> ```diff
-> - python -m spacy download en
-> + python -m spacy download en_core_web_sm
-> ```
 
 ```python
 import spacy

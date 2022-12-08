@@ -40,7 +40,7 @@ except ImportError:
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, is_windows, importlib_metadata
-from .errors import Errors, Warnings, OLD_MODEL_SHORTCUTS
+from .errors import Errors, Warnings
 from . import about
 
 if TYPE_CHECKING:
@@ -427,8 +427,6 @@ def load_model(
             return load_model_from_path(Path(name), **kwargs)  # type: ignore[arg-type]
     elif hasattr(name, "exists"):  # Path or Path-like to model data
         return load_model_from_path(name, **kwargs)  # type: ignore[arg-type]
-    if name in OLD_MODEL_SHORTCUTS:
-        raise IOError(Errors.E941.format(name=name, full=OLD_MODEL_SHORTCUTS[name]))  # type: ignore[index]
     raise IOError(Errors.E050.format(name=name))
 
 

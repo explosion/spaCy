@@ -51,7 +51,7 @@ markup is correct.
         "import spacy",
         "import package_name",
         "",
-        "nlp = spacy.load('en')",
+        "nlp = spacy.load('en_core_web_sm')",
         "nlp.add_pipe(package_name)"
     ],
     "code_language": "python",
