@@ -59,6 +59,7 @@ def train(
     batcher = T["batcher"]
     train_logger = T["logger"]
     before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
+    before_update = T["before_update"]
 
     # Helper function to save checkpoints. This is a closure for convenience,
     # to avoid passing in all the args all the time.
@@ -89,6 +90,7 @@ def train(
         eval_frequency=T["eval_frequency"],
         exclude=frozen_components,
         annotating_components=annotating_components,
+        before_update=before_update,
     )
     clean_output_dir(output_path)
     stdout.write(msg.info(f"Pipeline: {nlp.pipe_names}") + "\n")
@@ -150,6 +152,7 @@ def train_while_improving(
     max_steps: int,
     exclude: List[str],
     annotating_components: List[str],
+    before_update: Optional[Callable[["Language", Dict[str, Any]], None]],
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
@@ -198,6 +201,9 @@ def train_while_improving(
     words_seen = 0
     start_time = timer()
     for step, (epoch, batch) in enumerate(train_data):
+        if before_update:
+            before_update_args = {"step": step, "epoch": epoch}
+            before_update(nlp, before_update_args)
         dropout = next(dropouts)  # type: ignore
         for subbatch in subdivide_batch(batch, accumulate_gradient):
             nlp.update(

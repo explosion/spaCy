@@ -626,3 +626,23 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
             OPS.to_numpy(vocab_r[word].vector),
             decimal=6,
         )
+
+
+def test_equality():
+    vectors1 = Vectors(shape=(10, 10))
+    vectors2 = Vectors(shape=(10, 8))
+
+    assert vectors1 != vectors2
+
+    vectors2 = Vectors(shape=(10, 10))
+    assert vectors1 == vectors2
+
+    vectors1.add("hello", row=2)
+    assert vectors1 != vectors2
+
+    vectors2.add("hello", row=2)
+    assert vectors1 == vectors2
+
+    vectors1.resize((5, 9))
+    vectors2.resize((5, 9))
+    assert vectors1 == vectors2

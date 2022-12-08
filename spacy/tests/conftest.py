@@ -351,17 +351,17 @@ def ru_tokenizer():
     return get_lang_class("ru")().tokenizer
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def ru_lemmatizer():
     pytest.importorskip("pymorphy3")
     return get_lang_class("ru")().add_pipe("lemmatizer")
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def ru_lookup_lemmatizer():
-    pytest.importorskip("pymorphy2")
+    pytest.importorskip("pymorphy3")
     return get_lang_class("ru")().add_pipe(
-        "lemmatizer", config={"mode": "pymorphy2_lookup"}
+        "lemmatizer", config={"mode": "pymorphy3_lookup"}
     )
 
 
@@ -437,19 +437,19 @@ def uk_tokenizer():
     return get_lang_class("uk")().tokenizer
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def uk_lemmatizer():
     pytest.importorskip("pymorphy3")
     pytest.importorskip("pymorphy3_dicts_uk")
     return get_lang_class("uk")().add_pipe("lemmatizer")
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def uk_lookup_lemmatizer():
-    pytest.importorskip("pymorphy2")
-    pytest.importorskip("pymorphy2_dicts_uk")
+    pytest.importorskip("pymorphy3")
+    pytest.importorskip("pymorphy3_dicts_uk")
     return get_lang_class("uk")().add_pipe(
-        "lemmatizer", config={"mode": "pymorphy2_lookup"}
+        "lemmatizer", config={"mode": "pymorphy3_lookup"}
     )
 
 
