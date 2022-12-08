@@ -424,6 +424,8 @@ class EditTreeLemmatizer(TrainablePipe):
         tree is unknown and "add_label" is set, the edit tree will be added to
         the labels.
         """
+        if self.lowercasing and _should_lowercased(form, lemma):
+            form = form.lower()
         tree_id = self.trees.add(form, lemma)
         if tree_id not in self.tree2label:
             if not add_label:
