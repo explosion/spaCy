@@ -114,7 +114,9 @@ def serve(
         raise ValueError(Errors.E1048.format(host=host))
 
     if available_port != port:
-        warnings.warn(Warnings.W124.format(host=host, port=port, available_port=available_port))
+        warnings.warn(
+            Warnings.W124.format(host=host, port=port, available_port=available_port)
+        )
 
     httpd = simple_server.make_server(host, available_port, app)
     print(f"\nUsing the '{style}' visualizer")
