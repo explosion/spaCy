@@ -22,8 +22,8 @@ def build_lemmatizer_model(
     token input: this is used in the context of the lemmatizer to determine when to convert inputs
     to lowercase before processing them with the edit trees. A single normalized linear layer
     is placed between the token-to-vector component and the sigmoid output neuron, as this has
-    been found to produce slightly better results than a direct connection. A possible intuition 
-    explaining this is that it reduces the interference between the two learning goals, 
+    been found to produce slightly better results than a direct connection. A possible intuition
+    explaining this is that it reduces the interference between the two learning goals,
     which are linked but nonetheless distinct.
 
     tok2vec (Model[List[Doc], List[Floats2d]]): The token-to-vector subnetwork.
