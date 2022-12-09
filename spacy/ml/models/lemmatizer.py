@@ -13,7 +13,7 @@ def build_lemmatizer_model(
     nO: Optional[int] = None,
     normalize=False,
     lowercasing=True,
-    lowercasing_relu_width: Optional[int] = 50,
+    lowercasing_relu_width: int = 50,
 ) -> Model[List[Doc], Union[List[Floats2d]]]:
     """Build a model for the edit-tree lemmatizer, using a provided token-to-vector component.
     A linear layer with softmax activation is added to predict scores
