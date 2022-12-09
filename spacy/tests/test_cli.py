@@ -140,7 +140,7 @@ def test_issue11235():
         assert os.path.exists(d / "cfg")
         assert os.path.exists(d / f"{lang_var}_model")
     assert cfg["commands"][0]["script"][0] == f"hello {lang_var}"
-    
+
 
 def test_cli_info():
     nlp = Dutch()
