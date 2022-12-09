@@ -13,6 +13,7 @@ def build_lemmatizer_model(
     nO: Optional[int] = None,
     normalize=False,
     lowercasing=True,
+    lowercasing_relu_width: Optional[int] = 50,
 ) -> Model[List[Doc], Union[List[Floats2d]]]:
     """Build a model for the edit-tree lemmatizer, using a provided token-to-vector component.
     A linear layer with softmax activation is added to predict scores
@@ -38,7 +39,9 @@ def build_lemmatizer_model(
         model = tok2vec >> with_array(softmax)
         if lowercasing:
             lowercasing_output = Sigmoid(1)
-            sigmoid_appendage = Relu(50) >> Dropout(0.2) >> lowercasing_output
+            sigmoid_appendage = (
+                Relu(lowercasing_relu_width) >> Dropout() >> lowercasing_output
+            )
             model |= tok2vec >> with_array(sigmoid_appendage)
             model.set_ref("lowercasing_output", lowercasing_output)
         return model

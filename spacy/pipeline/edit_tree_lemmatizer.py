@@ -25,6 +25,7 @@ default_model_config = """
 [model]
 @architectures = "spacy.Lemmatizer.v1"
 lowercasing = true
+lowercasing_relu_width = 50
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v2"
@@ -204,7 +205,7 @@ class EditTreeLemmatizer(TrainablePipe):
         self, docs, scores, lowercasing_flags: Optional[List[Floats2d]]
     ):
         guesses = []
-        for i, (doc, doc_scores) in enumerate(zip(docs, scores)):
+        for (i, doc, doc_scores) in zip(range(len(docs)), docs, scores):
             if self.top_k == 1:
                 doc_guesses = doc_scores.argmax(axis=1).reshape(-1, 1)
             else:
@@ -214,11 +215,13 @@ class EditTreeLemmatizer(TrainablePipe):
                 doc_guesses = doc_guesses.get()
 
             doc_compat_guesses = []
-            for j, (token, candidates) in enumerate(zip(doc, doc_guesses)):
-                to_lowercase = False
+            for (j, token, candidates) in zip(range(len(doc)), doc, doc_guesses):
                 if lowercasing_flags is not None and lowercasing_flags[i][j] > 0.5:
-                    to_lowercase = True
-                text = token.lower_ if to_lowercase else token.text
+                    to_lowercase = 1
+                    text = token.lower_
+                else:
+                    to_lowercase = 0
+                    text = token.text
                 tree_id = -1
                 for candidate in candidates:
                     candidate_tree_id = self.cfg["labels"][candidate]
