@@ -7,7 +7,7 @@ from ..util import get_cosine, add_vecs_to_vocab
 
 @pytest.fixture
 def vectors():
-    return [("apple", [1, 2, 3]), ("orange", [-1, -2, -3])]
+    return [("apple", [1, 2, 3]), ("orange", [-1, -2, -5])]
 
 
 @pytest.fixture()
@@ -71,19 +71,17 @@ def test_vectors_similarity_DD(vocab, vectors):
 def test_vectors_similarity_TD(vocab, vectors):
     [(word1, vec1), (word2, vec2)] = vectors
     doc = Doc(vocab, words=[word1, word2])
-    with pytest.warns(UserWarning):
-        assert isinstance(doc.similarity(doc[0]), float)
-        assert isinstance(doc[0].similarity(doc), float)
-        assert doc.similarity(doc[0]) == doc[0].similarity(doc)
+    assert isinstance(doc.similarity(doc[0]), float)
+    assert isinstance(doc[0].similarity(doc), float)
+    assert doc.similarity(doc[0]) == doc[0].similarity(doc)
 
 
 def test_vectors_similarity_TS(vocab, vectors):
     [(word1, vec1), (word2, vec2)] = vectors
     doc = Doc(vocab, words=[word1, word2])
-    with pytest.warns(UserWarning):
-        assert isinstance(doc[:2].similarity(doc[0]), float)
-        assert isinstance(doc[0].similarity(doc[-2]), float)
-        assert doc[:2].similarity(doc[0]) == doc[0].similarity(doc[:2])
+    assert isinstance(doc[:2].similarity(doc[0]), float)
+    assert isinstance(doc[0].similarity(doc[-2]), float)
+    assert doc[:2].similarity(doc[0]) == doc[0].similarity(doc[:2])
 
 
 def test_vectors_similarity_DS(vocab, vectors):
