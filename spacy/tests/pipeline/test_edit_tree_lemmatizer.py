@@ -1,4 +1,4 @@
-from typing import cast, Dict
+from typing import cast, Dict, Optional
 import pickle
 import pytest
 from hypothesis import given
@@ -193,7 +193,7 @@ def test_incomplete_data(lowercasing: bool):
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
     for i in range(50):
-        losses: Dict[Floats2d, Floats2d] = {}
+        losses: Optional[Dict[str, float]] = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
 
     # test the trained model
@@ -222,7 +222,7 @@ def test_overfitting_IO(lowercasing: bool):
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
 
     for i in range(50):
-        losses: Dict[Floats2d, Floats2d] = {}
+        losses: Optional[Dict[str, float]] = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
 
     test_text = "She likes blue eggs"
@@ -411,7 +411,7 @@ def test_lowercasing(lowercasing: bool):
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
     for _ in range(50):
-        losses: Dict[Floats2d, Floats2d] = {}
+        losses: Optional[Dict[str, float]] = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
 
     # test the trained model

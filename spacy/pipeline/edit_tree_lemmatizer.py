@@ -163,7 +163,7 @@ class EditTreeLemmatizer(TrainablePipe):
             for i, doc_d_tree_scores in enumerate(d_tree_scores):
                 eg_lowercasing_flags = lowercasing_flags[i]
                 eg_d_lowercasing_flags, eg_lowercasing_loss = lowercasing_loss_func(
-                    eg_lowercasing_flags, self.model.ops.asarray2f(lowercasing_truths[i])
+                    eg_lowercasing_flags, self.model.ops.asarray2i(lowercasing_truths[i])
                 )
                 doc_d_scores = self.model.ops.xp.hstack(
                     [
