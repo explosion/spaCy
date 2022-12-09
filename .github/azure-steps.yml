@@ -103,7 +103,7 @@ steps:
       python -m pip install --pre thinc-apple-ops
       python -m pytest --pyargs spacy
     displayName: "Run CPU tests with thinc-apple-ops"
-    condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.11'))
+    condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.10'))
 
   - script: |
       python .github/validate_universe_json.py website/meta/universe.json
