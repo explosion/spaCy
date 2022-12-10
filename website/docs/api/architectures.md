@@ -677,13 +677,14 @@ results than a direct connection. A possible intuition explaining this is that
 it reduces the interference between the two learning goals, which are linked but
 nonetheless distinct.
 
-| Name          | Description                                                                                |
-| ------------- | ------------------------------------------------------------------------------------------ |
-| `tok2vec`     | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
-| `nO`          | The number of tags to output. Inferred from the data if `None`. ~~Optional[int]~~          |
-| `normalize`   | Normalize probabilities during inference. Defaults to `False`. ~~bool~~                    |
-| `lowercasing` | If `True`, the additional sigmoid appendage is created. Defaults to `True`. ~~bool~~       |
-| **CREATES**   | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                     |
+| Name                     | Description                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------ |
+| `tok2vec`                | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
+| `nO`                     | The number of tags to output. Inferred from the data if `None`. ~~Optional[int]~~          |
+| `normalize`              | Normalize probabilities during inference. Defaults to `False`. ~~bool~~                    |
+| `lowercasing`            | If `True`, the additional sigmoid appendage is created. Defaults to `True`. ~~bool~~       |
+| `lowercasing_relu_width` | The width of the linear layer within the sigmoid appendage.                                |
+| **CREATES**              | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                     |
 
 ## Text classification architectures {#textcat source="spacy/ml/models/textcat.py"}
 

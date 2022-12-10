@@ -30,6 +30,7 @@ def build_lemmatizer_model(
     tok2vec (Model[List[Doc], List[Floats2d]]): The token-to-vector subnetwork.
     nO (int or None): The number of tags to output in the main model. Inferred from the data if None.
     lowercasing: if *True*, the additional sigmoid appendage is created.
+    lowercasing_relu_width: the width of the linear layer within the sigmoid appendage.
     """
     with Model.define_operators({">>": chain, "|": concatenate}):
         t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
