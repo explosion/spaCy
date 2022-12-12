@@ -958,8 +958,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
     E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
-    E1048 = ("No port available found for displacy on host {host}. Please specify an available port "
-             "by `displacy.serve(doc, port)`")
+    E1048 = ("No available port found for displaCy on host {host}. Please specify an available port "
+             "with `displacy.serve(doc, port)`")
     E1049 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port)` "
              "or use `auto_switch_port=True` to pick an available port automatically.")
 
