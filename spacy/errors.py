@@ -214,7 +214,7 @@ class Warnings(metaclass=ErrorsWithCodes):
             "is a Cython extension type.")
     W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
             "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
-    W124 = ("{host}:{port} is already in use, using the nearest available port {available_port} as an alternative.")
+    W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -958,7 +958,10 @@ class Errors(metaclass=ErrorsWithCodes):
     E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
     E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
-    E1048 = ("No port available found for displacy on host {host}. Please specify an available port by `displacy.serve(doc, host, port)`.")
+    E1048 = ("No port available found for displacy on host {host}. Please specify an available port "
+             "by `displacy.serve(doc, port)`")
+    E1049 = ("Port {port} is already in use. Please specify an available port by `displacy.serve(doc, port) "
+             "or let displacy automatically find a port by `displacy.serve(doc, auto_switch_port=True)`.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

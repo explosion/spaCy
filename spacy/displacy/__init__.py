@@ -83,6 +83,7 @@ def serve(
     manual: bool = False,
     port: int = 5000,
     host: str = "0.0.0.0",
+    auto_select_port: bool = False,
 ) -> None:
     """Serve displaCy visualisation.
 
@@ -94,37 +95,43 @@ def serve(
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     port (int): Port to serve visualisation.
     host (str): Host to serve visualisation.
+    auto_select_port (bool): Automatically select a port if the specified port is in use.
 
     DOCS: https://spacy.io/api/top-level#displacy.serve
     USAGE: https://spacy.io/usage/visualizers
     """
     from wsgiref import simple_server
 
-    # automatically switch to the next available port if the default / given port is taken
-    available_port = port
+    serve_port = port
 
-    while is_port_in_use(available_port) and available_port < 65535:
-        available_port += 1
+    if is_port_in_use(serve_port):
+        if not auto_select_port:
+            raise ValueError(Errors.E1049.format(port=port))
 
-    if is_in_jupyter():
-        warnings.warn(Warnings.W011)
-    render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
+        while is_port_in_use(serve_port) and serve_port < 65535:
+            serve_port += 1
 
-    if available_port == 65535 and is_port_in_use(available_port):
-        raise ValueError(Errors.E1048.format(host=host))
-
-    if available_port != port:
-        warnings.warn(
-            Warnings.W124.format(host=host, port=port, available_port=available_port)
+        if is_in_jupyter():
+            warnings.warn(Warnings.W011)
+        render(
+            docs, style=style, page=page, minify=minify, options=options, manual=manual
         )
 
-    httpd = simple_server.make_server(host, available_port, app)
+        if serve_port == 65535 and is_port_in_use(serve_port):
+            raise ValueError(Errors.E1048.format(host=host))
+
+        if serve_port != port:
+            warnings.warn(
+                Warnings.W124.format(host=host, port=port, serve_port=serve_port)
+            )
+
+    httpd = simple_server.make_server(host, serve_port, app)
     print(f"\nUsing the '{style}' visualizer")
-    print(f"Serving on http://{host}:{available_port} ...\n")
+    print(f"Serving on http://{host}:{serve_port} ...\n")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print(f"Shutting down server on port {available_port}.")
+        print(f"Shutting down server on port {serve_port}.")
     finally:
         httpd.server_close()
 
