@@ -299,7 +299,7 @@ cdef class Span:
                     for ancestor in ancestors:
                         ancestor_i = ancestor.i - self.c.start
                         if ancestor_i in range(length):
-                            array[i, head_col] = ancestor_i - i
+                            array[i, head_col] = numpy.int32(ancestor_i - i).astype(numpy.uint64)
 
                 # if there is no appropriate ancestor, define a new artificial root
                 value = array[i, head_col]
@@ -307,7 +307,7 @@ cdef class Span:
                     new_root = old_to_new_root.get(ancestor_i, None)
                     if new_root is not None:
                         # take the same artificial root as a previous token from the same sentence
-                        array[i, head_col] = new_root - i
+                        array[i, head_col] = numpy.int32(new_root - i).astype(numpy.uint64)
                     else:
                         # set this token as the new artificial root
                         array[i, head_col] = 0
