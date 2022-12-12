@@ -1768,7 +1768,7 @@ def get_search_char_byte_arrays(
         ):
             this_width = idx - working_start
             if this_width > 4 or this_width < working_width:
-                raise RuntimeError(Errors.E1050)
+                raise RuntimeError(Errors.E1051)
             if this_width > working_width:
                 for i in range(working_width, 5):
                     width_offsets[i] = working_start

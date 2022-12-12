@@ -198,22 +198,22 @@ def _verify_rich_config_group(
 ) -> None:
     if lengths is not None or rows is not None:
         if is_search_char_group and (search_chars is None or len(search_chars) == 0):
-            raise ValueError(Errors.E1047.format(label=label))
-        if search_chars is not None and len(search_chars) > 63:
             raise ValueError(Errors.E1048.format(label=label))
+        if search_chars is not None and len(search_chars) > 63:
+            raise ValueError(Errors.E1049.format(label=label))
         if lengths is None or rows is None:
-            raise ValueError(Errors.E1047.format(label=label))
+            raise ValueError(Errors.E1048.format(label=label))
         if len(lengths) != len(rows):
-            raise ValueError(Errors.E1047.format(label=label))
+            raise ValueError(Errors.E1048.format(label=label))
         if any([length < 1 for length in lengths]):
-            raise ValueError(Errors.E1047.format(label=label))
+            raise ValueError(Errors.E1048.format(label=label))
     elif search_chars is not None:
-        raise ValueError(Errors.E1047.format(label=label))
+        raise ValueError(Errors.E1048.format(label=label))
     if lengths is not None:
         if lengths[-1] > 63:
-            raise ValueError(Errors.E1048.format(label=label))
-        if len(lengths) != len(set(lengths)) or lengths != sorted(lengths):
             raise ValueError(Errors.E1049.format(label=label))
+        if len(lengths) != len(set(lengths)) or lengths != sorted(lengths):
+            raise ValueError(Errors.E1050.format(label=label))
 
 
 @registry.architectures("spacy.RichMultiHashEmbed.v1")
