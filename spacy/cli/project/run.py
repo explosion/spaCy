@@ -101,8 +101,8 @@ def project_run(
             if not (project_dir / dep).exists():
                 err = f"Missing dependency specified by command '{subcommand}': {dep}"
                 err_help = "Maybe you forgot to run the 'project assets' command or a previous step?"
-                err_kwargs = {"exits": 1} if not dry else {}
-                msg.fail(err, err_help, **err_kwargs)
+                err_exits = 1 if not dry else None
+                msg.fail(err, err_help, exits=err_exits)
         check_spacy_commit = check_bool_env_var(ENV_VARS.PROJECT_USE_GIT_VERSION)
         with working_dir(project_dir) as current_dir:
             msg.divider(subcommand)

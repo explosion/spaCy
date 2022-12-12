@@ -1004,6 +1004,54 @@ This method was previously available as `spacy.gold.spans_from_biluo_tags`.
 | `tags`      | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
 | **RETURNS** | A sequence of `Span` objects with added entity labels. ~~List[Span]~~                                                                                                                                                                                        |
 
+### training.biluo_to_iob {#biluo_to_iob tag="function"}
+
+Convert a sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags to
+[IOB](/usage/linguistic-features#accessing-ner) tags. This is useful if you want
+use the BILUO tags with a model that only supports IOB tags.
+
+> #### Example
+>
+> ```python
+> from spacy.training import biluo_to_iob
+>
+> tags = ["O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
+> iob_tags = biluo_to_iob(tags)
+> assert iob_tags == ["O", "O", "B-LOC", "I-LOC", "I-LOC", "O"]
+> ```
+
+| Name        | Description                                                                             |
+| ----------- | --------------------------------------------------------------------------------------- |
+| `tags`      | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags. ~~Iterable[str]~~ |
+| **RETURNS** | A list of [IOB](/usage/linguistic-features#accessing-ner) tags. ~~List[str]~~           |
+
+### training.iob_to_biluo {#iob_to_biluo tag="function"}
+
+Convert a sequence of [IOB](/usage/linguistic-features#accessing-ner) tags to
+[BILUO](/usage/linguistic-features#accessing-ner) tags. This is useful if you
+want use the IOB tags with a model that only supports BILUO tags.
+
+<Infobox title="Changed in v3.0" variant="warning" id="iob_to_biluo">
+
+This method was previously available as `spacy.gold.iob_to_biluo`.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> from spacy.training import iob_to_biluo
+>
+> tags = ["O", "O", "B-LOC", "I-LOC", "O"]
+> biluo_tags = iob_to_biluo(tags)
+> assert biluo_tags == ["O", "O", "B-LOC", "L-LOC", "O"]
+> ```
+
+| Name        | Description                                                                           |
+| ----------- | ------------------------------------------------------------------------------------- |
+| `tags`      | A sequence of [IOB](/usage/linguistic-features#accessing-ner) tags. ~~Iterable[str]~~ |
+| **RETURNS** | A list of [BILUO](/usage/linguistic-features#accessing-ner) tags. ~~List[str]~~       |
+
 ## Utility functions {#util source="spacy/util.py"}
 
 spaCy comes with a small collection of utility functions located in
