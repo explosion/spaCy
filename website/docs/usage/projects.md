@@ -259,9 +259,9 @@ pipelines.
 > This can be used in a project command like so:
 >
 > ```yaml
->   - name: "echo-path"
->     script:
->       - "echo ${env.ENV_PATH}"
+> - name: 'echo-path'
+>   script:
+>     - 'echo ${env.ENV_PATH}'
 > ```
 
 | Section                                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -643,12 +643,13 @@ locally.
 
 You can list one or more remotes in the `remotes` section of your
 [`project.yml`](#project-yml) by mapping a string name to the URL of the
-storage. Under the hood, spaCy uses the
-[`smart-open`](https://github.com/RaRe-Technologies/smart_open) library to
-communicate with the remote storages, so you can use any protocol that
-`smart-open` supports, including [S3](https://aws.amazon.com/s3/),
-[Google Cloud Storage](https://cloud.google.com/storage), SSH and more, although
-you may need to install extra dependencies to use certain protocols.
+storage. Under the hood, spaCy uses
+[`Pathy`](https://github.com/justindujardin/pathy) to communicate with the
+remote storages, so you can use any protocol that `Pathy` supports, including
+[S3](https://aws.amazon.com/s3/),
+[Google Cloud Storage](https://cloud.google.com/storage), and the local
+filesystem, although you may need to install extra dependencies to use certain
+protocols.
 
 > #### Example
 >
@@ -661,7 +662,6 @@ you may need to install extra dependencies to use certain protocols.
 remotes:
   default: 's3://my-spacy-bucket'
   local: '/mnt/scratch/cache'
-  stuff: 'ssh://myserver.example.com/whatever'
 ```
 
 <Infobox title="How it works" emoji="💡">
@@ -1010,54 +1010,6 @@ expected data types.
 
 ```python
 https://github.com/explosion/projects/blob/v3/integrations/fastapi/scripts/main.py
-```
-
----
-
-### Ray {#ray} <IntegrationLogo name="ray" width={100} height="auto" align="right" />
-
-> #### Installation
->
-> ```cli
-> $ pip install -U %%SPACY_PKG_NAME[ray]%%SPACY_PKG_FLAGS
-> # Check that the CLI is registered
-> $ python -m spacy ray --help
-> ```
-
-[Ray](https://ray.io/) is a fast and simple framework for building and running
-**distributed applications**. You can use Ray for parallel and distributed
-training with spaCy via our lightweight
-[`spacy-ray`](https://github.com/explosion/spacy-ray) extension package. If the
-package is installed in the same environment as spaCy, it will automatically add
-[`spacy ray`](/api/cli#ray) commands to your spaCy CLI. See the usage guide on
-[parallel training](/usage/training#parallel-training) for more details on how
-it works under the hood.
-
-<Project id="integrations/ray">
-
-Get started with parallel training using our project template. It trains a
-simple model on a Universal Dependencies Treebank and lets you parallelize the
-training with Ray.
-
-</Project>
-
-You can integrate [`spacy ray train`](/api/cli#ray-train) into your
-`project.yml` just like the regular training command and pass it the config, and
-optional output directory or remote storage URL and config overrides if needed.
-
-<!-- prettier-ignore -->
-```yaml
-### project.yml
-commands:
-  - name: "ray"
-    help: "Train a model via parallel training with Ray"
-    script:
-      - "python -m spacy ray train configs/config.cfg -o training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
-    deps:
-      - "corpus/train.spacy"
-      - "corpus/dev.spacy"
-    outputs:
-      - "training/model-best"
 ```
 
 ---

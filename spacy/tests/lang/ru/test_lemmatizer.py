@@ -81,6 +81,7 @@ def test_ru_lemmatizer_punct(ru_lemmatizer):
 
 
 def test_ru_doc_lookup_lemmatization(ru_lookup_lemmatizer):
+    assert ru_lookup_lemmatizer.mode == "pymorphy3_lookup"
     words = ["мама", "мыла", "раму"]
     pos = ["NOUN", "VERB", "NOUN"]
     morphs = [
@@ -92,3 +93,17 @@ def test_ru_doc_lookup_lemmatization(ru_lookup_lemmatizer):
     doc = ru_lookup_lemmatizer(doc)
     lemmas = [token.lemma_ for token in doc]
     assert lemmas == ["мама", "мыла", "раму"]
+
+
+@pytest.mark.parametrize(
+    "word,lemma",
+    (
+        ("бременем", "бремя"),
+        ("будешь", "быть"),
+        ("какая-то", "какой-то"),
+    ),
+)
+def test_ru_lookup_lemmatizer(ru_lookup_lemmatizer, word, lemma):
+    assert ru_lookup_lemmatizer.mode == "pymorphy3_lookup"
+    doc = Doc(ru_lookup_lemmatizer.vocab, words=[word])
+    assert ru_lookup_lemmatizer(doc)[0].lemma_ == lemma
