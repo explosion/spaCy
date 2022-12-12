@@ -316,7 +316,6 @@ cdef class StringStore:
         self.keys.push_back(key)
         return value
 
-    @cython.boundscheck(False)  # Deactivate bounds checking
     cdef (const unsigned char*, int) utf8_ptr(self, const attr_t hash_val):
         # Returns a pointer to the UTF-8 string together with its length in bytes.
         # This method presumes the calling code has already checked that *hash_val*

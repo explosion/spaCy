@@ -4,7 +4,6 @@ import weakref
 import numpy
 from time import time
 from numpy.testing import assert_array_equal
-from murmurhash.mrmr import hash
 import pytest
 import warnings
 from thinc.api import NumpyOps, get_current_ops
@@ -1017,10 +1016,10 @@ def _get_fnv1a_hash(input: bytes) -> int:
 def test_fnv1a_hash():
     """Checks the conformity of the 64-bit FNV1A implementation with
     http://www.isthe.com/chongo/src/fnv/test_fnv.c.
-    The method called here, _get_fnv1a_hash(), is only used in testing; 
+    The method called here, _get_fnv1a_hash(), is only used in testing;
     in production code, the hashing is performed in a fashion that is interweaved
-    with other logic. The conformity of the production code is demonstrated by the 
-    character combination hash tests, where hashes produced by the production code 
+    with other logic. The conformity of the production code is demonstrated by the
+    character combination hash tests, where hashes produced by the production code
     are tested for equality against hashes produced by _get_fnv1a_hash().
     """
     INPUTS = [
@@ -1458,7 +1457,7 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
         "xx✨rp", case_sensitive
     )
     hashes = doc.get_character_combination_hashes(
-        cs=case_sensitive,
+        case_sensitive=case_sensitive,
         p_lengths=bytes(
             (
                 1,
@@ -1539,7 +1538,7 @@ def test_get_character_combination_hashes_good_case_partial(en_tokenizer):
     doc = en_tokenizer("spaCy✨ and Prodigy")
     ps_search_chars, ps_width_offsets = get_search_char_byte_arrays("rp", False)
     hashes = doc.get_character_combination_hashes(
-        cs=False,
+        case_sensitive=False,
         p_lengths=bytes(),
         s_lengths=bytes(
             (
@@ -1586,7 +1585,7 @@ def test_get_character_combination_hashes_various_lengths(en_tokenizer):
         for s_length in range(1, 8):
 
             hashes = doc.get_character_combination_hashes(
-                cs=False,
+                case_sensitive=False,
                 p_lengths=bytes((p_length,)),
                 s_lengths=bytes((s_length,)),
                 ps_search_chars=bytes(),
@@ -1608,7 +1607,7 @@ def test_get_character_combination_hashes_turkish_i_with_dot(
     doc = en_tokenizer("İ".lower() + "İ")
     search_chars, width_offsets = get_search_char_byte_arrays("İ", case_sensitive)
     hashes = doc.get_character_combination_hashes(
-        cs=case_sensitive,
+        case_sensitive=case_sensitive,
         p_lengths=bytes(
             (
                 1,
@@ -1696,7 +1695,7 @@ def test_get_character_combination_hashes_string_store_spec_cases(
     assert len(doc) == 4
     ps_search_chars, ps_width_offsets = get_search_char_byte_arrays("E", case_sensitive)
     hashes = doc.get_character_combination_hashes(
-        cs=case_sensitive,
+        case_sensitive=case_sensitive,
         p_lengths=bytes((2,)),
         s_lengths=bytes((2,)),
         ps_search_chars=ps_search_chars,
@@ -1726,7 +1725,7 @@ def test_get_character_combination_hashes_string_store_spec_cases(
 def test_character_combination_hashes_empty_lengths(en_tokenizer):
     doc = en_tokenizer("and𐌞")
     assert doc.get_character_combination_hashes(
-        cs=True,
+        case_sensitive=True,
         p_lengths=bytes(),
         s_lengths=bytes(),
         ps_search_chars=bytes(),

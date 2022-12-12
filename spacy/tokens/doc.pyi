@@ -177,7 +177,7 @@ class Doc:
     def get_character_combination_hashes(
         self,
         *,
-        cs: bool,
+        case_sensitive: bool,
         p_lengths: bytes,
         s_lengths: bytes,
         ps_search_chars: bytes,

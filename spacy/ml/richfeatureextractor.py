@@ -69,7 +69,7 @@ def forward(
     features: List[Ints2d] = []
     for doc in docs:
         hashes = doc.get_character_combination_hashes(
-            cs=case_sensitive,
+            case_sensitive=case_sensitive,
             p_lengths=p_lengths,
             s_lengths=s_lengths,
             ps_search_chars=ps_search_chars,

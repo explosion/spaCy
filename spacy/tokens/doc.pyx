@@ -41,6 +41,7 @@ from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
 from ..util import get_words_and_spaces
 
 DEF PADDING = 5
+MAX_UTF8_CHAR_BYTE_WIDTH = 4
 
 cdef int bounds_check(int i, int length, int padding) except -1:
     if (i + padding) < 0:
@@ -1743,10 +1744,9 @@ cdef class Doc:
                     j += 1
         return output
 
-    @cython.boundscheck(False)  # Deactivate bounds checking
     def get_character_combination_hashes(self,
         *,
-        const bint cs, 
+        const bint case_sensitive, 
         const unsigned char* p_lengths,
         const unsigned char* s_lengths,
         const unsigned char* ps_search_chars,
@@ -1789,8 +1789,8 @@ cdef class Doc:
     
         Many of the buffers passed into and used by this method contain single-byte numerical values. This takes advantage of 
         the fact that we are hashing short affixes and searching for small groups of characters. The calling code is responsible
-        for ensuring that lengths being passed in cannot exceed 63 and hence that resulting values with maximally four-byte 
-        character widths can never exceed 255.
+        for ensuring that lengths being passed in cannot exceed 63 and hence, with maximally four-byte 
+        character widths, that individual values within buffers can never exceed the capacity of a single byte (255).
 
         Note that this method performs no data validation itself as it expects the calling code will already have done so, and
         that the behaviour of the code may be erratic if the supplied parameters do not conform to expectations.
@@ -1809,12 +1809,14 @@ cdef class Doc:
         
         # Define / allocate buffers
         cdef Pool mem = Pool()
-        cdef unsigned char* pref_l_buf = <unsigned char*> mem.alloc(p_max_l, 1)
-        cdef unsigned char* suff_l_buf = <unsigned char*> mem.alloc(s_max_l, 1)
-        cdef unsigned char* ps_res_buf = <unsigned char*> mem.alloc(ps_max_l, 4)
-        cdef unsigned char* ps_l_buf = <unsigned char*> mem.alloc(ps_max_l, 1)
-        cdef unsigned char* ss_res_buf = <unsigned char*> mem.alloc(ss_max_l, 4)
-        cdef unsigned char* ss_l_buf = <unsigned char*> mem.alloc(ss_max_l, 1)
+        cdef unsigned char* pref_l_buf = <unsigned char*> mem.alloc(p_max_l, sizeof(char))
+        cdef unsigned char* suff_l_buf = <unsigned char*> mem.alloc(s_max_l, sizeof(char))
+        cdef unsigned char* ps_res_buf = <unsigned char*> mem.alloc(ps_max_l, 
+            MAX_UTF8_CHAR_BYTE_WIDTH * sizeof(char))
+        cdef unsigned char* ps_l_buf = <unsigned char*> mem.alloc(ps_max_l, sizeof(char))
+        cdef unsigned char* ss_res_buf = <unsigned char*> mem.alloc(ss_max_l, 
+            MAX_UTF8_CHAR_BYTE_WIDTH * sizeof(char))
+        cdef unsigned char* ss_l_buf = <unsigned char*> mem.alloc(ss_max_l, sizeof(char))
         cdef int doc_l = self.length
         cdef np.ndarray[np.uint64_t, ndim=2] hashes = numpy.empty(
             (doc_l, hashes_per_tok), dtype="uint64")
@@ -1829,7 +1831,7 @@ cdef class Doc:
         
         for tok_i in range(doc_l):
             tok_c = self.c[tok_i]
-            num_tok_attr = tok_c.lex.orth if cs else tok_c.lex.lower
+            num_tok_attr = tok_c.lex.orth if case_sensitive else tok_c.lex.lower
             if num_tok_attr < len(SYMBOLS_BY_INT): # hardly ever happens
                 if num_tok_attr == 0:
                     tok_str_bytes = b""
@@ -2042,21 +2044,22 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
     return lca_matrix
 
 
-@cython.boundscheck(False)  # Deactivate bounds checking
 cdef void _set_prefix_lengths(
     const unsigned char* tok_str,
     const int tok_str_l,
     const int p_max_l, 
     unsigned char* pref_l_buf,
 ) nogil:
-    """ Populate *pref_l_buf*, which has length *pref_l*, with the byte lengths of the first *pref_l* characters within *tok_str*. 
-        Lengths that are greater than the character length of the whole word are populated with the byte length of the whole word.
+    """ Populate *pref_l_buf*, which has length *p_max_l*, with the byte lengths of each of the substrings terminated by the first *p_max_l* 
+        characters within *tok_str*. Lengths that are greater than the character length of the whole word are populated with the byte length 
+        of the whole word.
 
         tok_str: a UTF-8 representation of a string.
         tok_str_l: the length of *tok_str*.
         p_max_l: the number of characters to process at the beginning of the word.
-        pref_l_buf: a buffer of length *p_max_l* in which to store the lengths. The calling code ensures that lengths
-            greater than 255 cannot occur.
+        pref_l_buf: a buffer of length *p_max_l* in which to store the lengths. The code calling *get_character_combination_hashes()* is 
+        responsible for ensuring that *p_max_l* cannot exceed 63 and hence, with maximally four-byte character widths, that individual values 
+        within the buffer can never exceed the capacity of a single byte (255).
     """
     cdef int tok_str_idx = 1, pref_l_buf_idx = 0
 
@@ -2075,21 +2078,22 @@ cdef void _set_prefix_lengths(
         memset(pref_l_buf + pref_l_buf_idx, pref_l_buf[pref_l_buf_idx - 1], p_max_l - pref_l_buf_idx)
 
 
-@cython.boundscheck(False)  # Deactivate bounds checking
 cdef void _set_suffix_lengths(
     const unsigned char* tok_str,
     const int tok_str_l,
     const int s_max_l,
     unsigned char* suff_l_buf,
 ) nogil:
-    """ Populate *suff_l_buf*, which has length *suff_l*, with the byte lengths of the last *suff_l* characters within *tok_str*. 
-        Lengths that are greater than the character length of the whole word are populated with the byte length of the whole word.
+    """ Populate *suff_l_buf*, which has length *s_max_l*, with the byte lengths of each of the substrings started by the last *s_max_l* 
+        characters within *tok_str*. Lengths that are greater than the character length of the whole word are populated with the byte length 
+        of the whole word.
 
         tok_str: a UTF-8 representation of a string.
         tok_str_l: the length of *tok_str*.
         s_max_l: the number of characters to process at the end of the word.
-        suff_l_buf: a buffer of length *s_max_l* in which to store the lengths. The calling code ensures that lengths
-            greater than 255 cannot occur.
+        suff_l_buf: a buffer of length *s_max_l* in which to store the lengths. The code calling *get_character_combination_hashes()* is 
+        responsible for ensuring that *s_max_l* cannot exceed 63 and hence, with maximally four-byte character widths, that individual values 
+        within the buffer can never exceed the capacity of a single byte (255).
     """
     cdef int tok_str_idx = tok_str_l - 1, suff_l_buf_idx = 0
 
@@ -2105,7 +2109,6 @@ cdef void _set_suffix_lengths(
         memset(suff_l_buf + suff_l_buf_idx, suff_l_buf[suff_l_buf_idx - 1], s_max_l - suff_l_buf_idx)
 
 
-@cython.boundscheck(False)  # Deactivate bounds checking
 cdef void _search_for_chars(
     const unsigned char* tok_str,
     const int tok_str_l,
