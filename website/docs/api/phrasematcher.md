@@ -36,11 +36,11 @@ be shown.
 > matcher = PhraseMatcher(nlp.vocab)
 > ```
 
-| Name                                    | Description                                                                                            |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `vocab`                                 | The vocabulary object, which must be shared with the documents the matcher will operate on. ~~Vocab~~  |
-| `attr` <Tag variant="new">2.1</Tag>     | The token attribute to match on. Defaults to `ORTH`, i.e. the verbatim token text. ~~Union[int, str]~~ |
-| `validate` <Tag variant="new">2.1</Tag> | Validate patterns added to the matcher. ~~bool~~                                                       |
+| Name       | Description                                                                                            |
+| ---------- | ------------------------------------------------------------------------------------------------------ |
+| `vocab`    | The vocabulary object, which must be shared with the documents the matcher will operate on. ~~Vocab~~  |
+| `attr`     | The token attribute to match on. Defaults to `ORTH`, i.e. the verbatim token text. ~~Union[int, str]~~ |
+| `validate` | Validate patterns added to the matcher. ~~bool~~                                                       |
 
 ## PhraseMatcher.\_\_call\_\_ {#call tag="method"}
 

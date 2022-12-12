@@ -37,6 +37,15 @@ bn:
     accuracy:
       name: sagorsarker/bangla-bert-base
       size_factor: 3
+ca:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: projecte-aina/roberta-base-ca-v2
+      size_factor: 3
+    accuracy:
+      name: projecte-aina/roberta-base-ca-v2
+      size_factor: 3
 da:
   word_vectors: da_core_news_lg
   transformer:
@@ -271,4 +280,3 @@ zh:
     accuracy:
       name: bert-base-chinese
       size_factor: 3
-  has_letters: false

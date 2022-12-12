@@ -1,7 +1,6 @@
 from typing import cast, Any, Callable, Dict, Iterable, List, Optional
-from typing import Sequence, Tuple, Union
+from typing import Tuple
 from collections import Counter
-from copy import deepcopy
 from itertools import islice
 import numpy as np
 
@@ -149,9 +148,7 @@ class EditTreeLemmatizer(TrainablePipe):
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.cfg["labels"])
-            guesses: List[Ints2d] = [
-                self.model.ops.alloc((0, n_labels), dtype="i") for doc in docs
-            ]
+            guesses: List[Ints2d] = [self.model.ops.alloc2i(0, n_labels) for _ in docs]
             assert len(guesses) == n_docs
             return guesses
         scores = self.model.predict(docs)
@@ -331,9 +328,9 @@ class EditTreeLemmatizer(TrainablePipe):
 
             tree = dict(tree)
             if "orig" in tree:
-                tree["orig"] = self.vocab.strings[tree["orig"]]
+                tree["orig"] = self.vocab.strings.add(tree["orig"])
             if "orig" in tree:
-                tree["subst"] = self.vocab.strings[tree["subst"]]
+                tree["subst"] = self.vocab.strings.add(tree["subst"])
 
             trees.append(tree)
 

@@ -60,10 +60,45 @@ def test_initialize_from_labels():
     nlp2 = Language()
     lemmatizer2 = nlp2.add_pipe("trainable_lemmatizer")
     lemmatizer2.initialize(
-        get_examples=lambda: train_examples,
+        # We want to check that the strings in replacement nodes are
+        # added to the string store. Avoid that they get added through
+        # the examples.
+        get_examples=lambda: train_examples[:1],
         labels=lemmatizer.label_data,
     )
     assert lemmatizer2.tree2label == {1: 0, 3: 1, 4: 2, 6: 3}
+    assert lemmatizer2.label_data == {
+        "trees": [
+            {"orig": "S", "subst": "s"},
+            {
+                "prefix_len": 1,
+                "suffix_len": 0,
+                "prefix_tree": 0,
+                "suffix_tree": 4294967295,
+            },
+            {"orig": "s", "subst": ""},
+            {
+                "prefix_len": 0,
+                "suffix_len": 1,
+                "prefix_tree": 4294967295,
+                "suffix_tree": 2,
+            },
+            {
+                "prefix_len": 0,
+                "suffix_len": 0,
+                "prefix_tree": 4294967295,
+                "suffix_tree": 4294967295,
+            },
+            {"orig": "E", "subst": "e"},
+            {
+                "prefix_len": 1,
+                "suffix_len": 0,
+                "prefix_tree": 5,
+                "suffix_tree": 4294967295,
+            },
+        ],
+        "labels": (1, 3, 4, 6),
+    }
 
 
 def test_no_data():
