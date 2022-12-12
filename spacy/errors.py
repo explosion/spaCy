@@ -960,8 +960,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
     E1048 = ("No port available found for displacy on host {host}. Please specify an available port "
              "by `displacy.serve(doc, port)`")
-    E1049 = ("Port {port} is already in use. Please specify an available port by `displacy.serve(doc, port) "
-             "or let displacy automatically find a port by `displacy.serve(doc, auto_switch_port=True)`.")
+    E1049 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port)` "
+             "or use `auto_switch_port=True` to pick an available port automatically.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
