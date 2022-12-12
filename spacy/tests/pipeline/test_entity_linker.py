@@ -1200,16 +1200,9 @@ def test_threshold(meet_threshold: bool, config: Dict[str, Any]):
         "entity_linker",
         last=True,
         config={
-            **(
-                {"threshold": None}
-                if meet_threshold
-                else {
-                    "threshold": 1.0,
-                    # Prior for candidate may be 1.0, rendering the our test setting with threshold 1.0 useless
-                    # otherwise.
-                    "incl_prior": False,
-                }
-            ),
+            "threshold": None if meet_threshold else 1.0,
+            # Prior for candidate may be 1.0, rendering the our test setting with threshold 1.0 useless otherwise.
+            "incl_prior": meet_threshold,
             "model": config,
         },
     )
