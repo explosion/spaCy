@@ -37,3 +37,6 @@ next-env.d.ts
 
 !.vscode/extensions.json
 !public
+
+public/robots.txt
+public/sitemap*
