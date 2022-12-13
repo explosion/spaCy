@@ -38,7 +38,6 @@ const DropdownNavigation = ({ items, defaultValue }) => {
 }
 
 export default function Sidebar({ items = [], pageMenu = [], slug }) {
-    const [initialized, setInitialized] = useState(false)
     const [activeSection, setActiveSection] = useState(null)
     const activeRef = useRef()
     const activeHeading = getActiveHeading(items, slug)
@@ -46,16 +45,10 @@ export default function Sidebar({ items = [], pageMenu = [], slug }) {
     useEffect(() => {
         const handleInView = ({ detail }) => setActiveSection(detail)
         window.addEventListener('inview', handleInView, { passive: true })
-        if (!initialized) {
-            if (activeRef && activeRef.current) {
-                activeRef.current.scrollIntoView({ block: 'center' })
-            }
-            setInitialized(true)
-        }
         return () => {
             window.removeEventListener('inview', handleInView)
         }
-    }, [initialized])
+    })
 
     return (
         <menu className={classNames('sidebar', classes['root'])}>
