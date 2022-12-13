@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
-import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
+import Prism from 'prismjs'
+
+import 'prismjs/components/prism-ini.min.js'
 
 import { Quickstart } from '../components/quickstart'
 import generator, { DATA as GENERATOR_DATA } from './quickstart-training-generator'
@@ -108,11 +110,7 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
     })
     const rawStr = content.trim().replace(/\n\n\n+/g, '\n\n')
     const rawContent = `${COMMENT}\n${rawStr}`
-    const displayContent = highlightCode('ini', rawContent)
-        .split('\n')
-        .map((line) => (line.startsWith('#') ? `<span class="token comment">${line}</span>` : line))
-        .join('\n')
-
+    const displayContent = Prism.highlight(rawContent, Prism.languages.ini, 'ini')
     let data = DATA
     data[0].dropdown = models.languages
         .map(({ name, code }) => ({
