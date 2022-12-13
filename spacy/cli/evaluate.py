@@ -4,20 +4,20 @@ from pathlib import Path
 import re
 import srsly
 from thinc.api import fix_random_seed
-import typer
 
 from ..training import Corpus
 from ..tokens import Doc
-from ._util import Arg, Opt, evaluate_cli, setup_gpu, import_code
+from ._util import app, Arg, Opt, setup_gpu, import_code, benchmark_cli
 from ..scorer import Scorer
 from .. import util
 from .. import displacy
 
-
-@evaluate_cli.command("accuracy", context_settings={"allow_extra_args": True, "ignore_unknown_options": True},)
-def accuracy_cli(
+@benchmark_cli.command(
+    "accuracy",
+)
+@app.command("evaluate")
+def evaluate_cli(
     # fmt: off
-    ctx: typer.Context,
     model: str = Arg(..., help="Model name or path"),
     data_path: Path = Arg(..., help="Location of binary evaluation data in .spacy format", exists=True),
     output: Optional[Path] = Opt(None, "--output", "-o", help="Output JSON file for metrics", dir_okay=False),

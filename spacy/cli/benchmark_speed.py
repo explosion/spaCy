@@ -11,14 +11,14 @@ from .. import util
 from ..language import Language
 from ..tokens import Doc
 from ..training import Corpus
-from ._util import Arg, Opt, evaluate_cli, setup_gpu
+from ._util import Arg, Opt, benchmark_cli, setup_gpu
 
 
-@evaluate_cli.command(
+@benchmark_cli.command(
     "speed",
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
-def benchmark_cli(
+def benchmark_speed_cli(
     ctx: typer.Context,
     model: str = Arg(..., help="Model name or path"),
     data_path: Path = Arg(
