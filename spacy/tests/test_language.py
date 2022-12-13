@@ -152,7 +152,7 @@ def test_evaluate_no_pipe(nlp):
 def test_evaluate_textcat_multilabel(nlp_tcm):
     """Test that evaluate works with a multilabel textcat pipe."""
     text = "hello world"
-    annots = {"doc_annotation": {"cats": {"FEATURE": 1.0, "QUESTION": 1.0}}}
+    annots = {"cats": {"FEATURE": 1.0, "QUESTION": 1.0}}
     doc = Doc(nlp_tcm.vocab, words=text.split(" "))
     example = Example.from_dict(doc, annots)
     scores = nlp_tcm.evaluate([example])
@@ -169,8 +169,13 @@ def test_evaluate_multiple_textcat(nlp_tc_tcm):
     with more than one textcat or textcat_multilabel."""
     text = "hello world"
     annots = {
-        "doc_annotation": {
-            "cats": {"FEATURE": 1.0, "QUESTION": 1.0, "POSITIVE": 1.0, "NEGATIVE": 0.0}
+        "cats": {
+            "POSITIVE": 1.0,
+            "NEGATIVE": 0.0,
+            "FEATURE": 1.0,
+            "QUESTION": 1.0,
+            "POSITIVE": 1.0,
+            "NEGATIVE": 0.0,
         }
     }
     doc = Doc(nlp_tc_tcm.vocab, words=text.split(" "))
