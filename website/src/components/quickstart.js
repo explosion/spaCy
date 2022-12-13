@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect, useRef } from 'react'
+import React, { Fragment, useState, useEffect, useRef, Children } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import { window, document } from 'browser-monads'
@@ -36,7 +36,6 @@ const Quickstart = ({
     const isClient = typeof window !== 'undefined'
     const supportsCopy = isClient && document.queryCommandSupported('copy')
     const showCopy = supportsCopy && copy
-    const [styles, setStyles] = useState({})
     const [checked, setChecked] = useState({})
     const [initialized, setInitialized] = useState(false)
     const [copySuccess, setCopySuccess] = useState(false)
@@ -57,14 +56,6 @@ const Quickstart = ({
         copyToClipboard(copyAreaRef, setCopySuccess)
     }
 
-    const getCss = (id, checkedOptions) => {
-        const checkedForId = checkedOptions[id] || []
-        const exclude = checkedForId
-            .map((value) => `:not([data-quickstart-${id}="${value}"])`)
-            .join('')
-        return `[data-quickstart-results]>[data-quickstart-${id}]${exclude} {display: none}`
-    }
-
     useEffect(() => {
         window.dispatchEvent(new Event('resize')) // scroll position for progress
         if (!initialized) {
@@ -74,15 +65,24 @@ const Quickstart = ({
                     [id]: options.filter((option) => option.checked).map(({ id }) => id),
                 }))
             )
-            const initialStyles = Object.assign(
-                {},
-                ...data.map(({ id }) => ({ [id]: getCss(id, initialChecked) }))
-            )
             setChecked(initialChecked)
-            setStyles(initialStyles)
             setInitialized(true)
         }
     }, [data, initialized])
+
+    const isRelevant = (child) => {
+        if (typeof child === 'string' || child.type !== QS) {
+            return true
+        }
+
+        return data.every((itemData) => {
+            return (
+                !child.props[itemData.id] ||
+                !checked[itemData.id] ||
+                checked[itemData.id].includes(child.props[itemData.id])
+            )
+        })
+    }
 
     return !data.length ? null : (
         <Container id={id}>
@@ -117,10 +117,6 @@ const Quickstart = ({
                         const dropdownGetter = showDropdown[id] || (() => true)
                         return hidden ? null : (
                             <div key={id} data-quickstart-group={id} className={classes['group']}>
-                                <style data-quickstart-style={id} scoped>
-                                    {styles[id] ||
-                                        `[data-quickstart-results]>[data-quickstart-${id}] { display: none }`}
-                                </style>
                                 <div className={classes['legend']}>
                                     {title}
                                     {help && (
@@ -147,10 +143,6 @@ const Quickstart = ({
                                                             ),
                                                         }
                                                         setChecked(newChecked)
-                                                        setStyles({
-                                                            ...styles,
-                                                            [id]: getCss(id, newChecked),
-                                                        })
                                                         setterFunc(newChecked[id])
                                                     }}
                                                     type={optionType}
@@ -231,7 +223,7 @@ const Quickstart = ({
                         data-quickstart-results=""
                         ref={contentRef}
                     >
-                        {children}
+                        {Children.toArray(children).flat().filter(isRelevant)}
                     </code>
 
                     <menu className={classes['menu']}>
@@ -295,17 +287,7 @@ const QS = ({ children, prompt = 'bash', divider = false, comment = false, ...pr
         [classes['divider']]: !!divider,
         [classes['comment']]: !!comment,
     })
-    const attrs = Object.assign(
-        {},
-        ...Object.keys(props).map((key) => ({
-            [`data-quickstart-${key}`]: props[key],
-        }))
-    )
-    return (
-        <span className={qsClassNames} {...attrs}>
-            {children}
-        </span>
-    )
+    return <span className={qsClassNames}>{children}</span>
 }
 
 export { Quickstart, QS }
