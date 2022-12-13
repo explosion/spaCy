@@ -328,9 +328,9 @@ class EditTreeLemmatizer(TrainablePipe):
 
             tree = dict(tree)
             if "orig" in tree:
-                tree["orig"] = self.vocab.strings[tree["orig"]]
+                tree["orig"] = self.vocab.strings.add(tree["orig"])
             if "orig" in tree:
-                tree["subst"] = self.vocab.strings[tree["subst"]]
+                tree["subst"] = self.vocab.strings.add(tree["subst"])
 
             trees.append(tree)
 

@@ -158,15 +158,15 @@ def load_project_config(
         sys.exit(1)
     validate_project_version(config)
     validate_project_commands(config)
+    if interpolate:
+        err = f"{PROJECT_FILE} validation error"
+        with show_validation_error(title=err, hint_fill=False):
+            config = substitute_project_variables(config, overrides)
     # Make sure directories defined in config exist
     for subdir in config.get("directories", []):
         dir_path = path / subdir
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
-    if interpolate:
-        err = f"{PROJECT_FILE} validation error"
-        with show_validation_error(title=err, hint_fill=False):
-            config = substitute_project_variables(config, overrides)
     return config
 
 
