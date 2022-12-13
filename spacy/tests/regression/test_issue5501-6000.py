@@ -49,8 +49,8 @@ def test_issue5551(textcat_config):
     # All results should be the same because of the fixed seed
     assert len(results) == 3
     ops = get_current_ops()
-    assert_almost_equal(ops.to_numpy(results[0]), ops.to_numpy(results[1]))
-    assert_almost_equal(ops.to_numpy(results[0]), ops.to_numpy(results[2]))
+    assert_almost_equal(ops.to_numpy(results[0]), ops.to_numpy(results[1]), decimal=5)
+    assert_almost_equal(ops.to_numpy(results[0]), ops.to_numpy(results[2]), decimal=5)
 
 
 def test_issue5838():
