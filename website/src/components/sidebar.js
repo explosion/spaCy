@@ -44,9 +44,9 @@ export default function Sidebar({ items = [], pageMenu = [], slug }) {
 
     useEffect(() => {
         const handleInView = ({ detail }) => setActiveSection(detail)
-        window.addEventListener('inview', handleInView, { passive: true })
+        window.addEventListener('SPACY_SCROLL_HANDLER', handleInView, { passive: true })
         return () => {
-            window.removeEventListener('inview', handleInView)
+            window.removeEventListener('SPACY_SCROLL_HANDLER', handleInView)
         }
     })
 
