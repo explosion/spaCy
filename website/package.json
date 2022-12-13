@@ -43,6 +43,7 @@
         "remark": "^14.0.2",
         "remark-gfm": "^3.0.1",
         "remark-react": "^9.0.1",
+        "remark-smartypants": "^2.0.0",
         "remark-unwrap-images": "^3.0.1",
         "sass": "^1.56.1",
         "typescript": "4.8.4",
