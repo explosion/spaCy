@@ -150,7 +150,7 @@ const QuickstartInstall = ({ id, title }) => {
     }
     return (
         <Quickstart data={data} title={title} id={id} setters={setters} showDropdown={showDropdown}>
-            <QS os="mac" hardware="gpu" platform="arm">
+            <QS os="mac" hardware="gpu" platform="arm" comment prompt={false}>
                 # Note M1 GPU support is experimental, see{' '}
                 <a href="https://github.com/explosion/thinc/issues/792">Thinc issue #792</a>
             </QS>
