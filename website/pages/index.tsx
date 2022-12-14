@@ -29,6 +29,7 @@ import tailoredPipelinesImage from '../public/images/spacy-tailored-pipelines_wi
 import { nightly, legacy } from '../meta/dynamicMeta.mjs'
 
 import Benchmarks from '../docs/usage/_benchmarks-models.mdx'
+import { ImageFill } from '../src/components/embed'
 
 function getCodeExample(nightly) {
     return `# pip install -U ${nightly ? 'spacy-nightly --pre' : 'spacy'}
@@ -113,7 +114,10 @@ const Landing = () => {
                 >
                     <p>
                         <Link to="https://explosion.ai/custom-solutions" hidden>
-                            <img src={tailoredPipelinesImage.src} alt="spaCy Tailored Pipelines" />
+                            <ImageFill
+                                image={tailoredPipelinesImage}
+                                alt="spaCy Tailored Pipelines"
+                            />
                         </Link>
                     </p>
                     <p>
@@ -159,9 +163,8 @@ const Landing = () => {
                 >
                     <p>
                         <Link to="https://prodi.gy" hidden>
-                            {/** Update image */}
-                            <img
-                                src={prodigyImage.src}
+                            <ImageFill
+                                image={prodigyImage}
                                 alt="Prodigy: Radically efficient machine teaching"
                             />
                         </Link>
@@ -203,7 +206,7 @@ const Landing = () => {
             <LandingGrid cols={2}>
                 <LandingCol>
                     <Link to="/usage/projects" hidden>
-                        <img src={projectsImage.src} />
+                        <ImageFill image={projectsImage} />
                     </Link>
                     <br />
                     <br />
@@ -259,8 +262,8 @@ const Landing = () => {
                 >
                     <p>
                         <Link to="https://course.spacy.io" hidden>
-                            <img
-                                src={courseImage.src}
+                            <ImageFill
+                                image={courseImage}
                                 alt="Advanced NLP with spaCy: A free online course"
                             />
                         </Link>

@@ -122,10 +122,11 @@ export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (
 
     const next =
         section === 'usage'
-            ? sidebarUsageFlat.find(
-                  (item, index) =>
-                      index > 0 && sidebarUsageFlat[index - 1].url === slug && item[0] === '/'
-              )
+            ? sidebarUsageFlat.find((item, index) => {
+                  return (
+                      index > 0 && sidebarUsageFlat[index - 1].url === slug && item.url[0] === '/'
+                  )
+              })
             : undefined
 
     return {

@@ -1,6 +1,7 @@
 import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
+import ImageNext from 'next/image'
 
 import Link from './link'
 import Button from './button'
@@ -88,6 +89,7 @@ const Image = ({ src, alt, title, href, ...props }) => {
     return (
         <figure className="gatsby-resp-image-figure">
             <Link className={linkClassNames} href={href ?? src} hidden forceExternal>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className={classes.image} src={src} alt={alt} width={650} height="auto" />
             </Link>
             {title && (
@@ -96,6 +98,17 @@ const Image = ({ src, alt, title, href, ...props }) => {
                 </figcaption>
             )}
         </figure>
+    )
+}
+
+const ImageFill = ({ image, ...props }) => {
+    return (
+        <span
+            class={classes['figure-fill']}
+            style={{ paddingBottom: `${(image.height / image.width) * 100}%` }}
+        >
+            <ImageNext src={image.src} {...props} fill />
+        </span>
     )
 }
 
@@ -118,4 +131,4 @@ const GoogleSheet = ({ id, link, height, button = 'View full table' }) => {
     )
 }
 
-export { YouTube, SoundCloud, Iframe, Image, GoogleSheet }
+export { YouTube, SoundCloud, Iframe, Image, ImageFill, GoogleSheet }
