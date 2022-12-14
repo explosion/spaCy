@@ -20,6 +20,7 @@ import { github, MarkdownToReact } from '../components/util'
 
 import { nightly, legacy } from '../../meta/dynamicMeta.mjs'
 import universe from '../../meta/universe.json'
+import Image from 'next/image'
 
 function filterResources(resources, data) {
     const sorted = resources.sort((a, b) => a.id.localeCompare(b.id))
@@ -80,6 +81,7 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                                     }
                                     const url = `/universe/project/${id}`
                                     const header = youtube && (
+                                        // eslint-disable-next-line @next/next/no-img-element
                                         <img
                                             src={`https://img.youtube.com/vi/${youtube}/0.jpg`}
                                             alt=""
@@ -92,6 +94,7 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                                     return cover ? (
                                         <p key={id}>
                                             <Link key={id} to={url} hidden>
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img src={cover} alt={title || id} />
                                             </Link>
                                         </p>
@@ -205,6 +208,7 @@ const Project = ({ data, components }) => (
                                 `license/${data.github}.svg?style=flat-square`,
                                 `stars/${data.github}.svg?style=social&label=Stars`,
                             ].map((url, i) => (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     style={{
                                         borderRadius: '1em',
@@ -236,6 +240,7 @@ const Project = ({ data, components }) => (
 
         {data.cover && (
             <p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={data.cover} alt={data.title} width={250} style={{ maxWidth: '50%' }} />
             </p>
         )}
@@ -266,6 +271,7 @@ const Project = ({ data, components }) => (
 
             {data.image && (
                 <p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={data.image} style={{ maxWidth: '100%' }} alt="" />
                 </p>
             )}
