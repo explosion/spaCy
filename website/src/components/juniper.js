@@ -54,7 +54,7 @@ export default class Juniper extends React.Component {
             const es = new EventSource(binderUrl)
             es.onerror = (err) => {
                 es.close()
-                this.log(() => console.error('failed'))
+                this.log(() => console.error('failed', err))
                 reject(new Error(err))
             }
             let phase = null
@@ -149,8 +149,8 @@ export default class Juniper extends React.Component {
                 this.state.kernel
                     .restart()
                     .then(() => this.renderResponse(outputArea, code))
-                    .catch(() => {
-                        this.log(() => console.error('failed'))
+                    .catch((err) => {
+                        this.log(() => console.error('failed', err))
                         this.setState({ kernel: null })
                         outputArea.model.clear()
                         outputArea.model.add({
@@ -178,8 +178,8 @@ export default class Juniper extends React.Component {
                 this.setState({ kernel })
                 this.renderResponse(outputArea, code)
             })
-            .catch(() => {
-                this.log(() => console.error('failed'))
+            .catch((err) => {
+                this.log(() => console.error('failed', err))
                 this.setState({ kernel: null })
                 if (this.props.useStorage) {
                     this.setState({ fromStorage: false })
