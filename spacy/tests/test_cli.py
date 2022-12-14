@@ -12,6 +12,7 @@ from spacy.cli._util import is_subpath_of, load_project_config
 from spacy.cli._util import parse_config_overrides, string_to_list
 from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
+from spacy.cli._util import upload_file, download_file
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.download import get_compatibility, get_version
@@ -720,3 +721,18 @@ def test_debug_data_compile_gold():
     eg = Example(pred, ref)
     data = _compile_gold([eg], ["ner"], nlp, True)
     assert data["boundary_cross_ents"] == 1
+
+
+def test_upload_download_local_file():
+    with make_tempdir() as d1, make_tempdir() as d2:
+        filename = "f.txt"
+        content = "content"
+        local_file = d1 / filename
+        remote_file = d2 / filename
+        with local_file.open(mode="w") as file_:
+            file_.write(content)
+        upload_file(local_file, remote_file)
+        local_file.unlink()
+        download_file(remote_file, local_file)
+        with local_file.open(mode="r") as file_:
+            assert file_.read() == content
