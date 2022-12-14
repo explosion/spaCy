@@ -118,15 +118,15 @@ def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
 
 
 def get_candidates_all(
-    kb: KnowledgeBase, mentions: Iterator[Iterable[Span]]
+    kb: KnowledgeBase, docs: Iterator[Doc]
 ) -> Iterator[Iterable[Iterable[Candidate]]]:
     """
     Return candidate entities for the given mentions and fetching appropriate entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
-    mention (Iterator[Iterable[Span]]): Entity mentions per document for which to identify candidates.
+    docs (Iterator[Doc]): Doc instances with mentions (stored in `.ent`).
     RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
     """
-    return kb.get_candidates_all(mentions)
+    return kb.get_candidates_all(docs)
 
 
 @registry.misc("spacy.CandidateGenerator.v1")

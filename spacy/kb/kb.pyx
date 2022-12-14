@@ -1,11 +1,11 @@
 # cython: infer_types=True, profile=True
 
 from pathlib import Path
-from typing import Iterable, Tuple, Union, Iterator, TypeVar, Type
+from typing import Iterable, Tuple, Union, Iterator, TypeVar, Type, Optional
 from cymem.cymem cimport Pool
 
 from .candidate import Candidate
-from ..tokens import Span
+from ..tokens import Span, Doc
 from ..util import SimpleFrozenList
 from ..errors import Errors
 
@@ -32,24 +32,25 @@ cdef class KnowledgeBase:
         self.entity_vector_length = entity_vector_length
         self.mem = Pool()
 
-    def get_candidates_all(self, mentions: Iterator[Iterable[Span]]) -> Iterator[Iterable[Iterable[Candidate]]]:
+    def get_candidates_all(self, docs: Iterator[Doc]) -> Iterator[Iterable[Iterable[Candidate]]]:
         """
-        Return candidate entities for specified mentions. Each candidate defines the entity, the original alias,
-        and the prior probability of that alias resolving to that entity.
+        Return candidate entities for mentions stored in `ent` attribute in passed docs. Each candidate defines the
+        entity, the original alias, and the prior probability of that alias resolving to that entity.
         If no candidate is found for a given mention, an empty list is returned.
-        mentions (Generator[Iterable[Span]]): Mentions per documents for which to get candidates.
-        RETURNS (Generator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
+        docs (Iterator[Doc]): Doc instances with mentions (stored in `.ent`).
+        RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
         """
+        for doc in docs:
+            yield [self.get_candidates(ent_span, doc) for ent_span in doc.ents]
 
-        for doc_mentions in mentions:
-            yield [self.get_candidates(span) for span in doc_mentions]
-
-    def get_candidates(self, mention: Span) -> Iterable[Candidate]:
+    def get_candidates(self, mention: Span, doc: Optional[Doc] = None) -> Iterable[Candidate]:
         """
         Return candidate entities for specified text. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
         If the no candidate is found for a given text, an empty list is returned.
+        Note that doc is not utilized for further context in this implementation.
         mention (Span): Mention for which to get candidates.
+        doc (Optional[Doc]): Doc to use for context.
         RETURNS (Iterable[Candidate]): Identified candidates.
         """
         raise NotImplementedError(

@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True
-from typing import Iterable, Callable, Dict, Any, Union
+from typing import Iterable, Callable, Dict, Any, Union, Optional
 
 import srsly
 from preshed.maps cimport PreshMap
@@ -11,7 +11,7 @@ from libcpp.vector cimport vector
 from pathlib import Path
 import warnings
 
-from ..tokens import Span
+from ..tokens import Span, Doc
 from ..typedefs cimport hash_t
 from ..errors import Errors, Warnings
 from .. import util
@@ -231,7 +231,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
 
-    def get_candidates(self, mention: Span) -> Iterable[Candidate]:
+    def get_candidates(self, mention: Span, doc: Optional[Doc] = None) -> Iterable[Candidate]:
         return self.get_alias_candidates(mention.text)  # type: ignore
 
     def get_alias_candidates(self, str alias) -> Iterable[Candidate]:

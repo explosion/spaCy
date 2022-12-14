@@ -503,9 +503,9 @@ def test_el_pipe_configuration(nlp):
     def get_lowercased_candidates(kb, span):
         return kb.get_alias_candidates(span.text.lower())
 
-    def get_lowercased_candidates_all(kb, spans_per_doc):
-        for doc_spans in spans_per_doc:
-            yield [get_lowercased_candidates(kb, span) for span in doc_spans]
+    def get_lowercased_candidates_all(kb, docs):
+        for _doc in docs:
+            yield [get_lowercased_candidates(kb, ent_span) for ent_span in _doc.ents]
 
     @registry.misc("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[
