@@ -11,6 +11,7 @@ import CUSTOM_TYPES from '../../meta/type-annotations.json'
 import { isString, htmlToReact } from './util'
 import Link, { OptionalLink } from './link'
 import GitHubCode from './github'
+import Juniper from './juniper'
 import classes from '../styles/code.module.sass'
 import siteMetadata from '../../meta/site.json'
 import { binderBranch } from '../../meta/dynamicMeta.mjs'
@@ -286,8 +287,6 @@ const CodeHighlighted = ({ children, highlight }) => {
 }
 
 export class Code extends React.Component {
-    state = { Juniper: null }
-
     static defaultProps = {
         lang: 'none',
         executable: null,
@@ -304,20 +303,6 @@ export class Code extends React.Component {
         children: PropTypes.node,
     }
 
-    updateJuniper() {
-        if (this.state.Juniper == null && window.Juniper !== null) {
-            this.setState({ Juniper: window.Juniper })
-        }
-    }
-
-    componentDidMount() {
-        this.updateJuniper()
-    }
-
-    componentDidUpdate() {
-        this.updateJuniper()
-    }
-
     render() {
         const { lang, title, executable, github, prompt, wrap, highlight, className, children } =
             this.props
@@ -326,14 +311,13 @@ export class Code extends React.Component {
             [classes['cli']]: lang === 'cli',
         })
         const ghClassNames = classNames(codeClassNames, classes['max-height'])
-        const { Juniper } = this.state
 
         if (github) {
             return <GitHubCode url={github} className={ghClassNames} lang={lang} />
         }
-        if (!!executable && Juniper) {
+        if (!!executable) {
             return (
-                <JuniperWrapper Juniper={Juniper} title={title} lang={lang}>
+                <JuniperWrapper title={title} lang={lang}>
                     {children}
                 </JuniperWrapper>
             )
@@ -350,7 +334,7 @@ export class Code extends React.Component {
     }
 }
 
-const JuniperWrapper = ({ Juniper, title, lang, children }) => {
+const JuniperWrapper = ({ title, lang, children }) => {
     const { binderUrl, binderVersion } = siteMetadata
     const juniperTitle = title || 'Editable Code'
     return (

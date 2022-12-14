@@ -51,12 +51,35 @@ function remarkCodeBlocks(userOptions = {}) {
                 const data = node.data || (node.data = {})
                 const hProps = data.hProperties || (data.hProperties = {})
 
-                node.data.hProperties = Object.assign(
-                    {},
-                    hProps,
-                    attrs,
-                    getProps(Parser.parse(node.meta, { ecmaVersion: 'latest' }))
-                )
+                const meta = getProps(Parser.parse(node.meta, { ecmaVersion: 'latest' }))
+
+                node.data.hProperties = Object.assign({}, hProps, attrs, meta)
+
+                if (meta.executable) {
+                    node.type = 'mdxJsxFlowElement'
+                    node.name = 'CodeBlock'
+                    node.attributes = [
+                        {
+                            type: 'mdxJsxAttribute',
+                            name: 'lang',
+                            value: 'python',
+                        },
+                        {
+                            type: 'mdxJsxAttribute',
+                            name: 'executable',
+                            value: true,
+                        },
+
+                        // Adding the children like this makes sure
+                        // they don't get further formatted by Remark
+                        {
+                            type: 'mdxJsxAttribute',
+                            name: 'children',
+                            value: node.value,
+                        },
+                    ]
+                    node.data['_mdxExplicitJsx'] = true
+                }
             }
         })
 

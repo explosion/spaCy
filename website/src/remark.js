@@ -1,7 +1,7 @@
 import Link from './components/link'
 import Section, { Hr } from './components/section'
 import { Table, Tr, Th, Tx, Td } from './components/table'
-import { Pre, Code, InlineCode, TypeAnnotation } from './components/code'
+import CodeBlock, { Pre, Code, InlineCode, TypeAnnotation } from './components/code'
 import { Ol, Ul, Li } from './components/list'
 import { H2, H3, H4, H5, P, Abbr, Help, Label } from './components/typography'
 import Accordion from './components/accordion'
@@ -76,6 +76,7 @@ export const remarkComponents = {
     Tag,
     Accordion,
     Grid,
+    CodeBlock,
     InlineCode,
     Project,
     Integration,
