@@ -1,37 +1,44 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
-import CodeMirror from 'codemirror'
-import python from 'codemirror/mode/python/python' // eslint-disable-line no-unused-vars
-import { Widget } from '@phosphor/widgets'
+import CodeMirror from '@uiw/react-codemirror'
+import { createTheme } from '@uiw/codemirror-themes'
+import { tags as t } from '@lezer/highlight'
+import { python } from '@codemirror/lang-python'
 import { Kernel, ServerConnection } from '@jupyterlab/services'
-import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea'
-import { RenderMimeRegistry, standardRendererFactories } from '@jupyterlab/rendermime'
 import { window } from 'browser-monads'
+import classes from '../styles/code.module.sass'
+
+const spacyTheme = createTheme({
+    theme: 'dark',
+    settings: {
+        background: 'var(--color-front)',
+        foreground: 'var(--color-subtle)',
+        caret: 'var(--color-theme-dark)',
+        selection: 'var(--color-theme)',
+        selectionMatch: 'var(--color-theme)',
+        gutterBackground: 'var(--color-front)',
+        gutterForeground: 'var(--color-subtle)',
+        fontFamily: 'var(--font-code)',
+    },
+    styles: [
+        { tag: t.comment, color: 'var(--syntax-comment)' },
+        { tag: t.variableName, color: 'var(--color-subtle)' },
+        { tag: [t.string, t.special(t.brace)], color: '#fff' },
+        { tag: t.number, color: 'var(--syntax-number)' },
+        { tag: t.string, color: 'var(--syntax-selector)' },
+        { tag: t.bool, color: 'var(--syntax-keyword)' },
+        { tag: t.keyword, color: 'var(--syntax-keyword)' },
+        { tag: t.operator, color: 'var(--syntax-operator)' },
+    ],
+})
 
 export default class Juniper extends React.Component {
-    outputRef = null
-    inputRef = null
-    state = { kernel: null, renderers: null, fromStorage: null }
-
-    componentDidMount() {
-        const renderers = standardRendererFactories.filter((factory) =>
-            factory.mimeTypes.includes('text/latex') ? window.MathJax : true
-        )
-
-        const outputArea = new OutputArea({
-            model: new OutputAreaModel({ trusted: true }),
-            rendermime: new RenderMimeRegistry({ initialFactories: renderers }),
-        })
-
-        const cm = new CodeMirror(this.inputRef, {
-            value: this.props.children.trim(),
-            mode: this.props.lang,
-            theme: this.props.theme,
-        })
-        const runCode = () => this.execute(outputArea, cm.getValue())
-        cm.setOption('extraKeys', { 'Shift-Enter': runCode })
-        Widget.attach(outputArea, this.outputRef)
-        this.setState({ runCode })
+    state = {
+        kernel: null,
+        renderers: null,
+        fromStorage: null,
+        output: null,
+        code: this.props.children,
     }
 
     log(logFunction) {
@@ -127,14 +134,25 @@ export default class Juniper extends React.Component {
      * @param {OutputArea} outputArea - The cell's output area.
      * @param {string} code - The code to execute.
      */
-    renderResponse(outputArea, code) {
-        outputArea.future = this.state.kernel.requestExecute({ code })
-        outputArea.model.add({
-            output_type: 'stream',
-            name: 'loading',
-            text: this.props.msgLoading,
+    async renderResponse(kernel) {
+        if (this.state.code === null || this.state.code === '') {
+            this.state.output = 'No code entered'
+            return
+        }
+
+        const response = kernel.requestExecute({
+            code: this.state.code,
         })
-        outputArea.model.clear(true)
+
+        this.state.output = this.props.msgLoading
+
+        response.handleMsg = (message) => {
+            if (message.content && message.content.name === 'stdout') {
+                this.setState({
+                    output: message.content.text,
+                })
+            }
+        }
     }
 
     /**
@@ -142,41 +160,31 @@ export default class Juniper extends React.Component {
      * @param {OutputArea} - outputArea - The cell's output area.
      * @param {string} code - The code to execute.
      */
-    execute(outputArea, code) {
+    runCode() {
         this.log(() => console.info('executing'))
         if (this.state.kernel) {
             if (this.props.isolateCells) {
                 this.state.kernel
                     .restart()
-                    .then(() => this.renderResponse(outputArea, code))
+                    .then(() => this.renderResponse(this.state.kernel))
                     .catch((err) => {
-                        this.log(() => console.error('failed', err))
+                        this.log(() => console.error('faileder', err))
                         this.setState({ kernel: null })
-                        outputArea.model.clear()
-                        outputArea.model.add({
-                            output_type: 'stream',
-                            name: 'failure',
-                            text: this.props.msgError,
-                        })
+                        this.setState({ output: this.props.msgError })
                     })
                 return
             }
-            this.renderResponse(outputArea, code)
+            this.renderResponse(this.state.kernel)
             return
         }
         this.log(() => console.info('requesting kernel'))
         const url = this.props.url.split('//')[1]
         const action = !this.state.fromStorage ? 'Launching' : 'Reconnecting to'
-        outputArea.model.clear()
-        outputArea.model.add({
-            output_type: 'stream',
-            name: 'stdout',
-            text: `${action} Docker container on ${url}...`,
-        })
-        new Promise((resolve, reject) => this.getKernel().then(resolve).catch(reject))
+        this.setState({ output: `${action} Docker container on ${url}...` })
+        this.getKernel()
             .then((kernel) => {
                 this.setState({ kernel })
-                this.renderResponse(outputArea, code)
+                this.renderResponse(kernel)
             })
             .catch((err) => {
                 this.log(() => console.error('failed', err))
@@ -185,33 +193,40 @@ export default class Juniper extends React.Component {
                     this.setState({ fromStorage: false })
                     window.localStorage.removeItem(this.props.storageKey)
                 }
-                outputArea.model.clear()
-                outputArea.model.add({
-                    output_type: 'stream',
-                    name: 'failure',
-                    text: this.props.msgError,
-                })
+                this.setState({ output: this.props.msgError })
             })
     }
 
     render() {
         return (
             <div className={this.props.classNames.cell}>
-                <div
-                    className={this.props.classNames.input}
-                    ref={(x) => {
-                        this.inputRef = x
-                    }}
-                />
-                <button className={this.props.classNames.button} onClick={this.state.runCode}>
+                {this.state.code && (
+                    <CodeMirror
+                        value={this.state.code}
+                        extensions={[python()]}
+                        theme={spacyTheme}
+                        basicSetup={{
+                            lineNumbers: false,
+                            foldGutter: false,
+                            highlightActiveLine: false,
+                            highlightSelectionMatches: false,
+                        }}
+                        className={classes['juniper-input']}
+                        onChange={(value) => {
+                            this.setState({ code: value })
+                        }}
+                    />
+                )}
+                <button className={this.props.classNames.button} onClick={() => this.runCode()}>
                     {this.props.msgButton}
                 </button>
-                <div
-                    ref={(x) => {
-                        this.outputRef = x
-                    }}
-                    className={this.props.classNames.output}
-                />
+                {this.state.output !== null && (
+                    <pre
+                        className={`${this.props.classNames.output} ${classes['juniper-input']} ${classes.wrap}`}
+                    >
+                        {this.state.output}
+                    </pre>
+                )}
             </div>
         )
     }

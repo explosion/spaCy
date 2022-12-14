@@ -12,6 +12,9 @@
         "prettier": "prettier . --write"
     },
     "dependencies": {
+        "@codemirror/lang-python": "^6.1.0",
+        "@jupyterlab/services": "^3.2.1",
+        "@lezer/highlight": "^1.1.3",
         "@mapbox/rehype-prism": "^0.8.0",
         "@mdx-js/loader": "^2.1.5",
         "@mdx-js/react": "^2.1.5",
@@ -20,6 +23,8 @@
         "@types/node": "18.11.9",
         "@types/react": "18.0.25",
         "@types/react-dom": "18.0.8",
+        "@uiw/codemirror-themes": "^4.19.3",
+        "@uiw/react-codemirror": "^4.19.3",
         "acorn": "^8.8.1",
         "browser-monads": "^1.0.0",
         "classnames": "^2.3.2",
@@ -32,6 +37,7 @@
         "next-mdx-remote": "^4.2.0",
         "next-pwa": "^5.6.0",
         "next-sitemap": "^3.1.32",
+        "node-fetch": "^2.6.7",
         "parse-numeric-range": "^1.3.0",
         "prettier": "^2.7.1",
         "prismjs": "^1.29.0",
@@ -48,7 +54,8 @@
         "remark-unwrap-images": "^3.0.1",
         "sass": "^1.56.1",
         "typescript": "4.8.4",
-        "unist-util-visit": "^4.1.1"
+        "unist-util-visit": "^4.1.1",
+        "ws": "^8.11.0"
     },
     "engine": 18
 }
