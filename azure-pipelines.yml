@@ -29,7 +29,7 @@ jobs:
         inputs:
           versionSpec: "3.7"
       - script: |
-          pip install flake8==3.9.2
+          pip install flake8==5.0.4
           python -m flake8 spacy --count --select=E901,E999,F821,F822,F823 --show-source --statistics
         displayName: "flake8"
 
@@ -39,7 +39,7 @@ jobs:
       matrix:
         # We're only running one platform per Python version to speed up builds
         Python36Linux:
-          imageName: "ubuntu-latest"
+          imageName: "ubuntu-20.04"
           python.version: "3.6"
         #        Python36Windows:
         #          imageName: "windows-latest"
@@ -48,7 +48,7 @@ jobs:
         #          imageName: "macos-latest"
         #          python.version: "3.6"
         #        Python37Linux:
-        #          imageName: "ubuntu-latest"
+        #          imageName: "ubuntu-20.04"
         #          python.version: "3.7"
         Python37Windows:
           imageName: "windows-latest"
@@ -90,20 +90,3 @@ jobs:
       - template: .github/azure-steps.yml
         parameters:
           python_version: '$(python.version)'
-          architecture: 'x64'
-
-#  - job: "TestGPU"
-#    dependsOn: "Validate"
-#    strategy:
-#      matrix:
-#        Python38LinuxX64_GPU:
-#          python.version: '3.8'
-#    pool:
-#      name: "LinuxX64_GPU"
-#    steps:
-#      - template: .github/azure-steps.yml
-#        parameters:
-#          python_version: '$(python.version)'
-#          architecture: 'x64'
-#          gpu: true
-#          num_build_jobs: 24

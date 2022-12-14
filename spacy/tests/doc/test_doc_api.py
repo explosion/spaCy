@@ -2,6 +2,7 @@ import weakref
 
 import pytest
 import numpy
+import warnings
 
 from spacy.lang.xx import MultiLanguage
 from spacy.tokens import Doc, Span, Token
@@ -311,9 +312,9 @@ def test_doc_from_array_sent_starts(en_vocab):
     # no warning using default attrs
     attrs = doc._get_array_attrs()
     arr = doc.to_array(attrs)
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         new_doc.from_array(attrs, arr)
-        assert len(record) == 0
     # only SENT_START uses SENT_START
     attrs = [SENT_START]
     arr = doc.to_array(attrs)
