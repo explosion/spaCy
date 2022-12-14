@@ -8,6 +8,7 @@ import remarkPlugins from '../plugins/index.mjs'
 import rehypePlugins from '../plugins/rehypePlugins.mjs'
 
 import recordSection from '../meta/recordSections'
+import { sidebarUsageFlat } from '../meta/sidebarFlat'
 
 type ApiDetails = {
     stringName: string | null
@@ -121,16 +122,32 @@ export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (
         trainable: mdx.frontmatter.api_trainable ?? null,
     }
 
+    const slug = `/${args.params.listPathPage.join('/')}`
+
+    const next =
+        section === 'usage'
+            ? sidebarUsageFlat.find(
+                  (item, index) =>
+                      index > 0 && sidebarUsageFlat[index - 1].url === slug && item[0] === '/'
+              )
+            : undefined
+
     return {
         props: {
             ...mdx.frontmatter,
-            slug: `/${args.params.listPathPage.join('/')}`,
+            slug,
             mdx,
             sectionTitle: sectionMeta?.title ?? null,
             theme: sectionMeta?.theme ?? null,
             section: section,
             apiDetails: apiDetails,
             isIndex,
+            next: next
+                ? {
+                      slug: next.url,
+                      title: next.text,
+                  }
+                : null,
         },
     }
 }

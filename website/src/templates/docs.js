@@ -14,8 +14,8 @@ import { getCurrentSource, github } from '../components/util'
 
 import siteMetadata from '../../meta/site.json'
 import sidebars from '../../meta/sidebars.json'
-import models from '../../meta/languages.json'
 import { nightly, legacy } from '../../meta/dynamicMeta.mjs'
+import { languagesSorted } from '../../meta/languageSorted'
 
 const Docs = ({ pageContext, children }) => {
     const {
@@ -34,7 +34,6 @@ const Docs = ({ pageContext, children }) => {
         apiDetails,
     } = pageContext
     const { modelsRepo } = siteMetadata
-    const { languages } = models
     const isModels = section === 'models'
     const sidebar = pageContext.sidebar
         ? { items: pageContext.sidebar }
@@ -42,18 +41,15 @@ const Docs = ({ pageContext, children }) => {
     let pageMenu = menu ? menu.map(([text, id]) => ({ text, id })) : []
 
     if (isModels) {
-        sidebar.items[1].items = languages
-            .filter(({ models }) => models && models.length)
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((lang) => ({
-                text: lang.name,
-                url: `/models/${lang.code}`,
-                isActive: id === lang.code,
-                menu: lang.models.map((model) => ({
-                    text: model,
-                    id: model,
-                })),
-            }))
+        sidebar.items[1].items = languagesSorted.map((lang) => ({
+            text: lang.name,
+            url: `/models/${lang.code}`,
+            isActive: id === lang.code,
+            menu: lang.models.map((model) => ({
+                text: model,
+                id: model,
+            })),
+        }))
     }
     const sourcePath = source ? github(source) : null
     const currentSource = getCurrentSource(slug, isIndex)
