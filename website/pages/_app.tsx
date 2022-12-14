@@ -1,12 +1,14 @@
 import '../src/styles/layout.sass'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
+import PlausibleProvider from 'next-plausible'
 import { MDXProvider } from '@mdx-js/react'
 import { remarkComponents } from '../src/remark'
+import { domain } from '../meta/dynamicMeta.mjs'
 
 export default function App({ Component, pageProps }: AppProps) {
     return (
-        <>
+        <PlausibleProvider domain={domain} enabled>
             <Head>
                 <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
                 <link rel="shortcut icon" href="/icons/icon-192x192.png" />
@@ -24,6 +26,6 @@ export default function App({ Component, pageProps }: AppProps) {
             <MDXProvider components={remarkComponents}>
                 <Component {...pageProps} />
             </MDXProvider>
-        </>
+        </PlausibleProvider>
     )
 }
