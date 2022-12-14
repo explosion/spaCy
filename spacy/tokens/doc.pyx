@@ -2182,7 +2182,6 @@ cdef uint64_t FNV1A_OFFSET_BASIS = 0xcbf29ce484222325
 cdef uint64_t FNV1A_PRIME = 0x00000100000001B3
 
 
-@cython.boundscheck(False)  # Deactivate bounds checking
 cdef int _write_hashes(
     const unsigned char* res_buf,
     const unsigned char* aff_l_buf,
