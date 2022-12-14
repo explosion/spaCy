@@ -105,13 +105,13 @@ const Landing = ({ data }) => {
 
             <LandingBannerGrid>
                 <LandingBanner
-                    to="https://explosion.ai/spacy-tailored-pipelines"
+                    to="https://explosion.ai/custom-solutions"
                     button="Learn more"
                     background="#E4F4F9"
                     color="#1e1935"
                     small
                 >
-                    <Link to="https://explosion.ai/spacy-tailored-pipelines" hidden>
+                    <Link to="https://explosion.ai/custom-solutions" hidden>
                         <img src={tailoredPipelinesImage} alt="spaCy Tailored Pipelines" />
                     </Link>
                     <strong>
