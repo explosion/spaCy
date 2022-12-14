@@ -254,8 +254,11 @@ pre
     overflow: auto
 
 code, pre
-    font-family: monospace, monospace
-    font-size: 1em
+    font-family: var(--font-code)
+    font-size: var(--font-size-code)
+    font-variant-ligatures: none
+    -webkit-font-smoothing: subpixel-antialiased
+    -moz-osx-font-smoothing: auto
 
 table
     text-align: left
@@ -408,44 +411,6 @@ body [id]:target
     &:empty:before
         // Fix issue where empty lines would disappear
         content: " "
-
-// CodeMirror
-
-.CodeMirror.cm-s-default
-    background: var(--color-front)
-    color: var(--color-subtle)
-
-    .CodeMirror-line
-        color: var(--syntax-comment)
-        padding: 0
-
-    .CodeMirror-selected
-        background: var(--color-theme)
-        color: var(--color-back)
-
-    .CodeMirror-cursor
-        border-left-color: currentColor
-
-    .cm-property, .cm-variable, .cm-variable-2, .cm-meta // decorators
-        color: var(--color-subtle)
-
-    .cm-comment
-        color: var(--syntax-comment)
-
-    .cm-keyword, .cm-builtin
-        color: var(--syntax-keyword)
-
-    .cm-operator
-        color: var(--syntax-operator)
-
-    .cm-string
-        color: var(--syntax-selector)
-
-    .cm-number
-        color: var(--syntax-number)
-
-    .cm-def
-        color: var(--syntax-function)
 
 // Jupyter
 
