@@ -272,7 +272,10 @@ class SpanCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/spancategorizer#predict
         """
         indices = self.suggester(docs, ops=self.model.ops)
-        scores = self.model.predict((docs, indices))  # type: ignore
+        if indices.lengths.sum() == 0:
+            scores = self.model.ops.alloc2f(0, 0)
+        else:
+            scores = self.model.predict((docs, indices))  # type: ignore
         return indices, scores
 
     def set_candidates(
