@@ -477,7 +477,9 @@ class EntityLinker(TrainablePipe):
                 RETURN (doc): Doc instance with only valid entities (i.e. those to retrieve candidates for).
                 """
                 _doc = doc.copy()
-                _doc.ents = [doc.ents[i] for i in valid_ent_idx]
+                # mypy complains about mismatching types here (Tuple[str] vs. Tuple[str, ...]), which isn't correct and
+                # probably an artifact of a misreading of the Cython code.
+                _doc.ents = tuple([doc.ents[i] for i in valid_ent_idx])  # type: ignore
                 return _doc
 
             all_ent_cands = self.get_candidates_all(
