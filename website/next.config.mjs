@@ -33,6 +33,7 @@ const nextConfig = withPWA(
         typescript: {
             ignoreBuildErrors: true,
         },
+        images: { unoptimized: true },
     })
 )
 
