@@ -41,16 +41,15 @@ cdef class KnowledgeBase:
         RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
         """
         for doc in docs:
-            yield [self.get_candidates(ent_span, doc) for ent_span in doc.ents]
+            yield [self.get_candidates(ent_span) for ent_span in doc.ents]
 
-    def get_candidates(self, mention: Span, doc: Optional[Doc] = None) -> Iterable[Candidate]:
+    def get_candidates(self, mention: Span) -> Iterable[Candidate]:
         """
         Return candidate entities for specified text. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
         If the no candidate is found for a given text, an empty list is returned.
         Note that doc is not utilized for further context in this implementation.
         mention (Span): Mention for which to get candidates.
-        doc (Optional[Doc]): Doc to use for context.
         RETURNS (Iterable[Candidate]): Identified candidates.
         """
         raise NotImplementedError(
