@@ -186,16 +186,13 @@ def test_evaluate_multiple_textcat_separate(en_vocab):
     with custom scorers."""
 
     def custom_textcat_score(examples, **kwargs):
-        def custom_getter(doc, _):
-            return doc.cats
-
-        return Scorer.score_cats(
+        scores = Scorer.score_cats(
             examples,
-            "custom_cats",
+            "cats",
             multi_label=False,
-            getter=custom_getter,
             **kwargs,
         )
+        return {f"custom_{k}": v for k, v in scores.items()}
 
     @spacy.registry.scorers("test_custom_textcat_scorer")
     def make_custom_textcat_scorer():
