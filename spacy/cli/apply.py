@@ -95,7 +95,7 @@ def apply_cli(
         2. .jsonl files with a specified "field" to read the text from.
         3. Files with any other extension are assumed to be containing
            a single document.
-    DOCS: https://spacy.io/api/cli#tba
+    DOCS: https://spacy.io/api/cli#apply
     """
     data_path = ensure_path(data_path)
     output_file = ensure_path(output_file)
