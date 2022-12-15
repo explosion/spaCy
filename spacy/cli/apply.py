@@ -14,18 +14,15 @@ from ..vocab import Vocab
 from ..util import ensure_path, load_model
 
 
-path_help = (
-    "Location of the documents to predict on. "
-    "Can be a single file in .spacy format or a "
-    ".jsonl file. Files with other extensions "
-    "are treated as single plain text documents. "
-    "If a directory is provided "
-    "it is traversed recursively to grab all files to "
-    "be processed. The files can be a mixture of .spacy, "
-    ".jsonl and text files. If .jsonl is provided the "
-    "specified field is going to be grabbed ('text' "
-    "by default)."
-)
+path_help = """Location of the documents to predict on.
+Can be a single file in .spacy format or a .jsonl file.
+Files with other extensions are treated as single plain text documents.
+If a directory is provided it is traversed recursively to grab
+all files to be processed.
+The files can be a mixture of .spacy, .jsonl and text files.
+If .jsonl is provided the specified field is going
+to be grabbed ("text" by default)."""
+
 out_help = "Path to save the resulting .spacy file"
 code_help = (
     "Path to Python file with additional " "code (registered functions) to be imported"
@@ -56,7 +53,7 @@ def _stream_jsonl(path: Path, field: str) -> Iterable[str]:
     """
     for entry in srsly.read_jsonl(path):
         if field not in entry:
-            raise msg.fail(
+            msg.fail(
                 f"{path} does not contain the required '{field}' field.", exits=1
             )
         else:
@@ -117,11 +114,14 @@ def apply(
     batch_size: int,
     n_process: int,
 ):
+    docbin = DocBin(store_user_data=True)
+    paths = walk_directory(data_path)
+    if len(paths) == 0:
+        msg.fail("Did not find data to process,"
+                 f" {data_path} seems to be an empty directory.", exits=1)
     nlp = load_model(model)
     msg.good(f"Loaded model {model}")
     vocab = nlp.vocab
-    docbin = DocBin(store_user_data=True)
-    paths = walk_directory(data_path)
     streams: List[DocOrStrStream] = []
     text_files = []
     for path in paths:
