@@ -1,11 +1,11 @@
 # cython: infer_types=True, profile=True
 
 from pathlib import Path
-from typing import Iterable, Tuple, Union, Iterator, TypeVar, Type, Optional
+from typing import Iterable, Tuple, Union, Iterator, TypeVar, Type, Callable
 from cymem.cymem cimport Pool
 
 from .candidate import Candidate
-from ..tokens import Span, Doc
+from ..tokens import Span, SpanGroup, Doc
 from ..util import SimpleFrozenList
 from ..errors import Errors
 
@@ -32,16 +32,26 @@ cdef class KnowledgeBase:
         self.entity_vector_length = entity_vector_length
         self.mem = Pool()
 
-    def get_candidates_all(self, docs: Iterator[Doc]) -> Iterator[Iterable[Iterable[Candidate]]]:
+    def get_candidates_all(self, mentions: Iterator[SpanGroup]) -> Iterator[Iterable[Iterable[Candidate]]]:
         """
         Return candidate entities for mentions stored in `ent` attribute in passed docs. Each candidate defines the
         entity, the original alias, and the prior probability of that alias resolving to that entity.
         If no candidate is found for a given mention, an empty list is returned.
-        docs (Iterator[Doc]): Doc instances with mentions (stored in `.ent`).
+        mentions (Iterator[SpanGroup]): Mentions per doc as SpanGroup instance.
         RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
         """
-        for doc in docs:
-            yield [self.get_candidates(ent_span) for ent_span in doc.ents]
+        for doc_mentions in mentions:
+            yield [self.get_candidates(ent_span) for ent_span in doc_mentions]
+
+    @staticmethod
+    def get_ents_as_spangroup(doc: Doc, extractor: Union[str, Callable[[Iterable[Span]], Doc]] = "ent") -> SpanGroup:
+        """
+        Fetch entities from doc and returns them as a SpanGroup ready to be used in
+        `KnowledgeBase.get_candidates_all()`.
+        doc (Doc): Doc whose entities should be fetched.
+        extractor (Union[str, Callable[[Iterable[Span]], Doc]]): Defines how to retrieve object holding spans
+            used to describe entities. This can be a key referring to a property of the doc instance (e.g. "
+        """
 
     def get_candidates(self, mention: Span) -> Iterable[Candidate]:
         """

@@ -231,8 +231,8 @@ cdef class InMemoryLookupKB(KnowledgeBase):
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
 
-    def get_candidates(self, mention: Span, doc: Optional[Doc] = None) -> Iterable[Candidate]:
-        return self.get_alias_candidates(mention.text)  # type: ignore
+    def get_candidates(self, mention: Span) -> Iterable[Candidate]:
+        return self.get_alias_candidates(mention.text)
 
     def get_alias_candidates(self, str alias) -> Iterable[Candidate]:
         """

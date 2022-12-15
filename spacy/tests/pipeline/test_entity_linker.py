@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Dict, Any, Generator, Iterator
+from typing import Callable, Iterable, Dict, Any, Iterator
 
 import pytest
 from numpy.testing import assert_equal
@@ -15,7 +15,7 @@ from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
 from spacy.tests.util import make_tempdir
-from spacy.tokens import Span, Doc
+from spacy.tokens import Span, Doc, SpanGroup
 from spacy.training import Example
 from spacy.util import ensure_path
 from spacy.vocab import Vocab
@@ -500,12 +500,14 @@ def test_el_pipe_configuration(nlp):
 
     # Replace the pipe with a new one with with a different candidate generator.
 
-    def get_lowercased_candidates(kb, span):
+    def get_lowercased_candidates(kb: InMemoryLookupKB, span: Span):
         return kb.get_alias_candidates(span.text.lower())
 
-    def get_lowercased_candidates_all(kb, docs):
-        for _doc in docs:
-            yield [get_lowercased_candidates(kb, ent_span) for ent_span in _doc.ents]
+    def get_lowercased_candidates_all(
+        kb: InMemoryLookupKB, mentions: Iterator[SpanGroup]
+    ):
+        for doc_mentions in mentions:
+            yield [get_lowercased_candidates(kb, mention) for mention in doc_mentions]
 
     @registry.misc("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[
@@ -515,7 +517,7 @@ def test_el_pipe_configuration(nlp):
 
     @registry.misc("spacy.LowercaseCandidateAllGenerator.v1")
     def create_candidates_batch() -> Callable[
-        [InMemoryLookupKB, Generator[Iterable["Span"], None, None]],
+        [InMemoryLookupKB, Iterator[SpanGroup]],
         Iterator[Iterable[Iterable[Candidate]]],
     ]:
         return get_lowercased_candidates_all

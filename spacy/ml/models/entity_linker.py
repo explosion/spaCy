@@ -8,7 +8,7 @@ from ...util import registry
 from ...kb import KnowledgeBase, InMemoryLookupKB
 from ...kb import Candidate
 from ...vocab import Vocab
-from ...tokens import Span, Doc
+from ...tokens import Span, Doc, SpanGroup
 from ..extract_spans import extract_spans
 from ...errors import Errors
 
@@ -118,15 +118,15 @@ def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
 
 
 def get_candidates_all(
-    kb: KnowledgeBase, docs: Iterator[Doc]
+    kb: KnowledgeBase, mentions: Iterator[SpanGroup]
 ) -> Iterator[Iterable[Iterable[Candidate]]]:
     """
     Return candidate entities for the given mentions and fetching appropriate entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
-    docs (Iterator[Doc]): Doc instances with mentions (stored in `.ent`).
+    mentions (Iterator[SpanGroup]): Mentions per doc as SpanGroup instance.
     RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
     """
-    return kb.get_candidates_all(docs)
+    return kb.get_candidates_all(mentions)
 
 
 @registry.misc("spacy.CandidateGenerator.v1")
@@ -136,7 +136,7 @@ def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
 
 @registry.misc("spacy.CandidateAllGenerator.v1")
 def create_candidates_all() -> Callable[
-    [KnowledgeBase, Iterator[Doc]],
+    [KnowledgeBase, Iterator[SpanGroup]],
     Iterator[Iterable[Iterable[Candidate]]],
 ]:
     return get_candidates_all

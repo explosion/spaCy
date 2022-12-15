@@ -17,7 +17,7 @@ from thinc.api import CosineDistance, Model, Optimizer, Config
 from thinc.api import set_dropout_rate
 
 from ..kb import KnowledgeBase, Candidate
-from ..tokens import Doc, Span
+from ..tokens import Doc, Span, SpanGroup
 from .pipe import deserialize_config
 from .legacy.entity_linker import EntityLinker_v1
 from .trainable_pipe import TrainablePipe
@@ -87,7 +87,7 @@ def make_entity_linker(
     entity_vector_length: int,
     get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
     get_candidates_all: Callable[
-        [KnowledgeBase, Iterator[Doc]], Iterator[Iterable[Iterable[Candidate]]]
+        [KnowledgeBase, Iterator[SpanGroup]], Iterator[Iterable[Iterable[Candidate]]]
     ],
     generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
     overwrite: bool,
@@ -108,9 +108,9 @@ def make_entity_linker(
     entity_vector_length (int): Size of encoding vectors in the KB.
     get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function producing a list of
         candidates, given a certain knowledge base and a textual mention.
-    get_candidates_all (Callable[[KnowledgeBase, Iterator[Doc]], Iterator[Iterable[Iterable[Candidate]]]]): Function
-        that produces a list of candidates per document, given a certain knowledge base and several textual documents
-        with textual mentions.
+    get_candidates_all (Callable[[KnowledgeBase, Iterator[SpanGroup]], Iterator[Iterable[Iterable[Candidate]]]]):
+        Function producing a list of candidates per document, given a certain knowledge base and several textual
+        documents with textual mentions.
     generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
     scorer (Optional[Callable]): The scoring method.
     use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
@@ -187,7 +187,8 @@ class EntityLinker(TrainablePipe):
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         get_candidates_all: Callable[
-            [KnowledgeBase, Iterator[Doc]], Iterator[Iterable[Iterable[Candidate]]]
+            [KnowledgeBase, Iterator[SpanGroup]],
+            Iterator[Iterable[Iterable[Candidate]]],
         ],
         generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
         overwrite: bool = BACKWARD_OVERWRITE,
@@ -209,8 +210,8 @@ class EntityLinker(TrainablePipe):
         entity_vector_length (int): Size of encoding vectors in the KB.
         get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function producing a list
             of candidates, given a certain knowledge base and a textual mention.
-        get_candidates_all (Callable[[KnowledgeBase, Iterator[Doc]], Iterator[Iterable[Iterable[Candidate]]]]):
-            Function that produces a list of candidates per document, given a certain knowledge base and several textual
+        get_candidates_all (Callable[[KnowledgeBase, Iterator[SpanGroup]], Iterator[Iterable[Iterable[Candidate]]]]):
+            Function producing a list of candidates per document, given a certain knowledge base and several textual
             documents with textual mentions.
         generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
         scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
@@ -468,24 +469,13 @@ class EntityLinker(TrainablePipe):
 
         # Call candidate generator.
         if self.candidates_doc_mode:
-
-            def _adjust_ents_in_doc(doc: Doc, valid_ent_idx: Iterable[int]) -> Doc:
-                """
-                Generates copy of doc object with only those ents that are candidates are to be retrieved for.
-                doc (Doc): Doc object to adjust.
-                valid_ent_idx (Iterable[int]): Indices of entities to keep.
-                RETURN (doc): Doc instance with only valid entities (i.e. those to retrieve candidates for).
-                """
-                _doc = doc.copy()
-                # mypy complains about mismatching types here (Tuple[str] vs. Tuple[str, ...]), which isn't correct and
-                # probably an artifact of a misreading of the Cython code.
-                _doc.ents = tuple([doc.ents[i] for i in valid_ent_idx])  # type: ignore
-                return _doc
-
             all_ent_cands = self.get_candidates_all(
                 self.kb,
                 (
-                    _adjust_ents_in_doc(doc, next(valid_ent_idx_per_doc))
+                    SpanGroup(
+                        doc,
+                        spans=[doc.ents[idx] for idx in next(valid_ent_idx_per_doc)],
+                    )
                     for doc in docs
                     if len(doc) and len(doc.ents)
                 ),
