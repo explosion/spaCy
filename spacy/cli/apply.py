@@ -26,7 +26,7 @@ path_help = (
     "specified field is going to be grabbed ('text' "
     "by default)."
 )
-out_help = "Path where to save the result .spacy file"
+out_help = "Path to save the resulting .spacy file"
 code_help = (
     "Path to Python file with additional " "code (registered functions) to be imported"
 )
