@@ -507,7 +507,10 @@ def test_el_pipe_configuration(nlp):
         kb: InMemoryLookupKB, mentions: Iterator[SpanGroup]
     ):
         for doc_mentions in mentions:
-            yield [get_lowercased_candidates(kb, mention) for mention in doc_mentions]
+            yield [
+                get_lowercased_candidates(kb, doc_mentions[idx])
+                for idx in range(len(doc_mentions))
+            ]
 
     @registry.misc("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[
