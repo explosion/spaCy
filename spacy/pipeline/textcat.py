@@ -117,7 +117,7 @@ def textcat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     )
 
 
-@registry.scorers("spacy.textcat_scorer.v1")
+@registry.scorers("spacy.textcat_scorer.v2")
 def make_textcat_scorer():
     return textcat_score
 
