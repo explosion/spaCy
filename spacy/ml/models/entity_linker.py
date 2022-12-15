@@ -6,6 +6,7 @@ from thinc.api import Model, Maxout, Linear
 from ...util import registry
 from ...kb import KnowledgeBase, Candidate, get_candidates
 from ...vocab import Vocab
+from ...tokens import Span
 
 
 @registry.architectures("spacy.EntityLinker.v1")
@@ -44,5 +45,5 @@ def empty_kb(entity_vector_length: int) -> Callable[[Vocab], KnowledgeBase]:
 
 
 @registry.misc("spacy.CandidateGenerator.v1")
-def create_candidates() -> Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]:
+def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
     return get_candidates
