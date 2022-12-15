@@ -59,7 +59,7 @@ export const getStaticPaths: GetStaticPaths<ParsedUrlQuery> = async () => {
                 if (dirent.isDirectory()) {
                     return loadFolder([...pathBase, dirent.name])
                 }
-                if (!dirent.name.includes('.mdx')) {
+                if (!dirent.name.includes('.mdx') || dirent.name[0] === '_') {
                     return []
                 }
 
