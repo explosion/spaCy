@@ -805,7 +805,7 @@ cdef class Doc:
         `(M, N)` array of attributes.
 
         attrs (list) A list of attribute ID ints.
-        array (numpy.ndarray[ndim=2, dtype='int32']): The attribute values.
+        array (numpy.ndarray[ndim=2, dtype='uint64']): The attribute values.
         RETURNS (Doc): Itself.
 
         DOCS: https://spacy.io/api/doc#from_array
@@ -845,9 +845,9 @@ cdef class Doc:
             col = attrs.index(HEAD)
             for i in range(length):
                 # cast index to signed int
-                abs_head_index = numpy.int32(array[i, col]) + i
+                abs_head_index = array[i, col].astype(numpy.int32) + i
                 if abs_head_index < 0 or abs_head_index >= length:
-                    raise ValueError(Errors.E190.format(index=i, value=array[i, col], rel_head_index=numpy.int32(array[i, col])))
+                    raise ValueError(Errors.E190.format(index=i, value=array[i, col], rel_head_index=abs_head_index-i))
         # Do TAG first. This lets subsequent loop override stuff like POS, LEMMA
         if TAG in attrs:
             col = attrs.index(TAG)

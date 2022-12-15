@@ -295,7 +295,7 @@ def make_docs(nlp, batch, min_length, max_length):
             raise ValueError(Errors.E138.format(text=record))
         if "heads" in record:
             heads = record["heads"]
-            heads = numpy.asarray(heads, dtype="uint64")
+            heads = numpy.asarray([numpy.array(h).astype(numpy.uint64) for h in heads], dtype="uint64")
             heads = heads.reshape((len(doc), 1))
             doc = doc.from_array([HEAD], heads)
         if len(doc) >= min_length and len(doc) < max_length:

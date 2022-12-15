@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import numpy
 import pytest
 from spacy.tokens import Doc
 from spacy.attrs import ORTH, SHAPE, POS, DEP
@@ -91,14 +92,14 @@ def test_doc_from_array_heads_in_bounds(en_vocab):
 
     # head before start
     arr = doc.to_array(["HEAD"])
-    arr[0] = -1
+    arr[0] = numpy.int32(-1).astype(numpy.uint64)
     doc_from_array = Doc(en_vocab, words=words)
     with pytest.raises(ValueError):
         doc_from_array.from_array(["HEAD"], arr)
 
     # head after end
     arr = doc.to_array(["HEAD"])
-    arr[0] = 5
+    arr[0] = numpy.int32(5).astype(numpy.uint64)
     doc_from_array = Doc(en_vocab, words=words)
     with pytest.raises(ValueError):
         doc_from_array.from_array(["HEAD"], arr)
