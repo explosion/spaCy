@@ -115,8 +115,8 @@ class Span:
     end: int
     start_char: int
     end_char: int
-    label: int
-    kb_id: int
+    label: Union[int, str]
+    kb_id: Union[int, str]
     id: int
     ent_id: int
     ent_id_: str

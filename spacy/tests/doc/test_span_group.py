@@ -1,7 +1,9 @@
+from typing import List
+
 import pytest
 from random import Random
 from spacy.matcher import Matcher
-from spacy.tokens import Span, SpanGroup
+from spacy.tokens import Span, SpanGroup, Doc
 
 
 @pytest.fixture
@@ -240,3 +242,10 @@ def test_span_group_extend(doc):
 def test_span_group_dealloc(span_group):
     with pytest.raises(AttributeError):
         print(span_group.doc)
+
+
+def test_iter(doc: Doc):
+    span_group: SpanGroup = doc.spans["SPANS"]
+    spans: List[Span] = list(span_group)
+    for i, span in enumerate(span_group):
+        assert span == span_group[i] == spans[i]
