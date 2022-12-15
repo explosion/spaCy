@@ -1189,8 +1189,8 @@ $ python -m spacy apply [model] [data-path] [output-file] [--code] [--text-key] 
 | `--text-key`, `-tk`                       | The key for `.jsonl` files to use to grab the texts from. Defaults to `text`. ~~Optional[str] \(option)~~                                                                                                |
 | `--force-overwrite`, `-F`                 | If the provided `output-file` already exists, then force `apply` to overwrite it. If this is `False` (default) then quits with a warning instead. ~~bool (flag)~~                    |
 | `--gpu-id`, `-g`                          | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                                       |
-| `--batch-size`, `-g`                      | Batch size to use for prediction. Defaults to `1`. ~~int (option)~~                                                                                                                  |
-| `--n-process`, `-g`                       | Number of processes to use for prediction. Defaults to `1`. ~~int (option)~~                                                                                                         |
+| `--batch-size`, `-b`                      | Batch size to use for prediction. Defaults to `1`. ~~int (option)~~                                                                                                                  |
+| `--n-process`, `-n`                       | Number of processes to use for prediction. Defaults to `1`. ~~int (option)~~                                                                                                         |
 | `--help`, `-h`                            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                               | A `DocBin` with the annotations from the `model` for all the files found in `data-path`.                                                                                             |
 
