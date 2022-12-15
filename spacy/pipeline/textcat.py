@@ -87,7 +87,6 @@ subword_features = true
         "cats_macro_f": None,
         "cats_macro_auc": None,
         "cats_f_per_type": None,
-        "cats_macro_auc_per_type": None,
     },
 )
 def make_textcat(
@@ -293,7 +292,7 @@ class TextCategorizer(TrainablePipe):
         bp_scores(gradient)
         if sgd is not None:
             self.finish_update(sgd)
-        losses[self.name] += (gradient ** 2).sum()
+        losses[self.name] += (gradient**2).sum()
         return losses
 
     def _examples_to_truth(
@@ -327,7 +326,7 @@ class TextCategorizer(TrainablePipe):
         not_missing = self.model.ops.asarray(not_missing)  # type: ignore
         d_scores = scores - truths
         d_scores *= not_missing
-        mean_square_error = (d_scores ** 2).mean()
+        mean_square_error = (d_scores**2).mean()
         return float(mean_square_error), d_scores
 
     def add_label(self, label: str) -> int:

@@ -359,6 +359,7 @@ cdef class Doc:
             for annot in annotations:
                 if annot:
                     if annot is heads or annot is sent_starts or annot is ent_iobs:
+                        annot = numpy.array(annot, dtype=numpy.int32).astype(numpy.uint64)
                         for i in range(len(words)):
                             if attrs.ndim == 1:
                                 attrs[i] = annot[i]
@@ -1558,6 +1559,7 @@ cdef class Doc:
 
             for j, (attr, annot) in enumerate(token_annotations.items()):
                 if attr is HEAD:
+                    annot = numpy.array(annot, dtype=numpy.int32).astype(numpy.uint64)
                     for i in range(len(words)):
                         array[i, j] = annot[i]
                 elif attr is MORPH:

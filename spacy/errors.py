@@ -199,7 +199,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W117 = ("No spans to visualize found in Doc object with spans_key: '{spans_key}'. If this is "
             "surprising to you, make sure the Doc was processed using a model "
             "that supports span categorization, and check the `doc.spans[spans_key]` "
-            "property manually if necessary.")
+            "property manually if necessary.\n\nAvailable keys: {keys}")
     W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
             "for the corpora used to train the language. Please check "
             "`nlp.meta[\"sources\"]` for any relevant links.")
@@ -345,6 +345,11 @@ class Errors(metaclass=ErrorsWithCodes):
             "clear the existing vectors and resize the table.")
     E074 = ("Error interpreting compiled match pattern: patterns are expected "
             "to end with the attribute {attr}. Got: {bad_attr}.")
+    E079 = ("Error computing states in beam: number of predicted beams "
+            "({pbeams}) does not equal number of gold beams ({gbeams}).")
+    E080 = ("Duplicate state found in beam: {key}.")
+    E081 = ("Error getting gradient in beam: number of histories ({n_hist}) "
+            "does not equal number of losses ({losses}).")
     E082 = ("Error deprojectivizing parse: number of heads ({n_heads}), "
             "projective heads ({n_proj_heads}) and labels ({n_labels}) do not "
             "match.")
@@ -956,6 +961,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "sure it's overwritten on the subclass.")
     E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
+    E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
