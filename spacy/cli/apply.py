@@ -117,8 +117,10 @@ def apply(
     docbin = DocBin(store_user_data=True)
     paths = walk_directory(data_path)
     if len(paths) == 0:
-        msg.fail("Did not find data to process,"
-                 f" {data_path} seems to be an empty directory.", exits=1)
+        docbin.to_disk(output_file)
+        msg.warn("Did not find data to process,"
+                 f" {data_path} seems to be an empty directory.")
+        return
     nlp = load_model(model)
     msg.good(f"Loaded model {model}")
     vocab = nlp.vocab
