@@ -247,7 +247,7 @@ browser. Will run a simple web server.
 | `manual`           | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~ |
 | `port`             | Port to serve visualization. Defaults to `5000`. ~~int~~                                                                                                          |
 | `host`             | Host to serve visualization. Defaults to `"0.0.0.0"`. ~~str~~                                                                                                     |
-| `auto_switch_port` | If `True`, automatically switch to a different port if the specified port is already in use. Defaults to `False`. ~~bool~~                                          |
+| `auto_select_port` | If `True`, automatically switch to a different port if the specified port is already in use. Defaults to `False`. ~~bool~~                                          |
 
 ### displacy.render {#displacy.render tag="method" new="2"}
 
