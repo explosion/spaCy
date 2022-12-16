@@ -259,9 +259,9 @@ pipelines.
 > This can be used in a project command like so:
 >
 > ```yaml
->   - name: "echo-path"
->     script:
->       - "echo ${env.ENV_PATH}"
+> - name: 'echo-path'
+>   script:
+>     - 'echo ${env.ENV_PATH}'
 > ```
 
 | Section                                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -643,12 +643,13 @@ locally.
 
 You can list one or more remotes in the `remotes` section of your
 [`project.yml`](#project-yml) by mapping a string name to the URL of the
-storage. Under the hood, spaCy uses the
-[`smart-open`](https://github.com/RaRe-Technologies/smart_open) library to
-communicate with the remote storages, so you can use any protocol that
-`smart-open` supports, including [S3](https://aws.amazon.com/s3/),
-[Google Cloud Storage](https://cloud.google.com/storage), SSH and more, although
-you may need to install extra dependencies to use certain protocols.
+storage. Under the hood, spaCy uses
+[`Pathy`](https://github.com/justindujardin/pathy) to communicate with the
+remote storages, so you can use any protocol that `Pathy` supports, including
+[S3](https://aws.amazon.com/s3/),
+[Google Cloud Storage](https://cloud.google.com/storage), and the local
+filesystem, although you may need to install extra dependencies to use certain
+protocols.
 
 > #### Example
 >
@@ -661,7 +662,6 @@ you may need to install extra dependencies to use certain protocols.
 remotes:
   default: 's3://my-spacy-bucket'
   local: '/mnt/scratch/cache'
-  stuff: 'ssh://myserver.example.com/whatever'
 ```
 
 <Infobox title="How it works" emoji="💡">
