@@ -1,3 +1,5 @@
+import multiprocessing
+import time
 import numpy
 import pytest
 
@@ -363,3 +365,28 @@ def test_displacy_manual_sorted_entities():
 
     html = displacy.render(doc, style="ent", manual=True)
     assert html.find("FIRST") < html.find("SECOND")
+
+
+def test_autoport(en_vocab):
+    """Test that automatic port selection works"""
+    doc = Doc(en_vocab, words=["Welcome", "to", "the", "Bank", "of", "China"])
+
+    def background_server():
+        displacy.serve([doc], auto_select_port=True)
+
+    proc1 = multiprocessing.Process(target=background_server)
+    proc2 = multiprocessing.Process(target=background_server)
+    try:
+        proc1.start()
+        assert proc1.is_alive(), "displaCy server didn't start"
+        proc2.start()
+        time.sleep(1)
+        assert proc2.is_alive(), "Second displaCy server didn't start"
+        proc1.terminate()
+        proc2.terminate()
+    finally:
+        proc1.terminate()
+        proc2.terminate()
+        time.sleep(1)
+        proc1.close()
+        proc2.close()
