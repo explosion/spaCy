@@ -587,7 +587,7 @@ saves them to a `jsonl` file.
 
 | Name             | Description                                                                                                                        |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `progress_bar`   | Type of progress bar to show in the console: `all_steps` or `eval_steps`                                                           |
+| `progress_bar`   | Type of progress bar to show in the console: `train` or `eval`                                                                     |
 |                  | They track the number of steps until `training.max_steps` and `training.eval_frequency` are reached respectively.~~Optional[str]~~ |
 | `console_output` | Whether the logger should print the logs in the console.~~bool~~                                                                   |
 | `output_file`    | The file to save the training logs to. ~~Optional[Union[str, Path]]~~                                                              |

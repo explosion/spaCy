@@ -40,7 +40,7 @@ def console_logger(
     output_file (Optional[Union[str, Path]]): The file to save the training logs to.
     """
     return console_logger_v3(
-        progress_bar=None if progress_bar is False else "eval_steps",
+        progress_bar=None if progress_bar is False else "eval",
         console_output=console_output,
         output_file=output_file,
     )
@@ -54,8 +54,8 @@ def console_logger_v3(
 ):
     """The ConsoleLogger.v3 prints out training logs in the console and/or saves them to a jsonl file.
     progress_bar (Optional[str]): Type of progress bar to show in the console. Allowed values:
-        all_steps - Tracks the number of steps until `training.max_steps` is reached.
-        eval_steps - Tracks the number of steps until `training.eval_frequency` is reached.
+        train - Tracks the number of steps from the beginning of training until the full training run is complete (training.max_steps is reached).
+        eval - Tracks the number of steps between the previous and next evaluation (training.eval_frequency is reached).
     console_output (bool): Whether the logger should print the logs on the console.
     output_file (Optional[Union[str, Path]]): The file to save the training logs to.
     """
@@ -107,7 +107,7 @@ def console_logger_v3(
             write(msg.row(table_header, widths=table_widths, spacing=spacing))
             write(msg.row(["-" * width for width in table_widths], spacing=spacing))
         progress = None
-        expected_progress_types = ("all_steps", "eval_steps", None)
+        expected_progress_types = ("train", "eval", None)
         if progress_bar not in expected_progress_types:
             raise ValueError(
                 Errors.E1048.format(
@@ -172,7 +172,7 @@ def console_logger_v3(
                 )
                 if progress_bar:
                     # Set disable=None, so that it disables on non-TTY
-                    if progress_bar == "all_steps":
+                    if progress_bar == "train":
                         total = max_steps
                         desc = f"Last Eval Epoch: {info['epoch']}"
                         initial = info["step"]
