@@ -380,13 +380,13 @@ def test_autoport(en_vocab):
         proc1.start()
         assert proc1.is_alive(), "displaCy server didn't start"
         proc2.start()
-        time.sleep(1)
+        time.sleep(5)
         assert proc2.is_alive(), "Second displaCy server didn't start"
         proc1.terminate()
         proc2.terminate()
     finally:
         proc1.terminate()
         proc2.terminate()
-        time.sleep(1)
+        time.sleep(2)
         proc1.close()
         proc2.close()
