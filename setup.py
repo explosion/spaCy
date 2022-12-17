@@ -48,6 +48,7 @@ MOD_NAMES = [
     "spacy.pipeline._parser_internals.arc_eager",
     "spacy.pipeline._parser_internals.ner",
     "spacy.pipeline._parser_internals.nonproj",
+    "spacy.pipeline._parser_internals.search",
     "spacy.pipeline._parser_internals._state",
     "spacy.pipeline._parser_internals.stateclass",
     "spacy.pipeline._parser_internals.transition_system",
@@ -67,6 +68,7 @@ MOD_NAMES = [
     "spacy.matcher.dependencymatcher",
     "spacy.symbols",
     "spacy.vectors",
+    "spacy.tests.parser._search",
 ]
 COMPILE_OPTIONS = {
     "msvc": ["/Ox", "/EHsc"],
