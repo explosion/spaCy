@@ -113,7 +113,8 @@ class EntityRuler(Pipe):
         ent_id_sep (str): Separator used internally for entity IDs.
         scorer (Optional[Callable]): The scoring method. Defaults to
             spacy.scorer.get_ner_prf.
-        fuzzy_compare (Callable): The fuzzy comparison method.
+        fuzzy_compare (Callable): The fuzzy comparison method for the internal
+            Matcher. Defaults to spacy.matcher.matcher.fuzzy_compare.
 
         DOCS: https://spacy.io/api/entityruler#init
         """

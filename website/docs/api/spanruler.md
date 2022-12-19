@@ -46,16 +46,17 @@ how the component should be configured. You can override its settings via the
 > nlp.add_pipe("span_ruler", config=config)
 > ```
 
-| Setting               | Description                                                                                                                                                                             |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `spans_key`           | The spans key to save the spans under. If `None`, no spans are saved. Defaults to `"ruler"`. ~~Optional[str]~~                                                                          |
-| `spans_filter`        | The optional method to filter spans before they are assigned to doc.spans. Defaults to `None`. ~~Optional[Callable[[Iterable[Span], Iterable[Span]], List[Span]]]~~                     |
-| `annotate_ents`       | Whether to save spans to doc.ents. Defaults to `False`. ~~bool~~                                                                                                                        |
-| `ents_filter`         | The method to filter spans before they are assigned to doc.ents. Defaults to `util.filter_chain_spans`. ~~Callable[[Iterable[Span], Iterable[Span]], List[Span]]~~                      |
-| `phrase_matcher_attr` | Token attribute to match on, passed to the internal PhraseMatcher as `attr`. Defaults to `None`. ~~Optional[Union[int, str]]~~                                                          |
-| `validate`            | Whether patterns should be validated, passed to Matcher and PhraseMatcher as `validate`. Defaults to `False`. ~~bool~~                                                                  |
-| `overwrite`           | Whether to remove any existing spans under `Doc.spans[spans key]` if `spans_key` is set, or to remove any ents under `Doc.ents` if `annotate_ents` is set. Defaults to `True`. ~~bool~~ |
-| `scorer`              | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                       |
+| Setting                                        | Description                                                                                                                                                                             |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spans_key`                                    | The spans key to save the spans under. If `None`, no spans are saved. Defaults to `"ruler"`. ~~Optional[str]~~                                                                          |
+| `spans_filter`                                 | The optional method to filter spans before they are assigned to doc.spans. Defaults to `None`. ~~Optional[Callable[[Iterable[Span], Iterable[Span]], List[Span]]]~~                     |
+| `annotate_ents`                                | Whether to save spans to doc.ents. Defaults to `False`. ~~bool~~                                                                                                                        |
+| `ents_filter`                                  | The method to filter spans before they are assigned to doc.ents. Defaults to `util.filter_chain_spans`. ~~Callable[[Iterable[Span], Iterable[Span]], List[Span]]~~                      |
+| `phrase_matcher_attr`                          | Token attribute to match on, passed to the internal `PhraseMatcher` as `attr`. Defaults to `None`. ~~Optional[Union[int, str]]~~                                                        |
+| `validate`                                     | Whether patterns should be validated, passed to `Matcher` and `PhraseMatcher` as `validate`. Defaults to `False`. ~~bool~~                                                              |
+| `overwrite`                                    | Whether to remove any existing spans under `Doc.spans[spans key]` if `spans_key` is set, or to remove any ents under `Doc.ents` if `annotate_ents` is set. Defaults to `True`. ~~bool~~ |
+| `scorer`                                       | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                       |
+| `fuzzy_compare` <Tag variant="new">3.5.0</Tag> | The fuzzy comparison method, passed on to the internal `Matcher`. ~~Callable~~                                                                                                          |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/span_ruler.py

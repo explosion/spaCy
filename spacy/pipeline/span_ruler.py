@@ -261,7 +261,8 @@ class SpanRuler(Pipe):
             `annotate_ents` is set. Defaults to `True`.
         scorer (Optional[Callable]): The scoring method. Defaults to
             spacy.pipeline.span_ruler.overlapping_labeled_spans_score.
-        fuzzy_compare (Callable): The default fuzzy comparison method.
+        fuzzy_compare (Callable): The fuzzy comparison method for the internal
+            Matcher. Defaults to spacy.matcher.matcher.fuzzy_compare.
 
         DOCS: https://spacy.io/api/spanruler#init
         """
