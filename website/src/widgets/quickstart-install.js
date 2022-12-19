@@ -13,10 +13,10 @@ const DEFAULT_CUDA = 'cuda-autodetect'
 const CUDA = {
     '8.0': 'cuda80',
     '9.0': 'cuda90',
-    '9.1': 'cuda91',
-    '9.2': 'cuda92',
+    9.1: 'cuda91',
+    9.2: 'cuda92',
     '10.0': 'cuda100',
-    '10.1': 'cuda101',
+    10.1: 'cuda101',
     '10.2, 11.0+': 'cuda-autodetect',
 }
 const LANG_EXTRAS = ['ja'] // only for languages with models
@@ -30,26 +30,26 @@ const QuickstartInstall = ({ id, title }) => {
     const [selectedModels, setModels] = useState(DEFAULT_MODELS)
     const [efficiency, setEfficiency] = useState(DEFAULT_OPT === 'efficiency')
     const setters = {
-        hardware: v => (Array.isArray(v) ? setHardware(v[0]) : setCuda(v)),
-        config: v => setTrain(v.includes('train')),
+        hardware: (v) => (Array.isArray(v) ? setHardware(v[0]) : setCuda(v)),
+        config: (v) => setTrain(v.includes('train')),
         models: setModels,
-        optimize: v => setEfficiency(v.includes('efficiency')),
-        platform: v => setPlatform(v[0]),
-        os: v => setOs(v[0]),
+        optimize: (v) => setEfficiency(v.includes('efficiency')),
+        platform: (v) => setPlatform(v[0]),
+        os: (v) => setOs(v[0]),
     }
     const showDropdown = {
         hardware: () => hardware === 'gpu',
     }
-    const modelExtras = train ? selectedModels.filter(m => LANG_EXTRAS.includes(m)) : []
+    const modelExtras = train ? selectedModels.filter((m) => LANG_EXTRAS.includes(m)) : []
     const apple = os === 'mac' && platform === 'arm'
     const pipExtras = [
-        (hardware === 'gpu' && (platform !== 'arm' || os === 'linux')) && cuda,
+        hardware === 'gpu' && (platform !== 'arm' || os === 'linux') && cuda,
         train && 'transformers',
         train && 'lookups',
         apple && 'apple',
         ...modelExtras,
     ]
-        .filter(e => e)
+        .filter((e) => e)
         .join(',')
     return (
         <StaticQuery
@@ -85,7 +85,7 @@ const QuickstartInstall = ({ id, title }) => {
                             { id: 'pip', title: 'pip', checked: true },
                             !nightly ? { id: 'conda', title: 'conda' } : null,
                             { id: 'source', title: 'from source' },
-                        ].filter(o => o),
+                        ].filter((o) => o),
                     },
                     {
                         id: 'hardware',
@@ -94,7 +94,7 @@ const QuickstartInstall = ({ id, title }) => {
                             { id: 'cpu', title: 'CPU', checked: DEFAULT_HARDWARE === 'cpu' },
                             { id: 'gpu', title: 'GPU', checked: DEFAULT_HARDWARE == 'gpu' },
                         ],
-                        dropdown: Object.keys(CUDA).map(id => ({
+                        dropdown: Object.keys(CUDA).map((id) => ({
                             id: CUDA[id],
                             title: `CUDA ${id}`,
                         })),
@@ -113,8 +113,7 @@ const QuickstartInstall = ({ id, title }) => {
                             {
                                 id: 'train',
                                 title: 'train models',
-                                help:
-                                    'Check this if you plan to train your own models with spaCy to install extra dependencies and data resources',
+                                help: 'Check this if you plan to train your own models with spaCy to install extra dependencies and data resources',
                             },
                         ],
                     },
@@ -160,7 +159,10 @@ const QuickstartInstall = ({ id, title }) => {
                         showDropdown={showDropdown}
                     >
                         <QS os="mac" hardware="gpu" platform="arm">
-                            # Note M1 GPU support is experimental, see <a href="https://github.com/explosion/thinc/issues/792">Thinc issue #792</a>
+                            # Note M1 GPU support is experimental, see{' '}
+                            <a href="https://github.com/explosion/thinc/issues/792">
+                                Thinc issue #792
+                            </a>
                         </QS>
                         <QS package="pip" config="venv">
                             python -m venv .env
@@ -220,7 +222,8 @@ const QuickstartInstall = ({ id, title }) => {
                         <QS package="source">cd spaCy</QS>
                         <QS package="source">pip install -r requirements.txt</QS>
                         <QS package="source">
-                            pip install --no-build-isolation --editable {train || hardware == 'gpu' ? `'.[${pipExtras}]'` : '.'}
+                            pip install --no-build-isolation --editable{' '}
+                            {train || hardware == 'gpu' ? `'.[${pipExtras}]'` : '.'}
                         </QS>
                         <QS config="train" package="conda" comment prompt={false}>
                             # packages only available via pip

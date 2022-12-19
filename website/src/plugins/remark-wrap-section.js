@@ -28,7 +28,7 @@ function remarkWrapSection(userOptions = {}) {
         const headingsMap = []
         const newTree = []
 
-        visit(tree, 'import', node => {
+        visit(tree, 'import', (node) => {
             // For compatibility with MDX / gatsby-mdx, make sure import nodes
             // are not moved further down into children (which means they're not
             // recognized and interpreted anymore). Add them to the very start
@@ -52,7 +52,7 @@ function remarkWrapSection(userOptions = {}) {
                     index === headingsMap.length ? tree.children.length : headingsMap[index].index
                 const children = tree.children
                     .slice(sectionStartIndex, sectionEndIndex)
-                    .filter(node => node.type !== 'import')
+                    .filter((node) => node.type !== 'import')
 
                 if (children.length) {
                     const headingId = index === 0 ? 0 : headingsMap[index - 1].id

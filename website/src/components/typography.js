@@ -105,7 +105,7 @@ const Headline = ({
     const headingClassNames = classNames(classes.heading, className, {
         [classes.clear]: hasAction,
     })
-    const tags = tag ? tag.split(',').map(t => t.trim()) : []
+    const tags = tag ? tag.split(',').map((t) => t.trim()) : []
     return (
         <Component id={id} name={name} className={headingClassNames}>
             <Permalink id={permalink ? id : null}>{children} </Permalink>

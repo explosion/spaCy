@@ -85,9 +85,7 @@ export function htmlToReact(html) {
  * @returns {Node} - The converted React elements.
  */
 export function markdownToReact(markdown, remarkReactComponents = {}) {
-    return remark()
-        .use(remark2react, { remarkReactComponents })
-        .processSync(markdown).contents
+    return remark().use(remark2react, { remarkReactComponents }).processSync(markdown).contents
 }
 
 /**
@@ -113,7 +111,7 @@ export function join(arr, delimiter = ', ') {
  * @return {Object} - The converted object.
  */
 export function arrayToObj(arr, key) {
-    return Object.assign({}, ...arr.map(item => ({ [item[key]]: item })))
+    return Object.assign({}, ...arr.map((item) => ({ [item[key]]: item })))
 }
 
 /**

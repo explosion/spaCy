@@ -101,19 +101,19 @@ exports.createPages = ({ graphql, actions }) => {
                         }
                     }
                 `
-            ).then(result => {
+            ).then((result) => {
                 if (result.errors) {
                     console.log(result.errors)
                     reject(result.errors)
                 }
 
                 const sectionData = result.data.site.siteMetadata.sections
-                const sections = Object.assign({}, ...sectionData.map(s => ({ [s.id]: s })))
+                const sections = Object.assign({}, ...sectionData.map((s) => ({ [s.id]: s })))
 
                 /* Regular pages */
 
                 const pages = result.data.allFile.edges
-                pages.forEach(page => {
+                pages.forEach((page) => {
                     const { name } = path.parse(page.node.absolutePath)
                     if (!name.startsWith('_')) {
                         const mdx = page.node.childMdx || {}
@@ -184,7 +184,7 @@ exports.createPages = ({ graphql, actions }) => {
                 })
 
                 const universe = result.data.site.siteMetadata.universe.resources
-                universe.forEach(page => {
+                universe.forEach((page) => {
                     const slug = `/universe/project/${page.id}`
 
                     createPage({
@@ -203,8 +203,11 @@ exports.createPages = ({ graphql, actions }) => {
                 })
 
                 const universeCategories = result.data.site.siteMetadata.universe.categories
-                const categories = [].concat.apply([], universeCategories.map(cat => cat.items))
-                categories.forEach(page => {
+                const categories = [].concat.apply(
+                    [],
+                    universeCategories.map((cat) => cat.items)
+                )
+                categories.forEach((page) => {
                     const slug = `/universe/category/${page.id}`
 
                     createPage({

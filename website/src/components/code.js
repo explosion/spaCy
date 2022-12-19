@@ -16,13 +16,13 @@ import classes from '../styles/code.module.sass'
 const WRAP_THRESHOLD = 30
 const CLI_GROUPS = ['init', 'debug', 'project', 'ray', 'huggingface-hub']
 
-export default props => (
+export default (props) => (
     <Pre>
         <Code {...props} />
     </Pre>
 )
 
-export const Pre = props => {
+export const Pre = (props) => {
     return <pre className={classes.pre}>{props.children}</pre>
 }
 
@@ -100,7 +100,7 @@ function replacePrompt(line, prompt, isFirst = false) {
 }
 
 function parseArgs(raw) {
-    let args = raw.split(' ').filter(arg => arg)
+    let args = raw.split(' ').filter((arg) => arg)
     const result = {}
     while (args.length) {
         let opt = args.shift()
@@ -167,7 +167,7 @@ function formatCode(html, lang, prompt) {
         const lines = html
             .trim()
             .split('\n')
-            .map(line =>
+            .map((line) =>
                 line
                     .split(' | ')
                     .map((l, i) => convertLine(l, i))
@@ -233,17 +233,8 @@ export class Code extends React.Component {
     }
 
     render() {
-        const {
-            lang,
-            title,
-            executable,
-            github,
-            prompt,
-            wrap,
-            highlight,
-            className,
-            children,
-        } = this.props
+        const { lang, title, executable, github, prompt, wrap, highlight, className, children } =
+            this.props
         const codeClassNames = classNames(classes.code, className, `language-${lang}`, {
             [classes.wrap]: !!highlight || !!wrap || lang === 'cli',
             [classes.cli]: lang === 'cli',
@@ -263,7 +254,7 @@ export class Code extends React.Component {
         }
 
         const codeText = Array.isArray(children) ? children.join('') : children || ''
-        const highlightRange = highlight ? rangeParser.parse(highlight).filter(n => n > 0) : []
+        const highlightRange = highlight ? rangeParser.parse(highlight).filter((n) => n > 0) : []
         const rawHtml = ['none', 'cli'].includes(lang)
             ? codeText
             : highlightCode(lang, codeText, highlightRange)
@@ -280,7 +271,7 @@ export class Code extends React.Component {
 const JuniperWrapper = ({ Juniper, title, lang, children }) => (
     <StaticQuery
         query={query}
-        render={data => {
+        render={(data) => {
             const { binderUrl, binderBranch, binderVersion } = data.site.siteMetadata
             const juniperTitle = title || 'Editable Code'
             return (

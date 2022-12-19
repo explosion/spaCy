@@ -17,7 +17,7 @@ const defaultOptions = {
 function remarkCustomAttrs(userOptions = {}) {
     const options = Object.assign({}, defaultOptions, userOptions)
     function transformer(tree) {
-        visit(tree, null, node => {
+        visit(tree, null, (node) => {
             if (options.elements.includes(node.type)) {
                 if (
                     node.children &&
@@ -25,10 +25,13 @@ function remarkCustomAttrs(userOptions = {}) {
                     node.children[0].type === 'text' &&
                     node.children[0].value
                 ) {
-                    if (node.children.length > 1 && node.children.every(el => el.type === 'text')) {
+                    if (
+                        node.children.length > 1 &&
+                        node.children.every((el) => el.type === 'text')
+                    ) {
                         // If headlines contain escaped characters, e.g.
                         // Doc.\_\_init\_\_, it will be split into several nodes
-                        const mergedText = node.children.map(el => el.value).join('')
+                        const mergedText = node.children.map((el) => el.value).join('')
                         node.children[0].value = mergedText
                         node.children = [node.children[0]]
                     }

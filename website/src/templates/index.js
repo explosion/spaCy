@@ -221,7 +221,7 @@ class Layout extends React.Component {
 export default withMDXScope(Layout)
 
 export const pageQuery = graphql`
-    query($slug: String!) {
+    query ($slug: String!) {
         site {
             siteMetadata {
                 nightly

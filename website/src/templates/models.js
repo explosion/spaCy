@@ -70,8 +70,7 @@ const MODEL_META = {
     pipeline: 'Active processing pipeline components in order',
     components: 'All processing pipeline components (including disabled components)',
     sources: 'Sources of training data',
-    vecs:
-        'Word vectors included in the package. Packages that only support context vectors compute similarity via the tensors shared with the pipeline.',
+    vecs: 'Word vectors included in the package. Packages that only support context vectors compute similarity via the tensors shared with the pipeline.',
     benchmark_parser: 'Syntax accuracy',
     benchmark_ner: 'NER accuracy',
     benchmark_speed: 'Speed',
@@ -113,7 +112,7 @@ function getLatestVersion(modelId, compatibility, prereleases) {
 
 function formatVectors(data) {
     if (!data) return 'n/a'
-    if (Object.values(data).every(n => n === 0)) return 'context vectors only'
+    if (Object.values(data).every((n) => n === 0)) return 'context vectors only'
     const { keys, vectors, width } = data
     if (keys >= 0) {
         return `${abbrNum(keys)} keys, ${abbrNum(vectors)} unique vectors (${width} dimensions)`
@@ -123,10 +122,10 @@ function formatVectors(data) {
 }
 
 function formatAccuracy(data, lang) {
-    const exclude = (lang !== "ja") ? ['speed'] : ['speed', 'morph_acc']
+    const exclude = lang !== 'ja' ? ['speed'] : ['speed', 'morph_acc']
     if (!data) return []
     return Object.keys(data)
-        .map(label => {
+        .map((label) => {
             const value = data[label]
             return isNaN(value) || exclude.includes(label)
                 ? null
@@ -136,14 +135,18 @@ function formatAccuracy(data, lang) {
                       help: MODEL_META[label],
                   }
         })
-        .filter(item => item)
+        .filter((item) => item)
 }
 
 function formatDownloadLink(lang, name, version) {
-  const fullName = `${lang}_${name}-${version}`
-  const filename = `${fullName}-py3-none-any.whl`
-  const url = `https://github.com/explosion/spacy-models/releases/download/${fullName}/${filename}`
-  return <Link to={url} hideIcon>{filename}</Link>
+    const fullName = `${lang}_${name}-${version}`
+    const filename = `${fullName}-py3-none-any.whl`
+    const url = `https://github.com/explosion/spacy-models/releases/download/${fullName}/${filename}`
+    return (
+        <Link to={url} hideIcon>
+            {filename}
+        </Link>
+    )
 }
 
 function formatModelMeta(data) {
@@ -167,7 +170,7 @@ function formatModelMeta(data) {
 }
 
 function formatSources(data = []) {
-    const sources = data.map(s => (isString(s) ? { name: s } : s))
+    const sources = data.map((s) => (isString(s) ? { name: s } : s))
     return sources.map(({ name, url, author }, i) => (
         <Fragment key={i}>
             {i > 0 && <br />}
@@ -179,7 +182,7 @@ function formatSources(data = []) {
 
 function linkComponents(components = []) {
     return join(
-        components.map(c => (
+        components.map((c) => (
             <Fragment key={c}>
                 <OptionalLink to={COMPONENT_LINKS[c]} hideIcon>
                     <InlineCode>{c}</InlineCode>
@@ -210,23 +213,23 @@ const Model = ({
     const [isError, setIsError] = useState(true)
     const [meta, setMeta] = useState({})
     const { type, genre, size } = getModelComponents(name)
-    const display_type = type === 'core' && (size === 'sm' || size === 'trf') ? 'core_no_vectors' : type
-    const version = useMemo(() => getLatestVersion(name, compatibility, prereleases), [
-        name,
-        compatibility,
-        prereleases,
-    ])
+    const display_type =
+        type === 'core' && (size === 'sm' || size === 'trf') ? 'core_no_vectors' : type
+    const version = useMemo(
+        () => getLatestVersion(name, compatibility, prereleases),
+        [name, compatibility, prereleases]
+    )
 
     useEffect(() => {
         window.dispatchEvent(new Event('resize')) // scroll position for progress
         if (!initialized && version) {
             setIsError(false)
             fetch(`${baseUrl}/meta/${name}-${version}.json`)
-                .then(res => res.json())
-                .then(json => {
+                .then((res) => res.json())
+                .then((json) => {
                     setMeta(formatModelMeta(json))
                 })
-                .catch(err => {
+                .catch((err) => {
                     setIsError(true)
                     console.error(err)
                 })
@@ -360,7 +363,7 @@ const Model = ({
                     </p>
                     <Table fixed>
                         <tbody>
-                            {Object.keys(labels).map(pipe => {
+                            {Object.keys(labels).map((pipe) => {
                                 const labelNames = labels[pipe] || []
                                 const help = LABEL_SCHEME_META[pipe]
                                 return (
@@ -402,9 +405,9 @@ const Models = ({ pageContext, repo, children }) => {
         window.dispatchEvent(new Event('resize')) // scroll position for progress
         if (!initialized) {
             fetch(`${baseUrl}/compatibility.json`)
-                .then(res => res.json())
+                .then((res) => res.json())
                 .then(({ spacy }) => setCompatibility(spacy))
-                .catch(err => console.error(err))
+                .catch((err) => console.error(err))
             setInitialized(true)
         }
     }, [initialized, baseUrl])
@@ -415,7 +418,7 @@ const Models = ({ pageContext, repo, children }) => {
             <StaticQuery
                 query={query}
                 render={({ site }) =>
-                    models.map(modelName => (
+                    models.map((modelName) => (
                         <Model
                             key={modelName}
                             name={modelName}
