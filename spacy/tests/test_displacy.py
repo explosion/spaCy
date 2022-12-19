@@ -385,8 +385,10 @@ def test_autoport(en_vocab):
         proc1.terminate()
         proc2.terminate()
     finally:
-        proc1.terminate()
-        proc2.terminate()
+        if proc1.is_alive():
+            proc1.terminate()
+        if proc2.is_alive():
+            proc2.terminate()
         time.sleep(2)
         proc1.close()
         proc2.close()
