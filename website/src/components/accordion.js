@@ -17,7 +17,7 @@ export default function Accordion({ title, id, expanded = false, spaced = false,
         [classes.hidden]: isExpanded,
     })
     // Make sure accordion is expanded if JS is disabled
-    useEffect(() => setIsExpanded(expanded), [])
+    useEffect(() => setIsExpanded(expanded), [expanded])
     return (
         <section className="accordion" id={id}>
             <div className={rootClassNames}>

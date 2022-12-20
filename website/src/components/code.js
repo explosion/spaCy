@@ -4,7 +4,6 @@ import classNames from 'classnames'
 import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
 import 'prismjs-bibtex'
 import rangeParser from 'parse-numeric-range'
-import { StaticQuery, graphql } from 'gatsby'
 import { window } from 'browser-monads'
 
 import CUSTOM_TYPES from '../../meta/type-annotations.json'
@@ -12,15 +11,19 @@ import { isString, htmlToReact } from './util'
 import Link, { OptionalLink } from './link'
 import GitHubCode from './github'
 import classes from '../styles/code.module.sass'
+import siteMetadata from '../../meta/site.json'
+import { binderBranch } from '../../meta/dynamicMeta'
 
 const WRAP_THRESHOLD = 30
 const CLI_GROUPS = ['init', 'debug', 'project', 'ray', 'huggingface-hub']
 
-export default (props) => (
+const CodeBlock = (props) => (
     <Pre>
         <Code {...props} />
     </Pre>
 )
+
+export default CodeBlock
 
 export const Pre = (props) => {
     return <pre className={classes.pre}>{props.children}</pre>
@@ -172,7 +175,7 @@ function formatCode(html, lang, prompt) {
                     .split(' | ')
                     .map((l, i) => convertLine(l, i))
                     .map((l, j) => (
-                        <Fragment>
+                        <Fragment key={j}>
                             {j !== 0 && <span> | </span>}
                             {l}
                         </Fragment>
@@ -268,51 +271,34 @@ export class Code extends React.Component {
     }
 }
 
-const JuniperWrapper = ({ Juniper, title, lang, children }) => (
-    <StaticQuery
-        query={query}
-        render={(data) => {
-            const { binderUrl, binderBranch, binderVersion } = data.site.siteMetadata
-            const juniperTitle = title || 'Editable Code'
-            return (
-                <div className={classes.juniperWrapper}>
-                    <h4 className={classes.juniperTitle}>
-                        {juniperTitle}
-                        <span className={classes.juniperMeta}>
-                            spaCy v{binderVersion} &middot; Python 3 &middot; via{' '}
-                            <Link to="https://mybinder.org/" hidden>
-                                Binder
-                            </Link>
-                        </span>
-                    </h4>
+const JuniperWrapper = ({ Juniper, title, lang, children }) => {
+    const { binderUrl, binderVersion } = siteMetadata
+    const juniperTitle = title || 'Editable Code'
+    return (
+        <div className={classes.juniperWrapper}>
+            <h4 className={classes.juniperTitle}>
+                {juniperTitle}
+                <span className={classes.juniperMeta}>
+                    spaCy v{binderVersion} &middot; Python 3 &middot; via{' '}
+                    <Link to="https://mybinder.org/" hidden>
+                        Binder
+                    </Link>
+                </span>
+            </h4>
 
-                    <Juniper
-                        repo={binderUrl}
-                        branch={binderBranch}
-                        lang={lang}
-                        classNames={{
-                            cell: classes.juniperCell,
-                            input: classes.juniperInput,
-                            button: classes.juniperButton,
-                            output: classes.juniperOutput,
-                        }}
-                    >
-                        {children}
-                    </Juniper>
-                </div>
-            )
-        }}
-    />
-)
-
-const query = graphql`
-    query JuniperQuery {
-        site {
-            siteMetadata {
-                binderUrl
-                binderBranch
-                binderVersion
-            }
-        }
-    }
-`
+            <Juniper
+                repo={binderUrl}
+                branch={binderBranch}
+                lang={lang}
+                classNames={{
+                    cell: classes.juniperCell,
+                    input: classes.juniperInput,
+                    button: classes.juniperButton,
+                    output: classes.juniperOutput,
+                }}
+            >
+                {children}
+            </Juniper>
+        </div>
+    )
+}

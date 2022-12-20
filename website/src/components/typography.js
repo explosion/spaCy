@@ -70,12 +70,6 @@ export const Help = ({ children, className, size = 16 }) => (
     </span>
 )
 
-/**
- * Allows inserting comments that will appear in .md preview on GitHub, but
- * won't be included in the final build of the site.
- */
-export const Comment = () => null
-
 const Permalink = ({ id, children }) =>
     !id ? (
         <span className={headingTextClassName}>{children}</span>

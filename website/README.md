@@ -78,6 +78,7 @@ bit of time.
 ```yaml
 ├── docs                 # the actual markdown content
 ├── meta                 # JSON-formatted site metadata
+|   ├── dynamicMeta.js   # At build time generated meta data
 |   ├── languages.json   # supported languages and statistical models
 |   ├── sidebars.json    # sidebar navigations for different sections
 |   ├── site.json        # general site metadata

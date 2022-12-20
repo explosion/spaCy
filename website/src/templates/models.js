@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo, Fragment } from 'react'
-import { StaticQuery, graphql } from 'gatsby'
 import { window } from 'browser-monads'
 
 import Title from '../components/title'
@@ -16,6 +15,9 @@ import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
 import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
 import { isString, isEmptyObj } from '../components/util'
+
+import siteMetadata from '../../meta/site.json'
+import languages from '../../meta/languages.json'
 
 const COMPONENT_LINKS = {
     tok2vec: '/api/tok2vec',
@@ -367,7 +369,7 @@ const Model = ({
                                 const labelNames = labels[pipe] || []
                                 const help = LABEL_SCHEME_META[pipe]
                                 return (
-                                    <Tr key={`${name}-${pipe}`} evenodd={false} key={pipe}>
+                                    <Tr evenodd={false} key={pipe}>
                                         <Td style={{ width: '20%' }}>
                                             <Label>
                                                 {pipe} {help && <Help>{help}</Help>}
@@ -415,43 +417,23 @@ const Models = ({ pageContext, repo, children }) => {
     return (
         <>
             <Title title={title} teaser={`Available trained pipelines for ${title}`} />
-            <StaticQuery
-                query={query}
-                render={({ site }) =>
-                    models.map((modelName) => (
-                        <Model
-                            key={modelName}
-                            name={modelName}
-                            langId={id}
-                            langName={title}
-                            compatibility={compatibility}
-                            baseUrl={baseUrl}
-                            repo={repo}
-                            licenses={arrayToObj(site.siteMetadata.licenses, 'id')}
-                            hasExamples={meta.hasExamples}
-                            prereleases={site.siteMetadata.nightly}
-                        />
-                    ))
-                }
-            />
-
+            {models.map((modelName) => (
+                <Model
+                    key={modelName}
+                    name={modelName}
+                    langId={id}
+                    langName={title}
+                    compatibility={compatibility}
+                    baseUrl={baseUrl}
+                    repo={repo}
+                    licenses={arrayToObj(languages.licenses, 'id')}
+                    hasExamples={meta.hasExamples}
+                    prereleases={siteMetadata.nightly}
+                />
+            ))}
             {children}
         </>
     )
 }
 
 export default Models
-
-const query = graphql`
-    query ModelsQuery {
-        site {
-            siteMetadata {
-                nightly
-                licenses {
-                    id
-                    url
-                }
-            }
-        }
-    }
-`

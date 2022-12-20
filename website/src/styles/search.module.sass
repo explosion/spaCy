@@ -26,33 +26,3 @@
     top: 0.25rem
     left: 0.15rem
     cursor: pointer
-
-/* Algolia DocSearch */
-
-@include breakpoint(max, xs)
-    \:global(.algolia-autocomplete .ds-dropdown-menu)
-        max-width: 90vw !important
-        min-width: 90vw !important
-
-\:global(.algolia-autocomplete .algolia-docsearch-suggestion--category-header)
-    display: block
-    font: bold var(--font-size-lg)/var(--line-height-md) var(--font-secondary)
-    text-transform: uppercase
-    color: var(--color-theme)
-
-\:global(.algolia-autocomplete .algolia-docsearch-suggestion--subcategory-column)
-    color: var(--color-dark)
-
-\:global(.algolia-autocomplete .algolia-docsearch-suggestion--title)
-    font-size: var(--font-size-sm)
-
-\:global(.algolia-autocomplete .ds-dropdown-menu .ds-suggestion.ds-cursor .algolia-docsearch-suggestion--content)
-    background: var(--color-subtle-opaque) !important
-
-\:global(.algolia-autocomplete .algolia-docsearch-suggestion--text)
-    font-size: var(--font-size-sm)
-
-\:global(.algolia-autocomplete .algolia-docsearch-suggestion--highlight)
-    box-shadow: none !important
-    background: var(--color-theme-opaque) !important
-    color: var(--color-theme-dark) !important
