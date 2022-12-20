@@ -22,7 +22,7 @@
         {
             "files": ["package.json", "package-lock.json"],
             "options": {
-                "tabWidth": 4,
+                "tabWidth": 2,
                 "printWidth": 80,
                 "proseWrap": "always"
             }
