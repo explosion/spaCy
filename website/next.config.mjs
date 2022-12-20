@@ -2,13 +2,11 @@ import MDX from '@next/mdx'
 import PWA from 'next-pwa'
 
 import remarkPlugins from './plugins/index.mjs'
-import rehypePlugins from './plugins/rehypePlugins.mjs'
 
 const withMDX = MDX({
     extension: /\.mdx?$/,
     options: {
         remarkPlugins,
-        rehypePlugins,
         providerImportSource: '@mdx-js/react',
     },
     experimental: {

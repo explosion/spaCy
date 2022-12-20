@@ -2,10 +2,17 @@ import React, { Fragment, useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import rangeParser from 'parse-numeric-range'
-import { window } from 'browser-monads'
 import Prism from 'prismjs'
 
+// We manually load all the languages that are needed, which are currently only those:
+import 'prismjs/components/prism-diff.min.js'
+import 'prismjs/components/prism-bash.min.js'
+import 'prismjs/components/prism-ini.min.js'
+import 'prismjs/components/prism-jsx.min.js'
+import 'prismjs/components/prism-json.min.js'
+import 'prismjs/components/prism-markdown.min.js'
 import 'prismjs/components/prism-python.min.js'
+import 'prismjs/components/prism-yaml.min.js'
 
 import CUSTOM_TYPES from '../../meta/type-annotations.json'
 import { isString, htmlToReact } from './util'
@@ -197,12 +204,7 @@ const checkoutForComment = (line) => {
     )
 }
 
-const convertLine = (line, prompt) => {
-    const lineFlat = flattenReact(line).join('')
-    if (!lineFlat.startsWith(`${prompt} `)) {
-        return line
-    }
-
+const handlePromot = ({ lineFlat, prompt }) => {
     const lineWithoutPrompt = lineFlat.slice(prompt.length + 1)
 
     const cliRegex = /^python -m spacy/
@@ -244,6 +246,23 @@ const convertLine = (line, prompt) => {
     )
 }
 
+const convertLine = ({ line, prompt, lang }) => {
+    const lineFlat = flattenReact(line).join('')
+    if (lineFlat.startsWith(`${prompt} `)) {
+        return handlePromot({ lineFlat, prompt })
+    }
+
+    return lang === 'none' || !lineFlat ? (
+        lineFlat
+    ) : (
+        <span
+            dangerouslySetInnerHTML={{
+                __html: Prism.highlight(lineFlat, Prism.languages[lang], lang),
+            }}
+        />
+    )
+}
+
 const addLineHighlight = (children, highlight) => {
     if (!highlight) {
         return children
@@ -269,18 +288,18 @@ const addLineHighlight = (children, highlight) => {
     })
 }
 
-const CodeHighlighted = ({ children, highlight }) => {
+export const CodeHighlighted = ({ children, highlight, lang }) => {
     const [html, setHtml] = useState()
 
     useEffect(
         () =>
             setHtml(
                 addLineHighlight(
-                    splitLines(children).map((line) => convertLine(line, '$')),
+                    splitLines(children).map((line) => convertLine({ line, prompt: '$', lang })),
                     highlight
                 )
             ),
-        [children, highlight]
+        [children, highlight, lang]
     )
 
     return <>{html}</>
@@ -304,8 +323,7 @@ export class Code extends React.Component {
     }
 
     render() {
-        const { lang, title, executable, github, prompt, wrap, highlight, className, children } =
-            this.props
+        const { lang, title, executable, github, wrap, highlight, className, children } = this.props
         const codeClassNames = classNames(classes['code'], className, `language-${lang}`, {
             [classes['wrap']]: !!highlight || !!wrap || lang === 'cli',
             [classes['cli']]: lang === 'cli',
@@ -327,7 +345,9 @@ export class Code extends React.Component {
             <>
                 {title && <h4 className={classes['title']}>{title}</h4>}
                 <code className={codeClassNames}>
-                    <CodeHighlighted highlight={highlight}>{children}</CodeHighlighted>
+                    <CodeHighlighted highlight={highlight} lang={lang}>
+                        {children}
+                    </CodeHighlighted>
                 </code>
             </>
         )

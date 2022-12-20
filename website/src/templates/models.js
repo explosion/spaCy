@@ -298,8 +298,8 @@ const Model = ({
                 {name}
             </H2>
             <Aside title="Installation">
-                <CodeBlock lang="cli" prompt="$">
-                    python -m spacy download {name}
+                <CodeBlock lang="bash" prompt="$">
+                    $ python -m spacy download {name}
                 </CodeBlock>
             </Aside>
             {meta.description && <MarkdownToReact markdown={meta.description} />}

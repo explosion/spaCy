@@ -5,7 +5,6 @@ import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote'
 import path from 'path'
 import Layout from '../src/templates'
 import remarkPlugins from '../plugins/index.mjs'
-import rehypePlugins from '../plugins/rehypePlugins.mjs'
 
 import recordSection from '../meta/recordSections'
 import { sidebarUsageFlat } from '../meta/sidebarFlat'
@@ -94,10 +93,7 @@ export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (
 
     const mdx = await serialize(fs.readFileSync(pathFileWithIndexAndExtension, 'utf-8'), {
         parseFrontmatter: true,
-        mdxOptions: {
-            remarkPlugins,
-            rehypePlugins,
-        },
+        mdxOptions: { remarkPlugins },
     })
 
     if (!mdx.frontmatter) {
