@@ -4,7 +4,7 @@ import Layout from '../../src/templates'
 const Universe = () => {
     return (
         <Layout
-            slug={['universe']}
+            slug={'/universe'}
             section="universe"
             sectionTitle={recordSections.universe.title}
             theme={recordSections.universe.theme}

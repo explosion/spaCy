@@ -32,7 +32,7 @@ export const getStaticProps: GetStaticProps<PropsPageBase, ParsedUrlQuery> = asy
             id: item.id,
             title: item.title,
             teaser: item.description,
-            slug: args.params.slug,
+            slug: `/universe/category/${args.params.slug}`,
             isIndex: false,
             data: { ...item, isCategory: true },
             section: 'universe',

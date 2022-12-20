@@ -30,7 +30,7 @@ export const getStaticProps: GetStaticProps<PropsPageBase, ParsedUrlQuery> = asy
             id: resource.id,
             title: resource.title || resource.id,
             teaser: resource.slogan || null,
-            slug: args.params.slug,
+            slug: `/universe/project/${args.params.slug}`,
             isIndex: false,
             data: { ...resource, isProject: true },
             section: 'universe',
