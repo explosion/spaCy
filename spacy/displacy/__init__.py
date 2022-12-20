@@ -11,7 +11,7 @@ from .render import DependencyRenderer, EntityRenderer, SpanRenderer
 from ..tokens import Doc, Span
 from ..errors import Errors, Warnings
 from ..util import is_in_jupyter
-from ..util import is_port_in_use
+from ..util import find_available_port
 
 
 _html = {}
@@ -102,36 +102,20 @@ def serve(
     """
     from wsgiref import simple_server
 
-    serve_port = port
+    port = find_available_port(port, host, auto_select_port)
 
-    if is_port_in_use(serve_port):
-        if not auto_select_port:
-            raise ValueError(Errors.E1049.format(port=port))
-
-        while is_port_in_use(serve_port) and serve_port < 65535:
-            serve_port += 1
-
-        if is_in_jupyter():
-            warnings.warn(Warnings.W011)
-        render(
-            docs, style=style, page=page, minify=minify, options=options, manual=manual
-        )
-
-        if serve_port == 65535 and is_port_in_use(serve_port):
-            raise ValueError(Errors.E1048.format(host=host))
-
-        if serve_port != port:
-            warnings.warn(
-                Warnings.W124.format(host=host, port=port, serve_port=serve_port)
-            )
-
-    httpd = simple_server.make_server(host, serve_port, app)
+    if is_in_jupyter():
+        warnings.warn(Warnings.W011)
+    render(
+        docs, style=style, page=page, minify=minify, options=options, manual=manual
+    )
+    httpd = simple_server.make_server(host, port, app)
     print(f"\nUsing the '{style}' visualizer")
-    print(f"Serving on http://{host}:{serve_port} ...\n")
+    print(f"Serving on http://{host}:{port} ...\n")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print(f"Shutting down server on port {serve_port}.")
+        print(f"Shutting down server on port {port}.")
     finally:
         httpd.server_close()
 

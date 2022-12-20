@@ -1749,3 +1749,30 @@ def is_port_in_use(port):
         return True
     finally:
         s.close()
+
+def find_available_port(start, host, auto_select_port=False):
+    """Given a starting port and a host, handle finding a port.
+
+    If `auto_select_port` is False, a busy port will raise an error.
+
+    If `auto_select_port` is True, the next free higher port will be used.
+    """
+    if not is_port_in_use(start):
+        return start
+
+    port = start
+    if not auto_select_port:
+        raise ValueError(Errors.E1049.format(port=port))
+
+    while is_port_in_use(port) and port < 65535:
+        port += 1
+
+    if port == 65535 and is_port_in_use(port):
+        raise ValueError(Errors.E1048.format(host=host))
+
+    # if we get here, the port changed
+    warnings.warn(
+        Warnings.W124.format(host=host, port=start, serve_port=port)
+    )
+    return port
+
