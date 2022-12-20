@@ -798,7 +798,12 @@ doesn't, the pipeline analysis won't catch that.
   },
   "problems": {
     "tagger": [],
-    "entity_linker": ["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"]
+    "entity_linker": [
+      "doc.ents",
+      "doc.sents",
+      "token.ent_iob",
+      "token.ent_type"
+    ]
   },
   "attrs": {
     "token.ent_iob": { "assigns": [], "requires": ["entity_linker"] },
