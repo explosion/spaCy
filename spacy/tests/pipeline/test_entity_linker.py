@@ -12,7 +12,6 @@ from spacy.lang.en import English
 from spacy.ml import load_kb
 from spacy.ml.models.entity_linker import build_span_maker
 from spacy.pipeline import EntityLinker, TrainablePipe
-from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
 from spacy.tests.util import make_tempdir
@@ -20,6 +19,8 @@ from spacy.tokens import Span, Doc
 from spacy.training import Example
 from spacy.util import ensure_path
 from spacy.vocab import Vocab
+
+from spacy_legacy.components.entity_linker import EntityLinker_v1
 
 
 @pytest.fixture

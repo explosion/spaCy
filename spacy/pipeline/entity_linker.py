@@ -13,7 +13,6 @@ from ..kb import KnowledgeBase, Candidate
 from ..ml import empty_kb
 from ..tokens import Doc, Span
 from .pipe import deserialize_config
-from .legacy.entity_linker import EntityLinker_v1
 from .trainable_pipe import TrainablePipe
 from ..language import Language
 from ..vocab import Vocab
@@ -120,6 +119,13 @@ def make_entity_linker(
     """
 
     if not model.attrs.get("include_span_maker", False):
+        try:
+            from spacy_legacy.components.entity_linker import EntityLinker_v1
+        except:
+            raise ImportError(
+                """In order to use v1 of the EntityLinker, you must use
+                    spacy-legacy >=XXX."""
+            )
         # The only difference in arguments here is that use_gold_ents and threshold aren't available.
         return EntityLinker_v1(
             nlp.vocab,
