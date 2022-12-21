@@ -443,7 +443,7 @@ def test_find_available_port():
 
     from wsgiref.simple_server import make_server, demo_app
 
-    httpd = make_server(host, port, demo_app)
-    with pytest.warns(UserWarning, match="already in use"):
-        found_port = find_available_port(port, host, auto_select_port=True)
-    assert found_port == port + 1, "Didn't find next port"
+    with make_server(host, port, demo_app) as httpd:
+        with pytest.warns(UserWarning, match="already in use"):
+            found_port = find_available_port(port, host, auto_select_port=True)
+        assert found_port == port + 1, "Didn't find next port"
