@@ -180,7 +180,6 @@ cdef class SpanGroup:
             raise ValueError(Errors.E855.format(obj="span"))
         self.push_back(span.c)
 
-
     def extend(self, spans_or_span_group: Union[SpanGroup, Iterable["Span"]]):
         """Add multiple spans or contents of another SpanGroup to the group.
         All spans must refer to the same Doc object as the span group.
