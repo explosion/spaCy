@@ -411,7 +411,7 @@ def test_entity_ruler_fuzzy_disabled(nlp, entity_ruler_factory):
     ruler = nlp.add_pipe(
         entity_ruler_factory,
         name="entity_ruler",
-        config={"fuzzy_compare": {"@misc": "test_fuzzy_compare_disabled"}},
+        config={"matcher_fuzzy_compare": {"@misc": "test_fuzzy_compare_disabled"}},
     )
     patterns = [{"label": "HELLO", "pattern": [{"LOWER": {"FUZZY": "hello"}}]}]
     ruler.add_patterns(patterns)
