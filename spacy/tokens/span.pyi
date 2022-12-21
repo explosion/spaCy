@@ -95,8 +95,8 @@ class Span:
         self,
         start_idx: int,
         end_idx: int,
-        label: int = ...,
-        kb_id: int = ...,
+        label: Union[int, str] = ...,
+        kb_id: Union[int, str] = ...,
         vector: Optional[Floats1d] = ...,
     ) -> Span: ...
     @property
@@ -115,8 +115,8 @@ class Span:
     end: int
     start_char: int
     end_char: int
-    label: Union[int, str]
-    kb_id: Union[int, str]
+    label: int
+    kb_id: int
     id: int
     ent_id: int
     ent_id_: str
