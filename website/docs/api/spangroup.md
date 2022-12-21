@@ -204,7 +204,7 @@ already present in the current span group.
 
 ## SpanGroup.\_\_iter\_\_ {#iter tag="method" new="3.5"}
 
-Iterate over the spans in this SpanGroup.
+Iterate over the spans in this span group.
 
 > #### Example
 >
@@ -217,7 +217,7 @@ Iterate over the spans in this SpanGroup.
 
 | Name       | Description                         |
 | ---------- | ----------------------------------- |
-| **YIELDS** | A span in this SpanGroup.. ~~Span~~ |
+| **YIELDS** | A span in this span group. ~~Span~~ |
 
 ## SpanGroup.append {#append tag="method"}
 
