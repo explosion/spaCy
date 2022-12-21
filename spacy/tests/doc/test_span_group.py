@@ -246,7 +246,7 @@ def test_span_group_dealloc(span_group):
 
 
 @pytest.mark.issue(11975)
-def test_iter(doc: Doc):
+def test_typing(doc: Doc):
     span_group: SpanGroup = doc.spans["SPANS"]
     spans: List[Span] = list(span_group)
     for i, span in enumerate(span_group):

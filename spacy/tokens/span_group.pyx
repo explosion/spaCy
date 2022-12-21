@@ -173,7 +173,7 @@ cdef class SpanGroup:
     def __iter__(self):
         """
         Iterate over the spans in this SpanGroup.
-        YIELDS (Span): An span in this SpanGroup.
+        YIELDS (Span): A span in this SpanGroup.
 
         DOCS: https://spacy.io/api/spangroup#iter
         """
