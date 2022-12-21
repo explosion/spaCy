@@ -4,6 +4,7 @@ import pytest
 from random import Random
 from spacy.matcher import Matcher
 from spacy.tokens import Span, SpanGroup, Doc
+from spacy.util import filter_spans
 
 
 @pytest.fixture
@@ -244,8 +245,10 @@ def test_span_group_dealloc(span_group):
         print(span_group.doc)
 
 
+@pytest.mark.issue(11975)
 def test_iter(doc: Doc):
     span_group: SpanGroup = doc.spans["SPANS"]
     spans: List[Span] = list(span_group)
     for i, span in enumerate(span_group):
         assert span == span_group[i] == spans[i]
+    filter_spans(span_group)
