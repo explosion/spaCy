@@ -84,7 +84,7 @@ def test_matcher_add_new_api(en_vocab):
     on_match = Mock()
     matcher.add("NEW_API_CALLBACK", patterns, on_match=on_match)
     assert len(matcher(doc)) == 2
-    assert on_match.call_count == 2
+    assert on_match.call_count == 1
 
 
 def test_matcher_no_match(matcher):
