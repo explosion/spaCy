@@ -1,4 +1,5 @@
 # cython: infer_types=True, profile=True
+from collections import defaultdict
 from typing import List, Iterable
 
 from libcpp.vector cimport vector
@@ -313,10 +314,14 @@ cdef class Matcher:
         else:
             final_results = final_matches
         # perform the callbacks on the filtered set of results
-        for i, (key, *_) in enumerate(final_matches):
+        key_matches = defaultdict(list)
+        for (key, *_) in final_matches:
+            key_matches[key].append((key,*_))
+
+        for key, matches in key_matches.items():
             on_match = self._callbacks.get(key, None)
             if on_match is not None:
-                on_match(self, doc, i, final_matches)
+                    on_match(self, doc, key, matches)
         return final_results
 
     def _normalize_key(self, key):
