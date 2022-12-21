@@ -318,10 +318,10 @@ cdef class Matcher:
         for (key, *_) in final_matches:
             key_matches[key].append((key,*_))
 
-        for key, matches in key_matches.items():
+        for i, (key, matches) in enumerate(key_matches.items()):
             on_match = self._callbacks.get(key, None)
             if on_match is not None:
-                    on_match(self, doc, key, matches)
+                    on_match(self, doc, i, matches)
         return final_results
 
     def _normalize_key(self, key):
