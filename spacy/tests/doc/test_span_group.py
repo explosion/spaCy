@@ -247,6 +247,7 @@ def test_span_group_dealloc(span_group):
 
 @pytest.mark.issue(11975)
 def test_typing(doc: Doc):
+    """Tests whether typing of `SpanGroup` as `Iterable[Span]`-like object is accepted by mypy."""
     span_group: SpanGroup = doc.spans["SPANS"]
     spans: List[Span] = list(span_group)
     for i, span in enumerate(span_group):
