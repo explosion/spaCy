@@ -268,6 +268,27 @@ predicted scores.
 | `scores`    | Scores representing the model's predictions. ~~StateClass~~                 |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
+## DependencyParser.get_teacher_student_loss {#get_teacher_student_loss tag="method" new="4"}
+
+Calculate the loss and its gradient for the batch of student scores relative to
+the teacher scores.
+
+> #### Example
+>
+> ```python
+> teacher_parser = teacher.get_pipe("parser")
+> student_parser = student.add_pipe("parser")
+> student_scores = student_parser.predict([eg.predicted for eg in examples])
+> teacher_scores = teacher_parser.predict([eg.predicted for eg in examples])
+> loss, d_loss = student_parser.get_teacher_student_loss(teacher_scores, student_scores)
+> ```
+
+| Name             | Description                                                                 |
+| ---------------- | --------------------------------------------------------------------------- |
+| `teacher_scores` | Scores representing the teacher model's predictions.                        |
+| `student_scores` | Scores representing the student model's predictions.                        |
+| **RETURNS**      | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
+
 ## DependencyParser.create_optimizer {#create_optimizer tag="method"}
 
 Create an [`Optimizer`](https://thinc.ai/docs/api-optimizers) for the pipeline

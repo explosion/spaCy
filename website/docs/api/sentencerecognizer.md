@@ -254,6 +254,27 @@ predicted scores.
 | `scores`    | Scores representing the model's predictions.                                |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
+## SentenceRecognizer.get_teacher_student_loss {#get_teacher_student_loss tag="method" new="4"}
+
+Calculate the loss and its gradient for the batch of student scores relative to
+the teacher scores.
+
+> #### Example
+>
+> ```python
+> teacher_senter = teacher.get_pipe("senter")
+> student_senter = student.add_pipe("senter")
+> student_scores = student_senter.predict([eg.predicted for eg in examples])
+> teacher_scores = teacher_senter.predict([eg.predicted for eg in examples])
+> loss, d_loss = student_senter.get_teacher_student_loss(teacher_scores, student_scores)
+> ```
+
+| Name             | Description                                                                 |
+| ---------------- | --------------------------------------------------------------------------- |
+| `teacher_scores` | Scores representing the teacher model's predictions.                        |
+| `student_scores` | Scores representing the student model's predictions.                        |
+| **RETURNS**      | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
+
 ## SentenceRecognizer.create_optimizer {#create_optimizer tag="method"}
 
 Create an optimizer for the pipeline component.

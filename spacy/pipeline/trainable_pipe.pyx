@@ -56,6 +56,56 @@ cdef class TrainablePipe(Pipe):
         except Exception as e:
             error_handler(self.name, self, [doc], e)
 
+
+    def distill(self,
+               teacher_pipe: Optional["TrainablePipe"],
+               teacher_docs: Iterable["Doc"],
+               student_docs: Iterable["Doc"],
+               *,
+               drop: float=0.0,
+               sgd: Optional[Optimizer]=None,
+               losses: Optional[Dict[str, float]]=None) -> Dict[str, float]:
+        """Train a pipe (the student) on the predictions of another pipe
+        (the teacher). The student is typically trained on the probability
+        distribution of the teacher, but details may differ per pipe.
+
+        teacher_pipe (Optional[TrainablePipe]): The teacher pipe to learn
+            from.
+        teacher_docs (Iterable[Doc]): Documents passed through teacher pipes.
+        student_docs (Iterable[Doc]): Documents passed through student pipes.
+            Must contain the same tokens as `teacher_docs` but may have
+            different annotations.
+        drop (float): dropout rate.
+        sgd (Optional[Optimizer]): An optimizer. Will be created via
+            create_optimizer if not set.
+        losses (Optional[Dict[str, float]]): Optional record of loss during
+            distillation.
+        RETURNS: The updated losses dictionary.
+        """
+        # By default we require a teacher pipe, but there are downstream
+        # implementations that don't require a pipe.
+        if teacher_pipe is None:
+            raise ValueError(Errors.E4002.format(name=self.name))
+        if losses is None:
+            losses = {}
+        losses.setdefault(self.name, 0.0)
+        if not any(len(doc) for doc in teacher_docs):
+            return losses
+        if not any(len(doc) for doc in student_docs):
+            return losses
+        set_dropout_rate(self.model, drop)
+        for node in teacher_pipe.model.walk():
+            if node.name == "softmax":
+                node.attrs["softmax_normalize"] = True
+        teacher_scores = teacher_pipe.model.predict(teacher_docs)
+        student_scores, bp_student_scores = self.model.begin_update(student_docs)
+        loss, d_scores = self.get_teacher_student_loss(teacher_scores, student_scores)
+        bp_student_scores(d_scores)
+        if sgd is not None:
+            self.finish_update(sgd)
+        losses[self.name] += loss
+        return losses
+
     def pipe(self, stream: Iterable[Doc], *, batch_size: int=128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
@@ -168,6 +218,17 @@ cdef class TrainablePipe(Pipe):
         DOCS: https://spacy.io/api/pipe#get_loss
         """
         raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="get_loss", name=self.name))
+
+    def get_teacher_student_loss(self, teacher_scores, student_scores):
+        """Calculate the loss and its gradient for a batch of student
+        scores, relative to teacher scores.
+
+        teacher_scores: Scores representing the teacher model's predictions.
+        student_scores: Scores representing the student model's predictions.
+
+        DOCS: https://spacy.io/api/pipe#get_teacher_student_loss
+        """
+        raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="get_teacher_student_loss", name=self.name))
 
     def create_optimizer(self) -> Optimizer:
         """Create an optimizer for the pipeline component.

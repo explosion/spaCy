@@ -396,6 +396,45 @@ def test_overfitting_IO(pipe_name):
     assert_equal(batch_deps_1, no_batch_deps)
 
 
+def test_distill():
+    teacher = English()
+    teacher_parser = teacher.add_pipe("parser")
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(teacher.make_doc(text), annotations))
+        for dep in annotations.get("deps", []):
+            teacher_parser.add_label(dep)
+
+    optimizer = teacher.initialize(get_examples=lambda: train_examples)
+
+    for i in range(200):
+        losses = {}
+        teacher.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["parser"] < 0.0001
+
+    student = English()
+    student_parser = student.add_pipe("parser")
+    student_parser.initialize(
+        get_examples=lambda: train_examples, labels=teacher_parser.label_data
+    )
+
+    docs = [eg.predicted for eg in train_examples]
+
+    for i in range(200):
+        losses = {}
+        student_parser.distill(teacher_parser, docs, docs, sgd=optimizer, losses=losses)
+    assert losses["parser"] < 0.0001
+
+    test_text = "I like securities."
+    doc = student(test_text)
+    assert doc[0].dep_ == "nsubj"
+    assert doc[2].dep_ == "dobj"
+    assert doc[3].dep_ == "punct"
+    assert doc[0].head.i == 1
+    assert doc[2].head.i == 1
+    assert doc[3].head.i == 1
+
+
 # fmt: off
 @pytest.mark.slow
 @pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])

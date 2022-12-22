@@ -899,7 +899,8 @@ backprop passes.
 Recursively wrap both the models and methods of each pipe using
 [NVTX](https://nvidia.github.io/NVTX/) range markers. By default, the following
 methods are wrapped: `pipe`, `predict`, `set_annotations`, `update`, `rehearse`,
-`get_loss`, `initialize`, `begin_update`, `finish_update`, `update`.
+`get_loss`, `get_student_teacher_loss`, `initialize`, `begin_update`,
+`finish_update`, `update`.
 
 | Name                        | Description                                                                                                                                                     |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
