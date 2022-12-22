@@ -155,11 +155,8 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         name (str): The component instance name, used to add entries to the
             losses during training.
         threshold (float): Cutoff to consider a prediction "positive".
-<<<<<<< HEAD
-        save_activations (bool): save model activations in Doc when annotating.
-=======
         scorer (Optional[Callable]): The scoring method.
->>>>>>> upstream/master
+        save_activations (bool): save model activations in Doc when annotating.
 
         DOCS: https://spacy.io/api/textcategorizer#init
         """
