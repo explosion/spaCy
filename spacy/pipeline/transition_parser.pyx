@@ -12,7 +12,6 @@ import random
 import srsly
 from thinc.api import get_ops, set_dropout_rate, CupyOps, NumpyOps, Optimizer
 from thinc.api import LegacySequenceCategoricalCrossentropy, chain, softmax_activation, use_ops
-from thinc.extra.search cimport Beam
 from thinc.types import Floats2d
 import numpy.random
 import numpy
