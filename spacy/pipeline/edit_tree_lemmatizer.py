@@ -165,7 +165,7 @@ class EditTreeLemmatizer(TrainablePipe):
             doc_compat_guesses = []
             for i, token in enumerate(doc):
                 for _ in range(self.top_k):
-                    candidate = doc_scores[i].argmax()
+                    candidate = int(doc_scores[i].argmax())
                     candidate_tree_id = self.cfg["labels"][candidate]
                     if self.trees.apply(candidate_tree_id, token.text) is not None:
                         doc_compat_guesses.append(candidate_tree_id)
