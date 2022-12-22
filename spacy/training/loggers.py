@@ -171,7 +171,6 @@ def console_logger_v3(
                     )
                 )
                 if progress_bar:
-                    # Set disable=None, so that it disables on non-TTY
                     if progress_bar == "train":
                         total = max_steps
                         desc = f"Last Eval Epoch: {info['epoch']}"
@@ -180,6 +179,7 @@ def console_logger_v3(
                         total = eval_frequency
                         desc = f"Epoch {info['epoch']+1}"
                         initial = 0
+                    # Set disable=None, so that it disables on non-TTY
                     progress = tqdm.tqdm(
                         total=total,
                         disable=None,
