@@ -29,6 +29,8 @@ from .project.push import project_push  # noqa: F401
 from .project.pull import project_pull  # noqa: F401
 from .project.document import project_document  # noqa: F401
 from .find_threshold import find_threshold  # noqa: F401
+from .configure import merge, use_tok2vec, use_transformer  # noqa: F401
+from .configure import configure_resume_cli  # noqa: F401
 
 
 @app.command("link", no_args_is_help=True, deprecated=True, hidden=True)
