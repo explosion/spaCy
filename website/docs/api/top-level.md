@@ -564,11 +564,11 @@ start decreasing across epochs.
 
  </Accordion>
 
-| Name             | Description                                                                                                                 |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `progress_bar`   | Whether the logger should print a progress bar tracking the steps till the next evaluation pass (default: `False`).~~bool~~ |
-| `console_output` | Whether the logger should print the logs in the console (default: `True`). ~~bool~~                                         |
-| `output_file`    | The file to save the training logs to (default: `None`). ~~Optional[Union[str, Path]]~~                                     |
+| Name             | Description                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `progress_bar`   | Whether the logger should print a progress bar tracking the steps till the next evaluation pass (default: `False`). ~~bool~~ |
+| `console_output` | Whether the logger should print the logs in the console (default: `True`). ~~bool~~                                          |
+| `output_file`    | The file to save the training logs to (default: `None`). ~~Optional[Union[str, Path]]~~                                      |
 
 #### spacy.ConsoleLogger.v3 {#ConsoleLogger tag="registered function"}
 
@@ -585,12 +585,12 @@ start decreasing across epochs.
 Writes the results of a training step to the console in a tabular format and
 optionally saves them to a `jsonl` file.
 
-| Name             | Description                                                                                                                                              |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `progress_bar`   | Type of progress bar to show in the console: ``"train"`, `"eval"` or `None`.                                                                             |
-|                  | The bar tracks the number of steps until `training.max_steps` and `training.eval_frequency` are reached respectively (default: `None`).~~Optional[str]~~ |
-| `console_output` | Whether the logger should print the logs in the console (default: `True`). ~~bool~~                                                                      |
-| `output_file`    | The file to save the training logs to (default: `None`). ~~Optional[Union[str, Path]]~~                                                                  |
+| Name             | Description                                                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `progress_bar`   | Type of progress bar to show in the console: `"train"`, `"eval"` or `None`.                                                                               |
+|                  | The bar tracks the number of steps until `training.max_steps` and `training.eval_frequency` are reached respectively (default: `None`). ~~Optional[str]~~ |
+| `console_output` | Whether the logger should print the logs in the console (default: `True`). ~~bool~~                                                                       |
+| `output_file`    | The file to save the training logs to (default: `None`). ~~Optional[Union[str, Path]]~~                                                                   |
 
 ## Readers {#readers}
 
