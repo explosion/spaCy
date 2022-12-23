@@ -107,8 +107,8 @@ def console_logger_v3(
             write(msg.row(table_header, widths=table_widths, spacing=spacing))
             write(msg.row(["-" * width for width in table_widths], spacing=spacing))
         progress = None
-        expected_progress_types = ("train", "eval", None)
-        if progress_bar not in expected_progress_types:
+        expected_progress_types = ("train", "eval")
+        if progress_bar is not None and progress_bar not in expected_progress_types:
             raise ValueError(
                 Errors.E1048.format(
                     unexpected=progress_bar, expected=expected_progress_types
