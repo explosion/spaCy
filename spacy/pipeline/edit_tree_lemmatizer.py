@@ -160,8 +160,7 @@ class EditTreeLemmatizer(TrainablePipe):
     def _scores2guesses(self, docs, scores):
         guesses = []
         for doc, doc_scores in zip(docs, scores):
-            if not isinstance(doc_scores, np.ndarray):
-                doc_scores = doc_scores.get()
+            NumpyOps().asarray(doc_scores)
             doc_compat_guesses = []
             for i, token in enumerate(doc):
                 for _ in range(self.top_k):
