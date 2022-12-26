@@ -1763,13 +1763,13 @@ def find_available_port(start, host, auto_select=False):
 
     port = start
     if not auto_select:
-        raise ValueError(Errors.E1049.format(port=port))
+        raise ValueError(Errors.E1050.format(port=port))
 
     while is_port_in_use(port, host) and port < 65535:
         port += 1
 
     if port == 65535 and is_port_in_use(port, host):
-        raise ValueError(Errors.E1048.format(host=host))
+        raise ValueError(Errors.E1049.format(host=host))
 
     # if we get here, the port changed
     warnings.warn(Warnings.W124.format(host=host, port=start, serve_port=port))
