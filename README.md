@@ -46,6 +46,7 @@ open-source software, released under the [MIT license](https://github.com/explos
 | 🛠 **[Changelog]**                                                                                                                                                                                                         | Changes and version history.                                                                                                                                                                                                                                                                                                 |
 | 💝 **[Contribute]**                                                                                                                                                                                                       | How to contribute to the spaCy project and code base.                                                                                                                                                                                                                                                                        |
 | <a href="https://explosion.ai/spacy-tailored-pipelines"><img src="https://user-images.githubusercontent.com/13643239/152853098-1c761611-ccb0-4ec6-9066-b234552831fe.png" width="125" alt="spaCy Tailored Pipelines"/></a> | Get a custom spaCy pipeline, tailor-made for your NLP problem by spaCy's core developers. Streamlined, production-ready, predictable and maintainable. Start by completing our 5-minute questionnaire to tell us what you need and we'll be in touch! **[Learn more &rarr;](https://explosion.ai/spacy-tailored-pipelines)** |
+| <a href="https://explosion.ai/spacy-tailored-analysis"><img src="https://user-images.githubusercontent.com/1019791/206151300-b00cd189-e503-4797-aa1e-1bb6344062c5.png" width="125" alt="spaCy Tailored Pipelines"/></a> | Bespoke advice for problem solving, strategy and analysis for applied NLP projects. Services include data strategy, code reviews, pipeline design and annotation coaching. Curious? Fill in our 5-minute questionnaire to tell us what you need and we'll be in touch! **[Learn more &rarr;](https://explosion.ai/spacy-tailored-analysis)** |
 
 [spacy 101]: https://spacy.io/usage/spacy-101
 [new in v3.0]: https://spacy.io/usage/v3
@@ -58,6 +59,7 @@ open-source software, released under the [MIT license](https://github.com/explos
 [project templates]: https://github.com/explosion/projects
 [changelog]: https://spacy.io/usage#changelog
 [contribute]: https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md
+
 
 ## 💬 Where to ask questions
 
