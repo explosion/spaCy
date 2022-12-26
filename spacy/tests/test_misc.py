@@ -445,5 +445,5 @@ def test_find_available_port():
 
     with make_server(host, port, demo_app) as httpd:
         with pytest.warns(UserWarning, match="already in use"):
-            found_port = find_available_port(port, host, auto_select_port=True)
+            found_port = find_available_port(port, host, auto_select=True)
         assert found_port == port + 1, "Didn't find next port"

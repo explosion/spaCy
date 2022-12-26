@@ -1751,18 +1751,18 @@ def is_port_in_use(port, host="localhost"):
         s.close()
 
 
-def find_available_port(start, host, auto_select_port=False):
+def find_available_port(start, host, auto_select=False):
     """Given a starting port and a host, handle finding a port.
 
-    If `auto_select_port` is False, a busy port will raise an error.
+    If `auto_select` is False, a busy port will raise an error.
 
-    If `auto_select_port` is True, the next free higher port will be used.
+    If `auto_select` is True, the next free higher port will be used.
     """
     if not is_port_in_use(start, host):
         return start
 
     port = start
-    if not auto_select_port:
+    if not auto_select:
         raise ValueError(Errors.E1049.format(port=port))
 
     while is_port_in_use(port, host) and port < 65535:
