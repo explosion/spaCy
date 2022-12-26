@@ -1739,16 +1739,17 @@ def all_equal(iterable):
     return next(g, True) and not next(g, False)
 
 
-def is_port_in_use(port):
+def is_port_in_use(port, host="localhost"):
     """Check if localhost:port is in use."""
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        s.bind(("localhost", port))
+        s.bind((host, port))
         return False
     except socket.error:
         return True
     finally:
         s.close()
+
 
 def find_available_port(start, host, auto_select_port=False):
     """Given a starting port and a host, handle finding a port.
@@ -1757,22 +1758,19 @@ def find_available_port(start, host, auto_select_port=False):
 
     If `auto_select_port` is True, the next free higher port will be used.
     """
-    if not is_port_in_use(start):
+    if not is_port_in_use(start, host):
         return start
 
     port = start
     if not auto_select_port:
         raise ValueError(Errors.E1049.format(port=port))
 
-    while is_port_in_use(port) and port < 65535:
+    while is_port_in_use(port, host) and port < 65535:
         port += 1
 
-    if port == 65535 and is_port_in_use(port):
+    if port == 65535 and is_port_in_use(port, host):
         raise ValueError(Errors.E1048.format(host=host))
 
     # if we get here, the port changed
-    warnings.warn(
-        Warnings.W124.format(host=host, port=start, serve_port=port)
-    )
+    warnings.warn(Warnings.W124.format(host=host, port=start, serve_port=port))
     return port
-
