@@ -10,7 +10,11 @@ from spacy.language import Language
 from ._util import configure_cli, Arg, Opt
 
 # These are the architectures that are recognized as tok2vec/feature sources.
-TOK2VEC_ARCHS = [("spacy", "Tok2Vec"), ("spacy-transformers", "TransformerModel")]
+TOK2VEC_ARCHS = [
+    ("spacy", "Tok2Vec"),
+    ("spacy", "HashEmbedCNN"),
+    ("spacy-transformers", "TransformerModel"),
+]
 # These are the listeners.
 LISTENER_ARCHS = [
     ("spacy", "Tok2VecListener"),
