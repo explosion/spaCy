@@ -1,6 +1,6 @@
 # Our libraries
 #spacy-legacy>=3.0.10,<3.1.0
-# XXX TEMP FOR TESTING
+# XXX TEMP FOR TESTING again
 git+https://github.com/polm/spacy-legacy.git@feature/entity-linker-component-v1#egg=spacy-legacy
 spacy-loggers>=1.0.0,<2.0.0
 cymem>=2.0.2,<2.1.0
