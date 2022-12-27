@@ -186,7 +186,14 @@ def use_transformer(
             "name": transformer_name,
         }
     }
-    trf = nlp.add_pipe("transformer", config=trf_config, first=True)
+    try:
+        trf = nlp.add_pipe("transformer", config=trf_config, first=True)
+    except ValueError:
+        fail_msg = (
+            "Configuring a transformer requires spacy-transformers. "
+            "Install with: pip install spacy-transformers"
+        )
+        msg.fail(fail_msg, exits=1)
 
     # TODO maybe remove vectors?
 
