@@ -213,7 +213,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
             "is a Cython extension type.")
     W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
-            "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
+            "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline. ")
 
 
 class Errors(metaclass=ErrorsWithCodes):
