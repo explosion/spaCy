@@ -104,7 +104,7 @@ steps:
 
   - script: |
       # TODO REMOVE - temp for testing
-      pip freeze | grep legacy
+      pip freeze
       python -m pytest --pyargs spacy -W error
     displayName: "Run CPU tests"
 
