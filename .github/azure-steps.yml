@@ -103,6 +103,8 @@ steps:
     displayName: "Install test requirements"
 
   - script: |
+      # TODO REMOVE - temp for testing
+      pip freeze | grep legacy
       python -m pytest --pyargs spacy -W error
     displayName: "Run CPU tests"
 
