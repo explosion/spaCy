@@ -126,7 +126,6 @@ def make_entity_linker(
                 """In order to use v1 of the EntityLinker, you must use
                     spacy-legacy >=XXX."""
             )
-            # TODO REMOVE this is to trigger a test build
         # The only difference in arguments here is that use_gold_ents and threshold aren't available.
         return EntityLinker_v1(
             nlp.vocab,
