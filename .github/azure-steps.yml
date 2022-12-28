@@ -100,11 +100,12 @@ steps:
 
   - script: |
       python -m pip install -U -r requirements.txt
+      python -m pip freeze
     displayName: "Install test requirements"
 
   - script: |
       # TODO REMOVE - temp for testing
-      pip freeze
+      python -m pip freeze
       python -m pytest --pyargs spacy -W error
     displayName: "Run CPU tests"
 
