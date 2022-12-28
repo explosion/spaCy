@@ -100,6 +100,7 @@ steps:
 
   - script: |
       python -m pip install -U -r requirements.txt
+      python -m pip uninstall -y spacy-legacy
       python -m pip install 'git+https://github.com/polm/spacy-legacy.git@feature/entity-linker-component-v1#egg=spacy-legacy'
       python -m pip freeze
     displayName: "Install test requirements"
