@@ -16,6 +16,9 @@ steps:
 
   - script: |
       python -m pip install -U build pip setuptools
+      echo "----- REQUIREMENTS -----"
+      cat requirements.txt
+      echo "----- END REQUIREMENTS -----"
       python -m pip install -U -r requirements.txt
     displayName: "Install dependencies"
 
