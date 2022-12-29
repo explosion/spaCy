@@ -16,6 +16,9 @@ steps:
 
   - script: |
       python -m pip install -U build pip setuptools
+      echo "----- REQUIREMENTS -----"
+      cat requirements.txt
+      echo "----- END REQUIREMENTS -----"
       python -m pip install -U -r requirements.txt
     displayName: "Install dependencies"
 
@@ -99,10 +102,16 @@ steps:
 #    condition: eq(variables['python_version'], '3.8')
 
   - script: |
+      cat requirements.txt
       python -m pip install -U -r requirements.txt
+      python -m pip uninstall -y spacy-legacy
+      python -m pip install 'git+https://github.com/polm/spacy-legacy.git@feature/entity-linker-component-v1#egg=spacy-legacy'
+      python -m pip freeze
     displayName: "Install test requirements"
 
   - script: |
+      # TODO REMOVE - temp for testing
+      python -m pip freeze
       python -m pytest --pyargs spacy -W error
     displayName: "Run CPU tests"
 
