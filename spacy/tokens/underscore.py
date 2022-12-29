@@ -2,10 +2,10 @@ from typing import Dict, Any, List, Optional, Tuple, Union, TYPE_CHECKING
 import functools
 import copy
 from ..errors import Errors
+from .span import Span
 
 if TYPE_CHECKING:
     from .doc import Doc
-    from .span import Span
     from .token import Token
 
 
@@ -25,6 +25,9 @@ class Underscore:
         obj: Union["Doc", "Span", "Token"],
         start: Optional[int] = None,
         end: Optional[int] = None,
+        label: int = 0,
+        kb_id: int = 0,
+        span_id: int = 0,
     ):
         object.__setattr__(self, "_extensions", extensions)
         object.__setattr__(self, "_obj", obj)
@@ -36,6 +39,10 @@ class Underscore:
         object.__setattr__(self, "_doc", obj.doc)
         object.__setattr__(self, "_start", start)
         object.__setattr__(self, "_end", end)
+        if type(obj) == Span:
+            object.__setattr__(self, "_label", label)
+            object.__setattr__(self, "_kb_id", kb_id)
+            object.__setattr__(self, "_span_id", span_id)
 
     def __dir__(self) -> List[str]:
         # Hack to enable autocomplete on custom extensions
@@ -88,8 +95,39 @@ class Underscore:
     def has(self, name: str) -> bool:
         return name in self._extensions
 
-    def _get_key(self, name: str) -> Tuple[str, str, Optional[int], Optional[int]]:
-        return ("._.", name, self._start, self._end)
+    def _get_key(
+        self, name: str
+    ) -> Union[
+        Tuple[str, str, Optional[int], Optional[int]],
+        Tuple[str, str, Optional[int], Optional[int], int, int, int],
+    ]:
+        if hasattr(self, "_label"):
+            return (
+                "._.",
+                name,
+                self._start,
+                self._end,
+                self._label,
+                self._kb_id,
+                self._span_id,
+            )
+        else:
+            return "._.", name, self._start, self._end
+
+    @staticmethod
+    def _replace_keys(old_underscore: "Underscore", new_underscore: "Underscore"):
+        """
+        This function is called by Span when its kb_id or label are re-assigned.
+        It checks if any user_data is stored for this span and replaces the keys
+        """
+        for name in old_underscore._extensions:
+            old_key = old_underscore._get_key(name)
+            old_doc = old_underscore._doc
+            new_key = new_underscore._get_key(name)
+            if old_key != new_key and old_key in old_doc.user_data:
+                old_underscore._doc.user_data[
+                    new_key
+                ] = old_underscore._doc.user_data.pop(old_key)
 
     @classmethod
     def get_state(cls) -> Tuple[Dict[Any, Any], Dict[Any, Any], Dict[Any, Any]]:

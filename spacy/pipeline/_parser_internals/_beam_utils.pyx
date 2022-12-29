@@ -3,17 +3,16 @@
 cimport numpy as np
 import numpy
 from cpython.ref cimport PyObject, Py_XDECREF
-from thinc.extra.search cimport Beam
-from thinc.extra.search import MaxViolation
-from thinc.extra.search cimport MaxViolation
 
 from ...typedefs cimport hash_t, class_t
 from .transition_system cimport TransitionSystem, Transition
 from ...errors import Errors
+from .search cimport Beam, MaxViolation
+from .search import MaxViolation
 from .stateclass cimport StateC, StateClass
 
 
-# These are passed as callbacks to thinc.search.Beam
+# These are passed as callbacks to .search.Beam
 cdef int transition_state(void* _dest, void* _src, class_t clas, void* _moves) except -1:
     dest = <StateC*>_dest
     src = <StateC*>_src

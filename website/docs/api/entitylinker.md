@@ -200,12 +200,6 @@ knowledge base. This argument should be a function that takes a `Vocab` instance
 and creates the `KnowledgeBase`, ensuring that the strings of the knowledge base
 are synced with the current vocab.
 
-<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
-
-This method was previously called `begin_training`.
-
-</Infobox>
-
 > #### Example
 >
 > ```python

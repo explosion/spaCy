@@ -259,15 +259,6 @@ either in the [config](/usage/training#config), or by calling
 [`pipe.add_label`](/api/pipe#add_label) for each possible output label (e.g. for
 the tagger or textcat).
 
-<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
-
-This method was previously called `begin_training`. It now also takes a
-**function** that is called with no arguments and returns a sequence of
-[`Example`](/api/example) objects instead of tuples of `Doc` and `GoldParse`
-objects.
-
-</Infobox>
-
 > #### Example
 >
 > ```python

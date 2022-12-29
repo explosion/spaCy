@@ -2,7 +2,8 @@
 from typing import Callable, Dict, Iterable, List, Optional, Union
 import numpy
 import srsly
-from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
+from thinc.api import Model, set_dropout_rate, Config
+from thinc.legacy import LegacySequenceCategoricalCrossentropy
 from thinc.types import Floats2d, Ints1d
 import warnings
 from itertools import islice
@@ -244,7 +245,7 @@ class Tagger(TrainablePipe):
 
         DOCS: https://spacy.io/api/tagger#rehearse
         """
-        loss_func = SequenceCategoricalCrossentropy()
+        loss_func = LegacySequenceCategoricalCrossentropy()
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
@@ -275,7 +276,7 @@ class Tagger(TrainablePipe):
         DOCS: https://spacy.io/api/tagger#get_loss
         """
         validate_examples(examples, "Tagger.get_loss")
-        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False, neg_prefix=self.cfg["neg_prefix"])
+        loss_func = LegacySequenceCategoricalCrossentropy(names=self.labels, normalize=False, neg_prefix=self.cfg["neg_prefix"])
         # Convert empty tag "" to missing value None so that both misaligned
         # tokens and tokens with missing annotation have the default missing
         # value None.
