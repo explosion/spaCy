@@ -897,7 +897,9 @@ def test_textcat_multi_threshold():
     assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 1.0
 
 
-@pytest.mark.parametrize("component_name,scorer", [("textcat", "spacy.textcat_scorer.v1")])
+@pytest.mark.parametrize(
+    "component_name,scorer", [("textcat", "spacy.textcat_scorer.v1")]
+)
 def test_textcat_legacy_scorers(component_name, scorer):
     """Check that legacy scorers are registered and produce the expected score
     keys."""
