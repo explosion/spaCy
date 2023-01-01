@@ -112,7 +112,7 @@ cdef class StringStore:
 
     DOCS: https://spacy.io/api/stringstore
     """
-    def __init__(self, strings=None, freeze=False):
+    def __init__(self, strings=None):
         """Create the StringStore.
 
         strings (iterable): A sequence of unicode strings to add to the store.
