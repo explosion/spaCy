@@ -6,7 +6,6 @@ from libcpp.vector cimport vector
 from cymem.cymem cimport Pool
 
 from collections import Counter
-from thinc.extra.search cimport Beam
 
 from ...tokens.doc cimport Doc
 from ...tokens.span import Span
@@ -17,6 +16,7 @@ from ...attrs cimport IS_SPACE
 from ...structs cimport TokenC, SpanC
 from ...training import split_bilu_label
 from ...training.example cimport Example
+from .search cimport Beam
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition, do_func_t

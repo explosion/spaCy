@@ -48,8 +48,6 @@ cdef class Doc:
 
     cdef TokenC* c
 
-    cdef public float sentiment
-
     cdef public dict activations
 
     cdef public dict user_hooks

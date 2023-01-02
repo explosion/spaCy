@@ -29,7 +29,7 @@ class UkrainianLemmatizer(RussianLemmatizer):
                 ) from None
             if getattr(self, "_morph", None) is None:
                 self._morph = MorphAnalyzer(lang="uk")
-        elif mode == "pymorphy3":
+        elif mode in {"pymorphy3", "pymorphy3_lookup"}:
             try:
                 from pymorphy3 import MorphAnalyzer
             except ImportError:

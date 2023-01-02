@@ -53,6 +53,7 @@ def project_run(
     force: bool = False,
     dry: bool = False,
     capture: bool = False,
+    skip_requirements_check: bool = False,
 ) -> None:
     """Run a named script defined in the project.yml. If the script is part
     of the default pipeline (defined in the "run" section), DVC is used to
@@ -69,6 +70,7 @@ def project_run(
         sys.exit will be called with the return code. You should use capture=False
         when you want to turn over execution to the command, and capture=True
         when you want to run the command more like a function.
+    skip_requirements_check (bool): Whether to skip the requirements check.
     """
     config = load_project_config(project_dir, overrides=overrides)
     commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
@@ -76,9 +78,10 @@ def project_run(
     validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
 
     req_path = project_dir / "requirements.txt"
-    if config.get("check_requirements", True) and os.path.exists(req_path):
-        with req_path.open() as requirements_file:
-            _check_requirements([req.replace("\n", "") for req in requirements_file])
+    if not skip_requirements_check:
+        if config.get("check_requirements", True) and os.path.exists(req_path):
+            with req_path.open() as requirements_file:
+                _check_requirements([req.strip() for req in requirements_file])
 
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
@@ -90,6 +93,7 @@ def project_run(
                 force=force,
                 dry=dry,
                 capture=capture,
+                skip_requirements_check=True,
             )
     else:
         cmd = commands[subcommand]
@@ -97,8 +101,8 @@ def project_run(
             if not (project_dir / dep).exists():
                 err = f"Missing dependency specified by command '{subcommand}': {dep}"
                 err_help = "Maybe you forgot to run the 'project assets' command or a previous step?"
-                err_kwargs = {"exits": 1} if not dry else {}
-                msg.fail(err, err_help, **err_kwargs)
+                err_exits = 1 if not dry else None
+                msg.fail(err, err_help, exits=err_exits)
         check_spacy_commit = check_bool_env_var(ENV_VARS.PROJECT_USE_GIT_VERSION)
         with working_dir(project_dir) as current_dir:
             msg.divider(subcommand)
@@ -338,6 +342,12 @@ def _check_requirements(requirements: List[str]) -> Tuple[bool, bool]:
             failed_pkgs_msgs.append(dnf.report())
         except pkg_resources.VersionConflict as vc:
             conflicting_pkgs_msgs.append(vc.report())
+        except Exception:
+            msg.warn(
+                f"Unable to check requirement: {req} "
+                "Checks are currently limited to requirement specifiers "
+                "(PEP 508)"
+            )
 
     if len(failed_pkgs_msgs) or len(conflicting_pkgs_msgs):
         msg.warn(
