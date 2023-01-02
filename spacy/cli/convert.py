@@ -7,7 +7,7 @@ import re
 import sys
 import itertools
 
-from ._util import app, Arg, Opt, _handle_renamed_language_codes
+from ._util import app, Arg, Opt, _handle_renamed_language_codes, walk_directory
 from ..training import docs_to_json
 from ..tokens import Doc, DocBin
 from ..training.converters import iob_to_docs, conll_ner_to_docs, json_to_docs
