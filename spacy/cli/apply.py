@@ -53,9 +53,7 @@ def _stream_jsonl(path: Path, field: str) -> Iterable[str]:
     """
     for entry in srsly.read_jsonl(path):
         if field not in entry:
-            msg.fail(
-                f"{path} does not contain the required '{field}' field.", exits=1
-            )
+            msg.fail(f"{path} does not contain the required '{field}' field.", exits=1)
         else:
             yield entry[field]
 
@@ -118,8 +116,10 @@ def apply(
     paths = walk_directory(data_path)
     if len(paths) == 0:
         docbin.to_disk(output_file)
-        msg.warn("Did not find data to process,"
-                 f" {data_path} seems to be an empty directory.")
+        msg.warn(
+            "Did not find data to process,"
+            f" {data_path} seems to be an empty directory."
+        )
         return
     nlp = load_model(model)
     msg.good(f"Loaded model {model}")

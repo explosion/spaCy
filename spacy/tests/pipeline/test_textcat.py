@@ -934,3 +934,22 @@ def test_save_activations_multi():
     doc = nlp("This is a test.")
     assert list(doc.activations["textcat_multilabel"].keys()) == ["probabilities"]
     assert doc.activations["textcat_multilabel"]["probabilities"].shape == (nO,)
+
+
+@pytest.mark.parametrize(
+    "component_name,scorer", [("textcat", "spacy.textcat_scorer.v1")]
+)
+def test_textcat_legacy_scorers(component_name, scorer):
+    """Check that legacy scorers are registered and produce the expected score
+    keys."""
+    nlp = English()
+    nlp.add_pipe(component_name, config={"scorer": {"@scorers": scorer}})
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA_SINGLE_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    # score the model (it's not actually trained but that doesn't matter)
+    scores = nlp.evaluate(train_examples)
+    assert 0 <= scores["cats_score"] <= 1

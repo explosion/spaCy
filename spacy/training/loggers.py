@@ -26,6 +26,8 @@ def setup_table(
     return final_cols, final_widths, ["r" for _ in final_widths]
 
 
+# We cannot rename this method as it's directly imported
+# and used by external packages such as spacy-loggers.
 @registry.loggers("spacy.ConsoleLogger.v2")
 def console_logger(
     progress_bar: bool = False,
@@ -33,7 +35,27 @@ def console_logger(
     output_file: Optional[Union[str, Path]] = None,
 ):
     """The ConsoleLogger.v2 prints out training logs in the console and/or saves them to a jsonl file.
-    progress_bar (bool): Whether the logger should print the progress bar.
+    progress_bar (bool): Whether the logger should print a progress bar tracking the steps till the next evaluation pass.
+    console_output (bool): Whether the logger should print the logs on the console.
+    output_file (Optional[Union[str, Path]]): The file to save the training logs to.
+    """
+    return console_logger_v3(
+        progress_bar=None if progress_bar is False else "eval",
+        console_output=console_output,
+        output_file=output_file,
+    )
+
+
+@registry.loggers("spacy.ConsoleLogger.v3")
+def console_logger_v3(
+    progress_bar: Optional[str] = None,
+    console_output: bool = True,
+    output_file: Optional[Union[str, Path]] = None,
+):
+    """The ConsoleLogger.v3 prints out training logs in the console and/or saves them to a jsonl file.
+    progress_bar (Optional[str]): Type of progress bar to show in the console. Allowed values:
+        train - Tracks the number of steps from the beginning of training until the full training run is complete (training.max_steps is reached).
+        eval - Tracks the number of steps between the previous and next evaluation (training.eval_frequency is reached).
     console_output (bool): Whether the logger should print the logs on the console.
     output_file (Optional[Union[str, Path]]): The file to save the training logs to.
     """
@@ -70,6 +92,7 @@ def console_logger(
             for name, proc in nlp.pipeline
             if hasattr(proc, "is_trainable") and proc.is_trainable
         ]
+        max_steps = nlp.config["training"]["max_steps"]
         eval_frequency = nlp.config["training"]["eval_frequency"]
         score_weights = nlp.config["training"]["score_weights"]
         score_cols = [col for col, value in score_weights.items() if value is not None]
@@ -84,6 +107,13 @@ def console_logger(
             write(msg.row(table_header, widths=table_widths, spacing=spacing))
             write(msg.row(["-" * width for width in table_widths], spacing=spacing))
         progress = None
+        expected_progress_types = ("train", "eval")
+        if progress_bar is not None and progress_bar not in expected_progress_types:
+            raise ValueError(
+                Errors.E1048.format(
+                    unexpected=progress_bar, expected=expected_progress_types
+                )
+            )
 
         def log_step(info: Optional[Dict[str, Any]]) -> None:
             nonlocal progress
@@ -141,11 +171,23 @@ def console_logger(
                     )
                 )
                 if progress_bar:
+                    if progress_bar == "train":
+                        total = max_steps
+                        desc = f"Last Eval Epoch: {info['epoch']}"
+                        initial = info["step"]
+                    else:
+                        total = eval_frequency
+                        desc = f"Epoch {info['epoch']+1}"
+                        initial = 0
                     # Set disable=None, so that it disables on non-TTY
                     progress = tqdm.tqdm(
-                        total=eval_frequency, disable=None, leave=False, file=stderr
+                        total=total,
+                        disable=None,
+                        leave=False,
+                        file=stderr,
+                        initial=initial,
                     )
-                    progress.set_description(f"Epoch {info['epoch']+1}")
+                    progress.set_description(desc)
 
         def finalize() -> None:
             if output_stream:

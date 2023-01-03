@@ -944,6 +944,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
     E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
+    E1048 = ("Got '{unexpected}' as console progress bar type, but expected one of the following: {expected}")
 
     # v4 error strings
     E4000 = ("Expected a Doc as input, but got: '{type}'")
