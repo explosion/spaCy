@@ -4077,7 +4077,7 @@
                 "nlp.add_pipe('pythainlp')",
                 "doc = nlp('ผมเป็นคนไทย   แต่มะลิอยากไปโรงเรียนส่วนผมจะไปไหน  ผมอยากไปเที่ยว')",
                 "",
-                "print(list(list(doc.sents)))",
+                "print(list(doc.sents))",
                 "# output: [ผมเป็นคนไทย   แต่มะลิอยากไปโรงเรียนส่วนผมจะไปไหน  , ผมอยากไปเที่ยว]"
             ],
             "code_language": "python",
