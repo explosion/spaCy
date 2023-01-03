@@ -4062,6 +4062,33 @@
             "author_links": {
                 "github": "yasufumy"
             }
+        },
+        {
+            "id": "spacy-pythainlp",
+            "title": "spaCy-PyThaiNLP",
+            "slogan": "PyThaiNLP For spaCy",
+            "description": "This package wraps the PyThaiNLP library to add support Thai for spaCy.",
+            "github": "PyThaiNLP/spaCy-PyThaiNLP",
+            "code_example": [
+                "import spacy",
+                "from spacy_pythainlp.core import *",
+                "",
+                "nlp = spacy.blank('th')",
+                "nlp.add_pipe('pythainlp')",
+                "doc = nlp('ผมเป็นคนไทย   แต่มะลิอยากไปโรงเรียนส่วนผมจะไปไหน  ผมอยากไปเที่ยว')",
+                "",
+                "print(list(list(doc.sents)))",
+                "# output: [ผมเป็นคนไทย   แต่มะลิอยากไปโรงเรียนส่วนผมจะไปไหน  , ผมอยากไปเที่ยว]"
+            ],
+            "code_language": "python",
+            "author": "Wannaphong Phatthiyaphaibun",
+            "author_links": {
+                "twitter": "@wannaphong_p",
+                "github": "wannaphong",
+                "website": "https://github.com/PyThaiNLP/spaCy-PyThaiNLP"
+            },
+            "category": ["pipeline", "research"],
+            "tags": ["Thai"]
         }
 
     ],
@@ -4151,33 +4178,6 @@
                     "description": "Episodes about spaCy or interviews with the spaCy team"
                 }
             ]
-        },
-        {
-            "id": "spacy-pythainlp",
-            "title": "spaCy-PyThaiNLP",
-            "slogan": "PyThaiNLP For spaCy",
-            "description": "This package wraps the PyThaiNLP library to add support Thai for spaCy.",
-            "github": "PyThaiNLP/spaCy-PyThaiNLP",
-            "code_example": [
-                "import spacy",
-                "from spacy_pythainlp.core import *",
-                "",
-                "nlp = spacy.blank('th')",
-                "nlp.add_pipe('pythainlp')",
-                "doc = nlp('ผมเป็นคนไทย   แต่มะลิอยากไปโรงเรียนส่วนผมจะไปไหน  ผมอยากไปเที่ยว')",
-                "",
-                "print(list(list(doc.sents)))",
-                "# output: [ผมเป็นคนไทย   แต่มะลิอยากไปโรงเรียนส่วนผมจะไปไหน  , ผมอยากไปเที่ยว]"
-            ],
-            "code_language": "python",
-            "author": "Wannaphong Phatthiyaphaibun",
-            "author_links": {
-                "twitter": "@wannaphong_p",
-                "github": "wannaphong",
-                "website": "https://github.com/PyThaiNLP/spaCy-PyThaiNLP"
-            },
-            "category": ["pipeline", "research"],
-            "tags": ["Thai"]
         }
     ]
 }
