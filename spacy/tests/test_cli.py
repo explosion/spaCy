@@ -1204,6 +1204,7 @@ def test_walk_directory():
             Path(d / f).touch()
 
         assert (len(walk_directory(d))) == 7
+        assert (len(walk_directory(d, suffix=None))) == 7
         assert (len(walk_directory(d, suffix="json"))) == 1
         assert (len(walk_directory(d, suffix="iob"))) == 2
         assert (len(walk_directory(d, suffix="conll"))) == 3
