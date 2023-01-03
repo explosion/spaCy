@@ -11,24 +11,25 @@ import {
     LandingDemo,
     LandingBannerGrid,
     LandingBanner,
-} from '../components/landing'
-import { H2 } from '../components/typography'
-import { InlineCode } from '../components/code'
-import { Ul, Li } from '../components/list'
-import Button from '../components/button'
-import Link from '../components/link'
+} from '../src/components/landing'
+import { H2 } from '../src/components/typography'
+import { InlineCode } from '../src/components/code'
+import { Ul, Li } from '../src/components/list'
+import Button from '../src/components/button'
+import Link from '../src/components/link'
 
-import QuickstartTraining from '../widgets/quickstart-training'
-import Project from '../widgets/project'
-import Features from '../widgets/features'
-import Layout from '../components/layout'
-import courseImage from '../../docs/images/course.jpg'
-import prodigyImage from '../../docs/images/prodigy_overview.jpg'
-import projectsImage from '../../docs/images/projects.png'
-import tailoredPipelinesImage from '../../docs/images/spacy-tailored-pipelines_wide.png'
-import { nightly, legacy } from '../../meta/dynamicMeta'
+import QuickstartTraining from '../src/widgets/quickstart-training'
+import Project from '../src/widgets/project'
+import Features from '../src/widgets/features'
+import Layout from '../src/templates'
+import courseImage from '../public/images/course.jpg'
+import prodigyImage from '../public/images/prodigy_overview.jpg'
+import projectsImage from '../public/images/projects.png'
+import tailoredPipelinesImage from '../public/images/spacy-tailored-pipelines_wide.png'
+import { nightly, legacy } from '../meta/dynamicMeta.mjs'
 
-import Benchmarks from '../../docs/usage/_benchmarks-models.mdx'
+import Benchmarks from '../docs/usage/_benchmarks-models.mdx'
+import { ImageFill } from '../src/components/embed'
 
 function getCodeExample(nightly) {
     return `# pip install -U ${nightly ? 'spacy-nightly --pre' : 'spacy'}
@@ -60,7 +61,7 @@ for entity in doc.ents:
 const Landing = () => {
     const codeExample = getCodeExample(nightly)
     return (
-        <>
+        <Layout>
             <LandingHeader nightly={nightly} legacy={legacy}>
                 <LandingTitle>
                     Industrial-Strength
@@ -111,15 +112,20 @@ const Landing = () => {
                     color="#1e1935"
                     small
                 >
-                    <Link to="https://explosion.ai/custom-solutions" hidden>
-                        <img src={tailoredPipelinesImage} alt="spaCy Tailored Pipelines" />
-                    </Link>
-                    <strong>
-                        Get a custom spaCy pipeline, tailor-made for your NLP problem by
-                        spaCy&apos;s core developers.
-                    </strong>
-                    <br />
-                    <br />
+                    <p>
+                        <Link to="https://explosion.ai/custom-solutions" hidden>
+                            <ImageFill
+                                image={tailoredPipelinesImage}
+                                alt="spaCy Tailored Pipelines"
+                            />
+                        </Link>
+                    </p>
+                    <p>
+                        <strong>
+                            Get a custom spaCy pipeline, tailor-made for your NLP problem by
+                            spaCy&apos;s core developers.
+                        </strong>
+                    </p>
                     <Ul>
                         <Li emoji="🔥">
                             <strong>Streamlined.</strong> Nobody knows spaCy better than we do. Send
@@ -155,20 +161,21 @@ const Landing = () => {
                     color="#000"
                     small
                 >
-                    <Link to="https://prodi.gy" hidden>
-                        {/** Update image */}
-                        <img
-                            src={prodigyImage}
-                            alt="Prodigy: Radically efficient machine teaching"
-                        />
-                    </Link>
-                    <br />
-                    <br />
-                    Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
-                    can do the annotation themselves, enabling a new level of rapid iteration.
-                    Whether you&apos;re working on entity recognition, intent detection or image
-                    classification, Prodigy can help you <strong>train and evaluate</strong> your
-                    models faster.
+                    <p>
+                        <Link to="https://prodi.gy" hidden>
+                            <ImageFill
+                                image={prodigyImage}
+                                alt="Prodigy: Radically efficient machine teaching"
+                            />
+                        </Link>
+                    </p>
+                    <p>
+                        Prodigy is an <strong>annotation tool</strong> so efficient that data
+                        scientists can do the annotation themselves, enabling a new level of rapid
+                        iteration. Whether you&apos;re working on entity recognition, intent
+                        detection or image classification, Prodigy can help you{' '}
+                        <strong>train and evaluate</strong> your models faster.
+                    </p>
                 </LandingBanner>
             </LandingBannerGrid>
 
@@ -199,7 +206,7 @@ const Landing = () => {
             <LandingGrid cols={2}>
                 <LandingCol>
                     <Link to="/usage/projects" hidden>
-                        <img src={projectsImage} />
+                        <ImageFill image={projectsImage} />
                     </Link>
                     <br />
                     <br />
@@ -236,13 +243,15 @@ const Landing = () => {
                     button="See what's new"
                     small
                 >
-                    spaCy v3.0 features all new <strong>transformer-based pipelines</strong> that
-                    bring spaCy&apos;s accuracy right up to the current{' '}
-                    <strong>state-of-the-art</strong>. You can use any pretrained transformer to
-                    train your own pipelines, and even share one transformer between multiple
-                    components with <strong>multi-task learning</strong>. Training is now fully
-                    configurable and extensible, and you can define your own custom models using{' '}
-                    <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks.
+                    <p>
+                        spaCy v3.0 features all new <strong>transformer-based pipelines</strong>{' '}
+                        that bring spaCy&apos;s accuracy right up to the current{' '}
+                        <strong>state-of-the-art</strong>. You can use any pretrained transformer to
+                        train your own pipelines, and even share one transformer between multiple
+                        components with <strong>multi-task learning</strong>. Training is now fully
+                        configurable and extensible, and you can define your own custom models using{' '}
+                        <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks.
+                    </p>
                 </LandingBanner>
                 <LandingBanner
                     to="https://course.spacy.io"
@@ -251,19 +260,21 @@ const Landing = () => {
                     color="#252a33"
                     small
                 >
-                    <Link to="https://course.spacy.io" hidden>
-                        <img
-                            src={courseImage}
-                            alt="Advanced NLP with spaCy: A free online course"
-                        />
-                    </Link>
-                    <br />
-                    <br />
-                    In this <strong>free and interactive online course</strong> you’ll learn how to
-                    use spaCy to build advanced natural language understanding systems, using both
-                    rule-based and machine learning approaches. It includes{' '}
-                    <strong>55 exercises</strong> featuring videos, slide decks, multiple-choice
-                    questions and interactive coding practice in the browser.
+                    <p>
+                        <Link to="https://course.spacy.io" hidden>
+                            <ImageFill
+                                image={courseImage}
+                                alt="Advanced NLP with spaCy: A free online course"
+                            />
+                        </Link>
+                    </p>
+                    <p>
+                        In this <strong>free and interactive online course</strong> you’ll learn how
+                        to use spaCy to build advanced natural language understanding systems, using
+                        both rule-based and machine learning approaches. It includes{' '}
+                        <strong>55 exercises</strong> featuring videos, slide decks, multiple-choice
+                        questions and interactive coding practice in the browser.
+                    </p>
                 </LandingBanner>
             </LandingBannerGrid>
 
@@ -285,7 +296,7 @@ const Landing = () => {
                     <Benchmarks />
                 </LandingCol>
             </LandingGrid>
-        </>
+        </Layout>
     )
 }
 

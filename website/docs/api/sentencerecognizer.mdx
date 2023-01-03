@@ -2,7 +2,7 @@
 title: SentenceRecognizer
 tag: class
 source: spacy/pipeline/senter.pyx
-new: 3
+version: 3
 teaser: 'Pipeline component for sentence segmentation'
 api_base_class: /api/tagger
 api_string_name: senter
@@ -12,7 +12,7 @@ api_trainable: true
 A trainable pipeline component for sentence segmentation. For a simpler,
 rule-based strategy, see the [`Sentencizer`](/api/sentencizer).
 
-## Assigned Attributes {#assigned-attributes}
+## Assigned Attributes {id="assigned-attributes"}
 
 Predicted values will be assigned to `Token.is_sent_start`. The resulting
 sentences can be accessed using `Doc.sents`.
@@ -22,7 +22,7 @@ sentences can be accessed using `Doc.sents`.
 | `Token.is_sent_start` | A boolean value indicating whether the token starts a sentence. This will be either `True` or `False` for all tokens. ~~bool~~ |
 | `Doc.sents`           | An iterator over sentences in the `Doc`, determined by `Token.is_sent_start` values. ~~Iterator[Span]~~                        |
 
-## Config and implementation {#config}
+## Config and implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -49,7 +49,7 @@ architectures and their arguments and hyperparameters.
 %%GITHUB_SPACY/spacy/pipeline/senter.pyx
 ```
 
-## SentenceRecognizer.\_\_init\_\_ {#init tag="method"}
+## SentenceRecognizer.\_\_init\_\_ {id="init",tag="method"}
 
 Initialize the sentence recognizer.
 
@@ -81,7 +81,7 @@ shortcut for this and instantiate the component using its string name and
 | `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                           |
 | `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~ |
 
-## SentenceRecognizer.\_\_call\_\_ {#call tag="method"}
+## SentenceRecognizer.\_\_call\_\_ {id="call",tag="method"}
 
 Apply the pipe to one document. The document is modified in place, and returned.
 This usually happens under the hood when the `nlp` object is called on a text
@@ -105,7 +105,7 @@ and all pipeline components are applied to the `Doc` in order. Both
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## SentenceRecognizer.pipe {#pipe tag="method"}
+## SentenceRecognizer.pipe {id="pipe",tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
@@ -129,7 +129,7 @@ and [`pipe`](/api/sentencerecognizer#pipe) delegate to the
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## SentenceRecognizer.initialize {#initialize tag="method"}
+## SentenceRecognizer.initialize {id="initialize",tag="method"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. **At least one example
@@ -153,7 +153,7 @@ by [`Language.initialize`](/api/language#initialize).
 | _keyword-only_ |                                                                                                                                                                            |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                       |
 
-## SentenceRecognizer.predict {#predict tag="method"}
+## SentenceRecognizer.predict {id="predict",tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
 modifying them.
@@ -170,7 +170,7 @@ modifying them.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
 | **RETURNS** | The model's prediction for each document.   |
 
-## SentenceRecognizer.set_annotations {#set_annotations tag="method"}
+## SentenceRecognizer.set_annotations {id="set_annotations",tag="method"}
 
 Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
@@ -187,7 +187,7 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 | `docs`   | The documents to modify. ~~Iterable[Doc]~~                   |
 | `scores` | The scores to set, produced by `SentenceRecognizer.predict`. |
 
-## SentenceRecognizer.update {#update tag="method"}
+## SentenceRecognizer.update {id="update",tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
@@ -211,7 +211,7 @@ Delegates to [`predict`](/api/sentencerecognizer#predict) and
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## SentenceRecognizer.rehearse {#rehearse tag="method,experimental" new="3"}
+## SentenceRecognizer.rehearse {id="rehearse",tag="method,experimental",version="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model to try to address
@@ -234,7 +234,7 @@ the "catastrophic forgetting" problem. This feature is experimental.
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## SentenceRecognizer.get_loss {#get_loss tag="method"}
+## SentenceRecognizer.get_loss {id="get_loss",tag="method"}
 
 Find the loss and gradient of loss for the batch of documents and their
 predicted scores.
@@ -253,7 +253,7 @@ predicted scores.
 | `scores`    | Scores representing the model's predictions.                                |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
-## SentenceRecognizer.create_optimizer {#create_optimizer tag="method"}
+## SentenceRecognizer.create_optimizer {id="create_optimizer",tag="method"}
 
 Create an optimizer for the pipeline component.
 
@@ -268,7 +268,7 @@ Create an optimizer for the pipeline component.
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## SentenceRecognizer.use_params {#use_params tag="method, contextmanager"}
+## SentenceRecognizer.use_params {id="use_params",tag="method, contextmanager"}
 
 Modify the pipe's model, to use the given parameter values. At the end of the
 context, the original parameters are restored.
@@ -285,7 +285,7 @@ context, the original parameters are restored.
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## SentenceRecognizer.to_disk {#to_disk tag="method"}
+## SentenceRecognizer.to_disk {id="to_disk",tag="method"}
 
 Serialize the pipe to disk.
 
@@ -302,7 +302,7 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## SentenceRecognizer.from_disk {#from_disk tag="method"}
+## SentenceRecognizer.from_disk {id="from_disk",tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
@@ -320,7 +320,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `SentenceRecognizer` object. ~~SentenceRecognizer~~                                |
 
-## SentenceRecognizer.to_bytes {#to_bytes tag="method"}
+## SentenceRecognizer.to_bytes {id="to_bytes",tag="method"}
 
 > #### Example
 >
@@ -337,7 +337,7 @@ Serialize the pipe to a bytestring.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the `SentenceRecognizer` object. ~~bytes~~                           |
 
-## SentenceRecognizer.from_bytes {#from_bytes tag="method"}
+## SentenceRecognizer.from_bytes {id="from_bytes",tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -356,7 +356,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `SentenceRecognizer` object. ~~SentenceRecognizer~~                                     |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from

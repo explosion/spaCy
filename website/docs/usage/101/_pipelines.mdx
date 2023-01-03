@@ -5,7 +5,7 @@ referred to as the **processing pipeline**. The pipeline used by the
 and an entity recognizer. Each pipeline component returns the processed `Doc`,
 which is then passed on to the next component.
 
-![The processing pipeline](../../images/pipeline.svg)
+![The processing pipeline](/images/pipeline.svg)
 
 > - **Name**: ID of the pipeline component.
 > - **Component:** spaCy's implementation of the component.
@@ -34,8 +34,6 @@ the [config](/usage/training#config):
 [nlp]
 pipeline = ["tok2vec", "tagger", "parser", "ner"]
 ```
-
-import Accordion from 'components/accordion.js'
 
 <Accordion title="Does the order of pipeline components matter?" id="pipeline-components-order">
 

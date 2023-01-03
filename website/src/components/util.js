@@ -1,9 +1,10 @@
-import React, { Fragment } from 'react'
+import React, { Fragment, useEffect, useState } from 'react'
 import { Parser as HtmlToReactParser } from 'html-to-react'
-import remark from 'remark'
-import remark2react from 'remark-react'
 import siteMetadata from '../../meta/site.json'
-import { domain } from '../../meta/dynamicMeta'
+import { domain } from '../../meta/dynamicMeta.mjs'
+import remarkPlugins from '../../plugins/index.mjs'
+import { serialize } from 'next-mdx-remote/serialize'
+import { MDXRemote } from 'next-mdx-remote'
 
 const htmlToReactParser = new HtmlToReactParser()
 
@@ -85,8 +86,25 @@ export function htmlToReact(html) {
  *  for HTML elements.
  * @returns {Node} - The converted React elements.
  */
-export function markdownToReact(markdown, remarkReactComponents = {}) {
-    return remark().use(remark2react, { remarkReactComponents }).processSync(markdown).contents
+export function MarkdownToReact({ markdown }) {
+    const [mdx, setMdx] = useState(null)
+
+    useEffect(() => {
+        const getMdx = async () => {
+            setMdx(
+                await serialize(markdown, {
+                    parseFrontmatter: false,
+                    mdxOptions: {
+                        remarkPlugins,
+                    },
+                })
+            )
+        }
+
+        getMdx()
+    }, [markdown])
+
+    return mdx ? <MDXRemote {...mdx} /> : <></>
 }
 
 /**

@@ -7,7 +7,7 @@ menu:
   - ['Migrating from v2.1', 'migrating']
 ---
 
-## New Features {#features hidden="true"}
+## New Features {id="features",hidden="true"}
 
 spaCy v2.2 features improved statistical models, new pretrained models for
 Norwegian and Lithuanian, better Dutch NER, as well as a new mechanism for
@@ -22,7 +22,7 @@ full changelog, see the
 For more details and a behind-the-scenes look at the new release,
 [see our blog post](https://explosion.ai/blog/spacy-v2-2).
 
-### Better pretrained models and more languages {#models}
+### Better pretrained models and more languages {id="models"}
 
 > #### Example
 >
@@ -46,7 +46,7 @@ overall. We've also added new core models for [Norwegian](/models/nb) (MIT) and
 
 </Infobox>
 
-### Text classification scores and CLI training {#train-textcat-cli}
+### Text classification scores and CLI training {id="train-textcat-cli"}
 
 > #### Example
 >
@@ -106,7 +106,7 @@ processing.
 
 </Infobox>
 
-### Serializable lookup tables and smaller installation {#lookups}
+### Serializable lookup tables and smaller installation {id="lookups"}
 
 > #### Example
 >
@@ -140,7 +140,7 @@ languages that don't yet ship with pretrained models.
 
 </Infobox>
 
-### CLI command to debug and validate training data {#debug-data}
+### CLI command to debug and validate training data {id="debug-data"}
 
 > #### Example
 >
@@ -300,7 +300,7 @@ will not be available.
 
 </Infobox>
 
-## Backwards incompatibilities {#incompat}
+## Backwards incompatibilities {id="incompat"}
 
 <Infobox title="Important note on models" variant="warning">
 
@@ -379,7 +379,7 @@ check if all of your models are up to date, you can run the
   list of dicts. This is mostly internals, but if your code used
   `nlp.meta["sources"]`, you might have to update it.
 
-### Migrating from spaCy 2.1 {#migrating}
+### Migrating from spaCy 2.1 {id="migrating"}
 
 #### Lemmatization data and lookup tables
 
@@ -389,8 +389,7 @@ with only tokenizers, you now need to install that data explicitly via
 setup is required – the package just needs to be installed in the same
 environment as spaCy.
 
-```python
-### {highlight="3-4"}
+```python {highlight="3-4"}
 nlp = Turkish()
 doc = nlp("Bu bir cümledir.")
 # 🚨 This now requires the lookups data to be installed explicitly

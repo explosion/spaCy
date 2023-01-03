@@ -60,7 +60,7 @@ another token that's at least 10 characters long.
 
 </Accordion>
 
-## Token-based matching {#matcher}
+## Token-based matching {id="matcher"}
 
 spaCy features a rule-matching engine, the [`Matcher`](/api/matcher), that
 operates over tokens, similar to regular expressions. The rules can refer to
@@ -72,7 +72,7 @@ To match large terminology lists, you can use the
 [`PhraseMatcher`](/api/phrasematcher), which accepts `Doc` objects as match
 patterns.
 
-### Adding patterns {#adding-patterns}
+### Adding patterns {id="adding-patterns"}
 
 Let's say we want to enable spaCy to find a combination of three tokens:
 
@@ -102,8 +102,7 @@ First, we initialize the `Matcher` with a vocab. The matcher must always share
 the same vocab with the documents it will operate on. We can now call
 [`matcher.add()`](/api/matcher#add) with an ID and a list of patterns.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.matcher import Matcher
 
@@ -153,7 +152,7 @@ merge _some_ patterns into one token, while adding entity labels for other
 pattern types. You shouldn't have to create different matchers for each of those
 processes.
 
-#### Available token attributes {#adding-patterns-attributes}
+#### Available token attributes {id="adding-patterns-attributes"}
 
 The available token pattern keys correspond to a number of
 [`Token` attributes](/api/token#attributes). The supported attributes for
@@ -208,7 +207,11 @@ you need to describe fields like this.
 
 <Infobox title="Tip: Try the interactive matcher explorer">
 
-[![Matcher demo](../images/matcher-demo.jpg)](https://explosion.ai/demos/matcher)
+<Image
+  src="/images/matcher-demo.jpg"
+  href="https://explosion.ai/demos/matcher"
+  alt="Matcher demo"
+/>
 
 The [Matcher Explorer](https://explosion.ai/demos/matcher) lets you test the
 rule-based `Matcher` by creating token patterns interactively and running them
@@ -218,7 +221,7 @@ spaCy processes your text – and why your pattern matches, or why it doesn't.
 
 </Infobox>
 
-#### Extended pattern syntax and attributes {#adding-patterns-attributes-extended new="2.1"}
+#### Extended pattern syntax and attributes {id="adding-patterns-attributes-extended",version="2.1"}
 
 Instead of mapping to a single value, token patterns can also map to a
 **dictionary of properties**. For example, to specify that the value of a lemma
@@ -251,7 +254,7 @@ following rich comparison attributes are available:
 | `INTERSECTS`               | Attribute value (for `MORPH` or custom list attributes) has a non-empty intersection with a list. ~~Any~~ |
 | `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~   |
 
-#### Regular expressions {#regex new="2.1"}
+#### Regular expressions {id="regex",version="2.1"}
 
 In some cases, only matching tokens and token attributes isn't enough – for
 example, you might want to match different spellings of a word, without having
@@ -287,7 +290,7 @@ token. If you need to match on the whole text instead, see the details on
 
 </Infobox>
 
-##### Matching regular expressions on the full text {#regex-text}
+##### Matching regular expressions on the full text {id="regex-text"}
 
 If your expressions apply to multiple tokens, a simple solution is to match on
 the `doc.text` with `re.finditer` and use the
@@ -301,8 +304,7 @@ more valid tokens, `Doc.char_span` returns `None`.
 > `"USA"` is a single token and `Span` objects are **sequences of tokens**. So
 > `"US"` cannot be its own span, because it does not end on a token boundary.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 import re
 
@@ -349,8 +351,7 @@ the (white)space tokens are split on. That hopefully shouldn't happen, though,
 because it'd mean your regex is producing matches with leading or trailing
 whitespace.
 
-```python
-### {highlight="5-8"}
+```python {highlight="5-8"}
 span = doc.char_span(start, end)
 if span is not None:
     print("Found match:", span.text)
@@ -366,7 +367,7 @@ else:
 
 ---
 
-#### Operators and quantifiers {#quantifiers}
+#### Operators and quantifiers {id="quantifiers"}
 
 The matcher also lets you use quantifiers, specified as the `'OP'` key.
 Quantifiers let you define sequences of tokens to be matched, e.g. one or more
@@ -402,28 +403,28 @@ This quirk in the semantics is corrected in spaCy v2.1.0.
 
 </Infobox>
 
-#### Using wildcard token patterns {#adding-patterns-wildcard new="2"}
+#### Using wildcard token patterns {id="adding-patterns-wildcard",version="2"}
 
 While the token attributes offer many options to write highly specific patterns,
 you can also use an empty dictionary, `{}` as a wildcard representing **any
 token**. This is useful if you know the context of what you're trying to match,
 but very little about the specific token and its characters. For example, let's
 say you're trying to extract people's user names from your data. All you know is
-that they are listed as "User name: {username}". The name itself may contain any
-character, but no whitespace – so you'll know it will be handled as one token.
+that they are listed as "User name: \{username\}". The name itself may contain
+any character, but no whitespace – so you'll know it will be handled as one
+token.
 
 ```python
 [{"ORTH": "User"}, {"ORTH": "name"}, {"ORTH": ":"}, {}]
 ```
 
-#### Validating and debugging patterns {#pattern-validation new="2.1"}
+#### Validating and debugging patterns {id="pattern-validation",version="2.1"}
 
 The `Matcher` can validate patterns against a JSON schema with the option
 `validate=True`. This is useful for debugging patterns during development, in
 particular for catching unsupported attributes.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.matcher import Matcher
 
@@ -439,7 +440,7 @@ matcher.add("HelloWorld", [pattern])
 
 ```
 
-### Adding on_match rules {#on_match}
+### Adding on_match rules {id="on_match"}
 
 To move on to a more realistic example, let's say you're working with a large
 corpus of blog articles, and you want to match all mentions of "Google I/O"
@@ -447,8 +448,7 @@ corpus of blog articles, and you want to match all mentions of "Google I/O"
 match on the uppercase versions, avoiding matches with phrases such as "Google
 i/o".
 
-```python
-### {executable="true"}
+```python {executable="true"}
 from spacy.lang.en import English
 from spacy.matcher import Matcher
 from spacy.tokens import Span
@@ -511,7 +511,7 @@ you prefer.
 | `i`       | Index of the current match (`matches[i`]). ~~int~~                                                                                                |
 | `matches` | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. ~~List[Tuple[int, int int]]~~ |
 
-### Creating spans from matches {#matcher-spans}
+### Creating spans from matches {id="matcher-spans"}
 
 Creating [`Span`](/api/span) objects from the returned matches is a very common
 use case. spaCy makes this easy by giving you access to the `start` and `end`
@@ -520,8 +520,7 @@ label. As of spaCy v3.0, you can also set `as_spans=True` when calling the
 matcher on a `Doc`, which will return a list of [`Span`](/api/span) objects
 using the `match_id` as the span label.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.matcher import Matcher
 from spacy.tokens import Span
@@ -544,7 +543,7 @@ for span in matches:
     print(span.text, span.label_)
 ```
 
-### Using custom pipeline components {#matcher-pipeline}
+### Using custom pipeline components {id="matcher-pipeline"}
 
 Let's say your data also contains some annoying pre-processing artifacts, like
 leftover HTML line breaks (e.g. `<br>` or `<BR/>`). To make your text easier to
@@ -555,8 +554,7 @@ process the text. You can achieve this by adding a
 that's called on each `Doc` object, merges the leftover HTML spans and sets an
 attribute `bad_html` on the token.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.language import Language
 from spacy.matcher import Matcher
@@ -622,7 +620,7 @@ and **extension attributes**, see the
 
 </Infobox>
 
-### Example: Using linguistic annotations {#example1}
+### Example: Using linguistic annotations {id="example1"}
 
 Let's say you're analyzing user comments and you want to find out what people
 are saying about Facebook. You want to start off by finding adjectives following
@@ -651,8 +649,7 @@ calculate the start and end of the matched span within the sentence. Using
 displaCy in ["manual" mode](/usage/visualizers#manual-usage) lets you pass in a
 list of dictionaries containing the text and entities to render.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy import displacy
 from spacy.matcher import Matcher
@@ -688,7 +685,7 @@ matches = matcher(doc)
 displacy.render(matched_sents, style="ent", manual=True)
 ```
 
-### Example: Phone numbers {#example2}
+### Example: Phone numbers {id="example2"}
 
 Phone numbers can have many different formats and matching them is often tricky.
 During tokenization, spaCy will leave sequences of numbers intact and only split
@@ -723,8 +720,7 @@ set of rules like this is often better than training a model. It'll produce more
 predictable results, is much easier to modify and extend, and doesn't require
 any training data – only a set of test cases.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.matcher import Matcher
 
@@ -742,7 +738,7 @@ for match_id, start, end in matches:
     print(span.text)
 ```
 
-### Example: Hashtags and emoji on social media {#example3}
+### Example: Hashtags and emoji on social media {id="example3"}
 
 Social media posts, especially tweets, can be difficult to work with. They're
 very short and often contain various emoji and hashtags. By only looking at the
@@ -772,8 +768,7 @@ that you can create a pattern for one or more emoji tokens. Valid hashtags
 usually consist of a `#`, plus a sequence of ASCII characters with no
 whitespace, making them easy to match as well.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 from spacy.lang.en import English
 from spacy.matcher import Matcher
 
@@ -843,8 +838,7 @@ To label the hashtags, we can use a
 [custom attribute](/usage/processing-pipelines#custom-components-attributes) set
 on the respective token:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.matcher import Matcher
 from spacy.tokens import Token
@@ -874,17 +868,16 @@ for token in doc:
     print(token.text, token._.is_hashtag)
 ```
 
-## Efficient phrase matching {#phrasematcher}
+## Efficient phrase matching {id="phrasematcher"}
 
 If you need to match large terminology lists, you can also use the
 [`PhraseMatcher`](/api/phrasematcher) and create [`Doc`](/api/doc) objects
 instead of token patterns, which is much more efficient overall. The `Doc`
 patterns can contain single or multiple tokens.
 
-### Adding phrase patterns {#adding-phrase-patterns}
+### Adding phrase patterns {id="adding-phrase-patterns"}
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.matcher import PhraseMatcher
 
@@ -927,7 +920,7 @@ as a stream.
 
 </Infobox>
 
-### Matching on other token attributes {#phrasematcher-attrs new="2.1"}
+### Matching on other token attributes {id="phrasematcher-attrs",version="2.1"}
 
 By default, the `PhraseMatcher` will match on the verbatim token text, e.g.
 `Token.text`. By setting the `attr` argument on initialization, you can change
@@ -935,8 +928,7 @@ By default, the `PhraseMatcher` will match on the verbatim token text, e.g.
 pattern to the matched `Doc`. For example, using the attribute `LOWER` lets you
 match on `Token.lower` and create case-insensitive match patterns:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 from spacy.lang.en import English
 from spacy.matcher import PhraseMatcher
 
@@ -970,8 +962,7 @@ will be tokenized and you'll be able to find tokens and combinations of tokens
 based on a few examples. Here, we're matching on the shapes `ddd.d.d.d` and
 `ddd.ddd.d.d`:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 from spacy.lang.en import English
 from spacy.matcher import PhraseMatcher
 
@@ -991,7 +982,7 @@ to match phrases with the same sequence of punctuation and non-punctuation
 tokens as the pattern. But this can easily get confusing and doesn't have much
 of an advantage over writing one or two token patterns.
 
-## Dependency Matcher {#dependencymatcher new="3" model="parser"}
+## Dependency Matcher {id="dependencymatcher",version="3",model="parser"}
 
 The [`DependencyMatcher`](/api/dependencymatcher) lets you match patterns within
 the dependency parse using
@@ -1059,7 +1050,7 @@ can be used as `LEFT_ID` in another dict.
 
 </Infobox>
 
-### Dependency matcher operators {#dependencymatcher-operators}
+### Dependency matcher operators {id="dependencymatcher-operators"}
 
 The following operators are supported by the `DependencyMatcher`, most of which
 come directly from
@@ -1080,7 +1071,7 @@ come directly from
 | `A $++ B` | `B` is a right sibling of `A`, i.e. `A` and `B` have the same parent and `A.i < B.i`.                                |
 | `A $-- B` | `B` is a left sibling of `A`, i.e. `A` and `B` have the same parent and `A.i > B.i`.                                 |
 
-### Designing dependency matcher patterns {#dependencymatcher-patterns}
+### Designing dependency matcher patterns {id="dependencymatcher-patterns"}
 
 Let's say we want to find sentences describing who founded what kind of company:
 
@@ -1105,11 +1096,9 @@ relations and tokens we want to match:
 > displacy.serve(doc)
 > ```
 
-import DisplaCyDepFoundedHtml from 'images/displacy-dep-founded.html'
-
 <Iframe
   title="displaCy visualization of dependencies"
-  html={DisplaCyDepFoundedHtml}
+  src="/images/displacy-dep-founded.html"
   height={450}
 />
 
@@ -1129,8 +1118,7 @@ head to an immediate dependent as `head > child`.
 The simplest dependency matcher pattern will identify and name a single token in
 the tree:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.matcher import DependencyMatcher
 
@@ -1151,8 +1139,7 @@ print(matches) # [(4851363122962674176, [1])]
 Now that we have a named anchor token (`anchor_founded`), we can add the founder
 as the immediate dependent (`>`) of `founded` with the dependency label `nsubj`:
 
-```python
-### Step 1 {highlight="8,10"}
+```python {title="Step 1",highlight="8,10"}
 pattern = [
     {
         "RIGHT_ID": "anchor_founded",
@@ -1170,8 +1157,7 @@ pattern = [
 
 The direct object (`dobj`) is added in the same way:
 
-```python
-### Step 2 {highlight=""}
+```python {title="Step 2"}
 pattern = [
     #...
     {
@@ -1191,8 +1177,7 @@ tokens into the pattern**. For the final part of our pattern, we'll specify that
 the token `founded_object` should have a modifier with the dependency relation
 `amod` or `compound`:
 
-```python
-### Step 3 {highlight="7"}
+```python {title="Step 3",highlight="7"}
 pattern = [
     # ...
     {
@@ -1211,12 +1196,11 @@ each new token needs to be linked to an existing token on its left. As for
 `founded` in this example, a token may be linked to more than one token on its
 right:
 
-![Dependency matcher pattern](../images/dep-match-diagram.svg)
+![Dependency matcher pattern](/images/dep-match-diagram.svg)
 
 The full pattern comes together as shown in the example below:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.matcher import DependencyMatcher
 
@@ -1272,14 +1256,14 @@ of patterns such as `{}` that match any token in the sentence.
 
 </Infobox>
 
-## Rule-based entity recognition {#entityruler new="2.1"}
+## Rule-based entity recognition {id="entityruler",version="2.1"}
 
 The [`EntityRuler`](/api/entityruler) is a component that lets you add named
 entities based on pattern dictionaries, which makes it easy to combine
 rule-based and statistical named entity recognition for even more powerful
 pipelines.
 
-### Entity Patterns {#entityruler-patterns}
+### Entity Patterns {id="entityruler-patterns"}
 
 Entity patterns are dictionaries with two keys: `"label"`, specifying the label
 to assign to the entity if the pattern is matched, and `"pattern"`, the match
@@ -1297,7 +1281,7 @@ pattern. The entity ruler accepts two types of patterns:
    {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
    ```
 
-### Using the entity ruler {#entityruler-usage}
+### Using the entity ruler {id="entityruler-usage"}
 
 The [`EntityRuler`](/api/entityruler) is a pipeline component that's typically
 added via [`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is
@@ -1307,8 +1291,7 @@ matches were to overlap, the pattern matching most tokens takes priority. If
 they also happen to be equally long, then the match occurring first in the `Doc`
 is chosen.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 from spacy.lang.en import English
 
 nlp = English()
@@ -1330,8 +1313,7 @@ entity ruler will only add spans to the `doc.ents` if they don't overlap with
 existing entities predicted by the model. To overwrite overlapping entities, you
 can set `overwrite_ents=True` on initialization.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -1343,7 +1325,7 @@ doc = nlp("MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-#### Validating and debugging EntityRuler patterns {#entityruler-pattern-validation new="2.1.8"}
+#### Validating and debugging EntityRuler patterns {id="entityruler-pattern-validation",version="2.1.8"}
 
 The entity ruler can validate patterns against a JSON schema with the config
 setting `"validate"`. See details under
@@ -1353,14 +1335,13 @@ setting `"validate"`. See details under
 ruler = nlp.add_pipe("entity_ruler", config={"validate": True})
 ```
 
-### Adding IDs to patterns {#entityruler-ent-ids new="2.2.2"}
+### Adding IDs to patterns {id="entityruler-ent-ids",version="2.2.2"}
 
 The [`EntityRuler`](/api/entityruler) can also accept an `id` attribute for each
 pattern. Using the `id` attribute allows multiple patterns to be associated with
 the same entity.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 from spacy.lang.en import English
 
 nlp = English()
@@ -1382,15 +1363,14 @@ patterns, the `ent_id_` property of the matched entity is set to the `id` given
 in the patterns. So in the example above it's easy to identify that "San
 Francisco" and "San Fran" are both the same entity.
 
-### Using pattern files {#entityruler-files}
+### Using pattern files {id="entityruler-files"}
 
 The [`to_disk`](/api/entityruler#to_disk) and
 [`from_disk`](/api/entityruler#from_disk) let you save and load patterns to and
 from JSONL (newline-delimited JSON) files, containing one pattern object per
 line.
 
-```json
-### patterns.jsonl
+```json {title="patterns.jsonl"}
 {"label": "ORG", "pattern": "Apple"}
 {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
 ```
@@ -1427,9 +1407,9 @@ all pipeline components will be restored and deserialized – including the enti
 ruler. This lets you ship powerful pipeline packages with binary weights _and_
 rules included!
 
-### Using a large number of phrase patterns {#entityruler-large-phrase-patterns new="2.2.4"}
+### Using a large number of phrase patterns {id="entityruler-large-phrase-patterns",version="2.2.4"}
 
-<!-- TODO: double-check that this still works if the ruler is added to the pipeline on creation, and include suggestion if needed -->
+{/* TODO: double-check that this still works if the ruler is added to the pipeline on creation, and include suggestion if needed */}
 
 When using a large amount of **phrase patterns** (roughly > 10000) it's useful
 to understand how the `add_patterns` function of the entity ruler works. For
@@ -1455,14 +1435,14 @@ with nlp.select_pipes(enable="tagger"):
     ruler.add_patterns(patterns)
 ```
 
-## Rule-based span matching {#spanruler new="3.3.1"}
+## Rule-based span matching {id="spanruler",version="3.3.1"}
 
 The [`SpanRuler`](/api/spanruler) is a generalized version of the entity ruler
 that lets you add spans to `doc.spans` or `doc.ents` based on pattern
 dictionaries, which makes it easy to combine rule-based and statistical pipeline
 components.
 
-### Span patterns {#spanruler-patterns}
+### Span patterns {id="spanruler-patterns"}
 
 The [pattern format](#entityruler-patterns) is the same as for the entity ruler:
 
@@ -1478,7 +1458,7 @@ The [pattern format](#entityruler-patterns) is the same as for the entity ruler:
    {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
    ```
 
-### Using the span ruler {#spanruler-usage}
+### Using the span ruler {id="spanruler-usage"}
 
 The [`SpanRuler`](/api/spanruler) is a pipeline component that's typically added
 via [`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is called on
@@ -1488,8 +1468,7 @@ Unlike in `doc.ents`, overlapping matches are allowed in `doc.spans`, so no
 filtering is required, but optional filtering and sorting can be applied to the
 spans before they're saved.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.blank("en")
@@ -1511,8 +1490,7 @@ always filtered, using [`util.filter_spans`](/api/top-level#util.filter_spans)
 by default. See the [`SpanRuler` API docs](/api/spanruler) for more information
 about how to customize the sorting and filtering of matched spans.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -1526,14 +1504,13 @@ doc = nlp("MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-### Using pattern files {#spanruler-files}
+### Using pattern files {id="spanruler-files"}
 
 You can save patterns in a JSONL file (newline-delimited JSON) to load with
 [`SpanRuler.initialize`](/api/spanruler#initialize) or
 [`SpanRuler.add_patterns`](/api/spanruler#add_patterns).
 
-```json
-### patterns.jsonl
+```json {title="patterns.jsonl"}
 {"label": "ORG", "pattern": "Apple"}
 {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
 ```
@@ -1557,7 +1534,7 @@ separately and then added through
 
 </Infobox>
 
-## Combining models and rules {#models-rules}
+## Combining models and rules {id="models-rules"}
 
 You can combine statistical and rule-based components in a variety of ways.
 Rule-based components can be used to improve the accuracy of statistical models,
@@ -1568,7 +1545,7 @@ components after a statistical model to correct common errors. Finally,
 rule-based components can reference the attributes set by statistical models, in
 order to implement more abstract logic.
 
-### Example: Expanding named entities {#models-rules-ner}
+### Example: Expanding named entities {id="models-rules-ner"}
 
 When using a trained
 [named entity recognition](/usage/linguistic-features/#named-entities) model to
@@ -1594,8 +1571,7 @@ or "Dr.". This makes sense, because it makes it easier to resolve the entity
 type back to a knowledge base. But what if your application needs the full
 names, _including_ the titles?
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -1614,8 +1590,7 @@ expands the entity span by one token. After all, what all titles in this example
 have in common is that _if_ they occur, they occur in the **previous token**
 right before the person entity.
 
-```python
-### {highlight="9-13"}
+```python {highlight="9-13"}
 from spacy.language import Language
 from spacy.tokens import Span
 
@@ -1643,8 +1618,7 @@ register it as a [pipeline component](/usage/processing-pipelines) so it can run
 automatically when processing a text. We can use
 [`nlp.add_pipe`](/api/language#add_pipe) to add it to the current pipeline.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.language import Language
 from spacy.tokens import Span
@@ -1693,8 +1667,7 @@ We can now use the [`Span.set_extension`](/api/span#set_extension) method to add
 the custom extension attribute `"person_title"`, using `get_person_title` as the
 getter function.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.tokens import Span
 
@@ -1713,7 +1686,7 @@ doc = nlp("Dr Alex Smith chaired first board meeting of Acme Corp Inc.")
 print([(ent.text, ent.label_, ent._.person_title) for ent in doc.ents])
 ```
 
-### Example: Using entities, part-of-speech tags and the dependency parse {#models-rules-pos-dep}
+### Example: Using entities, part-of-speech tags and the dependency parse {id="models-rules-pos-dep"}
 
 > #### Linguistic features
 >
@@ -1736,8 +1709,7 @@ tense**, whether company names are attached to it and whether the person is the
 subject. All of this information is available in the part-of-speech tags and the
 dependency parse.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -1752,7 +1724,7 @@ print([(ent.text, ent.label_) for ent in doc.ents])
 > - `VBD`: Verb, past tense.
 > - `IN`: Conjunction, subordinating or preposition.
 
-![Visualization of dependency parse](../images/displacy-model-rules.svg "[`spacy.displacy`](/api/top-level#displacy) visualization with `options={'fine_grained': True}` to output the fine-grained part-of-speech tags, i.e. `Token.tag_`")
+![Visualization of dependency parse](/images/displacy-model-rules.svg "[`spacy.displacy`](/api/top-level#displacy) visualization with `options={'fine_grained': True}` to output the fine-grained part-of-speech tags, i.e. `Token.tag_`")
 
 In this example, "worked" is the root of the sentence and is a past tense verb.
 Its subject is "Alex Smith", the person who worked. "at Acme Corp Inc." is a
@@ -1801,8 +1773,7 @@ the entity `Span` – for example `._.orgs` or `._.prev_orgs` and
 >       retokenizer.merge(ent)
 > ```
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 from spacy.language import Language
 from spacy import displacy
@@ -1835,12 +1806,11 @@ notice that our current logic fails and doesn't correctly detect the company as
 a past organization. That's because the root is a participle and the tense
 information is in the attached auxiliary "was":
 
-![Visualization of dependency parse](../images/displacy-model-rules2.svg)
+![Visualization of dependency parse](/images/displacy-model-rules2.svg)
 
 To solve this, we can adjust the rules to also check for the above construction:
 
-```python
-### {highlight="10-12"}
+```python {highlight="10-12"}
 @Language.component("extract_person_orgs")
 def extract_person_orgs(doc):
     person_entities = [ent for ent in doc.ents if ent.label_ == "PERSON"]

@@ -25,7 +25,7 @@ a list of available commands, you can type `python -m spacy --help`. You can
 also add the `--help` flag to any command or subcommand to see the description,
 available arguments and usage.
 
-## download {#download tag="command"}
+## download {id="download",tag="command"}
 
 Download [trained pipelines](/usage/models) for spaCy. The downloader finds the
 best-matching compatible version and uses `pip install` to download the Python
@@ -43,7 +43,7 @@ pipeline name to be specified with its version (e.g. `en_core_web_sm-3.0.0`).
 > will also allow you to add it as a versioned package dependency to your
 > project.
 
-```cli
+```bash
 $ python -m spacy download [model] [--direct] [--sdist] [pip_args]
 ```
 
@@ -56,24 +56,24 @@ $ python -m spacy download [model] [--direct] [--sdist] [pip_args]
 | pip args                                   | Additional installation options to be passed to `pip install` when installing the pipeline package. For example, `--user` to install to the user home directory or `--no-deps` to not install package dependencies. ~~Any (option/flag)~~ |
 | **CREATES**                                | The installed pipeline package in your `site-packages` directory.                                                                                                                                                                         |
 
-## info {#info tag="command"}
+## info {id="info",tag="command"}
 
 Print information about your spaCy installation, trained pipelines and local
 setup, and generate [Markdown](https://en.wikipedia.org/wiki/Markdown)-formatted
 markup to copy-paste into
 [GitHub issues](https://github.com/explosion/spaCy/issues).
 
-```cli
+```bash
 $ python -m spacy info [--markdown] [--silent] [--exclude]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy info en_core_web_lg --markdown
 > ```
 
-```cli
+```bash
 $ python -m spacy info [model] [--markdown] [--silent] [--exclude]
 ```
 
@@ -87,7 +87,7 @@ $ python -m spacy info [model] [--markdown] [--silent] [--exclude]
 | `--help`, `-h`                               | Show help message and available arguments. ~~bool (flag)~~                                                              |
 | **PRINTS**                                   | Information about your spaCy installation.                                                                              |
 
-## validate {#validate new="2" tag="command"}
+## validate {id="validate",version="2",tag="command"}
 
 Find all trained pipeline packages installed in the current environment and
 check whether they are compatible with the currently installed version of spaCy.
@@ -102,7 +102,7 @@ compatible versions and command for updating are shown.
 > suite, to ensure all packages are up to date before proceeding. If
 > incompatible packages are found, it will return `1`.
 
-```cli
+```bash
 $ python -m spacy validate
 ```
 
@@ -110,12 +110,12 @@ $ python -m spacy validate
 | ---------- | -------------------------------------------------------------------- |
 | **PRINTS** | Details about the compatibility of your installed pipeline packages. |
 
-## init {#init new="3"}
+## init {id="init",version="3"}
 
 The `spacy init` CLI includes helpful commands for initializing training config
 files and pipeline directories.
 
-### init config {#init-config new="3" tag="command"}
+### init config {id="init-config",version="3",tag="command"}
 
 Initialize and save a [`config.cfg` file](/usage/training#config) using the
 **recommended settings** for your use case. It works just like the
@@ -127,11 +127,11 @@ customize those settings in your config file later.
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy init config config.cfg --lang en --pipeline ner,textcat --optimize accuracy
 > ```
 
-```cli
+```bash
 $ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [--gpu] [--pretraining] [--force]
 ```
 
@@ -147,7 +147,7 @@ $ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [
 | `--help`, `-h`         | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                                                                         |
 | **CREATES**            | The config file for training.                                                                                                                                                                                                                                                                                                      |
 
-### init fill-config {#init-fill-config new="3"}
+### init fill-config {id="init-fill-config",version="3"}
 
 Auto-fill a partial [.cfg file](/usage/training#config) with **all default
 values**, e.g. a config generated with the
@@ -161,15 +161,15 @@ validation error with more details.
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy init fill-config base.cfg config.cfg --diff
 > ```
 >
 > #### Example diff
 >
-> ![Screenshot of visual diff in terminal](../images/cli_init_fill-config_diff.jpg)
+> ![Screenshot of visual diff in terminal](/images/cli_init_fill-config_diff.jpg)
 
-```cli
+```bash
 $ python -m spacy init fill-config [base_path] [output_file] [--diff]
 ```
 
@@ -183,7 +183,7 @@ $ python -m spacy init fill-config [base_path] [output_file] [--diff]
 | `--help`, `-h`         | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**            | Complete and auto-filled config file for training.                                                                                                                                   |
 
-### init vectors {#init-vectors new="3" tag="command"}
+### init vectors {id="init-vectors",version="3",tag="command"}
 
 Convert [word vectors](/usage/linguistic-features#vectors-similarity) for use
 with spaCy. Will export an `nlp` object that you can use in the
@@ -198,7 +198,7 @@ This functionality was previously available as part of the command `init-model`.
 
 </Infobox>
 
-```cli
+```bash
 $ python -m spacy init vectors [lang] [vectors_loc] [output_dir] [--prune] [--truncate] [--name] [--verbose]
 ```
 
@@ -215,7 +215,7 @@ $ python -m spacy init vectors [lang] [vectors_loc] [output_dir] [--prune] [--tr
 | `--help`, `-h`     | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                          |
 | **CREATES**        | A spaCy pipeline directory containing the vocab and vectors.                                                                                                                                                                                                        |
 
-### init labels {#init-labels new="3" tag="command"}
+### init labels {id="init-labels",version="3",tag="command"}
 
 Generate JSON files for the labels in the data. This helps speed up the training
 process, since spaCy won't have to preprocess the data to extract the labels.
@@ -233,7 +233,7 @@ After generating the labels, you can provide them to components that accept a
 > path = "corpus/labels/ner.json
 > ```
 
-```cli
+```bash
 $ python -m spacy init labels [config_path] [output_path] [--code] [--verbose] [--gpu-id] [overrides]
 ```
 
@@ -248,7 +248,7 @@ $ python -m spacy init labels [config_path] [output_path] [--code] [--verbose] [
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **CREATES**       | The label files.                                                                                                                                                                                                   |
 
-## convert {#convert tag="command"}
+## convert {id="convert",tag="command"}
 
 Convert files into spaCy's
 [binary training data format](/api/data-formats#binary-training), a serialized
@@ -256,7 +256,7 @@ Convert files into spaCy's
 management functions. The converter can be specified on the command line, or
 chosen based on the file extension of the input file.
 
-```cli
+```bash
 $ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] [--n-sents] [--seg-sents] [--base] [--morphology] [--merge-subtokens] [--ner-map] [--lang]
 ```
 
@@ -277,7 +277,7 @@ $ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] 
 | `--help`, `-h`            | Show help message and available arguments. ~~bool (flag)~~                                                                                |
 | **CREATES**               | Binary [`DocBin`](/api/docbin) training data that can be used with [`spacy train`](/api/cli#train).                                       |
 
-### Converters {#converters}
+### Converters {id="converters"}
 
 | ID              | Description                                                                                                                                                                                                                                                                                                                                                           |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -287,12 +287,12 @@ $ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] 
 | `ner` / `conll` | NER with IOB/IOB2/BILUO tags, one token per line with columns separated by whitespace. The first column is the token and the final column is the NER tag. Sentences are separated by blank lines and documents are separated by the line `-DOCSTART- -X- O O`. Supports CoNLL 2003 NER format. See [sample data](%%GITHUB_SPACY/extra/example_data/ner_example_data). |
 | `iob`           | NER with IOB/IOB2/BILUO tags, one sentence per line with tokens separated by whitespace and annotation separated by `\|`, either `word\|B-ENT`or`word\|POS\|B-ENT`. See [sample data](%%GITHUB_SPACY/extra/example_data/ner_example_data).                                                                                                                            |
 
-## debug {#debug new="3"}
+## debug {id="debug",version="3"}
 
 The `spacy debug` CLI includes helpful commands for debugging and profiling your
 configs, data and implementations.
 
-### debug config {#debug-config new="3" tag="command"}
+### debug config {id="debug-config",version="3",tag="command"}
 
 Debug a [`config.cfg` file](/usage/training#config) and show validation errors.
 The command will create all objects in the tree and validate them. Note that
@@ -302,13 +302,13 @@ errors at once and some issues are only shown once previous errors have been
 fixed. To auto-fill a partial config and save the result, you can use the
 [`init fill-config`](/api/cli#init-fill-config) command.
 
-```cli
+```bash
 $ python -m spacy debug config [config_path] [--code] [--show-functions] [--show-variables] [overrides]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy debug config config.cfg
 > ```
 
@@ -332,7 +332,7 @@ python -m spacy init fill-config tmp/starter-config_invalid.cfg tmp/starter-conf
 
 <Accordion title="Example output (valid config and all options)" spaced>
 
-```cli
+```bash
 $ python -m spacy debug config ./config.cfg --show-functions --show-variables
 ```
 
@@ -452,7 +452,7 @@ File       /path/to/thinc/thinc/schedules.py (line 91)
 | overrides                | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                                     |
 | **PRINTS**               | Config validation errors, if available.                                                                                                                                                                                        |
 
-### debug data {#debug-data tag="command"}
+### debug data {id="debug-data",tag="command"}
 
 Analyze, debug and validate your training and development data. Get useful
 stats, and find problems like invalid entity annotations, cyclic dependencies,
@@ -478,13 +478,13 @@ the token distributions. To learn more, you can check out Papay et al.'s work on
 
 </Infobox>
 
-```cli
+```bash
 $ python -m spacy debug data [config_path] [--code] [--ignore-warnings] [--verbose] [--no-format] [overrides]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy debug data ./config.cfg
 > ```
 
@@ -638,7 +638,7 @@ will not be available.
 | overrides                  | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **PRINTS**                 | Debugging information.                                                                                                                                                                                             |
 
-### debug diff-config {#debug-diff tag="command"}
+### debug diff-config {id="debug-diff",tag="command"}
 
 Show a diff of a config file with respect to spaCy's defaults or another config
 file. If additional settings were used in the creation of the config file, then
@@ -646,13 +646,13 @@ you must supply these as extra parameters to the command when comparing to the
 default settings. The generated diff can also be used when posting to the
 discussion forum to provide more information for the maintainers.
 
-```cli
+```bash
 $ python -m spacy debug diff-config [config_path] [--compare-to] [--optimize] [--gpu] [--pretraining] [--markdown]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy debug diff-config ./config.cfg
 > ```
 
@@ -867,7 +867,7 @@ after_init = null
 | `markdown`, `-md`    | Generate Markdown for Github issues. Defaults to `False`. ~~bool (flag)~~                                                                                                                                                                                                                                 |
 | **PRINTS**           | Diff between the two config files.                                                                                                                                                                                                                                                                        |
 
-### debug profile {#debug-profile tag="command"}
+### debug profile {id="debug-profile",tag="command"}
 
 Profile which functions take the most time in a spaCy pipeline. Input should be
 formatted as one JSON object per line with a key `"text"`. It can either be
@@ -881,7 +881,7 @@ The `profile` command is now available as a subcommand of `spacy debug`.
 
 </Infobox>
 
-```cli
+```bash
 $ python -m spacy debug profile [model] [inputs] [--n-texts]
 ```
 
@@ -893,12 +893,12 @@ $ python -m spacy debug profile [model] [inputs] [--n-texts]
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                         |
 | **PRINTS**        | Profiling information for the pipeline.                                            |
 
-### debug model {#debug-model new="3" tag="command"}
+### debug model {id="debug-model",version="3",tag="command"}
 
 Debug a Thinc [`Model`](https://thinc.ai/docs/api-model) by running it on a
 sample text and checking how it updates its internal weights and parameters.
 
-```cli
+```bash
 $ python -m spacy debug model [config_path] [component] [--layers] [--dimensions] [--parameters] [--gradients] [--attributes] [--print-step0] [--print-step1] [--print-step2] [--print-step3] [--gpu-id]
 ```
 
@@ -909,7 +909,7 @@ model ("Step 0"), which helps us to understand the internal structure of the
 Neural Network, and to focus on specific layers that we want to inspect further
 (see next example).
 
-```cli
+```bash
 $ python -m spacy debug model ./config.cfg tagger -P0
 ```
 
@@ -955,7 +955,7 @@ an all-zero matrix determined by the `nO` and `nI` dimensions. After a first
 training step (Step 2), this matrix has clearly updated its values through the
 training feedback loop.
 
-```cli
+```bash
 $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P2
 ```
 
@@ -1016,7 +1016,7 @@ $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P
 | overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **PRINTS**              | Debugging information.                                                                                                                                                                                             |
 
-## train {#train tag="command"}
+## train {id="train",tag="command"}
 
 Train a pipeline. Expects data in spaCy's
 [binary format](/api/data-formats#training) and a
@@ -1042,11 +1042,11 @@ in the section `[paths]`.
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy train config.cfg --output ./output --paths.train ./train --paths.dev ./dev
 > ```
 
-```cli
+```bash
 $ python -m spacy train [config_path] [--output] [--code] [--verbose] [--gpu-id] [overrides]
 ```
 
@@ -1061,7 +1061,7 @@ $ python -m spacy train [config_path] [--output] [--code] [--verbose] [--gpu-id]
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **CREATES**       | The final trained pipeline and the best trained pipeline.                                                                                                                                                          |
 
-### Calling the training function from Python {#train-function new="3.2"}
+### Calling the training function from Python {id="train-function",version="3.2"}
 
 The training CLI exposes a `train` helper function that lets you run the
 training just like `spacy train`. Usually it's easier to use the command line
@@ -1084,7 +1084,7 @@ directly, but if you need to kick off training from code this is how to do it.
 | `use_gpu`      | Which GPU to use. Defaults to -1 for no GPU. ~~int~~                                                                          |
 | `overrides`    | Values to override config settings. ~~Dict[str, Any]~~                                                                        |
 
-## pretrain {#pretrain new="2.1" tag="command,experimental"}
+## pretrain {id="pretrain",version="2.1",tag="command,experimental"}
 
 Pretrain the "token to vector" ([`Tok2vec`](/api/tok2vec)) layer of pipeline
 components on raw text, using an approximate language-modeling objective.
@@ -1112,11 +1112,11 @@ auto-generated by setting `--pretraining` on
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy pretrain config.cfg ./output_pretrain --paths.raw_text ./data.jsonl
 > ```
 
-```cli
+```bash
 $ python -m spacy pretrain [config_path] [output_dir] [--code] [--resume-path] [--epoch-resume] [--gpu-id] [overrides]
 ```
 
@@ -1132,7 +1132,7 @@ $ python -m spacy pretrain [config_path] [output_dir] [--code] [--resume-path] [
 | overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.dropout 0.2`. ~~Any (option/flag)~~                              |
 | **CREATES**             | The pretrained weights that can be used to initialize `spacy train`.                                                                                                                                               |
 
-## evaluate {#evaluate new="2" tag="command"}
+## evaluate {id="evaluate",version="2",tag="command"}
 
 Evaluate a trained pipeline. Expects a loadable spaCy pipeline (package name or
 path) and evaluation data in the
@@ -1145,7 +1145,7 @@ skew. To render a sample of dependency parses in a HTML file using the
 [displaCy visualizations](/usage/visualizers), set as output directory as the
 `--displacy-path` argument.
 
-```cli
+```bash
 $ python -m spacy evaluate [model] [data_path] [--output] [--code] [--gold-preproc] [--gpu-id] [--displacy-path] [--displacy-limit]
 ```
 
@@ -1162,7 +1162,7 @@ $ python -m spacy evaluate [model] [data_path] [--output] [--code] [--gold-prepr
 | `--help`, `-h`                            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                               | Training results and optional metrics and visualizations.                                                                                                                            |
 
-## find-threshold {#find-threshold new="3.5" tag="command"}
+## find-threshold {id="find-threshold",version="3.5",tag="command"}
 
 Runs prediction trials for a trained model with varying tresholds to maximize
 the specified metric. The search space for the threshold is traversed linearly
@@ -1177,12 +1177,12 @@ be provided.
 
 > #### Examples
 >
-> ```cli
+> ```bash
 > # For textcat_multilabel:
 > $ python -m spacy find-threshold my_nlp data.spacy textcat_multilabel threshold cats_macro_f
 > ```
 >
-> ```cli
+> ```bash
 > # For spancat:
 > $ python -m spacy find-threshold my_nlp data.spacy spancat threshold spans_sc_f
 > ```
@@ -1201,7 +1201,7 @@ be provided.
 | `--silent`, `-V`, `-VV` | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                                       |
 | `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 
-## assemble {#assemble tag="command"}
+## assemble {id="assemble",tag="command"}
 
 Assemble a pipeline from a config file without additional training. Expects a
 [config file](/api/data-formats#config) with all settings and hyperparameters.
@@ -1211,11 +1211,11 @@ config.
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy assemble config.cfg ./output
 > ```
 
-```cli
+```bash
 $ python -m spacy assemble [config_path] [output_dir] [--code] [--verbose] [overrides]
 ```
 
@@ -1229,7 +1229,7 @@ $ python -m spacy assemble [config_path] [output_dir] [--code] [--verbose] [over
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.data ./data`. ~~Any (option/flag)~~                            |
 | **CREATES**       | The final assembled pipeline.                                                                                                                                                                                 |
 
-## package {#package tag="command"}
+## package {id="package",tag="command"}
 
 Generate an installable [Python package](/usage/training#models-generating) from
 an existing pipeline data directory. All data files are copied over. If
@@ -1255,13 +1255,13 @@ the sdist and wheel by setting `--build sdist,wheel`.
 
 </Infobox>
 
-```cli
+```bash
 $ python -m spacy package [input_dir] [output_dir] [--code] [--meta-path] [--create-meta] [--build] [--name] [--version] [--force]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy package /input /output
 > $ cd /output/en_pipeline-0.0.0
 > $ pip install dist/en_pipeline-0.0.0.tar.gz
@@ -1281,13 +1281,13 @@ $ python -m spacy package [input_dir] [output_dir] [--code] [--meta-path] [--cre
 | `--help`, `-h`                               | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                       |
 | **CREATES**                                  | A Python package containing the spaCy pipeline.                                                                                                                                                                                                                                  |
 
-## project {#project new="3"}
+## project {id="project",version="3"}
 
 The `spacy project` CLI includes subcommands for working with
 [spaCy projects](/usage/projects), end-to-end workflows for building and
 deploying custom spaCy pipelines.
 
-### project clone {#project-clone tag="command"}
+### project clone {id="project-clone",tag="command"}
 
 Clone a project template from a Git repository. Calls into `git` under the hood
 and can use the sparse checkout feature if available, so you're only downloading
@@ -1296,19 +1296,19 @@ what you need. By default, spaCy's
 can provide any other repo (public or private) that you have access to using the
 `--repo` option.
 
-```cli
+```bash
 $ python -m spacy project clone [name] [dest] [--repo] [--branch] [--sparse]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy project clone pipelines/ner_wikiner
 > ```
 >
 > Clone from custom repo:
 >
-> ```cli
+> ```bash
 > $ python -m spacy project clone template --repo https://github.com/your_org/your_repo
 > ```
 
@@ -1322,7 +1322,7 @@ $ python -m spacy project clone [name] [dest] [--repo] [--branch] [--sparse]
 | `--help`, `-h`   | Show help message and available arguments. ~~bool (flag)~~                                                                                                |
 | **CREATES**      | The cloned [project directory](/usage/projects#project-files).                                                                                            |
 
-### project assets {#project-assets tag="command"}
+### project assets {id="project-assets",tag="command"}
 
 Fetch project assets like datasets and pretrained weights. Assets are defined in
 the `assets` section of the [`project.yml`](/usage/projects#project-yml). If a
@@ -1333,13 +1333,13 @@ considered "private" and you have to take care of putting them into the
 destination directory yourself. If a local path is provided, the asset is copied
 into the current project.
 
-```cli
+```bash
 $ python -m spacy project assets [project_dir]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy project assets [--sparse]
 > ```
 
@@ -1350,7 +1350,7 @@ $ python -m spacy project assets [project_dir]
 | `--help`, `-h`   | Show help message and available arguments. ~~bool (flag)~~                                                                                                |
 | **CREATES**      | Downloaded or copied assets defined in the `project.yml`.                                                                                                 |
 
-### project run {#project-run tag="command"}
+### project run {id="project-run",tag="command"}
 
 Run a named command or workflow defined in the
 [`project.yml`](/usage/projects#project-yml). If a workflow name is specified,
@@ -1359,13 +1359,13 @@ all commands in the workflow are run, in order. If commands define
 re-run if state has changed. For example, if the input dataset changes, a
 preprocessing command that depends on those files will be re-run.
 
-```cli
+```bash
 $ python -m spacy project run [subcommand] [project_dir] [--force] [--dry]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy project run train
 > ```
 
@@ -1378,7 +1378,7 @@ $ python -m spacy project run [subcommand] [project_dir] [--force] [--dry]
 | `--help`, `-h`  | Show help message and available arguments. ~~bool (flag)~~                              |
 | **EXECUTES**    | The command defined in the `project.yml`.                                               |
 
-### project push {#project-push tag="command"}
+### project push {id="project-push",tag="command"}
 
 Upload all available files or directories listed as in the `outputs` section of
 commands to a remote storage. Outputs are archived and compressed prior to
@@ -1398,13 +1398,13 @@ remote storages, so you can use any protocol that `Pathy` supports, including
 filesystem, although you may need to install extra dependencies to use certain
 protocols.
 
-```cli
+```bash
 $ python -m spacy project push [remote] [project_dir]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy project push my_bucket
 > ```
 >
@@ -1421,7 +1421,7 @@ $ python -m spacy project push [remote] [project_dir]
 | `--help`, `-h` | Show help message and available arguments. ~~bool (flag)~~                              |
 | **UPLOADS**    | All project outputs that exist and are not already stored in the remote.                |
 
-### project pull {#project-pull tag="command"}
+### project pull {id="project-pull",tag="command"}
 
 Download all files or directories listed as `outputs` for commands, unless they
 are not already present locally. When searching for files in the remote, `pull`
@@ -1443,13 +1443,13 @@ remote storages, so you can use any protocol that `Pathy` supports, including
 filesystem, although you may need to install extra dependencies to use certain
 protocols.
 
-```cli
+```bash
 $ python -m spacy project pull [remote] [project_dir]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy project pull my_bucket
 > ```
 >
@@ -1466,7 +1466,7 @@ $ python -m spacy project pull [remote] [project_dir]
 | `--help`, `-h` | Show help message and available arguments. ~~bool (flag)~~                              |
 | **DOWNLOADS**  | All project outputs that do not exist locally and can be found in the remote.           |
 
-### project document {#project-document tag="command"}
+### project document {id="project-document",tag="command"}
 
 Auto-generate a pretty Markdown-formatted `README` for your project, based on
 its [`project.yml`](/usage/projects#project-yml). Will create sections that
@@ -1475,13 +1475,13 @@ content will be placed between two hidden markers, so you can add your own
 custom content before or after the auto-generated documentation. When you re-run
 the `project document` command, only the auto-generated part is replaced.
 
-```cli
+```bash
 $ python -m spacy project document [project_dir] [--output] [--no-emoji]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy project document --output README.md
 > ```
 
@@ -1490,7 +1490,7 @@ $ python -m spacy project document [project_dir] [--output] [--no-emoji]
 For more examples, see the templates in our
 [`projects`](https://github.com/explosion/projects) repo.
 
-![Screenshot of auto-generated Markdown Readme](../images/project_document.jpg)
+![Screenshot of auto-generated Markdown Readme](/images/project_document.jpg)
 
 </Accordion>
 
@@ -1501,7 +1501,7 @@ For more examples, see the templates in our
 | `--no-emoji`, `-NE` | Don't use emoji in the titles. ~~bool (flag)~~                                                                                                                                                          |
 | **CREATES**         | The Markdown-formatted project documentation.                                                                                                                                                           |
 
-### project dvc {#project-dvc tag="command"}
+### project dvc {id="project-dvc",tag="command"}
 
 Auto-generate [Data Version Control](https://dvc.org) (DVC) config file. Calls
 [`dvc run`](https://dvc.org/doc/command-reference/run) with `--no-exec` under
@@ -1521,13 +1521,13 @@ You'll also need to add the assets you want to track with
 
 </Infobox>
 
-```cli
+```bash
 $ python -m spacy project dvc [project_dir] [workflow] [--force] [--verbose] [--quiet]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ git init
 > $ dvc init
 > $ python -m spacy project dvc all
@@ -1543,14 +1543,14 @@ $ python -m spacy project dvc [project_dir] [workflow] [--force] [--verbose] [--
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                    |
 | **CREATES**       | A `dvc.yaml` file in the project directory, based on the steps defined in the given workflow.                 |
 
-## huggingface-hub {#huggingface-hub new="3.1"}
+## huggingface-hub {id="huggingface-hub",version="3.1"}
 
 The `spacy huggingface-cli` CLI includes commands for uploading your trained
 spaCy pipelines to the [Hugging Face Hub](https://huggingface.co/).
 
 > #### Installation
 >
-> ```cli
+> ```bash
 > $ pip install spacy-huggingface-hub
 > $ huggingface-cli login
 > ```
@@ -1564,19 +1564,19 @@ package installed. Installing the package will automatically add the
 
 </Infobox>
 
-### huggingface-hub push {#huggingface-hub-push tag="command"}
+### huggingface-hub push {id="huggingface-hub-push",tag="command"}
 
 Push a spaCy pipeline to the Hugging Face Hub. Expects a `.whl` file packaged
 with [`spacy package`](/api/cli#package) and `--build wheel`. For more details,
 see the spaCy project [integration](/usage/projects#huggingface_hub).
 
-```cli
+```bash
 $ python -m spacy huggingface-hub push [whl_path] [--org] [--msg] [--local-repo] [--verbose]
 ```
 
 > #### Example
 >
-> ```cli
+> ```bash
 > $ python -m spacy huggingface-hub push en_ner_fashion-0.0.0-py3-none-any.whl
 > ```
 

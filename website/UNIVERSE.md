@@ -51,31 +51,31 @@ use a linter to verify that your markup is correct.
 
 ```json
 {
-  "id": "unique-project-id",
-  "title": "Project title",
-  "slogan": "A short summary",
-  "description": "A longer description – *Markdown allowed!*",
-  "github": "user/repo",
-  "pip": "package-name",
-  "code_example": [
-    "import spacy",
-    "import package_name",
-    "",
-    "nlp = spacy.load('en')",
-    "nlp.add_pipe(package_name)"
-  ],
-  "code_language": "python",
-  "url": "https://example.com",
-  "thumb": "https://example.com/thumb.jpg",
-  "image": "https://example.com/image.jpg",
-  "author": "Your Name",
-  "author_links": {
-    "twitter": "username",
-    "github": "username",
-    "website": "https://example.com"
-  },
-  "category": ["pipeline", "standalone"],
-  "tags": ["some-tag", "etc"]
+    "id": "unique-project-id",
+    "title": "Project title",
+    "slogan": "A short summary",
+    "description": "A longer description – *Markdown allowed!*",
+    "github": "user/repo",
+    "pip": "package-name",
+    "code_example": [
+        "import spacy",
+        "import package_name",
+        "",
+        "nlp = spacy.load('en')",
+        "nlp.add_pipe(package_name)"
+    ],
+    "code_language": "python",
+    "url": "https://example.com",
+    "thumb": "https://example.com/thumb.jpg",
+    "image": "https://example.com/image.jpg",
+    "author": "Your Name",
+    "author_links": {
+        "twitter": "username",
+        "github": "username",
+        "website": "https://example.com"
+    },
+    "category": ["pipeline", "standalone"],
+    "tags": ["some-tag", "etc"]
 }
 ```
 

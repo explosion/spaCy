@@ -34,7 +34,7 @@ same thing. Clusters are represented as SpanGroups that start with a prefix
 A `CoreferenceResolver` component can be paired with a
 [`SpanResolver`](/api/span-resolver) to expand single tokens to spans.
 
-## Assigned Attributes {#assigned-attributes}
+## Assigned Attributes {id="assigned-attributes"}
 
 Predictions will be saved to `Doc.spans` as a [`SpanGroup`](/api/spangroup). The
 span key will be a prefix plus a serial number referring to the coreference
@@ -47,7 +47,7 @@ parameter.
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
 | `Doc.spans[prefix + "_" + cluster_number]` | One coreference cluster, represented as single-token spans. Cluster numbers start from 1. ~~SpanGroup~~ |
 
-## Config and implementation {#config}
+## Config and implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -73,7 +73,7 @@ details on the architectures and their arguments and hyperparameters.
 | `model`               | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [Coref](/api/architectures#Coref). ~~Model~~ |
 | `span_cluster_prefix` | The prefix for the keys for clusters saved to `doc.spans`. Defaults to `coref_clusters`. ~~str~~                                         |
 
-## CoreferenceResolver.\_\_init\_\_ {#init tag="method"}
+## CoreferenceResolver.\_\_init\_\_ {id="init",tag="method"}
 
 > #### Example
 >
@@ -102,7 +102,7 @@ shortcut for this and instantiate the component using its string name and
 | _keyword-only_        |                                                                                                     |
 | `span_cluster_prefix` | The prefix for the key for saving clusters of spans. ~~bool~~                                       |
 
-## CoreferenceResolver.\_\_call\_\_ {#call tag="method"}
+## CoreferenceResolver.\_\_call\_\_ {id="call",tag="method"}
 
 Apply the pipe to one document. The document is modified in place and returned.
 This usually happens under the hood when the `nlp` object is called on a text
@@ -125,7 +125,7 @@ and all pipeline components are applied to the `Doc` in order. Both
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## CoreferenceResolver.pipe {#pipe tag="method"}
+## CoreferenceResolver.pipe {id="pipe",tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
@@ -148,7 +148,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/coref#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## CoreferenceResolver.initialize {#initialize tag="method"}
+## CoreferenceResolver.initialize {id="initialize",tag="method"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. **At least one example
@@ -172,7 +172,7 @@ by [`Language.initialize`](/api/language#initialize).
 | _keyword-only_ |                                                                                                                                                                            |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                       |
 
-## CoreferenceResolver.predict {#predict tag="method"}
+## CoreferenceResolver.predict {id="predict",tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
 modifying them. Clusters are returned as a list of `MentionClusters`, one for
@@ -192,7 +192,7 @@ to token indices.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~                                  |
 | **RETURNS** | The predicted coreference clusters for the `docs`. ~~List[MentionClusters]~~ |
 
-## CoreferenceResolver.set_annotations {#set_annotations tag="method"}
+## CoreferenceResolver.set_annotations {id="set_annotations",tag="method"}
 
 Modify a batch of documents, saving coreference clusters in `Doc.spans`.
 
@@ -209,7 +209,7 @@ Modify a batch of documents, saving coreference clusters in `Doc.spans`.
 | `docs`     | The documents to modify. ~~Iterable[Doc]~~                                   |
 | `clusters` | The predicted coreference clusters for the `docs`. ~~List[MentionClusters]~~ |
 
-## CoreferenceResolver.update {#update tag="method"}
+## CoreferenceResolver.update {id="update",tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects. Delegates to
 [`predict`](/api/coref#predict).
@@ -231,7 +231,7 @@ Learn from a batch of [`Example`](/api/example) objects. Delegates to
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## CoreferenceResolver.create_optimizer {#create_optimizer tag="method"}
+## CoreferenceResolver.create_optimizer {id="create_optimizer",tag="method"}
 
 Create an optimizer for the pipeline component.
 
@@ -246,7 +246,7 @@ Create an optimizer for the pipeline component.
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## CoreferenceResolver.use_params {#use_params tag="method, contextmanager"}
+## CoreferenceResolver.use_params {id="use_params",tag="method, contextmanager"}
 
 Modify the pipe's model, to use the given parameter values. At the end of the
 context, the original parameters are restored.
@@ -263,7 +263,7 @@ context, the original parameters are restored.
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## CoreferenceResolver.to_disk {#to_disk tag="method"}
+## CoreferenceResolver.to_disk {id="to_disk",tag="method"}
 
 Serialize the pipe to disk.
 
@@ -280,7 +280,7 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## CoreferenceResolver.from_disk {#from_disk tag="method"}
+## CoreferenceResolver.from_disk {id="from_disk",tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
@@ -298,7 +298,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `CoreferenceResolver` object. ~~CoreferenceResolver~~                              |
 
-## CoreferenceResolver.to_bytes {#to_bytes tag="method"}
+## CoreferenceResolver.to_bytes {id="to_bytes",tag="method"}
 
 > #### Example
 >
@@ -315,7 +315,7 @@ Serialize the pipe to a bytestring, including the `KnowledgeBase`.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the `CoreferenceResolver` object. ~~bytes~~                          |
 
-## CoreferenceResolver.from_bytes {#from_bytes tag="method"}
+## CoreferenceResolver.from_bytes {id="from_bytes",tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -334,7 +334,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `CoreferenceResolver` object. ~~CoreferenceResolver~~                                   |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from

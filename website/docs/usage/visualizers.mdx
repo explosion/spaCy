@@ -1,7 +1,7 @@
 ---
 title: Visualizers
 teaser: Visualize dependencies and entities in your browser or in a notebook
-new: 2
+version: 2
 menu:
   - ['Dependencies', 'dep']
   - ['Named Entities', 'ent']
@@ -29,13 +29,12 @@ modifications you like. If you're using [Streamlit](https://streamlit.io), check
 out the [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit)
 package that helps you integrate spaCy visualizations into your apps!
 
-## Visualizing the dependency parse {#dep}
+## Visualizing the dependency parse {id="dep"}
 
 The dependency visualizer, `dep`, shows part-of-speech tags and syntactic
 dependencies.
 
-```python
-### Dependency example
+```python {title="Dependency example"}
 import spacy
 from spacy import displacy
 
@@ -44,7 +43,7 @@ doc = nlp("This is a sentence.")
 displacy.serve(doc, style="dep")
 ```
 
-![displaCy visualizer](../images/displacy.svg)
+![displaCy visualizer](/images/displacy.svg)
 
 The argument `options` lets you specify a dictionary of settings to customize
 the layout, for example:
@@ -77,9 +76,9 @@ For a list of all available options, see the
 > displacy.serve(doc, style="dep", options=options)
 > ```
 
-![displaCy visualizer (compact mode)](../images/displacy-compact.svg)
+![displaCy visualizer (compact mode)](/images/displacy-compact.svg)
 
-### Visualizing long texts {#dep-long-text new="2.0.12"}
+### Visualizing long texts {id="dep-long-text",version="2.0.12"}
 
 Long texts can become difficult to read when displayed in one row, so it's often
 better to visualize them sentence-by-sentence instead. As of v2.0.12, `displacy`
@@ -99,13 +98,12 @@ sentence_spans = list(doc.sents)
 displacy.serve(sentence_spans, style="dep")
 ```
 
-## Visualizing the entity recognizer {#ent}
+## Visualizing the entity recognizer {id="ent"}
 
 The entity visualizer, `ent`, highlights named entities and their labels in a
 text.
 
-```python
-### Named Entity example
+```python {title="Named Entity example"}
 import spacy
 from spacy import displacy
 
@@ -116,11 +114,9 @@ doc = nlp(text)
 displacy.serve(doc, style="ent")
 ```
 
-import DisplacyEntHtml from 'images/displacy-ent2.html'
-
 <Iframe
   title="displaCy visualizer for entities"
-  html={DisplacyEntHtml}
+  src="/images/displacy-ent2.html"
   height={180}
 />
 
@@ -147,11 +143,9 @@ use the `colors` setting to add your own colors for them.
 > displacy.serve(doc, style="ent", options=options)
 > ```
 
-import DisplacyEntCustomHtml from 'images/displacy-ent-custom.html'
-
 <Iframe
   title="displaCy visualizer for entities (custom styling)"
-  html={DisplacyEntCustomHtml}
+  src="/images/displacy-ent-custom.html"
   height={225}
 />
 
@@ -160,7 +154,7 @@ added as the `background` style attribute, you can use any
 [valid background value](https://tympanus.net/codrops/css_reference/background/)
 or shorthand – including gradients and even images!
 
-### Adding titles to documents {#ent-titles}
+### Adding titles to documents {id="ent-titles"}
 
 Rendering several large documents on one page can easily become confusing. To
 add a headline to each visualization, you can add a `title` to its `user_data`.
@@ -176,12 +170,11 @@ This feature is especially handy if you're using displaCy to compare performance
 at different stages of a process, e.g. during training. Here you could use the
 title for a brief description of the text example and the number of iterations.
 
-## Visualizing spans {#span}
+## Visualizing spans {id="span"}
 
 The span visualizer, `span`, highlights overlapping spans in a text.
 
-```python
-### Span example
+```python {title="Span example"}
 import spacy
 from spacy import displacy
 from spacy.tokens import Span
@@ -199,11 +192,9 @@ doc.spans["sc"] = [
 displacy.serve(doc, style="span")
 ```
 
-import DisplacySpanHtml from 'images/displacy-span.html'
-
 <Iframe
   title="displaCy visualizer for overlapping spans"
-  html={DisplacySpanHtml}
+  src="/images/displacy-span.html"
   height={180}
 />
 
@@ -227,23 +218,20 @@ specify which one displaCy should use with `spans_key` (`sc` is the default).
 > displacy.serve(doc, style="span", options=options)
 > ```
 
-import DisplacySpanCustomHtml from 'images/displacy-span-custom.html'
-
 <Iframe
   title="displaCy visualizer for spans (custom spans_key)"
-  html={DisplacySpanCustomHtml}
+  src="/images/displacy-span-custom.html"
   height={225}
 />
 
-## Using displaCy in Jupyter notebooks {#jupyter}
+## Using displaCy in Jupyter notebooks {id="jupyter"}
 
 displaCy is able to detect whether you're working in a
 [Jupyter](https://jupyter.org) notebook, and will return markup that can be
 rendered in a cell straight away. When you export your notebook, the
 visualizations will be included as HTML.
 
-```python
-### Jupyter example
+```python {title="Jupyter example"}
 # Don't forget to install a trained pipeline, e.g.: python -m spacy download en
 
 # In[1]:
@@ -267,7 +255,7 @@ rendering if auto-detection fails.
 
 </Infobox>
 
-![displaCy visualizer in a Jupyter notebook](../images/displacy_jupyter.jpg)
+![displaCy visualizer in a Jupyter notebook](/images/displacy_jupyter.jpg)
 
 Internally, displaCy imports `display` and `HTML` from `IPython.core.display`
 and returns a Jupyter HTML object. If you were doing it manually, it'd look like
@@ -280,15 +268,14 @@ html = displacy.render(doc, style="dep")
 display(HTML(html))
 ```
 
-## Rendering HTML {#html}
+## Rendering HTML {id="html"}
 
 If you don't need the web server and just want to generate the markup – for
 example, to export it to a file or serve it in a custom way – you can use
 [`displacy.render`](/api/top-level#displacy.render). It works the same way, but
 returns a string containing the markup.
 
-```python
-### Example
+```python {title="Example"}
 import spacy
 from spacy import displacy
 
@@ -329,10 +316,9 @@ rendering all `Doc`s at once, loop over them and export them separately.
 
 </Infobox>
 
-### Example: Export SVG graphics of dependency parses {#examples-export-svg}
+### Example: Export SVG graphics of dependency parses {id="examples-export-svg"}
 
-```python
-### Example
+```python {title="Example"}
 import spacy
 from spacy import displacy
 from pathlib import Path
@@ -350,7 +336,7 @@ for sent in sentences:
 The above code will generate the dependency visualizations as two files,
 `This-is-an-example.svg` and `This-is-another-one.svg`.
 
-### Rendering data manually {#manual-usage}
+### Rendering data manually {id="manual-usage"}
 
 You can also use displaCy to manually render data. This can be useful if you
 want to visualize output from other libraries, like [NLTK](http://www.nltk.org)
@@ -380,8 +366,7 @@ helper functions for converting `Doc` objects to displaCy's format for use with
 > html = displacy.render(ex, style="ent", manual=True)
 > ```
 
-```python
-### DEP input
+```python {title="DEP input"}
 {
     "words": [
         {"text": "This", "tag": "DT"},
@@ -397,8 +382,7 @@ helper functions for converting `Doc` objects to displaCy's format for use with
 }
 ```
 
-```python
-### ENT input
+```python {title="ENT input"}
 {
     "text": "But Google is starting from behind.",
     "ents": [{"start": 4, "end": 10, "label": "ORG"}],
@@ -406,8 +390,7 @@ helper functions for converting `Doc` objects to displaCy's format for use with
 }
 ```
 
-```python
-### ENT input with knowledge base links
+```python {title="ENT input with knowledge base links"}
 {
     "text": "But Google is starting from behind.",
     "ents": [{"start": 4, "end": 10, "label": "ORG", "kb_id": "Q95", "kb_url": "https://www.wikidata.org/entity/Q95"}],
@@ -415,8 +398,7 @@ helper functions for converting `Doc` objects to displaCy's format for use with
 }
 ```
 
-```python
-### SPANS input
+```python {title="SPANS input"}
 {
     "text": "Welcome to the Bank of China.",
     "spans": [
@@ -427,7 +409,7 @@ helper functions for converting `Doc` objects to displaCy's format for use with
 }
 ```
 
-## Using displaCy in a web application {#webapp}
+## Using displaCy in a web application {id="webapp"}
 
 If you want to use the visualizers as part of a web application, for example to
 create something like our [online demo](https://explosion.ai/demos/displacy),
@@ -455,6 +437,6 @@ Alternatively, if you're using [Streamlit](https://streamlit.io), check out the
 helps you integrate spaCy visualizations into your apps. It includes a full
 embedded visualizer, as well as individual components.
 
-![](../images/spacy-streamlit.png)
+![](/images/spacy-streamlit.png)
 
 </Grid>

@@ -42,9 +42,7 @@ enough, JSX components can be used.
 > For more details on editing the site locally, see the installation
 > instructions and markdown reference below.
 
-## Logo {#logo source="website/src/images/logo.svg"}
-
-import { Logos } from 'widgets/styleguide'
+## Logo {id="logo",source="website/src/images/logo.svg"}
 
 If you would like to use the spaCy logo on your site, please get in touch and
 ask us first. However, if you want to show support and tell others that your
@@ -53,9 +51,7 @@ project is using spaCy, you can grab one of our
 
 <Logos />
 
-## Colors {#colors}
-
-import { Colors, Patterns } from 'widgets/styleguide'
+## Colors {id="colors"}
 
 <Colors />
 
@@ -63,16 +59,16 @@ import { Colors, Patterns } from 'widgets/styleguide'
 
 <Patterns />
 
-## Typography {#typography}
-
-import { H1, H2, H3, H4, H5, Label, InlineList } from 'components/typography'
+## Typography {id="typography"}
 
 > #### Markdown
 >
-> ```markdown_
+> ```markdown
 > ## Headline 2
-> ## Headline 2 {#some_id}
-> ## Headline 2 {#some_id tag="method"}
+>
+> ## Headline 2 {id="some_id"}
+>
+> ## Headline 2 {id="some_id" tag="method"}
 > ```
 >
 > #### JSX
@@ -100,7 +96,6 @@ in the sidebar menu.
 </Infobox>
 
 <div>
-  <H1>Headline 1</H1>
   <H2>Headline 2</H2>
   <H3>Headline 3</H3>
   <H4>Headline 4</H4>
@@ -115,16 +110,16 @@ example, to add a tag for the documented type or mark features that have been
 introduced in a specific version or require statistical models to be loaded.
 Tags are also available as standalone `<Tag />` components.
 
-| Argument | Example                    | Result                                    |
-| -------- | -------------------------- | ----------------------------------------- |
-| `tag`    | `{tag="method"}`           | <Tag>method</Tag>                         |
-| `new`    | `{new="3"}`                | <Tag variant="new">3</Tag>                |
-| `model`  | `{model="tagger, parser"}` | <Tag variant="model">tagger, parser</Tag> |
-| `hidden` | `{hidden="true"}`          |                                           |
+| Argument  | Example                    | Result                                    |
+| --------- | -------------------------- | ----------------------------------------- |
+| `tag`     | `{tag="method"}`           | <Tag>method</Tag>                         |
+| `version` | `{version="3"}`            | <Tag variant="new">3</Tag>                |
+| `model`   | `{model="tagger, parser"}` | <Tag variant="model">tagger, parser</Tag> |
+| `hidden`  | `{hidden="true"}`          |                                           |
 
-## Elements {#elements}
+## Elements {id="elements"}
 
-### Links {#links}
+### Links {id="links"}
 
 > #### Markdown
 >
@@ -146,9 +141,7 @@ Special link styles are used depending on the link URL.
 - [I am a link to a model](/models/en#en_core_web_sm)
 - [I am a link to GitHub](https://github.com/explosion/spaCy)
 
-### Abbreviations {#abbr}
-
-import { Abbr } from 'components/typography'
+### Abbreviations {id="abbr"}
 
 > #### JSX
 >
@@ -160,13 +153,11 @@ Some text with <Abbr title="Explanation here">an abbreviation</Abbr>. On small
 screens, I collapse and the explanation text is displayed next to the
 abbreviation.
 
-### Tags {#tags}
-
-import Tag from 'components/tag'
+### Tags {id="tags"}
 
 > ```jsx
 > <Tag>method</Tag>
-> <Tag variant="new">4</Tag>
+> <Tag variant="version">4</Tag>
 > <Tag variant="model">tagger, parser</Tag>
 > ```
 
@@ -179,17 +170,13 @@ new anymore. Setting `variant="model"` takes a description of model capabilities
 and can be used to mark features that require a respective model to be
 installed.
 
-<InlineList>
+<p>
+  <Tag>method</Tag>
+  <Tag variant="new">4</Tag>
+  <Tag variant="model">tagger, parser</Tag>
+</p>
 
-<Tag>method</Tag> <Tag variant="new">4</Tag> <Tag variant="model">
-  tagger, parser
-</Tag>
-
-</InlineList>
-
-### Buttons {#buttons}
-
-import Button from 'components/button'
+### Buttons {id="buttons"}
 
 > ```jsx
 > <Button to="#" variant="primary">Primary small</Button>
@@ -200,33 +187,29 @@ Link buttons come in two variants, `primary` and `secondary` and two sizes, with
 an optional `large` size modifier. Since they're mostly used as enhanced links,
 the buttons are implemented as styled links instead of native button elements.
 
-<InlineList>
-  <Button to="#" variant="primary">
-    Primary small
-  </Button>
-  <Button to="#" variant="secondary">
-    Secondary small
-  </Button>
-</InlineList>
+<p>
+<Button to="#" variant="primary">Primary small</Button>
 
-<br />
+{' '}
 
-<InlineList>
-  <Button to="#" variant="primary" large>
-    Primary large
-  </Button>
-  <Button to="#" variant="secondary" large>
-    Secondary large
-  </Button>
-</InlineList>
+<Button to="#" variant="secondary">Secondary small</Button>
+</p>
+
+<p>
+<Button to="#" variant="primary">Primary small</Button>
+
+{' '}
+
+<Button to="#" variant="secondary">Secondary small</Button>
+</p>
 
 ## Components
 
-### Table {#table}
+### Table {id="table"}
 
 > #### Markdown
 >
-> ```markdown_
+> ```markdown
 > | Header 1 | Header 2 |
 > | -------- | -------- |
 > | Column 1 | Column 2 |
@@ -260,7 +243,7 @@ be italicized:
 
 > #### Markdown
 >
-> ```markdown_
+> ```markdown
 > | Header 1 | Header 2 | Header 3 |
 > | -------- | -------- | -------- |
 > | Column 1 | Column 2 | Column 3 |
@@ -274,11 +257,11 @@ be italicized:
 | _Hello_  |          |          |
 | Column 1 | Column 2 | Column 3 |
 
-### Type Annotations {#type-annotations}
+### Type Annotations {id="type-annotations"}
 
 > #### Markdown
 >
-> ```markdown_
+> ```markdown
 > ~~Model[List[Doc], Floats2d]~~
 > ```
 >
@@ -307,9 +290,9 @@ always be the **last element** in the row.
 
 > #### Markdown
 >
-> ```markdown_
-> | Header 1 | Header 2                |
-> | -------- | ----------------------- |
+> ```markdown
+> | Header 1 | Header 2               |
+> | -------- | ---------------------- |
 > | Column 1 | Column 2 ~~List[Doc]~~ |
 > ```
 
@@ -319,11 +302,11 @@ always be the **last element** in the row.
 | `model`                 | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. ~~Model[List[Doc], FullTransformerBatch]~~                                                   |
 | `set_extra_annotations` | Function that takes a batch of `Doc` objects and transformer outputs and can set additional annotations on the `Doc`. ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
 
-### List {#list}
+### List {id="list"}
 
 > #### Markdown
 >
-> ```markdown_
+> ```markdown
 > 1. One
 > 2. Two
 > ```
@@ -350,12 +333,13 @@ automatically.
 3. Lorem ipsum dolor
 4. consectetur adipiscing elit
 
-### Aside {#aside}
+### Aside {id="aside"}
 
 > #### Markdown
 >
-> ```markdown_
+> ```markdown
 > > #### Aside title
+> >
 > > This is aside text.
 > ```
 >
@@ -375,11 +359,11 @@ To make them easier to use in Markdown, paragraphs formatted as blockquotes will
 turn into asides by default. Level 4 headlines (with a leading `####`) will
 become aside titles.
 
-### Code Block {#code-block}
+### Code Block {id="code-block"}
 
 > #### Markdown
 >
-> ````markdown_
+> ````markdown
 > ```python
 > ### This is a title
 > import spacy
@@ -400,8 +384,7 @@ to raw text with no highlighting. An optional label can be added as the first
 line with the prefix `####` (Python-like) and `///` (JavaScript-like). the
 indented block as plain text and preserve whitespace.
 
-```python
-### Using spaCy
+```python {title="Using spaCy"}
 import spacy
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("This is a sentence.")
@@ -415,7 +398,7 @@ adding `{highlight="..."}` to the headline. Acceptable ranges are spans like
 
 > #### Markdown
 >
-> ````markdown_
+> ````markdown
 > ```python
 > ### This is a title {highlight="1-2"}
 > import spacy
@@ -423,8 +406,7 @@ adding `{highlight="..."}` to the headline. Acceptable ranges are spans like
 > ```
 > ````
 
-```python
-### Using the matcher {highlight="5-7"}
+```python {title="Using the matcher",highlight="5-7"}
 import spacy
 from spacy.matcher import Matcher
 
@@ -443,7 +425,7 @@ interactive widget defaults to a regular code block.
 
 > #### Markdown
 >
-> ````markdown_
+> ````markdown
 > ```python
 > ### {executable="true"}
 > import spacy
@@ -451,8 +433,7 @@ interactive widget defaults to a regular code block.
 > ```
 > ````
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("This is a sentence.")
@@ -466,7 +447,7 @@ original file is shown at the top of the widget.
 
 > #### Markdown
 >
-> ````markdown_
+> ````markdown
 > ```python
 > https://github.com/...
 > ```
@@ -482,9 +463,7 @@ original file is shown at the top of the widget.
 https://github.com/explosion/spaCy/tree/master/spacy/language.py
 ```
 
-### Infobox {#infobox}
-
-import Infobox from 'components/infobox'
+### Infobox {id="infobox"}
 
 > #### JSX
 >
@@ -520,9 +499,7 @@ blocks.
 
 </Infobox>
 
-### Accordion {#accordion}
-
-import Accordion from 'components/accordion'
+### Accordion {id="accordion"}
 
 > #### JSX
 >
@@ -549,7 +526,7 @@ sit amet dignissim justo congue.
 
 </Accordion>
 
-## Markdown reference {#markdown}
+## Markdown reference {id="markdown"}
 
 All page content and page meta lives in the `.mdx` files in the `/docs`
 directory. The frontmatter block at the top of each file defines the page title
@@ -560,7 +537,7 @@ and other settings like the sidebar menu.
 title: Page title
 ---
 
-## Headline starting a section {#some_id}
+## Headline starting a section {id="some_id"}
 
 This is a regular paragraph with a [link](https://spacy.io) and **bold text**.
 
@@ -574,8 +551,7 @@ This is a regular paragraph with a [link](https://spacy.io) and **bold text**.
 | -------- | -------- |
 | Column 1 | Column 2 |
 
-```python
-### Code block title {highlight="2-3"}
+```python {title="Code block title",highlight="2-3"}
 import spacy
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("Hello world")
@@ -597,7 +573,7 @@ In addition to the native markdown elements, you can use the components
 [abbr]: https://spacy.io/styleguide#abbr
 [tag]: https://spacy.io/styleguide#tag
 
-## Editorial {#editorial}
+## Editorial {id="editorial"}
 
 - "spaCy" should always be spelled with a lowercase "s" and a capital "C",
   unless it specifically refers to the Python package or Python import `spacy`
@@ -621,21 +597,16 @@ In addition to the native markdown elements, you can use the components
   - ❌ The [`Span`](/api/span) and [`Token`](/api/token) objects are views of a
     [`Doc`](/api/doc). [`Span.as_doc`](/api/span#as_doc) creates a
     [`Doc`](/api/doc) object from a [`Span`](/api/span).
-
-* Other things we format as code are: references to trained pipeline packages
+- Other things we format as code are: references to trained pipeline packages
   like `en_core_web_sm` or file names like `code.py` or `meta.json`.
-
   - ✅ After training, the `config.cfg` is saved to disk.
-
-* [Type annotations](#type-annotations) are a special type of code formatting,
+- [Type annotations](#type-annotations) are a special type of code formatting,
   expressed by wrapping the text in `~~` instead of backticks. The result looks
   like this: ~~List[Doc]~~. All references to known types will be linked
   automatically.
-
   - ✅ The model has the input type ~~List[Doc]~~ and it outputs a
     ~~List[Array2d]~~.
-
-* We try to keep links meaningful but short.
+- We try to keep links meaningful but short.
   - ✅ For details, see the usage guide on
     [training with custom code](/usage/training#custom-code).
   - ❌ For details, see

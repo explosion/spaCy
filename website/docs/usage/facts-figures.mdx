@@ -8,7 +8,7 @@ menu:
   # TODO: - ['Citing spaCy', 'citation']
 ---
 
-## Comparison {#comparison hidden="true"}
+## Comparison {id="comparison",hidden="true"}
 
 spaCy is a **free, open-source library** for advanced **Natural Language
 Processing** (NLP) in Python. It's designed specifically for **production use**
@@ -16,13 +16,11 @@ and helps you build applications that process and "understand" large volumes of
 text. It can be used to build information extraction or natural language
 understanding systems.
 
-### Feature overview {#comparison-features}
-
-import Features from 'widgets/features.js'
+### Feature overview {id="comparison-features"}
 
 <Features />
 
-### When should I use spaCy? {#comparison-usage}
+### When should I use spaCy? {id="comparison-usage"}
 
 - ✅ **I'm a beginner and just getting started with NLP.** – spaCy makes it easy
   to get started and comes with extensive documentation, including a
@@ -51,13 +49,13 @@ import Features from 'widgets/features.js'
   can use it to make the results of your research easily available for others to
   use, e.g. via a custom spaCy component.
 
-## Benchmarks {#benchmarks}
+## Benchmarks {id="benchmarks"}
 
 spaCy v3.0 introduces transformer-based pipelines that bring spaCy's accuracy
 right up to **current state-of-the-art**. You can also use a CPU-optimized
 pipeline, which is less accurate but much cheaper to run.
 
-<!-- TODO: update benchmarks and intro -->
+{/* TODO: update benchmarks and intro */}
 
 > #### Evaluation details
 >
@@ -69,8 +67,6 @@ pipeline, which is less accurate but much cheaper to run.
 >   gold-standard segmentation and tokenization, from a pretty specific type of
 >   text (articles from a single newspaper, 1984-1989).
 
-import Benchmarks from 'usage/_benchmarks-models.mdx'
-
 <Benchmarks />
 
 <figure>
@@ -81,7 +77,7 @@ import Benchmarks from 'usage/_benchmarks-models.mdx'
 | [Mrini et al.](https://khalilmrini.github.io/Label_Attention_Layer.pdf) (2019) | 97.4 | 96.3 |
 | [Zhou and Zhao](https://www.aclweb.org/anthology/P19-1230/) (2019)             | 97.2 | 95.7 |
 
-<figcaption class="caption">
+<figcaption className="caption">
 
 **Dependency parsing accuracy** on the Penn Treebank. See
 [NLP-progress](http://nlpprogress.com/english/dependency_parsing.html) for more
@@ -92,7 +88,7 @@ results. Project template:
 
 </figure>
 
-### Speed comparison {#benchmarks-speed}
+### Speed comparison {id="benchmarks-speed"}
 
 We compare the speed of different NLP libraries, measured in words per second
 (WPS) - higher is better. The evaluation was performed on 10,000 Reddit
@@ -108,7 +104,7 @@ comments.
 | Flair   | `pos`(`-fast`) & `ner`(`-fast`)                 |                                                            323 |                                                          1,184 |
 | UDPipe  | `english-ewt-ud-2.5`                            |                                                          1,101 |                                                          _n/a_ |
 
-<figcaption class="caption">
+<figcaption className="caption">
 
 **End-to-end processing speed** on raw unannotated text. Project template:
 [`benchmarks/speed`](%%GITHUB_PROJECTS/benchmarks/speed).
@@ -117,6 +113,4 @@ comments.
 
 </figure>
 
-<!-- TODO: ## Citing spaCy {#citation}
-
--->
+{/* TODO: ## Citing spaCy {id="citation"} */}

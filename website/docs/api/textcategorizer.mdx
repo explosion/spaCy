@@ -2,7 +2,7 @@
 title: TextCategorizer
 tag: class
 source: spacy/pipeline/textcat.py
-new: 2
+version: 2
 teaser: 'Pipeline component for text classification'
 api_base_class: /api/pipe
 api_string_name: textcat
@@ -29,7 +29,7 @@ only.
 
 </Infobox>
 
-## Assigned Attributes {#assigned-attributes}
+## Assigned Attributes {id="assigned-attributes"}
 
 Predictions will be saved to `doc.cats` as a dictionary, where the key is the
 name of the category and the value is a score between 0 and 1 (inclusive). For
@@ -49,7 +49,7 @@ supported.
 | ---------- | ------------------------------------- |
 | `Doc.cats` | Category scores. ~~Dict[str, float]~~ |
 
-## Config and implementation {#config}
+## Config and implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -93,7 +93,7 @@ architectures and their arguments and hyperparameters.
 %%GITHUB_SPACY/spacy/pipeline/textcat_multilabel.py
 ```
 
-## TextCategorizer.\_\_init\_\_ {#init tag="method"}
+## TextCategorizer.\_\_init\_\_ {id="init",tag="method"}
 
 > #### Example
 >
@@ -125,7 +125,7 @@ shortcut for this and instantiate the component using its string name and
 | `threshold`    | Cutoff to consider a prediction "positive", relevant for `textcat_multilabel` when calculating accuracy scores. ~~float~~        |
 | `scorer`       | The scoring method. Defaults to [`Scorer.score_cats`](/api/scorer#score_cats) for the attribute `"cats"`. ~~Optional[Callable]~~ |
 
-## TextCategorizer.\_\_call\_\_ {#call tag="method"}
+## TextCategorizer.\_\_call\_\_ {id="call",tag="method"}
 
 Apply the pipe to one document. The document is modified in place, and returned.
 This usually happens under the hood when the `nlp` object is called on a text
@@ -148,7 +148,7 @@ delegate to the [`predict`](/api/textcategorizer#predict) and
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## TextCategorizer.pipe {#pipe tag="method"}
+## TextCategorizer.pipe {id="pipe",tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
@@ -172,7 +172,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/textcategorizer#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## TextCategorizer.initialize {#initialize tag="method" new="3"}
+## TextCategorizer.initialize {id="initialize",tag="method",version="3"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. **At least one example
@@ -217,7 +217,7 @@ This method was previously called `begin_training`.
 | `labels`         | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Iterable[str]]~~ |
 | `positive_label` | The positive label for a binary task with exclusive classes, `None` otherwise and by default. This parameter is only used during scoring. It is not available when using the `textcat_multilabel` component. ~~Optional[str]~~                                                                                                                                                                             |
 
-## TextCategorizer.predict {#predict tag="method"}
+## TextCategorizer.predict {id="predict",tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects without
 modifying them.
@@ -234,7 +234,7 @@ modifying them.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
 | **RETURNS** | The model's prediction for each document.   |
 
-## TextCategorizer.set_annotations {#set_annotations tag="method"}
+## TextCategorizer.set_annotations {id="set_annotations",tag="method"}
 
 Modify a batch of [`Doc`](/api/doc) objects using pre-computed scores.
 
@@ -251,7 +251,7 @@ Modify a batch of [`Doc`](/api/doc) objects using pre-computed scores.
 | `docs`   | The documents to modify. ~~Iterable[Doc]~~                |
 | `scores` | The scores to set, produced by `TextCategorizer.predict`. |
 
-## TextCategorizer.update {#update tag="method"}
+## TextCategorizer.update {id="update",tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
@@ -275,7 +275,7 @@ Delegates to [`predict`](/api/textcategorizer#predict) and
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## TextCategorizer.rehearse {#rehearse tag="method,experimental" new="3"}
+## TextCategorizer.rehearse {id="rehearse",tag="method,experimental",version="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model to try to address
@@ -298,7 +298,7 @@ the "catastrophic forgetting" problem. This feature is experimental.
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## TextCategorizer.get_loss {#get_loss tag="method"}
+## TextCategorizer.get_loss {id="get_loss",tag="method"}
 
 Find the loss and gradient of loss for the batch of documents and their
 predicted scores.
@@ -317,7 +317,7 @@ predicted scores.
 | `scores`    | Scores representing the model's predictions.                                |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
-## TextCategorizer.score {#score tag="method" new="3"}
+## TextCategorizer.score {id="score",tag="method",version="3"}
 
 Score a batch of examples.
 
@@ -333,7 +333,7 @@ Score a batch of examples.
 | _keyword-only_ |                                                                                                                      |
 | **RETURNS**    | The scores, produced by [`Scorer.score_cats`](/api/scorer#score_cats). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
-## TextCategorizer.create_optimizer {#create_optimizer tag="method"}
+## TextCategorizer.create_optimizer {id="create_optimizer",tag="method"}
 
 Create an optimizer for the pipeline component.
 
@@ -348,7 +348,7 @@ Create an optimizer for the pipeline component.
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## TextCategorizer.use_params {#use_params tag="method, contextmanager"}
+## TextCategorizer.use_params {id="use_params",tag="method, contextmanager"}
 
 Modify the pipe's model to use the given parameter values.
 
@@ -364,7 +364,7 @@ Modify the pipe's model to use the given parameter values.
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## TextCategorizer.add_label {#add_label tag="method"}
+## TextCategorizer.add_label {id="add_label",tag="method"}
 
 Add a new label to the pipe. Raises an error if the output dimension is already
 set, or if the model has already been fully [initialized](#initialize). Note
@@ -386,7 +386,7 @@ automatically.
 | `label`     | The label to add. ~~str~~                                   |
 | **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
 
-## TextCategorizer.to_disk {#to_disk tag="method"}
+## TextCategorizer.to_disk {id="to_disk",tag="method"}
 
 Serialize the pipe to disk.
 
@@ -403,7 +403,7 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## TextCategorizer.from_disk {#from_disk tag="method"}
+## TextCategorizer.from_disk {id="from_disk",tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
@@ -421,7 +421,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `TextCategorizer` object. ~~TextCategorizer~~                                      |
 
-## TextCategorizer.to_bytes {#to_bytes tag="method"}
+## TextCategorizer.to_bytes {id="to_bytes",tag="method"}
 
 > #### Example
 >
@@ -438,7 +438,7 @@ Serialize the pipe to a bytestring.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the `TextCategorizer` object. ~~bytes~~                              |
 
-## TextCategorizer.from_bytes {#from_bytes tag="method"}
+## TextCategorizer.from_bytes {id="from_bytes",tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -457,7 +457,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `TextCategorizer` object. ~~TextCategorizer~~                                           |
 
-## TextCategorizer.labels {#labels tag="property"}
+## TextCategorizer.labels {id="labels",tag="property"}
 
 The labels currently added to the component.
 
@@ -472,7 +472,7 @@ The labels currently added to the component.
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
 
-## TextCategorizer.label_data {#label_data tag="property" new="3"}
+## TextCategorizer.label_data {id="label_data",tag="property",version="3"}
 
 The labels currently added to the component and their internal meta information.
 This is the data generated by [`init labels`](/api/cli#init-labels) and used by
@@ -490,7 +490,7 @@ the model with a pre-defined label set.
 | ----------- | ---------------------------------------------------------- |
 | **RETURNS** | The label data added to the component. ~~Tuple[str, ...]~~ |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from

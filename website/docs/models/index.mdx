@@ -7,7 +7,7 @@ menu:
   - ['Pipeline Design', 'design']
 ---
 
-<!-- TODO: include interactive demo -->
+{/* TODO: include interactive demo */}
 
 ### Quickstart {hidden="true"}
 
@@ -16,11 +16,9 @@ menu:
 > For more details on how to use trained pipelines with spaCy, see the
 > [usage guide](/usage/models).
 
-import QuickstartModels from 'widgets/quickstart-models.js'
-
 <QuickstartModels id="quickstart" />
 
-## Package naming conventions {#conventions}
+## Package naming conventions {id="conventions"}
 
 In general, spaCy expects all pipeline packages to follow the naming convention
 of `[lang]\_[name]`. For spaCy's pipelines, we also chose to divide the name
@@ -45,7 +43,7 @@ For example, [`en_core_web_sm`](/models/en#en_core_web_sm) is a small English
 pipeline trained on written web text (blogs, news, comments), that includes
 vocabulary, syntax and entities.
 
-### Package versioning {#model-versioning}
+### Package versioning {id="model-versioning"}
 
 Additionally, the pipeline package versioning reflects both the compatibility
 with spaCy, as well as the model version. A package version `a.b.c` translates
@@ -62,7 +60,7 @@ For a detailed compatibility overview, see the
 This is also the source of spaCy's internal compatibility check, performed when
 you run the [`download`](/api/cli#download) command.
 
-## Trained pipeline design {#design}
+## Trained pipeline design {id="design"}
 
 The spaCy v3 trained pipelines are designed to be efficient and configurable.
 For example, multiple components can share a common "token-to-vector" model and
@@ -89,9 +87,9 @@ Main changes from spaCy v2 models:
 - The lemmatizer tables and processing move from the vocab and tagger to a
   separate `lemmatizer` component.
 
-### CNN/CPU pipeline design {#design-cnn}
+### CNN/CPU pipeline design {id="design-cnn"}
 
-![Components and their dependencies in the CNN pipelines](../images/pipeline-design.svg)
+![Components and their dependencies in the CNN pipelines](/images/pipeline-design.svg)
 
 In the `sm`/`md`/`lg` models:
 
@@ -132,13 +130,13 @@ vector keys for default vectors.
 - [`Vectors.most_similar`](/api/vectors#most_similar) is not supported because
   there's no fixed list of vectors to compare your vectors to.
 
-### Transformer pipeline design {#design-trf}
+### Transformer pipeline design {id="design-trf"}
 
 In the transformer (`trf`) models, the `tagger`, `parser` and `ner` (if present)
 all listen to the `transformer` component. The `attribute_ruler` and
 `lemmatizer` have the same configuration as in the CNN models.
 
-### Modifying the default pipeline {#design-modify}
+### Modifying the default pipeline {id="design-modify"}
 
 For faster processing, you may only want to run a subset of the components in a
 trained pipeline. The `disable` and `exclude` arguments to

@@ -1,12 +1,9 @@
-import Infobox from 'components/infobox'
-
 Similarity is determined by comparing **word vectors** or "word embeddings",
 multi-dimensional meaning representations of a word. Word vectors can be
 generated using an algorithm like
 [word2vec](https://en.wikipedia.org/wiki/Word2vec) and usually look like this:
 
-```python
-### banana.vector
+```python {title="banana.vector"}
 array([2.02280000e-01,  -7.66180009e-02,   3.70319992e-01,
        3.28450017e-02,  -4.19569999e-01,   7.20689967e-02,
       -3.74760002e-01,   5.74599989e-02,  -1.24009997e-02,
@@ -44,8 +41,7 @@ the [`Token.vector`](/api/token#vector) attribute.
 default to an average of their token vectors. You can also check if a token has
 a vector assigned, and get the L2 norm, which can be used to normalize vectors.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_md")
@@ -95,8 +91,7 @@ similarity.
 >    You should see that the similarity results are identical to the token
 >    similarity.
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_md")  # make sure to use larger package!
@@ -111,7 +106,7 @@ burgers = doc1[5]
 print(french_fries, "<->", burgers, french_fries.similarity(burgers))
 ```
 
-### What to expect from similarity results {#similarity-expectations}
+### What to expect from similarity results {id="similarity-expectations"}
 
 Computing similarity scores can be helpful in many situations, but it's also
 important to maintain **realistic expectations** about what information it can
@@ -136,7 +131,10 @@ useful for your purpose. Here are some important considerations to keep in mind:
 
 <Infobox title="Tip: Check out sense2vec" emoji="💡">
 
-[![](../../images/sense2vec.jpg)](https://github.com/explosion/sense2vec)
+<Image
+  src="/images/sense2vec.jpg"
+  href="https://github.com/explosion/sense2vec"
+/>
 
 [`sense2vec`](https://github.com/explosion/sense2vec) is a library developed by
 us that builds on top of spaCy and lets you train and query more interesting and

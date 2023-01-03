@@ -7,8 +7,7 @@ later, depending on your use case.
 
 Named entities are available as the `ents` property of a `Doc`:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -32,11 +31,8 @@ for ent in doc.ents:
 Using spaCy's built-in [displaCy visualizer](/usage/visualizers), here's what
 our example sentence and its named entities look like:
 
-import DisplaCyEntHtml from 'images/displacy-ent1.html'
-import { Iframe } from 'components/embed'
-
 <Iframe
   title="displaCy visualization of entities"
-  html={DisplaCyEntHtml}
+  src="/images/displacy-ent1.html"
   height={100}
 />

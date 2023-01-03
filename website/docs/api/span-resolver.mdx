@@ -33,7 +33,7 @@ use case is as a post-processing step on word-level
 [coreference resolution](/api/coref). The input and output keys used to store
 `Span` objects are configurable.
 
-## Assigned Attributes {#assigned-attributes}
+## Assigned Attributes {id="assigned-attributes"}
 
 Predictions will be saved to `Doc.spans` as [`SpanGroup`s](/api/spangroup).
 
@@ -46,7 +46,7 @@ prefixes are configurable.
 | ------------------------------------------------- | ------------------------------------------------------------------------- |
 | `Doc.spans[output_prefix + "_" + cluster_number]` | One group of predicted spans. Cluster number starts from 1. ~~SpanGroup~~ |
 
-## Config and implementation {#config}
+## Config and implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -74,7 +74,7 @@ details on the architectures and their arguments and hyperparameters.
 | `input_prefix`  | The prefix to use for input `SpanGroup`s. Defaults to `coref_head_clusters`. ~~str~~                                                                   |
 | `output_prefix` | The prefix for predicted `SpanGroup`s. Defaults to `coref_clusters`. ~~str~~                                                                           |
 
-## SpanResolver.\_\_init\_\_ {#init tag="method"}
+## SpanResolver.\_\_init\_\_ {id="init",tag="method"}
 
 > #### Example
 >
@@ -104,7 +104,7 @@ shortcut for this and instantiate the component using its string name and
 | `input_prefix`  | The prefix to use for input `SpanGroup`s. Defaults to `coref_head_clusters`. ~~str~~                |
 | `output_prefix` | The prefix for predicted `SpanGroup`s. Defaults to `coref_clusters`. ~~str~~                        |
 
-## SpanResolver.\_\_call\_\_ {#call tag="method"}
+## SpanResolver.\_\_call\_\_ {id="call",tag="method"}
 
 Apply the pipe to one document. The document is modified in place and returned.
 This usually happens under the hood when the `nlp` object is called on a text
@@ -126,7 +126,7 @@ and [`set_annotations`](#set_annotations) methods.
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## SpanResolver.pipe {#pipe tag="method"}
+## SpanResolver.pipe {id="pipe",tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
@@ -150,7 +150,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/span-resolver#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## SpanResolver.initialize {#initialize tag="method"}
+## SpanResolver.initialize {id="initialize",tag="method"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. **At least one example
@@ -174,7 +174,7 @@ by [`Language.initialize`](/api/language#initialize).
 | _keyword-only_ |                                                                                                                                                                            |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                       |
 
-## SpanResolver.predict {#predict tag="method"}
+## SpanResolver.predict {id="predict",tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
 modifying them. Predictions are returned as a list of `MentionClusters`, one for
@@ -194,7 +194,7 @@ correspond to token indices.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~                   |
 | **RETURNS** | The predicted spans for the `Doc`s. ~~List[MentionClusters]~~ |
 
-## SpanResolver.set_annotations {#set_annotations tag="method"}
+## SpanResolver.set_annotations {id="set_annotations",tag="method"}
 
 Modify a batch of documents, saving predictions using the output prefix in
 `Doc.spans`.
@@ -212,7 +212,7 @@ Modify a batch of documents, saving predictions using the output prefix in
 | `docs`  | The documents to modify. ~~Iterable[Doc]~~                    |
 | `spans` | The predicted spans for the `docs`. ~~List[MentionClusters]~~ |
 
-## SpanResolver.update {#update tag="method"}
+## SpanResolver.update {id="update",tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects. Delegates to
 [`predict`](/api/span-resolver#predict).
@@ -234,7 +234,7 @@ Learn from a batch of [`Example`](/api/example) objects. Delegates to
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## SpanResolver.create_optimizer {#create_optimizer tag="method"}
+## SpanResolver.create_optimizer {id="create_optimizer",tag="method"}
 
 Create an optimizer for the pipeline component.
 
@@ -249,7 +249,7 @@ Create an optimizer for the pipeline component.
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## SpanResolver.use_params {#use_params tag="method, contextmanager"}
+## SpanResolver.use_params {id="use_params",tag="method, contextmanager"}
 
 Modify the pipe's model, to use the given parameter values. At the end of the
 context, the original parameters are restored.
@@ -266,7 +266,7 @@ context, the original parameters are restored.
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## SpanResolver.to_disk {#to_disk tag="method"}
+## SpanResolver.to_disk {id="to_disk",tag="method"}
 
 Serialize the pipe to disk.
 
@@ -283,7 +283,7 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## SpanResolver.from_disk {#from_disk tag="method"}
+## SpanResolver.from_disk {id="from_disk",tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
@@ -301,7 +301,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `SpanResolver` object. ~~SpanResolver~~                                            |
 
-## SpanResolver.to_bytes {#to_bytes tag="method"}
+## SpanResolver.to_bytes {id="to_bytes",tag="method"}
 
 > #### Example
 >
@@ -318,7 +318,7 @@ Serialize the pipe to a bytestring.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the `SpanResolver` object. ~~bytes~~                                 |
 
-## SpanResolver.from_bytes {#from_bytes tag="method"}
+## SpanResolver.from_bytes {id="from_bytes",tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -337,7 +337,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `SpanResolver` object. ~~SpanResolver~~                                                 |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from

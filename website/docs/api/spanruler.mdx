@@ -2,7 +2,7 @@
 title: SpanRuler
 tag: class
 source: spacy/pipeline/span_ruler.py
-new: 3.3
+version: 3.3
 teaser: 'Pipeline component for rule-based span and named entity recognition'
 api_string_name: span_ruler
 api_trainable: false
@@ -13,7 +13,7 @@ The span ruler lets you add spans to [`Doc.spans`](/api/doc#spans) and/or
 usage examples, see the docs on
 [rule-based span matching](/usage/rule-based-matching#spanruler).
 
-## Assigned Attributes {#assigned-attributes}
+## Assigned Attributes {id="assigned-attributes"}
 
 Matches will be saved to `Doc.spans[spans_key]` as a
 [`SpanGroup`](/api/spangroup) and/or to `Doc.ents`, where the annotation is
@@ -28,7 +28,7 @@ saved in the `Token.ent_type` and `Token.ent_iob` fields.
 | `Token.ent_type`       | The label part of the named entity tag (hash). ~~int~~            |
 | `Token.ent_type_`      | The label part of the named entity tag. ~~str~~                   |
 
-## Config and implementation {#config}
+## Config and implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -61,7 +61,7 @@ how the component should be configured. You can override its settings via the
 %%GITHUB_SPACY/spacy/pipeline/span_ruler.py
 ```
 
-## SpanRuler.\_\_init\_\_ {#init tag="method"}
+## SpanRuler.\_\_init\_\_ {id="init",tag="method"}
 
 Initialize the span ruler. If patterns are supplied here, they need to be a list
 of dictionaries with a `"label"` and `"pattern"` key. A pattern can either be a
@@ -93,7 +93,7 @@ token pattern (list) or a phrase pattern (string). For example:
 | `overwrite`           | Whether to remove any existing spans under `Doc.spans[spans key]` if `spans_key` is set, or to remove any ents under `Doc.ents` if `annotate_ents` is set. Defaults to `True`. ~~bool~~                                             |
 | `scorer`              | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                                   |
 
-## SpanRuler.initialize {#initialize tag="method"}
+## SpanRuler.initialize {id="initialize",tag="method"}
 
 Initialize the component with data and used before training to load in rules
 from a [pattern file](/usage/rule-based-matching/#spanruler-files). This method
@@ -125,7 +125,7 @@ config. Any existing patterns are removed on initialization.
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                               |
 | `patterns`     | The list of patterns. Defaults to `None`. ~~Optional[Sequence[Dict[str, Union[str, List[Dict[str, Any]]]]]]~~                                                      |
 
-## SpanRuler.\_\len\_\_ {#len tag="method"}
+## SpanRuler.\_\len\_\_ {id="len",tag="method"}
 
 The number of all patterns added to the span ruler.
 
@@ -142,7 +142,7 @@ The number of all patterns added to the span ruler.
 | ----------- | ------------------------------- |
 | **RETURNS** | The number of patterns. ~~int~~ |
 
-## SpanRuler.\_\_contains\_\_ {#contains tag="method"}
+## SpanRuler.\_\_contains\_\_ {id="contains",tag="method"}
 
 Whether a label is present in the patterns.
 
@@ -160,7 +160,7 @@ Whether a label is present in the patterns.
 | `label`     | The label to check. ~~str~~                         |
 | **RETURNS** | Whether the span ruler contains the label. ~~bool~~ |
 
-## SpanRuler.\_\_call\_\_ {#call tag="method"}
+## SpanRuler.\_\_call\_\_ {id="call",tag="method"}
 
 Find matches in the `Doc` and add them to `doc.spans[span_key]` and/or
 `doc.ents`. Typically, this happens automatically after the component has been
@@ -184,7 +184,7 @@ will be removed.
 | `doc`       | The `Doc` object to process, e.g. the `Doc` in the pipeline. ~~Doc~~ |
 | **RETURNS** | The modified `Doc` with added spans/entities. ~~Doc~~                |
 
-## SpanRuler.add_patterns {#add_patterns tag="method"}
+## SpanRuler.add_patterns {id="add_patterns",tag="method"}
 
 Add patterns to the span ruler. A pattern can either be a token pattern (list of
 dicts) or a phrase pattern (string). For more details, see the usage guide on
@@ -205,7 +205,7 @@ dicts) or a phrase pattern (string). For more details, see the usage guide on
 | ---------- | ---------------------------------------------------------------- |
 | `patterns` | The patterns to add. ~~List[Dict[str, Union[str, List[dict]]]]~~ |
 
-## SpanRuler.remove {#remove tag="method"}
+## SpanRuler.remove {id="remove",tag="method"}
 
 Remove patterns by label from the span ruler. A `ValueError` is raised if the
 label does not exist in any patterns.
@@ -223,7 +223,7 @@ label does not exist in any patterns.
 | ------- | -------------------------------------- |
 | `label` | The label of the pattern rule. ~~str~~ |
 
-## SpanRuler.remove_by_id {#remove_by_id tag="method"}
+## SpanRuler.remove_by_id {id="remove_by_id",tag="method"}
 
 Remove patterns by ID from the span ruler. A `ValueError` is raised if the ID
 does not exist in any patterns.
@@ -241,7 +241,7 @@ does not exist in any patterns.
 | ------------ | ----------------------------------- |
 | `pattern_id` | The ID of the pattern rule. ~~str~~ |
 
-## SpanRuler.clear {#clear tag="method"}
+## SpanRuler.clear {id="clear",tag="method"}
 
 Remove all patterns the span ruler.
 
@@ -254,7 +254,7 @@ Remove all patterns the span ruler.
 > ruler.clear()
 > ```
 
-## SpanRuler.to_disk {#to_disk tag="method"}
+## SpanRuler.to_disk {id="to_disk",tag="method"}
 
 Save the span ruler patterns to a directory. The patterns will be saved as
 newline-delimited JSON (JSONL).
@@ -270,7 +270,7 @@ newline-delimited JSON (JSONL).
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 
-## SpanRuler.from_disk {#from_disk tag="method"}
+## SpanRuler.from_disk {id="from_disk",tag="method"}
 
 Load the span ruler from a path.
 
@@ -286,7 +286,7 @@ Load the span ruler from a path.
 | `path`      | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 | **RETURNS** | The modified `SpanRuler` object. ~~SpanRuler~~                                                  |
 
-## SpanRuler.to_bytes {#to_bytes tag="method"}
+## SpanRuler.to_bytes {id="to_bytes",tag="method"}
 
 Serialize the span ruler to a bytestring.
 
@@ -301,7 +301,7 @@ Serialize the span ruler to a bytestring.
 | ----------- | ---------------------------------- |
 | **RETURNS** | The serialized patterns. ~~bytes~~ |
 
-## SpanRuler.from_bytes {#from_bytes tag="method"}
+## SpanRuler.from_bytes {id="from_bytes",tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -318,7 +318,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `bytes_data` | The bytestring to load. ~~bytes~~              |
 | **RETURNS**  | The modified `SpanRuler` object. ~~SpanRuler~~ |
 
-## SpanRuler.labels {#labels tag="property"}
+## SpanRuler.labels {id="labels",tag="property"}
 
 All labels present in the match patterns.
 
@@ -326,7 +326,7 @@ All labels present in the match patterns.
 | ----------- | -------------------------------------- |
 | **RETURNS** | The string labels. ~~Tuple[str, ...]~~ |
 
-## SpanRuler.ids {#ids tag="property"}
+## SpanRuler.ids {id="ids",tag="property"}
 
 All IDs present in the `id` property of the match patterns.
 
@@ -334,7 +334,7 @@ All IDs present in the `id` property of the match patterns.
 | ----------- | ----------------------------------- |
 | **RETURNS** | The string IDs. ~~Tuple[str, ...]~~ |
 
-## SpanRuler.patterns {#patterns tag="property"}
+## SpanRuler.patterns {id="patterns",tag="property"}
 
 All patterns that were added to the span ruler.
 
@@ -342,7 +342,7 @@ All patterns that were added to the span ruler.
 | ----------- | ---------------------------------------------------------------------------------------- |
 | **RETURNS** | The original patterns, one dictionary per pattern. ~~List[Dict[str, Union[str, dict]]]~~ |
 
-## Attributes {#attributes}
+## Attributes {id="attributes"}
 
 | Name             | Description                                                                      |
 | ---------------- | -------------------------------------------------------------------------------- |

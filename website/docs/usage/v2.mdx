@@ -17,7 +17,7 @@ spaCy, or just want to brush up on some NLP basics and the details of the
 library, check out the [spaCy 101 guide](/usage/spacy-101) that explains the
 most important concepts with examples and illustrations.
 
-## Summary {#summary}
+## Summary {id="summary"}
 
 <Grid cols={2}>
 
@@ -73,12 +73,12 @@ differentiable. Even if you don't have explicitly annotated data, you can update
 spaCy using all the **latest deep learning tricks** like adversarial training,
 noise contrastive estimation or reinforcement learning.
 
-## New features {#features}
+## New features {id="features"}
 
 This section contains an overview of the most important **new features and
 improvements**. The [API docs](/api) include additional deprecation notes.
 
-### Convolutional neural network models {#features-models}
+### Convolutional neural network models {id="features-models"}
 
 > #### Example
 >
@@ -109,7 +109,7 @@ process.
 
 </Infobox>
 
-### Improved processing pipelines {#features-pipelines}
+### Improved processing pipelines {id="features-pipelines"}
 
 > #### Example
 >
@@ -130,7 +130,7 @@ write any **attributes, properties and methods** to the `Doc`, `Token` and
 `Span`. You can add data, implement new features, integrate other libraries with
 spaCy or plug in your own machine learning models.
 
-![The processing pipeline](../images/pipeline.svg)
+![The processing pipeline](/images/pipeline.svg)
 
 <Infobox>
 
@@ -143,7 +143,7 @@ spaCy or plug in your own machine learning models.
 
 </Infobox>
 
-### Text classification {#features-text-classification}
+### Text classification {id="features-text-classification"}
 
 > #### Example
 >
@@ -172,7 +172,7 @@ network to assign position-sensitive vectors to each word in the document.
 
 </Infobox>
 
-### Hash values instead of integer IDs {#features-hash-ids}
+### Hash values instead of integer IDs {id="features-hash-ids"}
 
 > #### Example
 >
@@ -201,7 +201,7 @@ available via `token.orth`.
 
 </Infobox>
 
-### Improved word vectors support {#features-vectors}
+### Improved word vectors support {id="features-vectors"}
 
 > #### Example
 >
@@ -231,7 +231,7 @@ you set the `--prune-vectors` flag. Otherwise, you can use the new
 
 </Infobox>
 
-### Saving, loading and serialization {#features-serializer}
+### Saving, loading and serialization {id="features-serializer"}
 
 > #### Example
 >
@@ -266,7 +266,7 @@ the class directly, e.g. `from spacy.lang.en import English` or use
 
 </Infobox>
 
-### displaCy visualizer with Jupyter support {#features-displacy}
+### displaCy visualizer with Jupyter support {id="features-displacy"}
 
 > #### Example
 >
@@ -291,7 +291,7 @@ notebook.
 
 </Infobox>
 
-### Improved language data and lazy loading {#features-language}
+### Improved language data and lazy loading {id="features-language"}
 
 Language-specific data now lives in its own submodule, `spacy.lang`. Languages
 are lazy-loaded, i.e. only loaded when you import a `Language` class, or load a
@@ -308,7 +308,7 @@ lookup-based lemmatization – and **many new languages**!
 
 </Infobox>
 
-### Revised matcher API and phrase matcher {#features-matcher}
+### Revised matcher API and phrase matcher {id="features-matcher"}
 
 > #### Example
 >
@@ -338,7 +338,7 @@ patterns.
 
 </Infobox>
 
-## Backwards incompatibilities {#incompat}
+## Backwards incompatibilities {id="incompat"}
 
 The following modules, classes and methods have changed between v1.x and v2.0.
 
@@ -373,7 +373,7 @@ The following modules, classes and methods have changed between v1.x and v2.0.
 | `Doc.read_bytes`                                       | [`Doc.to_bytes`](/api/doc#to_bytes) [`Doc.from_bytes`](/api/doc#from_bytes) [`Doc.to_disk`](/api/doc#to_disk) [`Doc.from_disk`](/api/doc#from_disk) |
 | `Token.is_ancestor_of`                                 | [`Token.is_ancestor`](/api/token#is_ancestor)                                                                                                       |
 
-### Deprecated {#deprecated}
+### Deprecated {id="deprecated"}
 
 The following methods are deprecated. They can still be used, but should be
 replaced.
@@ -383,7 +383,7 @@ replaced.
 | `Tokenizer.tokens_from_list` | [`Doc`](/api/doc)                               |
 | `Span.sent_start`            | [`Span.is_sent_start`](/api/span#is_sent_start) |
 
-## Migrating from spaCy 1.x {#migrating}
+## Migrating from spaCy 1.x {id="migrating"}
 
 Because we'e made so many architectural changes to the library, we've tried to
 **keep breaking changes to a minimum**. A lot of projects follow the philosophy
@@ -403,7 +403,7 @@ v2.0.
 
 </Infobox>
 
-### Document processing {#migrating-document-processing}
+### Document processing {id="migrating-document-processing"}
 
 The [`Language.pipe`](/api/language#pipe) method allows spaCy to batch
 documents, which brings a **significant performance advantage** in v2.0. The new
@@ -421,7 +421,7 @@ To make usage easier, there's now a boolean `as_tuples` keyword argument, that
 lets you pass in an iterator of `(text, context)` pairs, so you can get back an
 iterator of `(doc, context)` tuples.
 
-### Saving, loading and serialization {#migrating-saving-loading}
+### Saving, loading and serialization {id="migrating-saving-loading"}
 
 Double-check all calls to `spacy.load()` and make sure they don't use the `path`
 keyword argument. If you're only loading in binary data and not a model package
@@ -451,7 +451,7 @@ If you've trained models with input from v1.x, you'll need to **retrain them**
 with spaCy v2.0. All previous models will not be compatible with the new
 version.
 
-### Processing pipelines and language data {#migrating-languages}
+### Processing pipelines and language data {id="migrating-languages"}
 
 If you're importing language data or `Language` classes, make sure to change
 your import statements to import from `spacy.lang`. If you've added your own
@@ -496,7 +496,7 @@ import and instantiate them directly – but it's more convenient to use the new
 + nlp.add_pipe(tagger, first=True)
 ```
 
-### Training {#migrating-training}
+### Training {id="migrating-training"}
 
 All built-in pipeline components are now subclasses of [`Pipe`](/api/pipe),
 fully trainable and serializable, and follow the same API. Instead of updating
@@ -525,7 +525,7 @@ training.
 + nlp.to_disk("/model")
 ```
 
-### Attaching custom data to the Doc {#migrating-doc}
+### Attaching custom data to the Doc {id="migrating-doc"}
 
 Previously, you had to create a new container in order to attach custom data to
 a `Doc` object. This often required converting the `Doc` objects to and from
@@ -561,7 +561,7 @@ own extension module.
 + meta = doc._.meta
 ```
 
-### Strings and hash values {#migrating-strings}
+### Strings and hash values {id="migrating-strings"}
 
 The change from integer IDs to hash values may not actually affect your code
 very much. However, if you're adding strings to the vocab manually, you now need
@@ -577,7 +577,7 @@ be sure that the string-to-hash mapping will always match across vocabularies.
 + other_nlp.vocab.strings["coffee"] # 3197928453018144401
 ```
 
-### Adding patterns and callbacks to the matcher {#migrating-matcher}
+### Adding patterns and callbacks to the matcher {id="migrating-matcher"}
 
 If you're using the matcher, you can now add patterns in one step. This should
 be easy to update – simply merge the ID, callback and patterns into one call to

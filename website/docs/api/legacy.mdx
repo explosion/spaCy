@@ -12,11 +12,11 @@ functions that may still be used in projects.
 You can find the detailed documentation of each such legacy function on this
 page.
 
-## Architectures {#architectures}
+## Architectures {id="architectures"}
 
 These functions are available from `@spacy.registry.architectures`.
 
-### spacy.Tok2Vec.v1 {#Tok2Vec_v1}
+### spacy.Tok2Vec.v1 {id="Tok2Vec_v1"}
 
 The `spacy.Tok2Vec.v1` architecture was expecting an `encode` model of type
 `Model[Floats2D, Floats2D]` such as `spacy.MaxoutWindowEncoder.v1` or
@@ -48,7 +48,7 @@ blog post for background.
 | `encode`    | Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder.v1](/api/legacy#MaxoutWindowEncoder_v1). ~~Model[Floats2d, Floats2d]~~                         |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                           |
 
-### spacy.MaxoutWindowEncoder.v1 {#MaxoutWindowEncoder_v1}
+### spacy.MaxoutWindowEncoder.v1 {id="MaxoutWindowEncoder_v1"}
 
 The `spacy.MaxoutWindowEncoder.v1` architecture was producing a model of type
 `Model[Floats2D, Floats2D]`. Since `spacy.MaxoutWindowEncoder.v2`, this has been
@@ -76,7 +76,7 @@ and residual connections.
 | `depth`         | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 | **CREATES**     | The model using the architecture. ~~Model[Floats2d, Floats2d]~~                                                                                                                                                |
 
-### spacy.MishWindowEncoder.v1 {#MishWindowEncoder_v1}
+### spacy.MishWindowEncoder.v1 {id="MishWindowEncoder_v1"}
 
 The `spacy.MishWindowEncoder.v1` architecture was producing a model of type
 `Model[Floats2D, Floats2D]`. Since `spacy.MishWindowEncoder.v2`, this has been
@@ -103,24 +103,24 @@ and residual connections.
 | `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 | **CREATES**   | The model using the architecture. ~~Model[Floats2d, Floats2d]~~                                                                                                                                                |
 
-### spacy.HashEmbedCNN.v1 {#HashEmbedCNN_v1}
+### spacy.HashEmbedCNN.v1 {id="HashEmbedCNN_v1"}
 
 Identical to [`spacy.HashEmbedCNN.v2`](/api/architectures#HashEmbedCNN) except
 using [`spacy.StaticVectors.v1`](#StaticVectors_v1) if vectors are included.
 
-### spacy.MultiHashEmbed.v1 {#MultiHashEmbed_v1}
+### spacy.MultiHashEmbed.v1 {id="MultiHashEmbed_v1"}
 
 Identical to [`spacy.MultiHashEmbed.v2`](/api/architectures#MultiHashEmbed)
 except with [`spacy.StaticVectors.v1`](#StaticVectors_v1) if vectors are
 included.
 
-### spacy.CharacterEmbed.v1 {#CharacterEmbed_v1}
+### spacy.CharacterEmbed.v1 {id="CharacterEmbed_v1"}
 
 Identical to [`spacy.CharacterEmbed.v2`](/api/architectures#CharacterEmbed)
 except using [`spacy.StaticVectors.v1`](#StaticVectors_v1) if vectors are
 included.
 
-### spacy.TextCatEnsemble.v1 {#TextCatEnsemble_v1}
+### spacy.TextCatEnsemble.v1 {id="TextCatEnsemble_v1"}
 
 The `spacy.TextCatEnsemble.v1` architecture built an internal `tok2vec` and
 `linear_model`. Since `spacy.TextCatEnsemble.v2`, this has been refactored so
@@ -158,7 +158,7 @@ network has an internal CNN Tok2Vec layer and uses attention.
 | `nO`                 | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**          | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
 
-### spacy.TextCatCNN.v1 {#TextCatCNN_v1}
+### spacy.TextCatCNN.v1 {id="TextCatCNN_v1"}
 
 Since `spacy.TextCatCNN.v2`, this architecture has become resizable, which means
 that you can add labels to a previously trained textcat. `TextCatCNN` v1 did not
@@ -194,7 +194,7 @@ architecture is usually less accurate than the ensemble, but runs faster.
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
 
-### spacy.TextCatBOW.v1 {#TextCatBOW_v1}
+### spacy.TextCatBOW.v1 {id="TextCatBOW_v1"}
 
 Since `spacy.TextCatBOW.v2`, this architecture has become resizable, which means
 that you can add labels to a previously trained textcat. `TextCatBOW` v1 did not
@@ -222,17 +222,17 @@ the others, but may not be as accurate, especially if texts are short.
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
 
-### spacy.TransitionBasedParser.v1 {#TransitionBasedParser_v1}
+### spacy.TransitionBasedParser.v1 {id="TransitionBasedParser_v1"}
 
 Identical to
 [`spacy.TransitionBasedParser.v2`](/api/architectures#TransitionBasedParser)
 except the `use_upper` was set to `True` by default.
 
-## Layers {#layers}
+## Layers {id="layers"}
 
 These functions are available from `@spacy.registry.layers`.
 
-### spacy.StaticVectors.v1 {#StaticVectors_v1}
+### spacy.StaticVectors.v1 {id="StaticVectors_v1"}
 
 Identical to [`spacy.StaticVectors.v2`](/api/architectures#StaticVectors) except
 for the handling of tokens without vectors.
@@ -246,11 +246,11 @@ added to an existing vectors table. See more details in
 
 </Infobox>
 
-## Loggers {#loggers}
+## Loggers {id="loggers"}
 
 These functions are available from `@spacy.registry.loggers`.
 
-### spacy.ConsoleLogger.v1 {#ConsoleLogger_v1}
+### spacy.ConsoleLogger.v1 {id="ConsoleLogger_v1"}
 
 > #### Example config
 >
@@ -264,7 +264,7 @@ Writes the results of a training step to the console in a tabular format.
 
 <Accordion title="Example console output" spaced>
 
-```cli
+```bash
 $ python -m spacy train config.cfg
 ```
 

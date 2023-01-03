@@ -1,9 +1,11 @@
 /**
  * Support titles, line highlights and more for code blocks
  */
+import { Parser } from 'acorn'
+import { visit } from 'unist-util-visit'
+import parseAttr from 'md-attr-parser'
 
-const visit = require('unist-util-visit')
-const parseAttr = require('md-attr-parser')
+import getProps from './getProps.mjs'
 
 const defaultOptions = {
     defaultPrefix: '###',
@@ -43,32 +45,33 @@ function remarkCodeBlocks(userOptions = {}) {
                     firstLine.startsWith('%%GITHUB_')
                 ) {
                     // GitHub URL
-                    attrs.github = 'true'
-                }
-                // If it's a bash code block and single line, check for prompts
-                if (lang === 'bash') {
-                    const [trueFirstLine, ...trueLines] = node.value.split('\n')
-                    for (let prompt of options.prompts) {
-                        if (trueFirstLine.startsWith(prompt)) {
-                            const content = [
-                                trueFirstLine.slice(prompt.length).trim(),
-                                ...trueLines,
-                            ]
-                            attrs.prompt = prompt
-                            node.value = content.join('\n')
-                            break
-                        }
-                    }
+                    attrs.github = node.value
                 }
 
                 const data = node.data || (node.data = {})
                 const hProps = data.hProperties || (data.hProperties = {})
-                node.data.hProperties = Object.assign({}, hProps, attrs)
+
+                const meta = getProps(Parser.parse(node.meta, { ecmaVersion: 'latest' }))
+
+                node.data.hProperties = Object.assign({}, hProps, attrs, meta)
             }
         })
+
+        visit(tree, 'inlineCode', (node) => {
+            node.type = 'mdxJsxTextElement'
+            node.name = 'InlineCode'
+            node.children = [
+                {
+                    type: 'text',
+                    value: node.value,
+                },
+            ]
+            node.data = { _mdxExplicitJsx: true }
+        })
+
         return tree
     }
     return transformer
 }
 
-module.exports = remarkCodeBlocks
+export default remarkCodeBlocks

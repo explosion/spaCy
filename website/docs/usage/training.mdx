@@ -15,15 +15,17 @@ menu:
   - ['Internal API', 'api']
 ---
 
-## Introduction to training {#basics hidden="true"}
-
-import Training101 from 'usage/101/_training.mdx'
+## Introduction to training {id="basics",hidden="true"}
 
 <Training101 />
 
 <Infobox title="Tip: Try the Prodigy annotation tool">
 
-[![Prodigy: Radically efficient machine teaching](../images/prodigy.jpg)](https://prodi.gy)
+<Image
+  src="/images/prodigy.jpg"
+  href="https://prodi.gy"
+  alt="Prodigy: Radically efficient machine teaching"
+/>
 
 If you need to label a lot of data, check out [Prodigy](https://prodi.gy), a
 new, active learning-powered annotation tool we've developed. Prodigy is fast
@@ -34,7 +36,7 @@ ready-to-use spaCy pipelines.
 
 </Infobox>
 
-## Quickstart {#quickstart tag="new"}
+## Quickstart {id="quickstart",tag="new"}
 
 The recommended way to train your spaCy pipelines is via the
 [`spacy train`](/api/cli#train) command on the command line. It only needs a
@@ -69,8 +71,6 @@ config.
 >    requirements and settings as CLI arguments.
 > 2. Run [`train`](/api/cli#train) with the exported config and data.
 
-import QuickstartTraining from 'widgets/quickstart-training.js'
-
 <QuickstartTraining />
 
 After you've saved the starter config to a file `base_config.cfg`, you can use
@@ -78,7 +78,7 @@ the [`init fill-config`](/api/cli#init-fill-config) command to fill in the
 remaining defaults. Training configs should always be **complete and without
 hidden defaults**, to keep your experiments reproducible.
 
-```cli
+```bash
 $ python -m spacy init fill-config base_config.cfg config.cfg
 ```
 
@@ -88,7 +88,7 @@ $ python -m spacy init fill-config base_config.cfg config.cfg
 > your training and development data, get useful stats, and find problems like
 > invalid entity annotations, cyclic dependencies, low data labels and more.
 >
-> ```cli
+> ```bash
 > $ python -m spacy debug data config.cfg
 > ```
 
@@ -100,7 +100,7 @@ add your data and run [`train`](/api/cli#train) with your config. See the
 spaCy's binary `.spacy` format. You can either include the data paths in the
 `[paths]` section of your config, or pass them in via the command line.
 
-```cli
+```bash
 $ python -m spacy train config.cfg --output ./output --paths.train ./train.spacy --paths.dev ./dev.spacy
 ```
 
@@ -108,7 +108,7 @@ $ python -m spacy train config.cfg --output ./output --paths.train ./train.spacy
 >
 > Use the `--gpu-id` option to select the GPU:
 >
-> ```cli
+> ```bash
 > $ python -m spacy train config.cfg --gpu-id 0
 > ```
 
@@ -141,7 +141,7 @@ treebank.
 
 </Project>
 
-## Training config system {#config}
+## Training config system {id="config"}
 
 Training config files include all **settings and hyperparameters** for training
 your pipeline. Instead of providing lots of arguments on the command line, you
@@ -212,7 +212,7 @@ available for the different architectures are documented with the
 
 <YouTube id="BWhh3r6W-qE"></YouTube>
 
-### Config lifecycle at runtime and training {#config-lifecycle}
+### Config lifecycle at runtime and training {id="config-lifecycle"}
 
 A pipeline's `config.cfg` is considered the "single source of truth", both at
 **training** and **runtime**. Under the hood,
@@ -222,7 +222,7 @@ config is available as [`nlp.config`](/api/language#config) and it includes all
 information about the pipeline, as well as the settings used to train and
 initialize it.
 
-![Illustration of pipeline lifecycle](../images/lifecycle.svg)
+![Illustration of pipeline lifecycle](/images/lifecycle.svg)
 
 At runtime spaCy will only use the `[nlp]` and `[components]` blocks of the
 config and load all data, including tokenization rules, model weights and other
@@ -240,7 +240,7 @@ requiring it to be available at runtime. You can also use this mechanism to
 provide data paths to custom pipeline components and custom tokenizers – see the
 section on [custom initialization](#initialization) for details.
 
-### Overwriting config settings on the command line {#config-overrides}
+### Overwriting config settings on the command line {id="config-overrides"}
 
 The config system means that you can define all settings **in one place** and in
 a consistent format. There are no command-line arguments that need to be set,
@@ -254,7 +254,7 @@ For cases like this, you can set additional command-line options starting with
 `--paths.train ./corpus/train.spacy` sets the `train` value in the `[paths]`
 block.
 
-```cli
+```bash
 $ python -m spacy train config.cfg --paths.train ./corpus/train.spacy --paths.dev ./corpus/dev.spacy --training.batch_size 128
 ```
 
@@ -271,7 +271,7 @@ reference it across your config and override it on the CLI once.
 > [`spacy train`](/api/cli#train) to make spaCy log more info, including which
 > overrides were set via the CLI and environment variables.
 
-#### Adding overrides via environment variables {#config-overrides-env}
+#### Adding overrides via environment variables {id="config-overrides-env"}
 
 Instead of defining the overrides as CLI arguments, you can also use the
 `SPACY_CONFIG_OVERRIDES` environment variable using the same argument syntax.
@@ -279,11 +279,11 @@ This is especially useful if you're training models as part of an automated
 process. Environment variables **take precedence** over CLI overrides and values
 defined in the config file.
 
-```cli
+```bash
 $ SPACY_CONFIG_OVERRIDES="--system.gpu_allocator pytorch --training.batch_size 128" ./your_script.sh
 ```
 
-### Reading from standard input {#config-stdin}
+### Reading from standard input {id="config-stdin"}
 
 Setting the config path to `-` on the command line lets you read the config from
 standard input and pipe it forward from a different process, like
@@ -297,11 +297,11 @@ fly without having to save to and load from disk.
 > stdout. In a custom script, you can print the string config, e.g.
 > `print(nlp.config.to_str())`.
 
-```cli
+```bash
 $ python -m spacy init config - --lang en --pipeline ner,textcat --optimize accuracy | python -m spacy train - --paths.train ./corpus/train.spacy --paths.dev ./corpus/dev.spacy
 ```
 
-### Using variable interpolation {#config-interpolation}
+### Using variable interpolation {id="config-interpolation"}
 
 Another very useful feature of the config system is that it supports variable
 interpolation for both **values and sections**. This means that you only need to
@@ -310,8 +310,7 @@ define a setting once and can reference it across your config using the
 the `[training]` block, and the whole block of `[training.optimizer]` is reused
 in `[pretraining]` and will become `pretraining.optimizer`.
 
-```ini
-### config.cfg (excerpt) {highlight="5,18"}
+```ini {title="config.cfg (excerpt)",highlight="5,18"}
 [system]
 seed = 0
 
@@ -354,7 +353,7 @@ that reference this variable.
 
 </Infobox>
 
-## Preparing Training Data {#training-data}
+## Preparing Training Data {id="training-data"}
 
 Training data for NLP projects comes in many different formats. For some common
 formats such as CoNLL, spaCy provides [converters](/api/cli#convert) you can use
@@ -372,8 +371,7 @@ are handled automatically.
 
 Here's an example of creating a `.spacy` file from some NER annotations.
 
-```python
-### preprocess.py
+```python {title="preprocess.py"}
 import spacy
 from spacy.tokens import DocBin
 
@@ -407,9 +405,9 @@ convert your data to JSON before creating a `.spacy` file.
 
 </Accordion>
 
-## Customizing the pipeline and training {#config-custom}
+## Customizing the pipeline and training {id="config-custom"}
 
-### Defining pipeline components {#config-components}
+### Defining pipeline components {id="config-components"}
 
 You typically train a [pipeline](/usage/processing-pipelines) of **one or more
 components**. The `[components]` block in the config defines the available
@@ -438,8 +436,7 @@ existing weights. This lets you include an already trained component in your
 pipeline, or update a trained component with more data specific to your use
 case.
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [components]
 
 # "parser" and "ner" are sourced from a trained pipeline
@@ -518,7 +515,7 @@ replace_listeners = ["model.tok2vec"]
 
 </Infobox>
 
-### Using predictions from preceding components {#annotating-components new="3.1"}
+### Using predictions from preceding components {id="annotating-components",version="3.1"}
 
 By default, components are updated in isolation during training, which means
 that they don't see the predictions of any earlier components in the pipeline. A
@@ -532,8 +529,7 @@ list of components. For example, the feature `DEP` from the parser could be used
 as a tagger feature by including `DEP` in the tok2vec `attrs` and including
 `parser` in `annotating_components`:
 
-```ini
-### config.cfg (excerpt) {highlight="7,12"}
+```ini {title="config.cfg (excerpt)",highlight="7,12"}
 [nlp]
 pipeline = ["parser", "tagger"]
 
@@ -555,8 +551,7 @@ pipeline is run. The config excerpt below shows how a frozen `ner` component and
 a `sentencizer` can provide the required `doc.sents` and `doc.ents` for the
 entity linker during training:
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [nlp]
 pipeline = ["sentencizer", "ner", "entity_linker"]
 
@@ -580,7 +575,7 @@ now-updated model to the predicted docs.
 
 </Infobox>
 
-### Using registered functions {#config-functions}
+### Using registered functions {id="config-functions"}
 
 The training configuration defined in the config file doesn't have to only
 consist of static values. Some settings can also be **functions**. For instance,
@@ -588,8 +583,7 @@ the `batch_size` can be a number that doesn't change, or a schedule, like a
 sequence of compounding values, which has shown to be an effective trick (see
 [Smith et al., 2017](https://arxiv.org/abs/1711.00489)).
 
-```ini
-### With static value
+```ini {title="With static value"}
 [training]
 batch_size = 128
 ```
@@ -612,8 +606,7 @@ from your configs.
 > instance, a learning rate schedule can be provided as the an argument of an
 > optimizer.
 
-```ini
-### With registered function
+```ini {title="With registered function"}
 [training.batch_size]
 @schedules = "compounding.v1"
 start = 100
@@ -621,7 +614,7 @@ stop = 1000
 compound = 1.001
 ```
 
-### Model architectures {#model-architectures}
+### Model architectures {id="model-architectures"}
 
 > #### 💡 Model type annotations
 >
@@ -659,7 +652,7 @@ different tasks. For example:
 | [TransitionBasedParser](/api/architectures#TransitionBasedParser) | Build a [transition-based parser](https://explosion.ai/blog/parsing-english-in-python) model used in the default [`EntityRecognizer`](/api/entityrecognizer) and [`DependencyParser`](/api/dependencyparser). ~~Model[List[Docs], List[List[Floats2d]]]~~ |
 | [TextCatEnsemble](/api/architectures#TextCatEnsemble)             | Stacked ensemble of a bag-of-words model and a neural network model with an internal CNN embedding layer. Used in the default [`TextCategorizer`](/api/textcategorizer). ~~Model[List[Doc], Floats2d]~~                                                   |
 
-### Metrics, training output and weighted scores {#metrics}
+### Metrics, training output and weighted scores {id="metrics"}
 
 When you train a pipeline using the [`spacy train`](/api/cli#train) command,
 you'll see a table showing the metrics after each pass over the data. The
@@ -721,7 +714,7 @@ still look good.
 
 </Accordion>
 
-## Custom functions {#custom-functions}
+## Custom functions {id="custom-functions"}
 
 Registered functions in the training config files can refer to built-in
 implementations, but you can also plug in fully **custom implementations**. All
@@ -740,14 +733,14 @@ Each custom function can have any number of arguments that are passed in via the
 given parameter is always explicitly set in the config, avoid setting a default
 value for it.
 
-### Training with custom code {#custom-code}
+### Training with custom code {id="custom-code"}
 
-> ```cli
+> ```bash
 > ### Training
 > $ python -m spacy train config.cfg --code functions.py
 > ```
 >
-> ```cli
+> ```bash
 > ### Packaging
 > $ python -m spacy package ./model-best ./packages --code functions.py
 > ```
@@ -765,7 +758,7 @@ any custom architectures, functions or
 your pipeline and registered when it's loaded. See the documentation on
 [saving and loading pipelines](/usage/saving-loading#models-custom) for details.
 
-#### Example: Modifying the nlp object {#custom-code-nlp-callbacks}
+#### Example: Modifying the nlp object {id="custom-code-nlp-callbacks"}
 
 For many use cases, you don't necessarily want to implement the whole `Language`
 subclass and language data from scratch – it's often enough to make a few small
@@ -799,8 +792,7 @@ stop word to the defaults:
 > @callbacks = "customize_language_data"
 > ```
 
-```python
-### functions.py {highlight="3,6"}
+```python {title="functions.py",highlight="3,6"}
 import spacy
 
 @spacy.registry.callbacks("customize_language_data")
@@ -836,8 +828,7 @@ we're adding the arguments `extra_stop_words` (a list of strings) and `debug`
 > debug = true
 > ```
 
-```python
-### functions.py {highlight="5,7-9"}
+```python {title="functions.py",highlight="5,7-9"}
 from typing import List
 import spacy
 
@@ -873,11 +864,11 @@ you can now run [`spacy train`](/api/cli#train) and point the argument `--code`
 to your Python file. Before loading the config, spaCy will import the
 `functions.py` module and your custom functions will be registered.
 
-```cli
+```bash
 $ python -m spacy train config.cfg --output ./output --code ./functions.py
 ```
 
-#### Example: Modifying tokenizer settings {#custom-tokenizer}
+#### Example: Modifying tokenizer settings {id="custom-tokenizer"}
 
 Use the `initialize.before_init` callback to modify the tokenizer settings when
 training a new pipeline. Write a registered callback that modifies the tokenizer
@@ -892,8 +883,7 @@ settings and specify this callback in your config:
 > @callbacks = "customize_tokenizer"
 > ```
 
-```python
-### functions.py
+```python {title="functions.py"}
 from spacy.util import registry, compile_suffix_regex
 
 @registry.callbacks("customize_tokenizer")
@@ -912,7 +902,7 @@ def make_customize_tokenizer():
 
 When training, provide the function above with the `--code` option:
 
-```cli
+```bash
 $ python -m spacy train config.cfg --code ./functions.py
 ```
 
@@ -936,7 +926,7 @@ disk.
 
 </Infobox>
 
-#### Example: Custom logging function {#custom-logging}
+#### Example: Custom logging function {id="custom-logging"}
 
 During training, the results of each step are passed to a logger function. By
 default, these results are written to the console with the
@@ -966,8 +956,7 @@ tabular results to a file:
 > log_path = "my_file.tab"
 > ```
 
-```python
-### functions.py
+```python {title="functions.py"}
 import sys
 from typing import IO, Tuple, Callable, Dict, Any, Optional
 import spacy
@@ -1005,7 +994,7 @@ def custom_logger(log_path):
     return setup_logger
 ```
 
-#### Example: Custom batch size schedule {#custom-code-schedule}
+#### Example: Custom batch size schedule {id="custom-code-schedule"}
 
 You can also implement your own batch size schedule to use during training. The
 `@spacy.registry.schedules` decorator lets you register that function in the
@@ -1019,8 +1008,7 @@ You can also implement your own batch size schedule to use during training. The
 > know that a config referencing `v1` means a different function than a config
 > referencing `v2`.
 
-```python
-### functions.py
+```python {title="functions.py"}
 import spacy
 
 @spacy.registry.schedules("my_custom_schedule.v1")
@@ -1037,15 +1025,14 @@ settings in the block will be passed to the function as keyword arguments. Keep
 in mind that the config shouldn't have any hidden defaults and all arguments on
 the functions need to be represented in the config.
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [training.batch_size]
 @schedules = "my_custom_schedule.v1"
 start = 2
 factor = 1.005
 ```
 
-### Defining custom architectures {#custom-architectures}
+### Defining custom architectures {id="custom-architectures"}
 
 Built-in pipeline components such as the tagger or named entity recognizer are
 constructed with default neural network [models](/api/architectures). You can
@@ -1064,8 +1051,7 @@ for more details.
 > output_width = 512
 > ```
 
-```python
-### functions.py
+```python {title="functions.py"}
 from typing import List
 from thinc.types import Floats2d
 from thinc.api import Model
@@ -1077,7 +1063,7 @@ def custom_neural_network(output_width: int) -> Model[List[Doc], List[Floats2d]]
     return create_model(output_width)
 ```
 
-## Customizing the initialization {#initialization}
+## Customizing the initialization {id="initialization"}
 
 When you start training a new model from scratch,
 [`spacy train`](/api/cli#train) will call
@@ -1120,7 +1106,7 @@ because the component settings required for training (load data from an external
 file) wouldn't match the component settings required at runtime (load what's
 included with the saved `nlp` object and don't depend on external file).
 
-![Illustration of pipeline lifecycle](../images/lifecycle.svg)
+![Illustration of pipeline lifecycle](/images/lifecycle.svg)
 
 <Infobox title="How components save and load data" emoji="📖">
 
@@ -1131,7 +1117,7 @@ initialization is implemented under the hood, see the usage guide on
 
 </Infobox>
 
-#### Initializing labels {#initialization-labels}
+#### Initializing labels {id="initialization-labels"}
 
 Built-in pipeline components like the
 [`EntityRecognizer`](/api/entityrecognizer) or
@@ -1157,7 +1143,7 @@ allow them to initialize faster.
 > path = "corpus/labels/ner.json
 > ```
 
-```cli
+```bash
 $ python -m spacy init labels config.cfg ./corpus --paths.train ./corpus/train.spacy
 ```
 
@@ -1174,20 +1160,20 @@ should always let spaCy **auto-generate the labels** for you.
 
 </Infobox>
 
-## Data utilities {#data}
+## Data utilities {id="data"}
 
 spaCy includes various features and utilities to make it easy to train models
 using your own data, manage training and evaluation corpora, convert existing
 annotations and configure data augmentation strategies for more robust models.
 
-### Converting existing corpora and annotations {#data-convert}
+### Converting existing corpora and annotations {id="data-convert"}
 
 If you have training data in a standard format like `.conll` or `.conllu`, the
 easiest way to convert it for use with spaCy is to run
 [`spacy convert`](/api/cli#convert) and pass it a file and an output directory.
 By default, the command will pick the converter based on the file extension.
 
-```cli
+```bash
 $ python -m spacy convert ./train.gold.conll ./corpus
 ```
 
@@ -1215,8 +1201,7 @@ especially when packing multiple documents together. You can also create `Doc`
 objects manually, so you can write your own custom logic to convert and store
 existing annotations for use in spaCy.
 
-```python
-### Training data from Doc objects {highlight="6-9"}
+```python {title="Training data from Doc objects",highlight="6-9"}
 import spacy
 from spacy.tokens import Doc, DocBin
 
@@ -1230,7 +1215,7 @@ docbin.add(doc)
 docbin.to_disk("./train.spacy")
 ```
 
-### Working with corpora {#data-corpora}
+### Working with corpora {id="data-corpora"}
 
 > #### Example
 >
@@ -1271,7 +1256,7 @@ By default, the training data is loaded into memory and shuffled before each
 epoch. If the corpus is **too large to fit into memory** during training, stream
 the corpus using a custom reader as described in the next section.
 
-### Custom data reading and batching {#custom-code-readers-batchers}
+### Custom data reading and batching {id="custom-code-readers-batchers"}
 
 Some use-cases require **streaming in data** or manipulating datasets on the
 fly, rather than generating all data beforehand and storing it to disk. Instead
@@ -1296,8 +1281,7 @@ as **config settings** – in this case, `source`.
 > source = "s3://your_bucket/path/data.csv"
 > ```
 
-```python
-### functions.py {highlight="7-8"}
+```python {title="functions.py",highlight="7-8"}
 from typing import Callable, Iterator, List
 import spacy
 from spacy.training import Example
@@ -1354,8 +1338,7 @@ training should stop.
 > max_steps = 2000
 > ```
 
-```python
-### functions.py
+```python {title="functions.py"}
 from typing import Callable, Iterable, Iterator
 from spacy import util
 import random
@@ -1418,8 +1401,7 @@ annotations are the same.
 > size = 150
 > ```
 
-```python
-### functions.py
+```python {title="functions.py"}
 from typing import Callable, Iterable, Iterator, List
 import spacy
 from spacy.training import Example
@@ -1439,12 +1421,9 @@ def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterator[List[Examp
     return create_filtered_batches
 ```
 
-<!-- TODO:
-* Custom corpus class
-* Minibatching
--->
+{/* TODO: Custom corpus class, Minibatching */}
 
-### Data augmentation {#data-augmentation}
+### Data augmentation {id="data-augmentation"}
 
 Data augmentation is the process of applying small **modifications** to the
 training data. It can be especially useful for punctuation and case replacement
@@ -1458,8 +1437,7 @@ your config. The built-in [`orth_variants`](/api/top-level#orth_variants)
 augmenter creates a data augmentation callback that uses orth-variant
 replacement.
 
-```ini
-### config.cfg (excerpt) {highlight="8,14"}
+```ini {title="config.cfg (excerpt)",highlight="8,14"}
 [corpora.train]
 @readers = "spacy.Corpus.v1"
 path = ${paths.train}
@@ -1483,12 +1461,18 @@ typically loaded from a JSON file. There are two types of orth variant rules:
 `"single"` for single tokens that should be replaced (e.g. hyphens) and
 `"paired"` for pairs of tokens (e.g. quotes).
 
-<!-- prettier-ignore -->
-```json
-### orth_variants.json
+```json {title="orth_variants.json"}
 {
   "single": [{ "tags": ["NFP"], "variants": ["…", "..."] }],
-  "paired": [{ "tags": ["``", "''"], "variants": [["'", "'"], ["‘", "’"]] }]
+  "paired": [
+    {
+      "tags": ["``", "''"],
+      "variants": [
+        ["'", "'"],
+        ["‘", "’"]
+      ]
+    }
+  ]
 }
 ```
 
@@ -1511,7 +1495,7 @@ to apply it to the **training corpus**, not the development data.
 
 </Infobox>
 
-#### Writing custom data augmenters {#data-augmentation-custom}
+#### Writing custom data augmenters {id="data-augmentation-custom"}
 
 Using the [`@spacy.augmenters`](/api/top-level#registry) registry, you can also
 register your own data augmentation callbacks. The callback should be a function
@@ -1572,7 +1556,78 @@ token-based annotations like the dependency parse or entity labels, you'll need
 to take care to adjust the `Example` object so its annotations match and remain
 valid.
 
-## Internal training API {#api}
+## Parallel & distributed training with Ray {id="parallel-training"}
+
+> #### Installation
+>
+> ```bash
+> $ pip install -U %%SPACY_PKG_NAME[ray]%%SPACY_PKG_FLAGS
+> # Check that the CLI is registered
+> $ python -m spacy ray --help
+> ```
+
+[Ray](https://ray.io/) is a fast and simple framework for building and running
+**distributed applications**. You can use Ray to train spaCy on one or more
+remote machines, potentially speeding up your training process. Parallel
+training won't always be faster though – it depends on your batch size, models,
+and hardware.
+
+<Infobox variant="warning">
+
+To use Ray with spaCy, you need the
+[`spacy-ray`](https://github.com/explosion/spacy-ray) package installed.
+Installing the package will automatically add the `ray` command to the spaCy
+CLI.
+
+</Infobox>
+
+The [`spacy ray train`](/api/cli#ray-train) command follows the same API as
+[`spacy train`](/api/cli#train), with a few extra options to configure the Ray
+setup. You can optionally set the `--address` option to point to your Ray
+cluster. If it's not set, Ray will run locally.
+
+```bash
+python -m spacy ray train config.cfg --n-workers 2
+```
+
+<Project id="integrations/ray">
+
+Get started with parallel training using our project template. It trains a
+simple model on a Universal Dependencies Treebank and lets you parallelize the
+training with Ray.
+
+</Project>
+
+### How parallel training works {id="parallel-training-details"}
+
+Each worker receives a shard of the **data** and builds a copy of the **model
+and optimizer** from the [`config.cfg`](#config). It also has a communication
+channel to **pass gradients and parameters** to the other workers. Additionally,
+each worker is given ownership of a subset of the parameter arrays. Every
+parameter array is owned by exactly one worker, and the workers are given a
+mapping so they know which worker owns which parameter.
+
+![Illustration of setup](/images/spacy-ray.svg)
+
+As training proceeds, every worker will be computing gradients for **all** of
+the model parameters. When they compute gradients for parameters they don't own,
+they'll **send them to the worker** that does own that parameter, along with a
+version identifier so that the owner can decide whether to discard the gradient.
+Workers use the gradients they receive and the ones they compute locally to
+update the parameters they own, and then broadcast the updated array and a new
+version ID to the other workers.
+
+This training procedure is **asynchronous** and **non-blocking**. Workers always
+push their gradient increments and parameter updates, they do not have to pull
+them and block on the result, so the transfers can happen in the background,
+overlapped with the actual training work. The workers also do not have to stop
+and wait for each other ("synchronize") at the start of each batch. This is very
+useful for spaCy, because spaCy is often trained on long documents, which means
+**batches can vary in size** significantly. Uneven workloads make synchronous
+gradient descent inefficient, because if one batch is slow, all of the other
+workers are stuck waiting for it to complete before they can continue.
+
+## Internal training API {id="api"}
 
 <Infobox variant="danger">
 
@@ -1586,7 +1641,7 @@ typically give you everything you need to train fully custom pipelines with
 
 </Infobox>
 
-### Training from a Python script {#api-train new="3.2"}
+### Training from a Python script {id="api-train",version="3.2"}
 
 If you want to run the training from a Python script instead of using the
 [`spacy train`](/api/cli#train) CLI command, you can call into the
@@ -1600,7 +1655,7 @@ from spacy.cli.train import train
 train("./config.cfg", overrides={"paths.train": "./train.spacy", "paths.dev": "./dev.spacy"})
 ```
 
-### Internal training loop API {#api-loop}
+### Internal training loop API {id="api-loop"}
 
 <Infobox variant="warning">
 
@@ -1691,8 +1746,7 @@ of being dropped.
 > - [`nlp.to_disk`](/api/language#to_disk): Save the updated pipeline to a
 >   directory.
 
-```python
-### Example training loop
+```python {title="Example training loop"}
 optimizer = nlp.initialize()
 for itn in range(100):
     random.shuffle(train_data)

@@ -11,8 +11,7 @@ Linguistic annotations are available as
 efficiency. So to get the readable string representation of an attribute, we
 need to add an underscore `_` to its name:
 
-```python
-### {executable="true"}
+```python {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -57,11 +56,8 @@ for token in doc:
 Using spaCy's built-in [displaCy visualizer](/usage/visualizers), here's what
 our example sentence and its dependencies look like:
 
-import DisplaCyLongHtml from 'images/displacy-long.html'
-import { Iframe } from 'components/embed'
-
 <Iframe
   title="displaCy visualization of dependencies and entities"
-  html={DisplaCyLongHtml}
+  src="/images/displacy-long.html"
   height={450}
 />

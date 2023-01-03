@@ -13,8 +13,14 @@ import Icon from '../components/icon'
 import Link, { OptionalLink } from '../components/link'
 import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
-import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
-import { isString, isEmptyObj } from '../components/util'
+import {
+    isString,
+    isEmptyObj,
+    join,
+    arrayToObj,
+    abbrNum,
+    MarkdownToReact,
+} from '../components/util'
 
 import siteMetadata from '../../meta/site.json'
 import languages from '../../meta/languages.json'
@@ -292,11 +298,11 @@ const Model = ({
                 {name}
             </H2>
             <Aside title="Installation">
-                <CodeBlock lang="cli" prompt="$">
-                    python -m spacy download {name}
+                <CodeBlock lang="bash" prompt="$">
+                    $ python -m spacy download {name}
                 </CodeBlock>
             </Aside>
-            {meta.description && markdownToReact(meta.description, MARKDOWN_COMPONENTS)}
+            {meta.description && <MarkdownToReact markdown={meta.description} />}
             {isError && error}
             <Table>
                 <tbody>
@@ -318,7 +324,7 @@ const Model = ({
                     )}
                 </tbody>
             </Table>
-            {meta.notes && markdownToReact(meta.notes, MARKDOWN_COMPONENTS)}
+            {meta.notes && <MarkdownToReact markdown={meta.notes} />}
             {hasInteractiveCode && (
                 <CodeBlock title="Try out the model" lang="python" executable={true}>
                     {[

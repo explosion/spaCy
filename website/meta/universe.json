@@ -2910,7 +2910,7 @@
                 "",
                 "print(doc._.clauses)",
                 "# Output:",
-                "# <SV, AE, died, None, None, None, [in Princeton, in 1955]>",
+                "# &lt;SV, AE, died, None, None, None, [in Princeton, in 1955]&gt;",
                 "",
                 "propositions = doc._.clauses[0].to_propositions(as_text=True)",
                 "",

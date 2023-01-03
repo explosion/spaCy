@@ -6,19 +6,19 @@ menu:
   - ['Upgrading Notes', 'upgrading']
 ---
 
-## New features {#features hidden="true"}
+## New features {id="features",hidden="true"}
 
 spaCy v3.4 brings typing and speed improvements along with new vectors for
 English CNN pipelines and new trained pipelines for Croatian. This release also
 includes prebuilt linux aarch64 wheels for all spaCy dependencies distributed by
 Explosion.
 
-### Typing improvements {#typing}
+### Typing improvements {id="typing"}
 
 spaCy v3.4 supports pydantic v1.9 and mypy 0.950+ through extensive updates to
 types in Thinc v8.1.
 
-### Speed improvements {#speed}
+### Speed improvements {id="speed"}
 
 - For the parser, use C `saxpy`/`sgemm` provided by the `Ops` implementation in
   order to use Accelerate through `thinc-apple-ops`.
@@ -42,9 +42,9 @@ types in Thinc v8.1.
 - Support env variable `SPACY_NUM_BUILD_JOBS` to specify the number of build
   jobs to run in parallel with `pip`.
 
-## Trained pipelines {#pipelines}
+## Trained pipelines {id="pipelines"}
 
-### New trained pipelines {#new-pipelines}
+### New trained pipelines {id="new-pipelines"}
 
 v3.4 introduces new CPU/CNN pipelines for Croatian, which use the trainable
 lemmatizer and [floret vectors](https://github.com/explosion/floret). Due to the
@@ -57,7 +57,7 @@ subwords, the pipelines have compact vectors with no out-of-vocabulary words.
 | [`hr_core_news_md`](/models/hr#hr_core_news_md) | 97.3 |       80.1 |  81.8 |
 | [`hr_core_news_lg`](/models/hr#hr_core_news_lg) | 97.5 |       80.4 |  83.0 |
 
-### Pipeline updates {#pipeline-updates}
+### Pipeline updates {id="pipeline-updates"}
 
 All CNN pipelines have been extended with whitespace augmentation.
 
@@ -70,7 +70,7 @@ The English CNN pipelines have new word vectors:
 | [`en_core_web_lg`](/models/en#en_core_web_lg) | v3.3.0        | 97.4 |       90.1 |  85.3 |
 | [`en_core_web_lg`](/models/en#en_core_web_lg) | v3.4.0        | 97.3 |       90.2 |  85.6 |
 
-## Notes about upgrading from v3.3 {#upgrading}
+## Notes about upgrading from v3.3 {id="upgrading"}
 
 ### Doc.has_vector
 
@@ -99,7 +99,7 @@ word list similar to the list of in-vocabulary vector keys with default vectors.
 - `Vectors.most_similar` is not supported because there's no fixed list of
   vectors to compare your vectors to.
 
-### Pipeline package version compatibility {#version-compat}
+### Pipeline package version compatibility {id="version-compat"}
 
 > #### Using legacy implementations
 >
@@ -133,7 +133,7 @@ working as expected, you can update the spaCy version requirements in the
 To update a config from spaCy v3.3 with the new v3.4 settings, run
 [`init fill-config`](/api/cli#init-fill-config):
 
-```cli
+```bash
 $ python -m spacy init fill-config config-v3.3.cfg config-v3.4.cfg
 ```
 

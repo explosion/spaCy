@@ -1,11 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { MDXProvider } from '@mdx-js/tag'
-import { withMDXScope } from 'gatsby-mdx/context'
 import useOnlineStatus from '@rehooks/online-status'
 import classNames from 'classnames'
-
-import MDXRenderer from './mdx-renderer'
 
 // Templates
 import Docs from './docs'
@@ -22,7 +18,7 @@ import Alert from '../components/alert'
 import Search from '../components/search'
 
 import siteMetadata from '../../meta/site.json'
-import { nightly, legacy } from '../../meta/dynamicMeta'
+import { nightly, legacy } from '../../meta/dynamicMeta.mjs'
 import { remarkComponents } from '../remark'
 
 const AlertSpace = ({ nightly, legacy }) => {
@@ -73,13 +69,6 @@ class Layout extends React.Component {
     }
 
     static propTypes = {
-        data: PropTypes.shape({
-            mdx: PropTypes.shape({
-                code: PropTypes.shape({
-                    body: PropTypes.string.isRequired,
-                }).isRequired,
-            }),
-        }).isRequired,
         scope: PropTypes.object.isRequired,
         pageContext: PropTypes.shape({
             title: PropTypes.string,
@@ -106,27 +95,19 @@ class Layout extends React.Component {
     }
 
     render() {
-        const { data, pageContext, location, children } = this.props
-        const { file, site = {} } = data || {}
-        const mdx = file ? file.childMdx : null
-        const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = pageContext
-        const uiTheme = nightly ? 'nightly' : legacy ? 'legacy' : theme
+        const { location, children } = this.props
+        const { title, section, sectionTitle, teaser, theme, searchExclude } = this.props
+        const uiTheme = nightly ? 'nightly' : legacy ? 'legacy' : theme ?? 'blue'
         const bodyClass = classNames(`theme-${uiTheme}`, { 'search-exclude': !!searchExclude })
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
-        const content = !mdx ? null : (
-            <MDXProvider components={remarkComponents}>
-                <MDXRenderer scope={this.state.scope}>{mdx.code.body}</MDXRenderer>
-            </MDXProvider>
-        )
 
         return (
-            <>
+            <div className={bodyClass}>
                 <SEO
                     title={title}
                     description={teaser || siteMetadata.description}
                     section={section}
                     sectionTitle={sectionTitle}
-                    bodyClass={bodyClass}
                     nightly={nightly}
                 />
                 <AlertSpace nightly={nightly} legacy={legacy} />
@@ -134,29 +115,24 @@ class Layout extends React.Component {
                     title={siteMetadata.title}
                     items={siteMetadata.navigation}
                     section={section}
-                    search={<Search settings={siteMetadata.docSearch} />}
+                    search={<Search />}
                     alert={nightly ? null : navAlert}
                 >
                     <Progress />
                 </Navigation>
                 {isDocs ? (
-                    <Docs pageContext={pageContext}>{content}</Docs>
+                    <Docs pageContext={this.props}>{children}</Docs>
                 ) : section === 'universe' ? (
-                    <Universe
-                        pageContext={pageContext}
-                        location={location}
-                        mdxComponents={mdxComponents}
-                    />
+                    <Universe pageContext={this.props} location={location} />
                 ) : (
                     <div>
                         {children}
-                        {content}
                         <Footer wide />
                     </div>
                 )}
-            </>
+            </div>
         )
     }
 }
 
-export default withMDXScope(Layout)
+export default Layout

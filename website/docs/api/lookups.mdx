@@ -3,7 +3,7 @@ title: Lookups
 teaser: A container for large lookup tables and dictionaries
 tag: class
 source: spacy/lookups.py
-new: 2.2
+version: 2.2
 ---
 
 This class allows convenient access to large lookup tables and dictionaries,
@@ -13,7 +13,7 @@ can be accessed before the pipeline components are applied (e.g. in the
 tokenizer and lemmatizer), as well as within the pipeline components via
 `doc.vocab.lookups`.
 
-## Lookups.\_\_init\_\_ {#init tag="method"}
+## Lookups.\_\_init\_\_ {id="init",tag="method"}
 
 Create a `Lookups` object.
 
@@ -24,7 +24,7 @@ Create a `Lookups` object.
 > lookups = Lookups()
 > ```
 
-## Lookups.\_\_len\_\_ {#len tag="method"}
+## Lookups.\_\_len\_\_ {id="len",tag="method"}
 
 Get the current number of tables in the lookups.
 
@@ -39,7 +39,7 @@ Get the current number of tables in the lookups.
 | ----------- | -------------------------------------------- |
 | **RETURNS** | The number of tables in the lookups. ~~int~~ |
 
-## Lookups.\_\contains\_\_ {#contains tag="method"}
+## Lookups.\_\contains\_\_ {id="contains",tag="method"}
 
 Check if the lookups contain a table of a given name. Delegates to
 [`Lookups.has_table`](/api/lookups#has_table).
@@ -57,7 +57,7 @@ Check if the lookups contain a table of a given name. Delegates to
 | `name`      | Name of the table. ~~str~~                               |
 | **RETURNS** | Whether a table of that name is in the lookups. ~~bool~~ |
 
-## Lookups.tables {#tables tag="property"}
+## Lookups.tables {id="tables",tag="property"}
 
 Get the names of all tables in the lookups.
 
@@ -73,7 +73,7 @@ Get the names of all tables in the lookups.
 | ----------- | ------------------------------------------------- |
 | **RETURNS** | Names of the tables in the lookups. ~~List[str]~~ |
 
-## Lookups.add_table {#add_table tag="method"}
+## Lookups.add_table {id="add_table",tag="method"}
 
 Add a new table with optional data to the lookups. Raises an error if the table
 exists.
@@ -91,7 +91,7 @@ exists.
 | `data`      | Optional data to add to the table. ~~dict~~ |
 | **RETURNS** | The newly added table. ~~Table~~            |
 
-## Lookups.get_table {#get_table tag="method"}
+## Lookups.get_table {id="get_table",tag="method"}
 
 Get a table from the lookups. Raises an error if the table doesn't exist.
 
@@ -109,7 +109,7 @@ Get a table from the lookups. Raises an error if the table doesn't exist.
 | `name`      | Name of the table. ~~str~~ |
 | **RETURNS** | The table. ~~Table~~       |
 
-## Lookups.remove_table {#remove_table tag="method"}
+## Lookups.remove_table {id="remove_table",tag="method"}
 
 Remove a table from the lookups. Raises an error if the table doesn't exist.
 
@@ -127,7 +127,7 @@ Remove a table from the lookups. Raises an error if the table doesn't exist.
 | `name`      | Name of the table to remove. ~~str~~ |
 | **RETURNS** | The removed table. ~~Table~~         |
 
-## Lookups.has_table {#has_table tag="method"}
+## Lookups.has_table {id="has_table",tag="method"}
 
 Check if the lookups contain a table of a given name. Equivalent to
 [`Lookups.__contains__`](/api/lookups#contains).
@@ -145,7 +145,7 @@ Check if the lookups contain a table of a given name. Equivalent to
 | `name`      | Name of the table. ~~str~~                               |
 | **RETURNS** | Whether a table of that name is in the lookups. ~~bool~~ |
 
-## Lookups.to_bytes {#to_bytes tag="method"}
+## Lookups.to_bytes {id="to_bytes",tag="method"}
 
 Serialize the lookups to a bytestring.
 
@@ -159,7 +159,7 @@ Serialize the lookups to a bytestring.
 | ----------- | --------------------------------- |
 | **RETURNS** | The serialized lookups. ~~bytes~~ |
 
-## Lookups.from_bytes {#from_bytes tag="method"}
+## Lookups.from_bytes {id="from_bytes",tag="method"}
 
 Load the lookups from a bytestring.
 
@@ -176,7 +176,7 @@ Load the lookups from a bytestring.
 | `bytes_data` | The data to load from. ~~bytes~~ |
 | **RETURNS**  | The loaded lookups. ~~Lookups~~  |
 
-## Lookups.to_disk {#to_disk tag="method"}
+## Lookups.to_disk {id="to_disk",tag="method"}
 
 Save the lookups to a directory as `lookups.bin`. Expects a path to a directory,
 which will be created if it doesn't exist.
@@ -191,7 +191,7 @@ which will be created if it doesn't exist.
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 
-## Lookups.from_disk {#from_disk tag="method"}
+## Lookups.from_disk {id="from_disk",tag="method"}
 
 Load lookups from a directory containing a `lookups.bin`. Will skip loading if
 the file doesn't exist.
@@ -209,7 +209,7 @@ the file doesn't exist.
 | `path`      | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 | **RETURNS** | The loaded lookups. ~~Lookups~~                                                                 |
 
-## Table {#table tag="class, ordererddict"}
+## Table {id="table",tag="class, ordererddict"}
 
 A table in the lookups. Subclass of `OrderedDict` that implements a slightly
 more consistent and unified API and includes a Bloom filter to speed up missed
@@ -218,7 +218,7 @@ lookups. Supports **all other methods and attributes** of `OrderedDict` /
 accept both integers and strings (which will be hashed before being added to the
 table).
 
-### Table.\_\_init\_\_ {#table.init tag="method"}
+### Table.\_\_init\_\_ {id="table.init",tag="method"}
 
 Initialize a new table.
 
@@ -236,7 +236,7 @@ Initialize a new table.
 | ------ | ------------------------------------------ |
 | `name` | Optional table name for reference. ~~str~~ |
 
-### Table.from_dict {#table.from_dict tag="classmethod"}
+### Table.from_dict {id="table.from_dict",tag="classmethod"}
 
 Initialize a new table from a dict.
 
@@ -254,7 +254,7 @@ Initialize a new table from a dict.
 | `name`      | Optional table name for reference. ~~str~~ |
 | **RETURNS** | The newly constructed object. ~~Table~~    |
 
-### Table.set {#table.set tag="method"}
+### Table.set {id="table.set",tag="method"}
 
 Set a new key / value pair. String keys will be hashed. Same as
 `table[key] = value`.
@@ -273,7 +273,7 @@ Set a new key / value pair. String keys will be hashed. Same as
 | `key`   | The key. ~~Union[str, int]~~ |
 | `value` | The value.                   |
 
-### Table.to_bytes {#table.to_bytes tag="method"}
+### Table.to_bytes {id="table.to_bytes",tag="method"}
 
 Serialize the table to a bytestring.
 
@@ -287,7 +287,7 @@ Serialize the table to a bytestring.
 | ----------- | ------------------------------- |
 | **RETURNS** | The serialized table. ~~bytes~~ |
 
-### Table.from_bytes {#table.from_bytes tag="method"}
+### Table.from_bytes {id="table.from_bytes",tag="method"}
 
 Load a table from a bytestring.
 
@@ -304,7 +304,7 @@ Load a table from a bytestring.
 | `bytes_data` | The data to load. ~~bytes~~ |
 | **RETURNS**  | The loaded table. ~~Table~~ |
 
-### Attributes {#table-attributes}
+### Attributes {id="table-attributes"}
 
 | Name           | Description                                                   |
 | -------------- | ------------------------------------------------------------- |

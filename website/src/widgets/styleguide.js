@@ -3,8 +3,9 @@ import React from 'react'
 import Grid from '../components/grid'
 import { Label } from '../components/typography'
 import Link from '../components/link'
+import SVG from 'react-inlinesvg'
 
-import Logo from '-!svg-react-loader!../images/logo.svg'
+import logoSpacy from '../images/logo.svg'
 import patternBlue from '../images/pattern_blue.jpg'
 import patternGreen from '../images/pattern_green.jpg'
 import patternPurple from '../images/pattern_purple.jpg'
@@ -64,7 +65,7 @@ export const Colors = () => (
 export const Patterns = () => {
     const imgStyle = (name) => ({
         height: 125,
-        background: `url(${patterns[name]}) center/150% repeat`,
+        background: `url(${patterns[name].src}) center/150% repeat`,
     })
     const textStyle = { fontSize: 'var(--font-size-xs)', color: 'var(--color-subtle-dark)' }
     const linkStyle = { color: 'var(--color-dark)' }
@@ -95,7 +96,7 @@ export const Logos = () => {
     return (
         <Grid cols={2} narrow>
             <div style={style}>
-                <Logo />
+                <SVG src={logoSpacy.src} />
             </div>
             <div
                 style={{
@@ -104,7 +105,7 @@ export const Logos = () => {
                     borderColor: 'var(--color-theme-blue)',
                 }}
             >
-                <Logo style={{ color: 'var(--color-back)' }} />
+                <SVG src={logoSpacy.src} style={{ color: 'var(--color-back)' }} />
             </div>
         </Grid>
     )

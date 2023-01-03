@@ -16,16 +16,11 @@ import Main from '../components/main'
 import Footer from '../components/footer'
 import { H3, H5, Label, InlineList } from '../components/typography'
 import { YouTube, SoundCloud, Iframe } from '../components/embed'
-import { github, markdownToReact } from '../components/util'
+import { github, MarkdownToReact } from '../components/util'
 
-import { nightly, legacy } from '../../meta/dynamicMeta'
+import { nightly, legacy } from '../../meta/dynamicMeta.mjs'
 import universe from '../../meta/universe.json'
-
-function getSlug(data) {
-    if (data.isCategory) return `/universe/category/${data.id}`
-    if (data.isProject) return `/universe/project/${data.id}`
-    return `/universe`
-}
+import Image from 'next/image'
 
 function filterResources(resources, data) {
     const sorted = resources.sort((a, b) => a.id.localeCompare(b.id))
@@ -38,7 +33,7 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
     const filteredResources = filterResources(content, data)
     const activeData = data ? content.find(({ id }) => id === data.id) : null
     const markdownComponents = { ...mdxComponents, code: InlineCode }
-    const slug = getSlug(data)
+    const slug = pageContext.slug
     const isHome = !data.isCategory && !data.isProject
 
     const sidebar = [
@@ -86,6 +81,7 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                                     }
                                     const url = `/universe/project/${id}`
                                     const header = youtube && (
+                                        // eslint-disable-next-line @next/next/no-img-element
                                         <img
                                             src={`https://img.youtube.com/vi/${youtube}/0.jpg`}
                                             alt=""
@@ -98,6 +94,7 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                                     return cover ? (
                                         <p key={id}>
                                             <Link key={id} to={url} hidden>
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img src={cover} alt={title || id} />
                                             </Link>
                                         </p>
@@ -211,6 +208,7 @@ const Project = ({ data, components }) => (
                                 `license/${data.github}.svg?style=flat-square`,
                                 `stars/${data.github}.svg?style=social&label=Stars`,
                             ].map((url, i) => (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     style={{
                                         borderRadius: '1em',
@@ -242,6 +240,7 @@ const Project = ({ data, components }) => (
 
         {data.cover && (
             <p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={data.cover} alt={data.title} width={250} style={{ maxWidth: '50%' }} />
             </p>
         )}
@@ -258,7 +257,11 @@ const Project = ({ data, components }) => (
                 />
             )}
 
-            {data.description && <section>{markdownToReact(data.description, components)}</section>}
+            {data.description && (
+                <section>
+                    <MarkdownToReact markdown={data.description} />
+                </section>
+            )}
 
             {data.code_example && (
                 <CodeBlock title="Example" lang={data.code_language || 'python'}>
@@ -268,6 +271,7 @@ const Project = ({ data, components }) => (
 
             {data.image && (
                 <p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={data.image} style={{ maxWidth: '100%' }} alt="" />
                 </p>
             )}

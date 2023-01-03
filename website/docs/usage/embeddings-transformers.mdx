@@ -74,7 +74,7 @@ of performance.
 
 </Accordion>
 
-## Shared embedding layers {#embedding-layers}
+## Shared embedding layers {id="embedding-layers"}
 
 spaCy lets you share a single transformer or other token-to-vector ("tok2vec")
 embedding layer between multiple components. You can even update the shared
@@ -85,7 +85,7 @@ difficult to swap components or retrain parts of the pipeline. Multi-task
 learning can affect your accuracy (either positively or negatively), and may
 require some retuning of your hyper-parameters.
 
-![Pipeline components using a shared embedding component vs. independent embedding layers](../images/tok2vec.svg)
+![Pipeline components using a shared embedding component vs. independent embedding layers](/images/tok2vec.svg)
 
 | Shared                                                                                      | Independent                                                             |
 | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -99,7 +99,7 @@ components by adding a [`Transformer`](/api/transformer) or
 later in the pipeline can "connect" to it by including a **listener layer** like
 [Tok2VecListener](/api/architectures#Tok2VecListener) within their model.
 
-![Pipeline components listening to shared embedding component](../images/tok2vec-listener.svg)
+![Pipeline components listening to shared embedding component](/images/tok2vec-listener.svg)
 
 At the beginning of training, the [`Tok2Vec`](/api/tok2vec) component will grab
 a reference to the relevant listener layers in the rest of your pipeline. When
@@ -113,7 +113,7 @@ transformer outputs to the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
 giving you access to them after the pipeline has finished running.
 
-### Example: Shared vs. independent config {#embedding-layers-config}
+### Example: Shared vs. independent config {id="embedding-layers-config"}
 
 The [config system](/usage/training#config) lets you express model configuration
 for both shared and independent embedding layers. The shared setup uses a single
@@ -123,8 +123,7 @@ the entity recognizer, use a
 [Tok2VecListener](/api/architectures#Tok2VecListener) layer as their model's
 `tok2vec` argument, which connects to the `tok2vec` component model.
 
-```ini
-### Shared {highlight="1-2,4-5,19-20"}
+```ini {title="Shared",highlight="1-2,4-5,19-20"}
 [components.tok2vec]
 factory = "tok2vec"
 
@@ -152,8 +151,7 @@ In the independent setup, the entity recognizer component defines its own
 same. This makes them fully independent and doesn't require an upstream
 [`Tok2Vec`](/api/tok2vec) component to be present in the pipeline.
 
-```ini
-### Independent {highlight="7-8"}
+```ini {title="Independent", highlight="7-8"}
 [components.ner]
 factory = "ner"
 
@@ -170,9 +168,9 @@ factory = "ner"
 @architectures = "spacy.MaxoutWindowEncoder.v2"
 ```
 
-<!-- TODO: Once rehearsal is tested, mention it here. -->
+{/* TODO: Once rehearsal is tested, mention it here. */}
 
-## Using transformer models {#transformers}
+## Using transformer models {id="transformers"}
 
 Transformers are a family of neural network architectures that compute **dense,
 context-sensitive representations** for the tokens in your documents. Downstream
@@ -188,7 +186,7 @@ transformer models, but for practical purposes, you can simply think of them as
 drop-in replacements that let you achieve **higher accuracy** in exchange for
 **higher training and runtime costs**.
 
-### Setup and installation {#transformers-installation}
+### Setup and installation {id="transformers-installation"}
 
 > #### System requirements
 >
@@ -210,8 +208,7 @@ your package manager and CUDA version. If you skip this step, pip will install
 PyTorch as a dependency below, but it may not find the best version for your
 setup.
 
-```bash
-### Example: Install PyTorch 1.11.0 for CUDA 11.3 with pip
+```bash {title="Example: Install PyTorch 1.11.0 for CUDA 11.3 with pip"}
 # See: https://pytorch.org/get-started/locally/
 $ pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 ```
@@ -224,8 +221,7 @@ environment variable if your CUDA runtime is installed in a non-standard
 location. Putting it all together, if you had installed CUDA 11.3 in
 `/opt/nvidia/cuda`, you would run:
 
-```bash
-### Installation with CUDA
+```bash {title="Installation with CUDA"}
 $ export CUDA_PATH="/opt/nvidia/cuda"
 $ pip install -U %%SPACY_PKG_NAME[cuda113,transformers]%%SPACY_PKG_FLAGS
 ```
@@ -235,12 +231,11 @@ that require [`SentencePiece`](https://github.com/google/sentencepiece) (e.g.,
 ALBERT, CamemBERT, XLNet, Marian, and T5), install the additional dependencies
 with:
 
-```bash
-### Install sentencepiece
+```bash {title="Install sentencepiece"}
 $ pip install transformers[sentencepiece]
 ```
 
-### Runtime usage {#transformers-runtime}
+### Runtime usage {id="transformers-runtime"}
 
 Transformer models can be used as **drop-in replacements** for other types of
 neural networks, so your spaCy pipeline can include them in a way that's
@@ -249,7 +244,7 @@ the standard way, like any other spaCy pipeline. Instead of using the
 transformers as subnetworks directly, you can also use them via the
 [`Transformer`](/api/transformer) pipeline component.
 
-![The processing pipeline with the transformer component](../images/pipeline_transformer.svg)
+![The processing pipeline with the transformer component](/images/pipeline_transformer.svg)
 
 The `Transformer` component sets the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
@@ -257,12 +252,11 @@ which lets you access the transformers outputs at runtime. The trained
 transformer-based [pipelines](/models) provided by spaCy end on `_trf`, e.g.
 [`en_core_web_trf`](/models/en#en_core_web_trf).
 
-```cli
+```bash
 $ python -m spacy download en_core_web_trf
 ```
 
-```python
-### Example
+```python {title="Example"}
 import spacy
 from thinc.api import set_gpu_allocator, require_gpu
 
@@ -299,7 +293,7 @@ assert isinstance(doc._.custom_attr, TransformerData)
 print(doc._.custom_attr.tensors)
 ```
 
-### Training usage {#transformers-training}
+### Training usage {id="transformers-training"}
 
 The recommended workflow for training is to use spaCy's
 [config system](/usage/training#config), usually via the
@@ -309,14 +303,13 @@ of objects by referring to creation functions, including functions you register
 yourself. For details on how to get started with training your own model, check
 out the [training quickstart](/usage/training#quickstart).
 
-<!-- TODO: <Project id="pipelines/transformers">
+{/* TODO: <Project id="pipelines/transformers"> */}
 
-The easiest way to get started is to clone a transformers-based project
-template. Swap in your data, edit the settings and hyperparameters and train,
-evaluate, package and visualize your model.
+{/* The easiest way to get started is to clone a transformers-based project */}
+{/* template. Swap in your data, edit the settings and hyperparameters and train, */}
+{/* evaluate, package and visualize your model. */}
 
-</Project>
--->
+{/* </Project> */}
 
 The `[components]` section in the [`config.cfg`](/api/data-formats#config)
 describes the pipeline components and the settings used to construct them,
@@ -344,8 +337,7 @@ component:
 > )
 > ```
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg",excerpt="true"}
 [components.transformer]
 factory = "transformer"
 max_batch_items = 4096
@@ -405,7 +397,7 @@ all defaults.
 
 </Infobox>
 
-### Customizing the settings {#transformers-training-custom-settings}
+### Customizing the settings {id="transformers-training-custom-settings"}
 
 To change any of the settings, you can edit the `config.cfg` and re-run the
 training. To change any of the functions, like the span getter, you can replace
@@ -425,8 +417,7 @@ subsentences of at most `max_length` tokens are returned.
 > max_length = 25
 > ```
 
-```python
-### code.py
+```python {title="code.py"}
 import spacy_transformers
 
 @spacy_transformers.registry.span_getters("custom_sent_spans")
@@ -454,11 +445,11 @@ function. You can make it available via the `--code` argument that can point to
 a Python file. For more details on training with custom code, see the
 [training documentation](/usage/training#custom-functions).
 
-```cli
+```bash
 python -m spacy train ./config.cfg --code ./code.py
 ```
 
-### Customizing the model implementations {#training-custom-model}
+### Customizing the model implementations {id="training-custom-model"}
 
 The [`Transformer`](/api/transformer) component expects a Thinc
 [`Model`](https://thinc.ai/docs/api-model) object to be passed in as its `model`
@@ -476,8 +467,7 @@ is where we'll plug in our transformer model, using the
 [TransformerListener](/api/architectures#TransformerListener) layer, which
 sneakily delegates to the `Transformer` pipeline component.
 
-```ini
-### config.cfg (excerpt) {highlight="12"}
+```ini {title="config.cfg (excerpt)",highlight="12"}
 [components.ner]
 factory = "ner"
 
@@ -517,7 +507,7 @@ custom learning rate for each component. Instead of a constant, you can also
 provide a schedule, allowing you to freeze the shared parameters at the start of
 training.
 
-## Static vectors {#static-vectors}
+## Static vectors {id="static-vectors"}
 
 If your pipeline includes a **word vectors table**, you'll be able to use the
 `.similarity()` method on the [`Doc`](/api/doc), [`Span`](/api/span),
@@ -546,7 +536,7 @@ the usage guide on
 
 </Infobox>
 
-### Using word vectors in your models {#word-vectors-models}
+### Using word vectors in your models {id="word-vectors-models"}
 
 Many neural network models are able to use word vector tables as additional
 features, which sometimes results in significant improvements in accuracy.
@@ -579,7 +569,7 @@ handled by the [StaticVectors](/api/architectures#StaticVectors) layer.
 
 </Infobox>
 
-#### Creating a custom embedding layer {#custom-embedding-layer}
+#### Creating a custom embedding layer {id="custom-embedding-layer"}
 
 The [MultiHashEmbed](/api/architectures#StaticVectors) layer is spaCy's
 recommended strategy for constructing initial word representations for your
@@ -642,7 +632,7 @@ def MyCustomVectors(
     )
 ```
 
-## Pretraining {#pretraining}
+## Pretraining {id="pretraining"}
 
 The [`spacy pretrain`](/api/cli#pretrain) command lets you initialize your
 models with **information from raw text**. Without pretraining, the models for
@@ -678,14 +668,14 @@ You can add a `[pretraining]` block to your config by setting the
 `--pretraining` flag on [`init config`](/api/cli#init-config) or
 [`init fill-config`](/api/cli#init-fill-config):
 
-```cli
+```bash
 $ python -m spacy init fill-config config.cfg config_pretrain.cfg --pretraining
 ```
 
 You can then run [`spacy pretrain`](/api/cli#pretrain) with the updated config
 and pass in optional config overrides, like the path to the raw text file:
 
-```cli
+```bash
 $ python -m spacy pretrain config_pretrain.cfg ./output --paths.raw_text text.jsonl
 ```
 
@@ -699,7 +689,7 @@ change the [objective](#pretraining-objectives).
 %%GITHUB_SPACY/spacy/default_config_pretraining.cfg
 ```
 
-### How pretraining works {#pretraining-details}
+### How pretraining works {id="pretraining-details"}
 
 The impact of [`spacy pretrain`](/api/cli#pretrain) varies, but it will usually
 be worth trying if you're **not using a transformer** model and you have
@@ -725,7 +715,7 @@ a "tok2vec" layer). The most common workflow is to use the
 [`Tok2Vec`](/api/tok2vec) component to create a shared token-to-vector layer for
 several components of your pipeline, and apply pretraining to its whole model.
 
-#### Configuring the pretraining {#pretraining-configure}
+#### Configuring the pretraining {id="pretraining-configure"}
 
 The [`spacy pretrain`](/api/cli#pretrain) command is configured using the
 `[pretraining]` section of your [config file](/usage/training#config). The
@@ -736,8 +726,7 @@ whole model), or a
 spaCy's built-in model architectures have a reference named `"tok2vec"` that
 will refer to the right layer.
 
-```ini
-### config.cfg
+```ini {title="config.cfg"}
 # 1. Use the whole model of the "tok2vec" component
 [pretraining]
 component = "tok2vec"
@@ -749,7 +738,7 @@ component = "textcat"
 layer = "tok2vec"
 ```
 
-#### Connecting pretraining to training {#pretraining-training}
+#### Connecting pretraining to training {id="pretraining-training"}
 
 To benefit from pretraining, your training step needs to know to initialize its
 `tok2vec` component with the weights learned from the pretraining step. You do
@@ -760,8 +749,7 @@ A pretraining step that runs for 5 epochs with an output path of `pretrain/`, as
 an example, produces `pretrain/model0.bin` through `pretrain/model4.bin`. To
 make use of the final output, you could fill in this value in your config file:
 
-```ini
-### config.cfg
+```ini {title="config.cfg"}
 
 [paths]
 init_tok2vec = "pretrain/model4.bin"
@@ -780,7 +768,7 @@ an existing pipeline, so it goes in `initialize.init_tok2vec`.
 
 </Infobox>
 
-#### Pretraining objectives {#pretraining-objectives}
+#### Pretraining objectives {id="pretraining-objectives"}
 
 > ```ini
 > ### Characters objective

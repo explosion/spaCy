@@ -20,7 +20,7 @@ your entities will be close to their initial tokens. If your entities are long
 and characterized by tokens in their middle, the component will likely not be a
 good fit for your task.
 
-## Assigned Attributes {#assigned-attributes}
+## Assigned Attributes {id="assigned-attributes"}
 
 Predictions will be saved to `Doc.ents` as a tuple. Each label will also be
 reflected to each underlying token, where it is saved in the `Token.ent_type`
@@ -38,7 +38,7 @@ non-overlapping, or an error will be thrown.
 | `Token.ent_type`  | The label part of the named entity tag (hash). ~~int~~            |
 | `Token.ent_type_` | The label part of the named entity tag. ~~str~~                   |
 
-## Config and implementation {#config}
+## Config and implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -72,7 +72,7 @@ architectures and their arguments and hyperparameters.
 %%GITHUB_SPACY/spacy/pipeline/ner.pyx
 ```
 
-## EntityRecognizer.\_\_init\_\_ {#init tag="method"}
+## EntityRecognizer.\_\_init\_\_ {id="init",tag="method"}
 
 > #### Example
 >
@@ -103,7 +103,7 @@ shortcut for this and instantiate the component using its string name and
 | `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~ |
 | `incorrect_spans_key`         | Identifies spans that are known to be incorrect entity annotations. The incorrect entity annotations can be stored in the span group in [`Doc.spans`](/api/doc#spans), under this key. Defaults to `None`. ~~Optional[str]~~                        |
 
-## EntityRecognizer.\_\_call\_\_ {#call tag="method"}
+## EntityRecognizer.\_\_call\_\_ {id="call",tag="method"}
 
 Apply the pipe to one document. The document is modified in place and returned.
 This usually happens under the hood when the `nlp` object is called on a text
@@ -127,7 +127,7 @@ and all pipeline components are applied to the `Doc` in order. Both
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## EntityRecognizer.pipe {#pipe tag="method"}
+## EntityRecognizer.pipe {id="pipe",tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
@@ -151,7 +151,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/entityrecognizer#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## EntityRecognizer.initialize {#initialize tag="method" new="3"}
+## EntityRecognizer.initialize {id="initialize",tag="method",version="3"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. **At least one example
@@ -194,7 +194,7 @@ This method was previously called `begin_training`.
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                                   |
 | `labels`       | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Dict[str, Dict[str, int]]]~~ |
 
-## EntityRecognizer.predict {#predict tag="method"}
+## EntityRecognizer.predict {id="predict",tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
 modifying them.
@@ -211,7 +211,7 @@ modifying them.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~                   |
 | **RETURNS** | A helper class for the parse state (internal). ~~StateClass~~ |
 
-## EntityRecognizer.set_annotations {#set_annotations tag="method"}
+## EntityRecognizer.set_annotations {id="set_annotations",tag="method"}
 
 Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
@@ -228,7 +228,7 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 | `docs`   | The documents to modify. ~~Iterable[Doc]~~                                                                                            |
 | `scores` | The scores to set, produced by `EntityRecognizer.predict`. Returns an internal helper class for the parse state. ~~List[StateClass]~~ |
 
-## EntityRecognizer.update {#update tag="method"}
+## EntityRecognizer.update {id="update",tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects, updating the pipe's
 model. Delegates to [`predict`](/api/entityrecognizer#predict) and
@@ -251,7 +251,7 @@ model. Delegates to [`predict`](/api/entityrecognizer#predict) and
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## EntityRecognizer.get_loss {#get_loss tag="method"}
+## EntityRecognizer.get_loss {id="get_loss",tag="method"}
 
 Find the loss and gradient of loss for the batch of documents and their
 predicted scores.
@@ -270,7 +270,7 @@ predicted scores.
 | `scores`    | Scores representing the model's predictions. ~~StateClass~~                 |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
-## EntityRecognizer.create_optimizer {#create_optimizer tag="method"}
+## EntityRecognizer.create_optimizer {id="create_optimizer",tag="method"}
 
 Create an optimizer for the pipeline component.
 
@@ -285,7 +285,7 @@ Create an optimizer for the pipeline component.
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## EntityRecognizer.use_params {#use_params tag="method, contextmanager"}
+## EntityRecognizer.use_params {id="use_params",tag="method, contextmanager"}
 
 Modify the pipe's model, to use the given parameter values. At the end of the
 context, the original parameters are restored.
@@ -302,7 +302,7 @@ context, the original parameters are restored.
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## EntityRecognizer.add_label {#add_label tag="method"}
+## EntityRecognizer.add_label {id="add_label",tag="method"}
 
 Add a new label to the pipe. Note that you don't have to call this method if you
 provide a **representative data sample** to the [`initialize`](#initialize)
@@ -322,7 +322,7 @@ to the model, and the output dimension will be
 | `label`     | The label to add. ~~str~~                                   |
 | **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
 
-## EntityRecognizer.set_output {#set_output tag="method"}
+## EntityRecognizer.set_output {id="set_output",tag="method"}
 
 Change the output dimension of the component's model by calling the model's
 attribute `resize_output`. This is a function that takes the original model and
@@ -341,7 +341,7 @@ forgetting" problem.
 | ---- | --------------------------------- |
 | `nO` | The new output dimension. ~~int~~ |
 
-## EntityRecognizer.to_disk {#to_disk tag="method"}
+## EntityRecognizer.to_disk {id="to_disk",tag="method"}
 
 Serialize the pipe to disk.
 
@@ -358,7 +358,7 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## EntityRecognizer.from_disk {#from_disk tag="method"}
+## EntityRecognizer.from_disk {id="from_disk",tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
@@ -376,7 +376,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `EntityRecognizer` object. ~~EntityRecognizer~~                                    |
 
-## EntityRecognizer.to_bytes {#to_bytes tag="method"}
+## EntityRecognizer.to_bytes {id="to_bytes",tag="method"}
 
 > #### Example
 >
@@ -393,7 +393,7 @@ Serialize the pipe to a bytestring.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the `EntityRecognizer` object. ~~bytes~~                             |
 
-## EntityRecognizer.from_bytes {#from_bytes tag="method"}
+## EntityRecognizer.from_bytes {id="from_bytes",tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -412,7 +412,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `EntityRecognizer` object. ~~EntityRecognizer~~                                         |
 
-## EntityRecognizer.labels {#labels tag="property"}
+## EntityRecognizer.labels {id="labels",tag="property"}
 
 The labels currently added to the component.
 
@@ -427,7 +427,7 @@ The labels currently added to the component.
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
 
-## EntityRecognizer.label_data {#label_data tag="property" new="3"}
+## EntityRecognizer.label_data {id="label_data",tag="property",version="3"}
 
 The labels currently added to the component and their internal meta information.
 This is the data generated by [`init labels`](/api/cli#init-labels) and used by
@@ -445,7 +445,7 @@ the model with a pre-defined label set.
 | ----------- | ------------------------------------------------------------------------------- |
 | **RETURNS** | The label data added to the component. ~~Dict[str, Dict[str, Dict[str, int]]]~~ |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from

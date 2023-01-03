@@ -4,21 +4,13 @@
  * Based on: https://github.com/luhmann/tufte-markdown
  */
 
-const visit = require('unist-util-visit')
-const slugify = require('@sindresorhus/slugify')
+import { visit } from 'unist-util-visit'
 
 const defaultOptions = {
     element: 'section',
     prefix: 'section-',
     depth: 2,
     slugify: true,
-}
-
-function slugifyNode(node) {
-    if (node.children.length && node.children[0].type === 'text') {
-        return slugify(node.children[0].value)
-    }
-    return null
 }
 
 function remarkWrapSection(userOptions = {}) {
@@ -40,7 +32,6 @@ function remarkWrapSection(userOptions = {}) {
             if (node.depth === options.depth) {
                 const data = node.data || (node.data = {})
                 const hProps = data.hProperties || (data.hProperties = {})
-                hProps.id = hProps.id ? hProps.id : slugifyNode(node)
                 headingsMap.push({ index, id: hProps.id })
             }
         })
@@ -58,7 +49,7 @@ function remarkWrapSection(userOptions = {}) {
                     const headingId = index === 0 ? 0 : headingsMap[index - 1].id
                     const sectionId = headingId ? options.prefix + headingId : undefined
                     const wrapperNode = {
-                        type: 'paragraph',
+                        type: 'section',
                         children,
                         data: { hName: options.element, hProperties: { id: sectionId } },
                     }
@@ -72,4 +63,4 @@ function remarkWrapSection(userOptions = {}) {
     return transformer
 }
 
-module.exports = remarkWrapSection
+export default remarkWrapSection

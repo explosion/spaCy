@@ -2,7 +2,7 @@
 title: AttributeRuler
 tag: class
 source: spacy/pipeline/attributeruler.py
-new: 3
+version: 3
 teaser: 'Pipeline component for rule-based token attribute assignment'
 api_string_name: attribute_ruler
 api_trainable: false
@@ -15,7 +15,7 @@ between attributes such as mapping fine-grained POS tags to coarse-grained POS
 tags. See the [usage guide](/usage/linguistic-features/#mappings-exceptions) for
 examples.
 
-## Config and implementation {#config}
+## Config and implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -37,7 +37,7 @@ how the component should be configured. You can override its settings via the
 %%GITHUB_SPACY/spacy/pipeline/attributeruler.py
 ```
 
-## AttributeRuler.\_\_init\_\_ {#init tag="method"}
+## AttributeRuler.\_\_init\_\_ {id="init",tag="method"}
 
 Initialize the attribute ruler.
 
@@ -56,7 +56,7 @@ Initialize the attribute ruler.
 | `validate`     | Whether patterns should be validated (passed to the [`Matcher`](/api/matcher#init)). Defaults to `False`. ~~bool~~                                                                                                                                                                         |
 | `scorer`       | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"tag`", `"pos"`, `"morph"` and `"lemma"` and [`Scorer.score_token_attr_per_feat`](/api/scorer#score_token_attr_per_feat) for the attribute `"morph"`. ~~Optional[Callable]~~ |
 
-## AttributeRuler.\_\_call\_\_ {#call tag="method"}
+## AttributeRuler.\_\_call\_\_ {id="call",tag="method"}
 
 Apply the attribute ruler to a `Doc`, setting token attributes for tokens
 matched by the provided patterns.
@@ -66,7 +66,7 @@ matched by the provided patterns.
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## AttributeRuler.add {#add tag="method"}
+## AttributeRuler.add {id="add",tag="method"}
 
 Add patterns to the attribute ruler. The patterns are a list of `Matcher`
 patterns and the attributes are a dict of attributes to set on the matched
@@ -89,7 +89,7 @@ may be negative to index from the end of the span.
 | `attrs`    | The attributes to assign to the target token in the matched span. ~~Dict[str, Any]~~                                              |
 | `index`    | The index of the token in the matched span to modify. May be negative to index from the end of the span. Defaults to `0`. ~~int~~ |
 
-## AttributeRuler.add_patterns {#add_patterns tag="method"}
+## AttributeRuler.add_patterns {id="add_patterns",tag="method"}
 
 > #### Example
 >
@@ -116,7 +116,7 @@ keys `"patterns"`, `"attrs"` and `"index"`, which match the arguments of
 | ---------- | -------------------------------------------------------------------------- |
 | `patterns` | The patterns to add. ~~Iterable[Dict[str, Union[List[dict], dict, int]]]~~ |
 
-## AttributeRuler.patterns {#patterns tag="property"}
+## AttributeRuler.patterns {id="patterns",tag="property"}
 
 Get all patterns that have been added to the attribute ruler in the
 `patterns_dict` format accepted by
@@ -126,7 +126,7 @@ Get all patterns that have been added to the attribute ruler in the
 | ----------- | -------------------------------------------------------------------------------------------- |
 | **RETURNS** | The patterns added to the attribute ruler. ~~List[Dict[str, Union[List[dict], dict, int]]]~~ |
 
-## AttributeRuler.initialize {#initialize tag="method"}
+## AttributeRuler.initialize {id="initialize",tag="method"}
 
 Initialize the component with data and used before training to load in rules
 from a file. This method is typically called by
@@ -160,7 +160,7 @@ config.
 | `tag_map`      | The tag map that maps fine-grained tags to coarse-grained tags and morphological features. Defaults to `None`. ~~Optional[Dict[str, Dict[Union[int, str], Union[int, str]]]]~~                                                                 |
 | `morph_rules`  | The morph rules that map token text and fine-grained tags to coarse-grained tags, lemmas and morphological features. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]]~~                            |
 
-## AttributeRuler.load_from_tag_map {#load_from_tag_map tag="method"}
+## AttributeRuler.load_from_tag_map {id="load_from_tag_map",tag="method"}
 
 Load attribute ruler patterns from a tag map.
 
@@ -168,7 +168,7 @@ Load attribute ruler patterns from a tag map.
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `tag_map` | The tag map that maps fine-grained tags to coarse-grained tags and morphological features. ~~Dict[str, Dict[Union[int, str], Union[int, str]]]~~ |
 
-## AttributeRuler.load_from_morph_rules {#load_from_morph_rules tag="method"}
+## AttributeRuler.load_from_morph_rules {id="load_from_morph_rules",tag="method"}
 
 Load attribute ruler patterns from morph rules.
 
@@ -176,7 +176,7 @@ Load attribute ruler patterns from morph rules.
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `morph_rules` | The morph rules that map token text and fine-grained tags to coarse-grained tags, lemmas and morphological features. ~~Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]~~ |
 
-## AttributeRuler.to_disk {#to_disk tag="method"}
+## AttributeRuler.to_disk {id="to_disk",tag="method"}
 
 Serialize the pipe to disk.
 
@@ -193,7 +193,7 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## AttributeRuler.from_disk {#from_disk tag="method"}
+## AttributeRuler.from_disk {id="from_disk",tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
@@ -211,7 +211,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `AttributeRuler` object. ~~AttributeRuler~~                                        |
 
-## AttributeRuler.to_bytes {#to_bytes tag="method"}
+## AttributeRuler.to_bytes {id="to_bytes",tag="method"}
 
 > #### Example
 >
@@ -228,7 +228,7 @@ Serialize the pipe to a bytestring.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the `AttributeRuler` object. ~~bytes~~                               |
 
-## AttributeRuler.from_bytes {#from_bytes tag="method"}
+## AttributeRuler.from_bytes {id="from_bytes",tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -247,7 +247,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `AttributeRuler` object. ~~AttributeRuler~~                                             |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from

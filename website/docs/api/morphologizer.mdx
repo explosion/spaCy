@@ -2,7 +2,7 @@
 title: Morphologizer
 tag: class
 source: spacy/pipeline/morphologizer.pyx
-new: 3
+version: 3
 teaser: 'Pipeline component for predicting morphological features'
 api_base_class: /api/tagger
 api_string_name: morphologizer
@@ -15,7 +15,7 @@ coarse-grained POS tags following the Universal Dependencies
 [FEATS](https://universaldependencies.org/format.html#morphological-annotation)
 annotation guidelines.
 
-## Assigned Attributes {#assigned-attributes}
+## Assigned Attributes {id="assigned-attributes"}
 
 Predictions are saved to `Token.morph` and `Token.pos`.
 
@@ -25,7 +25,7 @@ Predictions are saved to `Token.morph` and `Token.pos`.
 | `Token.pos_`  | The UPOS part of speech. ~~str~~          |
 | `Token.morph` | Morphological features. ~~MorphAnalysis~~ |
 
-## Config and implementation {#config}
+## Config and implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -53,7 +53,7 @@ architectures and their arguments and hyperparameters.
 %%GITHUB_SPACY/spacy/pipeline/morphologizer.pyx
 ```
 
-## Morphologizer.\_\_init\_\_ {#init tag="method"}
+## Morphologizer.\_\_init\_\_ {id="init",tag="method"}
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
@@ -97,7 +97,7 @@ annotation `C=E|X=Y`):
 | `extend` <Tag variant="new">3.2</Tag>    | Whether existing feature types (whose values may or may not be overwritten depending on `overwrite`) are preserved. Defaults to `False`. ~~bool~~                                                                                                                      |
 | `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"pos"` and `"morph"` and [`Scorer.score_token_attr_per_feat`](/api/scorer#score_token_attr_per_feat) for the attribute `"morph"`. ~~Optional[Callable]~~ |
 
-## Morphologizer.\_\_call\_\_ {#call tag="method"}
+## Morphologizer.\_\_call\_\_ {id="call",tag="method"}
 
 Apply the pipe to one document. The document is modified in place, and returned.
 This usually happens under the hood when the `nlp` object is called on a text
@@ -120,7 +120,7 @@ delegate to the [`predict`](/api/morphologizer#predict) and
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## Morphologizer.pipe {#pipe tag="method"}
+## Morphologizer.pipe {id="pipe",tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
@@ -144,7 +144,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/morphologizer#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## Morphologizer.initialize {#initialize tag="method"}
+## Morphologizer.initialize {id="initialize",tag="method"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. **At least one example
@@ -181,7 +181,7 @@ config.
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                              |
 | `labels`       | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[dict]~~ |
 
-## Morphologizer.predict {#predict tag="method"}
+## Morphologizer.predict {id="predict",tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
 modifying them.
@@ -198,7 +198,7 @@ modifying them.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
 | **RETURNS** | The model's prediction for each document.   |
 
-## Morphologizer.set_annotations {#set_annotations tag="method"}
+## Morphologizer.set_annotations {id="set_annotations",tag="method"}
 
 Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
@@ -215,7 +215,7 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 | `docs`   | The documents to modify. ~~Iterable[Doc]~~              |
 | `scores` | The scores to set, produced by `Morphologizer.predict`. |
 
-## Morphologizer.update {#update tag="method"}
+## Morphologizer.update {id="update",tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
@@ -239,7 +239,7 @@ Delegates to [`predict`](/api/morphologizer#predict) and
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## Morphologizer.get_loss {#get_loss tag="method"}
+## Morphologizer.get_loss {id="get_loss",tag="method"}
 
 Find the loss and gradient of loss for the batch of documents and their
 predicted scores.
@@ -258,7 +258,7 @@ predicted scores.
 | `scores`    | Scores representing the model's predictions.                                |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
-## Morphologizer.create_optimizer {#create_optimizer tag="method"}
+## Morphologizer.create_optimizer {id="create_optimizer",tag="method"}
 
 Create an optimizer for the pipeline component.
 
@@ -273,7 +273,7 @@ Create an optimizer for the pipeline component.
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## Morphologizer.use_params {#use_params tag="method, contextmanager"}
+## Morphologizer.use_params {id="use_params",tag="method, contextmanager"}
 
 Modify the pipe's model, to use the given parameter values. At the end of the
 context, the original parameters are restored.
@@ -290,7 +290,7 @@ context, the original parameters are restored.
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## Morphologizer.add_label {#add_label tag="method"}
+## Morphologizer.add_label {id="add_label",tag="method"}
 
 Add a new label to the pipe. If the `Morphologizer` should set annotations for
 both `pos` and `morph`, the label should include the UPOS as the feature `POS`.
@@ -313,7 +313,7 @@ will be automatically added to the model, and the output dimension will be
 | `label`     | The label to add. ~~str~~                                   |
 | **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
 
-## Morphologizer.to_disk {#to_disk tag="method"}
+## Morphologizer.to_disk {id="to_disk",tag="method"}
 
 Serialize the pipe to disk.
 
@@ -330,7 +330,7 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## Morphologizer.from_disk {#from_disk tag="method"}
+## Morphologizer.from_disk {id="from_disk",tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
@@ -348,7 +348,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `Morphologizer` object. ~~Morphologizer~~                                          |
 
-## Morphologizer.to_bytes {#to_bytes tag="method"}
+## Morphologizer.to_bytes {id="to_bytes",tag="method"}
 
 > #### Example
 >
@@ -365,7 +365,7 @@ Serialize the pipe to a bytestring.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the `Morphologizer` object. ~~bytes~~                                |
 
-## Morphologizer.from_bytes {#from_bytes tag="method"}
+## Morphologizer.from_bytes {id="from_bytes",tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -384,7 +384,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `Morphologizer` object. ~~Morphologizer~~                                               |
 
-## Morphologizer.labels {#labels tag="property"}
+## Morphologizer.labels {id="labels",tag="property"}
 
 The labels currently added to the component in the Universal Dependencies
 [FEATS](https://universaldependencies.org/format.html#morphological-annotation)
@@ -403,7 +403,7 @@ coarse-grained POS as the feature `POS`.
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
 
-## Morphologizer.label_data {#label_data tag="property" new="3"}
+## Morphologizer.label_data {id="label_data",tag="property",version="3"}
 
 The labels currently added to the component and their internal meta information.
 This is the data generated by [`init labels`](/api/cli#init-labels) and used by
@@ -421,7 +421,7 @@ model with a pre-defined label set.
 | ----------- | ----------------------------------------------- |
 | **RETURNS** | The label data added to the component. ~~dict~~ |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from
