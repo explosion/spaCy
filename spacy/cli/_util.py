@@ -29,6 +29,8 @@ if TYPE_CHECKING:
 SDIST_SUFFIX = ".tar.gz"
 WHEEL_SUFFIX = "-py3-none-any.whl"
 
+AUTO = "auto"
+
 PROJECT_FILE = "project.yml"
 PROJECT_LOCK = "project.lock"
 COMMAND = "python -m spacy"
@@ -596,6 +598,8 @@ def walk_directory(path: Path, suffix: Optional[str] = None) -> List[Path]:
             continue
         elif path.is_dir():
             paths.extend(path.iterdir())
+        elif suffix == AUTO:
+            locs.append(path)
         elif suffix is not None and not path.parts[-1].endswith(suffix):
             continue
         else:

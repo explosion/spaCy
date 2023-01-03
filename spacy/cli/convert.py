@@ -7,7 +7,7 @@ import re
 import sys
 import itertools
 
-from ._util import app, Arg, Opt, walk_directory
+from ._util import app, Arg, Opt, walk_directory, AUTO
 from ..training import docs_to_json
 from ..tokens import Doc, DocBin
 from ..training.converters import iob_to_docs, conll_ner_to_docs, json_to_docs
@@ -49,7 +49,7 @@ def convert_cli(
     model: Optional[str] = Opt(None, "--model", "--base", "-b", help="Trained spaCy pipeline for sentence segmentation to use as base (for --seg-sents)"),
     morphology: bool = Opt(False, "--morphology", "-m", help="Enable appending morphology to tags"),
     merge_subtokens: bool = Opt(False, "--merge-subtokens", "-T", help="Merge CoNLL-U subtokens"),
-    converter: str = Opt("auto", "--converter", "-c", help=f"Converter: {tuple(CONVERTERS.keys())}"),
+    converter: str = Opt(AUTO, "--converter", "-c", help=f"Converter: {tuple(CONVERTERS.keys())}"),
     ner_map: Optional[Path] = Opt(None, "--ner-map", "-nm", help="NER tag mapping (as JSON-encoded dict of entity types)", exists=True),
     lang: Optional[str] = Opt(None, "--lang", "-l", help="Language (if tokenizer required)"),
     concatenate: bool = Opt(None, "--concatenate", "-C", help="Concatenate output to a single file"),
@@ -100,7 +100,7 @@ def convert(
     model: Optional[str] = None,
     morphology: bool = False,
     merge_subtokens: bool = False,
-    converter: str = "auto",
+    converter: str = AUTO,
     ner_map: Optional[Path] = None,
     lang: Optional[str] = None,
     concatenate: bool = False,
@@ -213,17 +213,17 @@ def verify_cli_args(
         if len(input_locs) == 0:
             msg.fail("No input files in directory", input_path, exits=1)
         file_types = list(set([loc.suffix[1:] for loc in input_locs]))
-        if converter == "auto" and len(file_types) >= 2:
+        if converter == AUTO and len(file_types) >= 2:
             file_types_str = ",".join(file_types)
             msg.fail("All input files must be same type", file_types_str, exits=1)
-    if converter != "auto" and converter not in CONVERTERS:
+    if converter != AUTO and converter not in CONVERTERS:
         msg.fail(f"Can't find converter for {converter}", exits=1)
 
 
 def _get_converter(msg, converter, input_path: Path):
     if input_path.is_dir():
         input_path = walk_directory(input_path, converter)[0]
-    if converter == "auto":
+    if converter == AUTO:
         converter = input_path.suffix[1:]
     if converter == "ner" or converter == "iob":
         with input_path.open(encoding="utf8") as file_:

@@ -4,6 +4,7 @@ from collections import Counter
 from typing import Tuple, List, Dict, Any
 import pkg_resources
 import time
+from pathlib import Path
 
 import spacy
 import numpy
@@ -15,11 +16,11 @@ from thinc.api import Config, ConfigValidationError
 
 from spacy import about
 from spacy.cli import info
-from spacy.cli._util import is_subpath_of, load_project_config
+from spacy.cli._util import is_subpath_of, load_project_config, walk_directory
 from spacy.cli._util import parse_config_overrides, string_to_list
 from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
-from spacy.cli._util import upload_file, download_file
+from spacy.cli._util import upload_file, download_file, AUTO
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.debug_data import _get_distribution, _get_kl_divergence
@@ -1185,3 +1186,26 @@ def test_upload_download_local_file():
         download_file(remote_file, local_file)
         with local_file.open(mode="r") as file_:
             assert file_.read() == content
+
+
+def test_walk_directory():
+    with make_tempdir() as d:
+        files = [
+            "data1.iob",
+            "data2.iob",
+            "data3.json",
+            "data4.conll",
+            "data5.conll",
+            "data6.conll",
+            "data7.txt",
+        ]
+
+        for f in files:
+            Path(d / f).touch()
+
+        assert (len(walk_directory(d))) == 7
+        assert (len(walk_directory(d, suffix="json"))) == 1
+        assert (len(walk_directory(d, suffix="iob"))) == 2
+        assert (len(walk_directory(d, suffix="conll"))) == 3
+        assert (len(walk_directory(d, suffix="pdf"))) == 0
+        assert (len(walk_directory(d, suffix=AUTO))) == 7
