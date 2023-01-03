@@ -313,6 +313,29 @@ installed in the same environment – that's it.
 | `spacy_lookups`                                   | Group of entry points for custom [`Lookups`](/api/lookups), including lemmatizer data. Used by spaCy's [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) package.                                                                  |
 | [`spacy_displacy_colors`](#entry-points-displacy) | Group of entry points of custom label colors for the [displaCy visualizer](/usage/visualizers#ent). The key name doesn't matter, but it should point to a dict of labels and color values. Useful for custom models that predict different entity types. |
 
+### Loading probability tables into existing models
+
+You can load a probability table from [spacy-lookups-data](https://github.com/explosion/spacy-lookups-data) into an existing spaCy model like `en_core_web_sm`.
+
+```python
+### load_table.py
+import spacy
+from spacy.lookups import load_lookups
+nlp = spacy.load("en_core_web_sm")
+lookups = load_lookups("en", ["lexeme_prob"])
+nlp.vocab.lookups.add_table("lexeme_prob", lookups.get_table("lexeme_prob"))
+```
+
+When training a model from scratch you can also specify probability tables in the `config.cfg`.
+
+```ini
+### config.cfg (excerpt)
+[initialize.lookups]
+@misc = "spacy.LookupsDataLoader.v1"
+lang = ${nlp.lang}
+tables = ["lexeme_norm"]
+```
+
 ### Custom components via entry points {#entry-points-components}
 
 When you load a pipeline, spaCy will generally use its `config.cfg` to set up
