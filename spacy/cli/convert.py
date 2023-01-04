@@ -68,15 +68,11 @@ def convert_cli(
 
     DOCS: https://spacy.io/api/cli#convert
     """
-    print("CONVERT")
     input_path = Path(input_path)
     output_dir: Union[str, Path] = "-" if output_dir == Path("-") else output_dir
     silent = output_dir == "-"
     msg = Printer(no_print=silent)
-    print("BEFORE", converter)
     converter = _get_converter(msg, converter, input_path)
-    print("AFTER", converter)
-    print("VERIFYING")
     verify_cli_args(msg, input_path, output_dir, file_type.value, converter, ner_map)
     convert(
         input_path,
