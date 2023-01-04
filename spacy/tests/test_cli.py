@@ -20,7 +20,7 @@ from spacy.cli._util import is_subpath_of, load_project_config, walk_directory
 from spacy.cli._util import parse_config_overrides, string_to_list
 from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
-from spacy.cli._util import upload_file, download_file, AUTO
+from spacy.cli._util import upload_file, download_file
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.debug_data import _get_distribution, _get_kl_divergence
@@ -1209,4 +1209,3 @@ def test_walk_directory():
         assert (len(walk_directory(d, suffix="iob"))) == 2
         assert (len(walk_directory(d, suffix="conll"))) == 3
         assert (len(walk_directory(d, suffix="pdf"))) == 0
-        assert (len(walk_directory(d, suffix=AUTO))) == 7

@@ -7,7 +7,7 @@ import re
 import sys
 import itertools
 
-from ._util import app, Arg, Opt, walk_directory, AUTO
+from ._util import app, Arg, Opt, walk_directory
 from ..training import docs_to_json
 from ..tokens import Doc, DocBin
 from ..training.converters import iob_to_docs, conll_ner_to_docs, json_to_docs
@@ -27,6 +27,8 @@ CONVERTERS: Mapping[str, Callable[..., Iterable[Doc]]] = {
     "iob": iob_to_docs,
     "json": json_to_docs,
 }
+
+AUTO = "auto"
 
 
 # File types that can be written to stdout
@@ -66,12 +68,16 @@ def convert_cli(
 
     DOCS: https://spacy.io/api/cli#convert
     """
+    print("CONVERT")
     input_path = Path(input_path)
     output_dir: Union[str, Path] = "-" if output_dir == Path("-") else output_dir
     silent = output_dir == "-"
     msg = Printer(no_print=silent)
-    verify_cli_args(msg, input_path, output_dir, file_type.value, converter, ner_map)
+    print("BEFORE", converter)
     converter = _get_converter(msg, converter, input_path)
+    print("AFTER", converter)
+    print("VERIFYING")
+    verify_cli_args(msg, input_path, output_dir, file_type.value, converter, ner_map)
     convert(
         input_path,
         output_dir,
@@ -100,7 +106,7 @@ def convert(
     model: Optional[str] = None,
     morphology: bool = False,
     merge_subtokens: bool = False,
-    converter: str = AUTO,
+    converter: str,
     ner_map: Optional[Path] = None,
     lang: Optional[str] = None,
     concatenate: bool = False,
@@ -212,17 +218,21 @@ def verify_cli_args(
         input_locs = walk_directory(input_path, converter)
         if len(input_locs) == 0:
             msg.fail("No input files in directory", input_path, exits=1)
-        file_types = list(set([loc.suffix[1:] for loc in input_locs]))
-        if converter == AUTO and len(file_types) >= 2:
-            file_types_str = ",".join(file_types)
-            msg.fail("All input files must be same type", file_types_str, exits=1)
-    if converter != AUTO and converter not in CONVERTERS:
+    if converter not in CONVERTERS:
         msg.fail(f"Can't find converter for {converter}", exits=1)
 
 
 def _get_converter(msg, converter, input_path: Path):
     if input_path.is_dir():
-        input_path = walk_directory(input_path, converter)[0]
+        if converter == AUTO:
+            input_locs = walk_directory(input_path, suffix=None)
+            file_types = list(set([loc.suffix[1:] for loc in input_locs]))
+            if len(file_types) >= 2:
+                file_types_str = ",".join(file_types)
+                msg.fail("All input files must be same type", file_types_str, exits=1)
+            input_path = input_locs[0]
+        else:
+            input_path = walk_directory(input_path, suffix=converter)[0]
     if converter == AUTO:
         converter = input_path.suffix[1:]
     if converter == "ner" or converter == "iob":
@@ -241,4 +251,5 @@ def _get_converter(msg, converter, input_path: Path):
                 "Conversion may not succeed. "
                 "See https://spacy.io/api/cli#convert"
             )
+    print("got convertor", converter)
     return converter

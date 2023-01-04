@@ -29,8 +29,6 @@ if TYPE_CHECKING:
 SDIST_SUFFIX = ".tar.gz"
 WHEEL_SUFFIX = "-py3-none-any.whl"
 
-AUTO = "auto"
-
 PROJECT_FILE = "project.yml"
 PROJECT_LOCK = "project.lock"
 COMMAND = "python -m spacy"
@@ -585,6 +583,10 @@ def setup_gpu(use_gpu: int, silent=None) -> None:
 
 
 def walk_directory(path: Path, suffix: Optional[str] = None) -> List[Path]:
+    """Given a directory and a suffix, recursively find all files matching the suffix.
+    Directories or files with names beginning with a . are ignored, but hidden flags on
+    filesystems are not checked.
+    When provided with a suffix `None`, all files are returned without filtering."""
     if not path.is_dir():
         return [path]
     paths = [path]
@@ -598,8 +600,6 @@ def walk_directory(path: Path, suffix: Optional[str] = None) -> List[Path]:
             continue
         elif path.is_dir():
             paths.extend(path.iterdir())
-        elif suffix == AUTO:
-            locs.append(path)
         elif suffix is not None and not path.parts[-1].endswith(suffix):
             continue
         else:
