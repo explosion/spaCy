@@ -247,5 +247,4 @@ def _get_converter(msg, converter, input_path: Path):
                 "Conversion may not succeed. "
                 "See https://spacy.io/api/cli#convert"
             )
-    print("got convertor", converter)
     return converter
