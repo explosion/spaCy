@@ -12,6 +12,7 @@ menu:
   - ['train', 'train']
   - ['pretrain', 'pretrain']
   - ['evaluate', 'evaluate']
+  - ['apply', 'apply']
   - ['find-threshold', 'find-threshold']
   - ['assemble', 'assemble']
   - ['package', 'package']
@@ -474,7 +475,7 @@ report span characteristics such as the average span length and the span (or
 span boundary) distinctiveness. The distinctiveness measure shows how different
 the tokens are with respect to the rest of the corpus using the KL-divergence of
 the token distributions. To learn more, you can check out Papay et al.'s work on
-[*Dissecting Span Identification Tasks with Performance Prediction* (EMNLP 2020)](https://aclanthology.org/2020.emnlp-main.396/).
+[_Dissecting Span Identification Tasks with Performance Prediction_ (EMNLP 2020)](https://aclanthology.org/2020.emnlp-main.396/).
 
 </Infobox>
 
@@ -1162,6 +1163,37 @@ $ python -m spacy evaluate [model] [data_path] [--output] [--code] [--gold-prepr
 | `--help`, `-h`                            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                               | Training results and optional metrics and visualizations.                                                                                                                            |
 
+## apply {#apply new="3.5" tag="command"}
+
+Applies a trained pipeline to data and stores the resulting annotated documents
+in a `DocBin`. The input can be a single file or a directory. The recognized
+input formats are:
+
+1. `.spacy`
+2. `.jsonl` containing a user specified `text_key`
+3. Files with any other extension are assumed to be plain text files containing
+   a single document.
+
+When a directory is provided it is traversed recursively to collect all files.
+
+```cli
+$ python -m spacy apply [model] [data-path] [output-file] [--code] [--text-key] [--force-overwrite] [--gpu-id] [--batch-size] [--n-process]
+```
+
+| Name                                      | Description                                                                                                                                                                          |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`                                   | Pipeline to apply to the data. Can be a package or a path to a data directory. ~~str (positional)~~                                                                                  |
+| `data_path`                               | Location of data to be evaluated in spaCy's [binary format](/api/data-formats#training), jsonl, or plain text. ~~Path (positional)~~                                                 |
+| `output-file`, `-o`                       | Output `DocBin` path. ~~str (positional)~~                                                                                                                                           |
+| `--code`, `-c` <Tag variant="new">3</Tag> | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~ |
+| `--text-key`, `-tk`                       | The key for `.jsonl` files to use to grab the texts from. Defaults to `text`. ~~Optional[str] \(option)~~                                                                            |
+| `--force-overwrite`, `-F`                 | If the provided `output-file` already exists, then force `apply` to overwrite it. If this is `False` (default) then quits with a warning instead. ~~bool (flag)~~                    |
+| `--gpu-id`, `-g`                          | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                                       |
+| `--batch-size`, `-b`                      | Batch size to use for prediction. Defaults to `1`. ~~int (option)~~                                                                                                                  |
+| `--n-process`, `-n`                       | Number of processes to use for prediction. Defaults to `1`. ~~int (option)~~                                                                                                         |
+| `--help`, `-h`                            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
+| **CREATES**                               | A `DocBin` with the annotations from the `model` for all the files found in `data-path`.                                                                                             |
+
 ## find-threshold {#find-threshold new="3.5" tag="command"}
 
 Runs prediction trials for a trained model with varying tresholds to maximize
@@ -1186,7 +1218,6 @@ be provided.
 > # For spancat:
 > $ python -m spacy find-threshold my_nlp data.spacy spancat threshold spans_sc_f
 > ```
-
 
 | Name                    | Description                                                                                                                                                                          |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

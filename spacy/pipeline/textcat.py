@@ -74,7 +74,7 @@ subword_features = true
     default_config={
         "threshold": 0.0,
         "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
-        "scorer": {"@scorers": "spacy.textcat_scorer.v1"},
+        "scorer": {"@scorers": "spacy.textcat_scorer.v2"},
     },
     default_score_weights={
         "cats_score": 1.0,

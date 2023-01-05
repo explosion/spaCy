@@ -170,7 +170,7 @@ def prioritize_existing_ents_filter(
 
 
 @registry.misc("spacy.prioritize_existing_ents_filter.v1")
-def make_preverse_existing_ents_filter():
+def make_preserve_existing_ents_filter():
     return prioritize_existing_ents_filter
 
 
