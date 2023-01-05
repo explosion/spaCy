@@ -1216,7 +1216,6 @@ class Language:
                 self._optimizer = self.create_optimizer()
             sgd = self._optimizer
         pipes = list(self.pipeline)
-        random.shuffle(pipes)
         if component_cfg is None:
             component_cfg = {}
         grads = {}
@@ -1340,6 +1339,13 @@ class Language:
         for name, proc in self.pipeline:
             if hasattr(proc, "_rehearsal_model"):
                 proc._rehearsal_model = deepcopy(proc.model)  # type: ignore[attr-defined]
+
+        # Relink the listeners of rehearsal models to their respective upstream tok2vec component
+        # Otherwise they won't be synced with the tok2vec and throw a mismatched ID error
+        for i, (name1, proc1) in enumerate(self.pipeline):
+            if isinstance(proc1, ty.ListenedToComponent):
+                for name2, proc2 in self.pipeline[i + 1 :]:
+                    proc1.find_listeners(proc2)
         if sgd is not None:
             self._optimizer = sgd
         elif self._optimizer is None:
