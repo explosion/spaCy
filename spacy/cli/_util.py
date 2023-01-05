@@ -586,7 +586,7 @@ def walk_directory(path: Path, suffix: Optional[str] = None) -> List[Path]:
     """Given a directory and a suffix, recursively find all files matching the suffix.
     Directories or files with names beginning with a . are ignored, but hidden flags on
     filesystems are not checked.
-    When provided with a suffix `None`, all files are returned without filtering."""
+    When provided with a suffix `None`, there is no suffix-based filtering."""
     if not path.is_dir():
         return [path]
     paths = [path]
