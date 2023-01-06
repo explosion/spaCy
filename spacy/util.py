@@ -1739,7 +1739,7 @@ def all_equal(iterable):
     return next(g, True) and not next(g, False)
 
 
-def _is_port_in_use(port: int, host="localhost") -> bool:
+def _is_port_in_use(port: int, host: str = "localhost") -> bool:
     """Check if 'host:port' is in use. Return True if it is, False otherwise.
 
     Keyword arguments:
@@ -1756,7 +1756,7 @@ def _is_port_in_use(port: int, host="localhost") -> bool:
         s.close()
 
 
-def find_available_port(start: int, host: str, auto_select=False) -> int:
+def find_available_port(start: int, host: str, auto_select: bool = False) -> int:
     """Given a starting port and a host, handle finding a port.
 
     If `auto_select` is False, a busy port will raise an error.
