@@ -20,31 +20,15 @@ from ..tokens.token cimport Token
 from ..tokens.morphanalysis cimport MorphAnalysis
 from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH, ENT_IOB
 
+from .levenshtein import levenshtein_compare
 from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
 from ..strings import get_string_id
 from ..attrs import IDS
 from ..util import registry
 
-from .levenshtein import levenshtein
-
 
 DEF PADDING = 5
-
-
-cpdef bint fuzzy_compare(input_text: str, pattern_text: str, fuzzy: int = -1):
-    if fuzzy >= 0:
-        max_edits = fuzzy
-    else:
-        # allow at least two edits (to allow at least one transposition) and up
-        # to 20% of the pattern string length
-        max_edits = max(2, round(0.3 * len(pattern_text)))
-    return levenshtein(input_text, pattern_text, max_edits) <= max_edits
-
-
-@registry.misc("spacy.fuzzy_compare.v1")
-def make_fuzzy_compare():
-    return fuzzy_compare
 
 
 cdef class Matcher:
@@ -54,7 +38,7 @@ cdef class Matcher:
     USAGE: https://spacy.io/usage/rule-based-matching
     """
 
-    def __init__(self, vocab, validate=True, *, fuzzy_compare=fuzzy_compare):
+    def __init__(self, vocab, validate=True, *, fuzzy_compare=levenshtein_compare):
         """Create the Matcher.
 
         vocab (Vocab): The vocabulary object, which must be shared with the

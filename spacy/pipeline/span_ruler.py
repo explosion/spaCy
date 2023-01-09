@@ -13,7 +13,7 @@ from ..util import ensure_path, SimpleFrozenList, registry
 from ..tokens import Doc, Span
 from ..scorer import Scorer
 from ..matcher import Matcher, PhraseMatcher
-from ..matcher.matcher import fuzzy_compare
+from ..matcher.levenshtein import levenshtein_compare
 from .. import util
 
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
@@ -29,7 +29,7 @@ DEFAULT_SPANS_KEY = "ruler"
         "overwrite_ents": False,
         "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
         "ent_id_sep": "__unused__",
-        "matcher_fuzzy_compare": {"@misc": "spacy.fuzzy_compare.v1"},
+        "matcher_fuzzy_compare": {"@misc": "spacy.levenshtein_compare.v1"},
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -76,7 +76,7 @@ def make_entity_ruler(
         "annotate_ents": False,
         "ents_filter": {"@misc": "spacy.first_longest_spans_filter.v1"},
         "phrase_matcher_attr": None,
-        "matcher_fuzzy_compare": {"@misc": "spacy.fuzzy_compare.v1"},
+        "matcher_fuzzy_compare": {"@misc": "spacy.levenshtein_compare.v1"},
         "validate": False,
         "overwrite": True,
         "scorer": {
@@ -223,7 +223,7 @@ class SpanRuler(Pipe):
             [Iterable[Span], Iterable[Span]], Iterable[Span]
         ] = util.filter_chain_spans,
         phrase_matcher_attr: Optional[Union[int, str]] = None,
-        matcher_fuzzy_compare: Callable = fuzzy_compare,
+        matcher_fuzzy_compare: Callable = levenshtein_compare,
         validate: bool = False,
         overwrite: bool = False,
         scorer: Optional[Callable] = partial(

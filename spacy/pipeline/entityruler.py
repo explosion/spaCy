@@ -11,7 +11,7 @@ from ..errors import Errors, Warnings
 from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList, registry
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
-from ..matcher.matcher import fuzzy_compare
+from ..matcher.levenshtein import levenshtein_compare
 from ..scorer import get_ner_prf
 
 
@@ -24,7 +24,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
     assigns=["doc.ents", "token.ent_type", "token.ent_iob"],
     default_config={
         "phrase_matcher_attr": None,
-        "matcher_fuzzy_compare": {"@misc": "spacy.fuzzy_compare.v1"},
+        "matcher_fuzzy_compare": {"@misc": "spacy.levenshtein_compare.v1"},
         "validate": False,
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
@@ -85,7 +85,7 @@ class EntityRuler(Pipe):
         name: str = "entity_ruler",
         *,
         phrase_matcher_attr: Optional[Union[int, str]] = None,
-        matcher_fuzzy_compare: Callable = fuzzy_compare,
+        matcher_fuzzy_compare: Callable = levenshtein_compare,
         validate: bool = False,
         overwrite_ents: bool = False,
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
@@ -137,7 +137,6 @@ class EntityRuler(Pipe):
         if patterns is not None:
             self.add_patterns(patterns)
         self.scorer = scorer
-        self.fuzzy_compare = fuzzy_compare
 
     def __len__(self) -> int:
         """The number of all patterns added to the entity ruler."""
