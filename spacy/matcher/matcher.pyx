@@ -1089,7 +1089,7 @@ def _get_extra_predicates_dict(attr, value_dict, vocab, predicate_types,
                 continue
         predicate = cls(len(extra_predicates), attr, value, type_, vocab=vocab,
                         regex=regex, fuzzy=fuzzy, fuzzy_compare=fuzzy_compare)
-        # Don't create a redundant predicates.
+        # Don't create redundant predicates.
         # This helps with efficiency, as we're caching the results.
         if predicate.key in seen_predicates:
             output.append(seen_predicates[predicate.key])
