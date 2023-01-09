@@ -100,7 +100,7 @@ def train(
         stdout.write(
             msg.info(f"Set annotations on update for: {annotating_components}") + "\n"
         )
-    stdout.write(msg.info(f"Initial learn rate: {optimizer.learn_rate}") + "\n")
+    stdout.write(msg.info(f"Initial learn rate: {optimizer.learn_rate(step=0)}") + "\n")
     with nlp.select_pipes(disable=frozen_components):
         log_step, finalize_logger = train_logger(nlp, stdout, stderr)
     try:
