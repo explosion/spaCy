@@ -12,6 +12,7 @@ menu:
   - ['train', 'train']
   - ['pretrain', 'pretrain']
   - ['evaluate', 'evaluate']
+  - ['benchmark', 'benchmark']
   - ['find-threshold', 'find-threshold']
   - ['assemble', 'assemble']
   - ['package', 'package']
@@ -1161,6 +1162,38 @@ $ python -m spacy evaluate [model] [data_path] [--output] [--code] [--gold-prepr
 | `--displacy-limit`, `-dl`                 | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. ~~int (option)~~            |
 | `--help`, `-h`                            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                               | Training results and optional metrics and visualizations.                                                                                                                            |
+
+## benchmark {#benchmark new="3.5"}
+
+The `spacy benchmark` CLI includes commands for benchmarking the accuracy and
+speed of your spaCy pipelines.
+
+### accuracy {#benchmark-accuracy new="3.5" tag="command"}
+
+This subcommand is an alias for [`spacy evaluate`](#evaluate).
+
+### speed {#benchmark-speed new="3.5" tag="command"}
+
+Benchmark the speed of a trained pipeline with a 95% confidence interval.
+Expects a loadable spaCy pipeline (package name or path) and benchmark data in
+the [binary `.spacy` format](/api/data-formats#binary-training). The pipeline is
+warmed up before any measurements are taken.
+
+```cli
+$ python -m spacy benchmark speed [model] [data_path] [--batch_size] [--no-shuffle] [--gpu-id] [--batches] [--warmup]
+```
+
+| Name                 | Description                                                                                              |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| `model`              | Pipeline to benchmark the speed of. Can be a package or a path to a data directory. ~~str (positional)~~ |
+| `data_path`          | Location of benchmark data in spaCy's [binary format](/api/data-formats#training). ~~Path (positional)~~ |
+| `--batch-size`, `-b` | Set the batch size. If not set, the pipeline's batch size is used. ~~Optional[int] \(option)~~           |
+| `--no-shuffle`       | Do not shuffle documents in the benchmark data. ~~bool (flag)~~                                          |
+| `--gpu-id`, `-g`     | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                           |
+| `--batches`          | Number of batches to benchmark on. Defaults to `50`. ~~Optional[int] \(option)~~                         |
+| `--warmup`, `-w`     | Iterations over the benchmark data for warmup. Defaults to `3` ~~Optional[int] \(option)~~               |
+| `--help`, `-h`       | Show help message and available arguments. ~~bool (flag)~~                                               |
+| **CREATES**          | Pipeline speed with 95% confidence interval.                                                             |
 
 ## find-threshold {#find-threshold new="3.5" tag="command"}
 
