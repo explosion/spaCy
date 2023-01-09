@@ -1763,11 +1763,9 @@ def find_available_port(start: int, host: str, auto_select: bool = False) -> int
 
     If `auto_select` is True, the next free higher port will be used.
 
-    Keyword arguments:
-    start -- the port to start looking from
-    host -- the host to find a port on
-    auto_select -- whether to automatically select a new port if the given port is busy (default False)
-
+    start (int): the port to start looking from
+    host (str): the host to find a port on
+    auto_select (bool): whether to automatically select a new port if the given port is busy (default False)
     RETURNS (int): The port to use.
     """
     if not _is_port_in_use(start, host):
