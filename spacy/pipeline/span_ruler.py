@@ -255,7 +255,8 @@ class SpanRuler(Pipe):
             match on, passed to the internal PhraseMatcher as `attr`. Defaults
             to `None`.
         matcher_fuzzy_compare (Callable): The fuzzy comparison method for the
-            internal Matcher. Defaults to spacy.matcher.matcher.fuzzy_compare.
+            internal Matcher. Defaults to
+            spacy.matcher.levenshtein.levenshtein_compare.
         validate (bool): Whether patterns should be validated, passed to
             Matcher and PhraseMatcher as `validate`.
         overwrite (bool): Whether to remove any existing spans under this spans

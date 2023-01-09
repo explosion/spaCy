@@ -106,7 +106,8 @@ class EntityRuler(Pipe):
         phrase_matcher_attr (int / str): Token attribute to match on, passed
             to the internal PhraseMatcher as `attr`.
         matcher_fuzzy_compare (Callable): The fuzzy comparison method for the
-            internal Matcher. Defaults to spacy.matcher.matcher.fuzzy_compare.
+            internal Matcher. Defaults to
+            spacy.matcher.levenshtein.levenshtein_compare.
         validate (bool): Whether patterns should be validated, passed to
             Matcher and PhraseMatcher as `validate`
         patterns (iterable): Optional patterns to load in.
