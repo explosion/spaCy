@@ -848,7 +848,8 @@ def _get_attr_values(spec, string_store):
 # extensions to the matcher introduced in #3173.
 
 class _FuzzyPredicate:
-    operators = ("FUZZY", "FUZZY1", "FUZZY2", "FUZZY3", "FUZZY4", "FUZZY5")
+    operators = ("FUZZY", "FUZZY1", "FUZZY2", "FUZZY3", "FUZZY4", "FUZZY5",
+                 "FUZZY6", "FUZZY7", "FUZZY8", "FUZZY9")
 
     def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None,
                  regex=False, fuzzy=None, fuzzy_compare=None):

@@ -198,15 +198,20 @@ def test_matcher_match_fuzzy_set_multiple(en_vocab):
     ]
 
 
-@pytest.mark.parametrize("fuzzyn", range(1, 6))
-def test_matcher_match_fuzzyn(en_vocab, fuzzyn):
+@pytest.mark.parametrize("fuzzyn", range(1, 10))
+def test_matcher_match_fuzzyn_all_insertions(en_vocab, fuzzyn):
     matcher = Matcher(en_vocab)
     matcher.add("GoogleNow", [[{"ORTH": {f"FUZZY{fuzzyn}": "GoogleNow"}}]])
     # words with increasing edit distance
-    words = ["GoogleNow" + "a" * i for i in range(0, 6)]
+    words = ["GoogleNow" + "a" * i for i in range(0, 10)]
     doc = Doc(en_vocab, words)
     assert len(matcher(doc)) == fuzzyn + 1
 
+
+@pytest.mark.parametrize("fuzzyn", range(1, 6))
+def test_matcher_match_fuzzyn_various_edits(en_vocab, fuzzyn):
+    matcher = Matcher(en_vocab)
+    matcher.add("GoogleNow", [[{"ORTH": {f"FUZZY{fuzzyn}": "GoogleNow"}}]])
     # words with increasing edit distance of different edit types
     words = [
         "GoogleNow",
