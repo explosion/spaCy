@@ -158,6 +158,16 @@ cdef class SpanGroup:
             return self._concat(other)
         return NotImplemented
 
+    def __iter__(self):
+        """
+        Iterate over the spans in this SpanGroup.
+        YIELDS (Span): A span in this SpanGroup.
+
+        DOCS: https://spacy.io/api/spangroup#iter
+        """
+        for i in range(self.c.size()):
+            yield self[i]
+
     def append(self, Span span):
         """Add a span to the group. The span must refer to the same Doc
         object as the span group.

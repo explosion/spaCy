@@ -266,7 +266,7 @@ Render a dependency parse tree or named entity visualization.
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs`      | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict]~~                                                                                      |
 | `style`     | Visualization style, `"dep"`, `"ent"` or `"span"` <Tag variant="new">3.3</Tag>. Defaults to `"dep"`. ~~str~~                                                                           |
-| `page`      | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                                          |
+| `page`      | Render markup as full HTML page. Defaults to `False`. ~~bool~~                                                                                                                         |
 | `minify`    | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                                      |
 | `options`   | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                                      |
 | `manual`    | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~                      |
@@ -513,7 +513,7 @@ a [Weights & Biases](https://www.wandb.com/) dashboard.
 Instead of using one of the built-in loggers, you can
 [implement your own](/usage/training#custom-logging).
 
-#### spacy.ConsoleLogger.v2 {#ConsoleLogger tag="registered function"}
+#### spacy.ConsoleLogger.v2 {tag="registered function"}
 
 > #### Example config
 >
@@ -564,11 +564,33 @@ start decreasing across epochs.
 
  </Accordion>
 
-| Name             | Description                                                           |
-| ---------------- | --------------------------------------------------------------------- |
-| `progress_bar`   | Whether the logger should print the progress bar ~~bool~~             |
-| `console_output` | Whether the logger should print the logs on the console. ~~bool~~     |
-| `output_file`    | The file to save the training logs to. ~~Optional[Union[str, Path]]~~ |
+| Name             | Description                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `progress_bar`   | Whether the logger should print a progress bar tracking the steps till the next evaluation pass (default: `False`). ~~bool~~ |
+| `console_output` | Whether the logger should print the logs in the console (default: `True`). ~~bool~~                                          |
+| `output_file`    | The file to save the training logs to (default: `None`). ~~Optional[Union[str, Path]]~~                                      |
+
+#### spacy.ConsoleLogger.v3 {#ConsoleLogger tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.ConsoleLogger.v3"
+> progress_bar = "all_steps"
+> console_output = true
+> output_file = "training_log.jsonl"
+> ```
+
+Writes the results of a training step to the console in a tabular format and
+optionally saves them to a `jsonl` file.
+
+| Name             | Description                                                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `progress_bar`   | Type of progress bar to show in the console: `"train"`, `"eval"` or `None`.                                                                               |
+|                  | The bar tracks the number of steps until `training.max_steps` and `training.eval_frequency` are reached respectively (default: `None`). ~~Optional[str]~~ |
+| `console_output` | Whether the logger should print the logs in the console (default: `True`). ~~bool~~                                                                       |
+| `output_file`    | The file to save the training logs to (default: `None`). ~~Optional[Union[str, Path]]~~                                                                   |
 
 ## Readers {#readers}
 
@@ -1003,6 +1025,54 @@ This method was previously available as `spacy.gold.spans_from_biluo_tags`.
 | `doc`       | The document that the BILUO tags refer to. ~~Doc~~                                                                                                                                                                                                           |
 | `tags`      | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
 | **RETURNS** | A sequence of `Span` objects with added entity labels. ~~List[Span]~~                                                                                                                                                                                        |
+
+### training.biluo_to_iob {#biluo_to_iob tag="function"}
+
+Convert a sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags to
+[IOB](/usage/linguistic-features#accessing-ner) tags. This is useful if you want
+use the BILUO tags with a model that only supports IOB tags.
+
+> #### Example
+>
+> ```python
+> from spacy.training import biluo_to_iob
+>
+> tags = ["O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
+> iob_tags = biluo_to_iob(tags)
+> assert iob_tags == ["O", "O", "B-LOC", "I-LOC", "I-LOC", "O"]
+> ```
+
+| Name        | Description                                                                             |
+| ----------- | --------------------------------------------------------------------------------------- |
+| `tags`      | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags. ~~Iterable[str]~~ |
+| **RETURNS** | A list of [IOB](/usage/linguistic-features#accessing-ner) tags. ~~List[str]~~           |
+
+### training.iob_to_biluo {#iob_to_biluo tag="function"}
+
+Convert a sequence of [IOB](/usage/linguistic-features#accessing-ner) tags to
+[BILUO](/usage/linguistic-features#accessing-ner) tags. This is useful if you
+want use the IOB tags with a model that only supports BILUO tags.
+
+<Infobox title="Changed in v3.0" variant="warning" id="iob_to_biluo">
+
+This method was previously available as `spacy.gold.iob_to_biluo`.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> from spacy.training import iob_to_biluo
+>
+> tags = ["O", "O", "B-LOC", "I-LOC", "O"]
+> biluo_tags = iob_to_biluo(tags)
+> assert biluo_tags == ["O", "O", "B-LOC", "L-LOC", "O"]
+> ```
+
+| Name        | Description                                                                           |
+| ----------- | ------------------------------------------------------------------------------------- |
+| `tags`      | A sequence of [IOB](/usage/linguistic-features#accessing-ner) tags. ~~Iterable[str]~~ |
+| **RETURNS** | A list of [BILUO](/usage/linguistic-features#accessing-ner) tags. ~~List[str]~~       |
 
 ## Utility functions {#util source="spacy/util.py"}
 

@@ -107,7 +107,7 @@ steps:
     displayName: "Run CPU tests"
 
   - script: |
-      python -m pip install --pre thinc-apple-ops
+      python -m pip install 'spacy[apple]'
       python -m pytest --pyargs spacy
     displayName: "Run CPU tests with thinc-apple-ops"
     condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.11'))
