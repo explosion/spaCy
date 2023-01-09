@@ -1742,9 +1742,9 @@ def all_equal(iterable):
 def _is_port_in_use(port: int, host: str = "localhost") -> bool:
     """Check if 'host:port' is in use. Return True if it is, False otherwise.
 
-    Keyword arguments:
-    port -- the port to check
-    host -- the host to check (default "localhost")
+    port (int): the port to check
+    host (str): the host to check (default "localhost")
+    RETURNS (bool): Whether 'host:port' is in use.
     """
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
