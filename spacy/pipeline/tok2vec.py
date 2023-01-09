@@ -230,7 +230,10 @@ class Tok2Vec(TrainablePipe):
         target, _ = self._rehearsal_model.begin_update(docs)
         # TODO tokvecs vs target
         # How should the output from the rehearsal model influence the results of the tok2vec model?
+        # Current implementation is to subtract the target embeddings from the generated embeddings
         d_tokvecs = [self.model.ops.alloc2f(*t2v.shape) for t2v in tokvecs]
+        for i in range(len(tokvecs)):
+            d_tokvecs[i] += tokvecs[i] - target[i]
         losses.setdefault(self.name, 0.0)
 
         def accumulate_gradient(one_d_tokvecs):
