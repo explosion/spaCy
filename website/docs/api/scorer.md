@@ -76,7 +76,7 @@ core pipeline components, the individual score names start with the `Token` or
 
 Scores the tokenization:
 
-- `token_acc`: number of correct tokens / number of gold tokens
+- `token_acc`: number of correct tokens / number of predicted tokens
 - `token_p`, `token_r`, `token_f`: precision, recall and F-score for token
   character spans
 
