@@ -86,14 +86,20 @@ it compares to another value.
 > ]
 > ```
 
-| Attribute                  | Description                                                                                              |
-| -------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `IN`                       | Attribute value is member of a list. ~~Any~~                                                             |
-| `NOT_IN`                   | Attribute value is _not_ member of a list. ~~Any~~                                                       |
-| `IS_SUBSET`                | Attribute value (for `MORPH` or custom list attributes) is a subset of a list. ~~Any~~                   |
-| `IS_SUPERSET`              | Attribute value (for `MORPH` or custom list attributes) is a superset of a list. ~~Any~~                 |
-| `INTERSECTS`               | Attribute value (for `MORPH` or custom list attribute) has a non-empty intersection with a list. ~~Any~~ |
-| `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~  |
+| Attribute                        | Description                                                                                                                                                                                                       |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `REGEX`                          | Attribute value matches the regular expression at any position in the string. ~~Any~~                                                                                                                             |
+| `FUZZY`                          | Attribute value matches if the `fuzzy_compare` method matches for `(value, pattern, -1)`. The default method allows a Levenshtein edit distance of at least 2 and up to 30% of the pattern string length. ~~Any~~ |
+| `FUZZY1`, `FUZZY2`, ... `FUZZY9` | Attribute value matches if the `fuzzy_compare` method matches for `(value, pattern, N)`. The default method allows a Levenshtein edit distance of at most N (1-9). ~~Any~~                                        |
+| `IN`                             | Attribute value is member of a list. ~~Any~~                                                                                                                                                                      |
+| `NOT_IN`                         | Attribute value is _not_ member of a list. ~~Any~~                                                                                                                                                                |
+| `IS_SUBSET`                      | Attribute value (for `MORPH` or custom list attributes) is a subset of a list. ~~Any~~                                                                                                                            |
+| `IS_SUPERSET`                    | Attribute value (for `MORPH` or custom list attributes) is a superset of a list. ~~Any~~                                                                                                                          |
+| `INTERSECTS`                     | Attribute value (for `MORPH` or custom list attribute) has a non-empty intersection with a list. ~~Any~~                                                                                                          |
+| `==`, `>=`, `<=`, `>`, `<`       | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~                                                                                                           |
+
+As of spaCy v3.5, `REGEX` and `FUZZY` can be used in combination with `IN` and
+`NOT_IN`.
 
 ## Matcher.\_\_init\_\_ {#init tag="method"}
 
@@ -109,10 +115,11 @@ string where an integer is expected) or unexpected property names.
 > matcher = Matcher(nlp.vocab)
 > ```
 
-| Name       | Description                                                                                           |
-| ---------- | ----------------------------------------------------------------------------------------------------- |
-| `vocab`    | The vocabulary object, which must be shared with the documents the matcher will operate on. ~~Vocab~~ |
-| `validate` | Validate all patterns added to this matcher. ~~bool~~                                                 |
+| Name            | Description                                                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------- |
+| `vocab`         | The vocabulary object, which must be shared with the documents the matcher will operate on. ~~Vocab~~ |
+| `validate`      | Validate all patterns added to this matcher. ~~bool~~                                                 |
+| `fuzzy_compare` | The comparison method used for the `FUZZY` operators. ~~Callable[[str, str, int], bool]~~             |
 
 ## Matcher.\_\_call\_\_ {#call tag="method"}
 
