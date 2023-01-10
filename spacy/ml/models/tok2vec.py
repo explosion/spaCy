@@ -193,23 +193,14 @@ def _verify_rich_config_group(
     label: str,
     lengths: Optional[List[int]],
     rows: Optional[List[int]],
-    search_chars: Optional[str],
-    is_search_char_group: bool,
 ) -> None:
     if lengths is not None or rows is not None:
-        if is_search_char_group and (search_chars is None or len(search_chars) == 0):
-            raise ValueError(Errors.E1048.format(label=label))
-        if search_chars is not None and len(search_chars) > 63:
-            raise ValueError(Errors.E1049.format(label=label))
         if lengths is None or rows is None:
             raise ValueError(Errors.E1048.format(label=label))
         if len(lengths) != len(rows):
             raise ValueError(Errors.E1048.format(label=label))
         if any([length < 1 for length in lengths]):
             raise ValueError(Errors.E1048.format(label=label))
-    elif search_chars is not None:
-        raise ValueError(Errors.E1048.format(label=label))
-    if lengths is not None:
         if lengths[-1] > 63:
             raise ValueError(Errors.E1049.format(label=label))
         if len(lengths) != len(set(lengths)) or lengths != sorted(lengths):
@@ -227,12 +218,6 @@ def RichMultiHashEmbed(
     pref_rows: Optional[List[int]] = None,
     suff_lengths: Optional[List[int]] = None,
     suff_rows: Optional[List[int]] = None,
-    pref_search_chars: Optional[str] = None,
-    pref_search_lengths: Optional[List[int]] = None,
-    pref_search_rows: Optional[List[int]] = None,
-    suff_search_chars: Optional[str] = None,
-    suff_search_lengths: Optional[List[int]] = None,
-    suff_search_rows: Optional[List[int]] = None,
 ) -> Model[List[Doc], List[Floats2d]]:
     """
     Construct an embedding layer with the features of `MultiHashEmbed` (see above)
@@ -240,37 +225,12 @@ def RichMultiHashEmbed(
     The fixed-length `PREFIX` and `SUFFIX` features used in `MultiHashEmbed`
     are sometimes not rich enough when working with languages with complex morphology,
     and this layer allows the specification of multiple prefixes and suffixes
-    of any lengths.
-
-    Additionally, it is possible to use as features the results of character
-    searches of specified lengths. A list of search characters is specified; the
-    characters in each word are examined in order starting at the beginning or at
-    the end; and each character that matches one of the search characters is added,
-    in order, to the string to be used as a feature. The search continues until
-    either the search result string is full or the whole word has been examined.
-    This is useful because some languages exhibit morphological alternations where
-    one letter or letters regularly alternate with another letter or letters
-    depending on the presence of some other letter before or after it, e.g. German
-    plural nouns where the final two vowels are `ä-e` regularly correspond to
-    singular lemmas where the `e` is no longer present and the `ä` has become `a`,
-    e.g. `die Bäche` (plural) vs. `der Bach` (singular).
-
-    For most languages used with spaCy, searching is likely to be useful starting
-    at the end (`suff_*`), but the ability to search from the beginning (`pref_*`)
-    is also offered for completeness. Search characters should consist of all
-    characters that regularly alternate with other characters in the language in
-    question or whose presence before or after characters that would otherwise
-    alternate prevents the alternation from occurring, e.g. an `ä` in a German
-    plural noun does not become `a` if it is the third or fourth vowel from the
-    end of the word.
+    of any lengths. Arrays specifying lengths must be in ascending order.
 
     There are a few rare situations where a graphical character is expressed as
     more than one UTF-8 character, e.g. *i* when representing the lower-case form
     of the Turkish letter *İ*. Such situations are supported, but the lengths of
-    prefixes, suffixes and character search results may need to be increased
-    accordingly.
-
-    All arrays specifying lengths must be in ascending order.
+    prefixes and suffixes may need to be increased accordingly.
 
     width (int): The output width. Also used as the width of the embedding tables.
         Recommended values are between 64 and 300.
@@ -290,39 +250,13 @@ def RichMultiHashEmbed(
         for each word, e.g. for the word `spaCy`:
         `[1, 3]` would lead to `y` and `yCa` being used as features.
     suff_rows (Optional[List[int]]): The number of rows for each of `suff_lengths`.
-    pref_search_chars (Optional[str]): A string containing characters to search for
-        starting from the beginning of each word.
-    pref_search_lengths (Optional[List[int]]): The lengths of search result strings
-        to use as features, where the searches start from the beginning of each word.
-    pref_search_rows (Optional[List[int]]): The number of rows for each of
-        `pref_search_lengths`.
-    suff_search_chars (Optional[str]): A string containing characters to search for
-        starting from the end of each word.
-    suff_search_lengths (Optional[List[int]]): The lengths of search result strings
-        to use as features, where the searches start from the end of each word.
-    suff_search_rows (Optional[List[int]]): The number of rows for each of
-        `suff_search_lengths`.
     """
 
     if len(rows) != len(attrs):
         raise ValueError(f"Mismatched lengths: {len(rows)} vs {len(attrs)}")
 
-    _verify_rich_config_group("prefix", pref_lengths, pref_rows, None, False)
-    _verify_rich_config_group("suffix", suff_lengths, suff_rows, None, False)
-    _verify_rich_config_group(
-        "prefix search",
-        pref_search_lengths,
-        pref_search_rows,
-        pref_search_chars,
-        True,
-    )
-    _verify_rich_config_group(
-        "suffix search",
-        suff_search_lengths,
-        suff_search_rows,
-        suff_search_chars,
-        True,
-    )
+    _verify_rich_config_group("prefix", pref_lengths, pref_rows)
+    _verify_rich_config_group("suffix", suff_lengths, suff_rows)
 
     if "PREFIX" in attrs or "SUFFIX" in attrs:
         warnings.warn(Warnings.W124)
@@ -331,10 +265,6 @@ def RichMultiHashEmbed(
         rows.extend(pref_rows)
     if suff_rows is not None:
         rows.extend(suff_rows)
-    if pref_search_rows is not None:
-        rows.extend(pref_search_rows)
-    if suff_search_rows is not None:
-        rows.extend(suff_search_rows)
 
     embeddings: List[Model[Ints2d, Floats2d]] = [
         HashEmbed(width, row, column=i, seed=i + 7, dropout=0.0)
@@ -350,10 +280,6 @@ def RichMultiHashEmbed(
             case_sensitive=case_sensitive,
             pref_lengths=pref_lengths,
             suff_lengths=suff_lengths,
-            pref_search_chars=pref_search_chars,
-            pref_search_lengths=pref_search_lengths,
-            suff_search_chars=suff_search_chars,
-            suff_search_lengths=suff_search_lengths,
         ),
     )
 

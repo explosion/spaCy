@@ -180,12 +180,6 @@ class Doc:
         case_sensitive: bool,
         p_lengths: bytes,
         s_lengths: bytes,
-        ps_search_chars: bytes,
-        ps_width_offsets: bytes,
-        ps_lengths: bytes,
-        ss_search_chars: bytes,
-        ss_width_offsets: bytes,
-        ss_lengths: bytes,
     ) -> Ints2d: ...
     @staticmethod
     def _get_array_attrs() -> Tuple[Any]: ...

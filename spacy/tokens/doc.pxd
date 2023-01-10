@@ -50,18 +50,6 @@ cdef void _set_suffix_lengths(
 ) nogil
 
 
-cdef void _search_for_chars(
-    const unsigned char* tok_str,
-    const int tok_str_l,
-    const unsigned char* search_chars,
-    const unsigned char* width_offsets,
-    const int max_res_l,
-    const bint suffs_not_prefs,
-    unsigned char* res_buf,
-    unsigned char* l_buf,
-) nogil
-
-
 cdef int _write_hashes(
     const unsigned char* res_buf,
     const unsigned char* aff_l_buf,

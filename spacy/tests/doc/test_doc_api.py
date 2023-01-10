@@ -15,7 +15,6 @@ from spacy.lang.xx import MultiLanguage
 from spacy.language import Language
 from spacy.lexeme import Lexeme
 from spacy.tokens import Doc, Span, SpanGroup, Token
-from spacy.util import get_search_char_byte_arrays
 from spacy.vocab import Vocab
 
 from .test_underscore import clean_underscore  # noqa: F401
@@ -1450,12 +1449,6 @@ def _encode_and_hash(input: str, *, reverse: bool = False) -> int:
 def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive):
     doc = en_tokenizer("spaCy✨ and Prodigy")
 
-    ps_search_chars, ps_width_offsets = get_search_char_byte_arrays(
-        "Rp", case_sensitive
-    )
-    ss_search_chars, ss_width_offsets = get_search_char_byte_arrays(
-        "xx✨rp", case_sensitive
-    )
     hashes = doc.get_character_combination_hashes(
         case_sensitive=case_sensitive,
         p_lengths=bytes(
@@ -1473,17 +1466,6 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
                 5,
             )
         ),
-        ps_search_chars=ps_search_chars,
-        ps_width_offsets=ps_width_offsets,
-        ps_lengths=bytes((2,)),
-        ss_search_chars=ss_search_chars,
-        ss_width_offsets=ss_width_offsets,
-        ss_lengths=bytes(
-            (
-                1,
-                2,
-            )
-        ),
     )
     assert hashes[0][0] == _encode_and_hash("s")
     assert hashes[0][1] == _encode_and_hash("spa")
@@ -1492,9 +1474,6 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
     assert hashes[0][4] == _encode_and_hash("yCa" if case_sensitive else "yca")
     assert hashes[0][5] == _encode_and_hash("yCap" if case_sensitive else "ycap")
     assert hashes[0][6] == _encode_and_hash("yCaps" if case_sensitive else "ycaps")
-    assert hashes[0][7] == _encode_and_hash("p")
-    assert hashes[0][8] == _encode_and_hash("p")
-    assert hashes[0][9] == _encode_and_hash("p")
     assert hashes[1][0] == _encode_and_hash("✨")
     assert hashes[1][1] == _encode_and_hash("✨")
     assert hashes[1][2] == _encode_and_hash("✨")
@@ -1502,9 +1481,6 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
     assert hashes[1][4] == _encode_and_hash("✨", reverse=True)
     assert hashes[1][5] == _encode_and_hash("✨", reverse=True)
     assert hashes[1][6] == _encode_and_hash("✨", reverse=True)
-    assert hashes[1][7] == EMPTY_HASH_VALUE
-    assert hashes[1][8] == _encode_and_hash("✨")
-    assert hashes[1][9] == _encode_and_hash("✨")
     assert hashes[2][0] == _encode_and_hash("a")
     assert hashes[2][1] == _encode_and_hash("and")
     assert hashes[2][2] == _encode_and_hash("and")
@@ -1512,9 +1488,6 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
     assert hashes[2][4] == _encode_and_hash("dna")
     assert hashes[2][5] == _encode_and_hash("dna")
     assert hashes[2][6] == _encode_and_hash("dna")
-    assert hashes[2][7] == EMPTY_HASH_VALUE
-    assert hashes[2][8] == EMPTY_HASH_VALUE
-    assert hashes[2][9] == EMPTY_HASH_VALUE
     assert hashes[3][0] == _encode_and_hash("P" if case_sensitive else "p")
     assert hashes[3][1] == _encode_and_hash("Pro" if case_sensitive else "pro")
     assert hashes[3][2] == _encode_and_hash("Prod" if case_sensitive else "prod")
@@ -1522,21 +1495,10 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
     assert hashes[3][4] == _encode_and_hash("ygi")
     assert hashes[3][5] == _encode_and_hash("ygid")
     assert hashes[3][6] == _encode_and_hash("ygido")
-    assert (
-        hashes[3][7] == EMPTY_HASH_VALUE if case_sensitive else _encode_and_hash("pr")
-    )
-
-    assert hashes[3][8] == _encode_and_hash("r")
-
-    if case_sensitive:
-        assert hashes[3][9] == _encode_and_hash("r")
-    else:
-        assert hashes[3][9] == _encode_and_hash("rp")
 
 
 def test_get_character_combination_hashes_good_case_partial(en_tokenizer):
     doc = en_tokenizer("spaCy✨ and Prodigy")
-    ps_search_chars, ps_width_offsets = get_search_char_byte_arrays("rp", False)
     hashes = doc.get_character_combination_hashes(
         case_sensitive=False,
         p_lengths=bytes(),
@@ -1548,34 +1510,24 @@ def test_get_character_combination_hashes_good_case_partial(en_tokenizer):
                 5,
             )
         ),
-        ps_search_chars=ps_search_chars,
-        ps_width_offsets=ps_width_offsets,
-        ps_lengths=bytes((2,)),
-        ss_search_chars=bytes(),
-        ss_width_offsets=bytes(),
-        ss_lengths=bytes(),
     )
 
     assert hashes[0][0] == _encode_and_hash("yc")
     assert hashes[0][1] == _encode_and_hash("yca")
     assert hashes[0][2] == _encode_and_hash("ycap")
     assert hashes[0][3] == _encode_and_hash("ycaps")
-    assert hashes[0][4] == _encode_and_hash("p")
     assert hashes[1][0] == _encode_and_hash("✨", reverse=True)
     assert hashes[1][1] == _encode_and_hash("✨", reverse=True)
     assert hashes[1][2] == _encode_and_hash("✨", reverse=True)
     assert hashes[1][3] == _encode_and_hash("✨", reverse=True)
-    assert hashes[1][4] == EMPTY_HASH_VALUE
     assert hashes[2][0] == _encode_and_hash("dn")
     assert hashes[2][1] == _encode_and_hash("dna")
     assert hashes[2][2] == _encode_and_hash("dna")
     assert hashes[2][3] == _encode_and_hash("dna")
-    assert hashes[2][4] == EMPTY_HASH_VALUE
     assert hashes[3][0] == _encode_and_hash("yg")
     assert hashes[3][1] == _encode_and_hash("ygi")
     assert hashes[3][2] == _encode_and_hash("ygid")
     assert hashes[3][3] == _encode_and_hash("ygido")
-    assert hashes[3][4] == _encode_and_hash("pr")
 
 
 def test_get_character_combination_hashes_various_lengths(en_tokenizer):
@@ -1588,12 +1540,6 @@ def test_get_character_combination_hashes_various_lengths(en_tokenizer):
                 case_sensitive=False,
                 p_lengths=bytes((p_length,)),
                 s_lengths=bytes((s_length,)),
-                ps_search_chars=bytes(),
-                ps_width_offsets=bytes(),
-                ps_lengths=bytes(),
-                ss_search_chars=bytes(),
-                ss_width_offsets=bytes(),
-                ss_lengths=bytes(),
             )
 
             assert hashes[0][0] == _encode_and_hash("sp𐌞cé"[:p_length])
@@ -1605,7 +1551,6 @@ def test_get_character_combination_hashes_turkish_i_with_dot(
     en_tokenizer, case_sensitive
 ):
     doc = en_tokenizer("İ".lower() + "İ")
-    search_chars, width_offsets = get_search_char_byte_arrays("İ", case_sensitive)
     hashes = doc.get_character_combination_hashes(
         case_sensitive=case_sensitive,
         p_lengths=bytes(
@@ -1617,26 +1562,6 @@ def test_get_character_combination_hashes_turkish_i_with_dot(
             )
         ),
         s_lengths=bytes(
-            (
-                1,
-                2,
-                3,
-                4,
-            )
-        ),
-        ps_search_chars=search_chars,
-        ps_width_offsets=width_offsets,
-        ps_lengths=bytes(
-            (
-                1,
-                2,
-                3,
-                4,
-            )
-        ),
-        ss_search_chars=search_chars,
-        ss_width_offsets=width_offsets,
-        ss_lengths=bytes(
             (
                 1,
                 2,
@@ -1656,10 +1581,6 @@ def test_get_character_combination_hashes_turkish_i_with_dot(
         assert hashes[0][5] == _encode_and_hash(COMBINING_DOT_ABOVE + "İ", reverse=True)
         assert hashes[0][6] == _encode_and_hash("İ".lower() + "İ", reverse=True)
         assert hashes[0][7] == _encode_and_hash("İ".lower() + "İ", reverse=True)
-        assert hashes[0][8] == _encode_and_hash("İ")
-        assert hashes[0][9] == _encode_and_hash("İ")
-        assert hashes[0][12] == _encode_and_hash("İ")
-        assert hashes[0][13] == _encode_and_hash("İ")
 
     else:
         assert hashes[0][2] == _encode_and_hash("İ".lower() + "i")
@@ -1670,16 +1591,6 @@ def test_get_character_combination_hashes_turkish_i_with_dot(
             COMBINING_DOT_ABOVE + "İ".lower(), reverse=True
         )
         assert hashes[0][7] == _encode_and_hash("İ".lower() * 2, reverse=True)
-        assert hashes[0][8] == _encode_and_hash("i")
-        assert hashes[0][9] == _encode_and_hash("İ".lower())
-        assert hashes[0][10] == _encode_and_hash("İ".lower() + "i")
-        assert hashes[0][11] == _encode_and_hash("İ".lower() * 2)
-        assert hashes[0][12] == _encode_and_hash(COMBINING_DOT_ABOVE)
-        assert hashes[0][13] == _encode_and_hash(COMBINING_DOT_ABOVE + "i")
-        assert hashes[0][14] == _encode_and_hash(
-            COMBINING_DOT_ABOVE + "i" + COMBINING_DOT_ABOVE
-        )
-        assert hashes[0][15] == _encode_and_hash((COMBINING_DOT_ABOVE + "i") * 2)
 
 
 @pytest.mark.parametrize("case_sensitive", [True, False])
@@ -1693,33 +1604,17 @@ def test_get_character_combination_hashes_string_store_spec_cases(
     assert len(long_word) > 255
     doc = en_tokenizer(" ".join((symbol, short_word, normal_word, long_word)))
     assert len(doc) == 4
-    ps_search_chars, ps_width_offsets = get_search_char_byte_arrays("E", case_sensitive)
     hashes = doc.get_character_combination_hashes(
         case_sensitive=case_sensitive,
         p_lengths=bytes((2,)),
         s_lengths=bytes((2,)),
-        ps_search_chars=ps_search_chars,
-        ps_width_offsets=ps_width_offsets,
-        ps_lengths=bytes((2,)),
-        ss_search_chars=bytes(),
-        ss_width_offsets=bytes(),
-        ss_lengths=bytes(),
     )
     assert hashes[0][0] == _encode_and_hash("FL" if case_sensitive else "fl")
     assert hashes[0][1] == _encode_and_hash("91")
-    assert hashes[0][2] == EMPTY_HASH_VALUE
     assert hashes[1][0] == _encode_and_hash("be")
     assert hashes[1][1] == _encode_and_hash("ee")
-    if case_sensitive:
-        assert hashes[1][2] == EMPTY_HASH_VALUE
-    else:
-        assert hashes[1][2] == _encode_and_hash("ee")
     assert hashes[2][0] == hashes[3][0] == _encode_and_hash("se")
     assert hashes[2][1] == hashes[3][1] == _encode_and_hash("yt")
-    if case_sensitive:
-        assert hashes[2][2] == hashes[3][2] == EMPTY_HASH_VALUE
-    else:
-        assert hashes[2][2] == hashes[3][2] == _encode_and_hash("ee")
 
 
 def test_character_combination_hashes_empty_lengths(en_tokenizer):
@@ -1728,10 +1623,4 @@ def test_character_combination_hashes_empty_lengths(en_tokenizer):
         case_sensitive=True,
         p_lengths=bytes(),
         s_lengths=bytes(),
-        ps_search_chars=bytes(),
-        ps_width_offsets=bytes(),
-        ps_lengths=bytes(),
-        ss_search_chars=bytes(),
-        ss_width_offsets=bytes(),
-        ss_lengths=bytes(),
     ).shape == (1, 0)
