@@ -1,4 +1,4 @@
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, uint32_t
 from libcpp.vector cimport vector
 from libcpp.set cimport set
 from cymem.cymem cimport Pool
@@ -7,13 +7,6 @@ from murmurhash.mrmr cimport hash64
 
 from .typedefs cimport attr_t, hash_t
 
-
-cpdef hash_t hash_string(str string) except 0
-cdef hash_t hash_utf8(char* utf8_string, int length) nogil
-
-cdef str decode_Utf8Str(const Utf8Str* string)
-
-
 ctypedef union Utf8Str:
     unsigned char[8] s
     unsigned char* p
@@ -21,9 +14,13 @@ ctypedef union Utf8Str:
 
 cdef class StringStore:
     cdef Pool mem
+    cdef vector[hash_t] _keys
+    cdef PreshMap _map
 
-    cdef vector[hash_t] keys
-    cdef public PreshMap _map
+    cdef hash_t _intern_str(self, str string)
+    cdef Utf8Str* _allocate_str_repr(self, const unsigned char* chars, uint32_t length) except *
+    cdef str _decode_str_repr(self, const Utf8Str* string)
 
-    cdef const Utf8Str* intern_unicode(self, str py_string)
-    cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length, hash_t* precalculated_hash)
+
+cpdef hash_t hash_string(object string) except -1
+cpdef hash_t get_string_id(object string_or_hash) except -1

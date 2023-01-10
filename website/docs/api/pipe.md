@@ -152,12 +152,6 @@ network,
 setting up the label scheme based on the data. This method is typically called
 by [`Language.initialize`](/api/language#initialize).
 
-<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
-
-This method was previously called `begin_training`.
-
-</Infobox>
-
 > #### Example
 >
 > ```python

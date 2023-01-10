@@ -228,12 +228,13 @@ def parse_spans(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
             "kb_id": span.kb_id_ if span.kb_id_ else "",
             "kb_url": kb_url_template.format(span.kb_id_) if kb_url_template else "#",
         }
-        for span in doc.spans[spans_key]
+        for span in doc.spans.get(spans_key, [])
     ]
     tokens = [token.text for token in doc]
 
     if not spans:
-        warnings.warn(Warnings.W117.format(spans_key=spans_key))
+        keys = list(doc.spans.keys())
+        warnings.warn(Warnings.W117.format(spans_key=spans_key, keys=keys))
     title = doc.user_data.get("title", None) if hasattr(doc, "user_data") else None
     settings = get_doc_settings(doc)
     return {

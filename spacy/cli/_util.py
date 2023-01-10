@@ -23,7 +23,7 @@ from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
 from .. import about
 
 if TYPE_CHECKING:
-    from pathy import Pathy  # noqa: F401
+    from pathy import FluidPath  # noqa: F401
 
 
 SDIST_SUFFIX = ".tar.gz"
@@ -158,15 +158,15 @@ def load_project_config(
         sys.exit(1)
     validate_project_version(config)
     validate_project_commands(config)
+    if interpolate:
+        err = f"{PROJECT_FILE} validation error"
+        with show_validation_error(title=err, hint_fill=False):
+            config = substitute_project_variables(config, overrides)
     # Make sure directories defined in config exist
     for subdir in config.get("directories", []):
         dir_path = path / subdir
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
-    if interpolate:
-        err = f"{PROJECT_FILE} validation error"
-        with show_validation_error(title=err, hint_fill=False):
-            config = substitute_project_variables(config, overrides)
     return config
 
 
@@ -331,7 +331,7 @@ def import_code(code_path: Optional[Union[Path, str]]) -> None:
             msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
 
 
-def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
+def upload_file(src: Path, dest: Union[str, "FluidPath"]) -> None:
     """Upload a file.
 
     src (Path): The source path.
@@ -339,13 +339,20 @@ def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
     """
     import smart_open
 
+    # Create parent directories for local paths
+    if isinstance(dest, Path):
+        if not dest.parent.exists():
+            dest.parent.mkdir(parents=True)
+
     dest = str(dest)
     with smart_open.open(dest, mode="wb") as output_file:
         with src.open(mode="rb") as input_file:
             output_file.write(input_file.read())
 
 
-def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) -> None:
+def download_file(
+    src: Union[str, "FluidPath"], dest: Path, *, force: bool = False
+) -> None:
     """Download a file using smart_open.
 
     url (str): The URL of the file.
@@ -358,7 +365,7 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
     if dest.exists() and not force:
         return None
     src = str(src)
-    with smart_open.open(src, mode="rb", ignore_ext=True) as input_file:
+    with smart_open.open(src, mode="rb", compression="disable") as input_file:
         with dest.open(mode="wb") as output_file:
             shutil.copyfileobj(input_file, output_file)
 
@@ -368,7 +375,7 @@ def ensure_pathy(path):
     slow and annoying Google Cloud warning)."""
     from pathy import Pathy  # noqa: F811
 
-    return Pathy(path)
+    return Pathy.fluid(path)
 
 
 def git_checkout(
@@ -573,3 +580,35 @@ def setup_gpu(use_gpu: int, silent=None) -> None:
         local_msg.info("Using CPU")
         if gpu_is_available():
             local_msg.info("To switch to GPU 0, use the option: --gpu-id 0")
+
+
+def walk_directory(path: Path, suffix: Optional[str] = None) -> List[Path]:
+    if not path.is_dir():
+        return [path]
+    paths = [path]
+    locs = []
+    seen = set()
+    for path in paths:
+        if str(path) in seen:
+            continue
+        seen.add(str(path))
+        if path.parts[-1].startswith("."):
+            continue
+        elif path.is_dir():
+            paths.extend(path.iterdir())
+        elif suffix is not None and not path.parts[-1].endswith(suffix):
+            continue
+        else:
+            locs.append(path)
+    # It's good to sort these, in case the ordering messes up cache.
+    locs.sort()
+    return locs
+
+
+def _format_number(number: Union[int, float], ndigits: int = 2) -> str:
+    """Formats a number (float or int) rounding to `ndigits`, without truncating trailing 0s,
+    as happens with `round(number, ndigits)`"""
+    if isinstance(number, float):
+        return f"{number:.{ndigits}f}"
+    else:
+        return str(number)

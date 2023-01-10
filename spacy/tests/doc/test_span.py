@@ -305,31 +305,6 @@ def test_span_similarity_match():
         assert span1[:1].similarity(doc.vocab["a"]) == 1.0
 
 
-def test_spans_default_sentiment(en_tokenizer):
-    """Test span.sentiment property's default averaging behaviour"""
-    text = "good stuff bad stuff"
-    tokens = en_tokenizer(text)
-    tokens.vocab[tokens[0].text].sentiment = 3.0
-    tokens.vocab[tokens[2].text].sentiment = -2.0
-    doc = Doc(tokens.vocab, words=[t.text for t in tokens])
-    assert doc[:2].sentiment == 3.0 / 2
-    assert doc[-2:].sentiment == -2.0 / 2
-    assert doc[:-1].sentiment == (3.0 + -2) / 3.0
-
-
-def test_spans_override_sentiment(en_tokenizer):
-    """Test span.sentiment property's default averaging behaviour"""
-    text = "good stuff bad stuff"
-    tokens = en_tokenizer(text)
-    tokens.vocab[tokens[0].text].sentiment = 3.0
-    tokens.vocab[tokens[2].text].sentiment = -2.0
-    doc = Doc(tokens.vocab, words=[t.text for t in tokens])
-    doc.user_span_hooks["sentiment"] = lambda span: 10.0
-    assert doc[:2].sentiment == 10.0
-    assert doc[-2:].sentiment == 10.0
-    assert doc[:-1].sentiment == 10.0
-
-
 def test_spans_are_hashable(en_tokenizer):
     """Test spans can be hashed."""
     text = "good stuff bad stuff"

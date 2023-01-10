@@ -142,12 +142,6 @@ arguments it receives via the
 [`[initialize.components]`](/api/data-formats#config-initialize) block in the
 config.
 
-<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
-
-This method was previously called `begin_training`.
-
-</Infobox>
-
 > #### Example
 >
 > ```python

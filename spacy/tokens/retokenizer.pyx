@@ -18,7 +18,7 @@ from .underscore import is_writable_attr
 from ..attrs import intify_attrs
 from ..util import SimpleFrozenDict
 from ..errors import Errors
-from ..strings import get_string_id
+from ..strings cimport get_string_id
 
 
 cdef class Retokenizer:

@@ -153,3 +153,36 @@ whole pipeline has run.
 | `attrs`     | A dict of the `Doc` attributes and the values to set them to. Defaults to `{"tensor": None, "_.trf_data": None}` to clean up after `tok2vec` and `transformer` components. ~~dict~~ |
 | `silent`    | If `False`, show warnings if attributes aren't found or can't be set. Defaults to `True`. ~~bool~~                                                                                  |
 | **RETURNS** | The modified `Doc` with the modified attributes. ~~Doc~~                                                                                                                            |
+
+## span_cleaner {#span_cleaner tag="function,experimental"}
+
+Remove `SpanGroup`s from `doc.spans` based on a key prefix. This is used to
+clean up after the [`CoreferenceResolver`](/api/coref) when it's paired with a
+[`SpanResolver`](/api/span-resolver).
+
+<Infobox title="Important note" variant="warning">
+
+This pipeline function is not yet integrated into spaCy core, and is available
+via the extension package
+[`spacy-experimental`](https://github.com/explosion/spacy-experimental) starting
+in version 0.6.0. It exposes the component via
+[entry points](/usage/saving-loading/#entry-points), so if you have the package
+installed, using `factory = "span_cleaner"` in your
+[training config](/usage/training#config) or `nlp.add_pipe("span_cleaner")` will
+work out-of-the-box.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> config = {"prefix": "coref_head_clusters"}
+> nlp.add_pipe("span_cleaner", config=config)
+> doc = nlp("text")
+> assert "coref_head_clusters_1" not in doc.spans
+> ```
+
+| Setting     | Description                                                                                                               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `prefix`    | A prefix to check `SpanGroup` keys for. Any matching groups will be removed. Defaults to `"coref_head_clusters"`. ~~str~~ |
+| **RETURNS** | The modified `Doc` with any matching spans removed. ~~Doc~~                                                               |

@@ -123,9 +123,6 @@ class Tok2Vec(TrainablePipe):
             width = self.model.get_dim("nO")
             return [self.model.ops.alloc((0, width)) for doc in docs]
         tokvecs = self.model.predict(docs)
-        batch_id = Tok2VecListener.get_batch_id(docs)
-        for listener in self.listeners:
-            listener.receive(batch_id, tokvecs, _empty_backprop)
         return tokvecs
 
     def set_annotations(self, docs: Sequence[Doc], tokvecses) -> None:
@@ -286,8 +283,19 @@ class Tok2VecListener(Model):
 def forward(model: Tok2VecListener, inputs, is_train: bool):
     """Supply the outputs from the upstream Tok2Vec component."""
     if is_train:
-        model.verify_inputs(inputs)
-        return model._outputs, model._backprop
+        # This might occur during training when the tok2vec layer is frozen / hasn't been updated.
+        # In that case, it should be set to "annotating" so we can retrieve the embeddings from the doc.
+        if model._batch_id is None:
+            outputs = []
+            for doc in inputs:
+                if doc.tensor.size == 0:
+                    raise ValueError(Errors.E203.format(name="tok2vec"))
+                else:
+                    outputs.append(doc.tensor)
+            return outputs, _empty_backprop
+        else:
+            model.verify_inputs(inputs)
+            return model._outputs, model._backprop
     else:
         # This is pretty grim, but it's hard to do better :(.
         # It's hard to avoid relying on the doc.tensor attribute, because the
@@ -306,7 +314,7 @@ def forward(model: Tok2VecListener, inputs, is_train: bool):
                 outputs.append(model.ops.alloc2f(len(doc), width))
             else:
                 outputs.append(doc.tensor)
-        return outputs, lambda dX: []
+        return outputs, _empty_backprop
 
 
 def _empty_backprop(dX):  # for pickling

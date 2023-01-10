@@ -31,21 +31,21 @@ Construct a `Doc` object. The most common way to get a `Doc` object is via the
 > doc = Doc(nlp.vocab, words=words, spaces=spaces)
 > ```
 
-| Name                                     | Description                                                                                                                                                                                        |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`                                  | A storage container for lexical types. ~~Vocab~~                                                                                                                                                   |
-| `words`                                  | A list of strings or integer hash values to add to the document as words. ~~Optional[List[Union[str,int]]]~~                                                                                       |
-| `spaces`                                 | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. ~~Optional[List[bool]]~~       |
-| _keyword-only_                           |                                                                                                                                                                                                    |
-| `user\_data`                             | Optional extra data to attach to the Doc. ~~Dict~~                                                                                                                                                 |
-| `tags` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.tag` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                              |
-| `pos` <Tag variant="new">3</Tag>         | A list of strings, of the same length as `words`, to assign as `token.pos` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                              |
-| `morphs` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.morph` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
-| `lemmas` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.lemma` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
-| `heads` <Tag variant="new">3</Tag>       | A list of values, of the same length as `words`, to assign as the head for each word. Head indices are the absolute position of the head in the `Doc`. Defaults to `None`. ~~Optional[List[int]]~~ |
-| `deps` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.dep` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                              |
-| `sent_starts` <Tag variant="new">3</Tag> | A list of values, of the same length as `words`, to assign as `token.is_sent_start`. Will be overridden by heads if `heads` is provided. Defaults to `None`. ~~Optional[List[Optional[bool]]]~~    |
-| `ents` <Tag variant="new">3</Tag>        | A list of strings, of the same length of `words`, to assign the token-based IOB tag. Defaults to `None`. ~~Optional[List[str]]~~                                                                   |
+| Name                                     | Description                                                                                                                                                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                                  | A storage container for lexical types. ~~Vocab~~                                                                                                                                                        |
+| `words`                                  | A list of strings or integer hash values to add to the document as words. ~~Optional[List[Union[str,int]]]~~                                                                                            |
+| `spaces`                                 | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. ~~Optional[List[bool]]~~            |
+| _keyword-only_                           |                                                                                                                                                                                                         |
+| `user\_data`                             | Optional extra data to attach to the Doc. ~~Dict~~                                                                                                                                                      |
+| `tags` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.tag` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                   |
+| `pos` <Tag variant="new">3</Tag>         | A list of strings, of the same length as `words`, to assign as `token.pos` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                   |
+| `morphs` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.morph` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                 |
+| `lemmas` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.lemma` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                 |
+| `heads` <Tag variant="new">3</Tag>       | A list of values, of the same length as `words`, to assign as the head for each word. Head indices are the absolute position of the head in the `Doc`. Defaults to `None`. ~~Optional[List[int]]~~      |
+| `deps` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.dep` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                   |
+| `sent_starts` <Tag variant="new">3</Tag> | A list of values, of the same length as `words`, to assign as `token.is_sent_start`. Will be overridden by heads if `heads` is provided. Defaults to `None`. ~~Optional[List[Union[bool, int, None]]]~~ |
+| `ents` <Tag variant="new">3</Tag>        | A list of strings, of the same length of `words`, to assign the token-based IOB tag. Defaults to `None`. ~~Optional[List[str]]~~                                                                        |
 
 ## Doc.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -209,15 +209,15 @@ alignment mode `"strict".
 > assert span.text == "New York"
 > ```
 
-| Name                                 | Description                                                                                                                                                                                                                                                                  |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `start`                              | The index of the first character of the span. ~~int~~                                                                                                                                                                                                                        |
-| `end`                                | The index of the last character after the span. ~~int~~                                                                                                                                                                                                                      |
-| `label`                              | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~                                                                                                                                                                                                  |
-| `kb_id` <Tag variant="new">2.2</Tag> | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~                                                                                                                                                                                    |
-| `vector`                             | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~                                                                                                                                                                                               |
-| `alignment_mode`                     | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"contract"` (span of all tokens completely within the character span), `"expand"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
-| **RETURNS**                          | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                   |
+| Name             | Description                                                                                                                                                                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start`          | The index of the first character of the span. ~~int~~                                                                                                                                                                                                                        |
+| `end`            | The index of the last character after the span. ~~int~~                                                                                                                                                                                                                      |
+| `label`          | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~                                                                                                                                                                                                  |
+| `kb_id`          | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~                                                                                                                                                                                    |
+| `vector`         | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~                                                                                                                                                                                               |
+| `alignment_mode` | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"contract"` (span of all tokens completely within the character span), `"expand"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
+| **RETURNS**      | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                   |
 
 ## Doc.set_ents {#set_ents tag="method" new="3"}
 
@@ -757,11 +757,10 @@ The L2 norm of the document's vector representation.
 | `text_with_ws`                             | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`. ~~str~~                                                  |
 | `mem`                                      | The document's local memory heap, for all C data it owns. ~~cymem.Pool~~                                                                       |
 | `vocab`                                    | The store of lexical types. ~~Vocab~~                                                                                                          |
-| `tensor` <Tag variant="new">2</Tag>        | Container for dense vector representations. ~~numpy.ndarray~~                                                                                  |
+| `tensor`                                   | Container for dense vector representations. ~~numpy.ndarray~~                                                                                  |
 | `user_data`                                | A generic storage area, for user custom data. ~~Dict[str, Any]~~                                                                               |
-| `lang` <Tag variant="new">2.1</Tag>        | Language of the document's vocabulary. ~~int~~                                                                                                 |
-| `lang_` <Tag variant="new">2.1</Tag>       | Language of the document's vocabulary. ~~str~~                                                                                                 |
-| `sentiment`                                | The document's positivity/negativity score, if available. ~~float~~                                                                            |
+| `lang`                                     | Language of the document's vocabulary. ~~int~~                                                                                                 |
+| `lang_`                                    | Language of the document's vocabulary. ~~str~~                                                                                                 |
 | `user_hooks`                               | A dictionary that allows customization of the `Doc`'s properties. ~~Dict[str, Callable]~~                                                      |
 | `user_token_hooks`                         | A dictionary that allows customization of properties of `Token` children. ~~Dict[str, Callable]~~                                              |
 | `user_span_hooks`                          | A dictionary that allows customization of properties of `Span` children. ~~Dict[str, Callable]~~                                               |
@@ -785,7 +784,6 @@ serialization by passing in the string names via the `exclude` argument.
 | Name               | Description                                   |
 | ------------------ | --------------------------------------------- |
 | `text`             | The value of the `Doc.text` attribute.        |
-| `sentiment`        | The value of the `Doc.sentiment` attribute.   |
 | `tensor`           | The value of the `Doc.tensor` attribute.      |
 | `user_data`        | The value of the `Doc.user_data` dictionary.  |
 | `user_data_keys`   | The keys of the `Doc.user_data` dictionary.   |
