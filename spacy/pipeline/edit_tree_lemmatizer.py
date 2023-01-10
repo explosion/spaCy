@@ -208,6 +208,7 @@ class EditTreeLemmatizer(TrainablePipe):
                 else:
                     doc_compat_guesses.append(-1)
             guesses.append(np.array(doc_compat_guesses))
+
         return guesses
 
     def _scores2guesses_top_k_guardrail(self, docs, scores):
