@@ -20,6 +20,10 @@ from ..vocab import Vocab
 from .. import util
 
 
+# The cutoff value of *top_k* above which an alternative method is used to process guesses.
+TOP_K_GUARDRAIL = 20
+
+
 default_model_config = """
 [model]
 @architectures = "spacy.Tagger.v2"
@@ -145,6 +149,18 @@ class EditTreeLemmatizer(TrainablePipe):
         return float(loss), d_scores
 
     def predict(self, docs: Iterable[Doc]) -> List[Ints2d]:
+        if self.top_k == 1:
+            scores2guesses = self._scores2guesses_top_k_equals_1
+        elif self.top_k <= TOP_K_GUARDRAIL:
+            scores2guesses = self._scores2guesses_top_k_greater_1
+        else:
+            scores2guesses = self._scores2guesses_top_k_guardrail
+        # The behaviour of *_scores2guesses_top_k_greater_1()* is efficient for values
+        # of *top_k>1* that are likely to be useful when the edit tree lemmatizer is used
+        # for its principal purpose of lemmatizing tokens. However, the code could also
+        # be used for other purposes, and with very large values of *top_k* the method
+        # becomes inefficient. In such cases, *_scores2guesses_top_k_guardrail()* is used
+        # instead.
         n_docs = len(list(docs))
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
@@ -154,11 +170,28 @@ class EditTreeLemmatizer(TrainablePipe):
             return guesses
         scores = self.model.predict(docs)
         assert len(scores) == n_docs
-        guesses = self._scores2guesses(docs, scores)
+        guesses = scores2guesses(docs, scores)
         assert len(guesses) == n_docs
         return guesses
 
-    def _scores2guesses(self, docs, scores):
+    def _scores2guesses_top_k_equals_1(self, docs, scores):
+        guesses = []
+        for doc, doc_scores in zip(docs, scores):
+            doc_guesses = doc_scores.argmax(axis=1)
+            doc_guesses = self.numpy_ops.asarray(doc_guesses)
+
+            doc_compat_guesses = []
+            for i, token in enumerate(doc):
+                tree_id = self.cfg["labels"][doc_guesses[i]]
+                if self.trees.apply(tree_id, token.text) is not None:
+                    doc_compat_guesses.append(tree_id)
+                else:
+                    doc_compat_guesses.append(-1)
+            guesses.append(np.array(doc_compat_guesses))
+
+        return guesses
+
+    def _scores2guesses_top_k_greater_1(self, docs, scores):
         guesses = []
         predictions_to_consider = min(self.top_k, len(self.labels))
         for doc, doc_scores in zip(docs, scores):
@@ -175,6 +208,27 @@ class EditTreeLemmatizer(TrainablePipe):
                 else:
                     doc_compat_guesses.append(-1)
             guesses.append(np.array(doc_compat_guesses))
+        return guesses
+
+    def _scores2guesses_top_k_guardrail(self, docs, scores):
+        guesses = []
+        for doc, doc_scores in zip(docs, scores):
+            doc_guesses = np.argsort(doc_scores)[..., : -self.top_k - 1 : -1]
+            doc_guesses = self.numpy_ops.asarray(doc_guesses)
+
+            doc_compat_guesses = []
+            for token, candidates in zip(doc, doc_guesses):
+                tree_id = -1
+                for candidate in candidates:
+                    candidate_tree_id = self.cfg["labels"][candidate]
+
+                    if self.trees.apply(candidate_tree_id, token.text) is not None:
+                        tree_id = candidate_tree_id
+                        break
+                doc_compat_guesses.append(tree_id)
+
+            guesses.append(np.array(doc_compat_guesses))
+
         return guesses
 
     def set_annotations(self, docs: Iterable[Doc], batch_tree_ids):
