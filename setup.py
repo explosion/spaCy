@@ -33,7 +33,6 @@ MOD_NAMES = [
     "spacy.kb.candidate",
     "spacy.kb.kb",
     "spacy.kb.kb_in_memory",
-    "spacy.ml.parser_model",
     "spacy.ml.tb_framework",
     "spacy.morphology",
     "spacy.pipeline._edit_tree_internals.edit_trees",
