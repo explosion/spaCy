@@ -237,16 +237,17 @@ browser. Will run a simple web server.
 > displacy.serve([doc1, doc2], style="dep")
 > ```
 
-| Name      | Description                                                                                                                                                       |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`    | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span]], Doc, Span]~~                                                                             |
-| `style`   | Visualization style, `"dep"`, `"ent"` or `"span"` <Tag variant="new">3.3</Tag>. Defaults to `"dep"`. ~~str~~                                                      |
-| `page`    | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                     |
-| `minify`  | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                 |
-| `options` | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                 |
-| `manual`  | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~ |
-| `port`    | Port to serve visualization. Defaults to `5000`. ~~int~~                                                                                                          |
-| `host`    | Host to serve visualization. Defaults to `"0.0.0.0"`. ~~str~~                                                                                                     |
+| Name               | Description                                                                                                                                                       |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs`             | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span]], Doc, Span]~~                                                                             |
+| `style`            | Visualization style, `"dep"`, `"ent"` or `"span"` <Tag variant="new">3.3</Tag>. Defaults to `"dep"`. ~~str~~                                                      |
+| `page`             | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                     |
+| `minify`           | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                 |
+| `options`          | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                 |
+| `manual`           | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~ |
+| `port`             | Port to serve visualization. Defaults to `5000`. ~~int~~                                                                                                          |
+| `host`             | Host to serve visualization. Defaults to `"0.0.0.0"`. ~~str~~                                                                                                     |
+| `auto_select_port` | If `True`, automatically switch to a different port if the specified port is already in use. Defaults to `False`. ~~bool~~                                          |
 
 ### displacy.render {#displacy.render tag="method" new="2"}
 
@@ -266,7 +267,7 @@ Render a dependency parse tree or named entity visualization.
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs`      | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict]~~                                                                                      |
 | `style`     | Visualization style, `"dep"`, `"ent"` or `"span"` <Tag variant="new">3.3</Tag>. Defaults to `"dep"`. ~~str~~                                                                           |
-| `page`      | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                                          |
+| `page`      | Render markup as full HTML page. Defaults to `False`. ~~bool~~                                                                                                                         |
 | `minify`    | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                                      |
 | `options`   | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                                      |
 | `manual`    | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~                      |
@@ -513,7 +514,7 @@ a [Weights & Biases](https://www.wandb.com/) dashboard.
 Instead of using one of the built-in loggers, you can
 [implement your own](/usage/training#custom-logging).
 
-#### spacy.ConsoleLogger.v2 {#ConsoleLogger tag="registered function"}
+#### spacy.ConsoleLogger.v2 {tag="registered function"}
 
 > #### Example config
 >
@@ -564,11 +565,33 @@ start decreasing across epochs.
 
  </Accordion>
 
-| Name             | Description                                                           |
-| ---------------- | --------------------------------------------------------------------- |
-| `progress_bar`   | Whether the logger should print the progress bar ~~bool~~             |
-| `console_output` | Whether the logger should print the logs on the console. ~~bool~~     |
-| `output_file`    | The file to save the training logs to. ~~Optional[Union[str, Path]]~~ |
+| Name             | Description                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `progress_bar`   | Whether the logger should print a progress bar tracking the steps till the next evaluation pass (default: `False`). ~~bool~~ |
+| `console_output` | Whether the logger should print the logs in the console (default: `True`). ~~bool~~                                          |
+| `output_file`    | The file to save the training logs to (default: `None`). ~~Optional[Union[str, Path]]~~                                      |
+
+#### spacy.ConsoleLogger.v3 {#ConsoleLogger tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.ConsoleLogger.v3"
+> progress_bar = "all_steps"
+> console_output = true
+> output_file = "training_log.jsonl"
+> ```
+
+Writes the results of a training step to the console in a tabular format and
+optionally saves them to a `jsonl` file.
+
+| Name             | Description                                                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `progress_bar`   | Type of progress bar to show in the console: `"train"`, `"eval"` or `None`.                                                                               |
+|                  | The bar tracks the number of steps until `training.max_steps` and `training.eval_frequency` are reached respectively (default: `None`). ~~Optional[str]~~ |
+| `console_output` | Whether the logger should print the logs in the console (default: `True`). ~~bool~~                                                                       |
+| `output_file`    | The file to save the training logs to (default: `None`). ~~Optional[Union[str, Path]]~~                                                                   |
 
 ## Readers {#readers}
 

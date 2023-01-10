@@ -196,15 +196,15 @@ def _verify_rich_config_group(
 ) -> None:
     if lengths is not None or rows is not None:
         if lengths is None or rows is None:
-            raise ValueError(Errors.E1048.format(label=label))
+            raise ValueError(Errors.E1051.format(label=label))
         if len(lengths) != len(rows):
-            raise ValueError(Errors.E1048.format(label=label))
+            raise ValueError(Errors.E1051.format(label=label))
         if any([length < 1 for length in lengths]):
-            raise ValueError(Errors.E1048.format(label=label))
+            raise ValueError(Errors.E1051.format(label=label))
         if lengths[-1] > 63:
-            raise ValueError(Errors.E1049.format(label=label))
+            raise ValueError(Errors.E1052.format(label=label))
         if len(lengths) != len(set(lengths)) or lengths != sorted(lengths):
-            raise ValueError(Errors.E1050.format(label=label))
+            raise ValueError(Errors.E1053.format(label=label))
 
 
 @registry.architectures("spacy.RichMultiHashEmbed.v1")
@@ -259,7 +259,7 @@ def RichMultiHashEmbed(
     _verify_rich_config_group("suffix", suff_lengths, suff_rows)
 
     if "PREFIX" in attrs or "SUFFIX" in attrs:
-        warnings.warn(Warnings.W124)
+        warnings.warn(Warnings.W125)
 
     if pref_rows is not None:
         rows.extend(pref_rows)

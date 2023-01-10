@@ -214,7 +214,8 @@ class Warnings(metaclass=ErrorsWithCodes):
             "is a Cython extension type.")
     W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
             "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
-    W124 = ("Using the features PREFIX and/or SUFFIX in a RichFeatureExtractor configuration may lead to the same "
+    W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
+    W125 = ("Using the features PREFIX and/or SUFFIX in a RichFeatureExtractor configuration may lead to the same "
             "information being fed forward twice if prefixes and suffixes of corresponding lengths are specified.")    
 
 
@@ -964,10 +965,14 @@ class Errors(metaclass=ErrorsWithCodes):
     E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
     E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
-    E1048 = ("Invalid rich group config '{label}'.")
-    E1049 = ("Length > 63 in rich group config '{label}'.")
-    E1050 = ("Rich group config {label} specifies lengths that are not in ascending order.")
-    E1051 = ("Error splitting UTF-8 byte string into separate characters.")
+    E1048 = ("Got '{unexpected}' as console progress bar type, but expected one of the following: {expected}")
+    E1049 = ("No available port found for displaCy on host {host}. Please specify an available port "
+             "with `displacy.serve(doc, port)`")
+    E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port)` "
+             "or use `auto_switch_port=True` to pick an available port automatically.")
+    E1051 = ("Invalid rich group config '{label}'.")
+    E1052 = ("Length > 63 in rich group config '{label}'.")
+    E1053 = ("Rich group config {label} specifies lengths that are not in ascending order.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

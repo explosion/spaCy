@@ -74,7 +74,7 @@ subword_features = true
     default_config={
         "threshold": 0.5,
         "model": DEFAULT_MULTI_TEXTCAT_MODEL,
-        "scorer": {"@scorers": "spacy.textcat_multilabel_scorer.v1"},
+        "scorer": {"@scorers": "spacy.textcat_multilabel_scorer.v2"},
     },
     default_score_weights={
         "cats_score": 1.0,
@@ -120,7 +120,7 @@ def textcat_multilabel_score(examples: Iterable[Example], **kwargs) -> Dict[str,
     )
 
 
-@registry.scorers("spacy.textcat_multilabel_scorer.v1")
+@registry.scorers("spacy.textcat_multilabel_scorer.v2")
 def make_textcat_multilabel_scorer():
     return textcat_multilabel_score
 
