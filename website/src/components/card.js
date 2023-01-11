@@ -18,6 +18,7 @@ export default function Card({ title, to, image, header, small, onClick, childre
                 <H5 className={classes.title}>
                     {image && (
                         <div className={classes.image}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={image} width={35} alt="" />
                         </div>
                     )}

@@ -214,6 +214,7 @@ class Warnings(metaclass=ErrorsWithCodes):
             "is a Cython extension type.")
     W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
             "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
+    W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -963,6 +964,10 @@ class Errors(metaclass=ErrorsWithCodes):
              "knowledge base, use `InMemoryLookupKB`.")
     E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
     E1048 = ("Got '{unexpected}' as console progress bar type, but expected one of the following: {expected}")
+    E1049 = ("No available port found for displaCy on host {host}. Please specify an available port "
+             "with `displacy.serve(doc, port)`")
+    E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port)` "
+             "or use `auto_switch_port=True` to pick an available port automatically.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
