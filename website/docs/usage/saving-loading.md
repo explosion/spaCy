@@ -193,13 +193,13 @@ the data to and from a JSON file.
 
 > #### Real-world example
 >
-> To see custom serialization methods in action, check out the new
-> [`EntityRuler`](/api/entityruler) component and its
-> [source](%%GITHUB_SPACY/spacy/pipeline/entity_ruler.py). Patterns added to the
+> To see custom serialization methods in action, check out the
+> [`SpanRuler`](/api/spanruler) component and its
+> [source](%%GITHUB_SPACY/spacy/pipeline/span_ruler.py). Patterns added to the
 > component will be saved to a `.jsonl` file if the pipeline is serialized to
 > disk, and to a bytestring if the pipeline is serialized to bytes. This allows
-> saving out a pipeline with a rule-based entity recognizer and including all
-> rules _with_ the component data.
+> saving out a pipeline with rule-based components _with_ all the component
+> data.
 
 ```python
 ### {highlight="16-23,25-30"}
@@ -306,12 +306,12 @@ pipeline component factories, language classes and other settings. To make spaCy
 use your entry points, your package needs to expose them and it needs to be
 installed in the same environment – that's it.
 
-| Entry point                                                                    | Description                                                                                                                                                                                                                                              |
-| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`spacy_factories`](#entry-points-components)                                  | Group of entry points for pipeline component factories, keyed by component name. Can be used to expose custom components defined by another package.                                                                                                     |
-| [`spacy_languages`](#entry-points-languages)                                   | Group of entry points for custom [`Language` subclasses](/usage/linguistic-features#language-data), keyed by language shortcut.                                                                                                                          |
-| `spacy_lookups` <Tag variant="new">2.2</Tag>                                   | Group of entry points for custom [`Lookups`](/api/lookups), including lemmatizer data. Used by spaCy's [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) package.                                                                  |
-| [`spacy_displacy_colors`](#entry-points-displacy) <Tag variant="new">2.2</Tag> | Group of entry points of custom label colors for the [displaCy visualizer](/usage/visualizers#ent). The key name doesn't matter, but it should point to a dict of labels and color values. Useful for custom models that predict different entity types. |
+| Entry point                                       | Description                                                                                                                                                                                                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`spacy_factories`](#entry-points-components)     | Group of entry points for pipeline component factories, keyed by component name. Can be used to expose custom components defined by another package.                                                                                                     |
+| [`spacy_languages`](#entry-points-languages)      | Group of entry points for custom [`Language` subclasses](/usage/linguistic-features#language-data), keyed by language shortcut.                                                                                                                          |
+| `spacy_lookups`                                   | Group of entry points for custom [`Lookups`](/api/lookups), including lemmatizer data. Used by spaCy's [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) package.                                                                  |
+| [`spacy_displacy_colors`](#entry-points-displacy) | Group of entry points of custom label colors for the [displaCy visualizer](/usage/visualizers#ent). The key name doesn't matter, but it should point to a dict of labels and color values. Useful for custom models that predict different entity types. |
 
 ### Custom components via entry points {#entry-points-components}
 

@@ -13,7 +13,6 @@ import contextlib
 import srsly
 from thinc.api import get_ops, set_dropout_rate, CupyOps, NumpyOps
 from thinc.api import get_array_module
-from thinc.extra.search cimport Beam
 from thinc.types import Ints1d
 import numpy.random
 import numpy

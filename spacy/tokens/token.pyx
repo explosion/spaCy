@@ -284,14 +284,6 @@ cdef class Token:
         return self.vocab[self.c.lex.orth].prob
 
     @property
-    def sentiment(self):
-        """RETURNS (float): A scalar value indicating the positivity or
-            negativity of the token."""
-        if "sentiment" in self.doc.user_token_hooks:
-            return self.doc.user_token_hooks["sentiment"](self)
-        return self.vocab[self.c.lex.orth].sentiment
-
-    @property
     def lang(self):
         """RETURNS (uint64): ID of the language of the parent document's
             vocabulary.

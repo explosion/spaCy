@@ -162,7 +162,7 @@ rule-based matching are:
 | Attribute                                      | Description                                                                                                                                                                                                                                                                                               |
 | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ORTH`                                         | The exact verbatim text of a token. ~~str~~                                                                                                                                                                                                                                                               |
-| `TEXT` <Tag variant="new">2.1</Tag>            | The exact verbatim text of a token. ~~str~~                                                                                                                                                                                                                                                               |
+| `TEXT`                                         | The exact verbatim text of a token. ~~str~~                                                                                                                                                                                                                                                               |
 | `NORM`                                         | The normalized form of the token text. ~~str~~                                                                                                                                                                                                                                                            |
 | `LOWER`                                        | The lowercase form of the token text. ~~str~~                                                                                                                                                                                                                                                             |
 | `LENGTH`                                       | The length of the token text. ~~int~~                                                                                                                                                                                                                                                                     |
@@ -174,7 +174,7 @@ rule-based matching are:
 | `SPACY`                                        | Token has a trailing space. ~~bool~~                                                                                                                                                                                                                                                                      |
 | `POS`, `TAG`, `MORPH`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, morphological analysis, dependency label, lemma, shape. Note that the values of these attributes are case-sensitive. For a list of available part-of-speech tags and dependency labels, see the [Annotation Specifications](/api/annotation). ~~str~~ |
 | `ENT_TYPE`                                     | The token's entity label. ~~str~~                                                                                                                                                                                                                                                                         |
-| `_` <Tag variant="new">2.1</Tag>               | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~                                                                                                                                                                                 |
+| `_`                                            | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~                                                                                                                                                                                 |
 | `OP`                                           | [Operator or quantifier](#quantifiers) to determine how often to match a token pattern. ~~str~~                                                                                                                                                                                                           |
 
 <Accordion title="Does it matter if the attribute names are uppercase or lowercase?">
@@ -375,7 +375,7 @@ scoped quantifiers – instead, you can build those behaviors with `on_match`
 callbacks.
 
 | OP      | Description                                                            |
-|---------|------------------------------------------------------------------------|
+| ------- | ---------------------------------------------------------------------- |
 | `!`     | Negate the pattern, by requiring it to match exactly 0 times.          |
 | `?`     | Make the pattern optional, by allowing it to match 0 or 1 times.       |
 | `+`     | Require the pattern to match 1 or more times.                          |
@@ -471,7 +471,7 @@ matches = matcher(doc)
 ```
 
 A very similar logic has been implemented in the built-in
-[`EntityRuler`](/api/entityruler) by the way. It also takes care of handling
+[`entity_ruler`](/api/entityruler) by the way. It also takes care of handling
 overlapping matches, which you would otherwise have to take care of yourself.
 
 > #### Tip: Visualizing matches
@@ -776,6 +776,9 @@ whitespace, making them easy to match as well.
 ### {executable="true"}
 from spacy.lang.en import English
 from spacy.matcher import Matcher
+from spacy.tokens import Doc
+
+Doc.set_extension("sentiment", default=0.0)
 
 nlp = English()  # We only want the tokenizer, so no need to load a pipeline
 matcher = Matcher(nlp.vocab)
@@ -791,9 +794,9 @@ neg_patterns = [[{"ORTH": emoji}] for emoji in neg_emoji]
 def label_sentiment(matcher, doc, i, matches):
     match_id, start, end = matches[i]
     if doc.vocab.strings[match_id] == "HAPPY":  # Don't forget to get string!
-        doc.sentiment += 0.1  # Add 0.1 for positive sentiment
+        doc._.sentiment += 0.1  # Add 0.1 for positive sentiment
     elif doc.vocab.strings[match_id] == "SAD":
-        doc.sentiment -= 0.1  # Subtract 0.1 for negative sentiment
+        doc._.sentiment -= 0.1  # Subtract 0.1 for negative sentiment
 
 matcher.add("HAPPY", pos_patterns, on_match=label_sentiment)  # Add positive pattern
 matcher.add("SAD", neg_patterns, on_match=label_sentiment)  # Add negative pattern
@@ -823,16 +826,17 @@ the emoji span will make it available as `span._.emoji_desc`.
 
 ```python
 from emojipedia import Emojipedia  # Installation: pip install emojipedia
-from spacy.tokens import Span  # Get the global Span object
+from spacy.tokens import Doc, Span  # Get the global Doc and Span object
 
 Span.set_extension("emoji_desc", default=None)  # Register the custom attribute
+Doc.set_extension("sentiment", default=0.0)
 
 def label_sentiment(matcher, doc, i, matches):
     match_id, start, end = matches[i]
     if doc.vocab.strings[match_id] == "HAPPY":  # Don't forget to get string!
-        doc.sentiment += 0.1  # Add 0.1 for positive sentiment
+        doc._.sentiment += 0.1  # Add 0.1 for positive sentiment
     elif doc.vocab.strings[match_id] == "SAD":
-        doc.sentiment -= 0.1  # Subtract 0.1 for negative sentiment
+        doc._.sentiment -= 0.1  # Subtract 0.1 for negative sentiment
     span = doc[start:end]
     emoji = Emojipedia.search(span[0].text)  # Get data for emoji
     span._.emoji_desc = emoji.title  # Assign emoji description
@@ -1270,7 +1274,7 @@ of patterns such as `{}` that match any token in the sentence.
 
 ## Rule-based entity recognition {#entityruler new="2.1"}
 
-The [`EntityRuler`](/api/entityruler) is a component that lets you add named
+The [`entity_ruler`](/api/entityruler) is a component that lets you add named
 entities based on pattern dictionaries, which makes it easy to combine
 rule-based and statistical named entity recognition for even more powerful
 pipelines.
@@ -1295,13 +1299,12 @@ pattern. The entity ruler accepts two types of patterns:
 
 ### Using the entity ruler {#entityruler-usage}
 
-The [`EntityRuler`](/api/entityruler) is a pipeline component that's typically
-added via [`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is
-called on a text, it will find matches in the `doc` and add them as entities to
-the `doc.ents`, using the specified pattern label as the entity label. If any
-matches were to overlap, the pattern matching most tokens takes priority. If
-they also happen to be equally long, then the match occurring first in the `Doc`
-is chosen.
+The `entity_ruler` is a pipeline component that's typically added via
+[`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is called on a
+text, it will find matches in the `doc` and add them as entities to `doc.ents`,
+using the specified pattern label as the entity label. If any matches were to
+overlap, the pattern matching most tokens takes priority. If they also happen to
+be equally long, then the match occurring first in the `Doc` is chosen.
 
 ```python
 ### {executable="true"}
@@ -1339,7 +1342,7 @@ doc = nlp("MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-#### Validating and debugging EntityRuler patterns {#entityruler-pattern-validation new="2.1.8"}
+#### Validating and debugging entity ruler patterns {#entityruler-pattern-validation new="2.1.8"}
 
 The entity ruler can validate patterns against a JSON schema with the config
 setting `"validate"`. See details under
@@ -1351,9 +1354,9 @@ ruler = nlp.add_pipe("entity_ruler", config={"validate": True})
 
 ### Adding IDs to patterns {#entityruler-ent-ids new="2.2.2"}
 
-The [`EntityRuler`](/api/entityruler) can also accept an `id` attribute for each
-pattern. Using the `id` attribute allows multiple patterns to be associated with
-the same entity.
+The [`entity_ruler`](/api/entityruler) can also accept an `id` attribute for
+each pattern. Using the `id` attribute allows multiple patterns to be associated
+with the same entity.
 
 ```python
 ### {executable="true"}
@@ -1373,10 +1376,10 @@ doc2 = nlp("Apple is opening its first big office in San Fran.")
 print([(ent.text, ent.label_, ent.id_) for ent in doc2.ents])
 ```
 
-If the `id` attribute is included in the [`EntityRuler`](/api/entityruler)
-patterns, the `id_` property of the matched entity is set to the `id` given
-in the patterns. So in the example above it's easy to identify that "San
-Francisco" and "San Fran" are both the same entity.
+If the `id` attribute is included in the [`entity_ruler`](/api/entityruler)
+patterns, the `id_` property of the matched entity is set to the `id` given in
+the patterns. So in the example above it's easy to identify that "San Francisco"
+and "San Fran" are both the same entity.
 
 ### Using pattern files {#entityruler-files}
 
@@ -1400,13 +1403,13 @@ new_ruler = nlp.add_pipe("entity_ruler").from_disk("./patterns.jsonl")
 
 If you're using the [Prodigy](https://prodi.gy) annotation tool, you might
 recognize these pattern files from bootstrapping your named entity and text
-classification labelling. The patterns for the `EntityRuler` follow the same
+classification labelling. The patterns for the `entity_ruler` follow the same
 syntax, so you can use your existing Prodigy pattern files in spaCy, and vice
 versa.
 
 </Infobox>
 
-When you save out an `nlp` object that has an `EntityRuler` added to its
+When you save out an `nlp` object that has an `entity_ruler` added to its
 pipeline, its patterns are automatically exported to the pipeline directory:
 
 ```python
@@ -1429,9 +1432,9 @@ rules included!
 
 When using a large amount of **phrase patterns** (roughly > 10000) it's useful
 to understand how the `add_patterns` function of the entity ruler works. For
-each **phrase pattern**, the EntityRuler calls the nlp object to construct a doc
-object. This happens in case you try to add the EntityRuler at the end of an
-existing pipeline with, for example, a POS tagger and want to extract matches
+each **phrase pattern**, the entity ruler calls the nlp object to construct a
+doc object. This happens in case you try to add the entity ruler at the end of
+an existing pipeline with, for example, a POS tagger and want to extract matches
 based on the pattern's POS signature. In this case you would pass a config value
 of `"phrase_matcher_attr": "POS"` for the entity ruler.
 
@@ -1792,7 +1795,7 @@ the entity `Span` – for example `._.orgs` or `._.prev_orgs` and
 > [`Doc.retokenize`](/api/doc#retokenize) context manager:
 >
 > ```python
-> with doc.retokenize() as retokenize:
+> with doc.retokenize() as retokenizer:
 >   for ent in doc.ents:
 >       retokenizer.merge(ent)
 > ```

@@ -40,7 +40,8 @@ Get the number of strings in the store.
 
 ## StringStore.\_\_getitem\_\_ {#getitem tag="method"}
 
-Retrieve a string from a given hash, or vice versa.
+Retrieve a string from a given hash. If a string is passed as the input, add it
+to the store and return its hash.
 
 > #### Example
 >
@@ -51,14 +52,14 @@ Retrieve a string from a given hash, or vice versa.
 > assert stringstore[apple_hash] == "apple"
 > ```
 
-| Name           | Description                                     |
-| -------------- | ----------------------------------------------- |
-| `string_or_id` | The value to encode. ~~Union[bytes, str, int]~~ |
-| **RETURNS**    | The value to be retrieved. ~~Union[str, int]~~  |
+| Name             | Description                                                                  |
+| ---------------- | ---------------------------------------------------------------------------- |
+| `string_or_hash` | The hash value to lookup or the string to store. ~~Union[str, int]~~         |
+| **RETURNS**      | The stored string or the hash of the newly added string. ~~Union[str, int]~~ |
 
 ## StringStore.\_\_contains\_\_ {#contains tag="method"}
 
-Check whether a string is in the store.
+Check whether a string or a hash is in the store.
 
 > #### Example
 >
@@ -68,15 +69,14 @@ Check whether a string is in the store.
 > assert not "cherry" in stringstore
 > ```
 
-| Name        | Description                                     |
-| ----------- | ----------------------------------------------- |
-| `string`    | The string to check. ~~str~~                    |
-| **RETURNS** | Whether the store contains the string. ~~bool~~ |
+| Name             | Description                                             |
+| ---------------- | ------------------------------------------------------- |
+| `string_or_hash` | The string or hash to check. ~~Union[str, int]~~        |
+| **RETURNS**      | Whether the store contains the string or hash. ~~bool~~ |
 
 ## StringStore.\_\_iter\_\_ {#iter tag="method"}
 
-Iterate over the strings in the store, in order. Note that a newly initialized
-store will always include an empty string `""` at position `0`.
+Iterate over the stored strings in insertion order.
 
 > #### Example
 >
@@ -86,11 +86,59 @@ store will always include an empty string `""` at position `0`.
 > assert all_strings == ["apple", "orange"]
 > ```
 
-| Name       | Description                    |
-| ---------- | ------------------------------ |
-| **YIELDS** | A string in the store. ~~str~~ |
+| Name        | Description                    |
+| ----------- | ------------------------------ |
+| **RETURNS** | A string in the store. ~~str~~ |
 
-## StringStore.add {#add tag="method" new="2"}
+## StringStore.items {#iter tag="method" new="4"}
+
+Iterate over the stored string-hash pairs in insertion order.
+
+> #### Example
+>
+> ```python
+> stringstore = StringStore(["apple", "orange"])
+> all_strings_and_hashes = stringstore.items()
+> assert all_strings_and_hashes == [("apple", 8566208034543834098), ("orange", 2208928596161743350)]
+> ```
+
+| Name        | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| **RETURNS** | A list of string-hash pairs. ~~List[Tuple[str, int]]~~ |
+
+## StringStore.keys {#iter tag="method" new="4"}
+
+Iterate over the stored strings in insertion order.
+
+> #### Example
+>
+> ```python
+> stringstore = StringStore(["apple", "orange"])
+> all_strings = stringstore.keys()
+> assert all_strings == ["apple", "orange"]
+> ```
+
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| **RETURNS** | A list of strings. ~~List[str]~~ |
+
+## StringStore.values {#iter tag="method" new="4"}
+
+Iterate over the stored string hashes in insertion order.
+
+> #### Example
+>
+> ```python
+> stringstore = StringStore(["apple", "orange"])
+> all_hashes = stringstore.values()
+> assert all_hashes == [8566208034543834098, 2208928596161743350]
+> ```
+
+| Name        | Description                            |
+| ----------- | -------------------------------------- |
+| **RETURNS** | A list of string hashes. ~~List[int]~~ |
+
+## StringStore.add {#add tag="method"}
 
 Add a string to the `StringStore`.
 
@@ -110,7 +158,7 @@ Add a string to the `StringStore`.
 | `string`    | The string to add. ~~str~~       |
 | **RETURNS** | The string's hash value. ~~int~~ |
 
-## StringStore.to_disk {#to_disk tag="method" new="2"}
+## StringStore.to_disk {#to_disk tag="method"}
 
 Save the current state to a directory.
 

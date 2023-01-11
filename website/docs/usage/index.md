@@ -75,7 +75,6 @@ spaCy's [`setup.cfg`](%%GITHUB_SPACY/setup.cfg) for details on what's included.
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `lookups`        | Install [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) for data tables for lemmatization and lexeme normalization. The data is serialized with trained pipelines, so you only need this package if you want to train your own models. |
 | `transformers`   | Install [`spacy-transformers`](https://github.com/explosion/spacy-transformers). The package will be installed automatically when you install a transformer-based pipeline.                                                                                    |
-| `ray`            | Install [`spacy-ray`](https://github.com/explosion/spacy-ray) to add CLI commands for [parallel training](/usage/training#parallel-training).                                                                                                                  |
 | `cuda`, ...      | Install spaCy with GPU support provided by [CuPy](https://cupy.chainer.org) for your given CUDA version. See the GPU [installation instructions](#gpu) for details and options.                                                                                |
 | `apple`          | Install [`thinc-apple-ops`](https://github.com/explosion/thinc-apple-ops) to improve performance on an Apple M1.                                                                                                                                               |
 | `ja`, `ko`, `th` | Install additional dependencies required for tokenization for the [languages](/usage/models#languages).                                                                                                                                                        |
@@ -236,10 +235,10 @@ package to see what the oldest recommended versions of `numpy` are.
 Some additional options may be useful for spaCy developers who are editing the
 source code and recompiling frequently.
 
-- Install in editable mode. Changes to `.py` files will be reflected as soon
-  as the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will
-  require the `pip install` command below to be run again. Before installing in
-  editable mode, be sure you have removed any previous installs with
+- Install in editable mode. Changes to `.py` files will be reflected as soon as
+  the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will require
+  the `pip install` command below to be run again. Before installing in editable
+  mode, be sure you have removed any previous installs with
   `pip uninstall spacy`, which you may need to run multiple times to remove all
   traces of earlier installs.
 
@@ -248,8 +247,8 @@ source code and recompiling frequently.
   $ pip install --no-build-isolation --editable .
   ```
 
-- Build in parallel. Starting in v3.4.0, you can specify the number of
-  build jobs with the environment variable `SPACY_NUM_BUILD_JOBS`:
+- Build in parallel. Starting in v3.4.0, you can specify the number of build
+  jobs with the environment variable `SPACY_NUM_BUILD_JOBS`:
 
   ```bash
   $ pip install -r requirements.txt

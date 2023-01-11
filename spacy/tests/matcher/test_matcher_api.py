@@ -50,8 +50,6 @@ def test_matcher_from_usage_docs(en_vocab):
 
     def label_sentiment(matcher, doc, i, matches):
         match_id, start, end = matches[i]
-        if doc.vocab.strings[match_id] == "HAPPY":
-            doc.sentiment += 0.1
         span = doc[start:end]
         with doc.retokenize() as retokenizer:
             retokenizer.merge(span)
@@ -61,7 +59,6 @@ def test_matcher_from_usage_docs(en_vocab):
     matcher = Matcher(en_vocab)
     matcher.add("HAPPY", pos_patterns, on_match=label_sentiment)
     matcher(doc)
-    assert doc.sentiment != 0
     assert doc[1].norm_ == "happy emoji"
 
 
