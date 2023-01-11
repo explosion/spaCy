@@ -90,7 +90,7 @@ Iterate over the stored strings in insertion order.
 | ----------- | ------------------------------ |
 | **RETURNS** | A string in the store. ~~str~~ |
 
-## StringStore.items {#iter tag="method" new="4"}
+## StringStore.items {#items tag="method" new="4"}
 
 Iterate over the stored string-hash pairs in insertion order.
 
@@ -106,7 +106,7 @@ Iterate over the stored string-hash pairs in insertion order.
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | A list of string-hash pairs. ~~List[Tuple[str, int]]~~ |
 
-## StringStore.keys {#iter tag="method" new="4"}
+## StringStore.keys {#keys tag="method" new="4"}
 
 Iterate over the stored strings in insertion order.
 
@@ -122,7 +122,7 @@ Iterate over the stored strings in insertion order.
 | ----------- | -------------------------------- |
 | **RETURNS** | A list of strings. ~~List[str]~~ |
 
-## StringStore.values {#iter tag="method" new="4"}
+## StringStore.values {#values tag="method" new="4"}
 
 Iterate over the stored string hashes in insertion order.
 
