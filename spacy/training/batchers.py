@@ -26,8 +26,8 @@ def configure_minibatch_by_padded_size(
     The padded size is defined as the maximum length of sequences within the
     batch multiplied by the number of sequences in the batch.
 
-    size (int or Iterable[int]): The largest padded size to batch sequences into.
-        Can be a single integer, or a sequence, allowing for variable batch sizes.
+    size (int, Iterable[int] or Schedule): The largest padded size to batch sequences
+        into. Can be a single integer, or a sequence, allowing for variable batch sizes.
     buffer (int): The number of sequences to accumulate before sorting by length.
         A larger buffer will result in more even sizing, but if the buffer is
         very large, the iteration order will be less random, which can result
@@ -58,7 +58,7 @@ def configure_minibatch_by_words(
 ) -> BatcherT:
     """Create a batcher that uses the "minibatch by words" strategy.
 
-    size (int or Iterable[int]): The target number of words per batch.
+    size (int, Iterable[int] or Schedule): The target number of words per batch.
         Can be a single integer, or a sequence, allowing for variable batch sizes.
     tolerance (float): What percentage of the size to allow batches to exceed.
     discard_oversize (bool): Whether to discard sequences that by themselves
@@ -82,7 +82,7 @@ def configure_minibatch(
 ) -> BatcherT:
     """Create a batcher that creates batches of the specified size.
 
-    size (int or Iterable[int]): The target number of items per batch.
+    size (int, Iterable[int] or Schedule): The target number of items per batch.
         Can be a single integer, or a sequence, allowing for variable batch sizes.
     """
     optionals = {"get_length": get_length} if get_length is not None else {}
@@ -140,7 +140,7 @@ def minibatch_by_words(
     themselves, or be discarded if discard_oversize=True.
 
     seqs (Iterable[Sequence]): The sequences to minibatch.
-    size (int or Sequence[int]): The target number of words per batch.
+    size (int or Iterable[int]): The target number of words per batch.
         Can be a single integer, or a sequence, allowing for variable batch sizes.
     tolerance (float): What percentage of the size to allow batches to exceed.
     discard_oversize (bool): Whether to discard sequences that by themselves
