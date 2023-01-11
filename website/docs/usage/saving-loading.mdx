@@ -313,8 +313,8 @@ You can load a probability table from [spacy-lookups-data](https://github.com/ex
 import spacy
 from spacy.lookups import load_lookups
 nlp = spacy.load("en_core_web_sm")
-lookups = load_lookups("en", ["lexeme_prob"])
-nlp.vocab.lookups.add_table("lexeme_prob", lookups.get_table("lexeme_prob"))
+lookups = load_lookups("en", ["lexeme_norm"])
+nlp.vocab.lookups.add_table("lexeme_norm", lookups.get_table("lexeme_norm"))
 ```
 
 When training a model from scratch you can also specify probability tables in the `config.cfg`.
