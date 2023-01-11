@@ -914,7 +914,7 @@ def _compile_gold(
                 data["n_cycles"] += 1
         if "trainable_lemmatizer" in factory_names:
             # from EditTreeLemmatizer._labels_from_data
-            if all(token.lemma is None for token in gold):
+            if all(token.lemma == 0 for token in gold):
                 data["no_lemma_annotations"] += 1
             else:
                 lemma_set = set()
