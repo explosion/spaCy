@@ -675,16 +675,17 @@ def debug_data(
         msg.divider("Trainable Lemmatizer")
         trees_train: Set[str] = gold_train_data["lemmatizer_trees"]
         trees_dev: Set[str] = gold_dev_data["lemmatizer_trees"]
-
         # This is necessary context when someone is attempting to interpret whether the
         # number of trees exclusively in the dev set is meaningful.
-        msg.info(f"{len(trees_train)} lemmatizer trees generated from training data.")
-        msg.info(f"{len(trees_dev)} lemmatizer trees generated from dev data.")
-
+        msg.info(f"{len(trees_train)} lemmatizer trees generated from training data")
+        msg.info(f"{len(trees_dev)} lemmatizer trees generated from dev data")
         dev_not_train = trees_dev - trees_train
+
         if len(dev_not_train) != 0:
-            msg.warn(
-                f"{len(dev_not_train)} lemmatizer trees were found exclusively in the dev data."
+            pct = len(dev_not_train) / len(trees_dev)
+            msg.info(
+                f"{len(dev_not_train)} lemmatizer trees ({pct*100:.1f}% of dev trees)"
+                " were found exclusively in the dev data."
             )
         else:
             # Would we ever expect this case? It seems like it would be pretty rare,
@@ -692,18 +693,28 @@ def debug_data(
             msg.good("All trees in dev data present in training data.")
 
         if gold_train_data["n_low_cardinality_lemmas"] > 0:
-            msg.warn(
-                f"{gold_train_data['n_low_cardinality_lemmas']} docs with 1 or 0 unique lemmas."
-            )
+            n = gold_train_data["n_low_cardinality_lemmas"]
+            msg.warn(f"{n} docs with 1 or 0 unique lemmas.")
         else:
             msg.good("All training docs meet lemma uniqueness requirements.")
 
         if gold_dev_data["n_low_cardinality_lemmas"] > 0:
-            msg.warn(
-                f"{gold_dev_data['n_low_cardinality_lemmas']} docs with 1 or 0 unique lemmas."
-            )
+            n = gold_dev_data["n_low_cardinality_lemmas"]
+            msg.warn(f"{n} docs with 1 or 0 unique lemmas.")
         else:
             msg.good("All dev docs meet lemma uniqueness requirements.")
+
+        if gold_train_data["no_lemma_annotations"] > 0:
+            n = gold_train_data["no_lemma_annotations"]
+            msg.warn(f"{n} docs with no lemma annotations.")
+        else:
+            msg.good("All training docs have complete lemma annotations.")
+
+        if gold_dev_data["no_lemma_annotations"] > 0:
+            n = gold_dev_data["no_lemma_annotations"]
+            msg.warn(f"{n} docs with no lemma annotations.")
+        else:
+            msg.good("All dev docs have complete lemma annotations.")
 
     msg.divider("Summary")
     good_counts = msg.counts[MESSAGES.GOOD]
@@ -767,6 +778,7 @@ def _compile_gold(
         "n_cats_bad_values": 0,
         "texts": set(),
         "lemmatizer_trees": set(),
+        "no_lemma_annotations": 0,
         "n_low_cardinality_lemmas": 0,
     }
     if "trainable_lemmatizer" in factory_names:
@@ -902,18 +914,21 @@ def _compile_gold(
                 data["n_cycles"] += 1
         if "trainable_lemmatizer" in factory_names:
             # from EditTreeLemmatizer._labels_from_data
-            lemma_set = set()
-            for token in gold:
-                lemma_set.add(token.lemma)
-                if token.lemma != 0:
-                    tree_id = trees.add(token.text, token.lemma_)
-                    tree_str = trees.tree_to_str(tree_id)
-                    data["lemmatizer_trees"].add(tree_str)
-            # We want to identify cases where lemmas aren't assigned
-            # or are all assigned the same value, as this would indicate
-            # an issue since we're expecting a large set of lemmas
-            if len(lemma_set) < 2 and len(gold) > 1:
-                data["n_low_cardinality_lemmas"] += 1
+            if all(token.lemma is None for token in gold):
+                data["no_lemma_annotations"] += 1
+            else:
+                lemma_set = set()
+                for token in gold:
+                    if token.lemma != 0:
+                        lemma_set.add(token.lemma)
+                        tree_id = trees.add(token.text, token.lemma_)
+                        tree_str = trees.tree_to_str(tree_id)
+                        data["lemmatizer_trees"].add(tree_str)
+                # We want to identify cases where lemmas aren't assigned
+                # or are all assigned the same value, as this would indicate
+                # an issue since we're expecting a large set of lemmas
+                if len(lemma_set) < 2 and len(gold) > 1:
+                    data["n_low_cardinality_lemmas"] += 1
     return data
 
 
