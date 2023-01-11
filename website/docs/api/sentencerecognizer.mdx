@@ -1,0 +1,375 @@
+---
+title: SentenceRecognizer
+tag: class
+source: spacy/pipeline/senter.pyx
+version: 3
+teaser: 'Pipeline component for sentence segmentation'
+api_base_class: /api/tagger
+api_string_name: senter
+api_trainable: true
+---
+
+A trainable pipeline component for sentence segmentation. For a simpler,
+rule-based strategy, see the [`Sentencizer`](/api/sentencizer).
+
+## Assigned Attributes {id="assigned-attributes"}
+
+Predicted values will be assigned to `Token.is_sent_start`. The resulting
+sentences can be accessed using `Doc.sents`.
+
+| Location              | Value                                                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `Token.is_sent_start` | A boolean value indicating whether the token starts a sentence. This will be either `True` or `False` for all tokens. ~~bool~~ |
+| `Doc.sents`           | An iterator over sentences in the `Doc`, determined by `Token.is_sent_start` values. ~~Iterator[Span]~~                        |
+
+## Config and implementation {id="config"}
+
+The default config is defined by the pipeline component factory and describes
+how the component should be configured. You can override its settings via the
+`config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
+[`config.cfg` for training](/usage/training#config). See the
+[model architectures](/api/architectures) documentation for details on the
+architectures and their arguments and hyperparameters.
+
+> #### Example
+>
+> ```python
+> from spacy.pipeline.senter import DEFAULT_SENTER_MODEL
+> config = {"model": DEFAULT_SENTER_MODEL,}
+> nlp.add_pipe("senter", config=config)
+> ```
+
+| Setting                                  | Description                                                                                                                                                           |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                                  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
+| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                             |
+| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~                                   |
+
+```python
+%%GITHUB_SPACY/spacy/pipeline/senter.pyx
+```
+
+## SentenceRecognizer.\_\_init\_\_ {id="init",tag="method"}
+
+Initialize the sentence recognizer.
+
+> #### Example
+>
+> ```python
+> # Construction via add_pipe with default model
+> senter = nlp.add_pipe("senter")
+>
+> # Construction via create_pipe with custom model
+> config = {"model": {"@architectures": "my_senter"}}
+> senter = nlp.add_pipe("senter", config=config)
+>
+> # Construction from class
+> from spacy.pipeline import SentenceRecognizer
+> senter = SentenceRecognizer(nlp.vocab, model)
+> ```
+
+Create a new pipeline instance. In your application, you would normally use a
+shortcut for this and instantiate the component using its string name and
+[`nlp.add_pipe`](/api/language#add_pipe).
+
+| Name                                     | Description                                                                                                                         |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                                  | The shared vocabulary. ~~Vocab~~                                                                                                    |
+| `model`                                  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~                |
+| `name`                                   | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                 |
+| _keyword-only_                           |                                                                                                                                     |
+| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                           |
+| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~ |
+
+## SentenceRecognizer.\_\_call\_\_ {id="call",tag="method"}
+
+Apply the pipe to one document. The document is modified in place, and returned.
+This usually happens under the hood when the `nlp` object is called on a text
+and all pipeline components are applied to the `Doc` in order. Both
+[`__call__`](/api/sentencerecognizer#call) and
+[`pipe`](/api/sentencerecognizer#pipe) delegate to the
+[`predict`](/api/sentencerecognizer#predict) and
+[`set_annotations`](/api/sentencerecognizer#set_annotations) methods.
+
+> #### Example
+>
+> ```python
+> doc = nlp("This is a sentence.")
+> senter = nlp.add_pipe("senter")
+> # This usually happens under the hood
+> processed = senter(doc)
+> ```
+
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `doc`       | The document to process. ~~Doc~~ |
+| **RETURNS** | The processed document. ~~Doc~~  |
+
+## SentenceRecognizer.pipe {id="pipe",tag="method"}
+
+Apply the pipe to a stream of documents. This usually happens under the hood
+when the `nlp` object is called on a text and all pipeline components are
+applied to the `Doc` in order. Both [`__call__`](/api/sentencerecognizer#call)
+and [`pipe`](/api/sentencerecognizer#pipe) delegate to the
+[`predict`](/api/sentencerecognizer#predict) and
+[`set_annotations`](/api/sentencerecognizer#set_annotations) methods.
+
+> #### Example
+>
+> ```python
+> senter = nlp.add_pipe("senter")
+> for doc in senter.pipe(docs, batch_size=50):
+>     pass
+> ```
+
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `stream`       | A stream of documents. ~~Iterable[Doc]~~                      |
+| _keyword-only_ |                                                               |
+| `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
+| **YIELDS**     | The processed documents in order. ~~Doc~~                     |
+
+## SentenceRecognizer.initialize {id="initialize",tag="method"}
+
+Initialize the component for training. `get_examples` should be a function that
+returns an iterable of [`Example`](/api/example) objects. **At least one example
+should be supplied.** The data examples are used to **initialize the model** of
+the component and can either be the full training data or a representative
+sample. Initialization includes validating the network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data. This method is typically called
+by [`Language.initialize`](/api/language#initialize).
+
+> #### Example
+>
+> ```python
+> senter = nlp.add_pipe("senter")
+> senter.initialize(lambda: examples, nlp=nlp)
+> ```
+
+| Name           | Description                                                                                                                                                                |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. Must contain at least one `Example`. ~~Callable[[], Iterable[Example]]~~ |
+| _keyword-only_ |                                                                                                                                                                            |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                       |
+
+## SentenceRecognizer.predict {id="predict",tag="method"}
+
+Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+modifying them.
+
+> #### Example
+>
+> ```python
+> senter = nlp.add_pipe("senter")
+> scores = senter.predict([doc1, doc2])
+> ```
+
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
+| **RETURNS** | The model's prediction for each document.   |
+
+## SentenceRecognizer.set_annotations {id="set_annotations",tag="method"}
+
+Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
+
+> #### Example
+>
+> ```python
+> senter = nlp.add_pipe("senter")
+> scores = senter.predict([doc1, doc2])
+> senter.set_annotations([doc1, doc2], scores)
+> ```
+
+| Name     | Description                                                  |
+| -------- | ------------------------------------------------------------ |
+| `docs`   | The documents to modify. ~~Iterable[Doc]~~                   |
+| `scores` | The scores to set, produced by `SentenceRecognizer.predict`. |
+
+## SentenceRecognizer.update {id="update",tag="method"}
+
+Learn from a batch of [`Example`](/api/example) objects containing the
+predictions and gold-standard annotations, and update the component's model.
+Delegates to [`predict`](/api/sentencerecognizer#predict) and
+[`get_loss`](/api/sentencerecognizer#get_loss).
+
+> #### Example
+>
+> ```python
+> senter = nlp.add_pipe("senter")
+> optimizer = nlp.initialize()
+> losses = senter.update(examples, sgd=optimizer)
+> ```
+
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
+
+## SentenceRecognizer.rehearse {id="rehearse",tag="method,experimental",version="3"}
+
+Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
+current model to make predictions similar to an initial model to try to address
+the "catastrophic forgetting" problem. This feature is experimental.
+
+> #### Example
+>
+> ```python
+> senter = nlp.add_pipe("senter")
+> optimizer = nlp.resume_training()
+> losses = senter.rehearse(examples, sgd=optimizer)
+> ```
+
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
+
+## SentenceRecognizer.get_loss {id="get_loss",tag="method"}
+
+Find the loss and gradient of loss for the batch of documents and their
+predicted scores.
+
+> #### Example
+>
+> ```python
+> senter = nlp.add_pipe("senter")
+> scores = senter.predict([eg.predicted for eg in examples])
+> loss, d_loss = senter.get_loss(examples, scores)
+> ```
+
+| Name        | Description                                                                 |
+| ----------- | --------------------------------------------------------------------------- |
+| `examples`  | The batch of examples. ~~Iterable[Example]~~                                |
+| `scores`    | Scores representing the model's predictions.                                |
+| **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
+
+## SentenceRecognizer.create_optimizer {id="create_optimizer",tag="method"}
+
+Create an optimizer for the pipeline component.
+
+> #### Example
+>
+> ```python
+> senter = nlp.add_pipe("senter")
+> optimizer = senter.create_optimizer()
+> ```
+
+| Name        | Description                  |
+| ----------- | ---------------------------- |
+| **RETURNS** | The optimizer. ~~Optimizer~~ |
+
+## SentenceRecognizer.use_params {id="use_params",tag="method, contextmanager"}
+
+Modify the pipe's model, to use the given parameter values. At the end of the
+context, the original parameters are restored.
+
+> #### Example
+>
+> ```python
+> senter = nlp.add_pipe("senter")
+> with senter.use_params(optimizer.averages):
+>     senter.to_disk("/best_model")
+> ```
+
+| Name     | Description                                        |
+| -------- | -------------------------------------------------- |
+| `params` | The parameter values to use in the model. ~~dict~~ |
+
+## SentenceRecognizer.to_disk {id="to_disk",tag="method"}
+
+Serialize the pipe to disk.
+
+> #### Example
+>
+> ```python
+> senter = nlp.add_pipe("senter")
+> senter.to_disk("/path/to/senter")
+> ```
+
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
+
+## SentenceRecognizer.from_disk {id="from_disk",tag="method"}
+
+Load the pipe from disk. Modifies the object in place and returns it.
+
+> #### Example
+>
+> ```python
+> senter = nlp.add_pipe("senter")
+> senter.from_disk("/path/to/senter")
+> ```
+
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified `SentenceRecognizer` object. ~~SentenceRecognizer~~                                |
+
+## SentenceRecognizer.to_bytes {id="to_bytes",tag="method"}
+
+> #### Example
+>
+> ```python
+> senter = nlp.add_pipe("senter")
+> senter_bytes = senter.to_bytes()
+> ```
+
+Serialize the pipe to a bytestring.
+
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the `SentenceRecognizer` object. ~~bytes~~                           |
+
+## SentenceRecognizer.from_bytes {id="from_bytes",tag="method"}
+
+Load the pipe from a bytestring. Modifies the object in place and returns it.
+
+> #### Example
+>
+> ```python
+> senter_bytes = senter.to_bytes()
+> senter = nlp.add_pipe("senter")
+> senter.from_bytes(senter_bytes)
+> ```
+
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `SentenceRecognizer` object. ~~SentenceRecognizer~~                                     |
+
+## Serialization fields {id="serialization-fields"}
+
+During serialization, spaCy will export several data fields used to restore
+different aspects of the object. If needed, you can exclude them from
+serialization by passing in the string names via the `exclude` argument.
+
+> #### Example
+>
+> ```python
+> data = senter.to_disk("/path", exclude=["vocab"])
+> ```
+
+| Name    | Description                                                    |
+| ------- | -------------------------------------------------------------- |
+| `vocab` | The shared [`Vocab`](/api/vocab).                              |
+| `cfg`   | The config file. You usually don't want to exclude this.       |
+| `model` | The binary model data. You usually don't want to exclude this. |
