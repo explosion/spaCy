@@ -365,7 +365,7 @@ else:
 
 </Accordion>
 
-#### Fuzzy matching {#fuzzy new="3.5"}
+#### Fuzzy matching {id="fuzzy", version="3.5"}
 
 Fuzzy matching allows you to match tokens with alternate spellings, typos, etc.
 without specifying every possible variant.
@@ -394,7 +394,7 @@ pattern = [{"_": {"country": {"FUZZY": "Kyrgyzstan"}}}]
 pattern = [{"_": {"country": {"FUZZY3": "Kyrgyzstan"}}}]
 ```
 
-#### Regex and fuzzy matching with lists {#regex-fuzzy-lists new="3.5"}
+#### Regex and fuzzy matching with lists {id="regex-fuzzy-lists", version="3.5"}
 
 Starting in spaCy v3.5, both `REGEX` and `FUZZY` can be combined with the
 attributes `IN` and `NOT_IN`:
