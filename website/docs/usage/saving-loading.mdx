@@ -308,8 +308,7 @@ installed in the same environment – that's it.
 
 You can load a probability table from [spacy-lookups-data](https://github.com/explosion/spacy-lookups-data) into an existing spaCy model like `en_core_web_sm`.
 
-```python
-### load_table.py
+```python {title="load_table.py"}
 import spacy
 from spacy.lookups import load_lookups
 nlp = spacy.load("en_core_web_sm")
@@ -319,15 +318,14 @@ nlp.vocab.lookups.add_table("lexeme_norm", lookups.get_table("lexeme_norm"))
 
 When training a model from scratch you can also specify probability tables in the `config.cfg`.
 
-```ini
-### config.cfg (excerpt)
+```ini {title="config.cfg (excerpt)"}
 [initialize.lookups]
 @misc = "spacy.LookupsDataLoader.v1"
 lang = ${nlp.lang}
 tables = ["lexeme_norm"]
 ```
 
-### Custom components via entry points {#entry-points-components}
+### Custom components via entry points {id="entry-points-components"}
 
 When you load a pipeline, spaCy will generally use its `config.cfg` to set up
 the language class and construct the pipeline. The pipeline is specified as a
