@@ -110,7 +110,7 @@ def test_tokenization(sented_doc):
     )
     example.predicted[1].is_sent_start = False
     scores = scorer.score([example])
-    assert scores["token_acc"] == approx(0.66666666)
+    assert scores["token_acc"] == 0.5
     assert scores["token_p"] == 0.5
     assert scores["token_r"] == approx(0.33333333)
     assert scores["token_f"] == 0.4

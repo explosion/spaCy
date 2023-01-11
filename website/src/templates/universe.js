@@ -1,6 +1,5 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { StaticQuery, graphql } from 'gatsby'
 
 import Card from '../components/card'
 import Link from '../components/link'
@@ -17,18 +16,16 @@ import Main from '../components/main'
 import Footer from '../components/footer'
 import { H3, H5, Label, InlineList } from '../components/typography'
 import { YouTube, SoundCloud, Iframe } from '../components/embed'
-import { github, markdownToReact } from '../components/util'
+import { github, MarkdownToReact } from '../components/util'
 
-function getSlug(data) {
-    if (data.isCategory) return `/universe/category/${data.id}`
-    if (data.isProject) return `/universe/project/${data.id}`
-    return `/universe`
-}
+import { nightly, legacy } from '../../meta/dynamicMeta.mjs'
+import universe from '../../meta/universe.json'
+import Image from 'next/image'
 
 function filterResources(resources, data) {
     const sorted = resources.sort((a, b) => a.id.localeCompare(b.id))
     if (!data || !data.isCategory) return sorted
-    return sorted.filter(res => (res.category || []).includes(data.id))
+    return sorted.filter((res) => (res.category || []).includes(data.id))
 }
 
 const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComponents }) => {
@@ -36,7 +33,7 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
     const filteredResources = filterResources(content, data)
     const activeData = data ? content.find(({ id }) => id === data.id) : null
     const markdownComponents = { ...mdxComponents, code: InlineCode }
-    const slug = getSlug(data)
+    const slug = pageContext.slug
     const isHome = !data.isCategory && !data.isProject
 
     const sidebar = [
@@ -84,6 +81,7 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                                     }
                                     const url = `/universe/project/${id}`
                                     const header = youtube && (
+                                        // eslint-disable-next-line @next/next/no-img-element
                                         <img
                                             src={`https://img.youtube.com/vi/${youtube}/0.jpg`}
                                             alt=""
@@ -96,6 +94,7 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                                     return cover ? (
                                         <p key={id}>
                                             <Link key={id} to={url} hidden>
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img src={cover} alt={title || id} />
                                             </Link>
                                         </p>
@@ -123,9 +122,9 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                     </Section>
                 )}
                 <section className="search-exclude">
-                    <H3>Found a mistake or something isn't working?</H3>
+                    <H3>Found a mistake or something isn&apos;t working?</H3>
                     <p>
-                        If you've come across a universe project that isn't working or is
+                        If you&apos;ve come across a universe project that isn&apos;t working or is
                         incompatible with the reported spaCy version, let us know by{' '}
                         <Link to="https://github.com/explosion/spaCy/discussions/new">
                             opening a discussion thread
@@ -142,7 +141,13 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                         The Universe database is open-source and collected in a simple JSON file.
                         For more details on the formats and available fields, see the documentation.
                         Looking for inspiration your own spaCy plugin or extension? Check out the
-                        <Link to={"https://github.com/explosion/spaCy/discussions/categories/new-features-project-ideas/"} hideIcon ws>
+                        <Link
+                            to={
+                                'https://github.com/explosion/spaCy/discussions/categories/new-features-project-ideas/'
+                            }
+                            hideIcon
+                            ws
+                        >
                             project idea
                         </Link>
                         section in Discussions.
@@ -203,6 +208,7 @@ const Project = ({ data, components }) => (
                                 `license/${data.github}.svg?style=flat-square`,
                                 `stars/${data.github}.svg?style=social&label=Stars`,
                             ].map((url, i) => (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     style={{
                                         borderRadius: '1em',
@@ -228,12 +234,13 @@ const Project = ({ data, components }) => (
         )}
         {data.cran && (
             <Aside title="Installation">
-                <CodeBlock lang="r">install.packages("{data.cran}")</CodeBlock>
+                <CodeBlock lang="r">install.packages(&quot;{data.cran}&quot;)</CodeBlock>
             </Aside>
         )}
 
         {data.cover && (
             <p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={data.cover} alt={data.title} width={250} style={{ maxWidth: '50%' }} />
             </p>
         )}
@@ -250,7 +257,11 @@ const Project = ({ data, components }) => (
                 />
             )}
 
-            {data.description && <section>{markdownToReact(data.description, components)}</section>}
+            {data.description && (
+                <section>
+                    <MarkdownToReact markdown={data.description} />
+                </section>
+            )}
 
             {data.code_example && (
                 <CodeBlock title="Example" lang={data.code_language || 'python'}>
@@ -260,6 +271,7 @@ const Project = ({ data, components }) => (
 
             {data.image && (
                 <p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={data.image} style={{ maxWidth: '100%' }} alt="" />
                 </p>
             )}
@@ -316,7 +328,7 @@ const Project = ({ data, components }) => (
             {data.category && (
                 <p style={{ marginBottom: 0 }}>
                     <Label>Categories</Label>
-                    {data.category.map(cat => (
+                    {data.category.map((cat) => (
                         <Link to={`/universe/category/${cat}`} key={cat} ws>
                             <InlineCode>{cat}</InlineCode>
                         </Link>
@@ -327,73 +339,18 @@ const Project = ({ data, components }) => (
     </>
 )
 
-const Universe = ({ pageContext, location, mdxComponents }) => (
-    <StaticQuery
-        query={query}
-        render={data => {
-            const { universe, nightly, legacy } = data.site.siteMetadata
-            const theme = nightly ? 'nightly' : legacy ? 'legacy' : pageContext.theme
-            return (
-                <UniverseContent
-                    content={universe.resources}
-                    categories={universe.categories}
-                    pageContext={pageContext}
-                    location={location}
-                    mdxComponents={mdxComponents}
-                    theme={theme}
-                />
-            )
-        }}
-    />
-)
+const Universe = ({ pageContext, location, mdxComponents }) => {
+    const theme = nightly ? 'nightly' : legacy ? 'legacy' : pageContext.theme
+    return (
+        <UniverseContent
+            content={universe.resources}
+            categories={universe.categories}
+            pageContext={pageContext}
+            location={location}
+            mdxComponents={mdxComponents}
+            theme={theme}
+        />
+    )
+}
 
 export default Universe
-
-const query = graphql`
-    query UniverseQuery {
-        site {
-            siteMetadata {
-                nightly
-                legacy
-                universe {
-                    resources {
-                        type
-                        id
-                        title
-                        slogan
-                        url
-                        github
-                        description
-                        spacy_version
-                        pip
-                        cran
-                        category
-                        thumb
-                        image
-                        cover
-                        code_example
-                        code_language
-                        youtube
-                        soundcloud
-                        iframe
-                        iframe_height
-                        author
-                        author_links {
-                            twitter
-                            github
-                            website
-                        }
-                    }
-                    categories {
-                        label
-                        items {
-                            id
-                            title
-                            description
-                        }
-                    }
-                }
-            }
-        }
-    }
-`

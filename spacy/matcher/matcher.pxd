@@ -77,3 +77,4 @@ cdef class Matcher:
     cdef public object _extensions
     cdef public object _extra_predicates
     cdef public object _seen_attrs
+    cdef public object _fuzzy_compare
