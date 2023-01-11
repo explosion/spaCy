@@ -137,7 +137,7 @@ def _check_pipeline_names(nlp, nlp2):
 def configure_resume_cli(
     # fmt: off
     base_model: Path = Arg(..., help="Path or name of base model to use for config"),
-    output_path: Path = Arg(..., help="File to save the config to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
+    output_file: Path = Arg(..., help="File to save the config to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
     # fmt: on
 ):
     """Create a config for resuming training.
@@ -155,18 +155,18 @@ def configure_resume_cli(
     for comp in nlp.pipe_names:
         conf["components"][comp] = {"source": path_str}
 
-    if str(output_path) == "-":
+    if str(output_file) == "-":
         print(conf.to_str())
     else:
-        conf.to_disk(output_path)
-        msg.good("Saved config", output_path)
+        conf.to_disk(output_file)
+        msg.good("Saved config", output_file)
 
     return conf
 
 
 @configure_cli.command("transformer")
 def use_transformer(
-    base_model: str, output_path: Path, transformer_name: str = "roberta-base"
+    base_model: str, output_file: Path, transformer_name: str = "roberta-base"
 ) -> Config:
     """Replace pipeline tok2vec with transformer."""
 
@@ -208,17 +208,17 @@ def use_transformer(
         }
         nlp.config["components"][listener]["model"]["tok2vec"] = listener_config
 
-    if str(output_path) == "-":
+    if str(output_file) == "-":
         print(nlp.config.to_str())
     else:
-        nlp.config.to_disk(output_path)
-        msg.good("Saved config", output_path)
+        nlp.config.to_disk(output_file)
+        msg.good("Saved config", output_file)
 
     return nlp.config
 
 
 @configure_cli.command("tok2vec")
-def use_tok2vec(base_model: str, output_path: Path) -> Config:
+def use_tok2vec(base_model: str, output_file: Path) -> Config:
     """Replace pipeline tok2vec with CNN tok2vec."""
     nlp = spacy.load(base_model)
     _check_single_tok2vec(base_model, nlp.config)
@@ -240,11 +240,11 @@ def use_tok2vec(base_model: str, output_path: Path) -> Config:
         }
         nlp.config["components"][listener]["model"]["tok2vec"] = listener_config
 
-    if str(output_path) == "-":
+    if str(output_file) == "-":
         print(nlp.config.to_str())
     else:
-        nlp.config.to_disk(output_path)
-        msg.good("Saved config", output_path)
+        nlp.config.to_disk(output_file)
+        msg.good("Saved config", output_file)
 
     return nlp.config
 
@@ -298,7 +298,7 @@ def _inner_merge(nlp, nlp2, replace_listeners=False) -> Language:
 
 
 @configure_cli.command("merge")
-def merge_pipelines(base_model: str, added_model: str, output_path: Path) -> Language:
+def merge_pipelines(base_model: str, added_model: str, output_file: Path) -> Language:
     """Combine components from multiple pipelines."""
     nlp = spacy.load(base_model)
     nlp2 = spacy.load(added_model)
@@ -336,7 +336,7 @@ def merge_pipelines(base_model: str, added_model: str, output_path: Path) -> Lan
     nlp_out = _inner_merge(nlp, nlp2, replace_listeners=replace_listeners)
 
     # write the final pipeline
-    nlp.to_disk(output_path)
-    msg.info(f"Saved pipeline to: {output_path}")
+    nlp.to_disk(output_file)
+    msg.info(f"Saved pipeline to: {output_file}")
 
     return nlp

@@ -7,6 +7,7 @@ menu:
   - ['info', 'info']
   - ['validate', 'validate']
   - ['init', 'init']
+  - ['configure', 'configure']
   - ['convert', 'convert']
   - ['debug', 'debug']
   - ['train', 'train']
@@ -248,6 +249,94 @@ $ python -m spacy init labels [config_path] [output_path] [--code] [--verbose] [
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **CREATES**       | The label files.                                                                                                                                                                                                   |
+
+## configure {#configure new="TODO"}
+
+Modify or combine existing configs in high-level ways. Can be used to automate
+config changes made as part of the development cycle.
+
+### configure resume {#configure-resume tag="command"}
+
+Modify the input config for use in resuming training. When resuming training,
+all components are sourced from the previously trained pipeline.
+
+```cli
+$ python -m spacy configure resume [base_model] [output_file]
+```
+
+| Name          | Description                                                                                                                                                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base_model`  | A trained pipeline to resume training (package name or path). ~~str (positional)~~                                                                                                                                                    |
+| `output_file` | Path to output `.cfg` file or `-` to write the config to stdout (so you can pipe it forward to a file or to the `train` command). Note that if you're writing to stdout, no additional logging info is printed. ~~Path (positional)~~ |
+
+### configure transformer {#configure-transformer tag="command"}
+
+Modify the base config to use a transformer component, optionally specifying the
+base transformer to use. Useful for converting a CNN tok2vec pipeline to use
+transformers.
+
+During development of a model, you can use a CNN tok2vec for faster training
+time and reduced hardware requirements, and then use this command to convert
+your pipeline to use a transformer once you've verified a proof of concept. This
+can also help isolate whether any training issues are transformer-related or
+not.
+
+```cli
+$ python -m spacy configure transformer [base_model] [output_file] [--transformer_name]
+```
+
+| Name               | Description                                                                                                                                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base_model`       | A trained pipeline to resume training (package name or path). ~~str (positional)~~                                                                                                                                                    |
+| `output_file`      | Path to output `.cfg` file or `-` to write the config to stdout (so you can pipe it forward to a file or to the `train` command). Note that if you're writing to stdout, no additional logging info is printed. ~~Path (positional)~~ |
+| `transformer_name` | The name of the base HuggingFace model to use. Defaults to `roberta-base`. ~~str (option)~~                                                                                                                                           |
+
+### configure tok2vec {#configure-tok2vec tag="command"}
+
+Modify the base model config to use a CNN tok2vec component. Useful for
+generating a config from a transformer-based model for faster training
+iteration.
+
+```cli
+$ python -m spacy configure tok2vec [base_model] [output_file]
+```
+
+| Name          | Description                                                                                                                                                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base_model`  | A trained pipeline to resume training (package name or path). ~~str (positional)~~                                                                                                                                                    |
+| `output_file` | Path to output `.cfg` file or `-` to write the config to stdout (so you can pipe it forward to a file or to the `train` command). Note that if you're writing to stdout, no additional logging info is printed. ~~Path (positional)~~ |
+
+### configure merge {#configure-merge tag="command"}
+
+Take two pipelines and create a new one with components from both of them,
+handling the configuration of listeners. Note that unlike other commands, this
+produces a whole pipeline, not just a config.
+
+Components in the final pipeline are in the same order as in the original
+pipelines, with the base pipeline first and the added pipeline after. Because
+pipeline names must be unique, if there is a name collision in components, the
+later components will be automatically renamed.
+
+For components with listeners, the resulting pipeline structure depends on the
+number of listeners. If the second pipeline has only one listener, then
+[`replace_listeners`](https://spacy.io/api/language/#replace_listeners) will be
+used. If there is more than one listener, `replace_listeners` will not be used.
+In the multi-listener case, the resulting pipeline may require more adjustment
+for training to work.
+
+This is useful if you have trained a specialized component, such as NER or
+textcat, and want to provide with one of the official pretrained pipelines or
+another pipeline.
+
+```cli
+$ python -m spacy configure tok2vec [base_model] [added_model] [output_file]
+```
+
+| Name          | Description                                                                              |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| `base_model`  | A trained pipeline (package name or path) to use as a base. ~~str (positional)~~         |
+| `added_model` | A trained pipeline (package name or path) to combine with the base. ~~str (positional)~~ |
+| `output_file` | Path to output pipeline. ~~Path (positional)~~                                           |
 
 ## convert {#convert tag="command"}
 
