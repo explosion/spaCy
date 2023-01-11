@@ -12,10 +12,10 @@ jobs:
     if: github.repository_owner == 'explosion'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
             ref: ${{ github.head_ref }}
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
       - run: pip install black
       - name: Auto-format code if needed
         run: black spacy
@@ -23,10 +23,11 @@ jobs:
       # code and makes GitHub think the action failed
       - name: Check for modified files
         id: git-check
-        run: echo ::set-output name=modified::$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)
+        run: echo modified=$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi) >> $GITHUB_OUTPUT
+
       - name: Create Pull Request
         if: steps.git-check.outputs.modified == 'true'
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v4
         with:
             title: Auto-format code with black
             labels: meta

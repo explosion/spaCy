@@ -1,7 +1,8 @@
 # cython: infer_types=True, profile=True, binding=True
 from typing import Callable, Dict, Iterable, List, Optional, Union
 import srsly
-from thinc.api import SequenceCategoricalCrossentropy, Model, Config
+from thinc.api import Model, Config
+from thinc.legacy import LegacySequenceCategoricalCrossentropy
 from thinc.types import Floats2d, Ints1d
 from itertools import islice
 
@@ -290,7 +291,7 @@ class Morphologizer(Tagger):
         DOCS: https://spacy.io/api/morphologizer#get_loss
         """
         validate_examples(examples, "Morphologizer.get_loss")
-        loss_func = SequenceCategoricalCrossentropy(names=tuple(self.labels), normalize=False)
+        loss_func = LegacySequenceCategoricalCrossentropy(names=tuple(self.labels), normalize=False)
         truths = []
         for eg in examples:
             eg_truths = []

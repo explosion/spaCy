@@ -1,13 +1,13 @@
-from typing import cast, Any, Callable, Dict, Iterable, List, Optional
-from typing import Sequence, Tuple, Union
+from typing import cast, Any, Callable, Dict, Iterable, List, Optional, Union
+from typing import Tuple
 from collections import Counter
-from copy import deepcopy
 from itertools import islice
 import numpy as np
 
 import srsly
-from thinc.api import Config, Model, SequenceCategoricalCrossentropy
+from thinc.api import Config, Model
 from thinc.types import ArrayXd, Floats2d, Ints1d
+from thinc.legacy import LegacySequenceCategoricalCrossentropy
 
 from ._edit_tree_internals.edit_trees import EditTrees
 from ._edit_tree_internals.schemas import validate_edit_tree
@@ -130,7 +130,9 @@ class EditTreeLemmatizer(TrainablePipe):
         self, examples: Iterable[Example], scores: List[Floats2d]
     ) -> Tuple[float, List[Floats2d]]:
         validate_examples(examples, "EditTreeLemmatizer.get_loss")
-        loss_func = SequenceCategoricalCrossentropy(normalize=False, missing_value=-1)
+        loss_func = LegacySequenceCategoricalCrossentropy(
+            normalize=False, missing_value=-1
+        )
 
         truths = []
         for eg in examples:
@@ -348,9 +350,9 @@ class EditTreeLemmatizer(TrainablePipe):
 
             tree = dict(tree)
             if "orig" in tree:
-                tree["orig"] = self.vocab.strings[tree["orig"]]
+                tree["orig"] = self.vocab.strings.add(tree["orig"])
             if "orig" in tree:
-                tree["subst"] = self.vocab.strings[tree["subst"]]
+                tree["subst"] = self.vocab.strings.add(tree["subst"])
 
             trees.append(tree)
 

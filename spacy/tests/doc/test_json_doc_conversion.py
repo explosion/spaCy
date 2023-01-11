@@ -128,7 +128,9 @@ def test_doc_to_json_with_token_span_attributes(doc):
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
     doc[0:1]._.span_test = "span_attribute"
+    doc[0:2]._.span_test = "span_attribute_2"
     doc[0]._.token_test = 117
+    doc[1]._.token_test = 118
     doc.spans["span_group"] = [doc[0:1]]
     json_doc = doc.to_json(
         underscore=["json_test1", "json_test2", "token_test", "span_test"]
@@ -139,8 +141,10 @@ def test_doc_to_json_with_token_span_attributes(doc):
     assert json_doc["_"]["json_test2"] == [1, 2, 3]
     assert "underscore_token" in json_doc
     assert "underscore_span" in json_doc
-    assert json_doc["underscore_token"]["token_test"]["value"] == 117
-    assert json_doc["underscore_span"]["span_test"]["value"] == "span_attribute"
+    assert json_doc["underscore_token"]["token_test"][0]["value"] == 117
+    assert json_doc["underscore_token"]["token_test"][1]["value"] == 118
+    assert json_doc["underscore_span"]["span_test"][0]["value"] == "span_attribute"
+    assert json_doc["underscore_span"]["span_test"][1]["value"] == "span_attribute_2"
     assert len(schemas.validate(schemas.DocJSONSchema, json_doc)) == 0
     assert srsly.json_loads(srsly.json_dumps(json_doc)) == json_doc
 
@@ -161,8 +165,8 @@ def test_doc_to_json_with_custom_user_data(doc):
     assert json_doc["_"]["json_test"] == "hello world"
     assert "underscore_token" in json_doc
     assert "underscore_span" in json_doc
-    assert json_doc["underscore_token"]["token_test"]["value"] == 117
-    assert json_doc["underscore_span"]["span_test"]["value"] == "span_attribute"
+    assert json_doc["underscore_token"]["token_test"][0]["value"] == 117
+    assert json_doc["underscore_span"]["span_test"][0]["value"] == "span_attribute"
     assert len(schemas.validate(schemas.DocJSONSchema, json_doc)) == 0
     assert srsly.json_loads(srsly.json_dumps(json_doc)) == json_doc
 
@@ -181,8 +185,8 @@ def test_doc_to_json_with_token_span_same_identifier(doc):
     assert json_doc["_"]["my_ext"] == "hello world"
     assert "underscore_token" in json_doc
     assert "underscore_span" in json_doc
-    assert json_doc["underscore_token"]["my_ext"]["value"] == 117
-    assert json_doc["underscore_span"]["my_ext"]["value"] == "span_attribute"
+    assert json_doc["underscore_token"]["my_ext"][0]["value"] == 117
+    assert json_doc["underscore_span"]["my_ext"][0]["value"] == "span_attribute"
     assert len(schemas.validate(schemas.DocJSONSchema, json_doc)) == 0
     assert srsly.json_loads(srsly.json_dumps(json_doc)) == json_doc
 
@@ -195,10 +199,9 @@ def test_doc_to_json_with_token_attributes_missing(doc):
     doc[0]._.token_test = 117
     json_doc = doc.to_json(underscore=["span_test"])
 
-    assert "underscore_token" in json_doc
     assert "underscore_span" in json_doc
-    assert json_doc["underscore_span"]["span_test"]["value"] == "span_attribute"
-    assert "token_test" not in json_doc["underscore_token"]
+    assert json_doc["underscore_span"]["span_test"][0]["value"] == "span_attribute"
+    assert "underscore_token" not in json_doc
     assert len(schemas.validate(schemas.DocJSONSchema, json_doc)) == 0
 
 
@@ -283,7 +286,9 @@ def test_json_to_doc_with_token_span_attributes(doc):
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
     doc[0:1]._.span_test = "span_attribute"
+    doc[0:2]._.span_test = "span_attribute_2"
     doc[0]._.token_test = 117
+    doc[1]._.token_test = 118
 
     json_doc = doc.to_json(
         underscore=["json_test1", "json_test2", "token_test", "span_test"]
@@ -295,7 +300,9 @@ def test_json_to_doc_with_token_span_attributes(doc):
     assert new_doc._.json_test1 == "hello world"
     assert new_doc._.json_test2 == [1, 2, 3]
     assert new_doc[0]._.token_test == 117
+    assert new_doc[1]._.token_test == 118
     assert new_doc[0:1]._.span_test == "span_attribute"
+    assert new_doc[0:2]._.span_test == "span_attribute_2"
     assert new_doc.user_data == doc.user_data
     assert new_doc.to_bytes(exclude=["user_data"]) == doc.to_bytes(
         exclude=["user_data"]
@@ -363,3 +370,12 @@ def test_json_to_doc_validation_error(doc):
     doc_json.pop("tokens")
     with pytest.raises(ValueError):
         Doc(doc.vocab).from_json(doc_json, validate=True)
+
+
+def test_to_json_underscore_doc_getters(doc):
+    def get_text_length(doc):
+        return len(doc.text)
+
+    Doc.set_extension("text_length", getter=get_text_length)
+    doc_json = doc.to_json(underscore=["text_length"])
+    assert doc_json["_"]["text_length"] == get_text_length(doc)

@@ -3,7 +3,9 @@ from typing import Dict, Iterable, Optional, Callable, List, Union
 from itertools import islice
 
 import srsly
-from thinc.api import Model, SequenceCategoricalCrossentropy, Config
+from thinc.api import Model, Config
+from thinc.legacy import LegacySequenceCategoricalCrossentropy
+
 from thinc.types import Floats2d, Ints1d
 
 from ..tokens.doc cimport Doc
@@ -161,7 +163,7 @@ class SentenceRecognizer(Tagger):
         """
         validate_examples(examples, "SentenceRecognizer.get_loss")
         labels = self.labels
-        loss_func = SequenceCategoricalCrossentropy(names=labels, normalize=False)
+        loss_func = LegacySequenceCategoricalCrossentropy(names=labels, normalize=False)
         truths = []
         for eg in examples:
             eg_truth = []

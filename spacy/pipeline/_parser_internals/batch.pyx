@@ -33,7 +33,7 @@ class GreedyBatch(Batch):
         self._next_states = self._moves.transition_states(self._next_states, scores)
 
     def advance_with_actions(self, actions):
-        self._next_states = self._moves.apply_transitions(self._next_states, actions)
+        self._next_states = self._moves.apply_actions(self._next_states, actions)
 
     def get_states(self):
         return self._states

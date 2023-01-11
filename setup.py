@@ -30,12 +30,13 @@ MOD_NAMES = [
     "spacy.lexeme",
     "spacy.vocab",
     "spacy.attrs",
-    "spacy.kb",
+    "spacy.kb.candidate",
+    "spacy.kb.kb",
+    "spacy.kb.kb_in_memory",
     "spacy.ml.tb_framework",
     "spacy.morphology",
     "spacy.pipeline._edit_tree_internals.edit_trees",
     "spacy.pipeline.morphologizer",
-    "spacy.pipeline.multitask",
     "spacy.pipeline.pipe",
     "spacy.pipeline.trainable_pipe",
     "spacy.pipeline.sentencizer",
@@ -207,6 +208,17 @@ def setup_package():
         get_python_inc(plat_specific=True),
     ]
     ext_modules = []
+    ext_modules.append(
+        Extension(
+            "spacy.matcher.levenshtein",
+            [
+                "spacy/matcher/levenshtein.pyx",
+                "spacy/matcher/polyleven.c",
+            ],
+            language="c",
+            include_dirs=include_dirs,
+        )
+    )
     for name in MOD_NAMES:
         mod_path = name.replace(".", "/") + ".pyx"
         ext = Extension(

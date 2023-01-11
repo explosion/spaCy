@@ -303,13 +303,14 @@ available pipeline components and component functions.
 > ruler = nlp.add_pipe("entity_ruler")
 > ```
 
-| String name            | Component                                            | Description                                                                               |
+| Component name         | Component class                                      | Description                                                                               |
 | ---------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | `tagger`               | [`Tagger`](/api/tagger)                              | Assign part-of-speech-tags.                                                               |
 | `parser`               | [`DependencyParser`](/api/dependencyparser)          | Assign dependency labels.                                                                 |
 | `ner`                  | [`EntityRecognizer`](/api/entityrecognizer)          | Assign named entities.                                                                    |
 | `entity_linker`        | [`EntityLinker`](/api/entitylinker)                  | Assign knowledge base IDs to named entities. Should be added after the entity recognizer. |
-| `entity_ruler`         | [`EntityRuler`](/api/entityruler)                    | Assign named entities based on pattern rules and dictionaries.                            |
+| `span_ruler`           | [`SpanRuler`](/api/spanruler)                        | Assign spans based on pattern rules and dictionaries.                                     |
+| `entity_ruler`         | [`SpanRuler`](/api/spanruler)                        | Assign named entities based on pattern rules and dictionaries.                            |
 | `textcat`              | [`TextCategorizer`](/api/textcategorizer)            | Assign text categories: exactly one category is predicted per document.                   |
 | `textcat_multilabel`   | [`MultiLabel_TextCategorizer`](/api/textcategorizer) | Assign text categories in a multi-label setting: zero, one or more labels per document.   |
 | `lemmatizer`           | [`Lemmatizer`](/api/lemmatizer)                      | Assign base forms to words using rules and lookups.                                       |
@@ -363,7 +364,9 @@ nlp.enable_pipe("tagger")
 ```
 
 In addition to `disable`, `spacy.load()` also accepts `enable`. If `enable` is
-set, all components except for those in `enable` are disabled.
+set, all components except for those in `enable` are disabled. If `enable` and
+`disable` conflict (i.e. the same component is included in both), an error is
+raised.
 
 ```python
 # Load the complete pipeline, but disable all components except for tok2vec and tagger
@@ -1398,8 +1401,8 @@ Writing to a `._` attribute instead of to the `Doc` directly keeps a clearer
 separation and makes it easier to ensure backwards compatibility. For example,
 if you've implemented your own `.coref` property and spaCy claims it one day,
 it'll break your code. Similarly, just by looking at the code, you'll
-immediately know what's built-in and what's custom – for example,
-`doc.sentiment` is spaCy, while `doc._.sent_score` isn't.
+immediately know what's built-in and what's custom – for example, `doc.lang` is
+spaCy, while `doc._.language` isn't.
 
 </Accordion>
 

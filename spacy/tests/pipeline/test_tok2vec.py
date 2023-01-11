@@ -230,6 +230,97 @@ def test_tok2vec_listener_callback():
     assert get_dX(Y) is not None
 
 
+def test_tok2vec_listener_overfitting():
+    """Test that a pipeline with a listener properly overfits, even if 'tok2vec' is in the annotating components"""
+    orig_config = Config().from_str(cfg_string)
+    nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses, annotates=["tok2vec"])
+    assert losses["tagger"] < 0.00001
+
+    # test the trained model
+    test_text = "I like blue eggs"
+    doc = nlp(test_text)
+    assert doc[0].tag_ == "N"
+    assert doc[1].tag_ == "V"
+    assert doc[2].tag_ == "J"
+    assert doc[3].tag_ == "N"
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        assert doc2[0].tag_ == "N"
+        assert doc2[1].tag_ == "V"
+        assert doc2[2].tag_ == "J"
+        assert doc2[3].tag_ == "N"
+
+
+def test_tok2vec_frozen_not_annotating():
+    """Test that a pipeline with a frozen tok2vec raises an error when the tok2vec is not annotating"""
+    orig_config = Config().from_str(cfg_string)
+    nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+
+    for i in range(2):
+        losses = {}
+        with pytest.raises(
+            ValueError, match=r"the tok2vec embedding layer is not updated"
+        ):
+            nlp.update(
+                train_examples, sgd=optimizer, losses=losses, exclude=["tok2vec"]
+            )
+
+
+def test_tok2vec_frozen_overfitting():
+    """Test that a pipeline with a frozen & annotating tok2vec can still overfit"""
+    orig_config = Config().from_str(cfg_string)
+    nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+
+    for i in range(100):
+        losses = {}
+        nlp.update(
+            train_examples,
+            sgd=optimizer,
+            losses=losses,
+            exclude=["tok2vec"],
+            annotates=["tok2vec"],
+        )
+    assert losses["tagger"] < 0.0001
+
+    # test the trained model
+    test_text = "I like blue eggs"
+    doc = nlp(test_text)
+    assert doc[0].tag_ == "N"
+    assert doc[1].tag_ == "V"
+    assert doc[2].tag_ == "J"
+    assert doc[3].tag_ == "N"
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        assert doc2[0].tag_ == "N"
+        assert doc2[1].tag_ == "V"
+        assert doc2[2].tag_ == "J"
+        assert doc2[3].tag_ == "N"
+
+
 def test_replace_listeners():
     orig_config = Config().from_str(cfg_string)
     nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)

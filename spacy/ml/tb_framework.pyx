@@ -191,7 +191,7 @@ def _forward_greedy_cpu(model: Model, TransitionSystem moves, states: List[State
     scores = _parse_batch(cblas, moves, &c_states[0], weights, sizes, actions=actions)
 
     def backprop(dY):
-        raise ValueError(Errors.E4001)
+        raise ValueError(Errors.E4002)
 
     return (states, scores), backprop
 
