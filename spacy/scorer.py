@@ -174,7 +174,7 @@ class Scorer:
             prf_score.score_set(pred_spans, gold_spans)
         if len(acc_score) > 0:
             return {
-                "token_acc": acc_score.fscore,
+                "token_acc": acc_score.precision,
                 "token_p": prf_score.precision,
                 "token_r": prf_score.recall,
                 "token_f": prf_score.fscore,
