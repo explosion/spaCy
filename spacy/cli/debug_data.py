@@ -708,11 +708,23 @@ def debug_data(
             n = gold_train_data["no_lemma_annotations"]
             msg.warn(f"{n} docs with no lemma annotations.")
         else:
-            msg.good("All training docs have complete lemma annotations.")
+            msg.good("All training docs have lemma annotations.")
 
         if gold_dev_data["no_lemma_annotations"] > 0:
             n = gold_dev_data["no_lemma_annotations"]
             msg.warn(f"{n} docs with no lemma annotations.")
+        else:
+            msg.good("All dev docs have lemma annotations.")
+
+        if gold_train_data["partial_lemma_annotations"] > 0:
+            n = gold_train_data["partial_lemma_annotations"]
+            msg.info(f"{n} docs with partial lemma annotations.")
+        else:
+            msg.good("All training docs have complete lemma annotations.")
+
+        if gold_dev_data["partial_lemma_annotations"] > 0:
+            n = gold_dev_data["partial_lemma_annotations"]
+            msg.info(f"{n} docs with partial lemma annotations.")
         else:
             msg.good("All dev docs have complete lemma annotations.")
 
@@ -779,6 +791,7 @@ def _compile_gold(
         "texts": set(),
         "lemmatizer_trees": set(),
         "no_lemma_annotations": 0,
+        "partial_lemma_annotations": 0,
         "n_low_cardinality_lemmas": 0,
     }
     if "trainable_lemmatizer" in factory_names:
@@ -916,19 +929,21 @@ def _compile_gold(
             # from EditTreeLemmatizer._labels_from_data
             if all(token.lemma == 0 for token in gold):
                 data["no_lemma_annotations"] += 1
-            else:
-                lemma_set = set()
-                for token in gold:
-                    if token.lemma != 0:
-                        lemma_set.add(token.lemma)
-                        tree_id = trees.add(token.text, token.lemma_)
-                        tree_str = trees.tree_to_str(tree_id)
-                        data["lemmatizer_trees"].add(tree_str)
-                # We want to identify cases where lemmas aren't assigned
-                # or are all assigned the same value, as this would indicate
-                # an issue since we're expecting a large set of lemmas
-                if len(lemma_set) < 2 and len(gold) > 1:
-                    data["n_low_cardinality_lemmas"] += 1
+                continue
+            if any(token.lemma == 0 for token in gold):
+                data["partial_lemma_annotations"] += 1
+            lemma_set = set()
+            for token in gold:
+                if token.lemma != 0:
+                    lemma_set.add(token.lemma)
+                    tree_id = trees.add(token.text, token.lemma_)
+                    tree_str = trees.tree_to_str(tree_id)
+                    data["lemmatizer_trees"].add(tree_str)
+            # We want to identify cases where lemmas aren't assigned
+            # or are all assigned the same value, as this would indicate
+            # an issue since we're expecting a large set of lemmas
+            if len(lemma_set) < 2 and len(gold) > 1:
+                data["n_low_cardinality_lemmas"] += 1
     return data
 
 
