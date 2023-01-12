@@ -128,7 +128,7 @@ class EditTreeLemmatizer(TrainablePipe):
             for (predicted, gold_lemma) in zip(
                 eg.predicted, eg.get_aligned("LEMMA", as_string=True)
             ):
-                if gold_lemma is None:
+                if gold_lemma is None or gold_lemma == "":
                     label = -1
                 else:
                     tree_id = self.trees.add(predicted.text, gold_lemma)
