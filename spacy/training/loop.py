@@ -100,7 +100,7 @@ def train(
         stdout.write(
             msg.info(f"Set annotations on update for: {annotating_components}") + "\n"
         )
-    stdout.write(msg.info(f"Initial learn rate: {optimizer.learn_rate}") + "\n")
+    stdout.write(msg.info(f"Initial learn rate: {optimizer.learn_rate(step=0)}") + "\n")
     with nlp.select_pipes(disable=frozen_components):
         log_step, finalize_logger = train_logger(nlp, stdout, stderr)
     try:
@@ -204,7 +204,7 @@ def train_while_improving(
         if before_update:
             before_update_args = {"step": step, "epoch": epoch}
             before_update(nlp, before_update_args)
-        dropout = next(dropouts)  # type: ignore
+        dropout = dropouts(optimizer.step)  # type: ignore
         for subbatch in subdivide_batch(batch, accumulate_gradient):
             nlp.update(
                 subbatch,
@@ -230,6 +230,7 @@ def train_while_improving(
                     score, other_scores = evaluate()
             else:
                 score, other_scores = evaluate()
+            optimizer.last_score = score
             results.append((score, step))
             is_best_checkpoint = score == max(results)[0]
         else:
