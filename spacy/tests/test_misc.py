@@ -8,7 +8,7 @@ from spacy import prefer_gpu, require_gpu, require_cpu
 from spacy.ml._precomputable_affine import PrecomputableAffine
 from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
 from spacy.util import dot_to_object, SimpleFrozenList, import_file
-from spacy.util import to_ternary_int
+from spacy.util import to_ternary_int, find_available_port
 from thinc.api import Config, Optimizer, ConfigValidationError
 from thinc.api import get_current_ops, set_current_ops, NumpyOps, CupyOps, MPSOps
 from thinc.compat import has_cupy_gpu, has_torch_mps_gpu
@@ -434,3 +434,16 @@ def test_to_ternary_int():
     assert to_ternary_int(-10) == -1
     assert to_ternary_int("string") == -1
     assert to_ternary_int([0, "string"]) == -1
+
+
+def test_find_available_port():
+    host = "0.0.0.0"
+    port = 5000
+    assert find_available_port(port, host) == port, "Port 5000 isn't free"
+
+    from wsgiref.simple_server import make_server, demo_app
+
+    with make_server(host, port, demo_app) as httpd:
+        with pytest.warns(UserWarning, match="already in use"):
+            found_port = find_available_port(port, host, auto_select=True)
+        assert found_port == port + 1, "Didn't find next port"
