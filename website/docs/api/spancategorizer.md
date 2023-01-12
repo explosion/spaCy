@@ -105,7 +105,7 @@ architectures and their arguments and hyperparameters.
 >
 > ```python
 > # Construction via add_pipe with default model
-> # Use 'spancat_exclusive' for exclusive classes
+> # Replace 'spancat' with 'spancat_exclusive' for exclusive classes
 > spancat = nlp.add_pipe("spancat")
 >
 > # Construction via add_pipe with custom model
