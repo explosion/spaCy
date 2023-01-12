@@ -5,7 +5,7 @@ import typer
 import re
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, setup_gpu
+from ._util import import_code_paths, setup_gpu
 from ..training.pretrain import pretrain
 from ..util import load_config
 
@@ -19,7 +19,7 @@ def pretrain_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True, dir_okay=False, allow_dash=True),
     output_dir: Path = Arg(..., help="Directory to write weights to on each epoch"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    code_paths: str = Opt("", "--code", "-c", help="Comma-separated paths to Python files with additional code (registered functions) to be included in the package"),
     resume_path: Optional[Path] = Opt(None, "--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
     epoch_resume: Optional[int] = Opt(None, "--epoch-resume", "-er", help="The epoch to resume counting from when using --resume-path. Prevents unintended overwriting of existing weight files."),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
@@ -47,7 +47,7 @@ def pretrain_cli(
     DOCS: https://spacy.io/api/cli#pretrain
     """
     config_overrides = parse_config_overrides(ctx.args)
-    import_code(code_path)
+    import_code_paths(code_paths)
     verify_cli_args(config_path, output_dir, resume_path, epoch_resume)
     setup_gpu(use_gpu)
     msg.info(f"Loading config from: {config_path}")

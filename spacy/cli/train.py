@@ -6,7 +6,7 @@ import logging
 import sys
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, setup_gpu
+from ._util import import_code_paths, setup_gpu
 from ..training.loop import train as train_nlp
 from ..training.initialize import init_nlp
 from .. import util
@@ -20,7 +20,7 @@ def train_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    code_paths: str = Opt("", "--code", "-c", help="Comma-separated paths to Python files with additional code (registered functions) to be included in the package"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
@@ -41,7 +41,7 @@ def train_cli(
     """
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     overrides = parse_config_overrides(ctx.args)
-    import_code(code_path)
+    import_code_paths(code_paths)
     train(config_path, output_path, use_gpu=use_gpu, overrides=overrides)
 
 

@@ -5,7 +5,7 @@ import typer
 import logging
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code
+from ._util import import_code_paths
 from .. import util
 from ..util import get_sourced_components, load_model_from_config
 
@@ -19,7 +19,7 @@ def assemble_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
     output_path: Path = Arg(..., help="Output directory to store assembled pipeline in"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    code_paths: str = Opt("", "--code", "-c", help="Comma-separated paths to Python files with additional code (registered functions) to be included in the package"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     # fmt: on
 ):
@@ -38,7 +38,7 @@ def assemble_cli(
     if not config_path or (str(config_path) != "-" and not config_path.exists()):
         msg.fail("Config file not found", config_path, exits=1)
     overrides = parse_config_overrides(ctx.args)
-    import_code(code_path)
+    import_code_paths(code_paths)
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides, interpolate=False)
     msg.divider("Initializing pipeline")
