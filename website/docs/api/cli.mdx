@@ -12,6 +12,7 @@ menu:
   - ['train', 'train']
   - ['pretrain', 'pretrain']
   - ['evaluate', 'evaluate']
+  - ['benchmark', 'benchmark']
   - ['apply', 'apply']
   - ['find-threshold', 'find-threshold']
   - ['assemble', 'assemble']
@@ -1135,8 +1136,19 @@ $ python -m spacy pretrain [config_path] [output_dir] [--code] [--resume-path] [
 
 ## evaluate {id="evaluate",version="2",tag="command"}
 
-Evaluate a trained pipeline. Expects a loadable spaCy pipeline (package name or
-path) and evaluation data in the
+The `evaluate` subcommand is superseded by
+[`spacy benchmark accuracy`](#benchmark-accuracy). `evaluate` is provided as an
+alias to `benchmark accuracy` for compatibility.
+
+## benchmark {id="benchmark", version="3.5"}
+
+The `spacy benchmark` CLI includes commands for benchmarking the accuracy and
+speed of your spaCy pipelines.
+
+### accuracy {id="benchmark-accuracy", version="3.5", tag="command"}
+
+Evaluate the accuracy of a trained pipeline. Expects a loadable spaCy pipeline
+(package name or path) and evaluation data in the
 [binary `.spacy` format](/api/data-formats#binary-training). The
 `--gold-preproc` option sets up the evaluation examples with gold-standard
 sentences and tokens for the predictions. Gold preprocessing helps the
@@ -1147,7 +1159,7 @@ skew. To render a sample of dependency parses in a HTML file using the
 `--displacy-path` argument.
 
 ```bash
-$ python -m spacy evaluate [model] [data_path] [--output] [--code] [--gold-preproc] [--gpu-id] [--displacy-path] [--displacy-limit]
+$ python -m spacy benchmark accuracy [model] [data_path] [--output] [--code] [--gold-preproc] [--gpu-id] [--displacy-path] [--displacy-limit]
 ```
 
 | Name                                      | Description                                                                                                                                                                          |
@@ -1163,6 +1175,29 @@ $ python -m spacy evaluate [model] [data_path] [--output] [--code] [--gold-prepr
 | `--help`, `-h`                            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                               | Training results and optional metrics and visualizations.                                                                                                                            |
 
+### speed {id="benchmark-speed", version="3.5", tag="command"}
+
+Benchmark the speed of a trained pipeline with a 95% confidence interval.
+Expects a loadable spaCy pipeline (package name or path) and benchmark data in
+the [binary `.spacy` format](/api/data-formats#binary-training). The pipeline is
+warmed up before any measurements are taken.
+
+```cli
+$ python -m spacy benchmark speed [model] [data_path] [--batch_size] [--no-shuffle] [--gpu-id] [--batches] [--warmup]
+```
+
+| Name                 | Description                                                                                              |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| `model`              | Pipeline to benchmark the speed of. Can be a package or a path to a data directory. ~~str (positional)~~ |
+| `data_path`          | Location of benchmark data in spaCy's [binary format](/api/data-formats#training). ~~Path (positional)~~ |
+| `--batch-size`, `-b` | Set the batch size. If not set, the pipeline's batch size is used. ~~Optional[int] \(option)~~           |
+| `--no-shuffle`       | Do not shuffle documents in the benchmark data. ~~bool (flag)~~                                          |
+| `--gpu-id`, `-g`     | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                           |
+| `--batches`          | Number of batches to benchmark on. Defaults to `50`. ~~Optional[int] \(option)~~                         |
+| `--warmup`, `-w`     | Iterations over the benchmark data for warmup. Defaults to `3` ~~Optional[int] \(option)~~               |
+| `--help`, `-h`       | Show help message and available arguments. ~~bool (flag)~~                                               |
+| **PRINTS**           | Pipeline speed in words per second with a 95% confidence interval.                                       |
+
 ## apply {id="apply", version="3.5", tag="command"}
 
 Applies a trained pipeline to data and stores the resulting annotated documents
@@ -1176,7 +1211,7 @@ input formats are:
 
 When a directory is provided it is traversed recursively to collect all files.
 
-```cli
+```bash
 $ python -m spacy apply [model] [data-path] [output-file] [--code] [--text-key] [--force-overwrite] [--gpu-id] [--batch-size] [--n-process]
 ```
 
@@ -1193,7 +1228,6 @@ $ python -m spacy apply [model] [data-path] [output-file] [--code] [--text-key] 
 | `--n-process`, `-n`                       | Number of processes to use for prediction. Defaults to `1`. ~~int (option)~~                                                                                                         |
 | `--help`, `-h`                            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                               | A `DocBin` with the annotations from the `model` for all the files found in `data-path`.                                                                                             |
-
 
 ## find-threshold {id="find-threshold",version="3.5",tag="command"}
 
