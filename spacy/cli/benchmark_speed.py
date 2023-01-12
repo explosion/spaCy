@@ -153,7 +153,7 @@ def print_mean_with_ci(sample: numpy.ndarray):
     low = bootstrap_means[int(len(bootstrap_means) * 0.025)]
     high = bootstrap_means[int(len(bootstrap_means) * 0.975)]
 
-    print(f"Mean: {mean:.1f} WPS (95% CI: {low-mean:.1f} +{high-mean:.1f})")
+    print(f"Mean: {mean:.1f} words/s (95% CI: {low-mean:.1f} +{high-mean:.1f})")
 
 
 def print_outliers(sample: numpy.ndarray):
