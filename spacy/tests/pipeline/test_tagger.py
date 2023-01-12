@@ -234,11 +234,15 @@ def test_distill():
         get_examples=lambda: train_examples, labels=teacher_tagger.label_data
     )
 
-    docs = [eg.predicted for eg in train_examples]
+    distill_examples = [
+        Example.from_dict(teacher.make_doc(t[0]), {}) for t in TRAIN_DATA
+    ]
 
     for i in range(50):
         losses = {}
-        student_tagger.distill(teacher_tagger, docs, docs, sgd=optimizer, losses=losses)
+        student_tagger.distill(
+            teacher_tagger, distill_examples, sgd=optimizer, losses=losses
+        )
     assert losses["tagger"] < 0.00001
 
     test_text = "I like blue eggs"

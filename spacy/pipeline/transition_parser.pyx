@@ -209,8 +209,7 @@ cdef class Parser(TrainablePipe):
 
     def distill(self,
                teacher_pipe: Optional[TrainablePipe],
-               teacher_docs: Iterable[Doc],
-               student_docs: Iterable[Doc],
+               examples: Iterable["Example"],
                *,
                drop: float=0.0,
                sgd: Optional[Optimizer]=None,
@@ -221,11 +220,8 @@ cdef class Parser(TrainablePipe):
 
         teacher_pipe (Optional[TrainablePipe]): The teacher pipe to learn
             from.
-        teacher_docs (Iterable[Doc]): Documents passed through teacher pipes.
-        student_docs (Iterable[Doc]): Documents passed through student pipes.
-            Must contain the same tokens as `teacher_docs` but may have
-            different annotations.
-        drop (float): dropout rate.
+        examples (Iterable[Example]): Distillation examples. The reference
+            must contain teacher annotations (if any).
         sgd (Optional[Optimizer]): An optimizer. Will be created via
             create_optimizer if not set.
         losses (Optional[Dict[str, float]]): Optional record of loss during
@@ -238,14 +234,13 @@ cdef class Parser(TrainablePipe):
             losses = {}
         losses.setdefault(self.name, 0.0)
 
-        if not any(len(doc) for doc in teacher_docs):
-            return losses
-        if not any(len(doc) for doc in student_docs):
-            return losses
+        validate_examples(examples, "TransitionParser.distill")
 
         set_dropout_rate(self.model, drop)
 
-        teacher_step_model = teacher_pipe.model.predict(teacher_docs)
+        student_docs = [eg.predicted for eg in examples]
+
+        teacher_step_model = teacher_pipe.model.predict([eg.reference for eg in examples])
         student_step_model, backprop_tok2vec = self.model.begin_update(student_docs)
 
         # Add softmax activation, so that we can compute student losses

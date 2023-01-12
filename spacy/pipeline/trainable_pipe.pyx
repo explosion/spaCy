@@ -59,8 +59,7 @@ cdef class TrainablePipe(Pipe):
 
     def distill(self,
                teacher_pipe: Optional["TrainablePipe"],
-               teacher_docs: Iterable["Doc"],
-               student_docs: Iterable["Doc"],
+               examples: Iterable["Example"],
                *,
                drop: float=0.0,
                sgd: Optional[Optimizer]=None,
@@ -71,10 +70,8 @@ cdef class TrainablePipe(Pipe):
 
         teacher_pipe (Optional[TrainablePipe]): The teacher pipe to learn
             from.
-        teacher_docs (Iterable[Doc]): Documents passed through teacher pipes.
-        student_docs (Iterable[Doc]): Documents passed through student pipes.
-            Must contain the same tokens as `teacher_docs` but may have
-            different annotations.
+        examples (Iterable[Example]): Distillation examples. The reference
+            must contain teacher annotations (if any).
         drop (float): dropout rate.
         sgd (Optional[Optimizer]): An optimizer. Will be created via
             create_optimizer if not set.
@@ -89,16 +86,13 @@ cdef class TrainablePipe(Pipe):
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
-        if not any(len(doc) for doc in teacher_docs):
-            return losses
-        if not any(len(doc) for doc in student_docs):
-            return losses
+        validate_examples(examples, "TrainablePipe.distill")
         set_dropout_rate(self.model, drop)
         for node in teacher_pipe.model.walk():
             if node.name == "softmax":
                 node.attrs["softmax_normalize"] = True
-        teacher_scores = teacher_pipe.model.predict(teacher_docs)
-        student_scores, bp_student_scores = self.model.begin_update(student_docs)
+        teacher_scores = teacher_pipe.model.predict([eg.reference for eg in examples])
+        student_scores, bp_student_scores = self.model.begin_update([eg.predicted for eg in examples])
         loss, d_scores = self.get_teacher_student_loss(teacher_scores, student_scores)
         bp_student_scores(d_scores)
         if sgd is not None:

@@ -639,11 +639,13 @@ def test_distill():
         get_examples=lambda: train_examples, labels=teacher_ner.label_data
     )
 
-    docs = [eg.predicted for eg in train_examples]
+    distill_examples = [
+        Example.from_dict(teacher.make_doc(t[0]), {}) for t in TRAIN_DATA
+    ]
 
     for i in range(100):
         losses = {}
-        student_ner.distill(teacher_ner, docs, docs, sgd=optimizer, losses=losses)
+        student_ner.distill(teacher_ner, distill_examples, sgd=optimizer, losses=losses)
     assert losses["ner"] < 0.0001
 
     # test the trained model

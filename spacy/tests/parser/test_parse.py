@@ -418,11 +418,15 @@ def test_distill():
         get_examples=lambda: train_examples, labels=teacher_parser.label_data
     )
 
-    docs = [eg.predicted for eg in train_examples]
+    distill_examples = [
+        Example.from_dict(teacher.make_doc(t[0]), {}) for t in TRAIN_DATA
+    ]
 
     for i in range(200):
         losses = {}
-        student_parser.distill(teacher_parser, docs, docs, sgd=optimizer, losses=losses)
+        student_parser.distill(
+            teacher_parser, distill_examples, sgd=optimizer, losses=losses
+        )
     assert losses["parser"] < 0.0001
 
     test_text = "I like securities."
