@@ -582,6 +582,33 @@ def setup_gpu(use_gpu: int, silent=None) -> None:
             local_msg.info("To switch to GPU 0, use the option: --gpu-id 0")
 
 
+def walk_directory(path: Path, suffix: Optional[str] = None) -> List[Path]:
+    """Given a directory and a suffix, recursively find all files matching the suffix.
+    Directories or files with names beginning with a . are ignored, but hidden flags on
+    filesystems are not checked.
+    When provided with a suffix `None`, there is no suffix-based filtering."""
+    if not path.is_dir():
+        return [path]
+    paths = [path]
+    locs = []
+    seen = set()
+    for path in paths:
+        if str(path) in seen:
+            continue
+        seen.add(str(path))
+        if path.parts[-1].startswith("."):
+            continue
+        elif path.is_dir():
+            paths.extend(path.iterdir())
+        elif suffix is not None and not path.parts[-1].endswith(suffix):
+            continue
+        else:
+            locs.append(path)
+    # It's good to sort these, in case the ordering messes up cache.
+    locs.sort()
+    return locs
+
+
 def _format_number(number: Union[int, float], ndigits: int = 2) -> str:
     """Formats a number (float or int) rounding to `ndigits`, without truncating trailing 0s,
     as happens with `round(number, ndigits)`"""

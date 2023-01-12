@@ -364,6 +364,46 @@ else:
 
 </Accordion>
 
+#### Fuzzy matching {#fuzzy new="3.5"}
+
+Fuzzy matching allows you to match tokens with alternate spellings, typos, etc.
+without specifying every possible variant.
+
+```python
+# Matches "favourite", "favorites", "gavorite", "theatre", "theatr", ...
+pattern = [{"TEXT": {"FUZZY": "favorite"}},
+           {"TEXT": {"FUZZY": "theater"}}]
+```
+
+The `FUZZY` attribute allows fuzzy matches for any attribute string value,
+including custom attributes. Just like `REGEX`, it always needs to be applied to
+an attribute like `TEXT` or `LOWER`. By default `FUZZY` allows a Levenshtein
+edit distance of at least 2 and up to 30% of the pattern string length. Using
+the more specific attributes `FUZZY1`..`FUZZY9` you can specify the maximum
+allowed edit distance directly.
+
+```python
+# Match lowercase with fuzzy matching (allows 2 edits)
+pattern = [{"LOWER": {"FUZZY": "definitely"}}]
+
+# Match custom attribute values with fuzzy matching (allows 2 edits)
+pattern = [{"_": {"country": {"FUZZY": "Kyrgyzstan"}}}]
+
+# Match with exact Levenshtein edit distance limits (allows 3 edits)
+pattern = [{"_": {"country": {"FUZZY3": "Kyrgyzstan"}}}]
+```
+
+#### Regex and fuzzy matching with lists {#regex-fuzzy-lists new="3.5"}
+
+Starting in spaCy v3.5, both `REGEX` and `FUZZY` can be combined with the
+attributes `IN` and `NOT_IN`:
+
+```python
+pattern = [{"TEXT": {"FUZZY": {"IN": ["awesome", "cool", "wonderful"]}}}]
+
+pattern = [{"TEXT": {"REGEX": {"NOT_IN": ["^awe(some)?$", "^wonder(ful)?"]}}}]
+```
+
 ---
 
 #### Operators and quantifiers {#quantifiers}
