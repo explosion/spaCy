@@ -19,25 +19,16 @@ from ._util import Arg, Opt, benchmark_cli, setup_gpu
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
 def benchmark_speed_cli(
+    # fmt: off
     ctx: typer.Context,
     model: str = Arg(..., help="Model name or path"),
-    data_path: Path = Arg(
-        ..., help="Location of binary evaluation data in .spacy format", exists=True
-    ),
-    batch_size: Optional[int] = Opt(
-        None, "--batch-size", "-b", min=1, help="Override the pipeline batch size"
-    ),
+    data_path: Path = Arg(..., help="Location of binary evaluation data in .spacy format", exists=True),
+    batch_size: Optional[int] = Opt(None, "--batch-size", "-b", min=1, help="Override the pipeline batch size"),
     no_shuffle: bool = Opt(False, "--no-shuffle", help="Do not shuffle benchmark data"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
-    n_batches: int = Opt(
-        50,
-        "--batches",
-        help="Minimum number of batches to benchmark",
-        min=30,
-    ),
-    warmup_epochs: int = Opt(
-        3, "--warmup", "-w", min=0, help="Number of iterations over the data for warmup"
-    ),
+    n_batches: int = Opt(50, "--batches", help="Minimum number of batches to benchmark", min=30,),
+    warmup_epochs: int = Opt(3, "--warmup", "-w", min=0, help="Number of iterations over the data for warmup"),
+    # fmt: on
 ):
     """
     Benchmark a pipeline. Expects a loadable spaCy pipeline and benchmark
