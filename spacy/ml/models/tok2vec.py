@@ -1,4 +1,3 @@
-from encodings import search_function
 from typing import Optional, List, Union, cast
 import warnings
 from spacy.ml.richfeatureextractor import RichFeatureExtractor
@@ -6,6 +5,7 @@ from thinc.types import Floats2d, Ints2d, Ragged
 from thinc.api import chain, clone, concatenate, with_array, with_padded
 from thinc.api import Model, noop, list2ragged, ragged2list, HashEmbed
 from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
+from thinc.api import Dropout
 
 from ...tokens import Doc
 from ...util import registry
@@ -296,6 +296,7 @@ def RichMultiHashEmbed(
             ),
             max_out,
             ragged2list(),
+            Dropout(0.0)
         )
     else:
         model = chain(
@@ -304,6 +305,7 @@ def RichMultiHashEmbed(
             with_array(concatenate(*embeddings)),
             max_out,
             ragged2list(),
+            Dropout(0.0)
         )
     return model
 
