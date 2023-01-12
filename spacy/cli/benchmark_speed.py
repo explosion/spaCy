@@ -6,6 +6,7 @@ from pathlib import Path
 import time
 from tqdm import tqdm
 import typer
+from wasabi import msg
 
 from .. import util
 from ..language import Language
@@ -40,6 +41,9 @@ def benchmark_speed_cli(
     batch_size = batch_size if batch_size is not None else nlp.batch_size
     corpus = Corpus(data_path)
     docs = [eg.predicted for eg in corpus(nlp)]
+
+    if len(docs) == 0:
+        msg.fail("Cannot benchmark speed using an empty corpus.", exits=1)
 
     print(f"Warming up for {warmup_epochs} epochs...")
     warmup(nlp, docs, warmup_epochs, batch_size)
