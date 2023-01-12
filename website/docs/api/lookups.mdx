@@ -1,0 +1,313 @@
+---
+title: Lookups
+teaser: A container for large lookup tables and dictionaries
+tag: class
+source: spacy/lookups.py
+version: 2.2
+---
+
+This class allows convenient access to large lookup tables and dictionaries,
+e.g. lemmatization data or tokenizer exception lists using Bloom filters.
+Lookups are available via the [`Vocab`](/api/vocab) as `vocab.lookups`, so they
+can be accessed before the pipeline components are applied (e.g. in the
+tokenizer and lemmatizer), as well as within the pipeline components via
+`doc.vocab.lookups`.
+
+## Lookups.\_\_init\_\_ {id="init",tag="method"}
+
+Create a `Lookups` object.
+
+> #### Example
+>
+> ```python
+> from spacy.lookups import Lookups
+> lookups = Lookups()
+> ```
+
+## Lookups.\_\_len\_\_ {id="len",tag="method"}
+
+Get the current number of tables in the lookups.
+
+> #### Example
+>
+> ```python
+> lookups = Lookups()
+> assert len(lookups) == 0
+> ```
+
+| Name        | Description                                  |
+| ----------- | -------------------------------------------- |
+| **RETURNS** | The number of tables in the lookups. ~~int~~ |
+
+## Lookups.\_\_contains\_\_ {id="contains",tag="method"}
+
+Check if the lookups contain a table of a given name. Delegates to
+[`Lookups.has_table`](/api/lookups#has_table).
+
+> #### Example
+>
+> ```python
+> lookups = Lookups()
+> lookups.add_table("some_table")
+> assert "some_table" in lookups
+> ```
+
+| Name        | Description                                              |
+| ----------- | -------------------------------------------------------- |
+| `name`      | Name of the table. ~~str~~                               |
+| **RETURNS** | Whether a table of that name is in the lookups. ~~bool~~ |
+
+## Lookups.tables {id="tables",tag="property"}
+
+Get the names of all tables in the lookups.
+
+> #### Example
+>
+> ```python
+> lookups = Lookups()
+> lookups.add_table("some_table")
+> assert lookups.tables == ["some_table"]
+> ```
+
+| Name        | Description                                       |
+| ----------- | ------------------------------------------------- |
+| **RETURNS** | Names of the tables in the lookups. ~~List[str]~~ |
+
+## Lookups.add_table {id="add_table",tag="method"}
+
+Add a new table with optional data to the lookups. Raises an error if the table
+exists.
+
+> #### Example
+>
+> ```python
+> lookups = Lookups()
+> lookups.add_table("some_table", {"foo": "bar"})
+> ```
+
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| `name`      | Unique name of the table. ~~str~~           |
+| `data`      | Optional data to add to the table. ~~dict~~ |
+| **RETURNS** | The newly added table. ~~Table~~            |
+
+## Lookups.get_table {id="get_table",tag="method"}
+
+Get a table from the lookups. Raises an error if the table doesn't exist.
+
+> #### Example
+>
+> ```python
+> lookups = Lookups()
+> lookups.add_table("some_table", {"foo": "bar"})
+> table = lookups.get_table("some_table")
+> assert table["foo"] == "bar"
+> ```
+
+| Name        | Description                |
+| ----------- | -------------------------- |
+| `name`      | Name of the table. ~~str~~ |
+| **RETURNS** | The table. ~~Table~~       |
+
+## Lookups.remove_table {id="remove_table",tag="method"}
+
+Remove a table from the lookups. Raises an error if the table doesn't exist.
+
+> #### Example
+>
+> ```python
+> lookups = Lookups()
+> lookups.add_table("some_table")
+> removed_table = lookups.remove_table("some_table")
+> assert "some_table" not in lookups
+> ```
+
+| Name        | Description                          |
+| ----------- | ------------------------------------ |
+| `name`      | Name of the table to remove. ~~str~~ |
+| **RETURNS** | The removed table. ~~Table~~         |
+
+## Lookups.has_table {id="has_table",tag="method"}
+
+Check if the lookups contain a table of a given name. Equivalent to
+[`Lookups.__contains__`](/api/lookups#contains).
+
+> #### Example
+>
+> ```python
+> lookups = Lookups()
+> lookups.add_table("some_table")
+> assert lookups.has_table("some_table")
+> ```
+
+| Name        | Description                                              |
+| ----------- | -------------------------------------------------------- |
+| `name`      | Name of the table. ~~str~~                               |
+| **RETURNS** | Whether a table of that name is in the lookups. ~~bool~~ |
+
+## Lookups.to_bytes {id="to_bytes",tag="method"}
+
+Serialize the lookups to a bytestring.
+
+> #### Example
+>
+> ```python
+> lookup_bytes = lookups.to_bytes()
+> ```
+
+| Name        | Description                       |
+| ----------- | --------------------------------- |
+| **RETURNS** | The serialized lookups. ~~bytes~~ |
+
+## Lookups.from_bytes {id="from_bytes",tag="method"}
+
+Load the lookups from a bytestring.
+
+> #### Example
+>
+> ```python
+> lookup_bytes = lookups.to_bytes()
+> lookups = Lookups()
+> lookups.from_bytes(lookup_bytes)
+> ```
+
+| Name         | Description                      |
+| ------------ | -------------------------------- |
+| `bytes_data` | The data to load from. ~~bytes~~ |
+| **RETURNS**  | The loaded lookups. ~~Lookups~~  |
+
+## Lookups.to_disk {id="to_disk",tag="method"}
+
+Save the lookups to a directory as `lookups.bin`. Expects a path to a directory,
+which will be created if it doesn't exist.
+
+> #### Example
+>
+> ```python
+> lookups.to_disk("/path/to/lookups")
+> ```
+
+| Name   | Description                                                                                                                                |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+
+## Lookups.from_disk {id="from_disk",tag="method"}
+
+Load lookups from a directory containing a `lookups.bin`. Will skip loading if
+the file doesn't exist.
+
+> #### Example
+>
+> ```python
+> from spacy.lookups import Lookups
+> lookups = Lookups()
+> lookups.from_disk("/path/to/lookups")
+> ```
+
+| Name        | Description                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| `path`      | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| **RETURNS** | The loaded lookups. ~~Lookups~~                                                                 |
+
+## Table {id="table",tag="class, ordererddict"}
+
+A table in the lookups. Subclass of `OrderedDict` that implements a slightly
+more consistent and unified API and includes a Bloom filter to speed up missed
+lookups. Supports **all other methods and attributes** of `OrderedDict` /
+`dict`, and the customized methods listed here. Methods that get or set keys
+accept both integers and strings (which will be hashed before being added to the
+table).
+
+### Table.\_\_init\_\_ {id="table.init",tag="method"}
+
+Initialize a new table.
+
+> #### Example
+>
+> ```python
+> from spacy.lookups import Table
+> data = {"foo": "bar", "baz": 100}
+> table = Table(name="some_table", data=data)
+> assert "foo" in table
+> assert table["foo"] == "bar"
+> ```
+
+| Name   | Description                                |
+| ------ | ------------------------------------------ |
+| `name` | Optional table name for reference. ~~str~~ |
+
+### Table.from_dict {id="table.from_dict",tag="classmethod"}
+
+Initialize a new table from a dict.
+
+> #### Example
+>
+> ```python
+> from spacy.lookups import Table
+> data = {"foo": "bar", "baz": 100}
+> table = Table.from_dict(data, name="some_table")
+> ```
+
+| Name        | Description                                |
+| ----------- | ------------------------------------------ |
+| `data`      | The dictionary. ~~dict~~                   |
+| `name`      | Optional table name for reference. ~~str~~ |
+| **RETURNS** | The newly constructed object. ~~Table~~    |
+
+### Table.set {id="table.set",tag="method"}
+
+Set a new key / value pair. String keys will be hashed. Same as
+`table[key] = value`.
+
+> #### Example
+>
+> ```python
+> from spacy.lookups import Table
+> table = Table()
+> table.set("foo", "bar")
+> assert table["foo"] == "bar"
+> ```
+
+| Name    | Description                  |
+| ------- | ---------------------------- |
+| `key`   | The key. ~~Union[str, int]~~ |
+| `value` | The value.                   |
+
+### Table.to_bytes {id="table.to_bytes",tag="method"}
+
+Serialize the table to a bytestring.
+
+> #### Example
+>
+> ```python
+> table_bytes = table.to_bytes()
+> ```
+
+| Name        | Description                     |
+| ----------- | ------------------------------- |
+| **RETURNS** | The serialized table. ~~bytes~~ |
+
+### Table.from_bytes {id="table.from_bytes",tag="method"}
+
+Load a table from a bytestring.
+
+> #### Example
+>
+> ```python
+> table_bytes = table.to_bytes()
+> table = Table()
+> table.from_bytes(table_bytes)
+> ```
+
+| Name         | Description                 |
+| ------------ | --------------------------- |
+| `bytes_data` | The data to load. ~~bytes~~ |
+| **RETURNS**  | The loaded table. ~~Table~~ |
+
+### Attributes {id="table-attributes"}
+
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `name`         | Table name. ~~str~~                                           |
+| `default_size` | Default size of bloom filters if no data is provided. ~~int~~ |
+| `bloom`        | The bloom filters. ~~preshed.BloomFilter~~                    |
