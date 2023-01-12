@@ -234,7 +234,7 @@ predictions and gold-standard annotations, and update the component's model.
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## TrainablePipe.distill {#rehearse tag="method,experimental" new="4"}
+## TrainablePipe.distill {#distill tag="method,experimental" new="4"}
 
 Train a pipe (the student) on the predictions of another pipe (the teacher). The
 student is typically trained on the probability distribution of the teacher, but
@@ -308,7 +308,7 @@ This method needs to be overwritten with your own custom `get_loss` method.
 | `scores`    | Scores representing the model's predictions.                                |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
-## TrainablePipe.get_teacher_student_loss {#get_teacher_student_loss tag="method"}
+## TrainablePipe.get_teacher_student_loss {#get_teacher_student_loss tag="method" new="4"}
 
 Calculate the loss and its gradient for the batch of student scores relative to
 the teacher scores.
