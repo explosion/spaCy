@@ -208,13 +208,23 @@ def test_incomplete_data(lowercasing: bool):
     xp = lemmatizer.model.ops.xp
 
     # Missing annotations.
-    assert xp.count_nonzero(dX[0][0]) == 0
-    assert xp.count_nonzero(dX[0][3]) == 0
-    assert xp.count_nonzero(dX[1][0]) == 0
-    assert xp.count_nonzero(dX[1][3]) == 0
+    if lowercasing:
+        assert xp.count_nonzero(dX[0][0][:-1]) == 0
+        assert xp.count_nonzero(dX[0][3][:-1]) == 0
+        assert xp.count_nonzero(dX[1][0][:-1]) == 0
+        assert xp.count_nonzero(dX[1][3][:-1]) == 0
 
-    # Misaligned annotations.
-    assert xp.count_nonzero(dX[1][1]) == 0
+        # Misaligned annotations.
+        assert xp.count_nonzero(dX[1][1][:-1]) == 0
+
+    else:
+        assert xp.count_nonzero(dX[0][0]) == 0
+        assert xp.count_nonzero(dX[0][3]) == 0
+        assert xp.count_nonzero(dX[1][0]) == 0
+        assert xp.count_nonzero(dX[1][3]) == 0
+
+        # Misaligned annotations.
+        assert xp.count_nonzero(dX[1][1]) == 0
 
 
 @pytest.mark.parametrize("lowercasing", [True, False])
