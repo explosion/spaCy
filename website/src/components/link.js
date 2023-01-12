@@ -1,14 +1,13 @@
 import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
-import { Link as GatsbyLink } from 'gatsby'
+import NextLink from 'next/link'
 import classNames from 'classnames'
 
 import Icon from './icon'
 import classes from '../styles/link.module.sass'
 import { isString, isImage } from './util'
 
-const internalRegex = /(http(s?)):\/\/(prodi.gy|spacy.io|irl.spacy.io|explosion.ai|course.spacy.io)/gi
-
+const listUrlInternal = ['prodi.gy', 'spacy.io', 'explosion.ai']
 const Whitespace = ({ children }) => (
     // Ensure that links are always wrapped in spaces
     <> {children} </>
@@ -27,7 +26,6 @@ export default function Link({
     to,
     href,
     onClick,
-    activeClassName,
     hidden = false,
     hideIcon = false,
     ws = false,
@@ -43,12 +41,12 @@ export default function Link({
     const linkClassNames = classNames(classes.root, className, {
         [classes.hidden]: hidden,
         [classes.nowrap]: (withIcon && !sourceWithText) || icon === 'network',
-        [classes.withIcon]: withIcon,
+        [classes['with-icon']]: withIcon,
     })
     const Wrapper = ws ? Whitespace : Fragment
     const content = (
         <>
-            {sourceWithText ? <span className={classes.sourceText}>{children}</span> : children}
+            {sourceWithText ? <span className={classes['source-text']}>{children}</span> : children}
             {withIcon && <Icon name={icon} width={16} inline className={classes.icon} />}
         </>
     )
@@ -57,32 +55,28 @@ export default function Link({
         if ((dest && /^#/.test(dest)) || onClick) {
             return (
                 <Wrapper>
-                    <a href={dest} onClick={onClick} className={linkClassNames}>
+                    <NextLink href={dest} onClick={onClick} className={linkClassNames}>
                         {children}
-                    </a>
+                    </NextLink>
                 </Wrapper>
             )
         }
         return (
             <Wrapper>
-                <GatsbyLink
-                    to={dest}
-                    className={linkClassNames}
-                    activeClassName={activeClassName}
-                    {...other}
-                >
+                <NextLink href={dest} className={linkClassNames} {...other}>
                     {content}
-                </GatsbyLink>
+                </NextLink>
             </Wrapper>
         )
     }
-    const isInternal = internalRegex.test(dest)
-    const rel = isInternal ? null : 'noopener nofollow noreferrer'
+
+    const isInternal = listUrlInternal.some((urlInternal) => dest.includes(urlInternal))
+    const relTarget = isInternal ? {} : { rel: 'noopener nofollow noreferrer', target: '_blank' }
     return (
         <Wrapper>
-            <a href={dest} className={linkClassNames} target="_blank" rel={rel} {...other}>
+            <NextLink href={dest} className={linkClassNames} {...relTarget} {...other}>
                 {content}
-            </a>
+            </NextLink>
         </Wrapper>
     )
 }
@@ -103,7 +97,6 @@ Link.propTypes = {
     to: PropTypes.string,
     href: PropTypes.string,
     onClick: PropTypes.func,
-    activeClassName: PropTypes.string,
     hidden: PropTypes.bool,
     hideIcon: PropTypes.bool,
     ws: PropTypes.bool,
