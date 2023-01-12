@@ -227,6 +227,8 @@ cdef class Parser(TrainablePipe):
         losses (Optional[Dict[str, float]]): Optional record of loss during
             distillation.
         RETURNS: The updated losses dictionary.
+        
+        DOCS: https://spacy.io/api/dependencyparser#distill
         """
         if teacher_pipe is None:
             raise ValueError(Errors.E4002.format(name=self.name))
@@ -308,6 +310,10 @@ cdef class Parser(TrainablePipe):
         teacher_scores: Scores representing the teacher model's predictions.
         student_scores: Scores representing the student model's predictions.
 
+        RETURNS (Tuple[float, float]): The loss and the gradient.
+        
+        RETURNS (Tuple[float, float]): The loss and the gradient.
+        
         DOCS: https://spacy.io/api/dependencyparser#get_teacher_student_loss
         """
         loss_func = LegacySequenceCategoricalCrossentropy(normalize=False)

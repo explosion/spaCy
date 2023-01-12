@@ -234,7 +234,7 @@ predictions and gold-standard annotations, and update the component's model.
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## TrainablePipe.distill {id="rehearse", tag="method,experimental", version="4"}
+## TrainablePipe.distill {id="distill", tag="method,experimental", version="4"}
 
 Train a pipe (the student) on the predictions of another pipe (the teacher). The
 student is typically trained on the probability distribution of the teacher, but

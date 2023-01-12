@@ -955,7 +955,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E4000 = ("Expected a Doc as input, but got: '{type}'")
     E4001 = ("Expected input to be one of the following types: ({expected_types}), "
              "but got '{received_type}'")
-    E4002 = ("Pipe '{name}' requires teacher pipe for distillation.")
+    E4002 = ("Pipe '{name}' requires a teacher pipe for distillation.")
 
 
 # fmt: on
