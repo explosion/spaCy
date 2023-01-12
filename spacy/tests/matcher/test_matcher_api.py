@@ -118,6 +118,155 @@ def test_matcher_match_multi(matcher):
     ]
 
 
+@pytest.mark.parametrize(
+    "rules,match_locs",
+    [
+        (
+            {
+                "GoogleNow": [[{"ORTH": {"FUZZY": "Google"}}, {"ORTH": "Now"}]],
+            },
+            [(2, 4)],
+        ),
+        (
+            {
+                "Java": [[{"LOWER": {"FUZZY": "java"}}]],
+            },
+            [(5, 6)],
+        ),
+        (
+            {
+                "JS": [[{"ORTH": {"FUZZY": "JavaScript"}}]],
+                "GoogleNow": [[{"ORTH": {"FUZZY": "Google"}}, {"ORTH": "Now"}]],
+                "Java": [[{"LOWER": {"FUZZY": "java"}}]],
+            },
+            [(2, 4), (5, 6), (8, 9)],
+        ),
+        # only the second pattern matches (check that predicate keys used for
+        # caching don't collide)
+        (
+            {
+                "A": [[{"ORTH": {"FUZZY": "Javascripts"}}]],
+                "B": [[{"ORTH": {"FUZZY5": "Javascripts"}}]],
+            },
+            [(8, 9)],
+        ),
+    ],
+)
+def test_matcher_match_fuzzy(en_vocab, rules, match_locs):
+    words = ["They", "like", "Goggle", "Now", "and", "Jav", "but", "not", "JvvaScrpt"]
+    doc = Doc(en_vocab, words=words)
+
+    matcher = Matcher(en_vocab)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns)
+    assert match_locs == [(start, end) for m_id, start, end in matcher(doc)]
+
+
+@pytest.mark.parametrize("set_op", ["IN", "NOT_IN"])
+def test_matcher_match_fuzzy_set_op_longest(en_vocab, set_op):
+    rules = {
+        "GoogleNow": [[{"ORTH": {"FUZZY": {set_op: ["Google", "Now"]}}, "OP": "+"}]]
+    }
+    matcher = Matcher(en_vocab)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns, greedy="LONGEST")
+
+    words = ["They", "like", "Goggle", "Noo"]
+    doc = Doc(en_vocab, words=words)
+    assert len(matcher(doc)) == 1
+
+
+def test_matcher_match_fuzzy_set_multiple(en_vocab):
+    rules = {
+        "GoogleNow": [
+            [
+                {
+                    "ORTH": {"FUZZY": {"IN": ["Google", "Now"]}, "NOT_IN": ["Goggle"]},
+                    "OP": "+",
+                }
+            ]
+        ]
+    }
+    matcher = Matcher(en_vocab)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns, greedy="LONGEST")
+
+    words = ["They", "like", "Goggle", "Noo"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == [
+        (doc.vocab.strings["GoogleNow"], 3, 4),
+    ]
+
+
+@pytest.mark.parametrize("fuzzyn", range(1, 10))
+def test_matcher_match_fuzzyn_all_insertions(en_vocab, fuzzyn):
+    matcher = Matcher(en_vocab)
+    matcher.add("GoogleNow", [[{"ORTH": {f"FUZZY{fuzzyn}": "GoogleNow"}}]])
+    # words with increasing edit distance
+    words = ["GoogleNow" + "a" * i for i in range(0, 10)]
+    doc = Doc(en_vocab, words)
+    assert len(matcher(doc)) == fuzzyn + 1
+
+
+@pytest.mark.parametrize("fuzzyn", range(1, 6))
+def test_matcher_match_fuzzyn_various_edits(en_vocab, fuzzyn):
+    matcher = Matcher(en_vocab)
+    matcher.add("GoogleNow", [[{"ORTH": {f"FUZZY{fuzzyn}": "GoogleNow"}}]])
+    # words with increasing edit distance of different edit types
+    words = [
+        "GoogleNow",
+        "GoogleNuw",
+        "GoogleNuew",
+        "GoogleNoweee",
+        "GiggleNuw3",
+        "gouggle5New",
+    ]
+    doc = Doc(en_vocab, words)
+    assert len(matcher(doc)) == fuzzyn + 1
+
+
+@pytest.mark.parametrize("greedy", ["FIRST", "LONGEST"])
+@pytest.mark.parametrize("set_op", ["IN", "NOT_IN"])
+def test_matcher_match_fuzzyn_set_op_longest(en_vocab, greedy, set_op):
+    rules = {
+        "GoogleNow": [[{"ORTH": {"FUZZY2": {set_op: ["Google", "Now"]}}, "OP": "+"}]]
+    }
+    matcher = Matcher(en_vocab)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns, greedy=greedy)
+
+    words = ["They", "like", "Goggle", "Noo"]
+    doc = Doc(matcher.vocab, words=words)
+    spans = matcher(doc, as_spans=True)
+    assert len(spans) == 1
+    if set_op == "IN":
+        assert spans[0].text == "Goggle Noo"
+    else:
+        assert spans[0].text == "They like"
+
+
+def test_matcher_match_fuzzyn_set_multiple(en_vocab):
+    rules = {
+        "GoogleNow": [
+            [
+                {
+                    "ORTH": {"FUZZY1": {"IN": ["Google", "Now"]}, "NOT_IN": ["Goggle"]},
+                    "OP": "+",
+                }
+            ]
+        ]
+    }
+    matcher = Matcher(en_vocab)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns, greedy="LONGEST")
+
+    words = ["They", "like", "Goggle", "Noo"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == [
+        (doc.vocab.strings["GoogleNow"], 3, 4),
+    ]
+
+
 def test_matcher_empty_dict(en_vocab):
     """Test matcher allows empty token specs, meaning match on any token."""
     matcher = Matcher(en_vocab)
@@ -435,6 +584,30 @@ def test_matcher_regex(en_vocab):
     doc = Doc(en_vocab, words=["bye"])
     matches = matcher(doc)
     assert len(matches) == 0
+
+
+def test_matcher_regex_set_in(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": {"REGEX": {"IN": [r"(?:a)", r"(?:an)"]}}}]
+    matcher.add("A_OR_AN", [pattern])
+    doc = Doc(en_vocab, words=["an", "a", "hi"])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    doc = Doc(en_vocab, words=["bye"])
+    matches = matcher(doc)
+    assert len(matches) == 0
+
+
+def test_matcher_regex_set_not_in(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": {"REGEX": {"NOT_IN": [r"(?:a)", r"(?:an)"]}}}]
+    matcher.add("A_OR_AN", [pattern])
+    doc = Doc(en_vocab, words=["an", "a", "hi"])
+    matches = matcher(doc)
+    assert len(matches) == 1
+    doc = Doc(en_vocab, words=["bye"])
+    matches = matcher(doc)
+    assert len(matches) == 1
 
 
 def test_matcher_regex_shape(en_vocab):

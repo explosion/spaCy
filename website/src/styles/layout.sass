@@ -254,8 +254,11 @@ pre
     overflow: auto
 
 code, pre
-    font-family: monospace, monospace
-    font-size: 1em
+    font-family: var(--font-code)
+    font-size: var(--font-size-code)
+    font-variant-ligatures: none
+    -webkit-font-smoothing: subpixel-antialiased
+    -moz-osx-font-smoothing: auto
 
 table
     text-align: left
@@ -409,44 +412,6 @@ body [id]:target
         // Fix issue where empty lines would disappear
         content: " "
 
-// CodeMirror
-
-.CodeMirror.cm-s-default
-    background: var(--color-front)
-    color: var(--color-subtle)
-
-    .CodeMirror-line
-        color: var(--syntax-comment)
-        padding: 0
-
-    .CodeMirror-selected
-        background: var(--color-theme)
-        color: var(--color-back)
-
-    .CodeMirror-cursor
-        border-left-color: currentColor
-
-    .cm-property, .cm-variable, .cm-variable-2, .cm-meta // decorators
-        color: var(--color-subtle)
-
-    .cm-comment
-        color: var(--syntax-comment)
-
-    .cm-keyword, .cm-builtin
-        color: var(--syntax-keyword)
-
-    .cm-operator
-        color: var(--syntax-operator)
-
-    .cm-string
-        color: var(--syntax-selector)
-
-    .cm-number
-        color: var(--syntax-number)
-
-    .cm-def
-        color: var(--syntax-function)
-
 // Jupyter
 
 .jp-RenderedText pre
@@ -546,3 +511,34 @@ body [id]:target
 
     code, a
         color: inherit
+
+
+/* Algolia DocSearch */
+
+@include breakpoint(max, xs)
+    .algolia-autocomplete .ds-dropdown-menu
+        max-width: 90vw !important
+        min-width: 90vw !important
+
+.algolia-autocomplete .algolia-docsearch-suggestion--category-header
+    display: block
+    font: bold var(--font-size-lg)/var(--line-height-md) var(--font-secondary)
+    text-transform: uppercase
+    color: var(--color-theme)
+
+.algolia-autocomplete .algolia-docsearch-suggestion--subcategory-column
+    color: var(--color-dark)
+
+.algolia-autocomplete .algolia-docsearch-suggestion--title
+    font-size: var(--font-size-sm)
+
+.algolia-autocomplete .ds-dropdown-menu .ds-suggestion.ds-cursor .algolia-docsearch-suggestion--content
+    background: var(--color-subtle-opaque) !important
+
+.algolia-autocomplete .algolia-docsearch-suggestion--text
+    font-size: var(--font-size-sm)
+
+.algolia-autocomplete .algolia-docsearch-suggestion--highlight
+    box-shadow: none !important
+    background: var(--color-theme-opaque) !important
+    color: var(--color-theme-dark) !important
