@@ -317,6 +317,8 @@ cdef class Parser(TrainablePipe):
 
         RETURNS (Tuple[float, float]): The loss and the gradient.
         
+        RETURNS (Tuple[float, float]): The loss and the gradient.
+        
         DOCS: https://spacy.io/api/dependencyparser#get_teacher_student_loss
         """
         loss_func = LegacySequenceCategoricalCrossentropy(normalize=False)
