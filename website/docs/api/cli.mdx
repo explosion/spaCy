@@ -1136,8 +1136,19 @@ $ python -m spacy pretrain [config_path] [output_dir] [--code] [--resume-path] [
 
 ## evaluate {id="evaluate",version="2",tag="command"}
 
-Evaluate a trained pipeline. Expects a loadable spaCy pipeline (package name or
-path) and evaluation data in the
+The `evaluate` subcommand is superseded by
+[`spacy benchmark accuracy`](#benchmark-accuracy). `evaluate` is provided as an
+alias to `benchmark accuracy` for compatibility.
+
+## benchmark {id="benchmark", version="3.5"}
+
+The `spacy benchmark` CLI includes commands for benchmarking the accuracy and
+speed of your spaCy pipelines.
+
+### accuracy {id="benchmark-accuracy", version="3.5", tag="command"}
+
+Evaluate the accuracy of a trained pipeline. Expects a loadable spaCy pipeline
+(package name or path) and evaluation data in the
 [binary `.spacy` format](/api/data-formats#binary-training). The
 `--gold-preproc` option sets up the evaluation examples with gold-standard
 sentences and tokens for the predictions. Gold preprocessing helps the
@@ -1148,7 +1159,7 @@ skew. To render a sample of dependency parses in a HTML file using the
 `--displacy-path` argument.
 
 ```bash
-$ python -m spacy evaluate [model] [data_path] [--output] [--code] [--gold-preproc] [--gpu-id] [--displacy-path] [--displacy-limit]
+$ python -m spacy benchmark accuracy [model] [data_path] [--output] [--code] [--gold-preproc] [--gpu-id] [--displacy-path] [--displacy-limit]
 ```
 
 | Name                                      | Description                                                                                                                                                                          |
@@ -1163,15 +1174,6 @@ $ python -m spacy evaluate [model] [data_path] [--output] [--code] [--gold-prepr
 | `--displacy-limit`, `-dl`                 | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. ~~int (option)~~            |
 | `--help`, `-h`                            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                               | Training results and optional metrics and visualizations.                                                                                                                            |
-
-## benchmark {id="benchmark", version="3.5"}
-
-The `spacy benchmark` CLI includes commands for benchmarking the accuracy and
-speed of your spaCy pipelines.
-
-### accuracy {id="benchmark-accuracy", version="3.5", tag="command"}
-
-This subcommand is an alias for [`spacy evaluate`](#evaluate).
 
 ### speed {id="benchmark-speed", version="3.5", tag="command"}
 
