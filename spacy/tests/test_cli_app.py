@@ -31,3 +31,12 @@ def test_convert_auto_conflict():
         assert "All input files must be same type" in result.stdout
         out_files = os.listdir(d_out)
         assert len(out_files) == 0
+
+
+def test_benchmark_accuracy_alias():
+    # Verify that the `evaluate` alias works correctly.
+    result_benchmark = CliRunner().invoke(app, ["benchmark", "accuracy", "--help"])
+    result_evaluate = CliRunner().invoke(app, ["evaluate", "--help"])
+    assert result_benchmark.stdout == result_evaluate.stdout.replace(
+        "spacy evaluate", "spacy benchmark accuracy"
+    )

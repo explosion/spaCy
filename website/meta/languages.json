@@ -36,12 +36,7 @@
             "name": "Catalan",
             "example": "Això és una frase.",
             "has_examples": true,
-            "models": [
-                "ca_core_news_sm",
-                "ca_core_news_md",
-                "ca_core_news_lg",
-                "ca_core_news_trf"
-            ]
+            "models": ["ca_core_news_sm", "ca_core_news_md", "ca_core_news_lg", "ca_core_news_trf"]
         },
         {
             "code": "cs",
@@ -53,22 +48,12 @@
             "name": "Danish",
             "example": "Dette er en sætning.",
             "has_examples": true,
-            "models": [
-                "da_core_news_sm",
-                "da_core_news_md",
-                "da_core_news_lg",
-                "da_core_news_trf"
-            ]
+            "models": ["da_core_news_sm", "da_core_news_md", "da_core_news_lg", "da_core_news_trf"]
         },
         {
             "code": "de",
             "name": "German",
-            "models": [
-                "de_core_news_sm",
-                "de_core_news_md",
-                "de_core_news_lg",
-                "de_dep_news_trf"
-            ],
+            "models": ["de_core_news_sm", "de_core_news_md", "de_core_news_lg", "de_dep_news_trf"],
             "example": "Dies ist ein Satz.",
             "has_examples": true
         },
@@ -80,35 +65,21 @@
         {
             "code": "el",
             "name": "Greek",
-            "models": [
-                "el_core_news_sm",
-                "el_core_news_md",
-                "el_core_news_lg"
-            ],
+            "models": ["el_core_news_sm", "el_core_news_md", "el_core_news_lg"],
             "example": "Αυτή είναι μια πρόταση.",
             "has_examples": true
         },
         {
             "code": "en",
             "name": "English",
-            "models": [
-                "en_core_web_sm",
-                "en_core_web_md",
-                "en_core_web_lg",
-                "en_core_web_trf"
-            ],
+            "models": ["en_core_web_sm", "en_core_web_md", "en_core_web_lg", "en_core_web_trf"],
             "example": "This is a sentence.",
             "has_examples": true
         },
         {
             "code": "es",
             "name": "Spanish",
-            "models": [
-                "es_core_news_sm",
-                "es_core_news_md",
-                "es_core_news_lg",
-                "es_dep_news_trf"
-            ],
+            "models": ["es_core_news_sm", "es_core_news_md", "es_core_news_lg", "es_dep_news_trf"],
             "example": "Esto es una frase.",
             "has_examples": true
         },
@@ -130,21 +101,12 @@
             "code": "fi",
             "name": "Finnish",
             "has_examples": true,
-            "models": [
-                "fi_core_news_sm",
-                "fi_core_news_md",
-                "fi_core_news_lg"
-            ]
+            "models": ["fi_core_news_sm", "fi_core_news_md", "fi_core_news_lg"]
         },
         {
             "code": "fr",
             "name": "French",
-            "models": [
-                "fr_core_news_sm",
-                "fr_core_news_md",
-                "fr_core_news_lg",
-                "fr_dep_news_trf"
-            ],
+            "models": ["fr_core_news_sm", "fr_core_news_md", "fr_core_news_lg", "fr_dep_news_trf"],
             "example": "C'est une phrase.",
             "has_examples": true
         },
@@ -178,11 +140,7 @@
             "code": "hr",
             "name": "Croatian",
             "has_examples": true,
-            "models": [
-                "hr_core_news_sm",
-                "hr_core_news_md",
-                "hr_core_news_lg"
-            ]
+            "models": ["hr_core_news_sm", "hr_core_news_md", "hr_core_news_lg"]
         },
         {
             "code": "hsb",
@@ -213,23 +171,14 @@
         {
             "code": "it",
             "name": "Italian",
-            "models": [
-                "it_core_news_sm",
-                "it_core_news_md",
-                "it_core_news_lg"
-            ],
+            "models": ["it_core_news_sm", "it_core_news_md", "it_core_news_lg"],
             "example": "Questa è una frase.",
             "has_examples": true
         },
         {
             "code": "ja",
             "name": "Japanese",
-            "models": [
-                "ja_core_news_sm",
-                "ja_core_news_md",
-                "ja_core_news_lg",
-                "ja_core_news_trf"
-            ],
+            "models": ["ja_core_news_sm", "ja_core_news_md", "ja_core_news_lg", "ja_core_news_trf"],
             "dependencies": [
                 {
                     "name": "SudachiPy",
@@ -263,11 +212,7 @@
             ],
             "example": "이것은 문장입니다.",
             "has_examples": true,
-            "models": [
-                "ko_core_news_sm",
-                "ko_core_news_md",
-                "ko_core_news_lg"
-            ]
+            "models": ["ko_core_news_sm", "ko_core_news_md", "ko_core_news_lg"]
         },
         {
             "code": "ky",
@@ -299,11 +244,7 @@
             "code": "lt",
             "name": "Lithuanian",
             "has_examples": true,
-            "models": [
-                "lt_core_news_sm",
-                "lt_core_news_md",
-                "lt_core_news_lg"
-            ]
+            "models": ["lt_core_news_sm", "lt_core_news_md", "lt_core_news_lg"]
         },
         {
             "code": "lv",
@@ -312,11 +253,7 @@
         {
             "code": "mk",
             "name": "Macedonian",
-            "models": [
-                "mk_core_news_sm",
-                "mk_core_news_md",
-                "mk_core_news_lg"
-            ]
+            "models": ["mk_core_news_sm", "mk_core_news_md", "mk_core_news_lg"]
         },
         {
             "code": "ml",
@@ -332,11 +269,7 @@
             "name": "Norwegian Bokmål",
             "example": "Dette er en setning.",
             "has_examples": true,
-            "models": [
-                "nb_core_news_sm",
-                "nb_core_news_md",
-                "nb_core_news_lg"
-            ]
+            "models": ["nb_core_news_sm", "nb_core_news_md", "nb_core_news_lg"]
         },
         {
             "code": "ne",
@@ -346,11 +279,7 @@
         {
             "code": "nl",
             "name": "Dutch",
-            "models": [
-                "nl_core_news_sm",
-                "nl_core_news_md",
-                "nl_core_news_lg"
-            ],
+            "models": ["nl_core_news_sm", "nl_core_news_md", "nl_core_news_lg"],
             "example": "Dit is een zin.",
             "has_examples": true
         },
@@ -359,20 +288,12 @@
             "name": "Polish",
             "example": "To jest zdanie.",
             "has_examples": true,
-            "models": [
-                "pl_core_news_sm",
-                "pl_core_news_md",
-                "pl_core_news_lg"
-            ]
+            "models": ["pl_core_news_sm", "pl_core_news_md", "pl_core_news_lg"]
         },
         {
             "code": "pt",
             "name": "Portuguese",
-            "models": [
-                "pt_core_news_sm",
-                "pt_core_news_md",
-                "pt_core_news_lg"
-            ],
+            "models": ["pt_core_news_sm", "pt_core_news_md", "pt_core_news_lg"],
             "example": "Esta é uma frase.",
             "has_examples": true
         },
@@ -381,11 +302,7 @@
             "name": "Romanian",
             "example": "Aceasta este o propoziție.",
             "has_examples": true,
-            "models": [
-                "ro_core_news_sm",
-                "ro_core_news_md",
-                "ro_core_news_lg"
-            ]
+            "models": ["ro_core_news_sm", "ro_core_news_md", "ro_core_news_lg"]
         },
         {
             "code": "ru",
@@ -397,11 +314,7 @@
                     "url": "https://github.com/no-plagiarism/pymorphy3"
                 }
             ],
-            "models": [
-                "ru_core_news_sm",
-                "ru_core_news_md",
-                "ru_core_news_lg"
-            ]
+            "models": ["ru_core_news_sm", "ru_core_news_md", "ru_core_news_lg"]
         },
         {
             "code": "sa",
@@ -438,11 +351,7 @@
             "code": "sv",
             "name": "Swedish",
             "has_examples": true,
-            "models": [
-                "sv_core_news_sm",
-                "sv_core_news_md",
-                "sv_core_news_lg"
-            ]
+            "models": ["sv_core_news_sm", "sv_core_news_md", "sv_core_news_lg"]
         },
         {
             "code": "ta",
@@ -496,12 +405,7 @@
             "code": "uk",
             "name": "Ukrainian",
             "has_examples": true,
-            "models": [
-                "uk_core_news_sm",
-                "uk_core_news_md",
-                "uk_core_news_lg",
-                "uk_core_news_trf"
-            ],
+            "models": ["uk_core_news_sm", "uk_core_news_md", "uk_core_news_lg", "uk_core_news_trf"],
             "dependencies": [
                 {
                     "name": "pymorphy3",
@@ -532,10 +436,7 @@
         {
             "code": "xx",
             "name": "Multi-language",
-            "models": [
-                "xx_ent_wiki_sm",
-                "xx_sent_ud_sm"
-            ],
+            "models": ["xx_ent_wiki_sm", "xx_sent_ud_sm"],
             "example": "This is a sentence about Facebook."
         },
         {
@@ -546,12 +447,7 @@
         {
             "code": "zh",
             "name": "Chinese",
-            "models": [
-                "zh_core_web_sm",
-                "zh_core_web_md",
-                "zh_core_web_lg",
-                "zh_core_web_trf"
-            ],
+            "models": ["zh_core_web_sm", "zh_core_web_md", "zh_core_web_lg", "zh_core_web_trf"],
             "dependencies": [
                 {
                     "name": "Jieba",

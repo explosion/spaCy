@@ -1,17 +1,18 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import { navigate } from 'gatsby'
+import { useRouter } from 'next/router'
 
 import classes from '../styles/dropdown.module.sass'
 
 export default function Dropdown({ defaultValue, className, onChange, children }) {
+    const router = useRouter()
     const defaultOnChange = ({ target }) => {
         const isExternal = /((http(s?)):\/\/|mailto:)/gi.test(target.value)
         if (isExternal) {
             window.location.href = target.value
         } else {
-            navigate(target.value)
+            router.push(target.value)
         }
     }
     return (
