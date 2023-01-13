@@ -70,8 +70,9 @@ cdef class TrainablePipe(Pipe):
 
         teacher_pipe (Optional[TrainablePipe]): The teacher pipe to learn
             from.
-        examples (Iterable[Example]): Distillation examples. The reference
-            must contain teacher annotations (if any).
+        examples (Iterable[Example]): Distillation examples. The eference
+            and predicted docs must have the same number of tokens and the
+            same orthography.
         drop (float): dropout rate.
         sgd (Optional[Optimizer]): An optimizer. Will be created via
             create_optimizer if not set.
