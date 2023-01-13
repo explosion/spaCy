@@ -7,12 +7,15 @@ from thinc.api import fix_random_seed
 
 from ..training import Corpus
 from ..tokens import Doc
-from ._util import app, Arg, Opt, setup_gpu, import_code
+from ._util import app, Arg, Opt, setup_gpu, import_code, benchmark_cli
 from ..scorer import Scorer
 from .. import util
 from .. import displacy
 
 
+@benchmark_cli.command(
+    "accuracy",
+)
 @app.command("evaluate")
 def evaluate_cli(
     # fmt: off
@@ -36,7 +39,7 @@ def evaluate_cli(
     dependency parses in a HTML file, set as output directory as the
     displacy_path argument.
 
-    DOCS: https://spacy.io/api/cli#evaluate
+    DOCS: https://spacy.io/api/cli#benchmark-accuracy
     """
     import_code(code_path)
     evaluate(

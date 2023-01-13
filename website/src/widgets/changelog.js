@@ -10,8 +10,8 @@ import { repo } from '../components/util'
 
 function formatReleases(json) {
     return Object.values(json)
-        .filter(release => release.name)
-        .map(release => ({
+        .filter((release) => release.name)
+        .map((release) => ({
             title:
                 release.name.split(': ').length === 2 ? release.name.split(': ')[1] : release.name,
             url: release.html_url,
@@ -34,14 +34,14 @@ const Changelog = () => {
             setIsError(false)
             setIsLoading(true)
             fetch(`https://api.github.com/repos/${repo}/releases`)
-                .then(res => res.json())
-                .then(json => {
+                .then((res) => res.json())
+                .then((json) => {
                     const releases = formatReleases(json)
-                    setReleases(releases.filter(release => !release.pre))
-                    setPrereleases(releases.filter(release => release.pre))
+                    setReleases(releases.filter((release) => !release.pre))
+                    setPrereleases(releases.filter((release) => release.pre))
                     setIsLoading(false)
                 })
-                .catch(err => {
+                .catch((err) => {
                     setIsLoading(false)
                     setIsError(true)
                     console.error(err)

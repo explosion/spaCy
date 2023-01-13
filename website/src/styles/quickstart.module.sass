@@ -1,3 +1,4 @@
+@use 'sass:math'
 @import base
 
 .root
@@ -45,7 +46,7 @@
     &:hover
         background: var(--color-subtle-light)
 
-    .input:focus +
+    .input:focus
         border: 1px solid var(--color-theme)
         outline: none
 
@@ -82,14 +83,14 @@
         vertical-align: middle
         margin-right: 0.5rem
         cursor: pointer
-        border-radius: $size / 4
+        border-radius: math.div($size, 4)
         background: var(--color-back)
         position: relative
         top: -1px
 
     .checkbox:checked + &:before
         // Embed "check" icon here for simplicity
-        background: var(--color-theme) url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4gICAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTkgMTYuMTcybDEwLjU5NC0xMC41OTQgMS40MDYgMS40MDYtMTIgMTItNS41NzgtNS41NzggMS40MDYtMS40MDZ6Ii8+PC9zdmc+);
+        background: var(--color-theme) url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4gICAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTkgMTYuMTcybDEwLjU5NC0xMC41OTQgMS40MDYgMS40MDYtMTIgMTItNS41NzgtNS41NzggMS40MDYtMS40MDZ6Ii8+PC9zdmc+)
         background-size: contain
         border-color: var(--color-theme)
 

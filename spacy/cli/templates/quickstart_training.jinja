@@ -1,7 +1,7 @@
 {# This is a template for training configs used for the quickstart widget in
 the docs and the init config command. It encodes various best practices and
 can help generate the best possible configuration, given a user's requirements. #}
-{%- set use_transformer = hardware != "cpu" -%}
+{%- set use_transformer = hardware != "cpu" and transformer_data -%}
 {%- set transformer = transformer_data[optimize] if use_transformer else {} -%}
 {%- set listener_components = ["tagger", "morphologizer", "parser", "ner", "textcat", "textcat_multilabel", "entity_linker", "spancat", "trainable_lemmatizer"] -%}
 [paths]
