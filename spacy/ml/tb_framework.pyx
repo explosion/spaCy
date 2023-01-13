@@ -336,7 +336,7 @@ def _forward_fallback(
             all_ids.append(ids)
             all_statevecs.append(statevecs)
             all_which.append(which)
-        if max_moves >= 1 and n_moves >= max_moves:
+        if n_moves >= max_moves >= 1:
             break
         n_moves += 1
 

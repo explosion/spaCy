@@ -381,7 +381,7 @@ class Parser(TrainablePipe):
                 state.c.history.push_back(clas)
             output.append(costs)
             batch = [(s, h, g) for s, h, g in batch if len(h) != 0]
-            if max_moves >= 1 and n_moves >= max_moves:
+            if n_moves >= max_moves >= 1:
                 break
             n_moves += 1
 
