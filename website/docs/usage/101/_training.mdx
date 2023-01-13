@@ -1,0 +1,41 @@
+spaCy's tagger, parser, text categorizer and many other components are powered
+by **statistical models**. Every "decision" these components make – for example,
+which part-of-speech tag to assign, or whether a word is a named entity – is a
+**prediction** based on the model's current **weight values**. The weight values
+are estimated based on examples the model has seen during **training**. To train
+a model, you first need training data – examples of text, and the labels you
+want the model to predict. This could be a part-of-speech tag, a named entity or
+any other information.
+
+Training is an iterative process in which the model's predictions are compared
+against the reference annotations in order to estimate the **gradient of the
+loss**. The gradient of the loss is then used to calculate the gradient of the
+weights through [backpropagation](https://thinc.ai/docs/backprop101). The
+gradients indicate how the weight values should be changed so that the model's
+predictions become more similar to the reference labels over time.
+
+> - **Training data:** Examples and their annotations.
+> - **Text:** The input text the model should predict a label for.
+> - **Label:** The label the model should predict.
+> - **Gradient:** The direction and rate of change for a numeric value.
+>   Minimising the gradient of the weights should result in predictions that are
+>   closer to the reference labels on the training data.
+
+![The training process](/images/training.svg)
+
+When training a model, we don't just want it to memorize our examples – we want
+it to come up with a theory that can be **generalized across unseen data**.
+After all, we don't just want the model to learn that this one instance of
+"Amazon" right here is a company – we want it to learn that "Amazon", in
+contexts _like this_, is most likely a company. That's why the training data
+should always be representative of the data we want to process. A model trained
+on Wikipedia, where sentences in the first person are extremely rare, will
+likely perform badly on Twitter. Similarly, a model trained on romantic novels
+will likely perform badly on legal text.
+
+This also means that in order to know how the model is performing, and whether
+it's learning the right things, you don't only need **training data** – you'll
+also need **evaluation data**. If you only test the model with the data it was
+trained on, you'll have no idea how well it's generalizing. If you want to train
+a model from scratch, you usually need at least a few hundred examples for both
+training and evaluation.

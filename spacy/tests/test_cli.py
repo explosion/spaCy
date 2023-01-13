@@ -4,7 +4,9 @@ from collections import Counter
 from typing import Tuple, List, Dict, Any
 import pkg_resources
 import time
+from pathlib import Path
 
+import spacy
 import numpy
 import pytest
 import srsly
@@ -14,7 +16,7 @@ from thinc.api import Config, ConfigValidationError
 
 from spacy import about
 from spacy.cli import info
-from spacy.cli._util import is_subpath_of, load_project_config
+from spacy.cli._util import is_subpath_of, load_project_config, walk_directory
 from spacy.cli._util import parse_config_overrides, string_to_list
 from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
@@ -32,6 +34,7 @@ from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.project.remote_storage import RemoteStorage
 from spacy.cli.project.run import _check_requirements
 from spacy.cli.validate import get_model_pkgs
+from spacy.cli.apply import apply
 from spacy.cli.find_threshold import find_threshold
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
@@ -885,6 +888,82 @@ def test_span_length_freq_dist_output_must_be_correct():
     assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
 
 
+def test_applycli_empty_dir():
+    with make_tempdir() as data_path:
+        output = data_path / "test.spacy"
+        apply(data_path, output, "blank:en", "text", 1, 1)
+
+
+def test_applycli_docbin():
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        nlp = spacy.blank("en")
+        doc = nlp("testing apply cli.")
+        # test empty DocBin case
+        docbin = DocBin()
+        docbin.to_disk(data_path / "testin.spacy")
+        apply(data_path, output, "blank:en", "text", 1, 1)
+        docbin.add(doc)
+        docbin.to_disk(data_path / "testin.spacy")
+        apply(data_path, output, "blank:en", "text", 1, 1)
+
+
+def test_applycli_jsonl():
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        data = [{"field": "Testing apply cli.", "key": 234}]
+        data2 = [{"field": "234"}]
+        srsly.write_jsonl(data_path / "test.jsonl", data)
+        apply(data_path, output, "blank:en", "field", 1, 1)
+        srsly.write_jsonl(data_path / "test2.jsonl", data2)
+        apply(data_path, output, "blank:en", "field", 1, 1)
+
+
+def test_applycli_txt():
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        with open(data_path / "test.foo", "w") as ftest:
+            ftest.write("Testing apply cli.")
+        apply(data_path, output, "blank:en", "text", 1, 1)
+
+
+def test_applycli_mixed():
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        text = "Testing apply cli"
+        nlp = spacy.blank("en")
+        doc = nlp(text)
+        jsonl_data = [{"text": text}]
+        srsly.write_jsonl(data_path / "test.jsonl", jsonl_data)
+        docbin = DocBin()
+        docbin.add(doc)
+        docbin.to_disk(data_path / "testin.spacy")
+        with open(data_path / "test.txt", "w") as ftest:
+            ftest.write(text)
+        apply(data_path, output, "blank:en", "text", 1, 1)
+        # Check whether it worked
+        result = list(DocBin().from_disk(output).get_docs(nlp.vocab))
+        assert len(result) == 3
+        for doc in result:
+            assert doc.text == text
+
+
+def test_applycli_user_data():
+    Doc.set_extension("ext", default=0)
+    val = ("ext", 0)
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        nlp = spacy.blank("en")
+        doc = nlp("testing apply cli.")
+        doc._.ext = val
+        docbin = DocBin(store_user_data=True)
+        docbin.add(doc)
+        docbin.to_disk(data_path / "testin.spacy")
+        apply(data_path, output, "blank:en", "", 1, 1)
+        result = list(DocBin().from_disk(output).get_docs(nlp.vocab))
+        assert result[0]._.ext == val
+
+
 def test_local_remote_storage():
     with make_tempdir() as d:
         filename = "a.txt"
@@ -1107,3 +1186,26 @@ def test_upload_download_local_file():
         download_file(remote_file, local_file)
         with local_file.open(mode="r") as file_:
             assert file_.read() == content
+
+
+def test_walk_directory():
+    with make_tempdir() as d:
+        files = [
+            "data1.iob",
+            "data2.iob",
+            "data3.json",
+            "data4.conll",
+            "data5.conll",
+            "data6.conll",
+            "data7.txt",
+        ]
+
+        for f in files:
+            Path(d / f).touch()
+
+        assert (len(walk_directory(d))) == 7
+        assert (len(walk_directory(d, suffix=None))) == 7
+        assert (len(walk_directory(d, suffix="json"))) == 1
+        assert (len(walk_directory(d, suffix="iob"))) == 2
+        assert (len(walk_directory(d, suffix="conll"))) == 3
+        assert (len(walk_directory(d, suffix="pdf"))) == 0

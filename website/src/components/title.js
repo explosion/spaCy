@@ -10,6 +10,7 @@ import { H1, Label, InlineList, Help } from './typography'
 import Icon from './icon'
 
 import classes from '../styles/title.module.sass'
+import Image from 'next/image'
 
 const MetaItem = ({ label, url, children, help }) => (
     <span>
@@ -36,8 +37,8 @@ export default function Title({
     children,
     ...props
 }) {
-    const hasApiDetails = Object.values(apiDetails || {}).some(v => v)
-    const metaIconProps = { className: classes.metaIcon, width: 18 }
+    const hasApiDetails = Object.values(apiDetails || {}).some((v) => v)
+    const metaIconProps = { className: classes['meta-icon'], width: 18 }
     return (
         <header className={classes.root}>
             {(image || source) && (
@@ -50,6 +51,7 @@ export default function Title({
 
                     {image && (
                         <div className={classes.image}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={image} width={100} height={100} alt="" />
                         </div>
                     )}

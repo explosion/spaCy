@@ -11,6 +11,7 @@ from .render import DependencyRenderer, EntityRenderer, SpanRenderer
 from ..tokens import Doc, Span
 from ..errors import Errors, Warnings
 from ..util import is_in_jupyter
+from ..util import find_available_port
 
 
 _html = {}
@@ -36,7 +37,7 @@ def render(
     jupyter (bool): Override Jupyter auto-detection.
     options (dict): Visualiser-specific options, e.g. colors.
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
-    RETURNS (str): Rendered HTML markup.
+    RETURNS (str): Rendered SVG or HTML markup.
 
     DOCS: https://spacy.io/api/top-level#displacy.render
     USAGE: https://spacy.io/usage/visualizers
@@ -82,6 +83,7 @@ def serve(
     manual: bool = False,
     port: int = 5000,
     host: str = "0.0.0.0",
+    auto_select_port: bool = False,
 ) -> None:
     """Serve displaCy visualisation.
 
@@ -93,11 +95,14 @@ def serve(
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     port (int): Port to serve visualisation.
     host (str): Host to serve visualisation.
+    auto_select_port (bool): Automatically select a port if the specified port is in use.
 
     DOCS: https://spacy.io/api/top-level#displacy.serve
     USAGE: https://spacy.io/usage/visualizers
     """
     from wsgiref import simple_server
+
+    port = find_available_port(port, host, auto_select_port)
 
     if is_in_jupyter():
         warnings.warn(Warnings.W011)
