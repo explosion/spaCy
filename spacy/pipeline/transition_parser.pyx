@@ -306,7 +306,7 @@ class Parser(TrainablePipe):
         if max_moves >= 1:
             # Chop sequences into lengths of this many words, to make the
             # batch uniform length.
-            max_moves = int(random.uniform(max_moves // 2, max_moves * 2))
+            max_moves = int(random.uniform(max(max_moves // 2, 1), max_moves * 2))
             init_states, gold_states, _ = self._init_gold_batch(
                 examples,
                 max_length=max_moves

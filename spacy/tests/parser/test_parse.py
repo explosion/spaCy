@@ -1,3 +1,4 @@
+import itertools
 import pytest
 import numpy
 from numpy.testing import assert_equal
@@ -401,12 +402,15 @@ def test_incomplete_data(pipe_name):
     assert doc[2].head.i == 1
 
 
-@pytest.mark.parametrize("pipe_name", PARSERS)
-def test_overfitting_IO(pipe_name):
+@pytest.mark.parametrize(
+    "pipe_name,max_moves", itertools.product(PARSERS, [0, 1, 5, 100])
+)
+def test_overfitting_IO(pipe_name, max_moves):
     fix_random_seed(0)
     # Simple test to try and quickly overfit the dependency parser (normal or beam)
     nlp = English()
     parser = nlp.add_pipe(pipe_name)
+    parser.cfg["update_with_oracle_cut_size"] = max_moves
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
