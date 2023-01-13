@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "dbaeumer.vscode-eslint",
+        "unifiedjs.vscode-mdx",
+        "esbenp.prettier-vscode",
+        "syler.sass-indented"
+    ]
+}

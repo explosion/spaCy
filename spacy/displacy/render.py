@@ -94,7 +94,7 @@ class SpanRenderer:
         parsed (list): Dependency parses to render.
         page (bool): Render parses wrapped as full HTML page.
         minify (bool): Minify HTML markup.
-        RETURNS (str): Rendered HTML markup.
+        RETURNS (str): Rendered SVG or HTML markup.
         """
         rendered = []
         for i, p in enumerate(parsed):
@@ -510,7 +510,7 @@ class EntityRenderer:
         parsed (list): Dependency parses to render.
         page (bool): Render parses wrapped as full HTML page.
         minify (bool): Minify HTML markup.
-        RETURNS (str): Rendered HTML markup.
+        RETURNS (str): Rendered SVG or HTML markup.
         """
         rendered = []
         for i, p in enumerate(parsed):

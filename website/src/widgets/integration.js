@@ -1,31 +1,33 @@
 import React from 'react'
+import SVG from 'react-inlinesvg'
 
 import Card from '../components/card'
 
-import DVCLogo from '-!svg-react-loader!../images/logos/dvc.svg'
-import ProdigyLogo from '-!svg-react-loader!../images/logos/prodigy.svg'
-import StreamlitLogo from '-!svg-react-loader!../images/logos/streamlit.svg'
-import FastAPILogo from '-!svg-react-loader!../images/logos/fastapi.svg'
-import WandBLogo from '-!svg-react-loader!../images/logos/wandb.svg'
-import RayLogo from '-!svg-react-loader!../images/logos/ray.svg'
-import HuggingFaceHubLogo from '-!svg-react-loader!../images/logos/huggingface_hub.svg'
+import dVCLogo from '../images/logos/dvc.svg'
+import prodigyLogo from '../images/logos/prodigy.svg'
+import streamlitLogo from '../images/logos/streamlit.svg'
+import fastAPILogo from '../images/logos/fastapi.svg'
+import wandBLogo from '../images/logos/wandb.svg'
+import rayLogo from '../images/logos/ray.svg'
+import huggingFaceHubLogo from '../images/logos/huggingface_hub.svg'
 
 const LOGOS = {
-    dvc: DVCLogo,
-    prodigy: ProdigyLogo,
-    streamlit: StreamlitLogo,
-    fastapi: FastAPILogo,
-    wandb: WandBLogo,
-    ray: RayLogo,
-    huggingface_hub: HuggingFaceHubLogo,
+    dvc: dVCLogo.src,
+    prodigy: prodigyLogo.src,
+    streamlit: streamlitLogo.src,
+    fastapi: fastAPILogo.src,
+    wandb: wandBLogo.src,
+    ray: rayLogo.src,
+    huggingface_hub: huggingFaceHubLogo.src,
 }
 
 export const IntegrationLogo = ({ name, title, width, height, maxWidth, align, ...props }) => {
-    const Logo = LOGOS[name]
-    if (!Logo) throw new Error(`Unknown logo: ${name}`)
+    const logo = LOGOS[name]
+    if (!logo) throw new Error(`Unknown logo: ${name}`)
     const style = { maxWidth, float: align || 'none' }
     return (
-        <Logo
+        <SVG
+            src={logo}
             aria-label={title}
             aria-hidden={title ? undefined : 'true'}
             width={width}
