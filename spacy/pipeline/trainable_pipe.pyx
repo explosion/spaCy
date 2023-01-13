@@ -70,7 +70,7 @@ cdef class TrainablePipe(Pipe):
 
         teacher_pipe (Optional[TrainablePipe]): The teacher pipe to learn
             from.
-        examples (Iterable[Example]): Distillation examples. The eference
+        examples (Iterable[Example]): Distillation examples. The reference
             and predicted docs must have the same number of tokens and the
             same orthography.
         drop (float): dropout rate.

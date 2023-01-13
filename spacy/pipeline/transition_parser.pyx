@@ -221,7 +221,7 @@ cdef class Parser(TrainablePipe):
 
         teacher_pipe (Optional[TrainablePipe]): The teacher pipe to learn
             from.
-        examples (Iterable[Example]): Distillation examples. The eference
+        examples (Iterable[Example]): Distillation examples. The reference
             and predicted docs must have the same number of tokens and the
             same orthography.
         drop (float): dropout rate.
@@ -313,8 +313,6 @@ cdef class Parser(TrainablePipe):
         teacher_scores: Scores representing the teacher model's predictions.
         student_scores: Scores representing the student model's predictions.
 
-        RETURNS (Tuple[float, float]): The loss and the gradient.
-        
         RETURNS (Tuple[float, float]): The loss and the gradient.
         
         DOCS: https://spacy.io/api/dependencyparser#get_teacher_student_loss
