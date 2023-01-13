@@ -267,6 +267,10 @@ cdef class TrainablePipe(Pipe):
 
     @property
     def is_distillable(self) -> bool:
+        # Normally a pipe overrides `get_teacher_student_loss` to implement
+        # distillation. In more exceptional cases, a pipe can provide its
+        # own `distill` implementation. If neither of these methods is
+        # overridden, the pipe does not implement distillation.
         return not (self.__class__.distill is TrainablePipe.distill and self.__class__.get_teacher_student_loss is TrainablePipe.get_teacher_student_loss)
 
     @property
