@@ -30,6 +30,7 @@ from ._parser_internals cimport _beam_utils
 from ._parser_internals import _beam_utils
 
 from ..training import validate_examples, validate_get_examples
+from ..training import validate_distillation_examples
 from ..errors import Errors, Warnings
 from .. import util
 
@@ -236,7 +237,7 @@ cdef class Parser(TrainablePipe):
             losses = {}
         losses.setdefault(self.name, 0.0)
 
-        validate_examples(examples, "TransitionParser.distill")
+        validate_distillation_examples(examples, "TransitionParser.distill")
 
         set_dropout_rate(self.model, drop)
 

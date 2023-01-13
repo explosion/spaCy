@@ -47,6 +47,13 @@ def validate_examples(examples, method):
         raise TypeError(err)
 
 
+def validate_distillation_examples(examples, method):
+    validate_examples(examples, method)
+    for eg in examples:
+        if [token.text for token in eg.reference] != [token.text for token in eg.predicted]:
+            raise ValueError(Errors.E4003)
+
+
 def validate_get_examples(get_examples, method):
     """Check that a generator of a batch of examples received during processing is valid:
     the callable produces a non-empty list of Example objects.

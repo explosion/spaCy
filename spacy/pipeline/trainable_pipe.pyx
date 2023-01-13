@@ -6,7 +6,7 @@ import warnings
 
 from ..tokens.doc cimport Doc
 
-from ..training import validate_examples
+from ..training import validate_examples, validate_distillation_examples
 from ..errors import Errors, Warnings
 from .pipe import Pipe, deserialize_config
 from .. import util
@@ -88,7 +88,7 @@ cdef class TrainablePipe(Pipe):
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
-        validate_examples(examples, "TrainablePipe.distill")
+        validate_distillation_examples(examples, "TrainablePipe.distill")
         set_dropout_rate(self.model, drop)
         for node in teacher_pipe.model.walk():
             if node.name == "softmax":

@@ -956,6 +956,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E4001 = ("Expected input to be one of the following types: ({expected_types}), "
              "but got '{received_type}'")
     E4002 = ("Pipe '{name}' requires a teacher pipe for distillation.")
+    E4003 = ("Training examples for distillation must have the exact same tokens in the "
+             "reference and predicted docs.")
 
 
 # fmt: on
