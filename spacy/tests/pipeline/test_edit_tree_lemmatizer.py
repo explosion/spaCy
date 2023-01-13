@@ -195,6 +195,12 @@ def test_overfitting_IO():
     assert doc4[3].lemma_ == "egg"
 
 
+def test_is_distillable():
+    nlp = English()
+    lemmatizer = nlp.add_pipe("trainable_lemmatizer")
+    assert lemmatizer.is_distillable
+
+
 def test_distill():
     teacher = English()
     teacher_lemmatizer = teacher.add_pipe("trainable_lemmatizer")

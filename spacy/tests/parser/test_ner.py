@@ -617,6 +617,12 @@ def test_overfitting_IO(use_upper):
     assert ents[1].kb_id == 0
 
 
+def test_is_distillable():
+    nlp = English()
+    ner = nlp.add_pipe("ner")
+    assert ner.is_distillable
+
+
 def test_distill():
     teacher = English()
     teacher_ner = teacher.add_pipe("ner")

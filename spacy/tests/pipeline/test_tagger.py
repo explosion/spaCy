@@ -213,6 +213,12 @@ def test_overfitting_IO():
     assert doc3[0].tag_ != "N"
 
 
+def test_is_distillable():
+    nlp = English()
+    tagger = nlp.add_pipe("tagger")
+    assert tagger.is_distillable
+
+
 def test_distill():
     teacher = English()
     teacher_tagger = teacher.add_pipe("tagger")

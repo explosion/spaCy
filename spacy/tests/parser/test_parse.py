@@ -396,6 +396,12 @@ def test_overfitting_IO(pipe_name):
     assert_equal(batch_deps_1, no_batch_deps)
 
 
+def test_is_distillable():
+    nlp = English()
+    parser = nlp.add_pipe("parser")
+    assert parser.is_distillable
+
+
 def test_distill():
     teacher = English()
     teacher_parser = teacher.add_pipe("parser")

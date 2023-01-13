@@ -265,6 +265,10 @@ cdef class TrainablePipe(Pipe):
         raise NotImplementedError(Errors.E931.format(parent="Pipe", method="add_label", name=self.name))
 
     @property
+    def is_distillable(self) -> bool:
+        return not (self.__class__.distill is TrainablePipe.distill and self.__class__.get_teacher_student_loss is TrainablePipe.get_teacher_student_loss)
+
+    @property
     def is_trainable(self) -> bool:
         return True
 
