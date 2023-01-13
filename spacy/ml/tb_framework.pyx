@@ -148,32 +148,77 @@ def init(
     # model = _lsuv_init(model)
     return model
 
-InWithoutActions = Tuple[List[Doc], TransitionSystem]
-InWithActions = Tuple[List[Doc], TransitionSystem, List[Ints1d]]
-InT = TypeVar("InT", InWithoutActions, InWithActions)
 
-def forward(model, docs_moves: InT, is_train: bool):
-    if len(docs_moves) == 2:
-        docs, moves = docs_moves
-        actions = None
-    else:
-        docs, moves, actions = docs_moves
+class TransitionModelInputs:
+    """
+    Input to transition model.
+    """
+
+    # dataclass annotation is not yet supported in Cython 0.29.x,
+    # so, we'll do something close to it.
+
+    actions: Optional[List[Ints1d]]
+    docs: List[Doc]
+    max_moves: int
+    moves: TransitionSystem
+    states: Optional[List[State]]
+
+    __slots__ = [
+        "actions",
+        "docs",
+        "max_moves",
+        "moves",
+        "states",
+    ]
+
+    def __init__(
+        self,
+        docs: List[Doc],
+        moves: TransitionSystem,
+        actions: Optional[List[Ints1d]]=None,
+        max_moves: int=0,
+        states: Optional[List[State]]=None):
+        """
+        actions (Optional[List[Ints1d]]): actions to apply for each Doc.
+        docs (List[Doc]): Docs to predict transition sequences for.
+        max_moves: (int): the maximum number of moves to apply, values less
+            than 1 will apply moves to states until they are final states.
+        moves (TransitionSystem): the transition system to use when predicting
+            the transition sequences.
+        states (Optional[List[States]]): the initial states to predict the
+            transition sequences for. When absent, the initial states are
+            initialized from the provided Docs.
+        """
+        self.actions = actions
+        self.docs = docs
+        self.moves = moves
+        self.max_moves = max_moves
+        self.states = states
+
+
+def forward(model, inputs: TransitionModelInputs, is_train: bool):
+    docs = inputs.docs
+    moves = inputs.moves
+    actions = inputs.actions
 
     beam_width = model.attrs["beam_width"]
     hidden_pad = model.get_param("hidden_pad")
     tok2vec = model.get_ref("tok2vec")
 
-    states = moves.init_batch(docs)
+    states = moves.init_batch(docs) if inputs.states is None else inputs.states
     tokvecs, backprop_tok2vec = tok2vec(docs, is_train)
     tokvecs = model.ops.xp.vstack((tokvecs, hidden_pad))
     feats, backprop_feats = _forward_precomputable_affine(model, tokvecs, is_train)
     seen_mask = _get_seen_mask(model)
 
-    # Fixme: support actions in forward_cpu
-    if beam_width == 1 and not is_train and isinstance(model.ops, NumpyOps):
+    if not is_train and beam_width == 1 and isinstance(model.ops, NumpyOps):
+        # Note: max_moves is only used during training, so we don't need to
+        #       pass it to the greedy inference path.
         return _forward_greedy_cpu(model, moves, states, feats, seen_mask, actions=actions)
     else:
-        return _forward_fallback(model, moves, states, tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train, actions=actions)
+        return _forward_fallback(model, moves, states, tokvecs, backprop_tok2vec,
+            feats, backprop_feats, seen_mask, is_train, actions=actions,
+            max_moves=inputs.max_moves)
 
 
 def _forward_greedy_cpu(model: Model, TransitionSystem moves, states: List[StateClass], np.ndarray feats,
@@ -229,8 +274,17 @@ cdef list _parse_batch(CBlas cblas, TransitionSystem moves, StateC** states,
     return scores
 
 
-def _forward_fallback(model: Model, moves: TransitionSystem, states: List[StateClass], tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train: bool,
-                  actions: Optional[List[Ints1d]]=None):
+def _forward_fallback(
+    model: Model,
+    moves: TransitionSystem,
+    states: List[StateClass],
+    tokvecs, backprop_tok2vec,
+    feats,
+    backprop_feats,
+    seen_mask,
+    is_train: bool,
+    actions: Optional[List[Ints1d]]=None,
+    max_moves: int=0):
     nF = model.get_dim("nF")
     output = model.get_ref("output")
     hidden_b = model.get_param("hidden_b")
@@ -253,6 +307,7 @@ def _forward_fallback(model: Model, moves: TransitionSystem, states: List[StateC
             moves, states, None, width=beam_width, density=beam_density
         )
     arange = ops.xp.arange(nF)
+    n_moves = 0
     while not batch.is_done:
         ids = numpy.zeros((len(batch.get_unfinished_states()), nF), dtype="i")
         for i, state in enumerate(batch.get_unfinished_states()):
@@ -281,6 +336,9 @@ def _forward_fallback(model: Model, moves: TransitionSystem, states: List[StateC
             all_ids.append(ids)
             all_statevecs.append(statevecs)
             all_which.append(which)
+        if n_moves >= max_moves >= 1:
+            break
+        n_moves += 1
 
     def backprop_parser(d_states_d_scores):
         ids = ops.xp.vstack(all_ids)
