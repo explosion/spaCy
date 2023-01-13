@@ -126,7 +126,6 @@ def _check_pipeline_names(nlp, nlp2):
     for name in nlp2.pipe_names:
         if name in names:
             inc = _increment_suffix(name)
-            # TODO Would it be better to just keep incrementing?
             if inc in names or inc in nlp2.pipe_names:
                 msg.fail(fail_msg.format(name=name, new_name=inc), exits=1)
             rename[name] = inc
@@ -194,8 +193,6 @@ def use_transformer(
             "Install with: pip install spacy-transformers"
         )
         msg.fail(fail_msg, exits=1)
-
-    # TODO maybe remove vectors?
 
     # now update the listeners
     listeners = _get_listeners(nlp)
@@ -289,7 +286,6 @@ def _inner_merge(nlp, nlp2, replace_listeners=False) -> Language:
             # the tok2vec should not be copied over
             continue
         if replace_listeners and _has_listener(nlp2, comp):
-            # TODO does "model.tok2vec" work for everything?
             nlp2.replace_listeners(tok2vec_name, comp, ["model.tok2vec"])
         nlp.add_pipe(comp, source=nlp2, name=rename.get(comp, comp))
         if comp in rename:
@@ -306,7 +302,7 @@ def merge_pipelines(base_model: str, added_model: str, output_file: Path) -> Lan
     # to merge models:
     # - lang must be the same
     # - vectors must be the same
-    # - vocabs must be the same (how to check?)
+    # - vocabs must be the same
     # - tokenizer must be the same (only partially checkable)
     if nlp.lang != nlp2.lang:
         msg.fail("Can't merge - languages don't match", exits=1)
@@ -329,10 +325,9 @@ def merge_pipelines(base_model: str, added_model: str, output_file: Path) -> Lan
 
     # Check how many listeners there are and replace based on that
     # TODO: option to recognize frozen tok2vecs
-    # TODO: take list of pipe names to copy
+    # TODO: take list of pipe names to copy, ignore others
     listeners = _get_listeners(nlp2)
     replace_listeners = len(listeners) == 1
-    print(replace_listeners, len(listeners))
     nlp_out = _inner_merge(nlp, nlp2, replace_listeners=replace_listeners)
 
     # write the final pipeline
