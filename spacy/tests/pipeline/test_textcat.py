@@ -565,6 +565,12 @@ def test_initialize_examples(name, get_examples, train_data):
         nlp.initialize(get_examples=get_examples())
 
 
+def test_is_distillable():
+    nlp = English()
+    textcat = nlp.add_pipe("textcat")
+    assert not textcat.is_distillable
+
+
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the single-label textcat component - ensuring the ML models work correctly
     fix_random_seed(0)

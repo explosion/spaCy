@@ -195,6 +195,53 @@ def test_overfitting_IO():
     assert doc4[3].lemma_ == "egg"
 
 
+def test_is_distillable():
+    nlp = English()
+    lemmatizer = nlp.add_pipe("trainable_lemmatizer")
+    assert lemmatizer.is_distillable
+
+
+def test_distill():
+    teacher = English()
+    teacher_lemmatizer = teacher.add_pipe("trainable_lemmatizer")
+    teacher_lemmatizer.min_tree_freq = 1
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(teacher.make_doc(t[0]), t[1]))
+
+    optimizer = teacher.initialize(get_examples=lambda: train_examples)
+
+    for i in range(50):
+        losses = {}
+        teacher.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["trainable_lemmatizer"] < 0.00001
+
+    student = English()
+    student_lemmatizer = student.add_pipe("trainable_lemmatizer")
+    student_lemmatizer.min_tree_freq = 1
+    student_lemmatizer.initialize(
+        get_examples=lambda: train_examples, labels=teacher_lemmatizer.label_data
+    )
+
+    distill_examples = [
+        Example.from_dict(teacher.make_doc(t[0]), {}) for t in TRAIN_DATA
+    ]
+
+    for i in range(50):
+        losses = {}
+        student_lemmatizer.distill(
+            teacher_lemmatizer, distill_examples, sgd=optimizer, losses=losses
+        )
+    assert losses["trainable_lemmatizer"] < 0.00001
+
+    test_text = "She likes blue eggs"
+    doc = student(test_text)
+    assert doc[0].lemma_ == "she"
+    assert doc[1].lemma_ == "like"
+    assert doc[2].lemma_ == "blue"
+    assert doc[3].lemma_ == "egg"
+
+
 def test_lemmatizer_requires_labels():
     nlp = English()
     nlp.add_pipe("trainable_lemmatizer")

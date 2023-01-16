@@ -121,6 +121,39 @@ delegate to the [`predict`](/api/morphologizer#predict) and
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
+## Morphologizer.distill {id="distill", tag="method,experimental", version="4"}
+
+Train a pipe (the student) on the predictions of another pipe (the teacher). The
+student is typically trained on the probability distribution of the teacher, but
+details may differ per pipe. The goal of distillation is to transfer knowledge
+from the teacher to the student.
+
+The distillation is performed on ~~Example~~ objects. The `Example.reference`
+and `Example.predicted` ~~Doc~~s must have the same number of tokens and the
+same orthography. Even though the reference does not need have to have gold
+annotations, the teacher could adds its own annotations when necessary.
+
+This feature is experimental.
+
+> #### Example
+>
+> ```python
+> teacher_pipe = teacher.add_pipe("morphologizer")
+> student_pipe = student.add_pipe("morphologizer")
+> optimizer = nlp.resume_training()
+> losses = student.distill(teacher_pipe, examples, sgd=optimizer)
+> ```
+
+| Name           | Description                                                                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `teacher_pipe` | The teacher pipe to learn from. ~~Optional[TrainablePipe]~~                                                                                 |
+| `examples`     | Distillation examples. The reference and predicted docs must have the same number of tokens and the same orthography. ~~Iterable[Example]~~ |
+| _keyword-only_ |                                                                                                                                             |
+| `drop`         | Dropout rate. ~~float~~                                                                                                                     |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                               |
+| `losses`       | Optional record of the loss during distillation. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~                |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                       |
+
 ## Morphologizer.pipe {id="pipe",tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
@@ -258,6 +291,27 @@ predicted scores.
 | `examples`  | The batch of examples. ~~Iterable[Example]~~                                |
 | `scores`    | Scores representing the model's predictions.                                |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
+
+## Morphologizer.get_teacher_student_loss {id="get_teacher_student_loss", tag="method", version="4"}
+
+Calculate the loss and its gradient for the batch of student scores relative to
+the teacher scores.
+
+> #### Example
+>
+> ```python
+> teacher_morphologizer = teacher.get_pipe("morphologizer")
+> student_morphologizer = student.add_pipe("morphologizer")
+> student_scores = student_morphologizer.predict([eg.predicted for eg in examples])
+> teacher_scores = teacher_morphologizer.predict([eg.predicted for eg in examples])
+> loss, d_loss = student_morphologizer.get_teacher_student_loss(teacher_scores, student_scores)
+> ```
+
+| Name             | Description                                                                 |
+| ---------------- | --------------------------------------------------------------------------- |
+| `teacher_scores` | Scores representing the teacher model's predictions.                        |
+| `student_scores` | Scores representing the student model's predictions.                        |
+| **RETURNS**      | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
 ## Morphologizer.create_optimizer {id="create_optimizer",tag="method"}
 
