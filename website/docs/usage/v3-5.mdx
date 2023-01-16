@@ -6,13 +6,13 @@ menu:
   - ['Upgrading Notes', 'upgrading']
 ---
 
-## New features {#features hidden="true"}
+## New features {id="features",hidden="true"}
 
 spaCy v3.5 introduces three new CLI commands, `apply`, `benchmark` and
 `find-threshold`, provides improvements and extensions to our entity linking
 functionality, XXX
 
-### New CLI commands {#cli}
+### New CLI commands {id="cli"}
 
 TODO `apply`
 
@@ -20,16 +20,16 @@ TODO `benchmark`
 
 TODO `find-threshold`
 
-### Fuzzy matching {#fuzzy}
+### Fuzzy matching {id="fuzzy"}
 
 TODO
 
-### Entity linking generalization {#el}
+### Entity linking generalization {id="el"}
 
 The knowledge base used for entity linking is now easier to customize and has a
 new default implementation [`InMemoryLookupKB`](/api/kb_in_memory).
 
-### Additional features and improvements {#additional-features-and-improvements}
+### Additional features and improvements {id="additional-features-and-improvements"}
 
 - Language updates:
   - Extended support for Slovenian.
@@ -61,7 +61,7 @@ new default implementation [`InMemoryLookupKB`](/api/kb_in_memory).
   `vectors`.
 - Correctly handle missing annotations in the edit tree lemmatizer.
 
-### Trained pipeline updates {#pipelines}
+### Trained pipeline updates {id="pipelines"}
 
 - The CNN pipelines add `IS_SPACE` as a `tok2vec` feature for `tagger` and
   `morphologizer` components to improve tagging of non-whitespace vs. whitespace
@@ -74,15 +74,15 @@ new default implementation [`InMemoryLookupKB`](/api/kb_in_memory).
   in the
   [v1.2.0 release notes](https://github.com/explosion/spacy-transformers/releases/tag/v1.2.0).
 
-## Notes about upgrading from v3.4 {#upgrading}
+## Notes about upgrading from v3.4 {id="upgrading"}
 
-### Validation of textcat values {#textcat-validation}
+### Validation of textcat values {id="textcat-validation"}
 
 An error is now raised when unsupported values are given as input to train a
 `textcat` or `textcat_multilabel` model - ensure that values are `0.0` or `1.0`
 as explained in the [docs](/api/textcategorizer#assigned-attributes).
 
-### Updated default scores for tokenization and textcat {#scores}
+### Updated default scores for tokenization and textcat {id="scores"}
 
 We fixed a bug that inflated the `token_acc` scores in v3.0-v3.4. The reported
 `token_acc` will drop from v3.4 to v3.5, but if `token_p/r/f` stay the same,
@@ -97,7 +97,7 @@ For new `textcat` or `textcat_multilabel` configs, the new default `v2` scorers:
 - custom scorers can be used to score multiple `textcat` and
   `textcat_multilabel` components with the built-in `Scorer.score_cats` scorer
 
-### Pipeline package version compatibility {#version-compat}
+### Pipeline package version compatibility {id="version-compat"}
 
 > #### Using legacy implementations
 >
