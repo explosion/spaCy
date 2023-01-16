@@ -5,10 +5,8 @@ from pathlib import Path
 from spacy.about import __version__ as spacy_version
 from spacy import util
 from spacy import prefer_gpu, require_gpu, require_cpu
-from spacy.ml._precomputable_affine import PrecomputableAffine
-from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
 from spacy.util import dot_to_object, SimpleFrozenList, import_file, to_ternary_int
-from spacy.util find_available_port
+from spacy.util import find_available_port
 from thinc.api import Config, Optimizer, ConfigValidationError
 from thinc.api import get_current_ops, set_current_ops, NumpyOps, CupyOps, MPSOps
 from thinc.compat import has_cupy_gpu, has_torch_mps_gpu
