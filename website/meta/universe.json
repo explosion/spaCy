@@ -1,6 +1,6 @@
 {
     "resources": [
-         {
+        {
             "id": "grecy",
             "title": "greCy",
             "slogan": "Ancient Greek pipelines for spaCy",
@@ -60,12 +60,8 @@
                 "github": "Ce11an",
                 "website": "https://www.linkedin.com/in/cellan-hall/"
             },
-            "category": [
-                "extension"
-            ],
-            "tags": [
-                "text-processing"
-            ]
+            "category": ["extension"],
+            "tags": ["text-processing"]
         },
         {
             "id": "Zshot",
@@ -195,9 +191,7 @@
             "description": "Aim-spaCy helps to easily collect, store and explore training logs for spaCy, including: hyper-parameters, metrics and displaCy visualizations",
             "github": "aimhubio/aim-spacy",
             "pip": "aim-spacy",
-            "code_example": [
-                "https://github.com/aimhubio/aim-spacy/tree/master/examples"
-            ],
+            "code_example": ["https://github.com/aimhubio/aim-spacy/tree/master/examples"],
             "code_language": "python",
             "url": "https://aimstack.io/spacy",
             "thumb": "https://user-images.githubusercontent.com/13848158/172912427-ee9327ea-3cd8-47fa-8427-6c0d36cd831f.png",
@@ -266,7 +260,7 @@
             "code_language": "python",
             "author": "Peter Baumgartner",
             "author_links": {
-                "twitter" : "pmbaumgartner",
+                "twitter": "pmbaumgartner",
                 "github": "pmbaumgartner",
                 "website": "https://www.peterbaumgartner.com/"
             },
@@ -286,7 +280,7 @@
             "code_language": "python",
             "author": "Explosion",
             "author_links": {
-                "twitter" : "explosion_ai",
+                "twitter": "explosion_ai",
                 "github": "explosion",
                 "website": "https://explosion.ai/"
             },
@@ -748,7 +742,7 @@
             "code_language": "python",
             "author": "Keith Rozario",
             "author_links": {
-                "twitter" : "keithrozario",
+                "twitter": "keithrozario",
                 "github": "keithrozario",
                 "website": "https://www.keithrozario.com"
             },
@@ -2664,10 +2658,7 @@
                 "github": "davidberenstein1957",
                 "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
             },
-            "category": [
-                "pipeline",
-                "standalone"
-            ],
+            "category": ["pipeline", "standalone"],
             "tags": [
                 "classification",
                 "zero-shot",
@@ -2720,14 +2711,8 @@
                 "github": "davidberenstein1957",
                 "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
             },
-            "category": [
-                "pipeline"
-            ],
-            "tags": [
-                "ner",
-                "few-shot",
-                "gensim"
-            ],
+            "category": ["pipeline"],
+            "tags": ["ner", "few-shot", "gensim"],
             "spacy_version": 3
         },
         {
@@ -2778,16 +2763,8 @@
                 "github": "davidberenstein1957",
                 "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
             },
-            "category": [
-                "pipeline",
-                "standalone"
-            ],
-            "tags": [
-                "coreference",
-                "multi-lingual",
-                "cross-lingual",
-                "allennlp"
-            ],
+            "category": ["pipeline", "standalone"],
+            "tags": ["coreference", "multi-lingual", "cross-lingual", "allennlp"],
             "spacy_version": 3
         },
         {
@@ -2933,7 +2910,7 @@
                 "",
                 "print(doc._.clauses)",
                 "# Output:",
-                "# <SV, AE, died, None, None, None, [in Princeton, in 1955]>",
+                "# &lt;SV, AE, died, None, None, None, [in Princeton, in 1955]&gt;",
                 "",
                 "propositions = doc._.clauses[0].to_propositions(as_text=True)",
                 "",
@@ -2952,7 +2929,7 @@
             "description": "Collection of NLP visualizations for NER and syntax tree markup. Similar to [displaCy](https://explosion.ai/demos/displacy) and [displaCy ENT](https://explosion.ai/demos/displacy-ent).",
             "github": "natasha/ipymarkup",
             "image": "https://github.com/natasha/ipymarkup/blob/master/table.png?raw=true",
-            "pip":"pip install ipymarkup",
+            "pip": "pip install ipymarkup",
             "code_example": [
                 "from ipymarkup import show_span_ascii_markup, show_dep_ascii_markup",
                 "",
@@ -3715,7 +3692,15 @@
                 "website": "https://brucewlee.github.io/"
             },
             "category": ["research", "scientific"],
-            "tags": ["Readability", "Simplification", "Feature Extraction", "Syntax", "Discourse", "Semantics", "Lexical"]
+            "tags": [
+                "Readability",
+                "Simplification",
+                "Feature Extraction",
+                "Syntax",
+                "Discourse",
+                "Semantics",
+                "Lexical"
+            ]
         },
         {
             "id": "hmrb",
@@ -4090,7 +4075,6 @@
             "category": ["pipeline", "research"],
             "tags": ["Thai"]
         }
-
     ],
 
     "categories": [

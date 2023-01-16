@@ -139,6 +139,20 @@ def test_incomplete_data():
     assert doc[1].lemma_ == "like"
     assert doc[2].lemma_ == "blue"
 
+    # Check that incomplete annotations are ignored.
+    scores, _ = lemmatizer.model([eg.predicted for eg in train_examples], is_train=True)
+    _, dX = lemmatizer.get_loss(train_examples, scores)
+    xp = lemmatizer.model.ops.xp
+
+    # Missing annotations.
+    assert xp.count_nonzero(dX[0][0]) == 0
+    assert xp.count_nonzero(dX[0][3]) == 0
+    assert xp.count_nonzero(dX[1][0]) == 0
+    assert xp.count_nonzero(dX[1][3]) == 0
+
+    # Misaligned annotations.
+    assert xp.count_nonzero(dX[1][1]) == 0
+
 
 def test_overfitting_IO():
     nlp = English()

@@ -898,7 +898,11 @@ def test_textcat_multi_threshold():
 
 
 @pytest.mark.parametrize(
-    "component_name,scorer", [("textcat", "spacy.textcat_scorer.v1")]
+    "component_name,scorer",
+    [
+        ("textcat", "spacy.textcat_scorer.v1"),
+        ("textcat_multilabel", "spacy.textcat_multilabel_scorer.v1"),
+    ],
 )
 def test_textcat_legacy_scorers(component_name, scorer):
     """Check that legacy scorers are registered and produce the expected score
