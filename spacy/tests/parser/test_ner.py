@@ -617,6 +617,52 @@ def test_overfitting_IO(use_upper):
     assert ents[1].kb_id == 0
 
 
+def test_is_distillable():
+    nlp = English()
+    ner = nlp.add_pipe("ner")
+    assert ner.is_distillable
+
+
+def test_distill():
+    teacher = English()
+    teacher_ner = teacher.add_pipe("ner")
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(teacher.make_doc(text), annotations))
+        for ent in annotations.get("entities"):
+            teacher_ner.add_label(ent[2])
+
+    optimizer = teacher.initialize(get_examples=lambda: train_examples)
+
+    for i in range(50):
+        losses = {}
+        teacher.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["ner"] < 0.00001
+
+    student = English()
+    student_ner = student.add_pipe("ner")
+    student_ner.initialize(
+        get_examples=lambda: train_examples, labels=teacher_ner.label_data
+    )
+
+    distill_examples = [
+        Example.from_dict(teacher.make_doc(t[0]), {}) for t in TRAIN_DATA
+    ]
+
+    for i in range(100):
+        losses = {}
+        student_ner.distill(teacher_ner, distill_examples, sgd=optimizer, losses=losses)
+    assert losses["ner"] < 0.0001
+
+    # test the trained model
+    test_text = "I like London."
+    doc = student(test_text)
+    ents = doc.ents
+    assert len(ents) == 1
+    assert ents[0].text == "London"
+    assert ents[0].label_ == "LOC"
+
+
 def test_beam_ner_scores():
     # Test that we can get confidence values out of the beam_ner pipe
     beam_width = 16

@@ -1,5 +1,6 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
 from __future__ import print_function
+from typing import Dict, Iterable, List, Optional, Tuple
 from cymem.cymem cimport Pool
 cimport numpy as np
 from itertools import islice
@@ -9,7 +10,10 @@ from libc.stdlib cimport calloc, free
 import random
 
 import srsly
-from thinc.api import get_ops, set_dropout_rate, CupyOps, NumpyOps
+from thinc.api import get_ops, set_dropout_rate, CupyOps, NumpyOps, Optimizer
+from thinc.api import chain, softmax_activation, use_ops
+from thinc.legacy import LegacySequenceCategoricalCrossentropy
+from thinc.types import Floats2d
 import numpy.random
 import numpy
 import warnings
@@ -26,6 +30,7 @@ from ._parser_internals cimport _beam_utils
 from ._parser_internals import _beam_utils
 
 from ..training import validate_examples, validate_get_examples
+from ..training import validate_distillation_examples
 from ..errors import Errors, Warnings
 from .. import util
 
@@ -202,6 +207,121 @@ cdef class Parser(TrainablePipe):
     def add_multitask_objective(self, target):
         # Defined in subclasses, to avoid circular import
         raise NotImplementedError
+
+    def distill(self,
+               teacher_pipe: Optional[TrainablePipe],
+               examples: Iterable["Example"],
+               *,
+               drop: float=0.0,
+               sgd: Optional[Optimizer]=None,
+               losses: Optional[Dict[str, float]]=None):
+        """Train a pipe (the student) on the predictions of another pipe
+        (the teacher). The student is trained on the transition probabilities
+        of the teacher.
+
+        teacher_pipe (Optional[TrainablePipe]): The teacher pipe to learn
+            from.
+        examples (Iterable[Example]): Distillation examples. The reference
+            and predicted docs must have the same number of tokens and the
+            same orthography.
+        drop (float): dropout rate.
+        sgd (Optional[Optimizer]): An optimizer. Will be created via
+            create_optimizer if not set.
+        losses (Optional[Dict[str, float]]): Optional record of loss during
+            distillation.
+        RETURNS: The updated losses dictionary.
+        
+        DOCS: https://spacy.io/api/dependencyparser#distill
+        """
+        if teacher_pipe is None:
+            raise ValueError(Errors.E4002.format(name=self.name))
+        if losses is None:
+            losses = {}
+        losses.setdefault(self.name, 0.0)
+
+        validate_distillation_examples(examples, "TransitionParser.distill")
+
+        set_dropout_rate(self.model, drop)
+
+        student_docs = [eg.predicted for eg in examples]
+
+        teacher_step_model = teacher_pipe.model.predict([eg.reference for eg in examples])
+        student_step_model, backprop_tok2vec = self.model.begin_update(student_docs)
+
+        # Add softmax activation, so that we can compute student losses
+        # with cross-entropy loss.
+        with use_ops("numpy"):
+            teacher_model = chain(teacher_step_model, softmax_activation())
+            student_model = chain(student_step_model, softmax_activation())
+        
+        max_moves = self.cfg["update_with_oracle_cut_size"]
+        if max_moves >= 1:
+            # Chop sequences into lengths of this many words, to make the
+            # batch uniform length. Since we do not have a gold standard
+            # sequence, we use the teacher's predictions as the gold
+            # standard.
+            max_moves = int(random.uniform(max_moves // 2, max_moves * 2))
+            states = self._init_batch(teacher_step_model, student_docs, max_moves)
+        else:
+            states = self.moves.init_batch(student_docs)
+
+        loss = 0.0
+        n_moves = 0
+        while states:
+            # We do distillation as follows: (1) for every state, we compute the
+            # transition softmax distributions: (2) we backpropagate the error of
+            # the student (compared to the teacher) into the student model; (3)
+            # for all states, we move to the next state using the student's
+            # predictions.
+            teacher_scores = teacher_model.predict(states)
+            student_scores, backprop = student_model.begin_update(states)
+            state_loss, d_scores = self.get_teacher_student_loss(teacher_scores, student_scores)
+            backprop(d_scores)
+            loss += state_loss
+            self.transition_states(states, student_scores)
+            states = [state for state in states if not state.is_final()]
+
+            # Stop when we reach the maximum number of moves, otherwise we start
+            # to process the remainder of cut sequences again.
+            if max_moves >= 1 and n_moves >= max_moves:
+                break
+            n_moves += 1
+
+        backprop_tok2vec(student_docs)
+
+        if sgd is not None:
+            self.finish_update(sgd)
+
+        losses[self.name] += loss
+
+        del backprop
+        del backprop_tok2vec
+        teacher_step_model.clear_memory()
+        student_step_model.clear_memory()
+        del teacher_model
+        del student_model
+
+        return losses
+
+
+    def get_teacher_student_loss(
+        self, teacher_scores: List[Floats2d], student_scores: List[Floats2d]
+    ) -> Tuple[float, List[Floats2d]]:
+        """Calculate the loss and its gradient for a batch of student
+        scores, relative to teacher scores.
+
+        teacher_scores: Scores representing the teacher model's predictions.
+        student_scores: Scores representing the student model's predictions.
+
+        RETURNS (Tuple[float, float]): The loss and the gradient.
+        
+        DOCS: https://spacy.io/api/dependencyparser#get_teacher_student_loss
+        """
+        loss_func = LegacySequenceCategoricalCrossentropy(normalize=False)
+        d_scores, loss = loss_func(student_scores, teacher_scores)
+        if self.model.ops.xp.isnan(loss):
+            raise ValueError(Errors.E910.format(name=self.name))
+        return float(loss), d_scores
 
     def init_multitask_objectives(self, get_examples, pipeline, **cfg):
         """Setup models for secondary objectives, to benefit from multi-task
@@ -624,6 +744,40 @@ cdef class Parser(TrainablePipe):
                 except AttributeError:
                     raise ValueError(Errors.E149) from None
         return self
+
+    def _init_batch(self, teacher_step_model, docs, max_length):
+        """Make a square batch of length equal to the shortest transition
+        sequence or a cap. A long
+        doc will get multiple states. Let's say we have a doc of length 2*N,
+        where N is the shortest doc. We'll make two states, one representing
+        long_doc[:N], and another representing long_doc[N:]. In contrast to
+        _init_gold_batch, this version uses a teacher model to generate the
+        cut sequences."""
+        cdef:
+            StateClass start_state
+            StateClass state
+            Transition action
+        all_states = self.moves.init_batch(docs)
+        states = []
+        to_cut = []
+        for state, doc in zip(all_states, docs):
+            if not state.is_final():
+                if len(doc) < max_length:
+                    states.append(state)
+                else:
+                    to_cut.append(state)
+        while to_cut:
+            states.extend(state.copy() for state in to_cut)
+            # Move states forward max_length actions.
+            length = 0
+            while to_cut and length < max_length:
+                teacher_scores = teacher_step_model.predict(to_cut)
+                self.transition_states(to_cut, teacher_scores)
+                # States that are completed do not need further cutting.
+                to_cut = [state for state in to_cut if not state.is_final()]
+                length += 1
+        return states
+
 
     def _init_gold_batch(self, examples, max_length):
         """Make a square batch, of length equal to the shortest transition

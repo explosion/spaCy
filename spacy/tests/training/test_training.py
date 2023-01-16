@@ -8,7 +8,7 @@ from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
 from spacy.training import Alignment, Corpus, Example, biluo_tags_to_offsets
 from spacy.training import biluo_tags_to_spans, docs_to_json, iob_to_biluo
-from spacy.training import offsets_to_biluo_tags
+from spacy.training import offsets_to_biluo_tags, validate_distillation_examples
 from spacy.training.alignment_array import AlignmentArray
 from spacy.training.align import get_alignments
 from spacy.training.converters import json_to_docs
@@ -363,6 +363,19 @@ def test_example_from_dict_some_ner(en_vocab):
     )
     ner_tags = example.get_aligned_ner()
     assert ner_tags == ["U-LOC", None, None, None]
+
+
+def test_validate_distillation_examples(en_vocab):
+    words = ["a", "b", "c", "d"]
+    spaces = [True, True, False, True]
+    predicted = Doc(en_vocab, words=words, spaces=spaces)
+
+    example = Example.from_dict(predicted, {})
+    validate_distillation_examples([example], "test_validate_distillation_examples")
+
+    example = Example.from_dict(predicted, {"words": words + ["e"]})
+    with pytest.raises(ValueError, match=r"distillation"):
+        validate_distillation_examples([example], "test_validate_distillation_examples")
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")

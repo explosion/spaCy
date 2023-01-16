@@ -50,6 +50,12 @@ def test_implicit_label():
     nlp.initialize(get_examples=lambda: train_examples)
 
 
+def test_is_distillable():
+    nlp = English()
+    morphologizer = nlp.add_pipe("morphologizer")
+    assert morphologizer.is_distillable
+
+
 def test_no_resize():
     nlp = Language()
     morphologizer = nlp.add_pipe("morphologizer")
