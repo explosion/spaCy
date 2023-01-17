@@ -46,22 +46,24 @@ DEFAULT_EXCL_SPANCAT_MODEL = Config().from_str(spancat_excl_default_config)["mod
     "spancat_exclusive",
     assigns=["doc.spans"],
     default_config={
-        "spans_key": "sc",
-        "model": DEFAULT_EXCL_SPANCAT_MODEL,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
+        "model": DEFAULT_EXCL_SPANCAT_MODEL,
+        "spans_key": "sc",
         "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
+        "negative_weight": 1.0,
+        "allow_overlap": True,
     },
     default_score_weights={"spans_sc_f": 1.0, "spans_sc_p": 0.0, "spans_sc_r": 0.0},
 )
-def make_spancat(
+def make_exclusive_spancat(
     nlp: Language,
     name: str,
     suggester: Suggester,
     model: Model[Tuple[List[Doc], Ragged], Floats2d],
     spans_key: str,
     scorer: Optional[Callable],
-    negative_weight: float = 1.0,
-    allow_overlap: bool = True,
+    negative_weight: float,
+    allow_overlap: bool,
 ) -> "Exclusive_SpanCategorizer":
     """Create an Exclusive_SpanCategorizer component. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeler
