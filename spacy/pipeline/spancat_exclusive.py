@@ -63,7 +63,7 @@ def make_spancat(
     negative_weight: float = 1.0,
     allow_overlap: bool = True,
 ) -> "Exclusive_SpanCategorizer":
-    """Create a SpanCategorizerExclusive component. The span categorizer consists of two
+    """Create an Exclusive_SpanCategorizer component. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeler
     model that predicts a maximum of one label for each span.
 
@@ -136,7 +136,7 @@ class Exclusive_SpanCategorizer(SpanCategorizer):
         allow_overlap: bool = True,
         scorer: Optional[Callable] = spancat_score,
     ) -> None:
-        """Initialize the span categorizer.
+        """Initialize the exclusive span categorizer.
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
@@ -147,8 +147,9 @@ class Exclusive_SpanCategorizer(SpanCategorizer):
             `"spans"`.
         negative_weight (float): Multiplier for the loss terms.
             Can be used to down weigh the negative samples if there are too many.
+            Defaults to 1.0.
         allow_overlap (bool): If True the data is assumed to
-            contain overlapping spans.
+            contain overlapping spans. Defaults to `True`.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_spans for the Doc.spans[spans_key] with overlapping
             spans allowed.
@@ -186,7 +187,7 @@ class Exclusive_SpanCategorizer(SpanCategorizer):
         """Modify a batch of Doc objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        scores: The scores to set, produced by SpanCategorizerExclusive.predict.
+        indices_scores: The scores to set, produced by Exclusive_SpanCategorizer.predict.
 
         DOCS: https://spacy.io/api/spancatcategorizer#set_annotations
         """
