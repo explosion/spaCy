@@ -9,20 +9,96 @@ menu:
 ## New features {id="features",hidden="true"}
 
 spaCy v3.5 introduces three new CLI commands, `apply`, `benchmark` and
-`find-threshold`, provides improvements and extensions to our entity linking
-functionality, XXX
+`find-threshold`, provides improvements to our entity linking functionality, and
+includes a range of language updates and bug fixes.
 
 ### New CLI commands {id="cli"}
 
-TODO `apply`
+#### apply CLI
 
-TODO `benchmark`
+The [`apply` CLI](/api/cli#apply) can be used to apply a pipeline to one or more
+`.txt`, `.jsonl` or `.spacy` input files, saving the annotated docs in a single
+`.spacy` file.
 
-TODO `find-threshold`
+```shell
+spacy apply en_core_web_sm my_texts/ output.spacy
+```
+
+#### benchmark CLI
+
+The [`benchmark` CLI](/api/cli#benchmark) has been added to extend the existing
+`evaluate` functionality with a wider range of profiling subcommands.
+
+The `benchmark accuracy` CLI is introduced as an alias for `evaluate`.
+
+The new `benchmark speed` CLI performs warmup rounds before measuing the speed
+in words per second on batches of randomly shuffled documents from the provided
+data.
+
+```shell
+spacy benchmark speed my_pipeline data.spacy
+```
+
+The output is the mean performance using batches (`nlp.pipe`) with a 95%
+confidence interval, e.g., profiling `en_core_web_sm` on CPU:
+
+```none
+Outliers: 2.0%, extreme outliers: 0.0%
+Mean: 18904.1 words/s (95% CI: -256.9 +244.1)
+```
+
+#### find-threshold CLI
+
+The [`find-threshold` CLI](/api/cli#find-threshold) runs a series of trials
+across threshold values from `0.0` to `1.0` and identifies the best threshold
+for the provided score metric.
+
+The following command runs 20 trials for the `spancat` component in
+`my_pipeline`, recording the `spans_sc_f` score for each value of the threshold
+`[components.spancat.threshold]` from `0.0` to `1.0`:
+
+```shell
+spacy find-threshold my_pipeline data.spacy spancat threshold spans_sc_f --n_trials 20
+```
+
+The `find-threshold` CLI can be used with `textcat_multilabel`, `spancat` and
+custom components with thresholds that are applied while predicting or scoring.
 
 ### Fuzzy matching {id="fuzzy"}
 
-TODO
+New `FUZZY` operators support [fuzzy matching](/usage/rule-based-matching#fuzzy)
+with the `Matcher`. By default, the `FUZZY` operator allows a Levenshtein edit
+distance of 2 and up to 30% of the pattern string length. `FUZZY1`..`FUZZY9` can
+be used to specify the exact number of allowed edits.
+
+```python
+# Match lowercase with fuzzy matching (allows up to 2 edits)
+pattern = [{"LOWER": {"FUZZY": "definitely"}}]
+
+# Match custom attribute values with fuzzy matching (allows up to 2 edits)
+pattern = [{"_": {"country": {"FUZZY": "Kyrgyzstan"}}}]
+
+# Match with exact Levenshtein edit distance limits (allows up to 3 edits)
+pattern = [{"_": {"country": {"FUZZY3": "Kyrgyzstan"}}}]
+```
+
+Note that `FUZZY` is using Levenshtein edit distance rather than
+Damerau-Levenshtein edit distance, so a transposition like `teh` for `the`
+counts as two edits, one insertion and one deletion.
+
+If you'd prefer an alternate fuzzy matching algorithm, you can provide your onw
+custom method to the `Matcher` or as a config option for an entity ruler and
+span ruler.
+
+### FUZZY and REGEX with lists {id="fuzzy-regex-lists"}
+
+The `FUZZY` and `REGEX` operators are also now supported for lists with `IN` and
+`NOT_IN`:
+
+```python
+pattern = [{"TEXT": {"FUZZY": {"IN": ["awesome", "cool", "wonderful"]}}}]
+pattern = [{"TEXT": {"REGEX": {"NOT_IN": ["^awe(some)?$", "^wonder(ful)?"]}}}]
+```
 
 ### Entity linking generalization {id="el"}
 
@@ -43,7 +119,6 @@ new default implementation [`InMemoryLookupKB`](/api/kb_in_memory).
   [tracking](/api/top-level#ConsoleLogger).
 - Improved scoring behavior for `textcat` with `spacy.textcat_scorer.v2` and
   `spacy.textcat_multilabel_scorer.v2`.
-
 - Updates so that downstream components can train properly on a frozen `tok2vec`
   or `transformer` layer.
 - Allow interpolation of variables in directory names in projects.
@@ -82,7 +157,7 @@ An error is now raised when unsupported values are given as input to train a
 `textcat` or `textcat_multilabel` model - ensure that values are `0.0` or `1.0`
 as explained in the [docs](/api/textcategorizer#assigned-attributes).
 
-### Updated default scores for tokenization and textcat {id="scores"}
+### Updated scorers for tokenization and textcat {id="scores"}
 
 We fixed a bug that inflated the `token_acc` scores in v3.0-v3.4. The reported
 `token_acc` will drop from v3.4 to v3.5, but if `token_p/r/f` stay the same,
@@ -91,11 +166,12 @@ your tokenization performance has not changed from v3.4.
 For new `textcat` or `textcat_multilabel` configs, the new default `v2` scorers:
 
 - ignore `threshold` for `textcat`, so the reported `cats_p/r/f` may increase
-  slightly in v3.5 even though underlying performance is unchanged
+  slightly in v3.5 even though the underlying predictions are unchanged
 - report the performance of only the **final** `textcat` or `textcat_multilabel`
   component in the pipeline by default
-- custom scorers can be used to score multiple `textcat` and
-  `textcat_multilabel` components with the built-in `Scorer.score_cats` scorer
+- allow custom scorers to be used to score multiple `textcat` and
+  `textcat_multilabel` components with `Scorer.score_cats` by restricting the
+  evaluation to the component's provided labels
 
 ### Pipeline package version compatibility {id="version-compat"}
 
@@ -122,8 +198,8 @@ working as expected, you can update the spaCy version requirements in the
 [`meta.json`](/api/data-formats#meta):
 
 ```diff
-- "spacy_version": ">=3.3.0,<3.5.0",
-+ "spacy_version": ">=3.3.0,<3.6.0",
+- "spacy_version": ">=3.4.0,<3.5.0",
++ "spacy_version": ">=3.4.0,<3.6.0",
 ```
 
 ### Updating v3.4 configs
