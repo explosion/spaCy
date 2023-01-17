@@ -193,7 +193,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
     def _scores2guesses_top_k_greater_1(self, docs, scores):
         guesses = []
-        predictions_to_consider = min(self.top_k, len(self.labels))
+        top_k = min(self.top_k, len(self.labels))
         for doc, doc_scores in zip(docs, scores):
             doc_scores = self.numpy_ops.asarray(doc_scores)
             doc_compat_guesses = []
