@@ -113,7 +113,7 @@ def minibatch_by_padded_size(
         The `len` function is used by default.
     """
     if isinstance(size, int):
-        size_ = itertools.repeat(size)  # type: Iterator[int]
+        size_: Iterator[int] = itertools.repeat(size)
     else:
         size_ = iter(size)
     for outer_batch in minibatch(seqs, size=buffer):
