@@ -149,7 +149,7 @@ def minibatch_by_words(
         item. The `len` function is used by default.
     """
     if isinstance(size, int):
-        size_ = itertools.repeat(size)  # type: Iterator[int]
+        size_: Iterator[int] = itertools.repeat(size)
     else:
         size_ = iter(size)
     target_size = next(size_)
