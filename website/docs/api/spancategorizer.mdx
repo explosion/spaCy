@@ -16,7 +16,7 @@ that predicts zero or more labels for each candidate.
 This component comes in two forms: `spancat` and `spancat_exclusive`. When you
 need to perform multi-label classification on your spans, use `spancat`. The
 `spancat` component uses a `Logistic` layer where the output class probabilities
-are independent for each class. However, if you need to predict exactly one true
+are independent for each class. However, if you need to predict at most one true
 class for a span, then use `spancat_exclusive`. It uses a `Softmax` layer and
 treats the entities as a multi-class problem.
 
