@@ -193,6 +193,9 @@ class SpanCategorizer(TrainablePipe):
         """Initialize the span categorizer.
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
+        suggester (Callable[[Iterable[Doc], Optional[Ops]], Ragged]): A function that suggests spans.
+            Spans are returned as a ragged array with two integer columns, for the
+            start and end positions.
         name (str): The component instance name, used to add entries to the
             losses during training.
         spans_key (str): Key of the Doc.spans dict to save the spans under.
