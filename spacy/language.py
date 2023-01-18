@@ -1033,7 +1033,9 @@ class Language:
     ):
         """Update the models in the pipeline.
         teacher (Language): Teacher to distill from.
-        examples (Iterable[Example]): A batch of examples
+        examples (Iterable[Example]): Distillation examples. The reference
+            (teacher) and predicted (student) docs must have the same number of
+            tokens and the same orthography.
         drop (float): The dropout rate.
         sgd (Optional[Optimizer]): An optimizer.
         losses (Optional(Dict[str, float])): Dictionary to update with the loss,
