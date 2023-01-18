@@ -41,7 +41,7 @@ If you'd like to do this, **be sure you do _not_ include your local
 `node_modules` folder**, since there are some dependencies that need to be built
 for the image system. Rename it before using.
 
-First build the Docker container. This only needs to be done on the first run
+First build the Docker image. This only needs to be done on the first run
 or when changes are made to `Dockerfile` or the website dependencies:
 
 ```bash
