@@ -1583,12 +1583,12 @@ def minibatch(items, size):
     so that batch-size can vary on each step.
     """
     if isinstance(size, int):
-        size_ = constant_schedule(size)
+        size_ = itertools.repeat(size)
     else:
-        size_ = size
+        size_ = iter(size)
     items = iter(items)
-    for step in itertools.count():
-        batch_size = size_(step)
+    while True:
+        batch_size = next(size_)
         batch = list(itertools.islice(items, int(batch_size)))
         if len(batch) == 0:
             break
