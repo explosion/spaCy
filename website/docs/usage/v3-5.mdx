@@ -82,9 +82,9 @@ pattern = [{"_": {"country": {"FUZZY": "Kyrgyzstan"}}}]
 pattern = [{"_": {"country": {"FUZZY4": "Kyrgyzstan"}}}]
 ```
 
-Note that `FUZZY` uses Levenshtein edit distance rather than
-Damerau-Levenshtein edit distance, so a transposition like `teh` for `the`
-counts as two edits, one insertion and one deletion.
+Note that `FUZZY` uses Levenshtein edit distance rather than Damerau-Levenshtein
+edit distance, so a transposition like `teh` for `the` counts as two edits, one
+insertion and one deletion.
 
 If you'd prefer an alternate fuzzy matching algorithm, you can provide your own
 custom method to the `Matcher` or as a config option for an entity ruler and
