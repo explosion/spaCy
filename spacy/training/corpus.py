@@ -64,6 +64,17 @@ def create_plain_text_reader(
     min_length: int = 0,
     max_length: int = 0,
 ) -> Callable[["Language"], Iterable[Doc]]:
+    """Iterate Example objects from a file or directory of plain text
+    UTF-8 files with one line per doc.
+
+    path (Path): The directory or filename to read from.
+    min_length (int): Minimum document length (in tokens). Shorter documents
+        will be skipped. Defaults to 0, which indicates no limit.
+    max_length (int): Maximum document length (in tokens). Longer documents will
+        be skipped. Defaults to 0, which indicates no limit.
+
+    DOCS: https://spacy.io/api/corpus#plaintextcorpus
+    """
     if path is None:
         raise ValueError(Errors.E913)
     return PlainTextCorpus(path, min_length=min_length, max_length=max_length)
