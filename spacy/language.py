@@ -1342,7 +1342,7 @@ class Language:
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
             returns gold-standard Example objects.
-        labels (Dict[str, Any]): labels to pass to pipe initialization, using
+        labels (Dict[str, Any]): Labels to pass to pipe initialization, using
             the names of the pipes as keys. Overrides labels that are in the
             model configuration.
         sgd (Optional[Optimizer]): An optimizer to use for updates. If not
