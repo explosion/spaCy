@@ -1,13 +1,17 @@
+import itertools
 import pytest
+import numpy
 from numpy.testing import assert_equal
 from thinc.api import Adam
 
 from spacy import registry, util
 from spacy.attrs import DEP, NORM
 from spacy.lang.en import English
-from spacy.tokens import Doc
 from spacy.training import Example
+from spacy.tokens import Doc
 from spacy.vocab import Vocab
+from spacy import util, registry
+from thinc.api import fix_random_seed
 
 from ...pipeline import DependencyParser
 from ...pipeline.dep_parser import DEFAULT_PARSER_MODEL
@@ -58,6 +62,8 @@ PARTIAL_DATA = [
         },
     ),
 ]
+
+PARSERS = ["parser"]  # TODO: Test beam_parser when ready
 
 eps = 0.1
 
@@ -169,6 +175,57 @@ def test_parser_parse_one_word_sentence(en_vocab, en_parser, words):
     with en_parser.step_through(doc) as _:  # noqa: F841
         pass
     assert doc[0].dep != 0
+
+
+def test_parser_apply_actions(en_vocab, en_parser):
+    words = ["I", "ate", "pizza"]
+    words2 = ["Eat", "more", "pizza", "!"]
+    doc1 = Doc(en_vocab, words=words)
+    doc2 = Doc(en_vocab, words=words2)
+    docs = [doc1, doc2]
+
+    moves = en_parser.moves
+    moves.add_action(0, "")
+    moves.add_action(1, "")
+    moves.add_action(2, "nsubj")
+    moves.add_action(3, "obj")
+    moves.add_action(2, "amod")
+
+    actions = [
+        numpy.array([0, 0], dtype="i"),
+        numpy.array([2, 0], dtype="i"),
+        numpy.array([0, 4], dtype="i"),
+        numpy.array([3, 3], dtype="i"),
+        numpy.array([1, 1], dtype="i"),
+        numpy.array([1, 1], dtype="i"),
+        numpy.array([0], dtype="i"),
+        numpy.array([1], dtype="i"),
+    ]
+
+    states = moves.init_batch(docs)
+    active_states = states
+
+    for step_actions in actions:
+        active_states = moves.apply_actions(active_states, step_actions)
+
+    assert len(active_states) == 0
+
+    for (state, doc) in zip(states, docs):
+        moves.set_annotations(state, doc)
+
+    assert docs[0][0].head.i == 1
+    assert docs[0][0].dep_ == "nsubj"
+    assert docs[0][1].head.i == 1
+    assert docs[0][1].dep_ == "ROOT"
+    assert docs[0][2].head.i == 1
+    assert docs[0][2].dep_ == "obj"
+
+    assert docs[1][0].head.i == 0
+    assert docs[1][0].dep_ == "ROOT"
+    assert docs[1][1].head.i == 2
+    assert docs[1][1].dep_ == "amod"
+    assert docs[1][2].head.i == 0
+    assert docs[1][2].dep_ == "obj"
 
 
 @pytest.mark.skip(
@@ -319,7 +376,7 @@ def test_parser_constructor(en_vocab):
     DependencyParser(en_vocab, model)
 
 
-@pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
+@pytest.mark.parametrize("pipe_name", PARSERS)
 def test_incomplete_data(pipe_name):
     # Test that the parser works with incomplete information
     nlp = English()
@@ -345,11 +402,15 @@ def test_incomplete_data(pipe_name):
     assert doc[2].head.i == 1
 
 
-@pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
-def test_overfitting_IO(pipe_name):
+@pytest.mark.parametrize(
+    "pipe_name,max_moves", itertools.product(PARSERS, [0, 1, 5, 100])
+)
+def test_overfitting_IO(pipe_name, max_moves):
+    fix_random_seed(0)
     # Simple test to try and quickly overfit the dependency parser (normal or beam)
     nlp = English()
     parser = nlp.add_pipe(pipe_name)
+    parser.cfg["update_with_oracle_cut_size"] = max_moves
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
@@ -451,10 +512,12 @@ def test_distill():
 @pytest.mark.parametrize(
     "parser_config",
     [
-        # TransitionBasedParser V1
-        ({"@architectures": "spacy.TransitionBasedParser.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "state_type": "parser", "extra_state_tokens": False, "hidden_width": 64, "maxout_pieces": 2, "use_upper": True}),
-        # TransitionBasedParser V2
+        # TODO: re-enable after we have a spacy-legacy release for v4. See
+        # https://github.com/explosion/spacy-legacy/pull/36
+        #({"@architectures": "spacy.TransitionBasedParser.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "state_type": "parser", "extra_state_tokens": False, "hidden_width": 64, "maxout_pieces": 2, "use_upper": True}),
         ({"@architectures": "spacy.TransitionBasedParser.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "state_type": "parser", "extra_state_tokens": False, "hidden_width": 64, "maxout_pieces": 2, "use_upper": True}),
+        ({"@architectures": "spacy.TransitionBasedParser.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "state_type": "parser", "extra_state_tokens": False, "hidden_width": 64, "maxout_pieces": 2, "use_upper": False}),
+        ({"@architectures": "spacy.TransitionBasedParser.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "state_type": "parser", "extra_state_tokens": False, "hidden_width": 64, "maxout_pieces": 2}),
     ],
 )
 # fmt: on

@@ -209,6 +209,8 @@ class Warnings(metaclass=ErrorsWithCodes):
             "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
     W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
 
+    W400 = ("`use_upper=False` is ignored, the upper layer is always enabled")
+
 
 class Errors(metaclass=ErrorsWithCodes):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
@@ -958,6 +960,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E4002 = ("Pipe '{name}' requires a teacher pipe for distillation.")
     E4003 = ("Training examples for distillation must have the exact same tokens in the "
              "reference and predicted docs.")
+    E4004 = ("Backprop is not supported when is_train is not set.")
 
 
 # fmt: on
