@@ -314,8 +314,6 @@ class PlainTextCorpus:
                             continue
                         elif self.max_length >= 1 and len(doc) > self.max_length:
                             continue
-                        words = [w.text for w in doc]
-                        spaces = [bool(w.whitespace_) for w in doc]
                         # We don't *need* an example here, but it seems nice to
                         # make it match the Corpus signature.
-                        yield Example(doc, Doc(nlp.vocab, words=words, spaces=spaces))
+                        yield Example(doc, doc.copy())
