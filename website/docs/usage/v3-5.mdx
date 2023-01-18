@@ -20,8 +20,8 @@ The [`apply` CLI](/api/cli#apply) can be used to apply a pipeline to one or more
 `.txt`, `.jsonl` or `.spacy` input files, saving the annotated docs in a single
 `.spacy` file.
 
-```shell
-spacy apply en_core_web_sm my_texts/ output.spacy
+```bash
+$ spacy apply en_core_web_sm my_texts/ output.spacy
 ```
 
 #### benchmark CLI
@@ -35,8 +35,8 @@ The new `benchmark speed` CLI performs warmup rounds before measuing the speed
 in words per second on batches of randomly shuffled documents from the provided
 data.
 
-```shell
-spacy benchmark speed my_pipeline data.spacy
+```bash
+$ spacy benchmark speed my_pipeline data.spacy
 ```
 
 The output is the mean performance using batches (`nlp.pipe`) with a 95%
@@ -57,8 +57,8 @@ The following command runs 20 trials for the `spancat` component in
 `my_pipeline`, recording the `spans_sc_f` score for each value of the threshold
 `[components.spancat.threshold]` from `0.0` to `1.0`:
 
-```shell
-spacy find-threshold my_pipeline data.spacy spancat threshold spans_sc_f --n_trials 20
+```bash
+$ spacy find-threshold my_pipeline data.spacy spancat threshold spans_sc_f --n_trials 20
 ```
 
 The `find-threshold` CLI can be used with `textcat_multilabel`, `spancat` and
