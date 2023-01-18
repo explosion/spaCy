@@ -11,8 +11,8 @@ spacy/tests/package/pyproject.toml
 spacy/tests/package/requirements.txt
 
 # Website
-website/.cache/
-website/public/
+website/.cache
+website/public
 website/node_modules
 website/.npm
 website/logs

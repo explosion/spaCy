@@ -29,11 +29,9 @@ $ spacy apply en_core_web_sm my_texts/ output.spacy
 The [`benchmark` CLI](/api/cli#benchmark) has been added to extend the existing
 `evaluate` functionality with a wider range of profiling subcommands.
 
-The `benchmark accuracy` CLI is introduced as an alias for `evaluate`.
-
-The new `benchmark speed` CLI performs warmup rounds before measuing the speed
-in words per second on batches of randomly shuffled documents from the provided
-data.
+The `benchmark accuracy` CLI is introduced as an alias for `evaluate`. The new
+`benchmark speed` CLI performs warmup rounds before measuring the speed in words
+per second on batches of randomly shuffled documents from the provided data.
 
 ```bash
 $ spacy benchmark speed my_pipeline data.spacy
