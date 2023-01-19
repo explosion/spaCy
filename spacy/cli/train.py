@@ -22,7 +22,8 @@ def train_cli(
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
+    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    use_rehearse: bool = Opt(False, "--use_rehearse", "-r", help="Perform 'rehearsal updates' on a pre-trained model")
     # fmt: on
 ):
     """
@@ -42,7 +43,13 @@ def train_cli(
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
-    train(config_path, output_path, use_gpu=use_gpu, overrides=overrides)
+    train(
+        config_path,
+        output_path,
+        use_gpu=use_gpu,
+        overrides=overrides,
+        use_rehearse=use_rehearse,
+    )
 
 
 def train(
@@ -51,6 +58,7 @@ def train(
     *,
     use_gpu: int = -1,
     overrides: Dict[str, Any] = util.SimpleFrozenDict(),
+    use_rehearse: bool = False,
 ):
     config_path = util.ensure_path(config_path)
     output_path = util.ensure_path(output_path)
@@ -72,4 +80,11 @@ def train(
         nlp = init_nlp(config, use_gpu=use_gpu)
     msg.good("Initialized pipeline")
     msg.divider("Training pipeline")
-    train_nlp(nlp, output_path, use_gpu=use_gpu, stdout=sys.stdout, stderr=sys.stderr)
+    train_nlp(
+        nlp,
+        output_path,
+        use_gpu=use_gpu,
+        stdout=sys.stdout,
+        stderr=sys.stderr,
+        use_rehearse=use_rehearse,
+    )
