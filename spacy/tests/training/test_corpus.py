@@ -38,9 +38,9 @@ PLAIN_TEXT_DOC_TOKENIZED = [
 @pytest.mark.parametrize("min_length, max_length", [(0, 0), (0, 5), (5, 0), (5, 5)])
 def test_plain_text_reader(min_length, max_length):
     nlp = English()
-    with _string_to_tmp_file(PLAIN_TEXT_DOC) as f:
+    with _string_to_tmp_file(PLAIN_TEXT_DOC) as file_path:
         corpus = PlainTextCorpus(
-            Path(f.name), min_length=min_length, max_length=max_length
+            file_path, min_length=min_length, max_length=max_length
         )
 
         check = [
@@ -55,11 +55,12 @@ def test_plain_text_reader(min_length, max_length):
 
 
 @contextmanager
-def _string_to_tmp_file(s: str) -> Generator[IO, None, None]:
-    with tempfile.NamedTemporaryFile(suffix=".txt") as f:
-        f.write(s.encode("utf-8"))
-        f.seek(0)
-        yield f
+def _string_to_tmp_file(s: str) -> Generator[Path, None, None]:
+    with tempfile.TemporaryDirectory() as d:
+        file_path = Path(d) / "string.txt"
+        with open(file_path, "wb") as f:
+            f.write(s.encode("utf-8"))
+        yield file_path
 
 
 def _examples_to_tokens(
