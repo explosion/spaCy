@@ -221,12 +221,13 @@ def train_while_improving(
                 exclude=exclude,
                 annotates=annotating_components,
             )
-            nlp.rehearse(
-                subbatch,
-                losses=losses,
-                sgd=False,  # type: ignore[arg-type]
-                exclude=exclude,
-            )
+            if use_rehearse:
+                nlp.rehearse(
+                    subbatch,
+                    losses=losses,
+                    sgd=False,  # type: ignore[arg-type]
+                    exclude=exclude,
+                )
         # TODO: refactor this so we don't have to run it separately in here
         for name, proc in nlp.pipeline:
             if (
