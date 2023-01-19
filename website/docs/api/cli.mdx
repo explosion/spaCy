@@ -11,7 +11,6 @@ menu:
   - ['debug', 'debug']
   - ['train', 'train']
   - ['pretrain', 'pretrain']
-  - ['rehearse', 'rehearse']
   - ['evaluate', 'evaluate']
   - ['benchmark', 'benchmark']
   - ['apply', 'apply']
@@ -1050,7 +1049,7 @@ in the section `[paths]`.
 > ```
 
 ```bash
-$ python -m spacy train [config_path] [--output] [--code] [--verbose] [--gpu-id] [--use_rehearse] [overrides]
+$ python -m spacy train [config_path] [--output] [--code] [--verbose] [--gpu-id] [overrides]
 ```
 
 | Name              | Description                                                                                                                                                                                                        |
@@ -1134,7 +1133,6 @@ $ python -m spacy pretrain [config_path] [output_dir] [--code] [--resume-path] [
 | `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
 | overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.dropout 0.2`. ~~Any (option/flag)~~                              |
 | **CREATES**             | The pretrained weights that can be used to initialize `spacy train`.                                                                                                                                               |
-
 
 ## evaluate {id="evaluate",version="2",tag="command"}
 
