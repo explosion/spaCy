@@ -73,6 +73,8 @@ def train(
             msg.good(f"Created output directory: {output_path}")
         msg.info(f"Saving to output directory: {output_path}")
     setup_gpu(use_gpu)
+    if use_rehearse:
+        msg.info(f"Using rehearsal updates")
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides, interpolate=False)
     msg.divider("Initializing pipeline")
