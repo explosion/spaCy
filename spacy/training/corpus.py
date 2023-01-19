@@ -318,7 +318,7 @@ class PlainTextCorpus:
         for loc in walk_corpus(self.path, ".txt"):
             with open(loc, encoding="utf-8") as f:
                 for text in f:
-                    text = text.strip()
+                    text = text.rstrip("\r\n")
                     if len(text):
                         doc = nlp.make_doc(text)
                         if self.min_length >= 1 and len(doc) < self.min_length:
