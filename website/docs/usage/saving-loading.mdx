@@ -308,7 +308,8 @@ installed in the same environment – that's it.
 
 You can load a probability table from [spacy-lookups-data](https://github.com/explosion/spacy-lookups-data) into an existing spaCy model like `en_core_web_sm`.
 
-```python {title="load_table.py"}
+```python
+# Requirements: pip install spacy-lookups-data
 import spacy
 from spacy.lookups import load_lookups
 nlp = spacy.load("en_core_web_sm")
