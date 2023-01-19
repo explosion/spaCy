@@ -1,4 +1,4 @@
-from typing import Iterable, List, Tuple
+from typing import IO, Generator, Iterable, List, TextIO, Tuple
 from contextlib import contextmanager
 from pathlib import Path
 import pytest
@@ -55,7 +55,7 @@ def test_plain_text_reader(min_length, max_length):
 
 
 @contextmanager
-def _string_to_tmp_file(s: str):
+def _string_to_tmp_file(s: str) -> Generator[IO, None, None]:
     with tempfile.NamedTemporaryFile(suffix=".txt") as f:
         f.write(s.encode("utf-8"))
         f.seek(0)
