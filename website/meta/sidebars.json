@@ -129,6 +129,7 @@
                 "items": [
                     { "text": "Attributes", "url": "/api/attributes" },
                     { "text": "Corpus", "url": "/api/corpus" },
+                    { "text": "InMemoryLookupKB", "url": "/api/inmemorylookupkb" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },
                     { "text": "Lookups", "url": "/api/lookups" },
                     { "text": "MorphAnalysis", "url": "/api/morphology#morphanalysis" },
