@@ -346,13 +346,14 @@ and custom registered functions if needed. See the
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model, to try to address
-the "catastrophic forgetting" problem. Please note that this function needs to be used together with `Language.update`. This feature is experimental.
+the "catastrophic forgetting" problem. Please note that `Language.rehearse` needs to be used together with `Language.update`. This feature is experimental.
 
 > #### Example
 >
 > ```python
 > optimizer = nlp.resume_training()
-> losses = nlp.rehearse(examples, sgd=optimizer)
+> update_losses = nlp.update(examples, sgd=optimizer)
+> rehearse_losses = nlp.rehearse(examples, sgd=optimizer)
 > ```
 
 | Name           | Description                                                                                                   |

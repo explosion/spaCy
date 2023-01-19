@@ -244,14 +244,15 @@ predictions and gold-standard annotations, and update the component's model.
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model, to try to address
-the "catastrophic forgetting" problem. Please note that this function needs to be used together with `TrainablePipe.update`. This feature is experimental.
+the "catastrophic forgetting" problem. Please note that `TrainablePipe.update` needs to be used together with `TrainablePipe.update`. This feature is experimental.
 
 > #### Example
 >
 > ```python
 > pipe = nlp.add_pipe("your_custom_pipe")
 > optimizer = nlp.resume_training()
-> losses = pipe.rehearse(examples, sgd=optimizer)
+> update_losses = pipe.update(examples, sgd=optimizer)
+> rehearse_losses = pipe.rehearse(examples, sgd=optimizer)
 > ```
 
 | Name           | Description                                                                                                              |
