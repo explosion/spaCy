@@ -10,14 +10,13 @@ trigger:
   paths:
     exclude:
       - "website/*"
-      - "*.md"
+      - "*.mdx"
       - ".github/workflows/*"
 pr:
   paths:
     exclude:
-      - "*.md"
-      - "website/docs/*"
-      - "website/src/*"
+      - "website/*"
+      - "*.mdx"
       - ".github/workflows/*"
 
 jobs:
