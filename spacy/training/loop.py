@@ -214,14 +214,14 @@ def train_while_improving(
                 subbatch,
                 drop=dropout,
                 losses=losses,
-                sgd=None,  # type: ignore[arg-type]
+                sgd=None,
                 exclude=exclude,
                 annotates=annotating_components,
             )
             nlp.rehearse(
                 subbatch,
                 losses=losses,
-                sgd=None,  # type: ignore[arg-type]
+                sgd=None,
                 exclude=exclude,
                 rehearse_components=rehearse_components,
             )
