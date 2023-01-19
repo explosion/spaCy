@@ -11,6 +11,7 @@ menu:
   - ['debug', 'debug']
   - ['train', 'train']
   - ['pretrain', 'pretrain']
+  - ['rehearse', 'rehearse']
   - ['evaluate', 'evaluate']
   - ['benchmark', 'benchmark']
   - ['apply', 'apply']
@@ -1133,6 +1134,39 @@ $ python -m spacy pretrain [config_path] [output_dir] [--code] [--resume-path] [
 | `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
 | overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.dropout 0.2`. ~~Any (option/flag)~~                              |
 | **CREATES**             | The pretrained weights that can be used to initialize `spacy train`.                                                                                                                                               |
+
+## rehearse {id="rehearse",tag="command, experimental"}
+
+This command is designed to fine-tune pre-trained models while also trying to address the “catastrophic forgetting” problem. 
+It uses "rehearsal" updates that teach the current model to make predictions similar to an initial model. This feature is experimental.
+
+<Infobox title="Please note" variant="warning">
+
+The `rehearse` command outputs the sum of both losses from the `TrainablePipe.update` and `TrainablePipe.rehearse`. 
+This can potentially cause the loss to increase drastically, even while the scores also increasing. It's likely due to the model making more different predictions than the intital model.
+
+</Infobox>
+
+> #### Example
+>
+> ```bash
+> $ python -m spacy rehearse config.cfg --output ./output --paths.train ./train --paths.dev ./dev
+> ```
+
+```bash
+$ python -m spacy rehearse [config_path] [--output] [--code] [--verbose] [--gpu-id] [overrides]
+```
+
+| Name              | Description                                                                                                                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config_path`     | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. If `-`, the data will be [read from stdin](/usage/training#config-stdin). ~~Union[Path, str] \(positional)~~ |
+| `--output`, `-o`  | Directory to store trained pipeline in. Will be created if it doesn't exist. ~~Optional[Path] \(option)~~                                                                                                          |
+| `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~                               |
+| `--verbose`, `-V` | Show more detailed messages during training. ~~bool (flag)~~                                                                                                                                                       |
+| `--gpu-id`, `-g`  | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                                         |
+| `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
+| overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
+| **CREATES**       | The final rehearse pipeline and the best rehearsed pipeline.   
 
 ## evaluate {id="evaluate",version="2",tag="command"}
 

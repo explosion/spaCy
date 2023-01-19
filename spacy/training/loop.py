@@ -26,6 +26,7 @@ def train(
     output_path: Optional[Path] = None,
     *,
     use_gpu: int = -1,
+    use_rehearse: bool = False,
     stdout: IO = sys.stdout,
     stderr: IO = sys.stderr,
 ) -> Tuple["Language", Optional[Path]]:
@@ -35,6 +36,7 @@ def train(
     output_path (Optional[Path]): Optional output path to save trained model to.
     use_gpu (int): Whether to train on GPU. Make sure to call require_gpu
         before calling this function.
+    use_rehearse (bool): Use nlp.rehearse after nlp.update
     stdout (file): A file-like object to write output messages. To disable
         printing, set to io.StringIO.
     stderr (file): A second file-like object to write output messages. To disable
@@ -54,7 +56,10 @@ def train(
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"]]
     train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
-    optimizer = T["optimizer"]
+    if use_rehearse:
+        optimizer = nlp.resume_training()
+    else:
+        optimizer = T["optimizer"]
     score_weights = T["score_weights"]
     batcher = T["batcher"]
     train_logger = T["logger"]
@@ -88,6 +93,7 @@ def train(
         patience=T["patience"],
         max_steps=T["max_steps"],
         eval_frequency=T["eval_frequency"],
+        use_rehearse=use_rehearse,
         exclude=frozen_components,
         annotating_components=annotating_components,
         before_update=before_update,
@@ -150,6 +156,7 @@ def train_while_improving(
     accumulate_gradient: int,
     patience: int,
     max_steps: int,
+    use_rehearse: bool = False,
     exclude: List[str],
     annotating_components: List[str],
     before_update: Optional[Callable[["Language", Dict[str, Any]], None]],
@@ -213,6 +220,12 @@ def train_while_improving(
                 sgd=False,  # type: ignore[arg-type]
                 exclude=exclude,
                 annotates=annotating_components,
+            )
+            nlp.rehearse(
+                subbatch,
+                losses=losses,
+                sgd=False,  # type: ignore[arg-type]
+                exclude=exclude,
             )
         # TODO: refactor this so we don't have to run it separately in here
         for name, proc in nlp.pipeline:
