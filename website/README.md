@@ -7,17 +7,16 @@ The styleguide for the spaCy website is available at
 
 ## Setup and installation
 
-Before running the setup, make sure your versions of
-[Node](https://nodejs.org/en/) and [npm](https://www.npmjs.com/) are up to date.
-Node v10.15 or later is required.
-
 ```bash
 # Clone the repository
 git clone https://github.com/explosion/spaCy
 cd spaCy/website
 
-# Install Gatsby's command-line tool
-npm install --global gatsby-cli
+# Switch to the correct Node version
+#
+# If you don't have NVM and don't want to use it, you can manually switch to the Node version
+# stated in /.nvmrc and skip this step
+nvm use
 
 # Install the dependencies
 npm install
@@ -36,52 +35,47 @@ file in the root defines the settings used in this codebase.
 
 ## Building & developing the site with Docker
 
-Sometimes it's hard to get a local environment working due to rapid updates to
-node dependencies, so it may be easier to use docker for building the docs.
+While it shouldn't be necessary and is not recommended you can run this site in a Docker container.
 
 If you'd like to do this, **be sure you do _not_ include your local
 `node_modules` folder**, since there are some dependencies that need to be built
 for the image system. Rename it before using.
 
-```bash
-docker run -it \
-  -v $(pwd):/spacy-io/website \
-  -p 8000:8000 \
-  ghcr.io/explosion/spacy-io \
-  gatsby develop -H 0.0.0.0
-```
-
-This will allow you to access the built website at http://0.0.0.0:8000/ in your
-browser, and still edit code in your editor while having the site reflect those
-changes.
-
-**Note**: If you're working on a Mac with an M1 processor, you might see
-segfault errors from `qemu` if you use the default image. To fix this use the
-`arm64` tagged image in the `docker run` command
-(ghcr.io/explosion/spacy-io:arm64).
-
-### Building the Docker image
-
-If you'd like to build the image locally, you can do so like this:
+First build the Docker image. This only needs to be done on the first run
+or when changes are made to `Dockerfile` or the website dependencies:
 
 ```bash
 docker build -t spacy-io .
 ```
 
-This will take some time, so if you want to use the prebuilt image you'll save a
-bit of time.
+You can then build and run the website with:
+
+```bash
+docker run -it \
+  --rm \
+  -v $(pwd):/home/node/website \
+  -p 3000:3000 \
+  spacy-io \
+  npm run dev -- -H 0.0.0.0
+```
+
+This will allow you to access the built website at http://0.0.0.0:3000/ in your
+browser, and still edit code in your editor while having the site reflect those
+changes.
 
 ## Project structure
 
 ```yaml
 ├── docs                 # the actual markdown content
 ├── meta                 # JSON-formatted site metadata
+|   ├── dynamicMeta.js   # At build time generated meta data
 |   ├── languages.json   # supported languages and statistical models
 |   ├── sidebars.json    # sidebar navigations for different sections
 |   ├── site.json        # general site metadata
 |   ├── type-annotations.json # Type annotations
 |   └── universe.json    # data for the spaCy universe section
-├── public               # compiled site
+├── pages                # Next router pages
+├── public               # static images and other assets
 ├── setup                # Jinja setup
 ├── src                  # source
 |   ├── components       # React components
@@ -96,9 +90,11 @@ bit of time.
 |   |   └── universe.js  # layout templates for universe
 |   └── widgets          # non-reusable components with content, e.g. changelog
 ├── .eslintrc.json       # ESLint config file
+├── .nvmrc               # NVM config file
+|                        # (to support "nvm use" to switch to correct Node version)
+|
 ├── .prettierrc          # Prettier config file
-├── gatsby-browser.js    # browser-specific hooks for Gatsby
-├── gatsby-config.js     # Gatsby configuration
-├── gatsby-node.js       # Node-specific hooks for Gatsby
-└── package.json         # package settings and dependencies
+├── next.config.mjs      # Next config file
+├── package.json         # package settings and dependencies
+└── tsconfig.json        # TypeScript config file
 ```

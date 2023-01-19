@@ -128,7 +128,7 @@ class EditTreeLemmatizer(TrainablePipe):
             for (predicted, gold_lemma) in zip(
                 eg.predicted, eg.get_aligned("LEMMA", as_string=True)
             ):
-                if gold_lemma is None:
+                if gold_lemma is None or gold_lemma == "":
                     label = -1
                 else:
                     tree_id = self.trees.add(predicted.text, gold_lemma)
@@ -328,9 +328,9 @@ class EditTreeLemmatizer(TrainablePipe):
 
             tree = dict(tree)
             if "orig" in tree:
-                tree["orig"] = self.vocab.strings[tree["orig"]]
+                tree["orig"] = self.vocab.strings.add(tree["orig"])
             if "orig" in tree:
-                tree["subst"] = self.vocab.strings[tree["subst"]]
+                tree["subst"] = self.vocab.strings.add(tree["subst"])
 
             trees.append(tree)
 

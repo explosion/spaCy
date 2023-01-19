@@ -60,10 +60,45 @@ def test_initialize_from_labels():
     nlp2 = Language()
     lemmatizer2 = nlp2.add_pipe("trainable_lemmatizer")
     lemmatizer2.initialize(
-        get_examples=lambda: train_examples,
+        # We want to check that the strings in replacement nodes are
+        # added to the string store. Avoid that they get added through
+        # the examples.
+        get_examples=lambda: train_examples[:1],
         labels=lemmatizer.label_data,
     )
     assert lemmatizer2.tree2label == {1: 0, 3: 1, 4: 2, 6: 3}
+    assert lemmatizer2.label_data == {
+        "trees": [
+            {"orig": "S", "subst": "s"},
+            {
+                "prefix_len": 1,
+                "suffix_len": 0,
+                "prefix_tree": 0,
+                "suffix_tree": 4294967295,
+            },
+            {"orig": "s", "subst": ""},
+            {
+                "prefix_len": 0,
+                "suffix_len": 1,
+                "prefix_tree": 4294967295,
+                "suffix_tree": 2,
+            },
+            {
+                "prefix_len": 0,
+                "suffix_len": 0,
+                "prefix_tree": 4294967295,
+                "suffix_tree": 4294967295,
+            },
+            {"orig": "E", "subst": "e"},
+            {
+                "prefix_len": 1,
+                "suffix_len": 0,
+                "prefix_tree": 5,
+                "suffix_tree": 4294967295,
+            },
+        ],
+        "labels": (1, 3, 4, 6),
+    }
 
 
 def test_no_data():
@@ -103,6 +138,20 @@ def test_incomplete_data():
     doc = nlp(test_text)
     assert doc[1].lemma_ == "like"
     assert doc[2].lemma_ == "blue"
+
+    # Check that incomplete annotations are ignored.
+    scores, _ = lemmatizer.model([eg.predicted for eg in train_examples], is_train=True)
+    _, dX = lemmatizer.get_loss(train_examples, scores)
+    xp = lemmatizer.model.ops.xp
+
+    # Missing annotations.
+    assert xp.count_nonzero(dX[0][0]) == 0
+    assert xp.count_nonzero(dX[0][3]) == 0
+    assert xp.count_nonzero(dX[1][0]) == 0
+    assert xp.count_nonzero(dX[1][3]) == 0
+
+    # Misaligned annotations.
+    assert xp.count_nonzero(dX[1][1]) == 0
 
 
 def test_overfitting_IO():
