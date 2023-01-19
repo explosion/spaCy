@@ -22,8 +22,7 @@ def train_cli(
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
-    use_rehearse: bool = Opt(False, "--use_rehearse", "-r", help="Perform 'rehearsal updates' on a pre-trained model")
+    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
 ):
     """
@@ -43,13 +42,7 @@ def train_cli(
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
-    train(
-        config_path,
-        output_path,
-        use_gpu=use_gpu,
-        overrides=overrides,
-        use_rehearse=use_rehearse,
-    )
+    train(config_path, output_path, use_gpu=use_gpu, overrides=overrides)
 
 
 def train(
@@ -88,5 +81,4 @@ def train(
         use_gpu=use_gpu,
         stdout=sys.stdout,
         stderr=sys.stderr,
-        use_rehearse=use_rehearse,
     )

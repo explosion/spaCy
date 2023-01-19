@@ -26,7 +26,6 @@ def train(
     output_path: Optional[Path] = None,
     *,
     use_gpu: int = -1,
-    use_rehearse: bool = False,
     stdout: IO = sys.stdout,
     stderr: IO = sys.stderr,
 ) -> Tuple["Language", Optional[Path]]:
@@ -36,7 +35,6 @@ def train(
     output_path (Optional[Path]): Optional output path to save trained model to.
     use_gpu (int): Whether to train on GPU. Make sure to call require_gpu
         before calling this function.
-    use_rehearse (bool): Use nlp.rehearse after nlp.update
     stdout (file): A file-like object to write output messages. To disable
         printing, set to io.StringIO.
     stderr (file): A second file-like object to write output messages. To disable
@@ -56,10 +54,7 @@ def train(
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"]]
     train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
-    if use_rehearse:
-        optimizer = nlp.resume_training()
-    else:
-        optimizer = T["optimizer"]
+    optimizer = T["optimizer"]
     score_weights = T["score_weights"]
     batcher = T["batcher"]
     train_logger = T["logger"]
@@ -82,6 +77,8 @@ def train(
     frozen_components = T["frozen_components"]
     # Components that should set annotations on update
     annotating_components = T["annotating_components"]
+    # Components that should be rehearsed after update
+    rehearse_components = T["rehearse_components"]
     # Create iterator, which yields out info after each optimization step.
     training_step_iterator = train_while_improving(
         nlp,
@@ -93,9 +90,9 @@ def train(
         patience=T["patience"],
         max_steps=T["max_steps"],
         eval_frequency=T["eval_frequency"],
-        use_rehearse=use_rehearse,
         exclude=frozen_components,
         annotating_components=annotating_components,
+        rehearse_components=rehearse_components,
         before_update=before_update,
     )
     clean_output_dir(output_path)
@@ -156,9 +153,9 @@ def train_while_improving(
     accumulate_gradient: int,
     patience: int,
     max_steps: int,
-    use_rehearse: bool = False,
     exclude: List[str],
     annotating_components: List[str],
+    rehearse_components: List[str],
     before_update: Optional[Callable[["Language", Dict[str, Any]], None]],
 ):
     """Train until an evaluation stops improving. Works as a generator,
@@ -217,17 +214,17 @@ def train_while_improving(
                 subbatch,
                 drop=dropout,
                 losses=losses,
-                sgd=False,  # type: ignore[arg-type]
+                sgd=None,  # type: ignore[arg-type]
                 exclude=exclude,
                 annotates=annotating_components,
             )
-            if use_rehearse:
-                nlp.rehearse(
-                    subbatch,
-                    losses=losses,
-                    sgd=False,  # type: ignore[arg-type]
-                    exclude=exclude,
-                )
+            nlp.rehearse(
+                subbatch,
+                losses=losses,
+                sgd=None,  # type: ignore[arg-type]
+                exclude=exclude,
+                rehearse_components=rehearse_components,
+            )
         # TODO: refactor this so we don't have to run it separately in here
         for name, proc in nlp.pipeline:
             if (

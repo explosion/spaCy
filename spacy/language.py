@@ -1183,6 +1183,7 @@ class Language:
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         exclude: Iterable[str] = SimpleFrozenList(),
+        rehearse_components: List[str] = [],
     ) -> Dict[str, float]:
         """Make a "rehearsal" update to the models in the pipeline, to prevent
         forgetting. Rehearsal updates run an initial copy of the model over some
@@ -1195,6 +1196,7 @@ class Language:
         component_cfg (Dict[str, Dict]): Config parameters for specific pipeline
             components, keyed by component name.
         exclude (Iterable[str]): Names of components that shouldn't be updated.
+        rehearse_components (List[str]): Names of components that should be rehearsed
         RETURNS (dict): Results from the update.
 
         EXAMPLE:
@@ -1216,7 +1218,11 @@ class Language:
             component_cfg = {}
 
         for name, proc in pipes:
-            if name in exclude or not hasattr(proc, "rehearse"):
+            if (
+                name in exclude
+                or not hasattr(proc, "rehearse")
+                or name not in rehearse_components
+            ):
                 continue
             proc.rehearse(  # type: ignore[attr-defined]
                 examples, sgd=None, losses=losses, **component_cfg.get(name, {})

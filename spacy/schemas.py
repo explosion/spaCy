@@ -356,6 +356,7 @@ class ConfigSchemaTraining(BaseModel):
     logger: Logger = Field(..., title="The logger to track training progress")
     frozen_components: List[str] = Field(..., title="Pipeline components that shouldn't be updated during training")
     annotating_components: List[str] = Field(..., title="Pipeline components that should set annotations during training")
+    rehearse_components: List[str] = Field(..., title="Pipeline components that should be rehearsed during training")
     before_to_disk: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after training, before it's saved to disk")
     before_update: Optional[Callable[["Language", Dict[str, Any]], None]] = Field(..., title="Optional callback that is invoked at the start of each training step")
     # fmt: on
