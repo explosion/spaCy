@@ -1078,6 +1078,19 @@ class Language:
 
         teacher_pipes = dict(teacher.pipeline)
         for name, student_proc in self.pipeline:
+            if name in annotates:
+                for doc, eg in zip(
+                    _pipe(
+                        (eg.predicted for eg in examples),
+                        proc=student_proc,
+                        name=name,
+                        default_error_handler=self.default_error_handler,
+                        kwargs=pipe_kwargs[name],
+                    ),
+                    examples,
+                ):
+                    eg.predicted = doc
+
             if (
                 name not in exclude
                 and isinstance(student_proc, ty.DistillableComponent)
@@ -1096,18 +1109,7 @@ class Language:
                     losses=losses,
                     **component_cfg[name],
                 )
-            if name in annotates:
-                for doc, eg in zip(
-                    _pipe(
-                        (eg.predicted for eg in examples),
-                        proc=student_proc,
-                        name=name,
-                        default_error_handler=self.default_error_handler,
-                        kwargs=pipe_kwargs[name],
-                    ),
-                    examples,
-                ):
-                    eg.predicted = doc
+
         return losses
 
     def disable_pipes(self, *names) -> "DisabledPipes":
