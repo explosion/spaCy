@@ -1092,12 +1092,10 @@ class Language:
                 student_proc.distill(
                     teacher_pipe,
                     examples,
-                    sgd=None,
+                    sgd=sgd,
                     losses=losses,
                     **component_cfg[name],
                 )
-                if sgd is not None:
-                    student_proc.finish_update(sgd)
             if name in annotates:
                 for doc, eg in zip(
                     _pipe(
