@@ -155,7 +155,7 @@ def train_while_improving(
     max_steps: int,
     exclude: List[str],
     annotating_components: List[str],
-    rehearse_components: Optional[List[str]] = [],
+    rehearse_components: List[str],
     before_update: Optional[Callable[["Language", Dict[str, Any]], None]],
 ):
     """Train until an evaluation stops improving. Works as a generator,

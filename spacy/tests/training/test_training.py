@@ -1144,6 +1144,7 @@ def test_training_before_update(doc):
         max_steps=100,
         exclude=[],
         annotating_components=[],
+        rehearse_components=[],
         before_update=before_update,
     )
 
