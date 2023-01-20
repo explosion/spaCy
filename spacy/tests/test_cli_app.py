@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from typer.testing import CliRunner
+from spacy.tokens import DocBin, Doc
+from spacy.lang.en import English
 
 from spacy.cli._util import app
 from .util import make_tempdir
@@ -40,3 +42,52 @@ def test_benchmark_accuracy_alias():
     assert result_benchmark.stdout == result_evaluate.stdout.replace(
         "spacy evaluate", "spacy benchmark accuracy"
     )
+
+
+def test_debug_data_trainable_lemmatizer_cli():
+    nlp = English()
+    train_docs = [
+        Doc(nlp.vocab, words=["I", "like", "cats"], lemmas=["I", "like", "cat"]),
+        Doc(
+            nlp.vocab,
+            words=["Dogs", "are", "great", "too"],
+            lemmas=["dog", "be", "great", "too"],
+        ),
+    ]
+    dev_docs = [
+        Doc(nlp.vocab, words=["Cats", "are", "cute"], lemmas=["cat", "be", "cute"]),
+        Doc(nlp.vocab, words=["Pets", "are", "great"], lemmas=["pet", "be", "great"]),
+    ]
+    with make_tempdir() as d_in:
+        train_bin = DocBin(docs=train_docs)
+        train_bin.to_disk(d_in / "train.spacy")
+        dev_bin = DocBin(docs=dev_docs)
+        dev_bin.to_disk(d_in / "dev.spacy")
+        # `debug data` requires an input pipeline config
+        CliRunner().invoke(
+            app,
+            [
+                "init",
+                "config",
+                f"{d_in}/config.cfg",
+                "--lang",
+                "en",
+                "--pipeline",
+                "trainable_lemmatizer",
+            ],
+        )
+        result_debug_data = CliRunner().invoke(
+            app,
+            [
+                "debug",
+                "data",
+                f"{d_in}/config.cfg",
+                "--paths.train",
+                f"{d_in}/train.spacy",
+                "--paths.dev",
+                f"{d_in}/dev.spacy",
+            ],
+        )
+        # Instead of checking specific wording of the output, which may change,
+        # we'll check that this section of the debug output is present.
+        assert "= Trainable Lemmatizer =" in result_debug_data.stdout
