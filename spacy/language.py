@@ -1150,17 +1150,12 @@ class Language:
             component_cfg[name].setdefault("drop", drop)
             pipe_kwargs[name].setdefault("batch_size", self.batch_size)
         for name, proc in self.pipeline:
-            # ignore statements are used here because mypy ignores hasattr
-            if name not in exclude and hasattr(proc, "update"):
-                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])  # type: ignore
-            if sgd not in (None, False):
-                if (
-                    name not in exclude
-                    and isinstance(proc, ty.TrainableComponent)
-                    and proc.is_trainable
-                    and proc.model not in (True, False, None)
-                ):
-                    proc.finish_update(sgd)
+            if (
+                name not in exclude
+                and isinstance(proc, ty.TrainableComponent)
+                and proc.is_trainable
+            ):
+                proc.update(examples, sgd=sgd, losses=losses, **component_cfg[name])
             if name in annotates:
                 for doc, eg in zip(
                     _pipe(

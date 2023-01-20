@@ -54,9 +54,11 @@ def test_annotates_on_update():
         return AssertSents(name)
 
     class AssertSents:
+        model = None
+        is_trainable = True
+
         def __init__(self, name, **cfg):
             self.name = name
-            pass
 
         def __call__(self, doc):
             if not doc.has_annotation("SENT_START"):
@@ -64,10 +66,16 @@ def test_annotates_on_update():
             return doc
 
         def update(self, examples, *, drop=0.0, sgd=None, losses=None):
+            losses.setdefault(self.name, 0.0)
+
             for example in examples:
                 if not example.predicted.has_annotation("SENT_START"):
                     raise ValueError("No sents")
-            return {}
+
+            return losses
+
+        def finish_update(self, sgd=None):
+            pass
 
     nlp = English()
     nlp.add_pipe("sentencizer")
