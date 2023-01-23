@@ -31,6 +31,7 @@ import shlex
 import inspect
 import pkgutil
 import logging
+import socket
 
 try:
     import cupy.random
@@ -51,8 +52,7 @@ from . import about
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
-    from .language import Language  # noqa: F401
-    from .pipeline import Pipe  # noqa: F401
+    from .language import Language, PipeCallable  # noqa: F401
     from .tokens import Doc, Span  # noqa: F401
     from .vocab import Vocab  # noqa: F401
 
@@ -443,9 +443,9 @@ def load_model_from_package(
     name: str,
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Union[str, Iterable[str]] = SimpleFrozenList(),
-    enable: Union[str, Iterable[str]] = SimpleFrozenList(),
-    exclude: Union[str, Iterable[str]] = SimpleFrozenList(),
+    disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from an installed package.
@@ -619,9 +619,9 @@ def load_model_from_init_py(
     init_file: Union[Path, str],
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Union[str, Iterable[str]] = SimpleFrozenList(),
-    enable: Union[str, Iterable[str]] = SimpleFrozenList(),
-    exclude: Union[str, Iterable[str]] = SimpleFrozenList(),
+    disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Helper function to use in the `load()` method of a model package's
@@ -1642,9 +1642,11 @@ def check_bool_env_var(env_var: str) -> bool:
 
 def _pipe(
     docs: Iterable["Doc"],
-    proc: "Pipe",
+    proc: "PipeCallable",
     name: str,
-    default_error_handler: Callable[[str, "Pipe", List["Doc"], Exception], NoReturn],
+    default_error_handler: Callable[
+        [str, "PipeCallable", List["Doc"], Exception], NoReturn
+    ],
     kwargs: Mapping[str, Any],
 ) -> Iterator["Doc"]:
     if hasattr(proc, "pipe"):
@@ -1735,3 +1737,50 @@ def all_equal(iterable):
     (or if the input is an empty sequence), False otherwise."""
     g = itertools.groupby(iterable)
     return next(g, True) and not next(g, False)
+
+
+def _is_port_in_use(port: int, host: str = "localhost") -> bool:
+    """Check if 'host:port' is in use. Return True if it is, False otherwise.
+
+    port (int): the port to check
+    host (str): the host to check (default "localhost")
+    RETURNS (bool): Whether 'host:port' is in use.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind((host, port))
+        return False
+    except socket.error:
+        return True
+    finally:
+        s.close()
+
+
+def find_available_port(start: int, host: str, auto_select: bool = False) -> int:
+    """Given a starting port and a host, handle finding a port.
+
+    If `auto_select` is False, a busy port will raise an error.
+
+    If `auto_select` is True, the next free higher port will be used.
+
+    start (int): the port to start looking from
+    host (str): the host to find a port on
+    auto_select (bool): whether to automatically select a new port if the given port is busy (default False)
+    RETURNS (int): The port to use.
+    """
+    if not _is_port_in_use(start, host):
+        return start
+
+    port = start
+    if not auto_select:
+        raise ValueError(Errors.E1050.format(port=port))
+
+    while _is_port_in_use(port, host) and port < 65535:
+        port += 1
+
+    if port == 65535 and _is_port_in_use(port, host):
+        raise ValueError(Errors.E1049.format(host=host))
+
+    # if we get here, the port changed
+    warnings.warn(Warnings.W124.format(host=host, port=start, serve_port=port))
+    return port

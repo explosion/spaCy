@@ -11,6 +11,7 @@ from .render import DependencyRenderer, EntityRenderer, SpanRenderer
 from ..tokens import Doc, Span
 from ..errors import Errors, Warnings
 from ..util import is_in_jupyter
+from ..util import find_available_port
 
 
 _html = {}
@@ -36,7 +37,7 @@ def render(
     jupyter (bool): Override Jupyter auto-detection.
     options (dict): Visualiser-specific options, e.g. colors.
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
-    RETURNS (str): Rendered HTML markup.
+    RETURNS (str): Rendered SVG or HTML markup.
 
     DOCS: https://spacy.io/api/top-level#displacy.render
     USAGE: https://spacy.io/usage/visualizers
@@ -82,6 +83,7 @@ def serve(
     manual: bool = False,
     port: int = 5000,
     host: str = "0.0.0.0",
+    auto_select_port: bool = False,
 ) -> None:
     """Serve displaCy visualisation.
 
@@ -93,11 +95,14 @@ def serve(
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     port (int): Port to serve visualisation.
     host (str): Host to serve visualisation.
+    auto_select_port (bool): Automatically select a port if the specified port is in use.
 
     DOCS: https://spacy.io/api/top-level#displacy.serve
     USAGE: https://spacy.io/usage/visualizers
     """
     from wsgiref import simple_server
+
+    port = find_available_port(port, host, auto_select_port)
 
     if is_in_jupyter():
         warnings.warn(Warnings.W011)
@@ -228,12 +233,13 @@ def parse_spans(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
             "kb_id": span.kb_id_ if span.kb_id_ else "",
             "kb_url": kb_url_template.format(span.kb_id_) if kb_url_template else "#",
         }
-        for span in doc.spans[spans_key]
+        for span in doc.spans.get(spans_key, [])
     ]
     tokens = [token.text for token in doc]
 
     if not spans:
-        warnings.warn(Warnings.W117.format(spans_key=spans_key))
+        keys = list(doc.spans.keys())
+        warnings.warn(Warnings.W117.format(spans_key=spans_key, keys=keys))
     title = doc.user_data.get("title", None) if hasattr(doc, "user_data") else None
     settings = get_doc_settings(doc)
     return {

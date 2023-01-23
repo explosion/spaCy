@@ -158,6 +158,16 @@ cdef class SpanGroup:
             return self._concat(other)
         return NotImplemented
 
+    def __iter__(self):
+        """
+        Iterate over the spans in this SpanGroup.
+        YIELDS (Span): A span in this SpanGroup.
+
+        DOCS: https://spacy.io/api/spangroup#iter
+        """
+        for i in range(self.c.size()):
+            yield self[i]
+
     def append(self, Span span):
         """Add a span to the group. The span must refer to the same Doc
         object as the span group.
@@ -241,15 +251,18 @@ cdef class SpanGroup:
     cdef void push_back(self, SpanC span) nogil:
         self.c.push_back(span)
 
-    def copy(self)  -> SpanGroup:
+    def copy(self, doc: Optional["Doc"] = None) -> SpanGroup:
         """Clones the span group.
 
+        doc (Doc): New reference document to which the copy is bound.
         RETURNS (SpanGroup): A copy of the span group.
 
         DOCS: https://spacy.io/api/spangroup#copy
         """
+        if doc is None:
+            doc = self.doc
         return SpanGroup(
-            self.doc,
+            doc,
             name=self.name,
             attrs=deepcopy(self.attrs),
             spans=list(self),

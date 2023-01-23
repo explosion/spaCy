@@ -51,6 +51,7 @@ def project_run(
     force: bool = False,
     dry: bool = False,
     capture: bool = False,
+    skip_requirements_check: bool = False,
 ) -> None:
     """Run a named script defined in the project.yml. If the script is part
     of the default pipeline (defined in the "run" section), DVC is used to
@@ -67,6 +68,7 @@ def project_run(
         sys.exit will be called with the return code. You should use capture=False
         when you want to turn over execution to the command, and capture=True
         when you want to run the command more like a function.
+    skip_requirements_check (bool): Whether to skip the requirements check.
     """
     config = load_project_config(project_dir, overrides=overrides)
     commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
@@ -74,26 +76,28 @@ def project_run(
     validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
 
     req_path = project_dir / "requirements.txt"
-    if config.get("check_requirements", True) and os.path.exists(req_path):
-        with req_path.open() as requirements_file:
-            _check_requirements([req.replace("\n", "") for req in requirements_file])
+    if not skip_requirements_check:
+        if config.get("check_requirements", True) and os.path.exists(req_path):
+            with req_path.open() as requirements_file:
+                _check_requirements([req.strip() for req in requirements_file])
 
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
-        for workflow_item in workflows[subcommand]:
-            if isinstance(workflow_item, str):
+        for cmd in workflows[subcommand]:
+            if isinstance(cmd, str):
                 project_run(
                     project_dir,
-                    workflow_item,
+                    cmd,
                     overrides=overrides,
                     force=force,
                     dry=dry,
                     capture=capture,
+                    skip_requirements_check=True,
                 )
             else:
-                assert isinstance(workflow_item, dict)
-                assert len(workflow_item) == 1
-                cmds = workflow_item["parallel"]
+                assert isinstance(cmd, dict)
+                assert len(cmd) == 1
+                cmds = cmd["parallel"]
                 assert isinstance(cmds[0], str)
                 project_run_parallel_group(
                     project_dir,
@@ -289,6 +293,12 @@ def _check_requirements(requirements: List[str]) -> Tuple[bool, bool]:
             failed_pkgs_msgs.append(dnf.report())
         except pkg_resources.VersionConflict as vc:
             conflicting_pkgs_msgs.append(vc.report())
+        except Exception:
+            msg.warn(
+                f"Unable to check requirement: {req} "
+                "Checks are currently limited to requirement specifiers "
+                "(PEP 508)"
+            )
 
     if len(failed_pkgs_msgs) or len(conflicting_pkgs_msgs):
         msg.warn(

@@ -178,7 +178,7 @@ class _ParallelCommand:
     def change_state(self, new_state: str) -> None:
         if new_state not in self.state.transitions:
             raise RuntimeError(
-                Errors.E1044.format(old_state=self.state.name, new_state=new_state)
+                Errors.E1051.format(old_state=self.state.name, new_state=new_state)
             )
         self.state = _ParallelCommand.state_dict[new_state]
 

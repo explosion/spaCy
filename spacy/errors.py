@@ -199,7 +199,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W117 = ("No spans to visualize found in Doc object with spans_key: '{spans_key}'. If this is "
             "surprising to you, make sure the Doc was processed using a model "
             "that supports span categorization, and check the `doc.spans[spans_key]` "
-            "property manually if necessary.")
+            "property manually if necessary.\n\nAvailable keys: {keys}")
     W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
             "for the corpora used to train the language. Please check "
             "`nlp.meta[\"sources\"]` for any relevant links.")
@@ -212,8 +212,9 @@ class Warnings(metaclass=ErrorsWithCodes):
     W121 = ("Attempting to trace non-existent method '{method}' in pipe '{pipe}'")
     W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
             "is a Cython extension type.")
-    W123 = ("Argument {arg} with value {arg_value} is used instead of {config_value} as specified in the config. Be "
-            "aware that this might affect other components in your pipeline.")
+    W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
+            "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
+    W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -345,6 +346,11 @@ class Errors(metaclass=ErrorsWithCodes):
             "clear the existing vectors and resize the table.")
     E074 = ("Error interpreting compiled match pattern: patterns are expected "
             "to end with the attribute {attr}. Got: {bad_attr}.")
+    E079 = ("Error computing states in beam: number of predicted beams "
+            "({pbeams}) does not equal number of gold beams ({gbeams}).")
+    E080 = ("Duplicate state found in beam: {key}.")
+    E081 = ("Error getting gradient in beam: number of histories ({n_hist}) "
+            "does not equal number of losses ({losses}).")
     E082 = ("Error deprojectivizing parse: number of heads ({n_heads}), "
             "projective heads ({n_proj_heads}) and labels ({n_labels}) do not "
             "match.")
@@ -540,8 +546,14 @@ class Errors(metaclass=ErrorsWithCodes):
     E199 = ("Unable to merge 0-length span at `doc[{start}:{end}]`.")
     E200 = ("Can't set {attr} from Span.")
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
+    E203 = ("If the {name} embedding layer is not updated "
+            "during training, make sure to include it in 'annotating components'")
 
     # New errors added in v3.x
+    E851 = ("The 'textcat' component labels should only have values of 0 or 1, "
+            "but found value of '{val}'.")
+    E852 = ("The tar file pulled from the remote attempted an unsafe path "
+            "traversal.")
     E853 = ("Unsupported component factory name '{name}'. The character '.' is "
             "not permitted in factory names.")
     E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
@@ -711,9 +723,9 @@ class Errors(metaclass=ErrorsWithCodes):
             "`nlp.enable_pipe` instead.")
     E927 = ("Can't write to frozen list. Maybe you're trying to modify a computed "
             "property or default function argument?")
-    E928 = ("A KnowledgeBase can only be serialized to/from from a directory, "
+    E928 = ("An InMemoryLookupKB can only be serialized to/from from a directory, "
             "but the provided argument {loc} points to a file.")
-    E929 = ("Couldn't read KnowledgeBase from {loc}. The path does not seem to exist.")
+    E929 = ("Couldn't read InMemoryLookupKB from {loc}. The path does not seem to exist.")
     E930 = ("Received invalid get_examples callback in `{method}`. "
             "Expected function that returns an iterable of Example objects but "
             "got: {obj}")
@@ -944,8 +956,20 @@ class Errors(metaclass=ErrorsWithCodes):
              "case pass an empty list for the previously not specified argument to avoid this error.")
     E1043 = ("Expected None or a value in range [{range_start}, {range_end}] for entity linker threshold, but got "
              "{value}.")
-    E1044 = ("Illegal transition from {old_state} to {new_state}.")
-
+    E1044 = ("Expected `candidates_batch_size` to be >= 1, but got: {value}")
+    E1045 = ("Encountered {parent} subclass without `{parent}.{method}` "
+             "method in '{name}'. If you want to use this method, make "
+             "sure it's overwritten on the subclass.")
+    E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
+             "knowledge base, use `InMemoryLookupKB`.")
+    E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
+    E1048 = ("Got '{unexpected}' as console progress bar type, but expected one of the following: {expected}")
+    E1049 = ("No available port found for displaCy on host {host}. Please specify an available port "
+             "with `displacy.serve(doc, port=port)`")
+    E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
+             "or use `auto_switch_port=True` to pick an available port automatically.")
+    E1051 = ("Illegal transition from {old_state} to {new_state}.")
+    
 
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {

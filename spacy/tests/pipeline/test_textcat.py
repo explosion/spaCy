@@ -360,6 +360,30 @@ def test_label_types(name):
         nlp.initialize()
 
 
+@pytest.mark.parametrize(
+    "name,get_examples",
+    [
+        ("textcat", make_get_examples_single_label),
+        ("textcat_multilabel", make_get_examples_multi_label),
+    ],
+)
+def test_invalid_label_value(name, get_examples):
+    nlp = Language()
+    textcat = nlp.add_pipe(name)
+    example_getter = get_examples(nlp)
+
+    def invalid_examples():
+        # make one example with an invalid score
+        examples = example_getter()
+        ref = examples[0].reference
+        key = list(ref.cats.keys())[0]
+        ref.cats[key] = 2.0
+        return examples
+
+    with pytest.raises(ValueError):
+        nlp.initialize(get_examples=invalid_examples)
+
+
 @pytest.mark.parametrize("name", ["textcat", "textcat_multilabel"])
 def test_no_label(name):
     nlp = Language()
@@ -814,8 +838,8 @@ def test_textcat_loss(multi_label: bool, expected_loss: float):
         textcat = nlp.add_pipe("textcat_multilabel")
     else:
         textcat = nlp.add_pipe("textcat")
-    textcat.initialize(lambda: train_examples)
     assert isinstance(textcat, TextCategorizer)
+    textcat.initialize(lambda: train_examples)
     scores = textcat.model.ops.asarray(
         [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0]], dtype="f"  # type: ignore
     )
@@ -823,10 +847,10 @@ def test_textcat_loss(multi_label: bool, expected_loss: float):
     assert loss == expected_loss
 
 
-def test_textcat_threshold():
+def test_textcat_multilabel_threshold():
     # Ensure the scorer can be called with a different threshold
     nlp = English()
-    nlp.add_pipe("textcat")
+    nlp.add_pipe("textcat_multilabel")
 
     train_examples = []
     for text, annotations in TRAIN_DATA_SINGLE_LABEL:
@@ -849,7 +873,7 @@ def test_textcat_threshold():
     )
     pos_f = scores["cats_score"]
     assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 1.0
-    assert pos_f > macro_f
+    assert pos_f >= macro_f
 
 
 def test_textcat_multi_threshold():
@@ -871,3 +895,26 @@ def test_textcat_multi_threshold():
 
     scores = nlp.evaluate(train_examples, scorer_cfg={"threshold": 0})
     assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 1.0
+
+
+@pytest.mark.parametrize(
+    "component_name,scorer",
+    [
+        ("textcat", "spacy.textcat_scorer.v1"),
+        ("textcat_multilabel", "spacy.textcat_multilabel_scorer.v1"),
+    ],
+)
+def test_textcat_legacy_scorers(component_name, scorer):
+    """Check that legacy scorers are registered and produce the expected score
+    keys."""
+    nlp = English()
+    nlp.add_pipe(component_name, config={"scorer": {"@scorers": scorer}})
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA_SINGLE_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    # score the model (it's not actually trained but that doesn't matter)
+    scores = nlp.evaluate(train_examples)
+    assert 0 <= scores["cats_score"] <= 1
