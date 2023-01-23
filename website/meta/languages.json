@@ -165,7 +165,7 @@
             "has_examples": true
         },
         {
-            "code": "is",
+            "code": "isl",
             "name": "Icelandic"
         },
         {
@@ -434,7 +434,7 @@
             ]
         },
         {
-            "code": "xx",
+            "code": "mul",
             "name": "Multi-language",
             "models": ["xx_ent_wiki_sm", "xx_sent_ud_sm"],
             "example": "This is a sentence about Facebook."

@@ -962,6 +962,15 @@ class Errors(metaclass=ErrorsWithCodes):
              "reference and predicted docs.")
     E4004 = ("Backprop is not supported when is_train is not set.")
 
+# Deprecated model shortcuts, only used in errors and warnings
+OLD_MODEL_SHORTCUTS = {
+    "en": "en_core_web_sm", "de": "de_core_news_sm", "es": "es_core_news_sm",
+    "pt": "pt_core_news_sm", "fr": "fr_core_news_sm", "it": "it_core_news_sm",
+    "nl": "nl_core_news_sm", "el": "el_core_news_sm", "nb": "nb_core_news_sm",
+    "lt": "lt_core_news_sm", "xx": "xx_ent_wiki_sm"
+}
+
+RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}
 
 # fmt: on
 
