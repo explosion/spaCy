@@ -99,11 +99,7 @@ steps:
 #    condition: eq(variables['python_version'], '3.8')
 
   - script: |
-      cat requirements.txt
       python -m pip install -U -r requirements.txt
-      python -m pip uninstall -y spacy-legacy
-      python -m pip install "git+https://github.com/polm/spacy-legacy.git@feature/entity-linker-component-v1"
-      python -m pip freeze
     displayName: "Install test requirements"
 
   - script: |
