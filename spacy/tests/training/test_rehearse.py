@@ -1,6 +1,7 @@
 import pytest
 import spacy
 
+from thinc.api import Config
 from typing import List
 from spacy.training import Example
 
@@ -148,6 +149,86 @@ REHEARSE_DATA = [
     ),
 ]
 
+TEXTCAT_MULTILABEL_LISTENER_CONFIG = """
+[nlp]
+lang = "en"
+pipeline = ["tok2vec","textcat_multilabel"]
+disabled = []
+before_creation = null
+after_creation = null
+after_pipeline_creation = null
+batch_size = 1000
+tokenizer = {"@tokenizers":"spacy.Tokenizer.v1"}
+[components]
+[components.textcat_multilabel]
+factory = "textcat_multilabel"
+threshold = 0.5
+[components.textcat_multilabel.model]
+@architectures = "spacy.TextCatEnsemble.v2"
+nO = null
+[components.textcat_multilabel.model.linear_model]
+@architectures = "spacy.TextCatBOW.v2"
+exclusive_classes = false
+ngram_size = 1
+no_output_layer = false 
+[components.textcat_multilabel.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = 64
+upstream = "*"
+[components.tok2vec]
+factory = "tok2vec"
+[components.tok2vec.model]
+@architectures = "spacy.Tok2Vec.v2"
+[components.tok2vec.model.embed]
+@architectures = "spacy.MultiHashEmbed.v2"
+width = 64
+attrs = ["ORTH", "SHAPE"]
+rows = [5000, 2500]
+include_static_vectors = true 
+[components.tok2vec.model.encode]
+@architectures = "spacy.MishWindowEncoder.v2"
+width = 64
+depth = 4
+window_size = 1
+"""
+
+NER_LISTENER_CONFIG = """
+[nlp]
+lang = "en"
+pipeline = ["tok2vec","ner"]
+batch_size = 1000
+[components]
+[components.tok2vec]
+factory = "tok2vec"
+[components.tok2vec.model]
+@architectures = "spacy.Tok2Vec.v2"
+[components.tok2vec.model.embed]
+@architectures = "spacy.MultiHashEmbed.v2"
+width = ${components.tok2vec.model.encode.width}
+attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
+rows = [5000, 1000, 2500, 2500]
+include_static_vectors = false
+[components.tok2vec.model.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v2"
+width = 96
+depth = 4
+window_size = 1
+maxout_pieces = 3
+[components.ner]
+factory = "ner"
+[components.ner.model]
+@architectures = "spacy.TransitionBasedParser.v2"
+state_type = "ner"
+extra_state_tokens = false
+hidden_width = 64
+maxout_pieces = 2
+use_upper = true
+nO = null
+[components.ner.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+"""
+
 
 def _add_ner_label(ner, data):
     for _, annotations in data:
@@ -197,7 +278,11 @@ def _optimize(nlp, component: str, data: List, rehearse: bool):
             doc = nlp.make_doc(text)
             example = Example.from_dict(doc, annotation)
             if rehearse:
-                nlp.rehearse([example], sgd=optimizer)
+                nlp.update([example], sgd=None)
+                nlp.rehearse([example], sgd=None)
+                for name, proc in nlp.pipeline:
+                    if proc.is_trainable and proc.model not in (True, False, None):
+                        proc.finish_update(optimizer)
             else:
                 nlp.update([example], sgd=optimizer)
     return nlp
@@ -209,3 +294,21 @@ def test_rehearse(component):
     nlp.add_pipe(component)
     nlp = _optimize(nlp, component, TRAIN_DATA, False)
     _optimize(nlp, component, REHEARSE_DATA, True)
+
+
+@pytest.mark.issue(12044)
+def test_rehearse_textcat_multilabel_listener():
+    """Test nlp.rehearse on a textcat_multilabel pipeline with a tok2vec listener"""
+    config = Config().from_str(TEXTCAT_MULTILABEL_LISTENER_CONFIG)
+    nlp = spacy.blank("en", config=config)
+    nlp = _optimize(nlp, "textcat_multilabel", TRAIN_DATA, False)
+    _optimize(nlp, "textcat_multilabel", REHEARSE_DATA, True)
+
+
+@pytest.mark.issue(12044)
+def test_rehearse_ner_listener():
+    """Test nlp.rehearse on a ner pipeline with a tok2vec listener"""
+    config = Config().from_str(NER_LISTENER_CONFIG)
+    nlp = spacy.blank("en", config=config)
+    nlp = _optimize(nlp, "ner", TRAIN_DATA, False)
+    _optimize(nlp, "ner", REHEARSE_DATA, True)

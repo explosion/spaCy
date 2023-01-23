@@ -1337,9 +1337,18 @@ class Language:
         ops = get_current_ops()
         if self.vocab.vectors.shape[1] >= 1:
             self.vocab.vectors.to_ops(ops)
+
+        # Create rehearsal models
         for name, proc in self.pipeline:
             if hasattr(proc, "_rehearsal_model"):
                 proc._rehearsal_model = deepcopy(proc.model)  # type: ignore[attr-defined]
+
+        # Link listeners from rehearsal models to Tok2Vec components
+        for i, (name1, proc1) in enumerate(self.pipeline):
+            if isinstance(proc1, ty.ListenedToComponent):
+                for name2, proc2 in self.pipeline[i + 1 :]:
+                    proc1.find_listeners(proc2)
+
         if sgd is not None:
             self._optimizer = sgd
         elif self._optimizer is None:

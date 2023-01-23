@@ -205,6 +205,31 @@ Delegates to [`predict`](/api/tok2vec#predict).
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
+## Tok2Vec.rehearse {id="rehearse",tag="method,experimental",version="3.5.1"}
+
+Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
+current model to make predictions similar to an initial model, to try to address
+the "catastrophic forgetting" problem. Please note that `Tok2Vec.rehearse` needs to be used together with `Tok2Vec.update`. This feature is experimental.
+
+> #### Example
+>
+> ```python
+> tok2vec = nlp.add_pipe("tok2vec")
+> optimizer = nlp.resume_training()
+> update_losses = tok2vec.update(examples, sgd=None)
+> rehearse_losses = tok2vec.rehearse(examples, sgd=None)
+> tok2vec.finish_update(optimizer)
+> ```
+
+| Name           | Description                                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------------------- |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                             |
+| _keyword-only_ |                                                                                                               |
+| `drop`         | The dropout rate. ~~float~~                                                                                   |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~ |
+| `losses`       | Dictionary to update with the loss, keyed by pipeline component. ~~Optional[Dict[str, float]]~~               |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                         |
+
 ## Tok2Vec.create_optimizer {id="create_optimizer",tag="method"}
 
 Create an optimizer for the pipeline component.

@@ -59,6 +59,7 @@ class Tok2Vec(TrainablePipe):
         """
         self.vocab = vocab
         self.model = model
+        self._rehearsal_model = None
         self.name = name
         self.listener_map: Dict[str, List["Tok2VecListener"]] = {}
         self.cfg: Dict[str, Any] = {}
@@ -108,6 +109,11 @@ class Tok2Vec(TrainablePipe):
             for node in component.model.walk():
                 if isinstance(node, Tok2VecListener) and node.upstream_name in names:
                     self.add_listener(node, component.name)
+        # Make sure to link to Tok2VecListeners from rehearsal models
+        if isinstance(getattr(component, "_rehearsal_model", None), Model):
+            for node in component._rehearsal_model.walk():
+                if isinstance(node, Tok2VecListener) and node.upstream_name in names:
+                    self.add_listener(node, component.name + "_rehearsal_model")
 
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
@@ -189,6 +195,57 @@ class Tok2Vec(TrainablePipe):
             listener.receive(batch_id, tokvecs, accumulate_gradient)
         if self.listeners:
             self.listeners[-1].receive(batch_id, tokvecs, backprop)
+        return losses
+
+    def rehearse(
+        self,
+        examples: Iterable[Example],
+        *,
+        drop: float = 0.0,
+        sgd: Optional[Optimizer] = None,
+        losses: Optional[Dict[str, float]] = None,
+    ):
+        """Perform a "rehearsal" update from a batch of data. Rehearsal updates
+        teach the current model to make predictions similar to an initial model,
+        to try to address the "catastrophic forgetting" problem. This feature is
+        experimental.
+
+        examples (Iterable[Example]): A batch of Example objects.
+        drop (float): The dropout rate.
+        sgd (thinc.api.Optimizer): The optimizer.
+        losses (Dict[str, float]): Optional record of the loss during training.
+            Updated using the component name as the key.
+        RETURNS (Dict[str, float]): The updated losses dictionary.
+
+        DOCS: https://spacy.io/api/tok2vec#rehearse
+        """
+        if losses is None:
+            losses = {}
+        if self._rehearsal_model is None:
+            return losses
+        validate_examples(examples, "Tok2Vec.rehearse")
+        docs = [eg.predicted for eg in examples]
+        set_dropout_rate(self.model, drop)
+        tokvecs, bp_tokvecs = self.model.begin_update(docs)
+        target, _ = self._rehearsal_model.begin_update(docs)
+        d_tokvecs = [self.model.ops.alloc2f(*t2v.shape) for t2v in tokvecs]
+        losses.setdefault(self.name, 0.0)
+
+        for i in range(len(target)):
+            d_tokvecs[i] += target[i]
+            losses[self.name] += float((target[i] ** 2).sum())
+
+        def empty_backprop(_):
+            return [self.model.ops.alloc2f(*t2v.shape) for t2v in tokvecs]
+
+        batch_id = Tok2VecListener.get_batch_id(docs)
+        for listener in self.listeners:
+            listener.receive(batch_id, tokvecs, empty_backprop)
+
+        bp_tokvecs(d_tokvecs)
+        if sgd is not None:
+            self.finish_update(sgd)
+
         return losses
 
     def get_loss(self, examples, scores) -> None:
