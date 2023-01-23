@@ -691,7 +691,7 @@ def debug_data(
         else:
             # Would we ever expect this case? It seems like it would be pretty rare,
             # and we might actually want a warning?
-            msg.good("All trees in dev data present in training data.")
+            msg.info("All trees in dev data present in training data.")
 
         if gold_train_data["n_low_cardinality_lemmas"] > 0:
             n = gold_train_data["n_low_cardinality_lemmas"]
