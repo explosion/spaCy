@@ -24,7 +24,7 @@ component.
 
 </Infobox>
 
-## Assigned Attributes {id="assigned-attributes"}
+## Assigned Attributes {#assigned-attributes}
 
 Matches will be saved to `Doc.spans[spans_key]` as a
 [`SpanGroup`](/api/spangroup) and/or to `Doc.ents`, where the annotation is

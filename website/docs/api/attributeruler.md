@@ -2,7 +2,7 @@
 title: AttributeRuler
 tag: class
 source: spacy/pipeline/attribute_ruler.py
-version: 3
+new: 3
 teaser: 'Pipeline component for rule-based token attribute assignment'
 api_string_name: attribute_ruler
 api_trainable: false

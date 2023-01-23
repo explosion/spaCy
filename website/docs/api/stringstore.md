@@ -90,7 +90,7 @@ Iterate over the stored strings in insertion order.
 | ----------- | ------------------------------ |
 | **RETURNS** | A string in the store. ~~str~~ |
 
-## StringStore.items {id="items", tag="method", version="4"}
+## StringStore.items {#iter tag="method" new="4"}
 
 Iterate over the stored string-hash pairs in insertion order.
 
@@ -106,7 +106,7 @@ Iterate over the stored string-hash pairs in insertion order.
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | A list of string-hash pairs. ~~List[Tuple[str, int]]~~ |
 
-## StringStore.keys {id="keys", tag="method", version="4"}
+## StringStore.keys {#iter tag="method" new="4"}
 
 Iterate over the stored strings in insertion order.
 
@@ -122,7 +122,7 @@ Iterate over the stored strings in insertion order.
 | ----------- | -------------------------------- |
 | **RETURNS** | A list of strings. ~~List[str]~~ |
 
-## StringStore.values {id="values", tag="method", version="4"}
+## StringStore.values {#iter tag="method" new="4"}
 
 Iterate over the stored string hashes in insertion order.
 
@@ -138,7 +138,7 @@ Iterate over the stored string hashes in insertion order.
 | ----------- | -------------------------------------- |
 | **RETURNS** | A list of string hashes. ~~List[int]~~ |
 
-## StringStore.add {id="add", tag="method"}
+## StringStore.add {#add tag="method"}
 
 Add a string to the `StringStore`.
 
@@ -158,7 +158,7 @@ Add a string to the `StringStore`.
 | `string`    | The string to add. ~~str~~       |
 | **RETURNS** | The string's hash value. ~~int~~ |
 
-## StringStore.to_disk {id="to_disk",tag="method"}
+## StringStore.to_disk {#to_disk tag="method"}
 
 Save the current state to a directory.
 
@@ -172,7 +172,7 @@ Save the current state to a directory.
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 
-## StringStore.from_disk {id="from_disk",tag="method"}
+## StringStore.from_disk {#from_disk tag="method" new="2"}
 
 Loads state from a directory. Modifies the object in place and returns it.
 

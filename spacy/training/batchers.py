@@ -2,13 +2,12 @@ from typing import Union, Iterable, Sequence, TypeVar, List, Callable, Iterator
 from typing import Optional, Any
 from functools import partial
 import itertools
-from thinc.schedules import Schedule
+from thinc.schedules import Schedule, constant as constant_schedule
 
 from ..util import registry, minibatch
 
 
-SizingSchedule = Union[Iterable[int], int, Schedule]
-Sizing = Union[Iterable[int], int]
+Sizing = Union[Sequence[int], int, Schedule[int]]
 ItemT = TypeVar("ItemT")
 BatcherT = Callable[[Iterable[ItemT]], Iterable[List[ItemT]]]
 
@@ -16,7 +15,7 @@ BatcherT = Callable[[Iterable[ItemT]], Iterable[List[ItemT]]]
 @registry.batchers("spacy.batch_by_padded.v1")
 def configure_minibatch_by_padded_size(
     *,
-    size: SizingSchedule,
+    size: Sizing,
     buffer: int,
     discard_oversize: bool,
     get_length: Optional[Callable[[ItemT], int]] = None
@@ -26,8 +25,8 @@ def configure_minibatch_by_padded_size(
     The padded size is defined as the maximum length of sequences within the
     batch multiplied by the number of sequences in the batch.
 
-    size (int, Iterable[int] or Schedule): The largest padded size to batch sequences
-        into. Can be a single integer, or a sequence, allowing for variable batch sizes.
+    size (int or Sequence[int]): The largest padded size to batch sequences into.
+        Can be a single integer, or a sequence, allowing for variable batch sizes.
     buffer (int): The number of sequences to accumulate before sorting by length.
         A larger buffer will result in more even sizing, but if the buffer is
         very large, the iteration order will be less random, which can result
@@ -41,7 +40,7 @@ def configure_minibatch_by_padded_size(
     optionals = {"get_length": get_length} if get_length is not None else {}
     return partial(
         minibatch_by_padded_size,
-        size=_schedule_to_sizing(size),
+        size=size,
         buffer=buffer,
         discard_oversize=discard_oversize,
         **optionals
@@ -51,14 +50,14 @@ def configure_minibatch_by_padded_size(
 @registry.batchers("spacy.batch_by_words.v1")
 def configure_minibatch_by_words(
     *,
-    size: SizingSchedule,
+    size: Sizing,
     tolerance: float,
     discard_oversize: bool,
     get_length: Optional[Callable[[ItemT], int]] = None
 ) -> BatcherT:
     """Create a batcher that uses the "minibatch by words" strategy.
 
-    size (int, Iterable[int] or Schedule): The target number of words per batch.
+    size (int or Sequence[int]): The target number of words per batch.
         Can be a single integer, or a sequence, allowing for variable batch sizes.
     tolerance (float): What percentage of the size to allow batches to exceed.
     discard_oversize (bool): Whether to discard sequences that by themselves
@@ -69,7 +68,7 @@ def configure_minibatch_by_words(
     optionals = {"get_length": get_length} if get_length is not None else {}
     return partial(
         minibatch_by_words,
-        size=_schedule_to_sizing(size),
+        size=size,
         tolerance=tolerance,
         discard_oversize=discard_oversize,
         **optionals
@@ -78,15 +77,15 @@ def configure_minibatch_by_words(
 
 @registry.batchers("spacy.batch_by_sequence.v1")
 def configure_minibatch(
-    size: SizingSchedule, get_length: Optional[Callable[[ItemT], int]] = None
+    size: Sizing, get_length: Optional[Callable[[ItemT], int]] = None
 ) -> BatcherT:
     """Create a batcher that creates batches of the specified size.
 
-    size (int, Iterable[int] or Schedule): The target number of items per batch.
+    size (int or Sequence[int]): The target number of items per batch.
         Can be a single integer, or a sequence, allowing for variable batch sizes.
     """
     optionals = {"get_length": get_length} if get_length is not None else {}
-    return partial(minibatch, size=_schedule_to_sizing(size), **optionals)
+    return partial(minibatch, size=size, **optionals)
 
 
 def minibatch_by_padded_size(
@@ -102,7 +101,7 @@ def minibatch_by_padded_size(
     The padded size is defined as the maximum length of sequences within the
     batch multiplied by the number of sequences in the batch.
 
-    size (int or Iterable[int]): The largest padded size to batch sequences into.
+    size (int or Sequence[int]): The largest padded size to batch sequences into.
     buffer (int): The number of sequences to accumulate before sorting by length.
         A larger buffer will result in more even sizing, but if the buffer is
         very large, the iteration order will be less random, which can result
@@ -113,12 +112,13 @@ def minibatch_by_padded_size(
         The `len` function is used by default.
     """
     if isinstance(size, int):
-        size_: Iterator[int] = itertools.repeat(size)
+        size_ = constant_schedule(size)
     else:
-        size_ = iter(size)
-    for outer_batch in minibatch(seqs, size=buffer):
+        assert isinstance(size, Schedule)
+        size_ = size
+    for step, outer_batch in enumerate(minibatch(seqs, size=buffer)):
         outer_batch = list(outer_batch)
-        target_size = next(size_)
+        target_size = size_(step)
         for indices in _batch_by_length(outer_batch, target_size, get_length):
             subbatch = [outer_batch[i] for i in indices]
             padded_size = max(len(seq) for seq in subbatch) * len(subbatch)
@@ -140,7 +140,7 @@ def minibatch_by_words(
     themselves, or be discarded if discard_oversize=True.
 
     seqs (Iterable[Sequence]): The sequences to minibatch.
-    size (int or Iterable[int]): The target number of words per batch.
+    size (int or Sequence[int]): The target number of words per batch.
         Can be a single integer, or a sequence, allowing for variable batch sizes.
     tolerance (float): What percentage of the size to allow batches to exceed.
     discard_oversize (bool): Whether to discard sequences that by themselves
@@ -149,10 +149,12 @@ def minibatch_by_words(
         item. The `len` function is used by default.
     """
     if isinstance(size, int):
-        size_: Iterator[int] = itertools.repeat(size)
+        size_ = constant_schedule(size)
     else:
-        size_ = iter(size)
-    target_size = next(size_)
+        assert isinstance(size, Schedule)
+        size_ = size
+    step = 0
+    target_size = size_(step)
     tol_size = target_size * tolerance
     batch = []
     overflow = []
@@ -177,7 +179,8 @@ def minibatch_by_words(
         else:
             if batch:
                 yield batch
-            target_size = next(size_)
+            step += 1
+            target_size = size_(step)
             tol_size = target_size * tolerance
             batch = overflow
             batch_size = overflow_size
@@ -195,7 +198,8 @@ def minibatch_by_words(
             else:
                 if batch:
                     yield batch
-                target_size = next(size_)
+                step += 1
+                target_size = size_(step)
                 tol_size = target_size * tolerance
                 batch = [seq]
                 batch_size = n_words
@@ -232,9 +236,3 @@ def _batch_by_length(
     batches = [list(sorted(batch)) for batch in batches]
     batches.reverse()
     return batches
-
-
-def _schedule_to_sizing(size: SizingSchedule) -> Sizing:
-    if isinstance(size, Schedule):
-        return size.to_generator()
-    return size

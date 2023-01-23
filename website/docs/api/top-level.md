@@ -729,14 +729,14 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 > get_length = null
 > ```
 
-| Name               | Description                                                                                                                                                                                       |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `seqs`             | The sequences to minibatch. ~~Iterable[Any]~~                                                                                                                                                     |
-| `size`             | The target number of words per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Iterable[int], Schedule]~~ |
-| `tolerance`        | What percentage of the size to allow batches to exceed. ~~float~~                                                                                                                                 |
-| `discard_oversize` | Whether to discard sequences that by themselves exceed the tolerated size. ~~bool~~                                                                                                               |
-| `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                           |
-| **CREATES**        | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                               |
+| Name               | Description                                                                                                                                                                             |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `seqs`             | The sequences to minibatch. ~~Iterable[Any]~~                                                                                                                                           |
+| `size`             | The target number of words per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Sequence[int]]~~ |
+| `tolerance`        | What percentage of the size to allow batches to exceed. ~~float~~                                                                                                                       |
+| `discard_oversize` | Whether to discard sequences that by themselves exceed the tolerated size. ~~bool~~                                                                                                     |
+| `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
+| **CREATES**        | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                     |
 
 ### spacy.batch_by_sequence.v1 {#batch_by_sequence tag="registered function"}
 
@@ -751,11 +751,11 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 
 Create a batcher that creates batches of the specified size.
 
-| Name         | Description                                                                                                                                                                                       |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `size`       | The target number of items per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Iterable[int], Schedule]~~ |
-| `get_length` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                           |
-| **CREATES**  | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                               |
+| Name         | Description                                                                                                                                                                             |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `size`       | The target number of items per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Sequence[int]]~~ |
+| `get_length` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
+| **CREATES**  | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                     |
 
 ### spacy.batch_by_padded.v1 {#batch_by_padded tag="registered function"}
 
@@ -777,7 +777,7 @@ sequences in the batch.
 
 | Name               | Description                                                                                                                                                                                                                                 |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `size`             | The largest padded size to batch sequences into. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Iterable[int], Schedule]~~                                |
+| `size`             | The largest padded size to batch sequences into. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Sequence[int]]~~                                          |
 | `buffer`           | The number of sequences to accumulate before sorting by length. A larger buffer will result in more even sizing, but if the buffer is very large, the iteration order will be less random, which can result in suboptimal training. ~~int~~ |
 | `discard_oversize` | Whether to discard sequences that are by themselves longer than the largest padded batch size. ~~bool~~                                                                                                                                     |
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                                                                     |
@@ -899,8 +899,7 @@ backprop passes.
 Recursively wrap both the models and methods of each pipe using
 [NVTX](https://nvidia.github.io/NVTX/) range markers. By default, the following
 methods are wrapped: `pipe`, `predict`, `set_annotations`, `update`, `rehearse`,
-`get_loss`, `get_teacher_student_loss`, `initialize`, `begin_update`,
-`finish_update`, `update`.
+`get_loss`, `initialize`, `begin_update`, `finish_update`, `update`.
 
 | Name                        | Description                                                                                                                                                     |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1331,7 +1330,7 @@ vary on each step.
 | Name       | Description                                      |
 | ---------- | ------------------------------------------------ |
 | `items`    | The items to batch up. ~~Iterable[Any]~~         |
-| `size`     | The batch size(s). ~~Union[int, Iterable[int]]~~ |
+| `size`     | The batch size(s). ~~Union[int, Sequence[int]]~~ |
 | **YIELDS** | The batches.                                     |
 
 ### util.filter_spans {#util.filter_spans tag="function" new="2.1.4"}

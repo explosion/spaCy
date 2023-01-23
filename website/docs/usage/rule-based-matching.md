@@ -1342,7 +1342,7 @@ doc = nlp("MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-#### Validating and debugging entity ruler patterns {id="entityruler-pattern-validation",version="2.1.8"}
+#### Validating and debugging entity ruler patterns {#entityruler-pattern-validation new="2.1.8"}
 
 The entity ruler can validate patterns against a JSON schema with the config
 setting `"validate"`. See details under

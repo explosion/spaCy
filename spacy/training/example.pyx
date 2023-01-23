@@ -1,4 +1,5 @@
 from collections.abc import Iterable as IterableInstance
+import warnings
 import numpy
 from murmurhash.mrmr cimport hash64
 
@@ -44,13 +45,6 @@ def validate_examples(examples, method):
     if wrong:
         err = Errors.E978.format(name=method, types=wrong)
         raise TypeError(err)
-
-
-def validate_distillation_examples(examples, method):
-    validate_examples(examples, method)
-    for eg in examples:
-        if [token.text for token in eg.reference] != [token.text for token in eg.predicted]:
-            raise ValueError(Errors.E4003)
 
 
 def validate_get_examples(get_examples, method):

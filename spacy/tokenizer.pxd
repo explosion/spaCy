@@ -4,6 +4,7 @@ from cymem.cymem cimport Pool
 
 from .typedefs cimport hash_t
 from .structs cimport LexemeC, SpanC, TokenC
+from .strings cimport StringStore
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab, LexemesOrTokens, _Cached
 from .matcher.phrasematcher cimport PhraseMatcher

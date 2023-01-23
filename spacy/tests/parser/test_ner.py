@@ -13,7 +13,6 @@ from spacy.pipeline._parser_internals.ner import BiluoPushDown
 from spacy.training import Example, iob_to_biluo, split_bilu_label
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
-from thinc.api import fix_random_seed
 import logging
 
 from ..util import make_tempdir
@@ -413,7 +412,7 @@ def test_train_empty():
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
     ner = nlp.add_pipe("ner", last=True)
     ner.add_label("PERSON")
-    nlp.initialize(get_examples=lambda: train_examples)
+    nlp.initialize()
     for itn in range(2):
         losses = {}
         batches = util.minibatch(train_examples, size=8)
@@ -540,11 +539,11 @@ def test_block_ner():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
-def test_overfitting_IO():
-    fix_random_seed(1)
+@pytest.mark.parametrize("use_upper", [True, False])
+def test_overfitting_IO(use_upper):
     # Simple test to try and quickly overfit the NER component
     nlp = English()
-    ner = nlp.add_pipe("ner", config={"model": {}})
+    ner = nlp.add_pipe("ner", config={"model": {"use_upper": use_upper}})
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
@@ -576,6 +575,7 @@ def test_overfitting_IO():
         assert ents2[0].label_ == "LOC"
         # Ensure that the predictions are still the same, even after adding a new label
         ner2 = nlp2.get_pipe("ner")
+        assert ner2.model.attrs["has_upper"] == use_upper
         ner2.add_label("RANDOM_NEW_LABEL")
         doc3 = nlp2(test_text)
         ents3 = doc3.ents
@@ -615,52 +615,6 @@ def test_overfitting_IO():
     assert ents[1].text == "London"
     assert ents[1].label_ == "LOC"
     assert ents[1].kb_id == 0
-
-
-def test_is_distillable():
-    nlp = English()
-    ner = nlp.add_pipe("ner")
-    assert ner.is_distillable
-
-
-def test_distill():
-    teacher = English()
-    teacher_ner = teacher.add_pipe("ner")
-    train_examples = []
-    for text, annotations in TRAIN_DATA:
-        train_examples.append(Example.from_dict(teacher.make_doc(text), annotations))
-        for ent in annotations.get("entities"):
-            teacher_ner.add_label(ent[2])
-
-    optimizer = teacher.initialize(get_examples=lambda: train_examples)
-
-    for i in range(50):
-        losses = {}
-        teacher.update(train_examples, sgd=optimizer, losses=losses)
-    assert losses["ner"] < 0.00001
-
-    student = English()
-    student_ner = student.add_pipe("ner")
-    student_ner.initialize(
-        get_examples=lambda: train_examples, labels=teacher_ner.label_data
-    )
-
-    distill_examples = [
-        Example.from_dict(teacher.make_doc(t[0]), {}) for t in TRAIN_DATA
-    ]
-
-    for i in range(100):
-        losses = {}
-        student_ner.distill(teacher_ner, distill_examples, sgd=optimizer, losses=losses)
-    assert losses["ner"] < 0.0001
-
-    # test the trained model
-    test_text = "I like London."
-    doc = student(test_text)
-    ents = doc.ents
-    assert len(ents) == 1
-    assert ents[0].text == "London"
-    assert ents[0].label_ == "LOC"
 
 
 def test_beam_ner_scores():
