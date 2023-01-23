@@ -103,7 +103,6 @@ steps:
     displayName: "Install test requirements"
 
   - script: |
-      python -m pip freeze
       python -m pytest --pyargs spacy -W error
     displayName: "Run CPU tests"
 
