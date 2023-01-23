@@ -88,6 +88,10 @@ cdef class Pipe:
         return {}
 
     @property
+    def is_distillable(self) -> bool:
+        return False
+
+    @property
     def is_trainable(self) -> bool:
         return False
 

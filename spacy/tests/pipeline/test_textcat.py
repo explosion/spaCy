@@ -91,7 +91,9 @@ def test_issue3611():
         optimizer = nlp.initialize()
         for i in range(3):
             losses = {}
-            batches = util.minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+            batches = util.minibatch(
+                train_data, size=compounding(4.0, 32.0, 1.001).to_generator()
+            )
 
             for batch in batches:
                 nlp.update(examples=batch, sgd=optimizer, drop=0.1, losses=losses)
@@ -128,7 +130,9 @@ def test_issue4030():
         optimizer = nlp.initialize()
         for i in range(3):
             losses = {}
-            batches = util.minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+            batches = util.minibatch(
+                train_data, size=compounding(4.0, 32.0, 1.001).to_generator()
+            )
 
             for batch in batches:
                 nlp.update(examples=batch, sgd=optimizer, drop=0.1, losses=losses)
@@ -565,6 +569,12 @@ def test_initialize_examples(name, get_examples, train_data):
         nlp.initialize(get_examples=get_examples())
 
 
+def test_is_distillable():
+    nlp = English()
+    textcat = nlp.add_pipe("textcat")
+    assert not textcat.is_distillable
+
+
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the single-label textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
@@ -934,3 +944,26 @@ def test_save_activations_multi():
     doc = nlp("This is a test.")
     assert list(doc.activations["textcat_multilabel"].keys()) == ["probabilities"]
     assert doc.activations["textcat_multilabel"]["probabilities"].shape == (nO,)
+
+
+@pytest.mark.parametrize(
+    "component_name,scorer",
+    [
+        ("textcat", "spacy.textcat_scorer.v1"),
+        ("textcat_multilabel", "spacy.textcat_multilabel_scorer.v1"),
+    ],
+)
+def test_textcat_legacy_scorers(component_name, scorer):
+    """Check that legacy scorers are registered and produce the expected score
+    keys."""
+    nlp = English()
+    nlp.add_pipe(component_name, config={"scorer": {"@scorers": scorer}})
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA_SINGLE_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    # score the model (it's not actually trained but that doesn't matter)
+    scores = nlp.evaluate(train_examples)
+    assert 0 <= scores["cats_score"] <= 1

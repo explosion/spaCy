@@ -208,6 +208,8 @@ class Warnings(metaclass=ErrorsWithCodes):
     W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
             "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
 
+    W400 = ("`use_upper=False` is ignored, the upper layer is always enabled")
+
 
 class Errors(metaclass=ErrorsWithCodes):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
@@ -949,6 +951,10 @@ class Errors(metaclass=ErrorsWithCodes):
     E4000 = ("Expected a Doc as input, but got: '{type}'")
     E4001 = ("Expected input to be one of the following types: ({expected_types}), "
              "but got '{received_type}'")
+    E4002 = ("Pipe '{name}' requires a teacher pipe for distillation.")
+    E4003 = ("Training examples for distillation must have the exact same tokens in the "
+             "reference and predicted docs.")
+    E4004 = ("Backprop is not supported when is_train is not set.")
 
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {

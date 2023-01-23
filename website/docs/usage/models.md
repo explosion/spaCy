@@ -342,7 +342,7 @@ The easiest way to download a trained pipeline is via spaCy's
 [`download`](/api/cli#download) command. It takes care of finding the
 best-matching package compatible with your spaCy installation.
 
-```cli
+```bash
 # Download best-matching version of a package for your spaCy installation
 $ python -m spacy download en_core_web_sm
 
