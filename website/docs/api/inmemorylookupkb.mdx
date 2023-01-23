@@ -43,7 +43,7 @@ The length of the fixed-size entity vectors in the knowledge base.
 
 Add an entity to the knowledge base, specifying its corpus frequency and entity
 vector, which should be of length
-[`entity_vector_length`](/api/kb_in_memory#entity_vector_length).
+[`entity_vector_length`](/api/inmemorylookupkb#entity_vector_length).
 
 > #### Example
 >
@@ -79,8 +79,9 @@ frequency and entity vector for each entity.
 
 Add an alias or mention to the knowledge base, specifying its potential KB
 identifiers and their prior probabilities. The entity identifiers should refer
-to entities previously added with [`add_entity`](/api/kb_in_memory#add_entity)
-or [`set_entities`](/api/kb_in_memory#set_entities). The sum of the prior
+to entities previously added with
+[`add_entity`](/api/inmemorylookupkb#add_entity) or
+[`set_entities`](/api/inmemorylookupkb#set_entities). The sum of the prior
 probabilities should not exceed 1. Note that an empty string can not be used as
 alias.
 
@@ -156,7 +157,7 @@ Get a list of all aliases in the knowledge base.
 
 Given a certain textual mention as input, retrieve a list of candidate entities
 of type [`Candidate`](/api/kb#candidate). Wraps
-[`get_alias_candidates()`](/api/kb_in_memory#get_alias_candidates).
+[`get_alias_candidates()`](/api/inmemorylookupkb#get_alias_candidates).
 
 > #### Example
 >
@@ -174,7 +175,7 @@ of type [`Candidate`](/api/kb#candidate). Wraps
 
 ## InMemoryLookupKB.get_candidates_batch {id="get_candidates_batch",tag="method"}
 
-Same as [`get_candidates()`](/api/kb_in_memory#get_candidates), but for an
+Same as [`get_candidates()`](/api/inmemorylookupkb#get_candidates), but for an
 arbitrary number of mentions. The [`EntityLinker`](/api/entitylinker) component
 will call `get_candidates_batch()` instead of `get_candidates()`, if the config
 parameter `candidates_batch_size` is greater or equal than 1.
@@ -231,7 +232,7 @@ Given a certain entity ID, retrieve its pretrained entity vector.
 
 ## InMemoryLookupKB.get_vectors {id="get_vectors",tag="method"}
 
-Same as [`get_vector()`](/api/kb_in_memory#get_vector), but for an arbitrary
+Same as [`get_vector()`](/api/inmemorylookupkb#get_vector), but for an arbitrary
 number of entity IDs.
 
 The default implementation of `get_vectors()` executes `get_vector()` in a loop.

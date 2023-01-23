@@ -89,7 +89,7 @@ const Landing = () => {
                 </LandingCard>
 
                 <LandingCard title="Awesome ecosystem" url="/usage/projects" button="Read more">
-                    In the five years since its release, spaCy has become an industry standard with
+                    Since its release in 2015, spaCy has become an industry standard with
                     a huge ecosystem. Choose from a variety of plugins, integrate with your machine
                     learning stack and build custom components and workflows.
                 </LandingCard>

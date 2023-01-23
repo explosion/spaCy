@@ -9,16 +9,21 @@ from thinc.api import Config, Model, NumpyOps
 from thinc.api import SequenceCategoricalCrossentropy, L2Distance
 from thinc.types import Floats2d, Ints2d
 
+
 from ._edit_tree_internals.edit_trees import EditTrees
 from ._edit_tree_internals.schemas import validate_edit_tree
 from .lemmatizer import lemmatizer_score
 from .trainable_pipe import TrainablePipe
 from ..errors import Errors
 from ..language import Language
-from ..tokens import Doc
+from ..tokens import Doc, Token
 from ..training import Example, validate_examples, validate_get_examples
 from ..vocab import Vocab
 from .. import util
+
+
+# The cutoff value of *top_k* above which an alternative method is used to process guesses.
+TOP_K_GUARDRAIL = 20
 
 
 default_model_config = """
@@ -185,6 +190,18 @@ class EditTreeLemmatizer(TrainablePipe):
         return float(loss), d_scores
 
     def predict(self, docs: Iterable[Doc]) -> List[Ints2d]:
+        if self.top_k == 1:
+            scores2guesses = self._scores2guesses_top_k_equals_1
+        elif self.top_k <= TOP_K_GUARDRAIL:
+            scores2guesses = self._scores2guesses_top_k_greater_1
+        else:
+            scores2guesses = self._scores2guesses_top_k_guardrail
+        # The behaviour of *_scores2guesses_top_k_greater_1()* is efficient for values
+        # of *top_k>1* that are likely to be useful when the edit tree lemmatizer is used
+        # for its principal purpose of lemmatizing tokens. However, the code could also
+        # be used for other purposes, and with very large values of *top_k* the method
+        # becomes inefficient. In such cases, *_scores2guesses_top_k_guardrail()* is used
+        # instead.
         n_docs = len(list(docs))
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
@@ -198,40 +215,88 @@ class EditTreeLemmatizer(TrainablePipe):
             scores = self.model.predict(docs)
             lowercasing_flags = None
         assert len(scores) == n_docs
-        guesses = self._scores2guesses(docs, scores, lowercasing_flags)
+        guesses = scores2guesses(docs, scores, lowercasing_flags)
         assert len(guesses) == n_docs
         return guesses
 
-    def _scores2guesses(
+    def _get_doc_lowercasing_flags(
+        self, lowercasing_flags: Optional[List[Floats2d]], doc_i: int
+    ) -> Optional[Floats2d]:
+        if lowercasing_flags is not None:
+            return self.numpy_ops.asarray(lowercasing_flags[doc_i])
+        else:
+            return None
+
+    def _get_lowercasing_values(
+        self, token: Token, lowercasing_flags: Floats2d
+    ) -> Tuple[int, str]:
+        if lowercasing_flags is not None and lowercasing_flags[token.i] > 0.5:
+            return 1, token.lower_
+        else:
+            return 0, token.text
+
+    def _scores2guesses_top_k_equals_1(
         self, docs, scores, lowercasing_flags: Optional[List[Floats2d]]
     ):
         guesses = []
-        for (i, doc, doc_scores) in zip(range(len(docs)), docs, scores):
-            if lowercasing_flags is not None:
-                doc_lowercasing_flags = self.numpy_ops.asarray(lowercasing_flags[i])
-            if self.top_k == 1:
-                doc_guesses = doc_scores.argmax(axis=1).reshape(-1, 1)
-            else:
-                doc_guesses = np.argsort(doc_scores)[..., : -self.top_k - 1 : -1]
+        for i, doc, doc_scores in zip(range(len(docs)), docs, scores):
+            doc_lowercasing_flags = self._get_doc_lowercasing_flags(
+                lowercasing_flags, i
+            )
+            doc_guesses = self.numpy_ops.asarray(doc_scores.argmax(axis=1))
 
-            if not isinstance(doc_guesses, np.ndarray):
-                doc_guesses = doc_guesses.get()
+            doc_compat_guesses = []
+            for j, token in enumerate(doc):
+                to_lowercase, text = self._get_lowercasing_values(token, doc_lowercasing_flags)
+                tree_id = self.cfg["labels"][doc_guesses[j]]
+                if self.trees.apply(tree_id, text) is not None:
+                    doc_compat_guesses.append((tree_id, to_lowercase))
+                else:
+                    doc_compat_guesses.append((-1, to_lowercase))
+            guesses.append(np.array(doc_compat_guesses))
+
+        return guesses
+
+    def _scores2guesses_top_k_greater_1(self, docs, scores, lowercasing_flags):
+        guesses = []
+        top_k = min(self.top_k, len(self.labels))
+        for i, doc, doc_scores in zip(range(len(docs)), docs, scores):
+            doc_lowercasing_flags = self._get_doc_lowercasing_flags(
+                lowercasing_flags, i
+            )
+            doc_scores = self.numpy_ops.asarray(doc_scores)
+            doc_compat_guesses = []
+            for j, token in enumerate(doc):
+                to_lowercase, text = self._get_lowercasing_values(token, doc_lowercasing_flags)
+                for _ in range(top_k):
+                    candidate = int(doc_scores[j].argmax())
+                    candidate_tree_id = self.cfg["labels"][candidate]
+                    if self.trees.apply(candidate_tree_id, text) is not None:
+                        doc_compat_guesses.append((candidate_tree_id, to_lowercase))
+                        break
+                    doc_scores[i, candidate] = np.finfo(np.float32).min
+                else:
+                    doc_compat_guesses.append((-1, to_lowercase))
+            guesses.append(np.array(doc_compat_guesses))
+
+        return guesses
+
+    def _scores2guesses_top_k_guardrail(self, docs, scores, lowercasing_flags):
+        guesses = []
+        for i, doc, doc_scores in zip(range(len(docs)), docs, scores):
+            doc_lowercasing_flags = self._get_doc_lowercasing_flags(
+                lowercasing_flags, i
+            )
+            doc_guesses = self.numpy_ops.asarray(
+                np.argsort(doc_scores)[..., : -self.top_k - 1 : -1]
+            )
 
             doc_compat_guesses = []
             for (j, token, candidates) in zip(range(len(doc)), doc, doc_guesses):
-                if (
-                    lowercasing_flags is not None
-                    and doc_lowercasing_flags[j] > 0.5  # type:ignore
-                ):
-                    to_lowercase = 1
-                    text = token.lower_
-                else:
-                    to_lowercase = 0
-                    text = token.text
+                to_lowercase, text = self._get_lowercasing_values(token, doc_lowercasing_flags)
                 tree_id = -1
                 for candidate in candidates:
                     candidate_tree_id = self.cfg["labels"][candidate]
-
                     if self.trees.apply(candidate_tree_id, text) is not None:
                         tree_id = candidate_tree_id
                         break

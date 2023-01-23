@@ -154,7 +154,8 @@ def test_initialize_from_labels(lowercasing: bool):
 
 
 @pytest.mark.parametrize("lowercasing", [True, False])
-def test_no_data(lowercasing: bool):
+@pytest.mark.parametrize("top_k", (1, 5, 30))
+def test_no_data(lowercasing: bool, top_k: int):
     # Test that the lemmatizer provides a nice error when there's no tagging data / labels
     TEXTCAT_DATA = [
         ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),
@@ -163,7 +164,7 @@ def test_no_data(lowercasing: bool):
     nlp = English()
     nlp.add_pipe(
         "trainable_lemmatizer",
-        config={"model": {"lowercasing": lowercasing}},
+        config={"model": {"lowercasing": lowercasing}, "top_k": top_k},
     )
     nlp.add_pipe("textcat")
 
@@ -176,14 +177,15 @@ def test_no_data(lowercasing: bool):
 
 
 @pytest.mark.parametrize("lowercasing", [True, False])
-def test_incomplete_data(lowercasing: bool):
+@pytest.mark.parametrize("top_k", (1, 5, 30))
+def test_incomplete_data(lowercasing: bool, top_k: int):
     # Test that the lemmatizer works with incomplete information
     nlp = English()
     lemmatizer = cast(
         EditTreeLemmatizer,
         nlp.add_pipe(
             "trainable_lemmatizer",
-            config={"model": {"lowercasing": lowercasing}},
+            config={"model": {"lowercasing": lowercasing}, "top_k": top_k},
         ),
     )
     lemmatizer.min_tree_freq = 1
@@ -228,13 +230,14 @@ def test_incomplete_data(lowercasing: bool):
 
 
 @pytest.mark.parametrize("lowercasing", [True, False])
-def test_overfitting_IO(lowercasing: bool):
+@pytest.mark.parametrize("top_k", (1, 5, 30))
+def test_overfitting_IO(lowercasing: bool, top_k: int):
     nlp = English()
     lemmatizer = cast(
         EditTreeLemmatizer,
         nlp.add_pipe(
             "trainable_lemmatizer",
-            config={"model": {"lowercasing": lowercasing}},
+            config={"model": {"lowercasing": lowercasing}, "top_k": top_k},
         ),
     )
     lemmatizer.min_tree_freq = 1
@@ -271,7 +274,7 @@ def test_overfitting_IO(lowercasing: bool):
     nlp3 = English()
     nlp3.add_pipe(
         "trainable_lemmatizer",
-        config={"model": {"lowercasing": lowercasing}},
+        config={"model": {"lowercasing": lowercasing}, "top_k": top_k},
     )
     nlp3.from_bytes(nlp_bytes)
     doc3 = nlp3(test_text)

@@ -684,10 +684,15 @@ If your pipeline includes
 [custom components](/usage/processing-pipelines#custom-components), model
 architectures or other [code](/usage/training#custom-code), those functions need
 to be registered **before** your pipeline is loaded. Otherwise, spaCy won't know
-how to create the objects referenced in the config. The
-[`spacy package`](/api/cli#package) command lets you provide one or more paths
-to Python files containing custom registered functions using the `--code`
-argument.
+how to create the objects referenced in the config. If you're loading your own
+pipeline in Python, you can make custom components available just by importing
+the code that defines them before calling
+[`spacy.load`](/api/top-level#spacy.load). This is also how the `--code`
+argument to CLI commands works.
+
+With the [`spacy package`](/api/cli#package) command, you can provide one or
+more paths to Python files containing custom registered functions using the
+`--code` argument.
 
 > #### \_\_init\_\_.py (excerpt)
 >
