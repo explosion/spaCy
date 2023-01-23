@@ -13,7 +13,7 @@ export default function Section({ id, className, ...props }) {
 
     useEffect(() => {
         if (inView && relId) {
-            window.dispatchEvent(new CustomEvent('inview', { detail: relId }))
+            window.dispatchEvent(new CustomEvent('SPACY_SCROLL_HANDLER', { detail: relId }))
         }
     }, [inView, relId])
     return <section ref={ref} id={id} className={sectionClassNames} {...props} />
