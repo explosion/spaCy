@@ -1,44 +1,37 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
-import CodeMirror from '@uiw/react-codemirror'
-import { createTheme } from '@uiw/codemirror-themes'
-import { tags as t } from '@lezer/highlight'
-import { python } from '@codemirror/lang-python'
+import CodeMirror from 'codemirror'
+import python from 'codemirror/mode/python/python' // eslint-disable-line no-unused-vars
+import { Widget } from '@phosphor/widgets'
 import { Kernel, ServerConnection } from '@jupyterlab/services'
+import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea'
+import { RenderMimeRegistry, standardRendererFactories } from '@jupyterlab/rendermime'
 import { window } from 'browser-monads'
-import classes from '../styles/code.module.sass'
-
-const spacyTheme = createTheme({
-    theme: 'dark',
-    settings: {
-        background: 'var(--color-front)',
-        foreground: 'var(--color-subtle)',
-        caret: 'var(--color-theme-dark)',
-        selection: 'var(--color-theme)',
-        selectionMatch: 'var(--color-theme)',
-        gutterBackground: 'var(--color-front)',
-        gutterForeground: 'var(--color-subtle)',
-        fontFamily: 'var(--font-code)',
-    },
-    styles: [
-        { tag: t.comment, color: 'var(--syntax-comment)' },
-        { tag: t.variableName, color: 'var(--color-subtle)' },
-        { tag: [t.string, t.special(t.brace)], color: '#fff' },
-        { tag: t.number, color: 'var(--syntax-number)' },
-        { tag: t.string, color: 'var(--syntax-selector)' },
-        { tag: t.bool, color: 'var(--syntax-keyword)' },
-        { tag: t.keyword, color: 'var(--syntax-keyword)' },
-        { tag: t.operator, color: 'var(--syntax-operator)' },
-    ],
-})
 
 export default class Juniper extends React.Component {
-    state = {
-        kernel: null,
-        renderers: null,
-        fromStorage: null,
-        output: null,
-        code: this.props.children,
+    outputRef = null
+    inputRef = null
+    state = { kernel: null, renderers: null, fromStorage: null }
+
+    componentDidMount() {
+        const renderers = standardRendererFactories.filter(factory =>
+            factory.mimeTypes.includes('text/latex') ? window.MathJax : true
+        )
+
+        const outputArea = new OutputArea({
+            model: new OutputAreaModel({ trusted: true }),
+            rendermime: new RenderMimeRegistry({ initialFactories: renderers }),
+        })
+
+        const cm = new CodeMirror(this.inputRef, {
+            value: this.props.children.trim(),
+            mode: this.props.lang,
+            theme: this.props.theme,
+        })
+        const runCode = () => this.execute(outputArea, cm.getValue())
+        cm.setOption('extraKeys', { 'Shift-Enter': runCode })
+        Widget.attach(outputArea, this.outputRef)
+        this.setState({ runCode })
     }
 
     log(logFunction) {
@@ -59,9 +52,9 @@ export default class Juniper extends React.Component {
         this.log(() => console.info('building', { binderUrl }))
         return new Promise((resolve, reject) => {
             const es = new EventSource(binderUrl)
-            es.onerror = (err) => {
+            es.onerror = err => {
                 es.close()
-                this.log(() => console.error('failed', err))
+                this.log(() => console.error('failed'))
                 reject(new Error(err))
             }
             let phase = null
@@ -99,7 +92,7 @@ export default class Juniper extends React.Component {
             window.localStorage.setItem(this.props.storageKey, json)
         }
         const serverSettings = ServerConnection.makeSettings(settings)
-        return Kernel.startNew({ type: this.props.kernelType, serverSettings }).then((kernel) => {
+        return Kernel.startNew({ type: this.props.kernelType, serverSettings }).then(kernel => {
             this.log(() => console.info('ready'))
             return kernel
         })
@@ -123,7 +116,7 @@ export default class Juniper extends React.Component {
         }
         if (this.props.useBinder) {
             return this.requestBinder(this.props.repo, this.props.branch, this.props.url).then(
-                (settings) => this.requestKernel(settings)
+                settings => this.requestKernel(settings)
             )
         }
         return this.requestKernel(this.props.serverSettings)
@@ -134,25 +127,14 @@ export default class Juniper extends React.Component {
      * @param {OutputArea} outputArea - The cell's output area.
      * @param {string} code - The code to execute.
      */
-    async renderResponse(kernel) {
-        if (this.state.code === null || this.state.code === '') {
-            this.state.output = 'No code entered'
-            return
-        }
-
-        const response = kernel.requestExecute({
-            code: this.state.code,
+    renderResponse(outputArea, code) {
+        outputArea.future = this.state.kernel.requestExecute({ code })
+        outputArea.model.add({
+            output_type: 'stream',
+            name: 'loading',
+            text: this.props.msgLoading,
         })
-
-        this.state.output = this.props.msgLoading
-
-        response.handleMsg = (message) => {
-            if (message.content && message.content.name === 'stdout') {
-                this.setState({
-                    output: message.content.text,
-                })
-            }
-        }
+        outputArea.model.clear(true)
     }
 
     /**
@@ -160,73 +142,80 @@ export default class Juniper extends React.Component {
      * @param {OutputArea} - outputArea - The cell's output area.
      * @param {string} code - The code to execute.
      */
-    runCode() {
+    execute(outputArea, code) {
         this.log(() => console.info('executing'))
         if (this.state.kernel) {
             if (this.props.isolateCells) {
                 this.state.kernel
                     .restart()
-                    .then(() => this.renderResponse(this.state.kernel))
-                    .catch((err) => {
-                        this.log(() => console.error('faileder', err))
+                    .then(() => this.renderResponse(outputArea, code))
+                    .catch(() => {
+                        this.log(() => console.error('failed'))
                         this.setState({ kernel: null })
-                        this.setState({ output: this.props.msgError })
+                        outputArea.model.clear()
+                        outputArea.model.add({
+                            output_type: 'stream',
+                            name: 'failure',
+                            text: this.props.msgError,
+                        })
                     })
                 return
             }
-            this.renderResponse(this.state.kernel)
+            this.renderResponse(outputArea, code)
             return
         }
         this.log(() => console.info('requesting kernel'))
         const url = this.props.url.split('//')[1]
         const action = !this.state.fromStorage ? 'Launching' : 'Reconnecting to'
-        this.setState({ output: `${action} Docker container on ${url}...` })
-        this.getKernel()
-            .then((kernel) => {
+        outputArea.model.clear()
+        outputArea.model.add({
+            output_type: 'stream',
+            name: 'stdout',
+            text: `${action} Docker container on ${url}...`,
+        })
+        new Promise((resolve, reject) =>
+            this.getKernel()
+                .then(resolve)
+                .catch(reject)
+        )
+            .then(kernel => {
                 this.setState({ kernel })
-                this.renderResponse(kernel)
+                this.renderResponse(outputArea, code)
             })
-            .catch((err) => {
-                this.log(() => console.error('failed', err))
+            .catch(() => {
+                this.log(() => console.error('failed'))
                 this.setState({ kernel: null })
                 if (this.props.useStorage) {
                     this.setState({ fromStorage: false })
                     window.localStorage.removeItem(this.props.storageKey)
                 }
-                this.setState({ output: this.props.msgError })
+                outputArea.model.clear()
+                outputArea.model.add({
+                    output_type: 'stream',
+                    name: 'failure',
+                    text: this.props.msgError,
+                })
             })
     }
 
     render() {
         return (
             <div className={this.props.classNames.cell}>
-                {this.state.code && (
-                    <CodeMirror
-                        value={this.state.code}
-                        extensions={[python()]}
-                        theme={spacyTheme}
-                        basicSetup={{
-                            lineNumbers: false,
-                            foldGutter: false,
-                            highlightActiveLine: false,
-                            highlightSelectionMatches: false,
-                        }}
-                        className={classes['juniper-input']}
-                        onChange={(value) => {
-                            this.setState({ code: value })
-                        }}
-                    />
-                )}
-                <button className={this.props.classNames.button} onClick={() => this.runCode()}>
+                <div
+                    className={this.props.classNames.input}
+                    ref={x => {
+                        this.inputRef = x
+                    }}
+                />
+                <button className={this.props.classNames.button} onClick={this.state.runCode}>
                     {this.props.msgButton}
                 </button>
-                {this.state.output !== null && (
-                    <pre
-                        className={`${this.props.classNames.output} ${classes['juniper-input']} ${classes.wrap}`}
-                    >
-                        {this.state.output}
-                    </pre>
-                )}
+                <div
+                    ref={x => {
+                        this.outputRef = x
+                    }}
+                    className={this.props.classNames.output}
+                />
             </div>
         )
     }

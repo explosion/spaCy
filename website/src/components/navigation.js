@@ -2,13 +2,12 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import GitHubButton from 'react-github-btn'
-import SVG from 'react-inlinesvg'
 
 import Link from './link'
 import Icon from './icon'
 import Dropdown from './dropdown'
 import { github } from './util'
-import logoSpacy from '../images/logo.svg'
+import Logo from '-!svg-react-loader!../images/logo.svg'
 import classes from '../styles/navigation.module.sass'
 
 const NavigationDropdown = ({ items = [], section }) => {
@@ -32,7 +31,7 @@ export default function Navigation({ title, items = [], section, search, alert, 
     const logo = (
         <Link to="/" aria-label={title} hidden>
             <h1 className={classes.title}>{title}</h1>
-            <SVG src={logoSpacy.src} className={classes.logo} width={300} height={96} />
+            <Logo className={classes.logo} width={300} height={96} />
         </Link>
     )
 
@@ -41,7 +40,7 @@ export default function Navigation({ title, items = [], section, search, alert, 
             {!alert ? (
                 logo
             ) : (
-                <span className={classes['has-alert']}>
+                <span className={classes.hasAlert}>
                     {logo} <span className={classes.alert}>{alert}</span>
                 </span>
             )}
@@ -53,7 +52,7 @@ export default function Navigation({ title, items = [], section, search, alert, 
                     {items.map(({ text, url }, i) => {
                         const isActive = section && text.toLowerCase() === section
                         const itemClassNames = classNames(classes.item, {
-                            [classes['is-active']]: isActive,
+                            [classes.isActive]: isActive,
                         })
                         return (
                             <li key={i} className={itemClassNames}>

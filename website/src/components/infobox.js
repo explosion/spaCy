@@ -29,7 +29,7 @@ export default function Infobox({
                         {variant !== 'default' && !emoji && (
                             <Icon width={18} name={variant} inline className={classes.icon} />
                         )}
-                        <span>
+                        <span className={classes.titleText}>
                             {emoji && (
                                 <span className={classes.emoji} aria-hidden="true">
                                     {emoji}

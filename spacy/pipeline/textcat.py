@@ -77,7 +77,8 @@ subword_features = true
     default_config={
         "threshold": 0.0,
         "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
-        "scorer": {"@scorers": "spacy.textcat_scorer.v2"},
+        "scorer": {"@scorers": "spacy.textcat_scorer.v1"},
+        "save_activations": False,
     },
     default_score_weights={
         "cats_score": 1.0,
@@ -129,7 +130,7 @@ def textcat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     )
 
 
-@registry.scorers("spacy.textcat_scorer.v2")
+@registry.scorers("spacy.textcat_scorer.v1")
 def make_textcat_scorer():
     return textcat_score
 

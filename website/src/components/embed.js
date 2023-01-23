@@ -1,12 +1,11 @@
 import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import ImageNext from 'next/image'
 
 import Link from './link'
 import Button from './button'
 import { InlineCode } from './code'
-import { MarkdownToReact } from './util'
+import { markdownToReact } from './util'
 
 import classes from '../styles/embed.module.sass'
 
@@ -58,12 +57,18 @@ SoundCloud.propTypes = {
     color: PropTypes.string,
 }
 
-const Iframe = ({ title, src, width = 800, height = 300 }) => {
+function formatHTML(html) {
+    const encoded = encodeURIComponent(html)
+    return `<html><head><meta charset="UTF-8"></head><body>${encoded}</body></html>`
+}
+
+const Iframe = ({ title, src, html, width = 800, height = 300 }) => {
+    const source = html ? `data:text/html,${formatHTML(html)}` : src
     return (
         <iframe
             className={classes.standalone}
             title={title}
-            src={src}
+            src={source}
             width={width}
             height={height}
             allowFullScreen
@@ -80,35 +85,23 @@ Iframe.propTypes = {
     height: PropTypes.number,
 }
 
-const Image = ({ src, alt, title, href, ...props }) => {
+const Image = ({ src, alt, title, ...props }) => {
     // This is only needed for image types that are NOT handled by
     // gatsby-remark-images, i.e. mostly SVGs. The plugin adds formatting
     // and support for captions, so this normalises that behaviour.
-    const linkClassNames = classNames('gatsby-resp-image-link', classes['image-link'])
+    const linkClassNames = classNames('gatsby-resp-image-link', classes.imageLink)
     const markdownComponents = { code: InlineCode, p: Fragment, a: Link }
     return (
         <figure className="gatsby-resp-image-figure">
-            <Link className={linkClassNames} href={href ?? src} hidden forceExternal>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+            <Link className={linkClassNames} href={src} hidden forceExternal>
                 <img className={classes.image} src={src} alt={alt} width={650} height="auto" />
             </Link>
             {title && (
                 <figcaption className="gatsby-resp-image-figcaption">
-                    <MarkdownToReact markdown={title} />
+                    {markdownToReact(title, markdownComponents)}
                 </figcaption>
             )}
         </figure>
-    )
-}
-
-const ImageFill = ({ image, ...props }) => {
-    return (
-        <span
-            class={classes['figure-fill']}
-            style={{ paddingBottom: `${(image.height / image.width) * 100}%` }}
-        >
-            <ImageNext src={image.src} {...props} fill />
-        </span>
     )
 }
 
@@ -118,7 +111,7 @@ const GoogleSheet = ({ id, link, height, button = 'View full table' }) => {
             <iframe
                 title={id}
                 scrolling="no"
-                className={classes['google-sheet']}
+                className={classes.googleSheet}
                 height={height}
                 src={`https://docs.google.com/spreadsheets/d/e/${id}/pubhtml?widget=true&amp;headers=false`}
             />
@@ -131,4 +124,4 @@ const GoogleSheet = ({ id, link, height, button = 'View full table' }) => {
     )
 }
 
-export { YouTube, SoundCloud, Iframe, Image, ImageFill, GoogleSheet }
+export { YouTube, SoundCloud, Iframe, Image, GoogleSheet }

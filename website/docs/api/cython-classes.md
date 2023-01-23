@@ -1,0 +1,209 @@
+---
+title: Cython Classes
+menu:
+  - ['Doc', 'doc']
+  - ['Token', 'token']
+  - ['Span', 'span']
+  - ['Lexeme', 'lexeme']
+  - ['Vocab', 'vocab']
+  - ['StringStore', 'stringstore']
+---
+
+## Doc {#doc tag="cdef class" source="spacy/tokens/doc.pxd"}
+
+The `Doc` object holds an array of [`TokenC`](/api/cython-structs#tokenc)
+structs.
+
+<Infobox variant="warning">
+
+This section documents the extra C-level attributes and methods that can't be
+accessed from Python. For the Python documentation, see [`Doc`](/api/doc).
+
+</Infobox>
+
+### Attributes {#doc_attributes}
+
+| Name         | Description                                                                                              |
+| ------------ | -------------------------------------------------------------------------------------------------------- |
+| `mem`        | A memory pool. Allocated memory will be freed once the `Doc` object is garbage collected. ~~cymem.Pool~~ |
+| `vocab`      | A reference to the shared `Vocab` object. ~~Vocab~~                                                      |
+| `c`          | A pointer to a [`TokenC`](/api/cython-structs#tokenc) struct. ~~TokenC\*~~                               |
+| `length`     | The number of tokens in the document. ~~int~~                                                            |
+| `max_length` | The underlying size of the `Doc.c` array. ~~int~~                                                        |
+
+### Doc.push_back {#doc_push_back tag="method"}
+
+Append a token to the `Doc`. The token can be provided as a
+[`LexemeC`](/api/cython-structs#lexemec) or
+[`TokenC`](/api/cython-structs#tokenc) pointer, using Cython's
+[fused types](http://cython.readthedocs.io/en/latest/src/userguide/fusedtypes.html).
+
+> #### Example
+>
+> ```python
+> from spacy.tokens cimport Doc
+> from spacy.vocab cimport Vocab
+>
+> doc = Doc(Vocab())
+> lexeme = doc.vocab.get("hello")
+> doc.push_back(lexeme, True)
+> assert doc.text == "hello "
+> ```
+
+| Name         | Description                                        |
+| ------------ | -------------------------------------------------- |
+| `lex_or_tok` | The word to append to the `Doc`. ~~LexemeOrToken~~ |
+| `has_space`  | Whether the word has trailing whitespace. ~~bint~~ |
+
+## Token {#token tag="cdef class" source="spacy/tokens/token.pxd"}
+
+A Cython class providing access and methods for a
+[`TokenC`](/api/cython-structs#tokenc) struct. Note that the `Token` object does
+not own the struct. It only receives a pointer to it.
+
+<Infobox variant="warning">
+
+This section documents the extra C-level attributes and methods that can't be
+accessed from Python. For the Python documentation, see [`Token`](/api/token).
+
+</Infobox>
+
+### Attributes {#token_attributes}
+
+| Name    | Description                                                                |
+| ------- | -------------------------------------------------------------------------- |
+| `vocab` | A reference to the shared `Vocab` object. ~~Vocab~~                        |
+| `c`     | A pointer to a [`TokenC`](/api/cython-structs#tokenc) struct. ~~TokenC\*~~ |
+| `i`     | The offset of the token within the document. ~~int~~                       |
+| `doc`   | The parent document. ~~Doc~~                                               |
+
+### Token.cinit {#token_cinit tag="method"}
+
+Create a `Token` object from a `TokenC*` pointer.
+
+> #### Example
+>
+> ```python
+> token = Token.cinit(&doc.c[3], doc, 3)
+> ```
+
+| Name     | Description                                                                |
+| -------- | -------------------------------------------------------------------------- |
+| `vocab`  | A reference to the shared `Vocab`. ~~Vocab~~                               |
+| `c`      | A pointer to a [`TokenC`](/api/cython-structs#tokenc) struct. ~~TokenC\*~~ |
+| `offset` | The offset of the token within the document. ~~int~~                       |
+| `doc`    | The parent document. ~~int~~                                               |
+
+## Span {#span tag="cdef class" source="spacy/tokens/span.pxd"}
+
+A Cython class providing access and methods for a slice of a `Doc` object.
+
+<Infobox variant="warning">
+
+This section documents the extra C-level attributes and methods that can't be
+accessed from Python. For the Python documentation, see [`Span`](/api/span).
+
+</Infobox>
+
+### Attributes {#span_attributes}
+
+| Name         | Description                                                                   |
+| ------------ | ----------------------------------------------------------------------------- |
+| `doc`        | The parent document. ~~Doc~~                                                  |
+| `start`      | The index of the first token of the span. ~~int~~                             |
+| `end`        | The index of the first token after the span. ~~int~~                          |
+| `start_char` | The index of the first character of the span. ~~int~~                         |
+| `end_char`   | The index of the last character of the span. ~~int~~                          |
+| `label`      | A label to attach to the span, e.g. for named entities. ~~attr_t (uint64_t)~~ |
+
+## Lexeme {#lexeme tag="cdef class" source="spacy/lexeme.pxd"}
+
+A Cython class providing access and methods for an entry in the vocabulary.
+
+<Infobox variant="warning">
+
+This section documents the extra C-level attributes and methods that can't be
+accessed from Python. For the Python documentation, see [`Lexeme`](/api/lexeme).
+
+</Infobox>
+
+### Attributes {#lexeme_attributes}
+
+| Name    | Description                                                                   |
+| ------- | ----------------------------------------------------------------------------- |
+| `c`     | A pointer to a [`LexemeC`](/api/cython-structs#lexemec) struct. ~~LexemeC\*~~ |
+| `vocab` | A reference to the shared `Vocab` object. ~~Vocab~~                           |
+| `orth`  | ID of the verbatim text content. ~~attr_t (uint64_t)~~                        |
+
+## Vocab {#vocab tag="cdef class" source="spacy/vocab.pxd"}
+
+A Cython class providing access and methods for a vocabulary and other data
+shared across a language.
+
+<Infobox variant="warning">
+
+This section documents the extra C-level attributes and methods that can't be
+accessed from Python. For the Python documentation, see [`Vocab`](/api/vocab).
+
+</Infobox>
+
+### Attributes {#vocab_attributes}
+
+| Name      | Description                                                                                                |
+| --------- | ---------------------------------------------------------------------------------------------------------- |
+| `mem`     | A memory pool. Allocated memory will be freed once the `Vocab` object is garbage collected. ~~cymem.Pool~~ |
+| `strings` | A `StringStore` that maps string to hash values and vice versa. ~~StringStore~~                            |
+| `length`  | The number of entries in the vocabulary. ~~int~~                                                           |
+
+### Vocab.get {#vocab_get tag="method"}
+
+Retrieve a [`LexemeC*`](/api/cython-structs#lexemec) pointer from the
+vocabulary.
+
+> #### Example
+>
+> ```python
+> lexeme = vocab.get(vocab.mem, "hello")
+> ```
+
+| Name        | Description                                                                                                |
+| ----------- | ---------------------------------------------------------------------------------------------------------- |
+| `mem`       | A memory pool. Allocated memory will be freed once the `Vocab` object is garbage collected. ~~cymem.Pool~~ |
+| `string`    | The string of the word to look up. ~~str~~                                                                 |
+| **RETURNS** | The lexeme in the vocabulary. ~~const LexemeC\*~~                                                          |
+
+### Vocab.get_by_orth {#vocab_get_by_orth tag="method"}
+
+Retrieve a [`LexemeC*`](/api/cython-structs#lexemec) pointer from the
+vocabulary.
+
+> #### Example
+>
+> ```python
+> lexeme = vocab.get_by_orth(doc[0].lex.norm)
+> ```
+
+| Name        | Description                                                                                                |
+| ----------- | ---------------------------------------------------------------------------------------------------------- |
+| `mem`       | A memory pool. Allocated memory will be freed once the `Vocab` object is garbage collected. ~~cymem.Pool~~ |
+| `orth`      | ID of the verbatim text content. ~~attr_t (uint64_t)~~                                                     |
+| **RETURNS** | The lexeme in the vocabulary. ~~const LexemeC\*~~                                                          |
+
+## StringStore {#stringstore tag="cdef class" source="spacy/strings.pxd"}
+
+A lookup table to retrieve strings by 64-bit hashes.
+
+<Infobox variant="warning">
+
+This section documents the extra C-level attributes and methods that can't be
+accessed from Python. For the Python documentation, see
+[`StringStore`](/api/stringstore).
+
+</Infobox>
+
+### Attributes {#stringstore_attributes}
+
+| Name   | Description                                                                                                      |
+| ------ | ---------------------------------------------------------------------------------------------------------------- |
+| `mem`  | A memory pool. Allocated memory will be freed once the `StringStore` object is garbage collected. ~~cymem.Pool~~ |
+| `keys` | A list of hash values in the `StringStore`. ~~vector[hash_t] \(vector[uint64_t])~~                               |

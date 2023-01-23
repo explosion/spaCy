@@ -12,17 +12,17 @@ function isNum(children) {
 }
 
 function isDividerRow(children) {
-    if (children.length && children[0].props && children[0].type.name == 'Td') {
+    if (children.length && children[0].props && children[0].props.name == 'td') {
         const tdChildren = children[0].props.children
         if (tdChildren && !Array.isArray(tdChildren) && tdChildren.props) {
-            return tdChildren.type === 'em'
+            return tdChildren.props.name === 'em'
         }
     }
     return false
 }
 
 function isFootRow(children) {
-    if (children.length && children[0].type.name === 'Td') {
+    if (children.length && children[0].props.name === 'td') {
         const cellChildren = children[0].props.children
         if (
             cellChildren &&
@@ -45,7 +45,7 @@ export const Table = ({ fixed, className, ...props }) => {
 
 export const Th = ({ children, ...props }) => {
     const isRotated = children && !isString(children) && children.type && children.type.name == 'Tx'
-    const thClassNames = classNames(classes.th, { [classes['th-rotated']]: isRotated })
+    const thClassNames = classNames(classes.th, { [classes.thRotated]: isRotated })
     return (
         <th className={thClassNames} {...props}>
             {children}

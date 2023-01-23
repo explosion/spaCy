@@ -28,8 +28,6 @@ CONVERTERS: Mapping[str, Callable[..., Iterable[Doc]]] = {
     "json": json_to_docs,
 }
 
-AUTO = "auto"
-
 
 # File types that can be written to stdout
 FILE_TYPES_STDOUT = ("json",)
@@ -51,7 +49,7 @@ def convert_cli(
     model: Optional[str] = Opt(None, "--model", "--base", "-b", help="Trained spaCy pipeline for sentence segmentation to use as base (for --seg-sents)"),
     morphology: bool = Opt(False, "--morphology", "-m", help="Enable appending morphology to tags"),
     merge_subtokens: bool = Opt(False, "--merge-subtokens", "-T", help="Merge CoNLL-U subtokens"),
-    converter: str = Opt(AUTO, "--converter", "-c", help=f"Converter: {tuple(CONVERTERS.keys())}"),
+    converter: str = Opt("auto", "--converter", "-c", help=f"Converter: {tuple(CONVERTERS.keys())}"),
     ner_map: Optional[Path] = Opt(None, "--ner-map", "-nm", help="NER tag mapping (as JSON-encoded dict of entity types)", exists=True),
     lang: Optional[str] = Opt(None, "--lang", "-l", help="Language (if tokenizer required)"),
     concatenate: bool = Opt(None, "--concatenate", "-C", help="Concatenate output to a single file"),
@@ -72,8 +70,8 @@ def convert_cli(
     output_dir: Union[str, Path] = "-" if output_dir == Path("-") else output_dir
     silent = output_dir == "-"
     msg = Printer(no_print=silent)
-    converter = _get_converter(msg, converter, input_path)
     verify_cli_args(msg, input_path, output_dir, file_type.value, converter, ner_map)
+    converter = _get_converter(msg, converter, input_path)
     convert(
         input_path,
         output_dir,
@@ -102,7 +100,7 @@ def convert(
     model: Optional[str] = None,
     morphology: bool = False,
     merge_subtokens: bool = False,
-    converter: str,
+    converter: str = "auto",
     ner_map: Optional[Path] = None,
     lang: Optional[str] = None,
     concatenate: bool = False,
@@ -218,22 +216,18 @@ def verify_cli_args(
         input_locs = walk_directory(input_path, converter)
         if len(input_locs) == 0:
             msg.fail("No input files in directory", input_path, exits=1)
-    if converter not in CONVERTERS:
+        file_types = list(set([loc.suffix[1:] for loc in input_locs]))
+        if converter == "auto" and len(file_types) >= 2:
+            file_types_str = ",".join(file_types)
+            msg.fail("All input files must be same type", file_types_str, exits=1)
+    if converter != "auto" and converter not in CONVERTERS:
         msg.fail(f"Can't find converter for {converter}", exits=1)
 
 
 def _get_converter(msg, converter, input_path: Path):
     if input_path.is_dir():
-        if converter == AUTO:
-            input_locs = walk_directory(input_path, suffix=None)
-            file_types = list(set([loc.suffix[1:] for loc in input_locs]))
-            if len(file_types) >= 2:
-                file_types_str = ",".join(file_types)
-                msg.fail("All input files must be same type", file_types_str, exits=1)
-            input_path = input_locs[0]
-        else:
-            input_path = walk_directory(input_path, suffix=converter)[0]
-    if converter == AUTO:
+        input_path = walk_directory(input_path, converter)[0]
+    if converter == "auto":
         converter = input_path.suffix[1:]
     if converter == "ner" or converter == "iob":
         with input_path.open(encoding="utf8") as file_:

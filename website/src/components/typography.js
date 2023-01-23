@@ -58,8 +58,8 @@ export const Label = ({ className, ...props }) => (
 )
 
 export const InlineList = ({ Component = 'p', gutterBottom = true, className, children }) => {
-    const listClassNames = classNames(classes['inline-list'], className, {
-        [classes['no-gutter']]: !gutterBottom,
+    const listClassNames = classNames(classes.inlineList, className, {
+        [classes.noGutter]: !gutterBottom,
     })
     return <Component className={listClassNames}>{children}</Component>
 }
@@ -69,6 +69,12 @@ export const Help = ({ children, className, size = 16 }) => (
         <Icon name="help2" width={size} />
     </span>
 )
+
+/**
+ * Allows inserting comments that will appear in .md preview on GitHub, but
+ * won't be included in the final build of the site.
+ */
+export const Comment = () => null
 
 const Permalink = ({ id, children }) =>
     !id ? (
@@ -83,7 +89,7 @@ const Headline = ({
     Component,
     id,
     name,
-    version,
+    new: version,
     model,
     tag,
     source,
@@ -99,7 +105,7 @@ const Headline = ({
     const headingClassNames = classNames(classes.heading, className, {
         [classes.clear]: hasAction,
     })
-    const tags = tag ? tag.split(',').map((t) => t.trim()) : []
+    const tags = tag ? tag.split(',').map(t => t.trim()) : []
     return (
         <Component id={id} name={name} className={headingClassNames}>
             <Permalink id={permalink ? id : null}>{children} </Permalink>
@@ -136,7 +142,7 @@ const Headline = ({
 Headline.propTypes = {
     Component: PropTypes.oneOfType([PropTypes.element, PropTypes.string]).isRequired,
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.oneOf([false])]),
-    version: PropTypes.string,
+    new: PropTypes.string,
     model: PropTypes.string,
     source: PropTypes.string,
     tag: PropTypes.string,

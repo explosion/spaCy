@@ -25,21 +25,21 @@ export default function Main({
     sidebar = false,
     asides = false,
     wrapContent = false,
-    theme,
+    theme = 'blue',
     footer,
     children,
 }) {
-    const pattern = patterns[theme ?? 'blue']
+    const pattern = patterns[theme]
     const mainClassNames = classNames(classes.root, {
-        [classes['with-sidebar']]: sidebar,
-        [classes['with-asides']]: asides,
+        [classes.withSidebar]: sidebar,
+        [classes.withAsides]: asides,
     })
 
     return (
         <main className={mainClassNames}>
             {wrapContent ? <Content Component="article">{children}</Content> : children}
             {asides && (
-                <div className={classes.asides} style={{ backgroundImage: `url(${pattern.src}` }} />
+                <div className={classes.asides} style={{ backgroundImage: `url(${pattern}` }} />
             )}
             {footer}
         </main>
@@ -50,6 +50,6 @@ Main.propTypes = {
     sidebar: PropTypes.bool,
     asides: PropTypes.bool,
     wrapContent: PropTypes.bool,
-    theme: PropTypes.string,
+    theme: PropTypes.string.isRequired,
     footer: PropTypes.node,
 }

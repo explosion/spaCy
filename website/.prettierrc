@@ -20,11 +20,12 @@
             }
         },
         {
-            "files": ["package.json", "package-lock.json"],
+            "files": "*.md",
             "options": {
                 "tabWidth": 2,
                 "printWidth": 80,
-                "proseWrap": "always"
+                "proseWrap": "always",
+                "htmlWhitespaceSensitivity": "strict"
             }
         },
         {

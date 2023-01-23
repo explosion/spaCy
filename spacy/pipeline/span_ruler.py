@@ -13,7 +13,6 @@ from ..util import ensure_path, SimpleFrozenList, registry
 from ..tokens import Doc, Span
 from ..scorer import Scorer, get_ner_prf
 from ..matcher import Matcher, PhraseMatcher
-from ..matcher.levenshtein import levenshtein_compare
 from .. import util
 
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
@@ -29,7 +28,6 @@ DEFAULT_SPANS_KEY = "ruler"
         "overwrite_ents": False,
         "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
         "ent_id_sep": "__unused__",
-        "matcher_fuzzy_compare": {"@misc": "spacy.levenshtein_compare.v1"},
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -42,7 +40,6 @@ def make_entity_ruler(
     nlp: Language,
     name: str,
     phrase_matcher_attr: Optional[Union[int, str]],
-    matcher_fuzzy_compare: Callable,
     validate: bool,
     overwrite_ents: bool,
     scorer: Optional[Callable],
@@ -60,7 +57,6 @@ def make_entity_ruler(
         annotate_ents=True,
         ents_filter=ents_filter,
         phrase_matcher_attr=phrase_matcher_attr,
-        matcher_fuzzy_compare=matcher_fuzzy_compare,
         validate=validate,
         overwrite=False,
         scorer=scorer,
@@ -85,7 +81,6 @@ def make_entity_ruler_scorer():
         "annotate_ents": False,
         "ents_filter": {"@misc": "spacy.first_longest_spans_filter.v1"},
         "phrase_matcher_attr": None,
-        "matcher_fuzzy_compare": {"@misc": "spacy.levenshtein_compare.v1"},
         "validate": False,
         "overwrite": True,
         "scorer": {
@@ -108,7 +103,6 @@ def make_span_ruler(
     annotate_ents: bool,
     ents_filter: Callable[[Iterable[Span], Iterable[Span]], Iterable[Span]],
     phrase_matcher_attr: Optional[Union[int, str]],
-    matcher_fuzzy_compare: Callable,
     validate: bool,
     overwrite: bool,
     scorer: Optional[Callable],
@@ -121,7 +115,6 @@ def make_span_ruler(
         annotate_ents=annotate_ents,
         ents_filter=ents_filter,
         phrase_matcher_attr=phrase_matcher_attr,
-        matcher_fuzzy_compare=matcher_fuzzy_compare,
         validate=validate,
         overwrite=overwrite,
         scorer=scorer,
@@ -186,7 +179,7 @@ def prioritize_existing_ents_filter(
 
 
 @registry.misc("spacy.prioritize_existing_ents_filter.v1")
-def make_preserve_existing_ents_filter():
+def make_preverse_existing_ents_filter():
     return prioritize_existing_ents_filter
 
 
@@ -232,7 +225,6 @@ class SpanRuler(Pipe):
             [Iterable[Span], Iterable[Span]], Iterable[Span]
         ] = util.filter_chain_spans,
         phrase_matcher_attr: Optional[Union[int, str]] = None,
-        matcher_fuzzy_compare: Callable = levenshtein_compare,
         validate: bool = False,
         overwrite: bool = False,
         scorer: Optional[Callable] = partial(
@@ -263,9 +255,6 @@ class SpanRuler(Pipe):
         phrase_matcher_attr (Optional[Union[int, str]]): Token attribute to
             match on, passed to the internal PhraseMatcher as `attr`. Defaults
             to `None`.
-        matcher_fuzzy_compare (Callable): The fuzzy comparison method for the
-            internal Matcher. Defaults to
-            spacy.matcher.levenshtein.levenshtein_compare.
         validate (bool): Whether patterns should be validated, passed to
             Matcher and PhraseMatcher as `validate`.
         overwrite (bool): Whether to remove any existing spans under this spans
@@ -286,7 +275,6 @@ class SpanRuler(Pipe):
         self.spans_filter = spans_filter
         self.ents_filter = ents_filter
         self.scorer = scorer
-        self.matcher_fuzzy_compare = matcher_fuzzy_compare
         self._match_label_id_map: Dict[int, Dict[str, str]] = {}
         self.clear()
 
@@ -472,11 +460,7 @@ class SpanRuler(Pipe):
         DOCS: https://spacy.io/api/spanruler#clear
         """
         self._patterns: List[PatternType] = []
-        self.matcher: Matcher = Matcher(
-            self.nlp.vocab,
-            validate=self.validate,
-            fuzzy_compare=self.matcher_fuzzy_compare,
-        )
+        self.matcher: Matcher = Matcher(self.nlp.vocab, validate=self.validate)
         self.phrase_matcher: PhraseMatcher = PhraseMatcher(
             self.nlp.vocab,
             attr=self.phrase_matcher_attr,

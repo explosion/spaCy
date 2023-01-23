@@ -1,14 +1,12 @@
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { Fragment } from 'react'
 import { Parser as HtmlToReactParser } from 'html-to-react'
+import remark from 'remark'
+import remark2react from 'remark-react'
 import siteMetadata from '../../meta/site.json'
-import { domain } from '../../meta/dynamicMeta.mjs'
-import remarkPlugins from '../../plugins/index.mjs'
-import { serialize } from 'next-mdx-remote/serialize'
-import { MDXRemote } from 'next-mdx-remote'
 
 const htmlToReactParser = new HtmlToReactParser()
 
-const isNightly = siteMetadata.nightlyBranches.includes(domain)
+const isNightly = siteMetadata.nightlyBranches.includes(siteMetadata.domain)
 export const DEFAULT_BRANCH = isNightly ? 'develop' : 'master'
 export const repo = siteMetadata.repo
 export const modelsRepo = siteMetadata.modelsRepo
@@ -35,11 +33,11 @@ export function github(filepath, branch = DEFAULT_BRANCH) {
 /**
  * Get the source of a file in the documentation based on its slug
  * @param {string} slug - The slug, e.g. /api/doc.
- * @param {boolean} [isIndex] - Whether the page is an index, e.g. /api/index.mdx
+ * @param {boolean} [isIndex] - Whether the page is an index, e.g. /api/index.md
  * @param {string} [branch] - Optional branch on GitHub. Defaults to master.
  */
 export function getCurrentSource(slug, isIndex = false, branch = DEFAULT_BRANCH) {
-    const ext = isIndex ? '/index.mdx' : '.mdx'
+    const ext = isIndex ? '/index.md' : '.md'
     return github(`website/docs${slug}${ext}`, branch)
 }
 
@@ -86,25 +84,10 @@ export function htmlToReact(html) {
  *  for HTML elements.
  * @returns {Node} - The converted React elements.
  */
-export function MarkdownToReact({ markdown }) {
-    const [mdx, setMdx] = useState(null)
-
-    useEffect(() => {
-        const getMdx = async () => {
-            setMdx(
-                await serialize(markdown, {
-                    parseFrontmatter: false,
-                    mdxOptions: {
-                        remarkPlugins,
-                    },
-                })
-            )
-        }
-
-        getMdx()
-    }, [markdown])
-
-    return mdx ? <MDXRemote {...mdx} /> : <></>
+export function markdownToReact(markdown, remarkReactComponents = {}) {
+    return remark()
+        .use(remark2react, { remarkReactComponents })
+        .processSync(markdown).contents
 }
 
 /**
@@ -130,7 +113,7 @@ export function join(arr, delimiter = ', ') {
  * @return {Object} - The converted object.
  */
 export function arrayToObj(arr, key) {
-    return Object.assign({}, ...arr.map((item) => ({ [item[key]]: item })))
+    return Object.assign({}, ...arr.map(item => ({ [item[key]]: item })))
 }
 
 /**
