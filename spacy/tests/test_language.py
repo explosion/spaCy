@@ -689,7 +689,6 @@ def test_language_matching(lang, target):
         ("mul", "xx"),
         ("no", "nb"),
         ("pt-BR", "pt"),
-        ("xx", "mul"),
         ("zh-Hans", "zh"),
     ],
 )
