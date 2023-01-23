@@ -696,14 +696,10 @@ def debug_data(
         if gold_train_data["n_low_cardinality_lemmas"] > 0:
             n = gold_train_data["n_low_cardinality_lemmas"]
             msg.warn(f"{n} docs with 1 or 0 unique lemmas.")
-        else:
-            msg.good("All training docs meet lemma uniqueness requirements.")
 
         if gold_dev_data["n_low_cardinality_lemmas"] > 0:
             n = gold_dev_data["n_low_cardinality_lemmas"]
             msg.warn(f"{n} docs with 1 or 0 unique lemmas.")
-        else:
-            msg.good("All dev docs meet lemma uniqueness requirements.")
 
         if gold_train_data["no_lemma_annotations"] > 0:
             n = gold_train_data["no_lemma_annotations"]
