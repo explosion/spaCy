@@ -228,7 +228,7 @@ class EditTreeLemmatizer(TrainablePipe):
             return None
 
     def _get_lowercasing_values(
-        self, token: Token, lowercasing_flags: Floats2d
+        self, token: Token, lowercasing_flags: Optional[Floats2d]
     ) -> Tuple[int, str]:
         if lowercasing_flags is not None and lowercasing_flags[token.i] > 0.5:
             return 1, token.lower_
