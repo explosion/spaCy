@@ -389,14 +389,14 @@ cdef class Tokenizer:
         cdef vector[LexemeC*] suffixes
         cdef int orig_size
         orig_size = tokens.length
-        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes,
+        span = self._split_affixes(span, &prefixes, &suffixes,
                                    has_special, with_special_cases)
         self._attach_tokens(tokens, span, &prefixes, &suffixes, has_special,
                             with_special_cases)
         self._save_cached(&tokens.c[orig_size], orig_key, has_special,
                           tokens.length - orig_size)
 
-    cdef str _split_affixes(self, Pool mem, str string,
+    cdef str _split_affixes(self, str string,
                                 vector[const LexemeC*] *prefixes,
                                 vector[const LexemeC*] *suffixes,
                                 int* has_special,
