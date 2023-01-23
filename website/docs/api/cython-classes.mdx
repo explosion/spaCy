@@ -166,10 +166,10 @@ vocabulary.
 > lexeme = vocab.get("hello")
 > ```
 
-| Name        | Description                                                                                                |
-| ----------- | ---------------------------------------------------------------------------------------------------------- |
-| `string`    | The string of the word to look up. ~~str~~                                                                 |
-| **RETURNS** | The lexeme in the vocabulary. ~~const LexemeC\*~~                                                          |
+| Name        | Description                                       |
+| ----------- | ------------------------------------------------- |
+| `string`    | The string of the word to look up. ~~str~~        |
+| **RETURNS** | The lexeme in the vocabulary. ~~const LexemeC\*~~ |
 
 ### Vocab.get_by_orth {id="vocab_get_by_orth",tag="method"}
 
@@ -182,10 +182,10 @@ vocabulary.
 > lexeme = vocab.get_by_orth(doc[0].lex.norm)
 > ```
 
-| Name        | Description                                                                                                |
-| ----------- | ---------------------------------------------------------------------------------------------------------- |
-| `orth`      | ID of the verbatim text content. ~~attr_t (uint64_t)~~                                                     |
-| **RETURNS** | The lexeme in the vocabulary. ~~const LexemeC\*~~                                                          |
+| Name        | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| `orth`      | ID of the verbatim text content. ~~attr_t (uint64_t)~~ |
+| **RETURNS** | The lexeme in the vocabulary. ~~const LexemeC\*~~      |
 
 ## StringStore {id="stringstore",tag="cdef class",source="spacy/strings.pxd"}
 
