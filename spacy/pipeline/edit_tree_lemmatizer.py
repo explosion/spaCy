@@ -155,6 +155,25 @@ class EditTreeLemmatizer(TrainablePipe):
 
         return float(loss), d_scores
 
+    def get_teacher_student_loss(
+        self, teacher_scores: List[Floats2d], student_scores: List[Floats2d]
+    ) -> Tuple[float, List[Floats2d]]:
+        """Calculate the loss and its gradient for a batch of student
+        scores, relative to teacher scores.
+
+        teacher_scores: Scores representing the teacher model's predictions.
+        student_scores: Scores representing the student model's predictions.
+
+        RETURNS (Tuple[float, float]): The loss and the gradient.
+        
+        DOCS: https://spacy.io/api/edittreelemmatizer#get_teacher_student_loss
+        """
+        loss_func = LegacySequenceCategoricalCrossentropy(normalize=False)
+        d_scores, loss = loss_func(student_scores, teacher_scores)
+        if self.model.ops.xp.isnan(loss):
+            raise ValueError(Errors.E910.format(name=self.name))
+        return float(loss), d_scores
+
     def predict(self, docs: Iterable[Doc]) -> ActivationsT:
         n_docs = len(list(docs))
         if not any(len(doc) for doc in docs):

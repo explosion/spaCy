@@ -1,5 +1,6 @@
 # cython: infer_types=True, profile=True, binding=True
 from typing import Callable, Dict, Iterable, List, Optional, Union
+from typing import Tuple
 import numpy
 import srsly
 from thinc.api import Model, set_dropout_rate, Config
@@ -245,7 +246,6 @@ class Tagger(TrainablePipe):
 
         DOCS: https://spacy.io/api/tagger#rehearse
         """
-        loss_func = LegacySequenceCategoricalCrossentropy()
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
@@ -259,11 +259,31 @@ class Tagger(TrainablePipe):
         set_dropout_rate(self.model, drop)
         tag_scores, bp_tag_scores = self.model.begin_update(docs)
         tutor_tag_scores, _ = self._rehearsal_model.begin_update(docs)
-        grads, loss = loss_func(tag_scores, tutor_tag_scores)
+        loss, grads = self.get_teacher_student_loss(tutor_tag_scores, tag_scores)
         bp_tag_scores(grads)
-        self.finish_update(sgd)
+        if sgd is not None:
+            self.finish_update(sgd)
         losses[self.name] += loss
         return losses
+
+    def get_teacher_student_loss(
+        self, teacher_scores: List[Floats2d], student_scores: List[Floats2d]
+    ) -> Tuple[float, List[Floats2d]]:
+        """Calculate the loss and its gradient for a batch of student
+        scores, relative to teacher scores.
+
+        teacher_scores: Scores representing the teacher model's predictions.
+        student_scores: Scores representing the student model's predictions.
+
+        RETURNS (Tuple[float, float]): The loss and the gradient.
+        
+        DOCS: https://spacy.io/api/tagger#get_teacher_student_loss
+        """
+        loss_func = LegacySequenceCategoricalCrossentropy(normalize=False)
+        d_scores, loss = loss_func(student_scores, teacher_scores)
+        if self.model.ops.xp.isnan(loss):
+            raise ValueError(Errors.E910.format(name=self.name))
+        return float(loss), d_scores
 
     def get_loss(self, examples, scores):
         """Find the loss and gradient of loss for the batch of documents and
