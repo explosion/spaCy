@@ -163,12 +163,11 @@ vocabulary.
 > #### Example
 >
 > ```python
-> lexeme = vocab.get(vocab.mem, "hello")
+> lexeme = vocab.get("hello")
 > ```
 
 | Name        | Description                                                                                                |
 | ----------- | ---------------------------------------------------------------------------------------------------------- |
-| `mem`       | A memory pool. Allocated memory will be freed once the `Vocab` object is garbage collected. ~~cymem.Pool~~ |
 | `string`    | The string of the word to look up. ~~str~~                                                                 |
 | **RETURNS** | The lexeme in the vocabulary. ~~const LexemeC\*~~                                                          |
 
@@ -185,7 +184,6 @@ vocabulary.
 
 | Name        | Description                                                                                                |
 | ----------- | ---------------------------------------------------------------------------------------------------------- |
-| `mem`       | A memory pool. Allocated memory will be freed once the `Vocab` object is garbage collected. ~~cymem.Pool~~ |
 | `orth`      | ID of the verbatim text content. ~~attr_t (uint64_t)~~                                                     |
 | **RETURNS** | The lexeme in the vocabulary. ~~const LexemeC\*~~                                                          |
 

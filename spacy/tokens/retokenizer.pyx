@@ -223,7 +223,7 @@ def _merge(Doc doc, merges):
             if doc.vocab.vectors_length > 0:
                 doc.vocab.set_vector(new_orth, span.vector)
         token = tokens[token_index]
-        lex = doc.vocab.get(doc.mem, new_orth)
+        lex = doc.vocab.get(new_orth)
         token.lex = lex
         # We set trailing space here too
         token.spacy = doc.c[spans[token_index].end-1].spacy
@@ -359,7 +359,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     cdef int idx_offset = 0
     for i, orth in enumerate(orths):
         token = &doc.c[token_index + i]
-        lex = doc.vocab.get(doc.mem, orth)
+        lex = doc.vocab.get(orth)
         token.lex = lex
         # If lemma is currently set, set default lemma to orth
         if token.lemma != 0:

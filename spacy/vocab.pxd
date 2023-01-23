@@ -35,8 +35,8 @@ cdef class Vocab:
     cdef public object lex_attr_getters
     cdef public object cfg
 
-    cdef const LexemeC* get(self, Pool mem, str string) except NULL
-    cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL
+    cdef const LexemeC* get(self, str string) except NULL
+    cdef const LexemeC* get_by_orth(self, attr_t orth) except NULL
     cdef const TokenC* make_fused_token(self, substrings) except NULL
 
     cdef const LexemeC* _new_lexeme(self, str string) except NULL

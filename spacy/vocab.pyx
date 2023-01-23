@@ -139,7 +139,7 @@ cdef class Vocab:
         self.lex_attr_getters[flag_id] = flag_getter
         return flag_id
 
-    cdef const LexemeC* get(self, Pool mem, str string) except NULL:
+    cdef const LexemeC* get(self, str string) except NULL:
         """Get a pointer to a `LexemeC` from the lexicon, creating a new
         `Lexeme` if necessary using memory acquired from the given pool. If the
         pool is the lexicon's own memory, the lexeme is saved in the lexicon.
@@ -159,7 +159,7 @@ cdef class Vocab:
         else:
             return self._new_lexeme(string)
 
-    cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL:
+    cdef const LexemeC* get_by_orth(self, attr_t orth) except NULL:
         """Get a pointer to a `LexemeC` from the lexicon, creating a new
         `Lexeme` if necessary using memory acquired from the given pool. If the
         pool is the lexicon's own memory, the lexeme is saved in the lexicon.
@@ -259,7 +259,7 @@ cdef class Vocab:
             props = intify_attrs(props, strings_map=self.strings)
             token = &tokens[i]
             # Set the special tokens up to have arbitrary attributes
-            lex = <LexemeC*>self.get_by_orth(self.mem, props[ORTH])
+            lex = <LexemeC*>self.get_by_orth(props[ORTH])
             token.lex = lex
             for attr_id, value in props.items():
                 Token.set_struct_attr(token, attr_id, value)
