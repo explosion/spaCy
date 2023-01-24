@@ -120,24 +120,23 @@ def test_benchmark_accuracy_alias():
         ),
     ],
 )
-def test_init_config_trainable(component, examples):
-    nlp = English()
+def test_init_config_trainable(component, examples, en_vocab):
     if component == "textcat":
         train_docs = []
         for example in examples:
-            doc = Doc(nlp.vocab, words=example["words"])
+            doc = Doc(en_vocab, words=example["words"])
             doc.cats = example["cats"]
             train_docs.append(doc)
     elif component == "spancat":
         train_docs = []
         for example in examples:
-            doc = Doc(nlp.vocab, words=example["words"])
+            doc = Doc(en_vocab, words=example["words"])
             doc.spans["sc"] = [
                 Span(doc, start, end, label) for start, end, label in example["spans"]
             ]
             train_docs.append(doc)
     else:
-        train_docs = [Doc(nlp.vocab, **example) for example in examples]
+        train_docs = [Doc(en_vocab, **example) for example in examples]
 
     with make_tempdir() as d_in:
         train_bin = DocBin(docs=train_docs)
