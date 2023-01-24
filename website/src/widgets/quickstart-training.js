@@ -5,7 +5,7 @@ import 'prismjs/components/prism-ini.min.js'
 
 import { Quickstart } from '../components/quickstart'
 import generator, { DATA as GENERATOR_DATA } from './quickstart-training-generator'
-import { htmlToReact } from '../components/util'
+import htmlToReact from '../components/htmlToReact'
 import models from '../../meta/languages.json'
 
 const DEFAULT_LANG = 'en'
