@@ -19,7 +19,7 @@ export default function Card({ title, to, image, header, small, onClick, childre
                 <H5 className={classes.title}>
                     {image && (
                         <div className={classes.image}>
-                            <ImageNext src={image} height={35} width={35} alt="" />
+                            <ImageNext src={image} height={35} width={35} alt={`${title} Logo`} />
                         </div>
                     )}
                     {title && (

@@ -83,7 +83,7 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                                     const header = youtube && (
                                         <Image
                                             src={`https://img.youtube.com/vi/${youtube}/0.jpg`}
-                                            alt=""
+                                            alt={title}
                                             width="480"
                                             height="360"
                                             style={{

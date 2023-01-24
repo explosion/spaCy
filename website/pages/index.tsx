@@ -89,8 +89,8 @@ const Landing = () => {
                 </LandingCard>
 
                 <LandingCard title="Awesome ecosystem" url="/usage/projects" button="Read more">
-                    Since its release in 2015, spaCy has become an industry standard with
-                    a huge ecosystem. Choose from a variety of plugins, integrate with your machine
+                    Since its release in 2015, spaCy has become an industry standard with a huge
+                    ecosystem. Choose from a variety of plugins, integrate with your machine
                     learning stack and build custom components and workflows.
                 </LandingCard>
             </LandingGrid>
@@ -206,7 +206,10 @@ const Landing = () => {
             <LandingGrid cols={2}>
                 <LandingCol>
                     <Link to="/usage/projects" hidden>
-                        <ImageFill image={projectsImage} />
+                        <ImageFill
+                            image={projectsImage}
+                            alt="Illustration of project workflow and commands"
+                        />
                     </Link>
                     <br />
                     <br />

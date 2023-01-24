@@ -51,7 +51,7 @@ export default function Title({
 
                     {image && (
                         <div className={classes.image}>
-                            <Image src={image} width={100} height={100} alt="" />
+                            <Image src={image} width={100} height={100} alt={`${title} Logo`} />
                         </div>
                     )}
                 </div>
