@@ -17,10 +17,10 @@ import 'prismjs/components/prism-yaml.min.js'
 import { isString } from './util'
 import Link, { OptionalLink } from './link'
 import GitHubCode from './github'
-import Juniper from './juniper'
 import classes from '../styles/code.module.sass'
 import siteMetadata from '../../meta/site.json'
 import { binderBranch } from '../../meta/dynamicMeta.mjs'
+import dynamic from 'next/dynamic'
 
 const CLI_GROUPS = ['init', 'debug', 'project', 'ray', 'huggingface-hub']
 
@@ -274,6 +274,8 @@ export default class Code extends React.Component {
     }
 }
 
+const JuniperDynamic = dynamic(() => import('./juniper'))
+
 const JuniperWrapper = ({ title, lang, children }) => {
     const { binderUrl, binderVersion } = siteMetadata
     const juniperTitle = title || 'Editable Code'
@@ -289,7 +291,7 @@ const JuniperWrapper = ({ title, lang, children }) => {
                 </span>
             </h4>
 
-            <Juniper
+            <JuniperDynamic
                 repo={binderUrl}
                 branch={binderBranch}
                 lang={lang}
@@ -301,7 +303,7 @@ const JuniperWrapper = ({ title, lang, children }) => {
                 }}
             >
                 {children}
-            </Juniper>
+            </JuniperDynamic>
         </div>
     )
 }
