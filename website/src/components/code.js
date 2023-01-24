@@ -26,18 +26,6 @@ import { binderBranch } from '../../meta/dynamicMeta.mjs'
 const WRAP_THRESHOLD = 30
 const CLI_GROUPS = ['init', 'debug', 'project', 'ray', 'huggingface-hub']
 
-const CodeBlock = (props) => (
-    <Pre>
-        <Code {...props} />
-    </Pre>
-)
-
-export default CodeBlock
-
-export const Pre = (props) => {
-    return <pre className={classes['pre']}>{props.children}</pre>
-}
-
 export const InlineCode = ({ wrap = false, className, children, ...props }) => {
     const codeClassNames = classNames(classes['inline-code'], className, {
         [classes['wrap']]: wrap || (isString(children) && children.length >= WRAP_THRESHOLD),
