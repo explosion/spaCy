@@ -94,14 +94,14 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                                     )
                                     return cover ? (
                                         <p key={id}>
-                                            <Link key={id} to={url} hidden>
+                                            <Link key={id} to={url} noLinkLayout>
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img src={cover} alt={title || id} />
                                             </Link>
                                         </p>
                                     ) : data.id === 'videos' ? (
                                         <div>
-                                            <Link key={id} to={url} hidden>
+                                            <Link key={id} to={url} noLinkLayout>
                                                 {header}
                                                 <H5>{title}</H5>
                                             </Link>
@@ -216,7 +216,7 @@ const Project = ({ data, components }) => (
                 <p>
                     {data.spacy_version && <SpaCyVersion version={data.spacy_version} />}
                     {data.github && (
-                        <Link to={`https://github.com/${data.github}`} hidden>
+                        <Link to={`https://github.com/${data.github}`} noLinkLayout>
                             <ImageGitHub
                                 title={data.title || data.id}
                                 url={`release/${data.github}/all.svg?style=flat-square`}
@@ -304,7 +304,7 @@ const Project = ({ data, components }) => (
                             {data.author_links && data.author_links.twitter && (
                                 <Link
                                     to={`https://twitter.com/${data.author_links.twitter}`}
-                                    hidden
+                                    noLinkLayout
                                     ws
                                 >
                                     <Icon width={18} name="twitter" inline />
@@ -313,14 +313,14 @@ const Project = ({ data, components }) => (
                             {data.author_links && data.author_links.github && (
                                 <Link
                                     to={`https://github.com/${data.author_links.github}`}
-                                    hidden
+                                    noLinkLayout
                                     ws
                                 >
                                     <Icon width={18} name="github" inline />
                                 </Link>
                             )}
                             {data.author_links && data.author_links.website && (
-                                <Link to={data.author_links.website} hidden ws>
+                                <Link to={data.author_links.website} noLinkLayout ws>
                                     <Icon width={18} name="website" inline />
                                 </Link>
                             )}

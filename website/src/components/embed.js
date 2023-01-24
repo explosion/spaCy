@@ -89,7 +89,7 @@ const Image = ({ src, alt, title, href, ...props }) => {
     return (
         <figure className="gatsby-resp-image-figure">
             {href ? (
-                <Link className={linkClassNames} href={href} hidden forceExternal>
+                <Link className={linkClassNames} href={href} noLinkLayout forceExternal>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img className={classes.image} src={src} alt={alt} width={650} height="auto" />
                 </Link>

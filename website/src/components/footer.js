@@ -21,7 +21,7 @@ export default function Footer({ wide = false }) {
                             <li className={classes.label}>{label}</li>
                             {items.map(({ text, url }, j) => (
                                 <li key={j}>
-                                    <Link to={url} hidden>
+                                    <Link to={url} noLinkLayout>
                                         {text}
                                     </Link>
                                 </li>
@@ -42,14 +42,14 @@ export default function Footer({ wide = false }) {
             <div className={classNames(classes.content, classes.copy)}>
                 <span>
                     &copy; 2016-{new Date().getFullYear()}{' '}
-                    <Link to={companyUrl} hidden>
+                    <Link to={companyUrl} noLinkLayout>
                         {company}
                     </Link>
                 </span>
-                <Link to={companyUrl} aria-label={company} hidden className={classes.logo}>
+                <Link to={companyUrl} aria-label={company} noLinkLayout className={classes.logo}>
                     <SVG src={explosionLogo.src} width={45} height={45} />
                 </Link>
-                <Link to={`${companyUrl}/legal`} hidden>
+                <Link to={`${companyUrl}/legal`} noLinkLayout>
                     Legal / Imprint
                 </Link>
             </div>

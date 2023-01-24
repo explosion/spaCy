@@ -124,7 +124,7 @@ export const LandingBanner = ({
                                 <span className={classes['label']}>{label}</span>
                             </div>
                         )}
-                        <Link to={to} hidden>
+                        <Link to={to} noLinkLayout>
                             {title}
                         </Link>
                     </Heading>
