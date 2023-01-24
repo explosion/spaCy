@@ -76,7 +76,7 @@ export const Patterns = () => {
                     <Label>{name}</Label>
                     <span style={textStyle}>
                         by
-                        <Link to="https://dribbble.com/kemal" hidden style={linkStyle} ws>
+                        <Link to="https://dribbble.com/kemal" noLinkLayout style={linkStyle} ws>
                             Kemal Şanlı
                         </Link>
                     </span>

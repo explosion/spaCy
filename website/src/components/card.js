@@ -11,7 +11,7 @@ export default function Card({ title, to, image, header, small, onClick, childre
     return (
         <div className={classNames(classes.root, { [classes.small]: !!small })}>
             {header && (
-                <Link to={to} onClick={onClick} hidden>
+                <Link to={to} onClick={onClick} noLinkLayout>
                     {header}
                 </Link>
             )}
@@ -23,13 +23,13 @@ export default function Card({ title, to, image, header, small, onClick, childre
                         </div>
                     )}
                     {title && (
-                        <Link to={to} onClick={onClick} hidden>
+                        <Link to={to} onClick={onClick} noLinkLayout>
                             {title}
                         </Link>
                     )}
                 </H5>
             )}
-            <Link to={to} onClick={onClick} hidden>
+            <Link to={to} onClick={onClick} noLinkLayout>
                 {children}
             </Link>
         </div>
