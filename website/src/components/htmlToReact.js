@@ -7,6 +7,6 @@ const htmlToReactParser = new HtmlToReactParser()
  * @returns {Node} - The converted React elements.
  */
 
-export default function htmlToReact(html) {
-    return htmlToReactParser.parse(html)
+export default function HtmlToReact(props) {
+    return htmlToReactParser.parse(props.children)
 }
