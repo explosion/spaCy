@@ -32,6 +32,7 @@ import inspect
 import pkgutil
 import logging
 import socket
+import stat
 
 try:
     import cupy.random
@@ -1032,9 +1033,18 @@ def make_tempdir() -> Generator[Path, None, None]:
     YIELDS (Path): The path of the temp directory.
     """
     d = Path(tempfile.mkdtemp())
+
+    # On Windows, attempts to delete a git directory fail with permissions
+    # errors due to read only / hidden files. This mainly addresses that issue.
+    def _fix_perms(func, path, exc_info):
+        # IWUSR = give user write permission
+        os.chmod(path, stat.S_IWUSR)
+        # func is the function that gave the error, so it behaves like rmtree.
+        func(path)
+
     yield d
     try:
-        shutil.rmtree(str(d))
+        shutil.rmtree(str(d), ignore_errors=False, onerror=_fix_perms)
     except PermissionError as e:
         warnings.warn(Warnings.W091.format(dir=d, msg=e))
 
