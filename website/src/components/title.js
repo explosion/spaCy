@@ -51,8 +51,7 @@ export default function Title({
 
                     {image && (
                         <div className={classes.image}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={image} width={100} height={100} alt="" />
+                            <Image src={image} width={100} height={100} alt={`${title} Logo`} />
                         </div>
                     )}
                 </div>

@@ -81,10 +81,11 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                                     }
                                     const url = `/universe/project/${id}`
                                     const header = youtube && (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img
+                                        <Image
                                             src={`https://img.youtube.com/vi/${youtube}/0.jpg`}
-                                            alt=""
+                                            alt={title}
+                                            width="480"
+                                            height="360"
                                             style={{
                                                 clipPath: 'inset(12.9% 0)',
                                                 marginBottom: 'calc(-12.9% + 1rem)',
@@ -195,6 +196,19 @@ const SpaCyVersion = ({ version }) => {
     ))
 }
 
+const ImageGitHub = ({ url, isRounded, title }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+        style={{
+            borderRadius: isRounded ? '1em' : 0,
+            marginRight: '0.5rem',
+            verticalAlign: 'middle',
+        }}
+        src={`https://img.shields.io/github/${url}`}
+        alt={`${title} on GitHub`}
+    />
+)
+
 const Project = ({ data, components }) => (
     <>
         <Title title={data.title || data.id} teaser={data.slogan} image={data.thumb}>
@@ -203,23 +217,20 @@ const Project = ({ data, components }) => (
                     {data.spacy_version && <SpaCyVersion version={data.spacy_version} />}
                     {data.github && (
                         <Link to={`https://github.com/${data.github}`} noLinkLayout>
-                            {[
-                                `release/${data.github}/all.svg?style=flat-square`,
-                                `license/${data.github}.svg?style=flat-square`,
-                                `stars/${data.github}.svg?style=social&label=Stars`,
-                            ].map((url, i) => (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                    style={{
-                                        borderRadius: '1em',
-                                        marginRight: '0.5rem',
-                                        verticalAlign: 'middle',
-                                    }}
-                                    key={i}
-                                    src={`https://img.shields.io/github/${url}`}
-                                    alt=""
-                                />
-                            ))}
+                            <ImageGitHub
+                                title={data.title || data.id}
+                                url={`release/${data.github}/all.svg?style=flat-square`}
+                                isRounded
+                            />
+                            <ImageGitHub
+                                title={data.title || data.id}
+                                url={`license/${data.github}.svg?style=flat-square`}
+                                isRounded
+                            />
+                            <ImageGitHub
+                                title={data.title || data.id}
+                                url={`stars/${data.github}.svg?style=social&label=Stars`}
+                            />
                         </Link>
                     )}
                 </p>

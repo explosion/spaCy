@@ -1,12 +1,12 @@
 import React from 'react'
 import classNames from 'classnames'
 
-import patternDefault from '../images/pattern_blue.jpg'
-import patternNightly from '../images/pattern_nightly.jpg'
-import patternLegacy from '../images/pattern_legacy.jpg'
-import overlayDefault from '../images/pattern_landing.jpg'
-import overlayNightly from '../images/pattern_landing_nightly.jpg'
-import overlayLegacy from '../images/pattern_landing_legacy.jpg'
+import patternDefault from '../images/pattern_blue.png'
+import patternNightly from '../images/pattern_nightly.png'
+import patternLegacy from '../images/pattern_legacy.png'
+import overlayDefault from '../images/pattern_landing.png'
+import overlayNightly from '../images/pattern_landing_nightly.png'
+import overlayLegacy from '../images/pattern_landing_legacy.png'
 
 import Grid from './grid'
 import { Content } from './main'

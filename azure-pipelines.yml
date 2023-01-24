@@ -11,13 +11,21 @@ trigger:
     exclude:
       - "website/*"
       - "*.md"
+      - "*.mdx"
       - ".github/workflows/*"
 pr:
   paths:
     exclude:
       - "*.md"
+      - "*.mdx"
       - "website/docs/*"
       - "website/src/*"
+      - "website/meta/*.tsx"
+      - "website/meta/*.mjs"
+      - "website/meta/languages.json"
+      - "website/meta/site.json"
+      - "website/meta/sidebars.json"
+      - "website/meta/type-annotations.json"
       - ".github/workflows/*"
 
 jobs:
