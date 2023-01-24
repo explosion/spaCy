@@ -9,15 +9,15 @@ import classes from '../styles/readnext.module.sass'
 
 export default function ReadNext({ title, to }) {
     return (
-        <div className={classes.root}>
-            <Link to={to} noLinkLayout>
+        <Link to={to} noLinkLayout className={classes.root}>
+            <span>
                 <Label>Read next</Label>
                 {title}
-            </Link>
-            <Link to={to} noLinkLayout className={classes.icon}>
+            </span>
+            <span className={classes.icon}>
                 <Icon name="arrowright" aria-hidden="true" />
-            </Link>
-        </div>
+            </span>
+        </Link>
     )
 }
 
