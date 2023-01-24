@@ -42,7 +42,7 @@ const GitHubCode = ({ url, lang, errorMsg = defaultErrorMsg, className }) => {
     return (
         <>
             <header className={classes.header}>
-                <Link to={url} hidden>
+                <Link to={url} noLinkLayout>
                     <Icon name="github" width={16} inline />
                     <code
                         className={classNames(classes['inline-code'], classes['inline-code-dark'])}

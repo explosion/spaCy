@@ -363,7 +363,7 @@ const JuniperWrapper = ({ title, lang, children }) => {
                 {juniperTitle}
                 <span className={classes['juniper-meta']}>
                     spaCy v{binderVersion} &middot; Python 3 &middot; via{' '}
-                    <Link to="https://mybinder.org/" hidden>
+                    <Link to="https://mybinder.org/" noLinkLayout>
                         Binder
                     </Link>
                 </span>

@@ -88,7 +88,7 @@ const Image = ({ src, alt, title, href, ...props }) => {
     const markdownComponents = { code: InlineCode, p: Fragment, a: Link }
     return (
         <figure className="gatsby-resp-image-figure">
-            <Link className={linkClassNames} href={href ?? src} hidden forceExternal>
+            <Link className={linkClassNames} href={href ?? src} noLinkLayout forceExternal>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className={classes.image} src={src} alt={alt} width={650} height="auto" />
             </Link>
