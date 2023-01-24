@@ -274,7 +274,7 @@ class EditTreeLemmatizer(TrainablePipe):
                     if self.trees.apply(candidate_tree_id, text) is not None:
                         doc_compat_guesses.append((candidate_tree_id, to_lowercase))
                         break
-                    doc_scores[i, candidate] = np.finfo(np.float32).min
+                    doc_scores[j, candidate] = np.finfo(np.float32).min
                 else:
                     doc_compat_guesses.append((-1, to_lowercase))
             guesses.append(np.array(doc_compat_guesses))
