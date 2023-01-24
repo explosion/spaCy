@@ -81,10 +81,11 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                                     }
                                     const url = `/universe/project/${id}`
                                     const header = youtube && (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img
+                                        <Image
                                             src={`https://img.youtube.com/vi/${youtube}/0.jpg`}
-                                            alt=""
+                                            alt={title}
+                                            width="480"
+                                            height="360"
                                             style={{
                                                 clipPath: 'inset(12.9% 0)',
                                                 marginBottom: 'calc(-12.9% + 1rem)',

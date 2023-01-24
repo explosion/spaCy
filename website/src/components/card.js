@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
+import ImageNext from 'next/image'
 
 import Link from './link'
 import { H5 } from './typography'
@@ -18,8 +19,7 @@ export default function Card({ title, to, image, header, small, onClick, childre
                 <H5 className={classes.title}>
                     {image && (
                         <div className={classes.image}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={image} width={35} alt="" />
+                            <ImageNext src={image} height={35} width={35} alt={`${title} Logo`} />
                         </div>
                     )}
                     {title && (
