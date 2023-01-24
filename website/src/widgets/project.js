@@ -29,7 +29,11 @@ export default function Project({
     return (
         <Infobox title={header} emoji="🪐">
             {children}
-            <CopyInput text={text} prefix="$" />
+            <CopyInput
+                text={text}
+                prefix="$"
+                description="Example bash command to start with an end-to-end template"
+            />
         </Infobox>
     )
 }
