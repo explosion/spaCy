@@ -270,10 +270,10 @@ $ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] 
 | `--file-type`, `-t`       | Type of file to create. Either `spacy` (default) for binary [`DocBin`](/api/docbin) data or `json` for v2.x JSON format. ~~str (option)~~ |
 | `--n-sents`, `-n`         | Number of sentences per document. Supported for: `conll`, `conllu`, `iob`, `ner` ~~int (option)~~                                         |
 | `--seg-sents`, `-s`       | Segment sentences. Supported for: `conll`, `ner` ~~bool (flag)~~                                                                          |
-| `--base`, `-b`, `--model` | Trained spaCy pipeline for sentence segmentation to use as base (for `--seg-sents`). ~~Optional[str](option)~~                            |
+| `--base`, `-b`, `--model` | Trained spaCy pipeline for sentence segmentation to use as base (for `--seg-sents`). ~~Optional[str] (option)~~                           |
 | `--morphology`, `-m`      | Enable appending morphology to tags. Supported for: `conllu` ~~bool (flag)~~                                                              |
 | `--merge-subtokens`, `-T` | Merge CoNLL-U subtokens ~~bool (flag)~~                                                                                                   |
-| `--ner-map`, `-nm`        | NER tag mapping (as JSON-encoded dict of entity types). Supported for: `conllu` ~~Optional[Path](option)~~                                |
+| `--ner-map`, `-nm`        | NER tag mapping (as JSON-encoded dict of entity types). Supported for: `conllu` ~~Optional[Path] (option)~~                               |
 | `--lang`, `-l`            | Language code (if tokenizer required). ~~Optional[str] \(option)~~                                                                        |
 | `--concatenate`, `-C`     | Concatenate output to a single file ~~bool (flag)~~                                                                                       |
 | `--help`, `-h`            | Show help message and available arguments. ~~bool (flag)~~                                                                                |
