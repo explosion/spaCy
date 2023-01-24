@@ -208,7 +208,7 @@ const addLineHighlight = (children, highlight) => {
     })
 }
 
-export const CodeHighlighted = ({ children, highlight, lang }) => {
+const CodeHighlighted = ({ children, highlight, lang }) => {
     const [html, setHtml] = useState()
 
     useEffect(
