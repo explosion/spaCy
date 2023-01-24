@@ -1,8 +1,11 @@
 import os
 from pathlib import Path
-from typer.testing import CliRunner
-import srsly
 import pytest
+import shutil
+import srsly
+import stat
+from typer.testing import CliRunner
+import tempfile
 
 from spacy.cli._util import app
 from .util import make_tempdir
@@ -101,12 +104,23 @@ def test_project_run(project_dir):
 
 
 def test_project_clone():
-    with make_tempdir() as workspace:
+    # Git clones create some readonly/hidden files. On Windows, trying to
+    # delete these gives an error, so we have to handle that specially.
+
+    workspace = Path(tempfile.mkdtemp())
+
+    def _fix_perms(func, path, exc_info):
+        os.chmod(path, stat.S_IWUSR)
+        func(path)
+
+    try:
         out = workspace / "project"
         target = "benchmarks/ner_conll03"
         result = CliRunner().invoke(app, ["project", "clone", target, str(out)])
         assert result.exit_code == 0
         assert (out / "README.md").is_file()
+    finally:
+        shutil.rmtree(str(workspace), ignore_errors=False, onerror=_fix_perms)
 
 
 def test_project_push_pull(project_dir):
