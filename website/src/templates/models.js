@@ -14,14 +14,8 @@ import Icon from '../components/icon'
 import Link, { OptionalLink } from '../components/link'
 import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
-import {
-    isString,
-    isEmptyObj,
-    join,
-    arrayToObj,
-    abbrNum,
-    MarkdownToReact,
-} from '../components/util'
+import { isString, isEmptyObj, join, arrayToObj, abbrNum } from '../components/util'
+import MarkdownToReact from '../components/markdownToReact'
 
 import siteMetadata from '../../meta/site.json'
 import languages from '../../meta/languages.json'
