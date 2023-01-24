@@ -1,5 +1,5 @@
 import React from 'react'
-import Code from './code'
+import Code from './codeDynamic'
 import classes from '../styles/code.module.sass'
 
 export const Pre = (props) => {
