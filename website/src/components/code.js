@@ -225,7 +225,7 @@ export const CodeHighlighted = ({ children, highlight, lang }) => {
     return <>{html}</>
 }
 
-export class Code extends React.Component {
+export default class Code extends React.Component {
     static defaultProps = {
         lang: 'none',
         executable: null,

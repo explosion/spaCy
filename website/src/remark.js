@@ -1,7 +1,7 @@
 import Link from './components/link'
 import Section, { Hr } from './components/section'
 import { Table, Tr, Th, Tx, Td } from './components/table'
-import { Code } from './components/code'
+import Code from './components/code'
 import { TypeAnnotation } from './components/typeAnnotation'
 import { InlineCode } from './components/inlineCode'
 import CodeBlock, { Pre } from './components/codeBlock'
