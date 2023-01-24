@@ -44,19 +44,18 @@ def test_benchmark_accuracy_alias():
     )
 
 
-def test_debug_data_trainable_lemmatizer_cli():
-    nlp = English()
+def test_debug_data_trainable_lemmatizer_cli(en_vocab):
     train_docs = [
-        Doc(nlp.vocab, words=["I", "like", "cats"], lemmas=["I", "like", "cat"]),
+        Doc(en_vocab, words=["I", "like", "cats"], lemmas=["I", "like", "cat"]),
         Doc(
-            nlp.vocab,
+            en_vocab,
             words=["Dogs", "are", "great", "too"],
             lemmas=["dog", "be", "great", "too"],
         ),
     ]
     dev_docs = [
-        Doc(nlp.vocab, words=["Cats", "are", "cute"], lemmas=["cat", "be", "cute"]),
-        Doc(nlp.vocab, words=["Pets", "are", "great"], lemmas=["pet", "be", "great"]),
+        Doc(en_vocab, words=["Cats", "are", "cute"], lemmas=["cat", "be", "cute"]),
+        Doc(en_vocab, words=["Pets", "are", "great"], lemmas=["pet", "be", "great"]),
     ]
     with make_tempdir() as d_in:
         train_bin = DocBin(docs=train_docs)
