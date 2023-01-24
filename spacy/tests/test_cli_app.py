@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from typer.testing import CliRunner
 
@@ -37,6 +38,8 @@ def test_benchmark_accuracy_alias():
     # Verify that the `evaluate` alias works correctly.
     result_benchmark = CliRunner().invoke(app, ["benchmark", "accuracy", "--help"])
     result_evaluate = CliRunner().invoke(app, ["evaluate", "--help"])
-    assert result_benchmark.stdout == result_evaluate.stdout.replace(
-        "spacy evaluate", "spacy benchmark accuracy"
+    assert re.sub(r"\s+", " ", result_benchmark.stdout) == re.sub(
+        r"\s+",
+        " ",
+        result_evaluate.stdout.replace("spacy evaluate", "spacy benchmark accuracy"),
     )
