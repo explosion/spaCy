@@ -110,7 +110,7 @@ const Image = ({ src, alt, title, href, ...props }) => {
 const ImageFill = ({ image, ...props }) => {
     return (
         <span
-            class={classes['figure-fill']}
+            className={classes['figure-fill']}
             style={{ paddingBottom: `${(image.height / image.width) * 100}%` }}
         >
             <ImageNext src={image.src} {...props} fill />
