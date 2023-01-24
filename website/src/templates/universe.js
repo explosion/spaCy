@@ -195,11 +195,11 @@ const SpaCyVersion = ({ version }) => {
     ))
 }
 
-const ImageGitHub = ({ url }) => (
+const ImageGitHub = ({ url, isRounded }) => (
     // eslint-disable-next-line @next/next/no-img-element
     <img
         style={{
-            borderRadius: '1em',
+            borderRadius: isRounded ? '1em' : 0,
             marginRight: '0.5rem',
             verticalAlign: 'middle',
         }}
@@ -216,8 +216,14 @@ const Project = ({ data, components }) => (
                     {data.spacy_version && <SpaCyVersion version={data.spacy_version} />}
                     {data.github && (
                         <Link to={`https://github.com/${data.github}`} hidden>
-                            <ImageGitHub url={`release/${data.github}/all.svg?style=flat-square`} />
-                            <ImageGitHub url={`license/${data.github}.svg?style=flat-square`} />
+                            <ImageGitHub
+                                url={`release/${data.github}/all.svg?style=flat-square`}
+                                isRounded
+                            />
+                            <ImageGitHub
+                                url={`license/${data.github}.svg?style=flat-square`}
+                                isRounded
+                            />
                             <ImageGitHub
                                 url={`stars/${data.github}.svg?style=social&label=Stars`}
                             />
