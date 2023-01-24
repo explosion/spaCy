@@ -18,7 +18,7 @@ import Footer from '../components/footer'
 import { H3, H5, Label, InlineList } from '../components/typography'
 import { YouTube, SoundCloud, Iframe } from '../components/embed'
 import { github } from '../components/util'
-import MarkdownToReact from '../components/markdownToReact'
+import MarkdownToReact from '../components/markdownToReactDynamic'
 
 import { nightly, legacy } from '../../meta/dynamicMeta.mjs'
 import universe from '../../meta/universe.json'

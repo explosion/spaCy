@@ -6,7 +6,7 @@ import ImageNext from 'next/image'
 import Link from './link'
 import Button from './button'
 import { InlineCode } from './inlineCode'
-import MarkdownToReact from './markdownToReact'
+import MarkdownToReact from './markdownToReactDynamic'
 
 import classes from '../styles/embed.module.sass'
 

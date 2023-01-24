@@ -15,7 +15,7 @@ import Link, { OptionalLink } from '../components/link'
 import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
 import { isString, isEmptyObj, join, arrayToObj, abbrNum } from '../components/util'
-import MarkdownToReact from '../components/markdownToReact'
+import MarkdownToReact from '../components/markdownToReactDynamic'
 
 import siteMetadata from '../../meta/site.json'
 import languages from '../../meta/languages.json'
