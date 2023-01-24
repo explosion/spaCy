@@ -2,11 +2,11 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 
-import patternBlue from '../images/pattern_blue.jpg'
-import patternGreen from '../images/pattern_green.jpg'
-import patternPurple from '../images/pattern_purple.jpg'
-import patternNightly from '../images/pattern_nightly.jpg'
-import patternLegacy from '../images/pattern_legacy.jpg'
+import patternBlue from '../images/pattern_blue.png'
+import patternGreen from '../images/pattern_green.png'
+import patternPurple from '../images/pattern_purple.png'
+import patternNightly from '../images/pattern_nightly.png'
+import patternLegacy from '../images/pattern_legacy.png'
 import classes from '../styles/main.module.sass'
 
 const patterns = {

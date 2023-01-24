@@ -6,9 +6,9 @@ import Link from '../components/link'
 import SVG from 'react-inlinesvg'
 
 import logoSpacy from '../images/logo.svg'
-import patternBlue from '../images/pattern_blue.jpg'
-import patternGreen from '../images/pattern_green.jpg'
-import patternPurple from '../images/pattern_purple.jpg'
+import patternBlue from '../images/pattern_blue.png'
+import patternGreen from '../images/pattern_green.png'
+import patternPurple from '../images/pattern_purple.png'
 
 const colors = {
     dark: 'var(--color-front)',
