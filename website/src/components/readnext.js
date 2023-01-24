@@ -14,8 +14,8 @@ export default function ReadNext({ title, to }) {
                 <Label>Read next</Label>
                 {title}
             </Link>
-            <Link to={to} noLinkLayout className={classes.icon} aria-hidden="true">
-                <Icon name="arrowright" />
+            <Link to={to} noLinkLayout className={classes.icon}>
+                <Icon name="arrowright" aria-hidden="true" />
             </Link>
         </div>
     )
