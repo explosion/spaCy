@@ -695,33 +695,33 @@ def debug_data(
 
         if gold_train_data["n_low_cardinality_lemmas"] > 0:
             n = gold_train_data["n_low_cardinality_lemmas"]
-            msg.warn(f"{n} docs with 1 or 0 unique lemmas.")
+            msg.warn(f"{n} training docs with 0 or 1 unique lemmas.")
 
         if gold_dev_data["n_low_cardinality_lemmas"] > 0:
             n = gold_dev_data["n_low_cardinality_lemmas"]
-            msg.warn(f"{n} docs with 1 or 0 unique lemmas.")
+            msg.warn(f"{n} dev docs with 0 or 1 unique lemmas.")
 
         if gold_train_data["no_lemma_annotations"] > 0:
             n = gold_train_data["no_lemma_annotations"]
-            msg.warn(f"{n} docs with no lemma annotations.")
+            msg.warn(f"{n} training docs with no lemma annotations.")
         else:
             msg.good("All training docs have lemma annotations.")
 
         if gold_dev_data["no_lemma_annotations"] > 0:
             n = gold_dev_data["no_lemma_annotations"]
-            msg.warn(f"{n} docs with no lemma annotations.")
+            msg.warn(f"{n} dev docs with no lemma annotations.")
         else:
             msg.good("All dev docs have lemma annotations.")
 
         if gold_train_data["partial_lemma_annotations"] > 0:
             n = gold_train_data["partial_lemma_annotations"]
-            msg.info(f"{n} docs with partial lemma annotations.")
+            msg.info(f"{n} training docs with partial lemma annotations.")
         else:
             msg.good("All training docs have complete lemma annotations.")
 
         if gold_dev_data["partial_lemma_annotations"] > 0:
             n = gold_dev_data["partial_lemma_annotations"]
-            msg.info(f"{n} docs with partial lemma annotations.")
+            msg.info(f"{n} dev docs with partial lemma annotations.")
         else:
             msg.good("All dev docs have complete lemma annotations.")
 
