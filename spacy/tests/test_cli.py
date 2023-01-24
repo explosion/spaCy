@@ -1208,11 +1208,12 @@ def test_walk_directory():
         assert (len(walk_directory(d, suffix="conll"))) == 3
         assert (len(walk_directory(d, suffix="pdf"))) == 0
 
+
 def test_debug_data_trainable_lemmatizer_basic():
     examples = [
         ("She likes green eggs", {"lemmas": ["she", "like", "green", "egg"]}),
         ("Eat blue ham", {"lemmas": ["eat", "blue", "ham"]}),
-        ]
+    ]
     nlp = Language()
     train_examples = []
     for t in examples:
@@ -1222,6 +1223,7 @@ def test_debug_data_trainable_lemmatizer_basic():
     # ref test_edit_tree_lemmatizer::test_initialize_from_labels
     # this results in 4 trees
     assert len(data["lemmatizer_trees"]) == 4
+
 
 def test_debug_data_trainable_lemmatizer_partial():
     partial_examples = [
@@ -1244,6 +1246,7 @@ def test_debug_data_trainable_lemmatizer_partial():
     data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
     assert data["partial_lemma_annotations"] == 2
 
+
 def test_debug_data_trainable_lemmatizer_low_cardinality():
     low_cardinality_examples = [
         ("She likes green eggs", {"lemmas": ["no", "no", "no", "no"]}),
@@ -1256,6 +1259,7 @@ def test_debug_data_trainable_lemmatizer_low_cardinality():
 
     data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
     assert data["n_low_cardinality_lemmas"] == 2
+
 
 def test_debug_data_trainable_lemmatizer_not_annotated():
     unannotated_examples = [
