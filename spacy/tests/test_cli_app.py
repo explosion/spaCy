@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from typer.testing import CliRunner
+import srsly
+import pytest
 
 from spacy.cli._util import app
 from .util import make_tempdir
@@ -31,3 +33,100 @@ def test_convert_auto_conflict():
         assert "All input files must be same type" in result.stdout
         out_files = os.listdir(d_out)
         assert len(out_files) == 0
+
+
+# project tests
+
+SAMPLE_PROJECT = {
+    "title": "Sample project",
+    "description": "This is a project for testing",
+    "assets": [
+        {
+            "dest": "assets/spacy-readme.md",
+            "url": "https://github.com/explosion/spaCy/raw/dec81508d28b47f09a06203c472b37f00db6c869/README.md",
+            "checksum": "411b2c89ccf34288fae8ed126bf652f7",
+        }
+    ],
+    "commands": [
+        {
+            "name": "ok",
+            "help": "print ok",
+            "script": ["python -c \"print('okokok')\""],
+        },
+        {
+            "name": "create",
+            "help": "make a file",
+            "script": ["touch abc.txt"],
+            "outputs": ["abc.txt"],
+        },
+        {
+            "name": "clean",
+            "help": "remove test file",
+            "script": ["rm abc.txt"],
+        },
+    ],
+}
+
+SAMPLE_PROJECT_TEXT = srsly.yaml_dumps(SAMPLE_PROJECT)
+
+
+@pytest.fixture
+def project_dir():
+    with make_tempdir() as pdir:
+        (pdir / "project.yml").write_text(SAMPLE_PROJECT_TEXT)
+        yield pdir
+
+
+def test_project_document(project_dir):
+    readme_path = project_dir / "README.md"
+    result = CliRunner().invoke(
+        app, ["project", "document", str(project_dir), "-o", str(readme_path)]
+    )
+    assert result.exit_code == 0
+    assert readme_path.is_file()
+    text = readme_path.read_text()
+    assert SAMPLE_PROJECT["description"] in text
+
+
+def test_project_assets(project_dir):
+    result = CliRunner().invoke(app, ["project", "assets", str(project_dir)])
+    assert result.exit_code == 0
+    assert (project_dir / "assets" / "spacy-readme.md").is_file()
+
+
+def test_project_run(project_dir):
+    result = CliRunner().invoke(app, ["project", "run", "ok", str(project_dir)])
+    assert result.exit_code == 0
+    assert "okokok" in result.stdout
+
+
+def test_project_clone():
+    with make_tempdir() as workspace:
+        out = workspace / "project"
+        target = "benchmarks/ner_conll03"
+        result = CliRunner().invoke(app, ["project", "clone", target, str(out)])
+        assert result.exit_code == 0
+        assert (out / "README.md").is_file()
+
+
+def test_project_push_pull(project_dir):
+    proj = dict(SAMPLE_PROJECT)
+    remote = "xyz"
+
+    with make_tempdir() as remote_dir:
+        proj["remotes"] = {remote: str(remote_dir)}
+        proj_text = srsly.yaml_dumps(proj)
+        (project_dir / "project.yml").write_text(proj_text)
+
+        test_file = project_dir / "abc.txt"
+        result = CliRunner().invoke(app, ["project", "run", "create", str(project_dir)])
+        assert result.exit_code == 0
+        assert test_file.is_file()
+        result = CliRunner().invoke(app, ["project", "push", remote, str(project_dir)])
+        assert result.exit_code == 0
+        result = CliRunner().invoke(app, ["project", "run", "clean", str(project_dir)])
+        assert result.exit_code == 0
+        assert not test_file.exists()
+        result = CliRunner().invoke(app, ["project", "pull", remote, str(project_dir)])
+        assert result.exit_code == 0
+        assert test_file.is_file()
