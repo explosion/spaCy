@@ -13,7 +13,7 @@ import Progress from '../components/progress'
 import Footer from '../components/footer'
 import SEO from '../components/seo'
 import Link from '../components/link'
-import { InlineCode } from '../components/code'
+import { InlineCode } from '../components/inlineCode'
 import Alert from '../components/alert'
 import Search from '../components/search'
 

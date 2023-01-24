@@ -13,7 +13,7 @@ import {
     LandingBanner,
 } from '../src/components/landing'
 import { H2 } from '../src/components/typography'
-import { InlineCode } from '../src/components/code'
+import { InlineCode } from '../src/components/inlineCode'
 import { Ul, Li } from '../src/components/list'
 import Button from '../src/components/button'
 import Link from '../src/components/link'

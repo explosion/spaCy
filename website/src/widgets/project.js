@@ -3,7 +3,7 @@ import React from 'react'
 import CopyInput from '../components/copy'
 import Infobox from '../components/infobox'
 import Link from '../components/link'
-import { InlineCode } from '../components/code'
+import { InlineCode } from '../components/inlineCode'
 import { projectsRepo } from '../components/util'
 
 const COMMAND = 'python -m spacy project clone'

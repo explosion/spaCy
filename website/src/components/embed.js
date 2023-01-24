@@ -5,7 +5,7 @@ import ImageNext from 'next/image'
 
 import Link from './link'
 import Button from './button'
-import { InlineCode } from './code'
+import { InlineCode } from './inlineCode'
 import { MarkdownToReact } from './util'
 
 import classes from '../styles/embed.module.sass'
