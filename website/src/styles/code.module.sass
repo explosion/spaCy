@@ -14,15 +14,15 @@
     height: 450px
 
 .code,
-.juniper-input pre,
-.juniper-output
+.code-interactive-input pre,
+.code-interactive-output
     font: var(--font-size-code)/var(--line-height-code) var(--font-code) !important
     font-variant-ligatures: none !important
     -webkit-font-smoothing: subpixel-antialiased
     -moz-osx-font-smoothing: auto
 
 .code,
-.juniper-input pre
+.code-interactive-input pre
     display: block
     padding: 1.75em 1.5em
 
@@ -97,7 +97,7 @@
     word-wrap: anywhere
 
 .title,
-.juniper-button
+.code-interactive-button
     font: bold var(--font-size-lg)/var(--line-height-md) var(--font-secondary)
     text-transform: uppercase
     display: inline-block
@@ -121,23 +121,23 @@
     padding: 1.25rem 1rem 1rem
     font-size: var(--font-size-sm)
 
-.juniper-wrapper
+.code-interactive-wrapper
     background: var(--color-dark-secondary)
     padding: 5px
 
-.juniper-title
+.code-interactive-title
     font: bold var(--font-size-sm)/var(--line-height-sm) var(--font-primary)
     text-align: center
     padding: 0.25rem 1rem 0.5rem
     display: flex
     justify-content: space-between
 
-.juniper-cell
+.code-interactive-cell
     border: 0
     background: var(--color-front)
     padding: 1rem 0
 
-.juniper-input
+.code-interactive-input
     padding-top: 1rem
     padding-bottom: 2rem
     padding-left: 2rem
@@ -147,10 +147,10 @@
         padding: 0
         height: auto
 
-.juniper-output
+.code-interactive-output
     font: var(--font-size-xs) var(--font-code)
 
-.juniper-button
+.code-interactive-button
     transition: background-color 0.15s ease
     background: var(--color-theme-dark)
     margin: 0.5rem 0 1rem 2rem
@@ -158,7 +158,7 @@
     &:hover
         background: var(--color-theme-dark)
 
-.juniper-meta
+.code-interactive-meta
     font-size: var(--font-size-xs)
     font-weight: normal
     padding-top: 0.1rem

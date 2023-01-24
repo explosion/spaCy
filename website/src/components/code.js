@@ -255,9 +255,9 @@ export default class Code extends React.Component {
         }
         if (!!executable) {
             return (
-                <JuniperWrapper title={title} lang={lang}>
+                <CodeInteractiveWrapper title={title} lang={lang}>
                     {children}
-                </JuniperWrapper>
+                </CodeInteractiveWrapper>
             )
         }
 
@@ -274,16 +274,15 @@ export default class Code extends React.Component {
     }
 }
 
-const JuniperDynamic = dynamic(() => import('./juniper'))
+const CodeInteractiveDynamic = dynamic(() => import('./codeInteractive'))
 
-const JuniperWrapper = ({ title, lang, children }) => {
+const CodeInteractiveWrapper = ({ title, lang, children }) => {
     const { binderUrl, binderVersion } = siteMetadata
-    const juniperTitle = title || 'Editable Code'
     return (
-        <div className={classes['juniper-wrapper']}>
-            <h4 className={classes['juniper-title']}>
-                {juniperTitle}
-                <span className={classes['juniper-meta']}>
+        <div className={classes['code-interactive-wrapper']}>
+            <h4 className={classes['code-interactive-title']}>
+                {title || 'Editable Code'}
+                <span className={classes['code-interactive-meta']}>
                     spaCy v{binderVersion} &middot; Python 3 &middot; via{' '}
                     <Link to="https://mybinder.org/" noLinkLayout>
                         Binder
@@ -291,19 +290,19 @@ const JuniperWrapper = ({ title, lang, children }) => {
                 </span>
             </h4>
 
-            <JuniperDynamic
+            <CodeInteractiveDynamic
                 repo={binderUrl}
                 branch={binderBranch}
                 lang={lang}
                 classNames={{
-                    cell: classes['juniper-cell'],
-                    input: classes['juniper-input'],
-                    button: classes['juniper-button'],
-                    output: classes['juniper-output'],
+                    cell: classes['code-interactive-cell'],
+                    input: classes['code-interactive-input'],
+                    button: classes['code-interactive-button'],
+                    output: classes['code-interactive-output'],
                 }}
             >
                 {children}
-            </JuniperDynamic>
+            </CodeInteractiveDynamic>
         </div>
     )
 }

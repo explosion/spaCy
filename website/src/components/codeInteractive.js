@@ -211,7 +211,7 @@ export default class Juniper extends React.Component {
                             highlightActiveLine: false,
                             highlightSelectionMatches: false,
                         }}
-                        className={classes['juniper-input']}
+                        className={classes['code-interactive-input']}
                         onChange={(value) => {
                             this.setState({ code: value })
                         }}
@@ -222,7 +222,7 @@ export default class Juniper extends React.Component {
                 </button>
                 {this.state.output !== null && (
                     <pre
-                        className={`${this.props.classNames.output} ${classes['juniper-input']} ${classes.wrap}`}
+                        className={`${this.props.classNames.output} ${classes['code-interactive-input']} ${classes.wrap}`}
                     >
                         {this.state.output}
                     </pre>
@@ -242,7 +242,7 @@ Juniper.defaultProps = {
     theme: 'default',
     isolateCells: true,
     useBinder: true,
-    storageKey: 'juniper',
+    storageKey: 'codeInteractive',
     useStorage: true,
     storageExpire: 60,
     debug: false,
@@ -250,10 +250,10 @@ Juniper.defaultProps = {
     msgLoading: 'Loading...',
     msgError: 'Connecting failed. Please reload and try again.',
     classNames: {
-        cell: 'juniper-cell',
-        input: 'juniper-input',
-        button: 'juniper-button',
-        output: 'juniper-output',
+        cell: 'code-interactive-cell',
+        input: 'code-interactive-input',
+        button: 'code-interactive-button',
+        output: 'code-interactive-output',
     },
 }
 
