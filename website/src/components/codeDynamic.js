@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic'
 
 export default dynamic(() => import('./code'), {
-    loading: () => 'Loading...',
+    loading: () => <div style={{ color: 'white', padding: '1rem' }}>Loading...</div>,
 })
