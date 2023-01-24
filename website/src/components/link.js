@@ -39,7 +39,7 @@ export default function Link({
     const withIcon = !hidden && !hideIcon && !!icon && !isImage(children)
     const sourceWithText = withIcon && isString(children)
     const linkClassNames = classNames(classes.root, className, {
-        [classes.hidden]: hidden,
+        [classes.noLinkLayout]: hidden,
         [classes.nowrap]: (withIcon && !sourceWithText) || icon === 'network',
         [classes['with-icon']]: withIcon,
     })
