@@ -195,7 +195,7 @@ const SpaCyVersion = ({ version }) => {
     ))
 }
 
-const ImageGitHub = ({ url, isRounded }) => (
+const ImageGitHub = ({ url, isRounded, title }) => (
     // eslint-disable-next-line @next/next/no-img-element
     <img
         style={{
@@ -204,7 +204,7 @@ const ImageGitHub = ({ url, isRounded }) => (
             verticalAlign: 'middle',
         }}
         src={`https://img.shields.io/github/${url}`}
-        alt=""
+        alt={`${title} on GitHub`}
     />
 )
 
@@ -217,14 +217,17 @@ const Project = ({ data, components }) => (
                     {data.github && (
                         <Link to={`https://github.com/${data.github}`} hidden>
                             <ImageGitHub
+                                title={data.title || data.id}
                                 url={`release/${data.github}/all.svg?style=flat-square`}
                                 isRounded
                             />
                             <ImageGitHub
+                                title={data.title || data.id}
                                 url={`license/${data.github}.svg?style=flat-square`}
                                 isRounded
                             />
                             <ImageGitHub
+                                title={data.title || data.id}
                                 url={`stars/${data.github}.svg?style=social&label=Stars`}
                             />
                         </Link>
