@@ -84,7 +84,7 @@ def test_project_document(project_dir):
     )
     assert result.exit_code == 0
     assert readme_path.is_file()
-    text = readme_path.read_text()
+    text = readme_path.read_text("utf-8")
     assert SAMPLE_PROJECT["description"] in text
 
 
