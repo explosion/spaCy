@@ -26,6 +26,7 @@ pr:
       - "website/meta/site.json"
       - "website/meta/sidebars.json"
       - "website/meta/type-annotations.json"
+      - "website/pages/*"
       - ".github/workflows/*"
 
 jobs:
