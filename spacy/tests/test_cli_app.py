@@ -206,12 +206,14 @@ def noop_config():
         ["debug", "config"],
         ["debug", "data"],
         ["train"],
+        ["assemble"],
     ],
 )
 def test_multi_code(cmd, code_paths, data_paths, noop_config):
     # check that it fails without the code arg
+    output = ["."] if cmd[0] in ("pretrain", "assemble") else []
     cmd = ["python", "-m", "spacy"] + cmd
-    result = subprocess.run([*cmd, str(noop_config), *data_paths])
+    result = subprocess.run([*cmd, str(noop_config), *output, *data_paths])
     assert result.returncode == 1
 
     # check that it succeeds with the code arg
@@ -219,6 +221,7 @@ def test_multi_code(cmd, code_paths, data_paths, noop_config):
         [
             *cmd,
             str(noop_config),
+            *output,
             *data_paths,
             *code_paths,
         ]
