@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import Icon from './icon'
 import Link from './link'
 import classes from '../styles/code.module.sass'
-import { Code } from './code'
+import Code from './codeDynamic'
 
 const defaultErrorMsg = `Can't fetch code example from GitHub :(
 
