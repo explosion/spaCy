@@ -235,7 +235,7 @@ const handlePromot = ({ lineFlat, prompt }) => {
                     <Fragment key={j}>
                         {j !== 0 && ' '}
                         <span className={itemClassNames}>
-                            <OptionalLink hidden hideIcon to={url}>
+                            <OptionalLink noLinkLayout hideIcon to={url}>
                                 {text}
                             </OptionalLink>
                         </span>
