@@ -37,12 +37,13 @@ def build_lemmatizer_model(
         softmax = Softmax_v2(
             nO, t2v_width, init_W=glorot_uniform_init, normalize_outputs=normalize
         )
-        model = tok2vec >> with_array(softmax)
         if lowercasing:
             lowercasing_output = Sigmoid(1)
             sigmoid_appendage = (
                 Relu(lowercasing_relu_width) >> Dropout() >> lowercasing_output
             )
-            model |= tok2vec >> with_array(sigmoid_appendage)
+            model = tok2vec >> with_array(softmax | sigmoid_appendage)
             model.set_ref("lowercasing_output", lowercasing_output)
+        else:
+            model = tok2vec >> with_array(softmax)
         return model
