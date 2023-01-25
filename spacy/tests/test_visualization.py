@@ -661,7 +661,6 @@ def test_viz_render_instances_two_sentences(
         else "\nposs    Sarah    sarah    PROPN   NNP   NounType=prop|Number=sing   PERSON\ncase    's       's       PART    POS   Poss=yes                          \nnsubj   sister   sister   NOUN    NN    Number=sing                       \n"
     )
 
-
     # missing permitted value
     display_columns = [
         AttributeFormat("dep_", name="dep"),
