@@ -173,7 +173,7 @@ ngram_size = 1
 no_output_layer = false 
 [components.textcat_multilabel.model.tok2vec]
 @architectures = "spacy.Tok2VecListener.v1"
-width = 64
+width = ${components.tok2vec.model.encode.width}
 upstream = "*"
 [components.tok2vec]
 factory = "tok2vec"
@@ -181,15 +181,16 @@ factory = "tok2vec"
 @architectures = "spacy.Tok2Vec.v2"
 [components.tok2vec.model.embed]
 @architectures = "spacy.MultiHashEmbed.v2"
-width = 64
-attrs = ["ORTH", "SHAPE"]
-rows = [5000, 2500]
-include_static_vectors = true 
+width = ${components.tok2vec.model.encode.width}
+attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
+rows = [5000, 1000, 2500, 2500]
+include_static_vectors = false
 [components.tok2vec.model.encode]
-@architectures = "spacy.MishWindowEncoder.v2"
-width = 64
-depth = 4
+@architectures = "spacy.MaxoutWindowEncoder.v2"
+width = 256
+depth = 8
 window_size = 1
+maxout_pieces = 3
 """
 
 NER_LISTENER_CONFIG = """
