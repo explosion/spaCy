@@ -65,9 +65,10 @@
     --color-dark: hsl(214, 15%, 32%)
     --color-dark-secondary: hsl(214, 14%, 22%)
     --color-subtle-opaque: hsla(0, 0%, 96%, 0.56)
-    --color-subtle: hsl(0, 0%, 87%)
-    --color-subtle-light: hsl(0, 0%, 96%)
-    --color-subtle-dark: hsl(162, 5%, 60%)
+    --color-subtle: hsla(0, 0%, 0%, 0.13)
+    --color-subtle-light: hsla(0, 0%, 0%, 0.04)
+    --color-subtle-dark: hsla(162, 5%, 0%, 0.55)
+    --color-subtle-on-dark: hsla(0, 0%, 100%, 0.87)
 
     --color-green-medium: hsl(108, 66%, 63%)
     --color-green-transparent: hsla(108, 66%, 63%, 0.12)
@@ -387,7 +388,7 @@ body [id]:target
 
 [class*="language-bash"] .token
     &.function
-        color: var(--color-subtle)
+        color: var(--color-subtle-on-dark)
 
     &.operator, &.variable
         color: var(--syntax-comment)
@@ -397,7 +398,7 @@ body [id]:target
     color: var(--syntax-comment)
 
     .token
-        color: var(--color-subtle)
+        color: var(--color-subtle-on-dark)
 
 .gatsby-highlight-code-line
     background-color: var(--color-dark-secondary)
