@@ -162,7 +162,7 @@ const Landing = () => {
                     small
                 >
                     <p>
-                        <Link to="https://prodi.gy" hidden>
+                        <Link to="https://prodi.gy" noLinkLayout>
                             <ImageFill
                                 image={prodigyImage}
                                 alt="Prodigy: Radically efficient machine teaching"
