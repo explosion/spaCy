@@ -1,6 +1,7 @@
 import os
 import math
 from collections import Counter
+from tempfile import TemporaryDirectory
 from typing import Tuple, List, Dict, Any
 import pkg_resources
 import time
@@ -146,28 +147,30 @@ def test_issue11235():
 
 
 def test_project_git_dir_asset():
-    with make_tempdir() as d:
+    with TemporaryDirectory() as d:
+        p = Path(d)
         # Use a very small repo.
         git_checkout(
             "https://github.com/explosion/os-signpost.git",
             "os_signpost",
-            d / "signpost",
+            p / "signpost",
             branch="v0.0.3",
         )
-        assert os.path.isdir(d / "signpost")
+        assert os.path.isdir(p / "signpost")
 
 
 @pytest.mark.issue(12168)
 def test_project_git_file_asset():
-    with make_tempdir() as d:
+    with TemporaryDirectory() as d:
+        p = Path(d)
         # Use a very small repo.
         git_checkout(
             "https://github.com/explosion/os-signpost.git",
             "README.md",
-            d / "readme.md",
+            p / "readme.md",
             branch="v0.0.3",
         )
-        assert os.path.isfile(d / "readme.md")
+        assert os.path.isfile(p / "readme.md")
 
 
 def test_cli_info():
