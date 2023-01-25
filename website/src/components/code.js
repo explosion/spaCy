@@ -14,95 +14,15 @@ import 'prismjs/components/prism-markdown.min.js'
 import 'prismjs/components/prism-python.min.js'
 import 'prismjs/components/prism-yaml.min.js'
 
-import CUSTOM_TYPES from '../../meta/type-annotations.json'
-import { isString, htmlToReact } from './util'
+import { isString } from './util'
 import Link, { OptionalLink } from './link'
 import GitHubCode from './github'
-import Juniper from './juniper'
 import classes from '../styles/code.module.sass'
 import siteMetadata from '../../meta/site.json'
 import { binderBranch } from '../../meta/dynamicMeta.mjs'
+import dynamic from 'next/dynamic'
 
-const WRAP_THRESHOLD = 30
 const CLI_GROUPS = ['init', 'debug', 'project', 'ray', 'huggingface-hub']
-
-const CodeBlock = (props) => (
-    <Pre>
-        <Code {...props} />
-    </Pre>
-)
-
-export default CodeBlock
-
-export const Pre = (props) => {
-    return <pre className={classes['pre']}>{props.children}</pre>
-}
-
-export const InlineCode = ({ wrap = false, className, children, ...props }) => {
-    const codeClassNames = classNames(classes['inline-code'], className, {
-        [classes['wrap']]: wrap || (isString(children) && children.length >= WRAP_THRESHOLD),
-    })
-    return (
-        <code className={codeClassNames} {...props}>
-            {children}
-        </code>
-    )
-}
-
-InlineCode.propTypes = {
-    wrap: PropTypes.bool,
-    className: PropTypes.string,
-    children: PropTypes.node,
-}
-
-function linkType(el, showLink = true) {
-    if (!isString(el) || !el.length) return el
-    const elStr = el.trim()
-    if (!elStr) return el
-    const typeUrl = CUSTOM_TYPES[elStr]
-    const url = typeUrl == true ? DEFAULT_TYPE_URL : typeUrl
-    const ws = el[0] == ' '
-    return url && showLink ? (
-        <Fragment>
-            {ws && ' '}
-            <Link to={url} hideIcon>
-                {elStr}
-            </Link>
-        </Fragment>
-    ) : (
-        el
-    )
-}
-
-export const TypeAnnotation = ({ lang = 'python', link = true, children }) => {
-    // Hacky, but we're temporarily replacing a dot to prevent it from being split during highlighting
-    const TMP_DOT = '۔'
-    const code = Array.isArray(children) ? children.join('') : children || ''
-    const [rawText, meta] = code.split(/(?= \(.+\)$)/)
-    const rawStr = rawText.replace(/\./g, TMP_DOT)
-    const rawHtml =
-        lang === 'none' || !code ? code : Prism.highlight(rawStr, Prism.languages[lang], lang)
-    const html = rawHtml.replace(new RegExp(TMP_DOT, 'g'), '.').replace(/\n/g, ' ')
-    const result = htmlToReact(html)
-    const elements = Array.isArray(result) ? result : [result]
-    const annotClassNames = classNames(
-        'type-annotation',
-        `language-${lang}`,
-        classes['inline-code'],
-        classes['type-annotation'],
-        {
-            [classes['wrap']]: code.length >= WRAP_THRESHOLD,
-        }
-    )
-    return (
-        <span className={annotClassNames} role="code" aria-label="Type annotation">
-            {elements.map((el, i) => (
-                <Fragment key={i}>{linkType(el, !!link)}</Fragment>
-            ))}
-            {meta && <span className={classes['type-annotation-meta']}>{meta}</span>}
-        </span>
-    )
-}
 
 const splitLines = (children) => {
     const listChildrenPerLine = []
@@ -288,7 +208,7 @@ const addLineHighlight = (children, highlight) => {
     })
 }
 
-export const CodeHighlighted = ({ children, highlight, lang }) => {
+const CodeHighlighted = ({ children, highlight, lang }) => {
     const [html, setHtml] = useState()
 
     useEffect(
@@ -305,7 +225,7 @@ export const CodeHighlighted = ({ children, highlight, lang }) => {
     return <>{html}</>
 }
 
-export class Code extends React.Component {
+export default class Code extends React.Component {
     static defaultProps = {
         lang: 'none',
         executable: null,
@@ -354,6 +274,8 @@ export class Code extends React.Component {
     }
 }
 
+const JuniperDynamic = dynamic(() => import('./juniper'))
+
 const JuniperWrapper = ({ title, lang, children }) => {
     const { binderUrl, binderVersion } = siteMetadata
     const juniperTitle = title || 'Editable Code'
@@ -369,7 +291,7 @@ const JuniperWrapper = ({ title, lang, children }) => {
                 </span>
             </h4>
 
-            <Juniper
+            <JuniperDynamic
                 repo={binderUrl}
                 branch={binderBranch}
                 lang={lang}
@@ -381,7 +303,7 @@ const JuniperWrapper = ({ title, lang, children }) => {
                 }}
             >
                 {children}
-            </Juniper>
+            </JuniperDynamic>
         </div>
     )
 }

@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import Button from './button'
 import Tag from './tag'
 import { OptionalLink } from './link'
-import { InlineCode } from './code'
+import { InlineCode } from './inlineCode'
 import { H1, Label, InlineList, Help } from './typography'
 import Icon from './icon'
 
