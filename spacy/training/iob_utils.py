@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, Iterable, Union, Iterator
+from typing import List, Dict, Tuple, Iterable, Union, Iterator, cast
 import warnings
 
 from ..errors import Errors, Warnings
@@ -58,6 +58,14 @@ def doc_to_biluo_tags(doc: Doc, missing: str = "O"):
         [(ent.start_char, ent.end_char, ent.label_) for ent in doc.ents],
         missing=missing,
     )
+
+
+def _doc_to_biluo_tags_with_partial(doc: Doc) -> List[str]:
+    ents = doc_to_biluo_tags(doc, missing="-")
+    for i, token in enumerate(doc):
+        if token.ent_iob == 2:
+            ents[i] = "O"
+    return ents
 
 
 def offsets_to_biluo_tags(
@@ -216,6 +224,14 @@ def tags_to_entities(tags: Iterable[str]) -> List[Tuple[str, int, int]]:
         else:
             raise ValueError(Errors.E068.format(tag=tag))
     return entities
+
+
+def split_bilu_label(label: str) -> Tuple[str, str]:
+    return cast(Tuple[str, str], label.split("-", 1))
+
+
+def remove_bilu_prefix(label: str) -> str:
+    return label.split("-", 1)[1]
 
 
 # Fallbacks to make backwards-compat easier

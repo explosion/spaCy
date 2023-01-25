@@ -3,10 +3,10 @@ from typing import Optional
 import random
 import itertools
 from functools import partial
-from pydantic import BaseModel, StrictStr
 
 from ..util import registry
 from .example import Example
+from .iob_utils import split_bilu_label, _doc_to_biluo_tags_with_partial
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
@@ -62,6 +62,9 @@ def combined_augmenter(
     if orth_variants and random.random() < orth_level:
         raw_text = example.text
         orig_dict = example.to_dict()
+        orig_dict["doc_annotation"]["entities"] = _doc_to_biluo_tags_with_partial(
+            example.reference
+        )
         variant_text, variant_token_annot = make_orth_variants(
             nlp,
             raw_text,
@@ -128,6 +131,9 @@ def lower_casing_augmenter(
 
 def make_lowercase_variant(nlp: "Language", example: Example):
     example_dict = example.to_dict()
+    example_dict["doc_annotation"]["entities"] = _doc_to_biluo_tags_with_partial(
+        example.reference
+    )
     doc = nlp.make_doc(example.text.lower())
     example_dict["token_annotation"]["ORTH"] = [t.lower_ for t in example.reference]
     return example.from_dict(doc, example_dict)
@@ -146,6 +152,9 @@ def orth_variants_augmenter(
     else:
         raw_text = example.text
         orig_dict = example.to_dict()
+        orig_dict["doc_annotation"]["entities"] = _doc_to_biluo_tags_with_partial(
+            example.reference
+        )
         variant_text, variant_token_annot = make_orth_variants(
             nlp,
             raw_text,
@@ -248,6 +257,9 @@ def make_whitespace_variant(
     RETURNS (Example): Example with one additional space token.
     """
     example_dict = example.to_dict()
+    example_dict["doc_annotation"]["entities"] = _doc_to_biluo_tags_with_partial(
+        example.reference
+    )
     doc_dict = example_dict.get("doc_annotation", {})
     token_dict = example_dict.get("token_annotation", {})
     # returned unmodified if:
@@ -278,10 +290,8 @@ def make_whitespace_variant(
             ent_prev = doc_dict["entities"][position - 1]
             ent_next = doc_dict["entities"][position]
             if "-" in ent_prev and "-" in ent_next:
-                ent_iob_prev = ent_prev.split("-")[0]
-                ent_type_prev = ent_prev.split("-", 1)[1]
-                ent_iob_next = ent_next.split("-")[0]
-                ent_type_next = ent_next.split("-", 1)[1]
+                ent_iob_prev, ent_type_prev = split_bilu_label(ent_prev)
+                ent_iob_next, ent_type_next = split_bilu_label(ent_next)
                 if (
                     ent_iob_prev in ("B", "I")
                     and ent_iob_next in ("I", "L")

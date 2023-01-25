@@ -17,7 +17,7 @@ export default function Accordion({ title, id, expanded = false, spaced = false,
         [classes.hidden]: isExpanded,
     })
     // Make sure accordion is expanded if JS is disabled
-    useEffect(() => setIsExpanded(expanded), [])
+    useEffect(() => setIsExpanded(expanded), [expanded])
     return (
         <section className="accordion" id={id}>
             <div className={rootClassNames}>
@@ -34,7 +34,7 @@ export default function Accordion({ title, id, expanded = false, spaced = false,
                                     to={`#${id}`}
                                     className={classes.anchor}
                                     hidden
-                                    onClick={event => event.stopPropagation()}
+                                    onClick={(event) => event.stopPropagation()}
                                 >
                                     &para;
                                 </Link>

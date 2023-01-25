@@ -213,6 +213,7 @@ def convert_vectors(
         for lex in nlp.vocab:
             if lex.rank and lex.rank != OOV_RANK:
                 nlp.vocab.vectors.add(lex.orth, row=lex.rank)  # type: ignore[attr-defined]
+        nlp.vocab.deduplicate_vectors()
     else:
         if vectors_loc:
             logger.info(f"Reading vectors from {vectors_loc}")
@@ -239,6 +240,7 @@ def convert_vectors(
                 nlp.vocab.vectors = Vectors(
                     strings=nlp.vocab.strings, data=vectors_data, keys=vector_keys
                 )
+                nlp.vocab.deduplicate_vectors()
     if name is None:
         # TODO: Is this correct? Does this matter?
         nlp.vocab.vectors.name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"
@@ -335,3 +337,5 @@ def ensure_shape(vectors_loc):
         # store all the results in a list in memory
         lines2 = open_file(vectors_loc)
         yield from lines2
+        lines2.close()
+    lines.close()

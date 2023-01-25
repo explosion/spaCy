@@ -11,7 +11,10 @@
                     { "text": "spaCy 101", "url": "/usage/spacy-101" },
                     { "text": "New in v3.0", "url": "/usage/v3" },
                     { "text": "New in v3.1", "url": "/usage/v3-1" },
-                    { "text": "New in v3.2", "url": "/usage/v3-2" }
+                    { "text": "New in v3.2", "url": "/usage/v3-2" },
+                    { "text": "New in v3.3", "url": "/usage/v3-3" },
+                    { "text": "New in v3.4", "url": "/usage/v3-4" },
+                    { "text": "New in v3.5", "url": "/usage/v3-5" }
                 ]
             },
             {
@@ -43,7 +46,7 @@
                     { "text": "v2.x Documentation", "url": "https://v2.spacy.io" },
                     {
                         "text": "Custom Solutions",
-                        "url": "https://explosion.ai/spacy-tailored-pipelines"
+                        "url": "https://explosion.ai/custom-solutions"
                     }
                 ]
             }
@@ -92,7 +95,9 @@
                 "label": "Pipeline",
                 "items": [
                     { "text": "AttributeRuler", "url": "/api/attributeruler" },
+                    { "text": "CoreferenceResolver", "url": "/api/coref" },
                     { "text": "DependencyParser", "url": "/api/dependencyparser" },
+                    { "text": "EditTreeLemmatizer", "url": "/api/edittreelemmatizer" },
                     { "text": "EntityLinker", "url": "/api/entitylinker" },
                     { "text": "EntityRecognizer", "url": "/api/entityrecognizer" },
                     { "text": "EntityRuler", "url": "/api/entityruler" },
@@ -101,6 +106,8 @@
                     { "text": "SentenceRecognizer", "url": "/api/sentencerecognizer" },
                     { "text": "Sentencizer", "url": "/api/sentencizer" },
                     { "text": "SpanCategorizer", "url": "/api/spancategorizer" },
+                    { "text": "SpanResolver", "url": "/api/span-resolver" },
+                    { "text": "SpanRuler", "url": "/api/spanruler" },
                     { "text": "Tagger", "url": "/api/tagger" },
                     { "text": "TextCategorizer", "url": "/api/textcategorizer" },
                     { "text": "Tok2Vec", "url": "/api/tok2vec" },
@@ -121,7 +128,9 @@
             {
                 "label": "Other",
                 "items": [
+                    { "text": "Attributes", "url": "/api/attributes" },
                     { "text": "Corpus", "url": "/api/corpus" },
+                    { "text": "InMemoryLookupKB", "url": "/api/inmemorylookupkb" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },
                     { "text": "Lookups", "url": "/api/lookups" },
                     { "text": "MorphAnalysis", "url": "/api/morphology#morphanalysis" },

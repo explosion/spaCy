@@ -12,7 +12,7 @@ from click.parser import split_arg_string
 from typer.main import get_command
 from contextlib import contextmanager
 from thinc.api import Config, ConfigValidationError, require_gpu
-from thinc.util import has_cupy, gpu_is_available
+from thinc.util import gpu_is_available
 from configparser import InterpolationError
 import os
 
@@ -23,7 +23,7 @@ from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
 from .. import about
 
 if TYPE_CHECKING:
-    from pathy import Pathy  # noqa: F401
+    from pathy import FluidPath  # noqa: F401
 
 
 SDIST_SUFFIX = ".tar.gz"
@@ -46,6 +46,7 @@ DEBUG_HELP = """Suite of helpful commands for debugging and profiling. Includes
 commands to check and validate your config files, training and evaluation data,
 and custom model implementations.
 """
+BENCHMARK_HELP = """Commands for benchmarking pipelines."""
 INIT_HELP = """Commands for initializing configs and pipeline packages."""
 
 # Wrappers for Typer's annotations. Initially created to set defaults and to
@@ -54,12 +55,14 @@ Arg = typer.Argument
 Opt = typer.Option
 
 app = typer.Typer(name=NAME, help=HELP)
+benchmark_cli = typer.Typer(name="benchmark", help=BENCHMARK_HELP, no_args_is_help=True)
 project_cli = typer.Typer(name="project", help=PROJECT_HELP, no_args_is_help=True)
 debug_cli = typer.Typer(name="debug", help=DEBUG_HELP, no_args_is_help=True)
 init_cli = typer.Typer(name="init", help=INIT_HELP, no_args_is_help=True)
 
 app.add_typer(project_cli)
 app.add_typer(debug_cli)
+app.add_typer(benchmark_cli)
 app.add_typer(init_cli)
 
 
@@ -158,15 +161,15 @@ def load_project_config(
         sys.exit(1)
     validate_project_version(config)
     validate_project_commands(config)
+    if interpolate:
+        err = f"{PROJECT_FILE} validation error"
+        with show_validation_error(title=err, hint_fill=False):
+            config = substitute_project_variables(config, overrides)
     # Make sure directories defined in config exist
     for subdir in config.get("directories", []):
         dir_path = path / subdir
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
-    if interpolate:
-        err = f"{PROJECT_FILE} validation error"
-        with show_validation_error(title=err, hint_fill=False):
-            config = substitute_project_variables(config, overrides)
     return config
 
 
@@ -331,7 +334,7 @@ def import_code(code_path: Optional[Union[Path, str]]) -> None:
             msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
 
 
-def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
+def upload_file(src: Path, dest: Union[str, "FluidPath"]) -> None:
     """Upload a file.
 
     src (Path): The source path.
@@ -339,13 +342,20 @@ def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
     """
     import smart_open
 
+    # Create parent directories for local paths
+    if isinstance(dest, Path):
+        if not dest.parent.exists():
+            dest.parent.mkdir(parents=True)
+
     dest = str(dest)
     with smart_open.open(dest, mode="wb") as output_file:
         with src.open(mode="rb") as input_file:
             output_file.write(input_file.read())
 
 
-def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) -> None:
+def download_file(
+    src: Union[str, "FluidPath"], dest: Path, *, force: bool = False
+) -> None:
     """Download a file using smart_open.
 
     url (str): The URL of the file.
@@ -358,9 +368,9 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
     if dest.exists() and not force:
         return None
     src = str(src)
-    with smart_open.open(src, mode="rb", ignore_ext=True) as input_file:
+    with smart_open.open(src, mode="rb", compression="disable") as input_file:
         with dest.open(mode="wb") as output_file:
-            output_file.write(input_file.read())
+            shutil.copyfileobj(input_file, output_file)
 
 
 def ensure_pathy(path):
@@ -368,7 +378,7 @@ def ensure_pathy(path):
     slow and annoying Google Cloud warning)."""
     from pathy import Pathy  # noqa: F811
 
-    return Pathy(path)
+    return Pathy.fluid(path)
 
 
 def git_checkout(
@@ -460,6 +470,23 @@ def git_sparse_checkout(repo, subpath, dest, branch):
             msg.fail(err, repo, exits=1)
 
         shutil.move(str(source_path), str(dest))
+
+
+def git_repo_branch_exists(repo: str, branch: str) -> bool:
+    """Uses 'git ls-remote' to check if a repository and branch exists
+
+    repo (str): URL to get repo.
+    branch (str): Branch on repo to check.
+    RETURNS (bool): True if repo:branch exists.
+    """
+    get_git_version()
+    cmd = f"git ls-remote {repo} {branch}"
+    # We might be tempted to use `--exit-code` with `git ls-remote`, but
+    # `run_command` handles the `returncode` for us, so we'll rely on
+    # the fact that stdout returns '' if the requested branch doesn't exist
+    ret = run_command(cmd, capture=True)
+    exists = ret.stdout != ""
+    return exists
 
 
 def get_git_version(
@@ -554,5 +581,41 @@ def setup_gpu(use_gpu: int, silent=None) -> None:
         require_gpu(use_gpu)
     else:
         local_msg.info("Using CPU")
-        if has_cupy and gpu_is_available():
+        if gpu_is_available():
             local_msg.info("To switch to GPU 0, use the option: --gpu-id 0")
+
+
+def walk_directory(path: Path, suffix: Optional[str] = None) -> List[Path]:
+    """Given a directory and a suffix, recursively find all files matching the suffix.
+    Directories or files with names beginning with a . are ignored, but hidden flags on
+    filesystems are not checked.
+    When provided with a suffix `None`, there is no suffix-based filtering."""
+    if not path.is_dir():
+        return [path]
+    paths = [path]
+    locs = []
+    seen = set()
+    for path in paths:
+        if str(path) in seen:
+            continue
+        seen.add(str(path))
+        if path.parts[-1].startswith("."):
+            continue
+        elif path.is_dir():
+            paths.extend(path.iterdir())
+        elif suffix is not None and not path.parts[-1].endswith(suffix):
+            continue
+        else:
+            locs.append(path)
+    # It's good to sort these, in case the ordering messes up cache.
+    locs.sort()
+    return locs
+
+
+def _format_number(number: Union[int, float], ndigits: int = 2) -> str:
+    """Formats a number (float or int) rounding to `ndigits`, without truncating trailing 0s,
+    as happens with `round(number, ndigits)`"""
+    if isinstance(number, float):
+        return f"{number:.{ndigits}f}"
+    else:
+        return str(number)

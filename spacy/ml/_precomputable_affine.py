@@ -22,9 +22,15 @@ def forward(model, X, is_train):
     nP = model.get_dim("nP")
     nI = model.get_dim("nI")
     W = model.get_param("W")
-    Yf = model.ops.gemm(X, W.reshape((nF * nO * nP, nI)), trans2=True)
+    # Preallocate array for layer output, including padding.
+    Yf = model.ops.alloc2f(X.shape[0] + 1, nF * nO * nP, zeros=False)
+    model.ops.gemm(X, W.reshape((nF * nO * nP, nI)), trans2=True, out=Yf[1:])
     Yf = Yf.reshape((Yf.shape[0], nF, nO, nP))
-    Yf = model.ops.xp.vstack((model.get_param("pad"), Yf))
+
+    # Set padding. Padding has shape (1, nF, nO, nP). Unfortunately, we cannot
+    # change its shape to (nF, nO, nP) without breaking existing models. So
+    # we'll squeeze the first dimension here.
+    Yf[0] = model.ops.xp.squeeze(model.get_param("pad"), 0)
 
     def backward(dY_ids):
         # This backprop is particularly tricky, because we get back a different

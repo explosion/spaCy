@@ -6,17 +6,17 @@ import srsly
 import random
 from thinc.api import CosineDistance, Model, Optimizer, Config
 from thinc.api import set_dropout_rate
-import warnings
 
 from ..kb import KnowledgeBase, Candidate
 from ..ml import empty_kb
 from ..tokens import Doc, Span
 from .pipe import deserialize_config
+from .legacy.entity_linker import EntityLinker_v1
 from .trainable_pipe import TrainablePipe
 from ..language import Language
 from ..vocab import Vocab
 from ..training import Example, validate_examples, validate_get_examples
-from ..errors import Errors, Warnings
+from ..errors import Errors
 from ..util import SimpleFrozenList, registry
 from .. import util
 from ..scorer import Scorer
@@ -26,7 +26,7 @@ BACKWARD_OVERWRITE = True
 
 default_model_config = """
 [model]
-@architectures = "spacy.EntityLinker.v1"
+@architectures = "spacy.EntityLinker.v2"
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v2"
@@ -53,8 +53,12 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "incl_context": True,
         "entity_vector_length": 64,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
+        "get_candidates_batch": {"@misc": "spacy.CandidateBatchGenerator.v1"},
         "overwrite": True,
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
+        "use_gold_ents": True,
+        "candidates_batch_size": 1,
+        "threshold": None,
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -73,8 +77,14 @@ def make_entity_linker(
     incl_context: bool,
     entity_vector_length: int,
     get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
+    get_candidates_batch: Callable[
+        [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
+    ],
     overwrite: bool,
     scorer: Optional[Callable],
+    use_gold_ents: bool,
+    candidates_batch_size: int,
+    threshold: Optional[float] = None,
 ):
     """Construct an EntityLinker component.
 
@@ -86,10 +96,34 @@ def make_entity_linker(
     incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
     incl_context (bool): Whether or not to include the local context in the model.
     entity_vector_length (int): Size of encoding vectors in the KB.
-    get_candidates (Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]): Function that
+    get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
         produces a list of candidates, given a certain knowledge base and a textual mention.
+    get_candidates_batch (
+        Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
+        ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
     scorer (Optional[Callable]): The scoring method.
+    use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
+        component must provide entity annotations.
+    candidates_batch_size (int): Size of batches for entity candidate generation.
+    threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the threshold,
+        prediction is discarded. If None, predictions are not filtered by any threshold.
     """
+
+    if not model.attrs.get("include_span_maker", False):
+        # The only difference in arguments here is that use_gold_ents and threshold aren't available.
+        return EntityLinker_v1(
+            nlp.vocab,
+            model,
+            name,
+            labels_discard=labels_discard,
+            n_sents=n_sents,
+            incl_prior=incl_prior,
+            incl_context=incl_context,
+            entity_vector_length=entity_vector_length,
+            get_candidates=get_candidates,
+            overwrite=overwrite,
+            scorer=scorer,
+        )
     return EntityLinker(
         nlp.vocab,
         model,
@@ -100,8 +134,12 @@ def make_entity_linker(
         incl_context=incl_context,
         entity_vector_length=entity_vector_length,
         get_candidates=get_candidates,
+        get_candidates_batch=get_candidates_batch,
         overwrite=overwrite,
         scorer=scorer,
+        use_gold_ents=use_gold_ents,
+        candidates_batch_size=candidates_batch_size,
+        threshold=threshold,
     )
 
 
@@ -134,8 +172,14 @@ class EntityLinker(TrainablePipe):
         incl_context: bool,
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
+        get_candidates_batch: Callable[
+            [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
+        ],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
+        use_gold_ents: bool,
+        candidates_batch_size: int,
+        threshold: Optional[float] = None,
     ) -> None:
         """Initialize an entity linker.
 
@@ -150,11 +194,28 @@ class EntityLinker(TrainablePipe):
         entity_vector_length (int): Size of encoding vectors in the KB.
         get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
-        scorer (Optional[Callable]): The scoring method. Defaults to
-            Scorer.score_links.
-
+        get_candidates_batch (
+            Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]],
+            Iterable[Candidate]]
+            ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
+        scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
+        use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
+            component must provide entity annotations.
+        candidates_batch_size (int): Size of batches for entity candidate generation.
+        threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
+            threshold, prediction is discarded. If None, predictions are not filtered by any threshold.
         DOCS: https://spacy.io/api/entitylinker#init
         """
+
+        if threshold is not None and not (0 <= threshold <= 1):
+            raise ValueError(
+                Errors.E1043.format(
+                    range_start=0,
+                    range_end=1,
+                    value=threshold,
+                )
+            )
+
         self.vocab = vocab
         self.model = model
         self.name = name
@@ -163,12 +224,19 @@ class EntityLinker(TrainablePipe):
         self.incl_prior = incl_prior
         self.incl_context = incl_context
         self.get_candidates = get_candidates
+        self.get_candidates_batch = get_candidates_batch
         self.cfg: Dict[str, Any] = {"overwrite": overwrite}
         self.distance = CosineDistance(normalize=False)
         # how many neighbour sentences to take into account
-        # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
+        # create an empty KB by default
         self.kb = empty_kb(entity_vector_length)(self.vocab)
         self.scorer = scorer
+        self.use_gold_ents = use_gold_ents
+        self.candidates_batch_size = candidates_batch_size
+        self.threshold = threshold
+
+        if candidates_batch_size < 1:
+            raise ValueError(Errors.E1044)
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -176,7 +244,7 @@ class EntityLinker(TrainablePipe):
         if not callable(kb_loader):
             raise ValueError(Errors.E885.format(arg_type=type(kb_loader)))
 
-        self.kb = kb_loader(self.vocab)
+        self.kb = kb_loader(self.vocab)  # type: ignore
 
     def validate_kb(self) -> None:
         # Raise an error if the knowledge base is not initialized.
@@ -198,8 +266,8 @@ class EntityLinker(TrainablePipe):
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
-        kb_loader (Callable[[Vocab], KnowledgeBase]): A function that creates a KnowledgeBase from a Vocab instance.
-            Note that providing this argument, will overwrite all data accumulated in the current KB.
+        kb_loader (Callable[[Vocab], KnowledgeBase]): A function that creates a KnowledgeBase from a Vocab
+            instance. Note that providing this argument will overwrite all data accumulated in the current KB.
             Use this only when loading a KB as-such from file.
 
         DOCS: https://spacy.io/api/entitylinker#initialize
@@ -211,14 +279,49 @@ class EntityLinker(TrainablePipe):
         nO = self.kb.entity_vector_length
         doc_sample = []
         vector_sample = []
-        for example in islice(get_examples(), 10):
-            doc_sample.append(example.x)
+        for eg in islice(get_examples(), 10):
+            doc = eg.x
+            if self.use_gold_ents:
+                ents, _ = eg.get_aligned_ents_and_ner()
+                doc.ents = ents
+            doc_sample.append(doc)
             vector_sample.append(self.model.ops.alloc1f(nO))
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(vector_sample) > 0, Errors.E923.format(name=self.name)
+
+        # XXX In order for size estimation to work, there has to be at least
+        # one entity. It's not used for training so it doesn't have to be real,
+        # so we add a fake one if none are present.
+        # We can't use Doc.has_annotation here because it can be True for docs
+        # that have been through an NER component but got no entities.
+        has_annotations = any([doc.ents for doc in doc_sample])
+        if not has_annotations:
+            doc = doc_sample[0]
+            ent = doc[0:1]
+            ent.label_ = "XXX"
+            doc.ents = (ent,)
+
         self.model.initialize(
             X=doc_sample, Y=self.model.ops.asarray(vector_sample, dtype="float32")
         )
+
+        if not has_annotations:
+            # Clean up dummy annotation
+            doc.ents = []
+
+    def batch_has_learnable_example(self, examples):
+        """Check if a batch contains a learnable example.
+
+        If one isn't present, then the update step needs to be skipped.
+        """
+
+        for eg in examples:
+            for ent in eg.predicted.ents:
+                candidates = list(self.get_candidates(self.kb, ent))
+                if candidates:
+                    return True
+
+        return False
 
     def update(
         self,
@@ -247,35 +350,30 @@ class EntityLinker(TrainablePipe):
         if not examples:
             return losses
         validate_examples(examples, "EntityLinker.update")
-        sentence_docs = []
-        for eg in examples:
-            sentences = [s for s in eg.reference.sents]
-            kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
-            for ent in eg.reference.ents:
-                # KB ID of the first token is the same as the whole span
-                kb_id = kb_ids[ent.start]
-                if kb_id:
-                    try:
-                        # find the sentence in the list of sentences.
-                        sent_index = sentences.index(ent.sent)
-                    except AttributeError:
-                        # Catch the exception when ent.sent is None and provide a user-friendly warning
-                        raise RuntimeError(Errors.E030) from None
-                    # get n previous sentences, if there are any
-                    start_sentence = max(0, sent_index - self.n_sents)
-                    # get n posterior sentences, or as many < n as there are
-                    end_sentence = min(len(sentences) - 1, sent_index + self.n_sents)
-                    # get token positions
-                    start_token = sentences[start_sentence].start
-                    end_token = sentences[end_sentence].end
-                    # append that span as a doc to training
-                    sent_doc = eg.predicted[start_token:end_token].as_doc()
-                    sentence_docs.append(sent_doc)
+
         set_dropout_rate(self.model, drop)
-        if not sentence_docs:
-            warnings.warn(Warnings.W093.format(name="Entity Linker"))
+        docs = [eg.predicted for eg in examples]
+        # save to restore later
+        old_ents = [doc.ents for doc in docs]
+
+        for doc, ex in zip(docs, examples):
+            if self.use_gold_ents:
+                ents, _ = ex.get_aligned_ents_and_ner()
+                doc.ents = ents
+            else:
+                # only keep matching ents
+                doc.ents = ex.get_matching_ents()
+
+        # make sure we have something to learn from, if not, short-circuit
+        if not self.batch_has_learnable_example(examples):
             return losses
-        sentence_encodings, bp_context = self.model.begin_update(sentence_docs)
+
+        sentence_encodings, bp_context = self.model.begin_update(docs)
+
+        # now restore the ents
+        for doc, old in zip(docs, old_ents):
+            doc.ents = old
+
         loss, d_scores = self.get_loss(
             sentence_encodings=sentence_encodings, examples=examples
         )
@@ -288,24 +386,41 @@ class EntityLinker(TrainablePipe):
     def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
         validate_examples(examples, "EntityLinker.get_loss")
         entity_encodings = []
+        eidx = 0  # indices in gold entities to keep
+        keep_ents = []  # indices in sentence_encodings to keep
+
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
-            for ent in eg.reference.ents:
+
+            for ent in eg.get_matching_ents():
                 kb_id = kb_ids[ent.start]
                 if kb_id:
                     entity_encoding = self.kb.get_vector(kb_id)
                     entity_encodings.append(entity_encoding)
-        entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
-        if sentence_encodings.shape != entity_encodings.shape:
+                    keep_ents.append(eidx)
+
+                eidx += 1
+        entity_encodings = self.model.ops.asarray2f(entity_encodings, dtype="float32")
+        selected_encodings = sentence_encodings[keep_ents]
+
+        # if there are no matches, short circuit
+        if not keep_ents:
+            out = self.model.ops.alloc2f(*sentence_encodings.shape)
+            return 0, out
+
+        if selected_encodings.shape != entity_encodings.shape:
             err = Errors.E147.format(
                 method="get_loss", msg="gold entities do not match up"
             )
             raise RuntimeError(err)
-        # TODO: fix typing issue here
-        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)  # type: ignore
-        loss = self.distance.get_loss(sentence_encodings, entity_encodings)  # type: ignore
+        gradients = self.distance.get_grad(selected_encodings, entity_encodings)
+        # to match the input size, we need to give a zero gradient for items not in the kb
+        out = self.model.ops.alloc2f(*sentence_encodings.shape)
+        out[keep_ents] = gradients
+
+        loss = self.distance.get_loss(selected_encodings, entity_encodings)
         loss = loss / len(entity_encodings)
-        return float(loss), gradients
+        return float(loss), out
 
     def predict(self, docs: Iterable[Doc]) -> List[str]:
         """Apply the pipeline's model to a batch of docs, without modifying them.
@@ -320,27 +435,53 @@ class EntityLinker(TrainablePipe):
         self.validate_kb()
         entity_count = 0
         final_kb_ids: List[str] = []
+        xp = self.model.ops.xp
         if not docs:
             return final_kb_ids
         if isinstance(docs, Doc):
             docs = [docs]
         for i, doc in enumerate(docs):
+            if len(doc) == 0:
+                continue
             sentences = [s for s in doc.sents]
-            if len(doc) > 0:
-                # Looping through each entity (TODO: rewrite)
-                for ent in doc.ents:
-                    sent = ent.sent
-                    sent_index = sentences.index(sent)
+
+            # Loop over entities in batches.
+            for ent_idx in range(0, len(doc.ents), self.candidates_batch_size):
+                ent_batch = doc.ents[ent_idx : ent_idx + self.candidates_batch_size]
+
+                # Look up candidate entities.
+                valid_ent_idx = [
+                    idx
+                    for idx in range(len(ent_batch))
+                    if ent_batch[idx].label_ not in self.labels_discard
+                ]
+
+                batch_candidates = list(
+                    self.get_candidates_batch(
+                        self.kb, [ent_batch[idx] for idx in valid_ent_idx]
+                    )
+                    if self.candidates_batch_size > 1
+                    else [
+                        self.get_candidates(self.kb, ent_batch[idx])
+                        for idx in valid_ent_idx
+                    ]
+                )
+
+                # Looping through each entity in batch (TODO: rewrite)
+                for j, ent in enumerate(ent_batch):
+                    sent_index = sentences.index(ent.sent)
                     assert sent_index >= 0
-                    # get n_neighbour sentences, clipped to the length of the document
-                    start_sentence = max(0, sent_index - self.n_sents)
-                    end_sentence = min(len(sentences) - 1, sent_index + self.n_sents)
-                    start_token = sentences[start_sentence].start
-                    end_token = sentences[end_sentence].end
-                    sent_doc = doc[start_token:end_token].as_doc()
-                    # currently, the context is the same for each entity in a sentence (should be refined)
-                    xp = self.model.ops.xp
+
                     if self.incl_context:
+                        # get n_neighbour sentences, clipped to the length of the document
+                        start_sentence = max(0, sent_index - self.n_sents)
+                        end_sentence = min(
+                            len(sentences) - 1, sent_index + self.n_sents
+                        )
+                        start_token = sentences[start_sentence].start
+                        end_token = sentences[end_sentence].end
+                        sent_doc = doc[start_token:end_token].as_doc()
+                        # currently, the context is the same for each entity in a sentence (should be refined)
                         sentence_encoding = self.model.predict([sent_doc])[0]
                         sentence_encoding_t = sentence_encoding.T
                         sentence_norm = xp.linalg.norm(sentence_encoding_t)
@@ -349,13 +490,12 @@ class EntityLinker(TrainablePipe):
                         # ignoring this entity - setting to NIL
                         final_kb_ids.append(self.NIL)
                     else:
-                        candidates = list(self.get_candidates(self.kb, ent))
+                        candidates = list(batch_candidates[j])
                         if not candidates:
                             # no prediction possible for this entity - setting to NIL
                             final_kb_ids.append(self.NIL)
-                        elif len(candidates) == 1:
+                        elif len(candidates) == 1 and self.threshold is None:
                             # shortcut for efficiency reasons: take the 1 candidate
-                            # TODO: thresholding
                             final_kb_ids.append(candidates[0].entity_)
                         else:
                             random.shuffle(candidates)
@@ -384,10 +524,13 @@ class EntityLinker(TrainablePipe):
                                 if sims.shape != prior_probs.shape:
                                     raise ValueError(Errors.E161)
                                 scores = prior_probs + sims - (prior_probs * sims)
-                            # TODO: thresholding
-                            best_index = scores.argmax().item()
-                            best_candidate = candidates[best_index]
-                            final_kb_ids.append(best_candidate.entity_)
+                            final_kb_ids.append(
+                                candidates[scores.argmax().item()].entity_
+                                if self.threshold is None
+                                or scores.max() >= self.threshold
+                                else EntityLinker.NIL
+                            )
+
         if not (len(final_kb_ids) == entity_count):
             err = Errors.E147.format(
                 method="predict", msg="result variables not of equal length"

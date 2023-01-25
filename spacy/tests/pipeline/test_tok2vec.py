@@ -1,13 +1,13 @@
 import pytest
 from spacy.ml.models.tok2vec import build_Tok2Vec_model
-from spacy.ml.models.tok2vec import MultiHashEmbed, CharacterEmbed
-from spacy.ml.models.tok2vec import MishWindowEncoder, MaxoutWindowEncoder
+from spacy.ml.models.tok2vec import MultiHashEmbed, MaxoutWindowEncoder
 from spacy.pipeline.tok2vec import Tok2Vec, Tok2VecListener
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
 from spacy.training import Example
 from spacy import util
 from spacy.lang.en import English
+from spacy.util import registry
 from thinc.api import Config, get_current_ops
 from numpy.testing import assert_array_equal
 
@@ -55,24 +55,41 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
         assert doc_vec.shape == (len(doc), width)
 
 
+@pytest.mark.slow
+@pytest.mark.parametrize("width", [8])
 @pytest.mark.parametrize(
-    "width,embed_arch,embed_config,encode_arch,encode_config",
+    "embed_arch,embed_config",
     # fmt: off
     [
-        (8, MultiHashEmbed, {"rows": [100, 100], "attrs": ["SHAPE", "LOWER"], "include_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
-        (8, MultiHashEmbed, {"rows": [100, 20], "attrs": ["ORTH", "PREFIX"], "include_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 6}),
-        (8, CharacterEmbed, {"rows": 100, "nM": 64, "nC": 8, "include_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 3}),
-        (8, CharacterEmbed, {"rows": 100, "nM": 16, "nC": 2, "include_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 3}),
+        ("spacy.MultiHashEmbed.v1", {"rows": [100, 100], "attrs": ["SHAPE", "LOWER"], "include_static_vectors": False}),
+        ("spacy.MultiHashEmbed.v1", {"rows": [100, 20], "attrs": ["ORTH", "PREFIX"], "include_static_vectors": False}),
+        ("spacy.CharacterEmbed.v1", {"rows": 100, "nM": 64, "nC": 8, "include_static_vectors": False}),
+        ("spacy.CharacterEmbed.v1", {"rows": 100, "nM": 16, "nC": 2, "include_static_vectors": False}),
     ],
     # fmt: on
 )
-def test_tok2vec_configs(width, embed_arch, embed_config, encode_arch, encode_config):
+@pytest.mark.parametrize(
+    "tok2vec_arch,encode_arch,encode_config",
+    # fmt: off
+    [
+        ("spacy.Tok2Vec.v1", "spacy.MaxoutWindowEncoder.v1", {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
+        ("spacy.Tok2Vec.v2", "spacy.MaxoutWindowEncoder.v2", {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
+        ("spacy.Tok2Vec.v1", "spacy.MishWindowEncoder.v1", {"window_size": 1, "depth": 6}),
+        ("spacy.Tok2Vec.v2", "spacy.MishWindowEncoder.v2", {"window_size": 1, "depth": 6}),
+    ],
+    # fmt: on
+)
+def test_tok2vec_configs(
+    width, tok2vec_arch, embed_arch, embed_config, encode_arch, encode_config
+):
+    embed = registry.get("architectures", embed_arch)
+    encode = registry.get("architectures", encode_arch)
+    tok2vec_model = registry.get("architectures", tok2vec_arch)
+
     embed_config["width"] = width
     encode_config["width"] = width
     docs = get_batch(3)
-    tok2vec = build_Tok2Vec_model(
-        embed_arch(**embed_config), encode_arch(**encode_config)
-    )
+    tok2vec = tok2vec_model(embed(**embed_config), encode(**encode_config))
     tok2vec.initialize(docs)
     vectors, backprop = tok2vec.begin_update(docs)
     assert len(vectors) == len(docs)
@@ -100,7 +117,7 @@ cfg_string = """
     factory = "tagger"
 
     [components.tagger.model]
-    @architectures = "spacy.Tagger.v1"
+    @architectures = "spacy.Tagger.v2"
     nO = null
 
     [components.tagger.model.tok2vec]
@@ -213,6 +230,97 @@ def test_tok2vec_listener_callback():
     assert get_dX(Y) is not None
 
 
+def test_tok2vec_listener_overfitting():
+    """Test that a pipeline with a listener properly overfits, even if 'tok2vec' is in the annotating components"""
+    orig_config = Config().from_str(cfg_string)
+    nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses, annotates=["tok2vec"])
+    assert losses["tagger"] < 0.00001
+
+    # test the trained model
+    test_text = "I like blue eggs"
+    doc = nlp(test_text)
+    assert doc[0].tag_ == "N"
+    assert doc[1].tag_ == "V"
+    assert doc[2].tag_ == "J"
+    assert doc[3].tag_ == "N"
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        assert doc2[0].tag_ == "N"
+        assert doc2[1].tag_ == "V"
+        assert doc2[2].tag_ == "J"
+        assert doc2[3].tag_ == "N"
+
+
+def test_tok2vec_frozen_not_annotating():
+    """Test that a pipeline with a frozen tok2vec raises an error when the tok2vec is not annotating"""
+    orig_config = Config().from_str(cfg_string)
+    nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+
+    for i in range(2):
+        losses = {}
+        with pytest.raises(
+            ValueError, match=r"the tok2vec embedding layer is not updated"
+        ):
+            nlp.update(
+                train_examples, sgd=optimizer, losses=losses, exclude=["tok2vec"]
+            )
+
+
+def test_tok2vec_frozen_overfitting():
+    """Test that a pipeline with a frozen & annotating tok2vec can still overfit"""
+    orig_config = Config().from_str(cfg_string)
+    nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+
+    for i in range(100):
+        losses = {}
+        nlp.update(
+            train_examples,
+            sgd=optimizer,
+            losses=losses,
+            exclude=["tok2vec"],
+            annotates=["tok2vec"],
+        )
+    assert losses["tagger"] < 0.0001
+
+    # test the trained model
+    test_text = "I like blue eggs"
+    doc = nlp(test_text)
+    assert doc[0].tag_ == "N"
+    assert doc[1].tag_ == "V"
+    assert doc[2].tag_ == "J"
+    assert doc[3].tag_ == "N"
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        assert doc2[0].tag_ == "N"
+        assert doc2[1].tag_ == "V"
+        assert doc2[2].tag_ == "J"
+        assert doc2[3].tag_ == "N"
+
+
 def test_replace_listeners():
     orig_config = Config().from_str(cfg_string)
     nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
@@ -263,7 +371,7 @@ cfg_string_multi = """
     factory = "tagger"
 
     [components.tagger.model]
-    @architectures = "spacy.Tagger.v1"
+    @architectures = "spacy.Tagger.v2"
     nO = null
 
     [components.tagger.model.tok2vec]
@@ -373,7 +481,7 @@ cfg_string_multi_textcat = """
     factory = "tagger"
 
     [components.tagger.model]
-    @architectures = "spacy.Tagger.v1"
+    @architectures = "spacy.Tagger.v2"
     nO = null
 
     [components.tagger.model.tok2vec]

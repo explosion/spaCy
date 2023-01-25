@@ -1,4 +1,5 @@
 import pytest
+import warnings
 import srsly
 from mock import Mock
 
@@ -120,6 +121,36 @@ def test_issue6839(en_vocab):
     matcher.add("SPACY", [pattern])
     matches = matcher(span)
     assert matches
+
+
+@pytest.mark.issue(10643)
+def test_issue10643(en_vocab):
+    """Ensure overlapping terms can be removed from PhraseMatcher"""
+
+    # fmt: off
+    words = ["Only", "save", "out", "the", "binary", "data", "for", "the", "individual", "components", "."]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
+    terms = {
+        "0": Doc(en_vocab, words=["binary"]),
+        "1": Doc(en_vocab, words=["binary", "data"]),
+    }
+    matcher = PhraseMatcher(en_vocab)
+    for match_id, term in terms.items():
+        matcher.add(match_id, [term])
+
+    matches = matcher(doc)
+    assert matches == [(en_vocab.strings["0"], 4, 5), (en_vocab.strings["1"], 4, 6)]
+
+    matcher.remove("0")
+    assert len(matcher) == 1
+    new_matches = matcher(doc)
+    assert new_matches == [(en_vocab.strings["1"], 4, 6)]
+
+    matcher.remove("1")
+    assert len(matcher) == 0
+    no_matches = matcher(doc)
+    assert not no_matches
 
 
 def test_matcher_phrase_matcher(en_vocab):
@@ -314,13 +345,13 @@ def test_phrase_matcher_validation(en_vocab):
         matcher.add("TEST1", [doc1])
     with pytest.warns(UserWarning):
         matcher.add("TEST2", [doc2])
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         matcher.add("TEST3", [doc3])
-        assert not record.list
     matcher = PhraseMatcher(en_vocab, attr="POS", validate=True)
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         matcher.add("TEST4", [doc2])
-        assert not record.list
 
 
 def test_attr_validation(en_vocab):

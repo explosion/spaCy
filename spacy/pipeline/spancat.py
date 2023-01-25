@@ -1,7 +1,7 @@
-from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast
+from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
 from thinc.api import Optimizer
-from thinc.types import Ragged, Ints2d, Floats2d, Ints1d
+from thinc.types import Ragged, Ints2d, Floats2d
 
 import numpy
 
@@ -26,17 +26,17 @@ scorer = {"@layers": "spacy.LinearLogistic.v1"}
 hidden_size = 128
 
 [model.tok2vec]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [model.tok2vec.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 width = 96
 rows = [5000, 2000, 1000, 1000]
 attrs = ["ORTH", "PREFIX", "SUFFIX", "SHAPE"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 width = ${model.tok2vec.embed.width}
 window_size = 1
 maxout_pieces = 3
@@ -75,7 +75,7 @@ def build_ngram_suggester(sizes: List[int]) -> Suggester:
                 if spans:
                     assert spans[-1].ndim == 2, spans[-1].shape
             lengths.append(length)
-        lengths_array = cast(Ints1d, ops.asarray(lengths, dtype="i"))
+        lengths_array = ops.asarray1i(lengths)
         if len(spans) > 0:
             output = Ragged(ops.xp.vstack(spans), lengths_array)
         else:
@@ -133,6 +133,9 @@ def make_spancat(
     spans_key (str): Key of the doc.spans dict to save the spans under. During
         initialization and training, the component will look for spans on the
         reference document under the same key.
+    scorer (Optional[Callable]): The scoring method. Defaults to
+        Scorer.score_spans for the Doc.spans[spans_key] with overlapping
+        spans allowed.
     threshold (float): Minimum probability to consider a prediction positive.
         Spans with a positive prediction will be saved on the Doc. Defaults to
         0.5.
@@ -269,8 +272,29 @@ class SpanCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/spancategorizer#predict
         """
         indices = self.suggester(docs, ops=self.model.ops)
-        scores = self.model.predict((docs, indices))  # type: ignore
+        if indices.lengths.sum() == 0:
+            scores = self.model.ops.alloc2f(0, 0)
+        else:
+            scores = self.model.predict((docs, indices))  # type: ignore
         return indices, scores
+
+    def set_candidates(
+        self, docs: Iterable[Doc], *, candidates_key: str = "candidates"
+    ) -> None:
+        """Use the spancat suggester to add a list of span candidates to a list of docs.
+        This method is intended to be used for debugging purposes.
+
+        docs (Iterable[Doc]): The documents to modify.
+        candidates_key (str): Key of the Doc.spans dict to save the candidate spans under.
+
+        DOCS: https://spacy.io/api/spancategorizer#set_candidates
+        """
+        suggester_output = self.suggester(docs, ops=self.model.ops)
+
+        for candidates, doc in zip(suggester_output, docs):  # type: ignore
+            doc.spans[candidates_key] = []
+            for index in candidates.dataXd:
+                doc.spans[candidates_key].append(doc[index[0] : index[1]])
 
     def set_annotations(self, docs: Iterable[Doc], indices_scores) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.

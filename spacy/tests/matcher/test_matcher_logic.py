@@ -699,6 +699,10 @@ def test_matcher_with_alignments_greedy_longest(en_vocab):
         ("aaaa", "a a a a a?", [0, 1, 2, 3]),
         ("aaab", "a+ a b", [0, 0, 1, 2]),
         ("aaab", "a+ a+ b", [0, 0, 1, 2]),
+        ("aaab", "a{2,} b", [0, 0, 0, 1]),
+        ("aaab", "a{,3} b", [0, 0, 0, 1]),
+        ("aaab", "a{2} b", [0, 0, 1]),
+        ("aaab", "a{2,3} b", [0, 0, 0, 1]),
     ]
     for string, pattern_str, result in cases:
         matcher = Matcher(en_vocab)
@@ -711,6 +715,8 @@ def test_matcher_with_alignments_greedy_longest(en_vocab):
                 pattern.append({"ORTH": part[0], "OP": "*"})
             elif part.endswith("?"):
                 pattern.append({"ORTH": part[0], "OP": "?"})
+            elif part.endswith("}"):
+                pattern.append({"ORTH": part[0], "OP": part[1:]})
             else:
                 pattern.append({"ORTH": part})
         matcher.add("PATTERN", [pattern], greedy="LONGEST")
@@ -722,7 +728,7 @@ def test_matcher_with_alignments_greedy_longest(en_vocab):
         assert expected == result, (string, pattern_str, s, e, n_matches)
 
 
-def test_matcher_with_alignments_nongreedy(en_vocab):
+def test_matcher_with_alignments_non_greedy(en_vocab):
     cases = [
         (0, "aaab", "a* b", [[0, 1], [0, 0, 1], [0, 0, 0, 1], [1]]),
         (1, "baab", "b a* b", [[0, 1, 1, 2]]),
@@ -752,6 +758,10 @@ def test_matcher_with_alignments_nongreedy(en_vocab):
         (15, "aaaa", "a a a a a?", [[0, 1, 2, 3]]),
         (16, "aaab", "a+ a b", [[0, 1, 2], [0, 0, 1, 2]]),
         (17, "aaab", "a+ a+ b", [[0, 1, 2], [0, 0, 1, 2]]),
+        (18, "aaab", "a{2,} b", [[0, 0, 1], [0, 0, 0, 1]]),
+        (19, "aaab", "a{3} b", [[0, 0, 0, 1]]),
+        (20, "aaab", "a{2} b", [[0, 0, 1]]),
+        (21, "aaab", "a{2,3} b", [[0, 0, 1], [0, 0, 0, 1]]),
     ]
     for case_id, string, pattern_str, results in cases:
         matcher = Matcher(en_vocab)
@@ -764,6 +774,8 @@ def test_matcher_with_alignments_nongreedy(en_vocab):
                 pattern.append({"ORTH": part[0], "OP": "*"})
             elif part.endswith("?"):
                 pattern.append({"ORTH": part[0], "OP": "?"})
+            elif part.endswith("}"):
+                pattern.append({"ORTH": part[0], "OP": part[1:]})
             else:
                 pattern.append({"ORTH": part})
 

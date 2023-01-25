@@ -3,12 +3,13 @@ from typing import Iterable, TypeVar, TYPE_CHECKING
 from .compat import Literal
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator, create_model
-from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
+from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, ConstrainedStr
 from pydantic.main import ModelMetaclass
 from thinc.api import Optimizer, ConfigValidationError, Model
 from thinc.config import Promise
 from collections import defaultdict
 import inspect
+import re
 
 from .attrs import NAMES
 from .lookups import Lookups
@@ -104,7 +105,7 @@ def get_arg_model(
         sig_args[param.name] = (annotation, default)
     is_strict = strict and not has_variable
     sig_args["__config__"] = ArgSchemaConfig if is_strict else ArgSchemaConfigExtra  # type: ignore[assignment]
-    return create_model(name, **sig_args)  # type: ignore[arg-type, return-value]
+    return create_model(name, **sig_args)  # type: ignore[call-overload, arg-type, return-value]
 
 
 def validate_init_settings(
@@ -155,12 +156,40 @@ def validate_token_pattern(obj: list) -> List[str]:
 
 
 class TokenPatternString(BaseModel):
-    REGEX: Optional[StrictStr] = Field(None, alias="regex")
+    REGEX: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="regex")
     IN: Optional[List[StrictStr]] = Field(None, alias="in")
     NOT_IN: Optional[List[StrictStr]] = Field(None, alias="not_in")
     IS_SUBSET: Optional[List[StrictStr]] = Field(None, alias="is_subset")
     IS_SUPERSET: Optional[List[StrictStr]] = Field(None, alias="is_superset")
     INTERSECTS: Optional[List[StrictStr]] = Field(None, alias="intersects")
+    FUZZY: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy")
+    FUZZY1: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy1"
+    )
+    FUZZY2: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy2"
+    )
+    FUZZY3: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy3"
+    )
+    FUZZY4: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy4"
+    )
+    FUZZY5: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy5"
+    )
+    FUZZY6: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy6"
+    )
+    FUZZY7: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy7"
+    )
+    FUZZY8: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy8"
+    )
+    FUZZY9: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy9"
+    )
 
     class Config:
         extra = "forbid"
@@ -180,12 +209,12 @@ class TokenPatternNumber(BaseModel):
     IS_SUBSET: Optional[List[StrictInt]] = Field(None, alias="is_subset")
     IS_SUPERSET: Optional[List[StrictInt]] = Field(None, alias="is_superset")
     INTERSECTS: Optional[List[StrictInt]] = Field(None, alias="intersects")
-    EQ: Union[StrictInt, StrictFloat] = Field(None, alias="==")
-    NEQ: Union[StrictInt, StrictFloat] = Field(None, alias="!=")
-    GEQ: Union[StrictInt, StrictFloat] = Field(None, alias=">=")
-    LEQ: Union[StrictInt, StrictFloat] = Field(None, alias="<=")
-    GT: Union[StrictInt, StrictFloat] = Field(None, alias=">")
-    LT: Union[StrictInt, StrictFloat] = Field(None, alias="<")
+    EQ: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias="==")
+    NEQ: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias="!=")
+    GEQ: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias=">=")
+    LEQ: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias="<=")
+    GT: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias=">")
+    LT: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias="<")
 
     class Config:
         extra = "forbid"
@@ -198,13 +227,18 @@ class TokenPatternNumber(BaseModel):
         return v
 
 
-class TokenPatternOperator(str, Enum):
+class TokenPatternOperatorSimple(str, Enum):
     plus: StrictStr = StrictStr("+")
-    start: StrictStr = StrictStr("*")
+    star: StrictStr = StrictStr("*")
     question: StrictStr = StrictStr("?")
     exclamation: StrictStr = StrictStr("!")
 
 
+class TokenPatternOperatorMinMax(ConstrainedStr):
+    regex = re.compile(r"^({\d+}|{\d+,\d*}|{\d*,\d+})$")
+
+
+TokenPatternOperator = Union[TokenPatternOperatorSimple, TokenPatternOperatorMinMax]
 StringValue = Union[TokenPatternString, StrictStr]
 NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
 UnderscoreValue = Union[
@@ -323,6 +357,7 @@ class ConfigSchemaTraining(BaseModel):
     frozen_components: List[str] = Field(..., title="Pipeline components that shouldn't be updated during training")
     annotating_components: List[str] = Field(..., title="Pipeline components that should set annotations during training")
     before_to_disk: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after training, before it's saved to disk")
+    before_update: Optional[Callable[["Language", Dict[str, Any]], None]] = Field(..., title="Optional callback that is invoked at the start of each training step")
     # fmt: on
 
     class Config:
@@ -424,7 +459,7 @@ class ProjectConfigAssetURL(BaseModel):
     # fmt: off
     dest: StrictStr = Field(..., title="Destination of downloaded asset")
     url: Optional[StrictStr] = Field(None, title="URL of asset")
-    checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
+    checksum: Optional[str] = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
     description: StrictStr = Field("", title="Description of asset")
     # fmt: on
 
@@ -432,7 +467,7 @@ class ProjectConfigAssetURL(BaseModel):
 class ProjectConfigAssetGit(BaseModel):
     # fmt: off
     git: ProjectConfigAssetGitItem = Field(..., title="Git repo information")
-    checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
+    checksum: Optional[str] = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
     description: Optional[StrictStr] = Field(None, title="Description of asset")
     # fmt: on
 
@@ -485,3 +520,37 @@ class RecommendationSchema(BaseModel):
     word_vectors: Optional[str] = None
     transformer: Optional[RecommendationTrf] = None
     has_letters: bool = True
+
+
+class DocJSONSchema(BaseModel):
+    """
+    JSON/dict format for JSON representation of Doc objects.
+    """
+
+    cats: Optional[Dict[StrictStr, StrictFloat]] = Field(
+        None, title="Categories with corresponding probabilities"
+    )
+    ents: Optional[List[Dict[StrictStr, Union[StrictInt, StrictStr]]]] = Field(
+        None, title="Information on entities"
+    )
+    sents: Optional[List[Dict[StrictStr, StrictInt]]] = Field(
+        None, title="Indices of sentences' start and end indices"
+    )
+    text: StrictStr = Field(..., title="Document text")
+    spans: Optional[
+        Dict[StrictStr, List[Dict[StrictStr, Union[StrictStr, StrictInt]]]]
+    ] = Field(None, title="Span information - end/start indices, label, KB ID")
+    tokens: List[Dict[StrictStr, Union[StrictStr, StrictInt]]] = Field(
+        ..., title="Token information - ID, start, annotations"
+    )
+    underscore_doc: Optional[Dict[StrictStr, Any]] = Field(
+        None,
+        title="Any custom data stored in the document's _ attribute",
+        alias="_",
+    )
+    underscore_token: Optional[Dict[StrictStr, List[Dict[StrictStr, Any]]]] = Field(
+        None, title="Any custom data stored in the token's _ attribute"
+    )
+    underscore_span: Optional[Dict[StrictStr, List[Dict[StrictStr, Any]]]] = Field(
+        None, title="Any custom data stored in the span's _ attribute"
+    )

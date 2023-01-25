@@ -48,7 +48,8 @@ class Span:
         label: Union[str, int] = ...,
         vector: Optional[Floats1d] = ...,
         vector_norm: Optional[float] = ...,
-        kb_id: Optional[int] = ...,
+        kb_id: Union[str, int] = ...,
+        span_id: Union[str, int] = ...,
     ) -> None: ...
     def __richcmp__(self, other: Span, op: int) -> bool: ...
     def __hash__(self) -> int: ...
@@ -94,8 +95,8 @@ class Span:
         self,
         start_idx: int,
         end_idx: int,
-        label: int = ...,
-        kb_id: int = ...,
+        label: Union[int, str] = ...,
+        kb_id: Union[int, str] = ...,
         vector: Optional[Floats1d] = ...,
     ) -> Span: ...
     @property
@@ -116,6 +117,7 @@ class Span:
     end_char: int
     label: int
     kb_id: int
+    id: int
     ent_id: int
     ent_id_: str
     @property
@@ -124,3 +126,4 @@ class Span:
     def lemma_(self) -> str: ...
     label_: str
     kb_id_: str
+    id_: str
