@@ -6,6 +6,7 @@ import tempfile
 
 from spacy.lang.en import English
 from spacy.training import Example, PlainTextCorpus
+from spacy.util import make_tempdir
 
 # Intentional newlines to check that they are skipped.
 PLAIN_TEXT_DOC = """
@@ -35,7 +36,8 @@ PLAIN_TEXT_DOC_TOKENIZED = [
 ]
 
 
-@pytest.mark.parametrize("min_length, max_length", [(0, 0), (0, 5), (5, 0), (5, 5)])
+@pytest.mark.parametrize("min_length", [0, 5])
+@pytest.mark.parametrize("max_length", [0, 5])
 def test_plain_text_reader(min_length, max_length):
     nlp = English()
     with _string_to_tmp_file(PLAIN_TEXT_DOC) as file_path:
@@ -56,10 +58,10 @@ def test_plain_text_reader(min_length, max_length):
 
 @contextmanager
 def _string_to_tmp_file(s: str) -> Generator[Path, None, None]:
-    with tempfile.TemporaryDirectory() as d:
+    with make_tempdir() as d:
         file_path = Path(d) / "string.txt"
-        with open(file_path, "wb") as f:
-            f.write(s.encode("utf-8"))
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(s)
         yield file_path
 
 
