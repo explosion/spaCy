@@ -251,7 +251,12 @@ const Quickstart = ({
                     </menu>
                 </pre>
                 {showCopy && (
-                    <textarea ref={copyAreaRef} className={classes['copy-area']} rows={1} />
+                    <textarea
+                        ref={copyAreaRef}
+                        className={classes['copy-area']}
+                        rows={1}
+                        aria-label={`Interactive code example for ${title}`}
+                    />
                 )}
             </div>
         </Container>
