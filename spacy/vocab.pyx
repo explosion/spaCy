@@ -139,7 +139,7 @@ cdef class Vocab:
         self.lex_attr_getters[flag_id] = flag_getter
         return flag_id
 
-    cdef const LexemeC* get(self, Pool mem, str string) except NULL:
+    cdef const LexemeC* get(self, str string) except NULL:
         """Get a pointer to a `LexemeC` from the lexicon, creating a new
         `Lexeme` if necessary using memory acquired from the given pool. If the
         pool is the lexicon's own memory, the lexeme is saved in the lexicon.
@@ -157,9 +157,9 @@ cdef class Vocab:
                                                   orth=key, orth_id=string))
             return lex
         else:
-            return self._new_lexeme(mem, string)
+            return self._new_lexeme(string)
 
-    cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL:
+    cdef const LexemeC* get_by_orth(self, attr_t orth) except NULL:
         """Get a pointer to a `LexemeC` from the lexicon, creating a new
         `Lexeme` if necessary using memory acquired from the given pool. If the
         pool is the lexicon's own memory, the lexeme is saved in the lexicon.
@@ -171,21 +171,10 @@ cdef class Vocab:
         if lex != NULL:
             return lex
         else:
-            return self._new_lexeme(mem, self.strings[orth])
+            return self._new_lexeme(self.strings[orth])
 
-    cdef const LexemeC* _new_lexeme(self, Pool mem, str string) except NULL:
-        # I think this heuristic is bad, and the Vocab should always
-        # own the lexemes. It avoids weird bugs this way, as it's how the thing
-        # was originally supposed to work. The best solution to the growing
-        # memory use is to periodically reset the vocab, which is an action
-        # that should be up to the user to do (so we don't need to keep track
-        # of the doc ownership).
-        # TODO: Change the C API so that the mem isn't passed in here.
-        mem = self.mem
-        #if len(string) < 3 or self.length < 10000:
-        #    mem = self.mem
-        cdef bint is_oov = mem is not self.mem
-        lex = <LexemeC*>mem.alloc(1, sizeof(LexemeC))
+    cdef const LexemeC* _new_lexeme(self, str string) except NULL:
+        lex = <LexemeC*>self.mem.alloc(1, sizeof(LexemeC))
         lex.orth = self.strings.add(string)
         lex.length = len(string)
         if self.vectors is not None:
@@ -199,8 +188,7 @@ cdef class Vocab:
                     value = self.strings.add(value)
                 if value is not None:
                     Lexeme.set_struct_attr(lex, attr, value)
-        if not is_oov:
-            self._add_lex_to_vocab(lex.orth, lex)
+        self._add_lex_to_vocab(lex.orth, lex)
         if lex == NULL:
             raise ValueError(Errors.E085.format(string=string))
         return lex
@@ -271,7 +259,7 @@ cdef class Vocab:
             props = intify_attrs(props, strings_map=self.strings)
             token = &tokens[i]
             # Set the special tokens up to have arbitrary attributes
-            lex = <LexemeC*>self.get_by_orth(self.mem, props[ORTH])
+            lex = <LexemeC*>self.get_by_orth(props[ORTH])
             token.lex = lex
             for attr_id, value in props.items():
                 Token.set_struct_attr(token, attr_id, value)
