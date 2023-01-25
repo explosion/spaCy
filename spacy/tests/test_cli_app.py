@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import pytest
+import subprocess
 from typer.testing import CliRunner
 
 import spacy
@@ -199,14 +200,47 @@ def noop_config():
         yield cfg
 
 
-def test_multi_code_debug_data(code_paths, data_paths, noop_config):
+def test_multi_code_debug_config(code_paths, data_paths, noop_config):
     # check that it fails without the code arg
-    result = CliRunner().invoke(app, ["debug", "data", str(noop_config), *data_paths])
-    assert result.exit_code == 1
+    result = subprocess.run(
+        ["python", "-m", "spacy", "debug", "config", str(noop_config), *data_paths]
+    )
+    assert result.returncode == 1
 
     # check that it succeeds with the code arg
-    code_arg = ["--code", ",".join([str(pp) for pp in code_paths])]
-    result = CliRunner().invoke(
-        app, ["debug", "data", str(noop_config), *data_paths, *code_paths]
+    result = subprocess.run(
+        [
+            "python",
+            "-m",
+            "spacy",
+            "debug",
+            "config",
+            str(noop_config),
+            *data_paths,
+            *code_paths,
+        ]
     )
-    assert result.exit_code == 0
+    assert result.returncode == 0
+
+
+def test_multi_code_debug_data(code_paths, data_paths, noop_config):
+    # check that it fails without the code arg
+    result = subprocess.run(
+        ["python", "-m", "spacy", "debug", "data", str(noop_config), *data_paths]
+    )
+    assert result.returncode == 1
+
+    # check that it succeeds with the code arg
+    result = subprocess.run(
+        [
+            "python",
+            "-m",
+            "spacy",
+            "debug",
+            "data",
+            str(noop_config),
+            *data_paths,
+            *code_paths,
+        ]
+    )
+    assert result.returncode == 0
