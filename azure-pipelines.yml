@@ -29,8 +29,9 @@ pr:
       - ".github/workflows/*"
 
 jobs:
-  # Perform basic checks for most important errors (syntax etc.) Uses the config
-  # defined in .flake8 and overwrites the selected codes.
+  # Check formatting and linting. Perform basic checks for most important errors
+  # (syntax etc.) Uses the config defined in setup.cfg and overwrites the
+  # selected codes.
   - job: "Validate"
     pool:
       vmImage: "ubuntu-latest"
@@ -38,6 +39,10 @@ jobs:
       - task: UsePythonVersion@0
         inputs:
           versionSpec: "3.7"
+      - script: |
+          pip install black==22.3.0
+          python -m black spacy --check
+        displayName: "black"
       - script: |
           pip install flake8==5.0.4
           python -m flake8 spacy --count --select=E901,E999,F821,F822,F823,W605 --show-source --statistics
