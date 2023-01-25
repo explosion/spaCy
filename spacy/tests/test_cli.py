@@ -20,7 +20,7 @@ from spacy.cli._util import is_subpath_of, load_project_config, walk_directory
 from spacy.cli._util import parse_config_overrides, string_to_list
 from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
-from spacy.cli._util import upload_file, download_file
+from spacy.cli._util import upload_file, download_file, git_checkout
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.debug_data import _get_distribution, _get_kl_divergence
@@ -143,6 +143,31 @@ def test_issue11235():
         assert os.path.exists(d / "cfg")
         assert os.path.exists(d / f"{lang_var}_model")
     assert cfg["commands"][0]["script"][0] == f"hello {lang_var}"
+
+
+def test_project_git_dir_asset():
+    with make_tempdir() as d:
+        # Use a very small repo.
+        git_checkout(
+            "https://github.com/explosion/os-signpost.git",
+            "os_signpost",
+            d / "signpost",
+            branch="v0.0.3",
+        )
+        assert os.path.isdir(d / "signpost")
+
+
+@pytest.mark.issue(12168)
+def test_project_git_file_asset():
+    with make_tempdir() as d:
+        # Use a very small repo.
+        git_checkout(
+            "https://github.com/explosion/os-signpost.git",
+            "README.md",
+            d / "readme.md",
+            branch="v0.0.3",
+        )
+        assert os.path.isfile(d / "readme.md")
 
 
 def test_cli_info():
