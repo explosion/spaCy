@@ -1032,6 +1032,14 @@ def working_dir(path: Union[str, Path]) -> Iterator[Path]:
         os.chdir(str(prev_cwd))
 
 
+def _rm_readonly(func, path, excinfo):
+    if not os.access(path, os.W_OK):
+        os.chmod(path, os.stat.S_IWRITE)
+        func(path)
+    else:
+        raise
+
+
 @contextmanager
 def make_tempdir() -> Generator[Path, None, None]:
     """Execute a block in a temporary directory and remove the directory and
@@ -1042,7 +1050,7 @@ def make_tempdir() -> Generator[Path, None, None]:
     d = Path(tempfile.mkdtemp())
     yield d
     try:
-        shutil.rmtree(str(d))
+        shutil.rmtree(str(d), onerror=_rm_readonly)
     except PermissionError as e:
         warnings.warn(Warnings.W091.format(dir=d, msg=e))
 
