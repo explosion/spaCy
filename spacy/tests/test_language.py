@@ -686,7 +686,7 @@ def test_language_matching(lang, target):
         ("iw", "he"),
         ("is", "isl"),
         ("mo", "ro"),
-        ("mul", "xx"),
+        ("xx", "mul"),
         ("no", "nb"),
         ("pt-BR", "pt"),
         ("zh-Hans", "zh"),
