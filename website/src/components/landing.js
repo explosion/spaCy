@@ -110,6 +110,7 @@ export const LandingBanner = ({
     })
     const style = {
         '--color-theme': background,
+        '--color-theme-dark': background,
         '--color-back': color,
         backgroundImage: backgroundImage ? `url(${backgroundImage})` : null,
     }
