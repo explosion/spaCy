@@ -415,7 +415,7 @@ def git_checkout(
                 err = f"'{subpath}' is a path outside of the cloned repository."
                 msg.fail(err, repo, exits=1)
             if os.path.isdir(source_path):
-                shutil.copytree(str(source_path), str(dest))
+                shutil.copytree(source_path, dest)
             else:
                 shutil.copyfile(source_path, dest)
         except FileNotFoundError:
