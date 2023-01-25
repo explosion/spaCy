@@ -92,7 +92,7 @@ dropout = 0.1
 accumulate_gradient = 1
 patience = 1600
 max_epochs = 0
-max_steps = 20000
+max_steps = 100
 eval_frequency = 200
 frozen_components = []
 annotating_components = []
@@ -200,44 +200,24 @@ def noop_config():
         yield cfg
 
 
-def test_multi_code_debug_config(code_paths, data_paths, noop_config):
+@pytest.mark.parametrize(
+    "cmd",
+    [
+        ["debug", "config"],
+        ["debug", "data"],
+        ["train"],
+    ],
+)
+def test_multi_code(cmd, code_paths, data_paths, noop_config):
     # check that it fails without the code arg
-    result = subprocess.run(
-        ["python", "-m", "spacy", "debug", "config", str(noop_config), *data_paths]
-    )
+    cmd = ["python", "-m", "spacy"] + cmd
+    result = subprocess.run([*cmd, str(noop_config), *data_paths])
     assert result.returncode == 1
 
     # check that it succeeds with the code arg
     result = subprocess.run(
         [
-            "python",
-            "-m",
-            "spacy",
-            "debug",
-            "config",
-            str(noop_config),
-            *data_paths,
-            *code_paths,
-        ]
-    )
-    assert result.returncode == 0
-
-
-def test_multi_code_debug_data(code_paths, data_paths, noop_config):
-    # check that it fails without the code arg
-    result = subprocess.run(
-        ["python", "-m", "spacy", "debug", "data", str(noop_config), *data_paths]
-    )
-    assert result.returncode == 1
-
-    # check that it succeeds with the code arg
-    result = subprocess.run(
-        [
-            "python",
-            "-m",
-            "spacy",
-            "debug",
-            "data",
+            *cmd,
             str(noop_config),
             *data_paths,
             *code_paths,
