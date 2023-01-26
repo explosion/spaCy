@@ -200,6 +200,7 @@ def noop_config():
         yield cfg
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "cmd",
     ["debug config", "debug data", "train", "assemble"],
@@ -217,6 +218,7 @@ def test_multi_code(cmd, code_paths, data_paths, noop_config):
     assert result.returncode == 0
 
 
+@pytest.mark.slow
 def test_multi_code_evaluate(code_paths, data_paths, noop_config):
     # Evaluation requires a model, not a config, so this works differently from
     # the other commands.
