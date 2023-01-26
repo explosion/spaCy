@@ -771,11 +771,11 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 > get_length = null
 > ```
 
-Create a batcher that creates batches of the specified size.
+Create a minibatches of a fixed number of documents specified by `size`.
 
 | Name         | Description                                                                                                                                                                             |
 | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `size`       | The target number of items per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Sequence[int]]~~ |
+| `size`       | The target number of documents per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Sequence[int]]~~ |
 | `get_length` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
 | **CREATES**  | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                     |
 
