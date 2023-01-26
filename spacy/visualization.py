@@ -1,3 +1,6 @@
+from curses import beep
+from operator import index
+from re import search
 from typing import Dict, List, Optional, Union, cast
 import wasabi
 from wasabi.util import supports_ansi
@@ -66,9 +69,6 @@ class AttributeFormat:
         max_width:              a maximum width to which values of the attribute should be truncated.
         fg_color:               the foreground color that should be used to display instances of the attribute
         bg_color:               the background color that should be used to display instances of the attribute
-        permitted_vals:         a tuple of values of the attribute that should be displayed. If
-                                    permitted_values is not None and a value of the attribute is not
-                                    in permitted_values, the empty string is rendered instead of the value.
         value_dep_fg_colors:    a dictionary from values to foreground colors that should be used to display those values.
         value_dep_bg_colors:    a dictionary from values to background colors that should be used to display those values.
         """
@@ -78,7 +78,6 @@ class AttributeFormat:
         self.max_width = max_width
         self.fg_color = fg_color
         self.bg_color = bg_color
-        self.permitted_vals = permitted_vals
         self.value_dep_fg_colors = value_dep_fg_colors
         self.value_dep_bg_colors = value_dep_bg_colors
         self.printer = wasabi.Printer(no_print=True)
@@ -89,27 +88,12 @@ class AttributeFormat:
         *,
         right_pad_to_len: Optional[int] = None,
         ignore_colors: bool = False,
-        render_all_colors_in_vals: bool = False,
-        whole_row_fg_color: Union[int, str, None] = None,
-        whole_row_bg_color: Union[int, str, None] = None,
     ) -> str:
         """
         right_pad_to_len:           the width to which values should be right-padded, or 'None' for no right-padding.
         ignore_colors:              no colors should be rendered, typically because the values are required to calculate widths
-        render_all_colors_in_vals:  when rendering a table, self.fg_color and self.bg_color are rendered in Wasabi.
-                                    This argument is set to True when rendering a text to signal that colors should be rendered here.
-        whole_row_fg_color:         a foreground color used for the whole row. This takes precedence over value_dependent_fg_colors.
-        whole_row_bg_color:         a background color used for the whole row. This takes precedence over value_dependent_bg_colors.
         """
-        obj = token
-        parts = self.attribute.split(".")
-        for part in parts[:-1]:
-            obj = getattr(obj, part)
-        value = str(getattr(obj, parts[-1]))
-        if self.permitted_vals is not None and value not in (
-            str(v) for v in self.permitted_vals
-        ):
-            return ""
+        value = get_token_value(token, self.attribute)
         if self.max_width is not None:
             value = value[: self.max_width]
         fg_color = None
@@ -119,18 +103,10 @@ class AttributeFormat:
         else:
             right_padding = ""
         if SUPPORTS_ANSI and not ignore_colors and len(value) > 0:
-            if whole_row_fg_color is not None:
-                fg_color = whole_row_fg_color
-            elif self.value_dep_fg_colors is not None:
+            if self.value_dep_fg_colors is not None:
                 fg_color = self.value_dep_fg_colors.get(value, None)
-            if fg_color is None and render_all_colors_in_vals:
-                fg_color = self.fg_color
             if self.value_dep_bg_colors is not None:
                 bg_color = self.value_dep_bg_colors.get(value, None)
-            if whole_row_bg_color is not None:
-                bg_color = whole_row_bg_color
-            elif bg_color is None and render_all_colors_in_vals:
-                bg_color = self.bg_color
         if fg_color is not None or bg_color is not None:
             value = self.printer.text(value, color=fg_color, bg_color=bg_color)
         return value + right_padding
@@ -323,18 +299,59 @@ class Visualizer:
                 for vert_pos in range(sent.end - sent.start)
             ]
 
-    def render_table(self, doc: Doc, cols: List[AttributeFormat], spacing: int) -> str:
+    def render(
+        self,
+        doc: Doc,
+        cols: List[AttributeFormat],
+        spacing: int = 2,
+        start_i: int = 0,
+        length: Optional[int] = None,
+        search_attr_name: Optional[str] = None,
+        search_attr_value: Optional[str] = None,
+    ) -> str:
         """Renders a document as a table.
         TODO: specify a specific portion of the document to display.
 
-        cols:       the attribute formats of the columns to display.
-                        tree_right and tree_left are magic values for the
-                        attributes that render dependency trees where the
-                        roots are on the left or right respectively.
-        spacing:    the number of spaces between each column in the table.
+        cols:               the attribute formats of the columns to display.
+                                tree_right and tree_left are magic values for the
+                                attributes that render dependency trees where the
+                                roots are on the left or right respectively.
+        spacing:            the number of spaces between each column in the table.
+        start_i:            the token index at which to start searching, or at
+                                whose sentence to start rendering. Default: 0.
+        length:             the number of tokens after *start_i* at whose sentence
+                                to stop rendering. If *None*, the rest of the
+                                document is rendered.
+        search_attr_name:   the name of an attribute to search for in order to
+                                determine where to start rendering, e.g. "lemma_",
+                                or *None* if no search is to be carried out. If either
+                                of *search_attr_name* and *search_attr_value* is *None*,
+                                the behaviour is as if both were *None*.
+        search_attr_value:  the value of an attribute to search for in order to
+                                determine where to start rendering, e.g. "be",
+                                or *None* if no search is to be carried out. If either
+                                of *search_attr_name* and *search_attr_value* is *None*,
+                                the behaviour is as if both were *None*.
         """
         return_str = ""
-        for sent in doc.sents:
+        if search_attr_name is not None and search_attr_value is not None:
+            adj_start_i = get_adjusted_start_i(
+                doc, start_i, cols, search_attr_name, search_attr_value
+            )
+        else:
+            adj_start_i = start_i
+        if adj_start_i >= len(doc):
+            return return_str
+        end_i = len(doc) - 1
+        if length is not None:
+            end_i = min(end_i, adj_start_i + length)
+        elif start_i > 0 or (
+            search_attr_name is not None and search_attr_value is not None
+        ):
+            end_i = adj_start_i
+        adj_start_i = doc[adj_start_i].sent.start
+        end_i = doc[end_i].sent.end
+        for sent in doc[adj_start_i:end_i].sents:
             if "tree_right" in (c.attribute for c in cols):
                 tree_right = self.render_dep_tree(sent, True)
             if "tree_left" in (c.attribute for c in cols):
@@ -393,163 +410,44 @@ class Visualizer:
             )
         return return_str
 
-    def render_text(self, doc: Doc, attrs: List[AttributeFormat]) -> str:
-        """Renders a text interspersed with attribute labels.
-        TODO: specify a specific portion of the document to display.
 
-        """
-        return_str = ""
-        text_attrs = [a for a in attrs if a.attribute == "text"]
-        text_attr = text_attrs[0] if len(text_attrs) > 0 else AttributeFormat("text")
-        for token in doc:
-            this_token_strs = [""]
-            for attr in (a for a in attrs if a.attribute != "text"):
-                attr_text = attr.render(token, render_all_colors_in_vals=True)
-                if attr_text is not None and len(attr_text) > 0:
-                    this_token_strs.append(" " + attr_text)
-            if len(this_token_strs) == 1:
-                this_token_strs[0] = token.text
-            else:
-                this_token_strs[0] = text_attr.render(
-                    token, render_all_colors_in_vals=True
-                )
-            this_token_strs.append(token.whitespace_)
-            return_str += "".join(this_token_strs)
-        return return_str
+def get_token_value(token: Token, attribute: str) -> str:
+    """ 
+    Get value *token.x.y.z*. 
+    
+    token: the token
+    attribute: the attribute name, e.g. *x.y.z*.
+    """
+    obj = token
+    parts = attribute.split(".")
+    for part in parts[:-1]:
+        obj = getattr(obj, part)
+    return str(getattr(obj, parts[-1]))
 
-    def render_instances(
-        self,
-        doc: Doc,
-        *,
-        search_attrs: List[AttributeFormat],
-        display_cols: List[AttributeFormat],
-        group: bool,
-        spacing: int,
-        surrounding_tokens_height: int,
-        surrounding_tokens_fg_color: Union[str, int],
-        surrounding_tokens_bg_color: Union[str, int],
-    ) -> str:
-        """Shows all tokens in a document with specific attribute(s), e.g. entity labels, or attribute value(s), e.g. 'GPE'.
-        TODO: specify a specific portion of the document to display.
 
-        search_attrs:                   the attribute(s) or attribute value(s) that cause a row to be displayed for a token.
-        display_cols:                   the attributes that should be displayed in each row.
-        group:                          True if the rows should be ordered by the search attribute values,
-                                            False if they should retain their in-document order.
-        spacing:                        the number of spaces between each column.
-        surrounding_tokens_height:      a number of rows that should be displayed with information about tokens
-                                            before and after matched tokens. Consecutive matching tokens, e.g.
-                                            tokens belonging to the same named entity, are rendered together as a single group.
-        surrounding_tokens_fg_color:    a foreground color to use for surrounding token rows.
-        surrounding_tokens_bg_color:    a background color to use for surrounding token rows.
-                                            Note that if surrounding_tokens_bg_color is None, any background color defined for the attribute
-                                            will be used instead, which is unlikely to be the desired result.
-        """
+def get_adjusted_start_i(
+    doc: Doc,
+    start_i: int,
+    cols: List[AttributeFormat],
+    search_attr_name: str,
+    search_attr_value: str,
+):
+    """ 
+    Get the position at which to start rendering a document, which may be
+    adjusted by a search for a specific attribute value.
+    
+    doc: the document
+    start_i: the user-specified start index
+    cols: the list of attribute columns being displayed
+    search_attr_name: the name of the attribute for which values are being searched,
+        i.e. *x.y.z* for token attribute *token.x.y.z*, or *None* if no search is to be performed.
+    search_attr_value: the attribute value for which to search.
 
-        def filter(token: Token) -> bool:
-            for attr in search_attrs:
-                value = attr.render(token, ignore_colors=True)
-                if len(value) == 0:
-                    return False
-            return True
-
-        matched_tokens = [token for token in doc if filter(token)]
-        tokens_to_display_inds: List[int] = []
-        for token in matched_tokens:
-            for ind in range(
-                token.i - surrounding_tokens_height,
-                token.i + surrounding_tokens_height + 1,
-            ):
-                if ind >= 0 and ind < len(doc):
-                    tokens_to_display_inds.append(ind)
-        widths = []
-        for col in display_cols:
-            if len(tokens_to_display_inds) > 0:
-                width = max(
-                    len(col.render(doc[i], ignore_colors=True))
-                    for i in tokens_to_display_inds
-                )
-            else:
-                width = 0
-            if col.max_width is not None:
-                width = min(width, col.max_width)
-            width = max(width, len(col.name))
-            widths.append(width)
-        if group:
-            matched_tokens.sort(
-                key=(
-                    lambda token: [
-                        attr.render(token, ignore_colors=True) for attr in search_attrs
-                    ]
-                )
-            )
-
-        rows = []
-        token_ind_to_display = -1
-        for matched_token_ind, matched_token in enumerate(matched_tokens):
-            if surrounding_tokens_height > 0:
-                surrounding_start_ind = max(
-                    0, matched_token.i - surrounding_tokens_height
-                )
-                if token_ind_to_display + 1 == matched_token.i:
-                    surrounding_start_ind = token_ind_to_display + 1
-                surrounding_end_ind = min(
-                    len(doc), matched_token.i + surrounding_tokens_height + 1
-                )
-                if (
-                    matched_token_ind + 1 < len(matched_tokens)
-                    and matched_token.i + 1 == matched_tokens[matched_token_ind + 1].i
-                ):
-                    surrounding_end_ind = matched_token.i + 1
-
-            else:
-                surrounding_start_ind = matched_token.i
-                surrounding_end_ind = surrounding_start_ind + 1
-            for token_ind_to_display in range(
-                surrounding_start_ind, surrounding_end_ind
-            ):
-                if token_ind_to_display == matched_token.i:
-                    rows.append(
-                        [
-                            col.render(
-                                matched_token,
-                                right_pad_to_len=widths[col_ind],
-                            )
-                            for col_ind, col in enumerate(display_cols)
-                        ]
-                    )
-                else:
-                    rows.append(
-                        [
-                            col.render(
-                                doc[token_ind_to_display],
-                                whole_row_fg_color=surrounding_tokens_fg_color,
-                                whole_row_bg_color=surrounding_tokens_bg_color,
-                                right_pad_to_len=widths[col_ind],
-                            )
-                            for col_ind, col in enumerate(display_cols)
-                        ]
-                    )
-            if (
-                matched_token_ind + 1 < len(matched_tokens)
-                and token_ind_to_display + 1 != matched_tokens[matched_token_ind + 1].i
-            ):
-                rows.append([])
-        header: Optional[List[str]]
-        if len([1 for c in display_cols if len(c.name) > 0]) > 0:
-            header = [c.name for c in display_cols]
-        else:
-            header = None
-        aligns = [c.aligns for c in display_cols]
-        fg_colors = [c.fg_color for c in display_cols]
-        bg_colors = [c.bg_color for c in display_cols]
-        return wasabi.table(
-            rows,
-            header=header,
-            divider=True,
-            aligns=aligns,
-            widths=widths,
-            fg_colors=fg_colors,
-            bg_colors=bg_colors,
-            spacing=spacing,
-        )
+    """
+    for col in cols:
+        if col.name == search_attr_name or col.attribute == search_attr_name:
+            for token in doc[start_i:]:
+                if get_token_value(token, col.attribute) == search_attr_value:
+                    return token.i
+    else:
+        return len(doc)
