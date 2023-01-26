@@ -1,5 +1,5 @@
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
-from typing import cast, overload
+from typing import Literal, cast, overload
 from pathlib import Path
 from collections import Counter
 import sys
@@ -20,7 +20,6 @@ from ..pipeline import Morphologizer, SpanCategorizer
 from ..morphology import Morphology
 from ..language import Language
 from ..util import registry, resolve_dot_names
-from ..compat import Literal
 from ..vectors import Mode as VectorsMode
 from .. import util
 

@@ -29,7 +29,7 @@ jobs:
     steps:
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: "3.7"
+          versionSpec: "3.8"
       - script: |
           pip install flake8==5.0.4
           python -m flake8 spacy --count --select=E901,E999,F821,F822,F823,W605 --show-source --statistics
@@ -40,24 +40,6 @@ jobs:
     strategy:
       matrix:
         # We're only running one platform per Python version to speed up builds
-        Python36Linux:
-          imageName: "ubuntu-20.04"
-          python.version: "3.6"
-        #        Python36Windows:
-        #          imageName: "windows-latest"
-        #          python.version: "3.6"
-        #        Python36Mac:
-        #          imageName: "macos-latest"
-        #          python.version: "3.6"
-        #        Python37Linux:
-        #          imageName: "ubuntu-20.04"
-        #          python.version: "3.7"
-        Python37Windows:
-          imageName: "windows-latest"
-          python.version: "3.7"
-        #        Python37Mac:
-        #          imageName: "macos-latest"
-        #          python.version: "3.7"
         #        Python38Linux:
         #          imageName: "ubuntu-latest"
         #          python.version: "3.8"
