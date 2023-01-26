@@ -1,6 +1,3 @@
-from curses import beep
-from operator import index
-from re import search
 from typing import Dict, List, Optional, Union, cast
 import wasabi
 from wasabi.util import supports_ansi
