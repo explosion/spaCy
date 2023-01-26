@@ -412,9 +412,9 @@ class Visualizer:
 
 
 def get_token_value(token: Token, attribute: str) -> str:
-    """ 
-    Get value *token.x.y.z*. 
-    
+    """
+    Get value *token.x.y.z*.
+
     token: the token
     attribute: the attribute name, e.g. *x.y.z*.
     """
@@ -432,10 +432,10 @@ def get_adjusted_start_i(
     search_attr_name: str,
     search_attr_value: str,
 ):
-    """ 
+    """
     Get the position at which to start rendering a document, which may be
     adjusted by a search for a specific attribute value.
-    
+
     doc: the document
     start_i: the user-specified start index
     cols: the list of attribute columns being displayed
