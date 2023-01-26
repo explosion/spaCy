@@ -1035,9 +1035,9 @@ def make_tempdir() -> Generator[Path, None, None]:
 
     try:
         with tempfile.TemporaryDirectory() as td:
-            yield td
+            yield Path(td)
     except PermissionError as e:
-        warnings.warn(Warnings.W091.format(dir=d, msg=e))
+        warnings.warn(Warnings.W091.format(dir=td, msg=e))
 
 
 def is_cwd(path: Union[Path, str]) -> bool:
