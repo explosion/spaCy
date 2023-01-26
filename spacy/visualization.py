@@ -397,7 +397,7 @@ def render_table(
                 data,
                 header=header,
                 divider=True,
-                aligns=aligns,
+                aligns=aligns,  # type:ignore[arg-type]
                 widths=widths,
                 fg_colors=fg_colors,
                 bg_colors=bg_colors,

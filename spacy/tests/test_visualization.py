@@ -204,6 +204,7 @@ def test_viz_render_native_attributes(horse_doc):
     with pytest.raises(AttributeError):
         AttributeFormat("tree_right").render(horse_doc[2])
 
+
 def test_viz_render_colors(horse_doc):
     assert (
         AttributeFormat(
@@ -359,8 +360,7 @@ def test_viz_minimal_render_table_two_sentences(
     ]
 
     assert (
-        render_table(fully_featured_doc_two_sentences, formats, spacing=3)
-        .strip()
+        render_table(fully_featured_doc_two_sentences, formats, spacing=3).strip()
         == """
   ╔>╔═   poss       Sarah     sarah     PROPN   NNP   NounType=prop|Number=sing   PERSON
   ║ ╚>   case       's        's        PART    POS   Poss=yes                          
@@ -459,18 +459,13 @@ def test_viz_rich_render_table_two_sentences(
         ),
     ]
     print(render_table(fully_featured_doc_two_sentences, formats, spacing=3))
-    print(
-        repr(render_table(fully_featured_doc_two_sentences, formats, spacing=3))
-    )
+    print(repr(render_table(fully_featured_doc_two_sentences, formats, spacing=3)))
     target = (
         "\n\x1b[38;5;2m  tree\x1b[0m   \x1b[38;5;2mdep     \x1b[0m   index   text      lemma     \x1b[38;5;100mpos  \x1b[0m   \x1b[38;5;100mtag\x1b[0m   \x1b[38;5;100mmorph          \x1b[0m   \x1b[38;5;196ment   \x1b[0m\n\x1b[38;5;2m------\x1b[0m   \x1b[38;5;2m--------\x1b[0m   -----   -------   -------   \x1b[38;5;100m-----\x1b[0m   \x1b[38;5;100m---\x1b[0m   \x1b[38;5;100m---------------\x1b[0m   \x1b[38;5;196m------\x1b[0m\n\x1b[38;5;2m  ╔>╔═\x1b[0m   \x1b[38;5;2mposs    \x1b[0m   0       Sarah     sarah     \x1b[38;5;100mPROPN\x1b[0m   \x1b[38;5;100mNNP\x1b[0m   \x1b[38;5;100mNounType=prop|N\x1b[0m   \x1b[38;5;196m\x1b[38;5;50;48;5;12mPERSON\x1b[0m\x1b[0m\n\x1b[38;5;2m  ║ ╚>\x1b[0m   \x1b[38;5;2mcase    \x1b[0m   1       's        's        \x1b[38;5;100mPART \x1b[0m   \x1b[38;5;100mPOS\x1b[0m   \x1b[38;5;100mPoss=yes       \x1b[0m   \x1b[38;5;196m      \x1b[0m\n\x1b[38;5;2m╔>╚═══\x1b[0m   \x1b[38;5;2mnsubj   \x1b[0m   2       sister    sister    \x1b[38;5;100mNOUN \x1b[0m   \x1b[38;5;100mNN \x1b[0m   \x1b[38;5;100mNumber=sing    \x1b[0m   \x1b[38;5;196m      \x1b[0m\n\x1b[38;5;2m╠═════\x1b[0m   \x1b[38;5;2mROOT    \x1b[0m   3       flew      fly       \x1b[38;5;100mVERB \x1b[0m   \x1b[38;5;100mVBD\x1b[0m   \x1b[38;5;100mTense=past|Verb\x1b[0m   \x1b[38;5;196m      \x1b[0m\n\x1b[38;5;2m╠>╔═══\x1b[0m   \x1b[38;5;2mprep    \x1b[0m   4       to        to        \x1b[38;5;100mADP  \x1b[0m   \x1b[38;5;100mIN \x1b[0m   \x1b[38;5;100m               \x1b[0m   \x1b[38;5;196m      \x1b[0m\n\x1b[38;5;2m║ ║ ╔>\x1b[0m   \x1b[38;5;2mcompound\x1b[0m   5       Silicon   silicon   \x1b[38;5;100mPROPN\x1b[0m   \x1b[38;5;100mNNP\x1b[0m   \x1b[38;5;100mNounType=prop|N\x1b[0m   \x1b[38;5;196mGPE   \x1b[0m\n\x1b[38;5;2m║ ╚>╚═\x1b[0m   \x1b[38;5;2mpobj    \x1b[0m   6       Valley    valley    \x1b[38;5;100mPROPN\x1b[0m   \x1b[38;5;100mNNP\x1b[0m   \x1b[38;5;100mNounType=prop|N\x1b[0m   \x1b[38;5;196mGPE   \x1b[0m\n\x1b[38;5;2m╠══>╔═\x1b[0m   \x1b[38;5;2mprep    \x1b[0m   7       via       via       \x1b[38;5;100mADP  \x1b[0m   \x1b[38;5;100mIN \x1b[0m   \x1b[38;5;100m               \x1b[0m   \x1b[38;5;196m      \x1b[0m\n\x1b[38;5;2m║   ╚>\x1b[0m   \x1b[38;5;2mpobj    \x1b[0m   8       London    london    \x1b[38;5;100mPROPN\x1b[0m   \x1b[38;5;100mNNP\x1b[0m   \x1b[38;5;100mNounType=prop|N\x1b[0m   \x1b[38;5;196mGPE   \x1b[0m\n\x1b[38;5;2m╚════>\x1b[0m   \x1b[38;5;2mpunct   \x1b[0m   9       .         .         \x1b[38;5;100mPUNCT\x1b[0m   \x1b[38;5;100m.  \x1b[0m   \x1b[38;5;100mPunctType=peri \x1b[0m   \x1b[38;5;196m      \x1b[0m\n\n\n\x1b[38;5;2mtree\x1b[0m   \x1b[38;5;2mdep  \x1b[0m   index   text    lemma   \x1b[38;5;100mpos  \x1b[0m   \x1b[38;5;100mtag\x1b[0m   \x1b[38;5;100mmorph          \x1b[0m   \x1b[38;5;196ment\x1b[0m\n\x1b[38;5;2m----\x1b[0m   \x1b[38;5;2m-----\x1b[0m   -----   -----   -----   \x1b[38;5;100m-----\x1b[0m   \x1b[38;5;100m---\x1b[0m   \x1b[38;5;100m---------------\x1b[0m   \x1b[38;5;196m---\x1b[0m\n\x1b[38;5;2m  ╔>\x1b[0m   \x1b[38;5;2mnsubj\x1b[0m   10      She     she     \x1b[38;5;100mPRON \x1b[0m   \x1b[38;5;100mPRP\x1b[0m   \x1b[38;5;100mCase=Nom|Gender\x1b[0m   \x1b[38;5;196m   \x1b[0m\n\x1b[38;5;2m  ╠═\x1b[0m   \x1b[38;5;2mROOT \x1b[0m   11      loved   love    \x1b[38;5;100mVERB \x1b[0m   \x1b[38;5;100mVBD\x1b[0m   \x1b[38;5;100mTense=Past|Verb\x1b[0m   \x1b[38;5;196m   \x1b[0m\n\x1b[38;5;2m  ╠>\x1b[0m   \x1b[38;5;2mdobj \x1b[0m   12      it      it      \x1b[38;5;100mPRON \x1b[0m   \x1b[38;5;100mPRP\x1b[0m   \x1b[38;5;100mCase=Acc|Gender\x1b[0m   \x1b[38;5;196m   \x1b[0m\n\x1b[38;5;2m  ╚>\x1b[0m   \x1b[38;5;2mpunct\x1b[0m   13      .       .       \x1b[38;5;100mPUNCT\x1b[0m   \x1b[38;5;100m.  \x1b[0m   \x1b[38;5;100mPunctType=peri \x1b[0m   \x1b[38;5;196m   \x1b[0m\n\n"
         if SUPPORTS_ANSI
         else "\n  tree   dep        index   text      lemma     pos     tag   morph             ent   \n------   --------   -----   -------   -------   -----   ---   ---------------   ------\n  ╔>╔═   poss       0       Sarah     sarah     PROPN   NNP   NounType=prop|N   PERSON\n  ║ ╚>   case       1       's        's        PART    POS   Poss=yes                \n╔>╚═══   nsubj      2       sister    sister    NOUN    NN    Number=sing             \n╠═════   ROOT       3       flew      fly       VERB    VBD   Tense=past|Verb         \n╠>╔═══   prep       4       to        to        ADP     IN                            \n║ ║ ╔>   compound   5       Silicon   silicon   PROPN   NNP   NounType=prop|N   GPE   \n║ ╚>╚═   pobj       6       Valley    valley    PROPN   NNP   NounType=prop|N   GPE   \n╠══>╔═   prep       7       via       via       ADP     IN                            \n║   ╚>   pobj       8       London    london    PROPN   NNP   NounType=prop|N   GPE   \n╚════>   punct      9       .         .         PUNCT   .     PunctType=peri          \n\n\ntree   dep     index   text    lemma   pos     tag   morph             ent\n----   -----   -----   -----   -----   -----   ---   ---------------   ---\n  ╔>   nsubj   10      She     she     PRON    PRP   Case=Nom|Gender      \n  ╠═   ROOT    11      loved   love    VERB    VBD   Tense=Past|Verb      \n  ╠>   dobj    12      it      it      PRON    PRP   Case=Acc|Gender      \n  ╚>   punct   13      .       .       PUNCT   .     PunctType=peri       \n\n"
     )
-    assert (
-        render_table(fully_featured_doc_two_sentences, formats, spacing=3)
-        == target
-    )
+    assert render_table(fully_featured_doc_two_sentences, formats, spacing=3) == target
     assert (
         render_table(
             fully_featured_doc_two_sentences, formats, spacing=3, start_i=3, length=300
@@ -506,9 +501,7 @@ def test_viz_rich_render_table_start(
         ),
     ]
     print(
-        render_table(
-            fully_featured_doc_two_sentences, formats, spacing=3, start_i=11
-        )
+        render_table(fully_featured_doc_two_sentences, formats, spacing=3, start_i=11)
     )
     print(
         repr(
@@ -523,9 +516,7 @@ def test_viz_rich_render_table_start(
         else "\ntree   dep     index   text    lemma   pos     tag   morph             ent\n----   -----   -----   -----   -----   -----   ---   ---------------   ---\n  ╔>   nsubj   10      She     she     PRON    PRP   Case=Nom|Gender      \n  ╠═   ROOT    11      loved   love    VERB    VBD   Tense=Past|Verb      \n  ╠>   dobj    12      it      it      PRON    PRP   Case=Acc|Gender      \n  ╚>   punct   13      .       .       PUNCT   .     PunctType=peri       \n\n"
     )
     assert (
-        render_table(
-            fully_featured_doc_two_sentences, formats, spacing=3, start_i=11
-        )
+        render_table(fully_featured_doc_two_sentences, formats, spacing=3, start_i=11)
         == target
     )
     assert (
@@ -652,9 +643,7 @@ def test_viz_rich_render_table_end(
     )
 
     assert (
-        render_table(
-            fully_featured_doc_two_sentences, formats, spacing=3, start_i=2
-        )
+        render_table(fully_featured_doc_two_sentences, formats, spacing=3, start_i=2)
         == target
     )
     assert (
@@ -664,9 +653,7 @@ def test_viz_rich_render_table_end(
         == target
     )
     assert (
-        render_table(
-            fully_featured_doc_two_sentences, formats, spacing=3, length=3
-        )
+        render_table(fully_featured_doc_two_sentences, formats, spacing=3, length=3)
         == target
     )
     assert (
