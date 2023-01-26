@@ -202,28 +202,39 @@ def noop_config():
 
 @pytest.mark.parametrize(
     "cmd",
-    [
-        ["debug", "config"],
-        ["debug", "data"],
-        ["train"],
-        ["assemble"],
-    ],
+    ["debug config", "debug data", "train", "assemble"],
 )
 def test_multi_code(cmd, code_paths, data_paths, noop_config):
     # check that it fails without the code arg
-    output = ["."] if cmd[0] in ("pretrain", "assemble") else []
+    cmd = cmd.split()
+    output = ["."] if cmd[0] == "assemble" else []
     cmd = ["python", "-m", "spacy"] + cmd
     result = subprocess.run([*cmd, str(noop_config), *output, *data_paths])
     assert result.returncode == 1
 
     # check that it succeeds with the code arg
-    result = subprocess.run(
-        [
-            *cmd,
-            str(noop_config),
-            *output,
-            *data_paths,
-            *code_paths,
-        ]
-    )
+    result = subprocess.run([*cmd, str(noop_config), *output, *data_paths, *code_paths])
+    assert result.returncode == 0
+
+
+def test_multi_code_evaluate(code_paths, data_paths, noop_config):
+    # Evaluation requires a model, not a config, so this works differently from
+    # the other commands.
+
+    # Train a model to evaluate
+    cmd = f"python -m spacy train {noop_config} -o model".split()
+    result = subprocess.run([*cmd, *data_paths, *code_paths])
+    assert result.returncode == 0
+
+    # now do the evaluation
+
+    eval_data = data_paths[-1]
+    cmd = f"python -m spacy evaluate model/model-best {eval_data}".split()
+
+    # check that it fails without the code arg
+    result = subprocess.run(cmd)
+    assert result.returncode == 1
+
+    # check that it succeeds with the code arg
+    result = subprocess.run([*cmd, *code_paths])
     assert result.returncode == 0
