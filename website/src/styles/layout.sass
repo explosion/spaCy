@@ -413,46 +413,6 @@ body [id]:target
         // Fix issue where empty lines would disappear
         content: " "
 
-// Jupyter
-
-.jp-RenderedText pre
-    .ansi-cyan-fg.ansi-cyan-fg
-        color: var(--syntax-function)
-
-    .ansi-green-fg.ansi-green-fg
-        color: var(--color-green-medium)
-
-    .ansi-red-fg.ansi-red-fg
-        color: var(--syntax-operator)
-
-.jp-OutputArea
-    &:not(:empty)
-        padding: 2rem 2rem 1rem
-        border-top: 1px solid var(--color-dark)
-        margin-top: 2rem
-
-    .entities, svg
-        white-space: initial
-        font-family: inherit
-
-    .entities
-        font-size: 1.35rem
-
-    .displacy
-        margin-top: 1rem
-        font-family: var(--font-primary) !important
-        color: var(--color-subtle) !important
-        background: var(--color-front) !important
-
-.jp-OutputArea pre
-    font: inherit
-
-.jp-OutputPrompt.jp-OutputArea-prompt
-    padding-top: 0.5em
-    margin-right: 1rem
-    font-family: inherit
-    font-weight: bold
-
 /* Tooltips */
 
 [data-tooltip]
