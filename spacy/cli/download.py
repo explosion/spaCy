@@ -3,12 +3,12 @@ import requests
 import sys
 from wasabi import msg
 import typer
-import srsly
+import importlib.metadata as importlib_metadata
 
 from ._util import app, Arg, Opt, WHEEL_SUFFIX, SDIST_SUFFIX
 from .. import about
 from ..util import is_package, get_minor_version, run_command
-from ..util import is_prerelease_version, get_installed_models, get_package_path
+from ..util import is_prerelease_version, get_installed_models
 
 
 @app.command(
@@ -67,10 +67,8 @@ def download(
     # If we already have this version installed, skip downloading
     installed = get_installed_models()
     if model_name in installed:
-        model_path = get_package_path(model_name)
-        meta_path = model_path / "meta.json"
-        meta = srsly.read_json(meta_path)
-        if meta["version"] == version:
+        installed_version = importlib_metadata.version(model_name)
+        if installed_version == version:
             msg.warn(f"{model_name} v{version} already installed, skipping")
             return
 
