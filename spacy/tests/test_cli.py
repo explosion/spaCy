@@ -1207,3 +1207,69 @@ def test_walk_directory():
         assert (len(walk_directory(d, suffix="iob"))) == 2
         assert (len(walk_directory(d, suffix="conll"))) == 3
         assert (len(walk_directory(d, suffix="pdf"))) == 0
+
+
+def test_debug_data_trainable_lemmatizer_basic():
+    examples = [
+        ("She likes green eggs", {"lemmas": ["she", "like", "green", "egg"]}),
+        ("Eat blue ham", {"lemmas": ["eat", "blue", "ham"]}),
+    ]
+    nlp = Language()
+    train_examples = []
+    for t in examples:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
+    # ref test_edit_tree_lemmatizer::test_initialize_from_labels
+    # this results in 4 trees
+    assert len(data["lemmatizer_trees"]) == 4
+
+
+def test_debug_data_trainable_lemmatizer_partial():
+    partial_examples = [
+        # partial annotation
+        ("She likes green eggs", {"lemmas": ["", "like", "green", ""]}),
+        # misaligned partial annotation
+        (
+            "He hates green eggs",
+            {
+                "words": ["He", "hat", "es", "green", "eggs"],
+                "lemmas": ["", "hat", "e", "green", ""],
+            },
+        ),
+    ]
+    nlp = Language()
+    train_examples = []
+    for t in partial_examples:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
+    assert data["partial_lemma_annotations"] == 2
+
+
+def test_debug_data_trainable_lemmatizer_low_cardinality():
+    low_cardinality_examples = [
+        ("She likes green eggs", {"lemmas": ["no", "no", "no", "no"]}),
+        ("Eat blue ham", {"lemmas": ["no", "no", "no"]}),
+    ]
+    nlp = Language()
+    train_examples = []
+    for t in low_cardinality_examples:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
+    assert data["n_low_cardinality_lemmas"] == 2
+
+
+def test_debug_data_trainable_lemmatizer_not_annotated():
+    unannotated_examples = [
+        ("She likes green eggs", {}),
+        ("Eat blue ham", {}),
+    ]
+    nlp = Language()
+    train_examples = []
+    for t in unannotated_examples:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
+    assert data["no_lemma_annotations"] == 2
