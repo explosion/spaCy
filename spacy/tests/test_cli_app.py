@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from typer.testing import CliRunner
 from spacy.tokens import DocBin, Doc
-from spacy.lang.en import English
 
 from spacy.cli._util import app
 from .util import make_tempdir
