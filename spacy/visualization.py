@@ -436,7 +436,7 @@ def render_document(
         AttributeFormat("tree_left", name="tree", aligns="r", fg_color=4),
         AttributeFormat("dep_", name="dep_"),
         AttributeFormat("ent_type_", name="ent_type_"),
-        AttributeFormat("i", name="index", aligns="r"),
+        AttributeFormat("i", name="i"),
         AttributeFormat("text", name="text", max_width=30),
         AttributeFormat("lemma_", name="lemma_", max_width=30),
         AttributeFormat("pos_", name="pos_"),
