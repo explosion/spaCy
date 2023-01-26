@@ -537,13 +537,13 @@ none of them are specified, the whole document is displayed.
 > doc.inspect("lemma_", "time", length=20)
 > ```
 
-| Name                | Description                                                                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `search_attr_name`  | The name of an attribute for which to search to determine the sentence at which to begin rendering, e.g. `lemma_`. ~~Optional[str]~~ |
-| `search_attr_value` | The value of an attribute for which to search to determine the sentence at which to begin rendering, e.g. `give`. ~~Optional[str]~~  |
-| _keyword-only_      |                                                                                                                                      |
-| `start_i`           | The index at which searching should begin or with whose containing sentence rendering should begin. ~~Optional[int]~~                |
-| `length`            | The number of tokens from the start token to the token with whose containing sentence rendering should end. ~~Optional[int]~~        |
+| Name                | Description                                                                                                                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `search_attr_name`  | The name of an attribute to search for in order to determine the sentence to render, e.g. `lemma_`. ~~Optional[str]~~                                                                                                                          |
+| `search_attr_value` | The value of an attribute to search for in order to determine the sentence to render, e.g. `give`. ~~Optional[str]~~                                                                                                                           |
+| _keyword-only_      |                                                                                                                                                                                                                                                |
+| `start_i`           | The index at which to begin searching or whose containing sentence to render. ~~Optional[int]~~                                                                                                                                                |
+| `length`            | The number of tokens to display with their containing sentences. Can be used in isolation to display a portion at the beginning of a document or in conjunction with the other parameters to display more than one sentence. ~~Optional[int]~~ |
 
 ## Doc.retokenize {id="retokenize",tag="contextmanager",version="2.1"}
 
