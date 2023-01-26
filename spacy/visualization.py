@@ -292,7 +292,7 @@ def render_dep_tree(sent, root_right: bool) -> List[str]:
 def render_table(
     doc,
     cols: List[AttributeFormat],
-    spacing: int = 3,
+    spacing: int,
     search_attr_name: Optional[str] = None,
     search_attr_value: Optional[str] = None,
     start_i: int = 0,
