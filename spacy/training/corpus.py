@@ -58,6 +58,28 @@ def read_labels(path: Path, *, require: bool = False):
     return srsly.read_json(path)
 
 
+@util.registry.readers("spacy.PlainTextCorpus.v1")
+def create_plain_text_reader(
+    path: Optional[Path],
+    min_length: int = 0,
+    max_length: int = 0,
+) -> Callable[["Language"], Iterable[Doc]]:
+    """Iterate Example objects from a file or directory of plain text
+    UTF-8 files with one line per doc.
+
+    path (Path): The directory or filename to read from.
+    min_length (int): Minimum document length (in tokens). Shorter documents
+        will be skipped. Defaults to 0, which indicates no limit.
+    max_length (int): Maximum document length (in tokens). Longer documents will
+        be skipped. Defaults to 0, which indicates no limit.
+
+    DOCS: https://spacy.io/api/corpus#plaintextcorpus
+    """
+    if path is None:
+        raise ValueError(Errors.E913)
+    return PlainTextCorpus(path, min_length=min_length, max_length=max_length)
+
+
 def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
     path = util.ensure_path(path)
     if not path.is_dir() and path.parts[-1].endswith(file_type):
@@ -257,3 +279,52 @@ class JsonlCorpus:
                     # We don't *need* an example here, but it seems nice to
                     # make it match the Corpus signature.
                     yield Example(doc, Doc(nlp.vocab, words=words, spaces=spaces))
+
+
+class PlainTextCorpus:
+    """Iterate Example objects from a file or directory of plain text
+    UTF-8 files with one line per doc.
+
+    path (Path): The directory or filename to read from.
+    min_length (int): Minimum document length (in tokens). Shorter documents
+        will be skipped. Defaults to 0, which indicates no limit.
+    max_length (int): Maximum document length (in tokens). Longer documents will
+        be skipped. Defaults to 0, which indicates no limit.
+
+    DOCS: https://spacy.io/api/corpus#plaintextcorpus
+    """
+
+    file_type = "txt"
+
+    def __init__(
+        self,
+        path: Optional[Union[str, Path]],
+        *,
+        min_length: int = 0,
+        max_length: int = 0,
+    ) -> None:
+        self.path = util.ensure_path(path)
+        self.min_length = min_length
+        self.max_length = max_length
+
+    def __call__(self, nlp: "Language") -> Iterator[Example]:
+        """Yield examples from the data.
+
+        nlp (Language): The current nlp object.
+        YIELDS (Example): The example objects.
+
+        DOCS: https://spacy.io/api/corpus#plaintextcorpus-call
+        """
+        for loc in walk_corpus(self.path, ".txt"):
+            with open(loc, encoding="utf-8") as f:
+                for text in f:
+                    text = text.rstrip("\r\n")
+                    if len(text):
+                        doc = nlp.make_doc(text)
+                        if self.min_length >= 1 and len(doc) < self.min_length:
+                            continue
+                        elif self.max_length >= 1 and len(doc) > self.max_length:
+                            continue
+                        # We don't *need* an example here, but it seems nice to
+                        # make it match the Corpus signature.
+                        yield Example(doc, doc.copy())
