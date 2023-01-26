@@ -535,8 +535,8 @@ is displayed.
 > doc = nlp("All we have to decide is what to do with the time that is given us. Nobody knows how much time that is.")
 > doc.inspect()
 > doc.inspect("lemma_", "give")
-> doc.inspect("lemma_", "time", start_i=18)
-> doc.inspect("lemma_", "time", length=20)
+> doc.inspect("text", "time", start_i=18)
+> doc.inspect("text", "time", length=20)
 > ```
 
 | Name                | Description                                                                                                                                                                                                                                    |
