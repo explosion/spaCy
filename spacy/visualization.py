@@ -437,11 +437,11 @@ def render_document(
         AttributeFormat("dep_", name="dep_"),
         AttributeFormat("ent_type_", name="ent_type_"),
         AttributeFormat("i", name="index", aligns="r"),
-        AttributeFormat("text", name="text", max_width=20),
-        AttributeFormat("lemma_", name="lemma_", max_width=20),
+        AttributeFormat("text", name="text", max_width=30),
+        AttributeFormat("lemma_", name="lemma_", max_width=30),
         AttributeFormat("pos_", name="pos_"),
         AttributeFormat("tag_", name="tag_"),
-        AttributeFormat("morph", name="morph_", max_width=60),
+        AttributeFormat("morph", name="morph", max_width=80),
     ]
     if search_attr_name is not None and search_attr_value is not None:
         for col in cols:
