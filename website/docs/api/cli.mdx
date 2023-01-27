@@ -1413,6 +1413,7 @@ $ python -m spacy project assets [project_dir]
 | Name             | Description                                                                                                                                               |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `project_dir`    | Path to project directory. Defaults to current working directory. ~~Path (positional)~~                                                                   |
+| `--extra`, `-e`  | Download assets marked as "extra". Default false. ~~bool (flag)~~                                                                                         |
 | `--sparse`, `-S` | Enable [sparse checkout](https://git-scm.com/docs/git-sparse-checkout) to only check out and download what's needed. Requires Git v22.2+. ~~bool (flag)~~ |
 | `--help`, `-h`   | Show help message and available arguments. ~~bool (flag)~~                                                                                                |
 | **CREATES**      | Downloaded or copied assets defined in the `project.yml`.                                                                                                 |
