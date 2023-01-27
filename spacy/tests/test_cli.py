@@ -1155,7 +1155,7 @@ def test_cli_find_threshold(capsys):
         [
             """# comment
             --some-flag
-            spacy; python_version >= '3.6'""",
+            spacy; python_version >= '3.8'""",
             (False, False),
         ],
         [
