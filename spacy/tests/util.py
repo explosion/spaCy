@@ -1,6 +1,7 @@
 import numpy
 import tempfile
 import contextlib
+import re
 import srsly
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
@@ -95,3 +96,8 @@ def assert_packed_msg_equal(b1, b2):
     for (k1, v1), (k2, v2) in zip(sorted(msg1.items()), sorted(msg2.items())):
         assert k1 == k2
         assert v1 == v2
+
+
+def assert_strings_equal_except_ws(s1, s2):
+    """Assert that two strings are identical except for whitespace."""
+    assert re.sub(r"\s+", " ", s1) == re.sub(r"\s+", " ", s2)
