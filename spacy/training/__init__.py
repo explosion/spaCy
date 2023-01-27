@@ -1,4 +1,4 @@
-from .corpus import Corpus, JsonlCorpus  # noqa: F401
+from .corpus import Corpus, JsonlCorpus, PlainTextCorpus  # noqa: F401
 from .example import Example, validate_examples, validate_get_examples  # noqa: F401
 from .example import validate_distillation_examples  # noqa: F401
 from .alignment import Alignment  # noqa: F401

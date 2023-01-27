@@ -252,8 +252,11 @@ class EntityRecognizer(Parser):
     def labels(self):
         # Get the labels from the model by looking at the available moves, e.g.
         # B-PERSON, I-PERSON, L-PERSON, U-PERSON
-        labels = set(remove_bilu_prefix(move) for move in self.move_names
-                     if move[0] in ("B", "I", "L", "U"))
+        labels = set(
+            remove_bilu_prefix(move)
+            for move in self.move_names
+            if move[0] in ("B", "I", "L", "U")
+        )
         return tuple(sorted(labels))
 
     def scored_ents(self, beams):

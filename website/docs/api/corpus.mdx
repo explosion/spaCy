@@ -175,3 +175,68 @@ Yield examples from the data.
 | ---------- | -------------------------------------- |
 | `nlp`      | The current `nlp` object. ~~Language~~ |
 | **YIELDS** | The examples. ~~Example~~              |
+
+## PlainTextCorpus {id="plaintextcorpus",tag="class",version="3.5.1"}
+
+Iterate over documents from a plain text file. Can be used to read the raw text
+corpus for language model
+[pretraining](/usage/embeddings-transformers#pretraining). The expected file
+format is:
+
+- UTF-8 encoding
+- One document per line
+- Blank lines are ignored.
+
+```text {title="Example"}
+Can I ask where you work now and what you do, and if you enjoy it?
+They may just pull out of the Seattle market completely, at least until they have autonomous vehicles.
+My cynical view on this is that it will never be free to the public. Reason: what would be the draw of joining the military? Right now their selling point is free Healthcare and Education. Ironically both are run horribly and most, that I've talked to, come out wishing they never went in.
+```
+
+### PlainTextCorpus.\_\_init\_\_ {id="plaintextcorpus-init",tag="method"}
+
+Initialize the reader.
+
+> #### Example
+>
+> ```python
+> from spacy.training import PlainTextCorpus
+>
+> corpus = PlainTextCorpus("./data/docs.txt")
+> ```
+>
+> ```ini
+> ### Example config
+> [corpora.pretrain]
+> @readers = "spacy.PlainTextCorpus.v1"
+> path = "corpus/raw_text.txt"
+> min_length = 0
+> max_length = 0
+> ```
+
+| Name           | Description                                                                                                                |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `path`         | The directory or filename to read from. Expects newline-delimited documents in UTF8 format. ~~Union[str, Path]~~           |
+| _keyword-only_ |                                                                                                                            |
+| `min_length`   | Minimum document length (in tokens). Shorter documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~ |
+| `max_length`   | Maximum document length (in tokens). Longer documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~  |
+
+### PlainTextCorpus.\_\_call\_\_ {id="plaintextcorpus-call",tag="method"}
+
+Yield examples from the data.
+
+> #### Example
+>
+> ```python
+> from spacy.training import PlainTextCorpus
+> import spacy
+>
+> corpus = PlainTextCorpus("./docs.txt")
+> nlp = spacy.blank("en")
+> data = corpus(nlp)
+> ```
+
+| Name       | Description                            |
+| ---------- | -------------------------------------- |
+| `nlp`      | The current `nlp` object. ~~Language~~ |
+| **YIELDS** | The examples. ~~Example~~              |

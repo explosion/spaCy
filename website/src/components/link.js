@@ -26,7 +26,7 @@ export default function Link({
     to,
     href,
     onClick,
-    hidden = false,
+    noLinkLayout = false,
     hideIcon = false,
     ws = false,
     forceExternal = false,
@@ -36,10 +36,10 @@ export default function Link({
     const dest = to || href
     const external = forceExternal || /(http(s?)):\/\//gi.test(dest)
     const icon = getIcon(dest)
-    const withIcon = !hidden && !hideIcon && !!icon && !isImage(children)
+    const withIcon = !noLinkLayout && !hideIcon && !!icon && !isImage(children)
     const sourceWithText = withIcon && isString(children)
     const linkClassNames = classNames(classes.root, className, {
-        [classes.hidden]: hidden,
+        [classes['no-link-layout']]: noLinkLayout,
         [classes.nowrap]: (withIcon && !sourceWithText) || icon === 'network',
         [classes['with-icon']]: withIcon,
     })
@@ -97,7 +97,7 @@ Link.propTypes = {
     to: PropTypes.string,
     href: PropTypes.string,
     onClick: PropTypes.func,
-    hidden: PropTypes.bool,
+    noLinkLayout: PropTypes.bool,
     hideIcon: PropTypes.bool,
     ws: PropTypes.bool,
     className: PropTypes.string,
