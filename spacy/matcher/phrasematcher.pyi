@@ -1,5 +1,5 @@
-from typing import List, Tuple, Union, Optional, Callable, Any, Dict, overload
-from ..compat import Literal
+from typing import List, Tuple, Union, Optional, Callable, Any, Dict, Literal
+from typing import overload
 from .matcher import Matcher
 from ..vocab import Vocab
 from ..tokens import Doc, Span

@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, List, Optional, Tuple, Iterable
+from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, Literal
 from typing import TYPE_CHECKING, overload
 import sys
 import shutil
@@ -16,7 +16,6 @@ from thinc.util import gpu_is_available
 from configparser import InterpolationError
 import os
 
-from ..compat import Literal
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
 from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
