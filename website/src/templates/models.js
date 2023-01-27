@@ -5,7 +5,8 @@ import Title from '../components/title'
 import Section from '../components/section'
 import Button from '../components/button'
 import Aside from '../components/aside'
-import CodeBlock, { InlineCode } from '../components/code'
+import { InlineCode } from '../components/inlineCode'
+import CodeBlock from '../components/codeBlock'
 import { Table, Tr, Td, Th } from '../components/table'
 import Tag from '../components/tag'
 import { H2, Label } from '../components/typography'
@@ -13,14 +14,8 @@ import Icon from '../components/icon'
 import Link, { OptionalLink } from '../components/link'
 import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
-import {
-    isString,
-    isEmptyObj,
-    join,
-    arrayToObj,
-    abbrNum,
-    MarkdownToReact,
-} from '../components/util'
+import { isString, isEmptyObj, join, arrayToObj, abbrNum } from '../components/util'
+import MarkdownToReact from '../components/markdownToReactDynamic'
 
 import siteMetadata from '../../meta/site.json'
 import languages from '../../meta/languages.json'

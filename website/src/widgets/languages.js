@@ -1,7 +1,7 @@
 import React from 'react'
 
 import Link from '../components/link'
-import { InlineCode } from '../components/code'
+import { InlineCode } from '../components/inlineCode'
 import { Table, Tr, Th, Td } from '../components/table'
 import { Ul, Li } from '../components/list'
 import Infobox from '../components/infobox'
