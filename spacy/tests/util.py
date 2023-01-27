@@ -98,6 +98,5 @@ def assert_packed_msg_equal(b1, b2):
         assert v1 == v2
 
 
-def assert_strings_equal_except_ws(s1, s2):
-    """Assert that two strings are identical except for whitespace."""
-    assert re.sub(r"\s+", " ", s1) == re.sub(r"\s+", " ", s2)
+def normalize_whitespace(s):
+    return re.sub(r"\s+", " ", s)
