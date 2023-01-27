@@ -367,6 +367,14 @@ def test_spans_by_character(doc):
             span1.start_char + 1, span1.end_char, label="GPE", alignment_mode="unk"
         )
 
+    # Span.char_span + alignment mode "contract"
+    span2 = doc[0:2].char_span(
+        span1.start_char - 3, span1.end_char, label="GPE", alignment_mode="contract"
+    )
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
 
 def test_span_to_array(doc):
     span = doc[1:-2]
