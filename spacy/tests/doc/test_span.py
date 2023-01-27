@@ -163,6 +163,18 @@ def test_char_span(doc, i_sent, i, j, text):
         assert span.text == text
 
 
+def test_char_span_attributes(doc):
+    label = "LABEL"
+    kb_id = "KB_ID"
+    span_id = "SPAN_ID"
+    span1 = doc.char_span(20, 45, label=label, kb_id=kb_id, span_id=span_id)
+    span2 = doc[1:].char_span(15, 40, label=label, kb_id=kb_id, span_id=span_id)
+    assert span1.text == span2.text
+    assert span1.label_ == span2.label_ == label
+    assert span1.kb_id_ == span2.kb_id_ == kb_id
+    assert span1.id_ == span2.id_ == span_id
+
+
 def test_spans_sent_spans(doc):
     sents = list(doc.sents)
     assert sents[0].start == 0
