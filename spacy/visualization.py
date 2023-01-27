@@ -119,8 +119,8 @@ def render_dep_tree(sent, root_right: bool) -> List[str]:
     dependency tree output for a given token has the same index within the output list of
     strings as that token within the input document.
 
-    root_right: True if the tree should be rendered with the root on the right-hand side,
-                False if the tree should be rendered with the root on the left-hand side.
+    root_right: *True* if the tree should be rendered with the root on the right-hand side,
+                *False* if the tree should be rendered with the root on the left-hand side.
 
     Algorithm adapted from https://github.com/KoichiYasuoka/deplacy. It was confirmed that
     this code outputted equivalent trees to deplacy for a large number of sentences; there
@@ -403,7 +403,7 @@ def render_table(
                 bg_colors=bg_colors,
                 spacing=spacing,
             )
-            + "\n"
+            + "\n"  # use \n instead of os.linesep to match wasabi
         )
     return return_str
 
