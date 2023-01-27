@@ -33,7 +33,7 @@ export default function Accordion({ title, id, expanded = false, spaced = false,
                                 <Link
                                     to={`#${id}`}
                                     className={classes.anchor}
-                                    hidden
+                                    noLinkLayout
                                     onClick={(event) => event.stopPropagation()}
                                 >
                                     &para;

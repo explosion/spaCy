@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import Icon from './icon'
 import Link from './link'
 import classes from '../styles/code.module.sass'
-import { Code } from './code'
+import Code from './codeDynamic'
 
 const defaultErrorMsg = `Can't fetch code example from GitHub :(
 
@@ -42,7 +42,7 @@ const GitHubCode = ({ url, lang, errorMsg = defaultErrorMsg, className }) => {
     return (
         <>
             <header className={classes.header}>
-                <Link to={url} hidden>
+                <Link to={url} noLinkLayout>
                     <Icon name="github" width={16} inline />
                     <code
                         className={classNames(classes['inline-code'], classes['inline-code-dark'])}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, Fragment } from 'react'
 import { window } from 'browser-monads'
 
 import Link from '../components/link'
-import { InlineCode } from '../components/code'
+import { InlineCode } from '../components/inlineCode'
 import { Label, H3 } from '../components/typography'
 import { Table, Tr, Th, Td } from '../components/table'
 import Infobox from '../components/infobox'

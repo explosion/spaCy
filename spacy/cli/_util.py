@@ -46,6 +46,7 @@ DEBUG_HELP = """Suite of helpful commands for debugging and profiling. Includes
 commands to check and validate your config files, training and evaluation data,
 and custom model implementations.
 """
+BENCHMARK_HELP = """Commands for benchmarking pipelines."""
 INIT_HELP = """Commands for initializing configs and pipeline packages."""
 
 # Wrappers for Typer's annotations. Initially created to set defaults and to
@@ -54,12 +55,14 @@ Arg = typer.Argument
 Opt = typer.Option
 
 app = typer.Typer(name=NAME, help=HELP)
+benchmark_cli = typer.Typer(name="benchmark", help=BENCHMARK_HELP, no_args_is_help=True)
 project_cli = typer.Typer(name="project", help=PROJECT_HELP, no_args_is_help=True)
 debug_cli = typer.Typer(name="debug", help=DEBUG_HELP, no_args_is_help=True)
 init_cli = typer.Typer(name="init", help=INIT_HELP, no_args_is_help=True)
 
 app.add_typer(project_cli)
 app.add_typer(debug_cli)
+app.add_typer(benchmark_cli)
 app.add_typer(init_cli)
 
 
