@@ -251,8 +251,9 @@ the "catastrophic forgetting" problem. Please note that `TrainablePipe.update` n
 > ```python
 > pipe = nlp.add_pipe("your_custom_pipe")
 > optimizer = nlp.resume_training()
-> update_losses = pipe.update(examples, sgd=optimizer)
-> rehearse_losses = pipe.rehearse(examples, sgd=optimizer)
+> update_losses = pipe.update(examples, sgd=None)
+> rehearse_losses = pipe.rehearse(examples, sgd=None)
+> pipe.finish_update(optimizer)
 > ```
 
 | Name           | Description                                                                                                              |

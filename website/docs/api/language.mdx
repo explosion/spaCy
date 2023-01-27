@@ -352,8 +352,10 @@ the "catastrophic forgetting" problem. Please note that `Language.rehearse` need
 >
 > ```python
 > optimizer = nlp.resume_training()
-> update_losses = nlp.update(examples, sgd=optimizer)
-> rehearse_losses = nlp.rehearse(examples, sgd=optimizer)
+> update_losses = nlp.update(examples, sgd=None)
+> rehearse_losses = nlp.rehearse(examples, sgd=None)
+> for name, proc in nlp.pipeline:
+>   proc.finish_update(optimizer)
 > ```
 
 | Name           | Description                                                                                                   |
