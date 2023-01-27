@@ -1,5 +1,5 @@
 from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast
-from typing import Union, Literal, Protocol, runtime_checkable
+from typing import Union, Protocol, runtime_checkable
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
 from thinc.api import Optimizer
 from thinc.types import Ragged, Ints2d, Floats2d
