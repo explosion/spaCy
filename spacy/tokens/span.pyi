@@ -98,6 +98,7 @@ class Span:
         label: Union[int, str] = ...,
         kb_id: Union[int, str] = ...,
         vector: Optional[Floats1d] = ...,
+        alignment_mode: str = ...,
     ) -> Span: ...
     @property
     def conjuncts(self) -> Tuple[Token]: ...
