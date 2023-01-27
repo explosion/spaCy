@@ -45,7 +45,13 @@ SAMPLE_PROJECT = {
             "dest": "assets/spacy-readme.md",
             "url": "https://github.com/explosion/spaCy/raw/dec81508d28b47f09a06203c472b37f00db6c869/README.md",
             "checksum": "411b2c89ccf34288fae8ed126bf652f7",
-        }
+        },
+        {
+            "dest": "assets/citation.cff",
+            "url": "https://github.com/explosion/spaCy/raw/master/CITATION.cff",
+            "checksum": "c996bfd80202d480eb2e592369714e5e",
+            "extra": True,
+        },
     ],
     "commands": [
         {
@@ -89,22 +95,52 @@ def test_project_document(project_dir):
 
 
 def test_project_assets(project_dir):
+    asset_dir = project_dir / "assets"
     result = CliRunner().invoke(app, ["project", "assets", str(project_dir)])
     assert result.exit_code == 0
-    assert (project_dir / "assets" / "spacy-readme.md").is_file()
+    assert (asset_dir / "spacy-readme.md").is_file(), "Assets not downloaded"
+    # check that extras work
+    result = CliRunner().invoke(app, ["project", "assets", "--extra", str(project_dir)])
+    assert result.exit_code == 0
+    assert (asset_dir / "citation.cff").is_file(), "Extras not downloaded"
 
 
 def test_project_run(project_dir):
+    # make sure dry run works
+    test_file = project_dir / "abc.txt"
+    result = CliRunner().invoke(
+        app, ["project", "run", "--dry", "create", str(project_dir)]
+    )
+    assert result.exit_code == 0
+    assert not test_file.is_file()
+    result = CliRunner().invoke(app, ["project", "run", "create", str(project_dir)])
+    assert result.exit_code == 0
+    assert test_file.is_file()
     result = CliRunner().invoke(app, ["project", "run", "ok", str(project_dir)])
     assert result.exit_code == 0
     assert "okokok" in result.stdout
 
 
-def test_project_clone():
+@pytest.mark.parametrize(
+    "options",
+    [
+        "",
+        "--sparse",
+        "--branch v3",
+        "--repo https://github.com/explosion/projects --branch v3",
+    ],
+)
+def test_project_clone(options):
     with make_tempdir() as workspace:
         out = workspace / "project"
         target = "benchmarks/ner_conll03"
-        result = CliRunner().invoke(app, ["project", "clone", target, str(out)])
+        if not options:
+            options = []
+        else:
+            options = options.split()
+        result = CliRunner().invoke(
+            app, ["project", "clone", target, *options, str(out)]
+        )
         assert result.exit_code == 0
         assert (out / "README.md").is_file()
 
