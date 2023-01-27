@@ -41,7 +41,7 @@ ROOT_LEFT_CHARS = {
 
 class AttributeFormat:
     """
-    Instructions for rendering information about a token property, e.g. lemma_, ent_type_.
+    Instructions for rendering information about a token property, e.g. *lemma_*, *ent_type_*.
     """
 
     def __init__(
@@ -57,13 +57,13 @@ class AttributeFormat:
         value_dep_bg_colors: Optional[Dict[str, Union[str, int]]] = None,
     ):
         """
-        attribute:              the token attribute, e.g. lemma_, ._.holmes.lemma
-        name:                   the name to display e.g. in column headers
+        attribute:              the token attribute, e.g. *lemma_*, .*_.holmes.lemma*.
+        name:                   the name to display e.g. in column headers.
         aligns:                 where appropriate the column alignment 'l' (left,
                                     default), 'r' (right) or 'c' (center).
         max_width:              a maximum width to which values of the attribute should be truncated.
-        fg_color:               the foreground color that should be used to display instances of the attribute
-        bg_color:               the background color that should be used to display instances of the attribute
+        fg_color:               the foreground color that should be used to display instances of the attribute.
+        bg_color:               the background color that should be used to display instances of the attribute.
         value_dep_fg_colors:    a dictionary from values to foreground colors that should be used to display those values.
         value_dep_bg_colors:    a dictionary from values to background colors that should be used to display those values.
         """
@@ -90,24 +90,26 @@ class AttributeFormat:
     ) -> str:
         """
         right_pad_to_len:           the width to which values should be right-padded, or 'None' for no right-padding.
-        ignore_colors:              no colors should be rendered, typically because the values are required to calculate widths
+        ignore_colors:              no colors should be rendered, typically because the values are required to calculate widths.
         """
         value = _get_token_value(token, self.attribute)
         if self.max_width is not None:
             value = value[: self.max_width]
-        fg_color = None
-        bg_color = None
         if right_pad_to_len is not None:
             right_padding = " " * (right_pad_to_len - len(value))
         else:
             right_padding = ""
+        value_dep_fg_color = None
+        value_dep_bg_color = None
         if SUPPORTS_ANSI and not ignore_colors and len(value) > 0:
             if len(self.value_dep_fg_colors) > 0:
-                fg_color = self.value_dep_fg_colors.get(value, None)
+                value_dep_fg_color = self.value_dep_fg_colors.get(value, None)
             if len(self.value_dep_bg_colors) > 0:
-                bg_color = self.value_dep_bg_colors.get(value, None)
-        if fg_color is not None or bg_color is not None:
-            value = self.printer.text(value, color=fg_color, bg_color=bg_color)
+                value_dep_bg_color = self.value_dep_bg_colors.get(value, None)
+        if value_dep_fg_color is not None or value_dep_bg_color is not None:
+            value = self.printer.text(
+                value, color=value_dep_fg_color, bg_color=value_dep_bg_color
+            )
         return value + right_padding
 
 
@@ -120,7 +122,10 @@ def render_dep_tree(sent, root_right: bool) -> List[str]:
     root_right: True if the tree should be rendered with the root on the right-hand side,
                 False if the tree should be rendered with the root on the left-hand side.
 
-    Algorithm adapted from https://github.com/KoichiYasuoka/deplacy
+    Algorithm adapted from https://github.com/KoichiYasuoka/deplacy. It was confirmed that
+    this code outputted equivalent trees to deplacy for a large number of sentences; there
+    were a handful of cases where the trees were different, but in these cases
+    the trees outputted here were confirmed to be linguistically corrrect.
     """
 
     # Check sent is really a sentence
@@ -346,18 +351,16 @@ def render_table(
     adj_start_i = doc[adj_start_i].sent.start
     end_i = doc[end_i].sent.end
     for sent in doc[adj_start_i:end_i].sents:
-        if "tree_right" in (c.attribute for c in cols):
-            tree_right = render_dep_tree(sent, True)
-        if "tree_left" in (c.attribute for c in cols):
-            tree_left = render_dep_tree(sent, False)
         widths = []
         for col in cols:
-            # get the values without any color codes
-            if col.attribute == "tree_left":
-                width = len(tree_left[0])  # type: ignore
-            elif col.attribute == "tree_right":
-                width = len(tree_right[0])  # type: ignore
+            if col.attribute == "tree_right":
+                tree_right = render_dep_tree(sent, True)
+                width = len(tree_right[0])
+            elif col.attribute == "tree_left":
+                tree_left = render_dep_tree(sent, False)
+                width = len(tree_left[0])
             else:
+                # get the values without any color codes
                 if len(sent) > 0:
                     width = max(
                         len(col.render(token, ignore_colors=True)) for token in sent
@@ -462,7 +465,7 @@ def _get_token_value(token, attribute: str) -> str:
     """
     Get value *token.x.y.z*.
 
-    token: the token
+    token: the token.
     attribute: the attribute name, e.g. *x.y.z*.
     """
     obj = token
@@ -483,9 +486,9 @@ def _get_adjusted_start_i(
     Get the position at which to start rendering a document, which may be
     adjusted by a search for a specific attribute value.
 
-    doc: the document
-    start_i: the user-specified start index
-    cols: the list of attribute columns being displayed
+    doc: the document.
+    start_i: the user-specified start index.
+    cols: the list of attribute columns being displayed.
     search_attr_name: the name of the attribute for which values are being searched,
         i.e. *x.y.z* for token attribute *token.x.y.z*, or *None* if no search is to be performed.
     search_attr_value: the attribute value for which to search.
