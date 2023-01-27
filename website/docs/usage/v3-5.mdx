@@ -155,6 +155,21 @@ An error is now raised when unsupported values are given as input to train a
 `textcat` or `textcat_multilabel` model - ensure that values are `0.0` or `1.0`
 as explained in the [docs](/api/textcategorizer#assigned-attributes).
 
+### Using the default knowledge base
+
+As `KnowledgeBase` is now an abstract class, you should call the constructor of
+the new `InMemoryLookupKB` instead when you want to use spaCy's default KB
+implementation:
+
+```diff
+- kb = KnowledgeBase()
++ kb = InMemoryLookupKB()
+```
+
+If you've written a custom KB that inherits from `KnowledgeBase`, you'll need to
+implement its abstract methods, or alternatively inherit from `InMemoryLookupKB`
+instead.
+
 ### Updated scorers for tokenization and textcat {id="scores"}
 
 We fixed a bug that inflated the `token_acc` scores in v3.0-v3.4. The reported
