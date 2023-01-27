@@ -72,10 +72,4 @@ def train(
         nlp = init_nlp(config, use_gpu=use_gpu)
     msg.good("Initialized pipeline")
     msg.divider("Training pipeline")
-    train_nlp(
-        nlp,
-        output_path,
-        use_gpu=use_gpu,
-        stdout=sys.stdout,
-        stderr=sys.stderr,
-    )
+    train_nlp(nlp, output_path, use_gpu=use_gpu, stdout=sys.stdout, stderr=sys.stderr)
