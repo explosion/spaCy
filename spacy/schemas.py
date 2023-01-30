@@ -415,7 +415,7 @@ class ConfigSchemaDistill(BaseModel):
     batcher: Batcher = Field(..., title="Batcher for the training data")
     corpus: StrictStr = Field(..., title="Path in the config to the distillation data")
     dropout: StrictFloat = Field(..., title="Dropout rate")
-    max_epochs: StrictInt = Field(..., title="Maximum number of steps to distill for")
+    max_epochs: StrictInt = Field(..., title="Maximum number of epochs to distill for")
     max_steps: StrictInt = Field(..., title="Maximum number of steps to distill for")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
     pipe_map: Dict[str, str] = Field(..., title="Mapping from teacher to student pipe")
