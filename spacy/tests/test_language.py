@@ -807,6 +807,7 @@ def test_component_return():
         nlp("text")
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("teacher_tagger_name", ["tagger", "teacher_tagger"])
 def test_distill(teacher_tagger_name):
     teacher = English()
