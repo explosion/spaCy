@@ -171,3 +171,77 @@ def test_init_config_trainable(component, examples, en_vocab):
         )
         assert train_result.exit_code == 0
         assert Path(d_in / "model" / "model-last").exists()
+
+
+# @pytest.mark.slow
+@pytest.mark.parametrize(
+    "component,examples",
+    [
+        (
+            "tagger,parser,morphologizer",
+            [
+                dict(
+                    words=["I", "like", "cats"],
+                    tags=["PRP", "VBP", "NNS"],
+                    morphs=[
+                        "Case=Nom|Number=Sing|Person=1|PronType=Prs",
+                        "Tense=Pres|VerbForm=Fin",
+                        "Number=Plur",
+                    ],
+                    deps=["nsubj", "ROOT", "dobj"],
+                    heads=[1, 1, 1],
+                    pos=["PRON", "VERB", "NOUN"],
+                ),
+                dict(
+                    words=["I", "like", "dogs"],
+                    tags=["PRP", "VBP", "NNS"],
+                    morphs=[
+                        "Case=Nom|Number=Sing|Person=1|PronType=Prs",
+                        "Tense=Pres|VerbForm=Fin",
+                        "Number=Plur",
+                    ],
+                    deps=["nsubj", "ROOT", "dobj"],
+                    heads=[1, 1, 1],
+                    pos=["PRON", "VERB", "NOUN"],
+                ),
+            ]
+            * 15,
+        ),
+    ],
+)
+def test_init_config_trainable_multiple(component, examples, en_vocab):
+    train_docs = [Doc(en_vocab, **example) for example in examples]
+
+    with make_tempdir() as d_in:
+        train_bin = DocBin(docs=train_docs)
+        train_bin.to_disk(d_in / "train.spacy")
+        dev_bin = DocBin(docs=train_docs)
+        dev_bin.to_disk(d_in / "dev.spacy")
+        init_config_result = CliRunner().invoke(
+            app,
+            [
+                "init",
+                "config",
+                f"{d_in}/config.cfg",
+                "--lang",
+                "en",
+                "--pipeline",
+                component,
+            ],
+        )
+        assert init_config_result.exit_code == 0
+        train_result = CliRunner().invoke(
+            app,
+            [
+                "train",
+                f"{d_in}/config.cfg",
+                "--paths.train",
+                f"{d_in}/train.spacy",
+                "--paths.dev",
+                f"{d_in}/dev.spacy",
+                "--output",
+                f"{d_in}/model",
+            ],
+        )
+        assert train_result.exit_code == 0
+        assert Path(d_in / "model" / "model-last").exists()
