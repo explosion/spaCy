@@ -49,6 +49,9 @@ PipeCallable = Callable[[Doc], Doc]
 # This is the base config will all settings (training etc.)
 DEFAULT_CONFIG_PATH = Path(__file__).parent / "default_config.cfg"
 DEFAULT_CONFIG = util.load_config(DEFAULT_CONFIG_PATH)
+# This is the base config for the [distillation] block and currently not included
+# in the main config and only added via the 'init fill-config' command
+DEFAULT_CONFIG_DISTILL_PATH = Path(__file__).parent / "default_config_distillation.cfg"
 # This is the base config for the [pretraining] block and currently not included
 # in the main config and only added via the 'init fill-config' command
 DEFAULT_CONFIG_PRETRAIN_PATH = Path(__file__).parent / "default_config_pretraining.cfg"
