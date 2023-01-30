@@ -33,7 +33,6 @@ import inspect
 import pkgutil
 import logging
 import socket
-import stat
 
 try:
     import cupy.random
