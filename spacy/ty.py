@@ -27,6 +27,25 @@ class TrainableComponent(Protocol):
 
 
 @runtime_checkable
+class DistillableComponent(Protocol):
+    is_distillable: bool
+
+    def distill(
+        self,
+        teacher_pipe: Optional[TrainableComponent],
+        examples: Iterable["Example"],
+        *,
+        drop: float = 0.0,
+        sgd: Optional[Optimizer] = None,
+        losses: Optional[Dict[str, float]] = None
+    ) -> Dict[str, float]:
+        ...
+
+    def finish_update(self, sgd: Optimizer) -> None:
+        ...
+
+
+@runtime_checkable
 class InitializableComponent(Protocol):
     def initialize(
         self,

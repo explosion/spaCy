@@ -22,7 +22,7 @@ from . import ty
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
-from .training import Example, validate_examples
+from .training import Example, validate_examples, validate_distillation_examples
 from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
 from .util import registry, SimpleFrozenList, _pipe, raise_error, _DEFAULT_EMPTY_PIPES
@@ -1017,6 +1017,102 @@ class Language:
                 raise ValueError(Errors.E005.format(name=name, returned_type=type(doc)))
         return doc
 
+    def distill(
+        self,
+        teacher: "Language",
+        examples: Iterable[Example],
+        *,
+        drop: float = 0.0,
+        sgd: Optional[Optimizer] = None,
+        losses: Optional[Dict[str, float]] = None,
+        component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
+        exclude: Iterable[str] = SimpleFrozenList(),
+        annotates: Iterable[str] = SimpleFrozenList(),
+        student_to_teacher: Optional[Dict[str, str]] = None,
+    ):
+        """Distill the models in a student pipeline from a teacher pipeline.
+        teacher (Language): Teacher to distill from.
+        examples (Iterable[Example]): Distillation examples. The reference
+            (teacher) and predicted (student) docs must have the same number of
+            tokens and the same orthography.
+        drop (float): The dropout rate.
+        sgd (Optional[Optimizer]): An optimizer.
+        losses (Optional(Dict[str, float])): Dictionary to update with the loss,
+            keyed by component.
+        component_cfg (Optional[Dict[str, Dict[str, Any]]]): Config parameters
+            for specific pipeline components, keyed by component name.
+        exclude (Iterable[str]): Names of components that shouldn't be updated.
+        annotates (Iterable[str]): Names of components that should set
+            annotations on the predicted examples after updating.
+        student_to_teacher (Optional[Dict[str, str]]): Map student pipe name to
+            teacher pipe name, only needed for pipes where the student pipe
+            name does not match the teacher pipe name.
+        RETURNS (Dict[str, float]): The updated losses dictionary
+
+        DOCS: https://spacy.io/api/language#distill
+        """
+        if student_to_teacher is None:
+            student_to_teacher = {}
+        if losses is None:
+            losses = {}
+        if isinstance(examples, list) and len(examples) == 0:
+            return losses
+
+        validate_distillation_examples(examples, "Language.distill")
+        examples = _copy_examples(examples)
+
+        if sgd is None:
+            if self._optimizer is None:
+                self._optimizer = self.create_optimizer()
+            sgd = self._optimizer
+
+        if component_cfg is None:
+            component_cfg = {}
+        pipe_kwargs = {}
+        for student_name, student_proc in self.pipeline:
+            component_cfg.setdefault(student_name, {})
+            pipe_kwargs[student_name] = deepcopy(component_cfg[student_name])
+            component_cfg[student_name].setdefault("drop", drop)
+            pipe_kwargs[student_name].setdefault("batch_size", self.batch_size)
+
+        teacher_pipes = dict(teacher.pipeline)
+        for student_name, student_proc in self.pipeline:
+            if student_name in annotates:
+                for doc, eg in zip(
+                    _pipe(
+                        (eg.predicted for eg in examples),
+                        proc=student_proc,
+                        name=student_name,
+                        default_error_handler=self.default_error_handler,
+                        kwargs=pipe_kwargs[student_name],
+                    ),
+                    examples,
+                ):
+                    eg.predicted = doc
+
+            if (
+                student_name not in exclude
+                and isinstance(student_proc, ty.DistillableComponent)
+                and student_proc.is_distillable
+            ):
+                # A missing teacher pipe is not an error, some student pipes
+                # do not need a teacher, such as tok2vec layer losses.
+                teacher_name = (
+                    student_to_teacher[student_name]
+                    if student_name in student_to_teacher
+                    else student_name
+                )
+                teacher_pipe = teacher_pipes.get(teacher_name, None)
+                student_proc.distill(
+                    teacher_pipe,
+                    examples,
+                    sgd=sgd,
+                    losses=losses,
+                    **component_cfg[student_name],
+                )
+
+        return losses
+
     def disable_pipes(self, *names) -> "DisabledPipes":
         """Disable one or more pipeline components. If used as a context
         manager, the pipeline will be restored to the initial state at the end
@@ -1242,12 +1338,16 @@ class Language:
         self,
         get_examples: Optional[Callable[[], Iterable[Example]]] = None,
         *,
+        labels: Optional[Dict[str, Any]] = None,
         sgd: Optional[Optimizer] = None,
     ) -> Optimizer:
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
             returns gold-standard Example objects.
+        labels (Optional[Dict[str, Any]]): Labels to pass to pipe initialization,
+            using the names of the pipes as keys. Overrides labels that are in
+            the model configuration.
         sgd (Optional[Optimizer]): An optimizer to use for updates. If not
             provided, will be created using the .create_optimizer() method.
         RETURNS (thinc.api.Optimizer): The optimizer.
@@ -1292,6 +1392,8 @@ class Language:
         for name, proc in self.pipeline:
             if isinstance(proc, ty.InitializableComponent):
                 p_settings = I["components"].get(name, {})
+                if labels is not None and name in labels:
+                    p_settings["labels"] = labels[name]
                 p_settings = validate_init_settings(
                     proc.initialize, p_settings, section="components", name=name
                 )
@@ -1725,6 +1827,7 @@ class Language:
         # using the nlp.config with all defaults.
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
+        orig_distill = config.pop("distill", None)
         orig_pretraining = config.pop("pretraining", None)
         config["components"] = {}
         if auto_fill:
@@ -1733,6 +1836,9 @@ class Language:
             filled = config
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
+        if orig_distill is not None:
+            filled["distill"] = orig_distill
+            config["distill"] = orig_distill
         if orig_pretraining is not None:
             filled["pretraining"] = orig_pretraining
             config["pretraining"] = orig_pretraining
