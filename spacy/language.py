@@ -1031,7 +1031,7 @@ class Language:
         annotates: Iterable[str] = SimpleFrozenList(),
         student_to_teacher: Optional[Dict[str, str]] = None,
     ):
-        """Update the models in the pipeline.
+        """Distill the models in a student pipeline from a teacher pipeline.
         teacher (Language): Teacher to distill from.
         examples (Iterable[Example]): Distillation examples. The reference
             (teacher) and predicted (student) docs must have the same number of
