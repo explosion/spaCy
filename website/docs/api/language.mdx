@@ -358,7 +358,7 @@ Distill the models in a student pipeline from a teacher pipeline.
 | `component_cfg`      | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~                                              |
 | `exclude`            | Names of components that shouldn't be updated. Defaults to `[]`. ~~Iterable[str]~~                                                                                                          |
 | `annotates`          | Names of components that should set annotations on the prediced examples after updating. Defaults to `[]`. ~~Iterable[str]~~                                                                |
-| `student_to_teacher` | Map student component names to teacher component names, only necessary when the names differ. Defaults to `None`. ~~Iterable[str]~~                                                         |
+| `student_to_teacher` | Map student component names to teacher component names, only necessary when the names differ. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                              |
 | **RETURNS**          | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                                                                       |
 
 ## Language.rehearse {id="rehearse",tag="method,experimental",version="3"}
