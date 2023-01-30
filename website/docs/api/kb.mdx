@@ -21,8 +21,8 @@ functions called by the [`EntityLinker`](/api/entitylinker) component.
 <Infobox variant="warning">
 
 This class was not abstract up to spaCy version 3.5. The `KnowledgeBase`
-implementation up to that point is available as `InMemoryLookupKB` from 3.5
-onwards.
+implementation up to that point is available as
+[`InMemoryLookupKB`](/api/inmemorylookupkb) from 3.5 onwards.
 
 </Infobox>
 
@@ -110,14 +110,15 @@ to you.
 </Infobox>
 
 From spaCy 3.5 on `KnowledgeBase` is an abstract class (with
-[`InMemoryLookupKB`](/api/kb_in_memory) being a drop-in replacement) to allow
-more flexibility in customizing knowledge bases. Some of its methods were moved
-to [`InMemoryLookupKB`](/api/kb_in_memory) during this refactoring, one of those
-being `get_alias_candidates()`. This method is now available as
-[`InMemoryLookupKB.get_alias_candidates()`](/api/kb_in_memory#get_alias_candidates).
-Note: [`InMemoryLookupKB.get_candidates()`](/api/kb_in_memory#get_candidates)
+[`InMemoryLookupKB`](/api/inmemorylookupkb) being a drop-in replacement) to
+allow more flexibility in customizing knowledge bases. Some of its methods were
+moved to [`InMemoryLookupKB`](/api/inmemorylookupkb) during this refactoring,
+one of those being `get_alias_candidates()`. This method is now available as
+[`InMemoryLookupKB.get_alias_candidates()`](/api/inmemorylookupkb#get_alias_candidates).
+Note:
+[`InMemoryLookupKB.get_candidates()`](/api/inmemorylookupkb#get_candidates)
 defaults to
-[`InMemoryLookupKB.get_alias_candidates()`](/api/kb_in_memory#get_alias_candidates).
+[`InMemoryLookupKB.get_alias_candidates()`](/api/inmemorylookupkb#get_alias_candidates).
 
 ## KnowledgeBase.get_vector {id="get_vector",tag="method"}
 

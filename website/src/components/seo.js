@@ -9,6 +9,8 @@ import socialImageLegacy from '../images/social_legacy.jpg'
 import siteMetadata from '../../meta/site.json'
 import Head from 'next/head'
 
+import { siteUrl } from '../../meta/dynamicMeta.mjs'
+
 function getPageTitle(title, sitename, slogan, sectionTitle, nightly, legacy) {
     if (sectionTitle && title) {
         const suffix = nightly ? ' (nightly)' : legacy ? ' (legacy)' : ''
@@ -25,7 +27,7 @@ function getImage(section, nightly, legacy) {
     if (legacy) return socialImageLegacy
     if (section === 'api') return socialImageApi
     if (section === 'universe') return socialImageUniverse
-    return socialImageDefault
+    return `${siteUrl}${socialImageDefault.src}`
 }
 
 export default function SEO({
@@ -46,7 +48,7 @@ export default function SEO({
         nightly,
         legacy
     )
-    const socialImage = getImage(section, nightly, legacy).src
+    const socialImage = getImage(section, nightly, legacy)
     const meta = [
         {
             name: 'description',

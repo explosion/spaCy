@@ -1,6 +1,5 @@
 from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple
-from typing import Iterable, TypeVar, TYPE_CHECKING
-from .compat import Literal
+from typing import Iterable, TypeVar, Literal, TYPE_CHECKING
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator, create_model
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, ConstrainedStr
@@ -163,15 +162,33 @@ class TokenPatternString(BaseModel):
     IS_SUPERSET: Optional[List[StrictStr]] = Field(None, alias="is_superset")
     INTERSECTS: Optional[List[StrictStr]] = Field(None, alias="intersects")
     FUZZY: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy")
-    FUZZY1: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy1")
-    FUZZY2: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy2")
-    FUZZY3: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy3")
-    FUZZY4: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy4")
-    FUZZY5: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy5")
-    FUZZY6: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy6")
-    FUZZY7: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy7")
-    FUZZY8: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy8")
-    FUZZY9: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy9")
+    FUZZY1: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy1"
+    )
+    FUZZY2: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy2"
+    )
+    FUZZY3: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy3"
+    )
+    FUZZY4: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy4"
+    )
+    FUZZY5: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy5"
+    )
+    FUZZY6: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy6"
+    )
+    FUZZY7: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy7"
+    )
+    FUZZY8: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy8"
+    )
+    FUZZY9: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy9"
+    )
 
     class Config:
         extra = "forbid"

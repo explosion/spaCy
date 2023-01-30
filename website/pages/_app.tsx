@@ -17,7 +17,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 <link rel="manifest" href="/manifest.webmanifest" />
                 <meta
                     name="viewport"
-                    content="width=device-width, initial-scale=1.0, minimum-scale=1 maximum-scale=1.0, user-scalable=0, shrink-to-fit=no, viewport-fit=cover"
+                    content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=5.0, shrink-to-fit=no, viewport-fit=cover"
                 />
                 <meta name="theme-color" content="#09a3d5" />
                 <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />

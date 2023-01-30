@@ -1,4 +1,4 @@
-from typing import Iterator, Optional, Any, Dict, Callable, Iterable
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable, Literal
 from typing import Union, Tuple, List, Set, Pattern, Sequence
 from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
 
@@ -40,7 +40,6 @@ from .git_info import GIT_VERSION
 from . import util
 from . import about
 from .lookups import load_lookups
-from .compat import Literal
 
 
 PipeCallable = Callable[[Doc], Doc]

@@ -236,17 +236,17 @@ browser. Will run a simple web server.
 > displacy.serve([doc1, doc2], style="dep")
 > ```
 
-| Name               | Description                                                                                                                                                       |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`             | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span]], Doc, Span]~~                                                                             |
-| `style`            | Visualization style, `"dep"`, `"ent"` or `"span"` <Tag variant="new">3.3</Tag>. Defaults to `"dep"`. ~~str~~                                                      |
-| `page`             | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                     |
-| `minify`           | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                 |
-| `options`          | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                 |
-| `manual`           | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~ |
-| `port`             | Port to serve visualization. Defaults to `5000`. ~~int~~                                                                                                          |
-| `host`             | Host to serve visualization. Defaults to `"0.0.0.0"`. ~~str~~                                                                                                     |
-| `auto_select_port` | If `True`, automatically switch to a different port if the specified port is already in use. Defaults to `False`. ~~bool~~                                          |
+| Name                                            | Description                                                                                                                                                       |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs`                                          | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span]], Doc, Span]~~                                                                             |
+| `style` <Tag variant="new">3.3</Tag>            | Visualization style, `"dep"`, `"ent"` or `"span"`. Defaults to `"dep"`. ~~str~~                                                                                   |
+| `page`                                          | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                     |
+| `minify`                                        | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                 |
+| `options`                                       | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                 |
+| `manual`                                        | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~ |
+| `port`                                          | Port to serve visualization. Defaults to `5000`. ~~int~~                                                                                                          |
+| `host`                                          | Host to serve visualization. Defaults to `"0.0.0.0"`. ~~str~~                                                                                                     |
+| `auto_select_port` <Tag variant="new">3.5</Tag> | If `True`, automatically switch to a different port if the specified port is already in use. Defaults to `False`. ~~bool~~                                        |
 
 ### displacy.render {id="displacy.render",tag="method",version="2"}
 
