@@ -83,7 +83,7 @@ def init_fill_config_cli(
     # fmt: off
     base_path: Path = Arg(..., help="Path to base config to fill", exists=True, dir_okay=False),
     output_file: Path = Arg("-", help="Path to output .cfg file (or - for stdout)", allow_dash=True),
-    distillation: bool = Opt(False, "--distillation", "-d", help="Include config for distillation (with 'spacy distill')"),
+    distillation: bool = Opt(False, "--distillation", "-dt", help="Include config for distillation (with 'spacy distill')"),
     pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
     diff: bool = Opt(False, "--diff", "-D", help="Print a visual diff highlighting the changes"),
     code_path: Optional[Path] = Opt(None, "--code-path", "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
