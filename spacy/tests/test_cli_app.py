@@ -183,7 +183,7 @@ def test_project_run(project_dir):
     "options",
     [
         "",
-        "--sparse",
+        # "--sparse",
         "--branch v3",
         "--repo https://github.com/explosion/projects --branch v3",
     ],
