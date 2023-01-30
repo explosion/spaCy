@@ -99,7 +99,13 @@ def init_fill_config_cli(
     DOCS: https://spacy.io/api/cli#init-fill-config
     """
     import_code(code_path)
-    fill_config(output_file, base_path, distillation=distillation, pretraining=pretraining, diff=diff)
+    fill_config(
+        output_file,
+        base_path,
+        distillation=distillation,
+        pretraining=pretraining,
+        diff=diff,
+    )
 
 
 def fill_config(
