@@ -833,7 +833,7 @@ def test_distill(teacher_tagger_name):
         Example.from_dict(teacher.make_doc(t[0]), {}) for t in TAGGER_TRAIN_DATA
     ]
 
-    component_map = (
+    student_to_teacher = (
         None
         if teacher_tagger.name == student_tagger.name
         else {student_tagger.name: teacher_tagger.name}
@@ -846,7 +846,7 @@ def test_distill(teacher_tagger_name):
             distill_examples,
             sgd=optimizer,
             losses=losses,
-            component_map=component_map,
+            student_to_teacher=student_to_teacher,
         )
     assert losses["tagger"] < 0.00001
 
@@ -864,6 +864,6 @@ def test_distill(teacher_tagger_name):
         distill_examples,
         sgd=optimizer,
         losses=losses,
-        component_map=component_map,
+        student_to_teacher=student_to_teacher,
         annotates=["tagger"],
     )

@@ -1029,7 +1029,7 @@ class Language:
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         exclude: Iterable[str] = SimpleFrozenList(),
         annotates: Iterable[str] = SimpleFrozenList(),
-        component_map: Optional[Dict[str, str]] = None,
+        student_to_teacher: Optional[Dict[str, str]] = None,
     ):
         """Update the models in the pipeline.
         teacher (Language): Teacher to distill from.
@@ -1045,15 +1045,15 @@ class Language:
         exclude (Iterable[str]): Names of components that shouldn't be updated.
         annotates (Iterable[str]): Names of components that should set
             annotations on the predicted examples after updating.
-        component_map (Optional[Dict[str, str]]): Map student pipe name to
+        student_to_teacher (Optional[Dict[str, str]]): Map student pipe name to
             teacher pipe name, only needed for pipes where the student pipe
             name does not match the teacher pipe name.
         RETURNS (Dict[str, float]): The updated losses dictionary
 
         DOCS: https://spacy.io/api/language#distill
         """
-        if component_map is None:
-            component_map = {}
+        if student_to_teacher is None:
+            student_to_teacher = {}
         if losses is None:
             losses = {}
         if isinstance(examples, list) and len(examples) == 0:
@@ -1099,7 +1099,7 @@ class Language:
                 # A missing teacher pipe is not an error, some student pipes
                 # do not need a teacher, such as tok2vec layer losses.
                 teacher_pipe_name = (
-                    component_map[name] if name in component_map else name
+                    student_to_teacher[name] if name in student_to_teacher else name
                 )
                 teacher_pipe = teacher_pipes.get(teacher_pipe_name, None)
                 student_proc.distill(
