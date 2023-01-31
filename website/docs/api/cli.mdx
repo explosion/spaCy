@@ -1410,12 +1410,13 @@ $ python -m spacy project assets [project_dir]
 > $ python -m spacy project assets [--sparse]
 > ```
 
-| Name             | Description                                                                                                                                               |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `project_dir`    | Path to project directory. Defaults to current working directory. ~~Path (positional)~~                                                                   |
-| `--sparse`, `-S` | Enable [sparse checkout](https://git-scm.com/docs/git-sparse-checkout) to only check out and download what's needed. Requires Git v22.2+. ~~bool (flag)~~ |
-| `--help`, `-h`   | Show help message and available arguments. ~~bool (flag)~~                                                                                                |
-| **CREATES**      | Downloaded or copied assets defined in the `project.yml`.                                                                                                 |
+| Name                                           | Description                                                                                                                                               |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_dir`                                  | Path to project directory. Defaults to current working directory. ~~Path (positional)~~                                                                   |
+| `--extra`, `-e` <Tag variant="new">3.3.1</Tag> | Download assets marked as "extra". Default false. ~~bool (flag)~~                                                                                         |
+| `--sparse`, `-S`                               | Enable [sparse checkout](https://git-scm.com/docs/git-sparse-checkout) to only check out and download what's needed. Requires Git v22.2+. ~~bool (flag)~~ |
+| `--help`, `-h`                                 | Show help message and available arguments. ~~bool (flag)~~                                                                                                |
+| **CREATES**                                    | Downloaded or copied assets defined in the `project.yml`.                                                                                                 |
 
 ### project run {id="project-run",tag="command"}
 
