@@ -15,7 +15,7 @@ OPS = get_current_ops()
 
 SPAN_KEY = "labeled_spans"
 
-SPANCAT_COMPONENTS = ["spancat", "spancat_exclusive"]
+SPANCAT_COMPONENTS = ["spancat", "spancat_singlelabel"]
 
 TRAIN_DATA = [
     ("Who is Shaka Khan?", {"spans": {SPAN_KEY: [(7, 17, "PERSON")]}}),
