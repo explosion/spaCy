@@ -103,6 +103,7 @@ steps:
     displayName: "Install test requirements"
 
   - script: |
+      git --version
       python -m pytest --pyargs spacy -W error
     displayName: "Run CPU tests"
 
