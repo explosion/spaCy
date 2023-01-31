@@ -542,10 +542,6 @@ class Errors(metaclass=ErrorsWithCodes):
     E203 = ("If the {name} embedding layer is not updated "
             "during training, make sure to include it in 'annotating components'")
 
-    # New errors added in v4.x
-    E300 = ("nlp.pipe(text_tuples, as_tuples=True) has been replaced with:\n"
-            "nlp.pipe_as_tuples(text_tuples)")
-
     # New errors added in v3.x
     E851 = ("The 'textcat' component labels should only have values of 0 or 1, "
             "but found value of '{val}'.")
@@ -965,6 +961,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E4003 = ("Training examples for distillation must have the exact same tokens in the "
              "reference and predicted docs.")
     E4004 = ("Backprop is not supported when is_train is not set.")
+    E4005 = ("nlp.pipe(text_tuples, as_tuples=True) has been replaced with:\n"
+             "nlp.pipe_as_tuples(text_tuples)")
 
 
 # fmt: on

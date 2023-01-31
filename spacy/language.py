@@ -1577,7 +1577,7 @@ class Language:
         DOCS: https://spacy.io/api/language#pipe
         """
         if as_tuples is not None:
-            raise ValueError(Errors.E300)
+            raise ValueError(Errors.E4005)
 
         # Set argument defaults
         if n_process == -1:
