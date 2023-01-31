@@ -1,4 +1,4 @@
-from typing import Iterator, Optional, Any, Dict, Callable, Iterable, Collection
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable, Literal
 from typing import Union, Tuple, List, Set, Pattern, Sequence
 from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
 
@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
+
 from thinc.api import get_current_ops, Config, CupyOps, Optimizer
 import srsly
 import multiprocessing as mp
@@ -21,10 +22,10 @@ from . import ty
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
-from .training import Example, validate_examples
+from .training import Example, validate_examples, validate_distillation_examples
 from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe, raise_error
+from .util import registry, SimpleFrozenList, _pipe, raise_error, _DEFAULT_EMPTY_PIPES
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .util import warn_if_jupyter_cupy
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
@@ -39,11 +40,9 @@ from .git_info import GIT_VERSION
 from . import util
 from . import about
 from .lookups import load_lookups
-from .compat import Literal
 
 
-if TYPE_CHECKING:
-    from .pipeline import Pipe  # noqa: F401
+PipeCallable = Callable[[Doc], Doc]
 
 
 # This is the base config will all settings (training etc.)
@@ -180,7 +179,7 @@ class Language:
         self.vocab: Vocab = vocab
         if self.lang is None:
             self.lang = self.vocab.lang
-        self._components: List[Tuple[str, "Pipe"]] = []
+        self._components: List[Tuple[str, PipeCallable]] = []
         self._disabled: Set[str] = set()
         self.max_length = max_length
         # Create the default tokenizer from the default config
@@ -302,7 +301,7 @@ class Language:
         return SimpleFrozenList(names)
 
     @property
-    def components(self) -> List[Tuple[str, "Pipe"]]:
+    def components(self) -> List[Tuple[str, PipeCallable]]:
         """Get all (name, component) tuples in the pipeline, including the
         currently disabled components.
         """
@@ -321,12 +320,12 @@ class Language:
         return SimpleFrozenList(names, error=Errors.E926.format(attr="component_names"))
 
     @property
-    def pipeline(self) -> List[Tuple[str, "Pipe"]]:
+    def pipeline(self) -> List[Tuple[str, PipeCallable]]:
         """The processing pipeline consisting of (name, component) tuples. The
         components are called on the Doc in order as it passes through the
         pipeline.
 
-        RETURNS (List[Tuple[str, Pipe]]): The pipeline.
+        RETURNS (List[Tuple[str, Callable[[Doc], Doc]]]): The pipeline.
         """
         pipes = [(n, p) for n, p in self._components if n not in self._disabled]
         return SimpleFrozenList(pipes, error=Errors.E926.format(attr="pipeline"))
@@ -526,7 +525,7 @@ class Language:
         assigns: Iterable[str] = SimpleFrozenList(),
         requires: Iterable[str] = SimpleFrozenList(),
         retokenizes: bool = False,
-        func: Optional["Pipe"] = None,
+        func: Optional[PipeCallable] = None,
     ) -> Callable[..., Any]:
         """Register a new pipeline component. Can be used for stateless function
         components that don't require a separate factory. Can be used as a
@@ -541,7 +540,7 @@ class Language:
             e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
-        func (Optional[Callable]): Factory function if not used as a decorator.
+        func (Optional[Callable[[Doc], Doc]): Factory function if not used as a decorator.
 
         DOCS: https://spacy.io/api/language#component
         """
@@ -552,11 +551,11 @@ class Language:
                 raise ValueError(Errors.E853.format(name=name))
         component_name = name if name is not None else util.get_object_name(func)
 
-        def add_component(component_func: "Pipe") -> Callable:
+        def add_component(component_func: PipeCallable) -> Callable:
             if isinstance(func, type):  # function is a class
                 raise ValueError(Errors.E965.format(name=component_name))
 
-            def factory_func(nlp, name: str) -> "Pipe":
+            def factory_func(nlp, name: str) -> PipeCallable:
                 return component_func
 
             internal_name = cls.get_factory_name(name)
@@ -606,7 +605,7 @@ class Language:
             print_pipe_analysis(analysis, keys=keys)
         return analysis
 
-    def get_pipe(self, name: str) -> "Pipe":
+    def get_pipe(self, name: str) -> PipeCallable:
         """Get a pipeline component for a given component name.
 
         name (str): Name of pipeline component to get.
@@ -627,7 +626,7 @@ class Language:
         config: Dict[str, Any] = SimpleFrozenDict(),
         raw_config: Optional[Config] = None,
         validate: bool = True,
-    ) -> "Pipe":
+    ) -> PipeCallable:
         """Create a pipeline component. Mostly used internally. To create and
         add a component to the pipeline, you can use nlp.add_pipe.
 
@@ -639,7 +638,7 @@ class Language:
         raw_config (Optional[Config]): Internals: the non-interpolated config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
-        RETURNS (Pipe): The pipeline component.
+        RETURNS (Callable[[Doc], Doc]): The pipeline component.
 
         DOCS: https://spacy.io/api/language#create_pipe
         """
@@ -694,24 +693,18 @@ class Language:
 
     def create_pipe_from_source(
         self, source_name: str, source: "Language", *, name: str
-    ) -> Tuple["Pipe", str]:
+    ) -> Tuple[PipeCallable, str]:
         """Create a pipeline component by copying it from an existing model.
 
         source_name (str): Name of the component in the source pipeline.
         source (Language): The source nlp object to copy from.
         name (str): Optional alternative name to use in current pipeline.
-        RETURNS (Tuple[Callable, str]): The component and its factory name.
+        RETURNS (Tuple[Callable[[Doc], Doc], str]): The component and its factory name.
         """
         # Check source type
         if not isinstance(source, Language):
             raise ValueError(Errors.E945.format(name=source_name, source=type(source)))
-        # Check vectors, with faster checks first
-        if (
-            self.vocab.vectors.shape != source.vocab.vectors.shape
-            or self.vocab.vectors.key2row != source.vocab.vectors.key2row
-            or self.vocab.vectors.to_bytes(exclude=["strings"])
-            != source.vocab.vectors.to_bytes(exclude=["strings"])
-        ):
+        if self.vocab.vectors != source.vocab.vectors:
             warnings.warn(Warnings.W113.format(name=source_name))
         if source_name not in source.component_names:
             raise KeyError(
@@ -745,7 +738,7 @@ class Language:
         config: Dict[str, Any] = SimpleFrozenDict(),
         raw_config: Optional[Config] = None,
         validate: bool = True,
-    ) -> "Pipe":
+    ) -> PipeCallable:
         """Add a component to the processing pipeline. Valid components are
         callables that take a `Doc` object, modify it and return it. Only one
         of before/after/first/last can be set. Default behaviour is "last".
@@ -768,7 +761,7 @@ class Language:
         raw_config (Optional[Config]): Internals: the non-interpolated config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
-        RETURNS (Pipe): The pipeline component.
+        RETURNS (Callable[[Doc], Doc]): The pipeline component.
 
         DOCS: https://spacy.io/api/language#add_pipe
         """
@@ -789,14 +782,6 @@ class Language:
                 factory_name, source, name=name
             )
         else:
-            if not self.has_factory(factory_name):
-                err = Errors.E002.format(
-                    name=factory_name,
-                    opts=", ".join(self.factory_names),
-                    method="add_pipe",
-                    lang=util.get_object_name(self),
-                    lang_code=self.lang,
-                )
             pipe_component = self.create_pipe(
                 factory_name,
                 name=name,
@@ -882,7 +867,7 @@ class Language:
         *,
         config: Dict[str, Any] = SimpleFrozenDict(),
         validate: bool = True,
-    ) -> "Pipe":
+    ) -> PipeCallable:
         """Replace a component in the pipeline.
 
         name (str): Name of the component to replace.
@@ -891,7 +876,7 @@ class Language:
             component. Will be merged with default config, if available.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
-        RETURNS (Pipe): The new pipeline component.
+        RETURNS (Callable[[Doc], Doc]): The new pipeline component.
 
         DOCS: https://spacy.io/api/language#replace_pipe
         """
@@ -943,11 +928,11 @@ class Language:
             init_cfg = self._config["initialize"]["components"].pop(old_name)
             self._config["initialize"]["components"][new_name] = init_cfg
 
-    def remove_pipe(self, name: str) -> Tuple[str, "Pipe"]:
+    def remove_pipe(self, name: str) -> Tuple[str, PipeCallable]:
         """Remove a component from the pipeline.
 
         name (str): Name of the component to remove.
-        RETURNS (tuple): A `(name, component)` tuple of the removed component.
+        RETURNS (Tuple[str, Callable[[Doc], Doc]]): A `(name, component)` tuple of the removed component.
 
         DOCS: https://spacy.io/api/language#remove_pipe
         """
@@ -1028,9 +1013,105 @@ class Language:
                 raise ValueError(Errors.E109.format(name=name)) from e
             except Exception as e:
                 error_handler(name, proc, [doc], e)
-            if doc is None:
-                raise ValueError(Errors.E005.format(name=name))
+            if not isinstance(doc, Doc):
+                raise ValueError(Errors.E005.format(name=name, returned_type=type(doc)))
         return doc
+
+    def distill(
+        self,
+        teacher: "Language",
+        examples: Iterable[Example],
+        *,
+        drop: float = 0.0,
+        sgd: Optional[Optimizer] = None,
+        losses: Optional[Dict[str, float]] = None,
+        component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
+        exclude: Iterable[str] = SimpleFrozenList(),
+        annotates: Iterable[str] = SimpleFrozenList(),
+        student_to_teacher: Optional[Dict[str, str]] = None,
+    ):
+        """Distill the models in a student pipeline from a teacher pipeline.
+        teacher (Language): Teacher to distill from.
+        examples (Iterable[Example]): Distillation examples. The reference
+            (teacher) and predicted (student) docs must have the same number of
+            tokens and the same orthography.
+        drop (float): The dropout rate.
+        sgd (Optional[Optimizer]): An optimizer.
+        losses (Optional(Dict[str, float])): Dictionary to update with the loss,
+            keyed by component.
+        component_cfg (Optional[Dict[str, Dict[str, Any]]]): Config parameters
+            for specific pipeline components, keyed by component name.
+        exclude (Iterable[str]): Names of components that shouldn't be updated.
+        annotates (Iterable[str]): Names of components that should set
+            annotations on the predicted examples after updating.
+        student_to_teacher (Optional[Dict[str, str]]): Map student pipe name to
+            teacher pipe name, only needed for pipes where the student pipe
+            name does not match the teacher pipe name.
+        RETURNS (Dict[str, float]): The updated losses dictionary
+
+        DOCS: https://spacy.io/api/language#distill
+        """
+        if student_to_teacher is None:
+            student_to_teacher = {}
+        if losses is None:
+            losses = {}
+        if isinstance(examples, list) and len(examples) == 0:
+            return losses
+
+        validate_distillation_examples(examples, "Language.distill")
+        examples = _copy_examples(examples)
+
+        if sgd is None:
+            if self._optimizer is None:
+                self._optimizer = self.create_optimizer()
+            sgd = self._optimizer
+
+        if component_cfg is None:
+            component_cfg = {}
+        pipe_kwargs = {}
+        for student_name, student_proc in self.pipeline:
+            component_cfg.setdefault(student_name, {})
+            pipe_kwargs[student_name] = deepcopy(component_cfg[student_name])
+            component_cfg[student_name].setdefault("drop", drop)
+            pipe_kwargs[student_name].setdefault("batch_size", self.batch_size)
+
+        teacher_pipes = dict(teacher.pipeline)
+        for student_name, student_proc in self.pipeline:
+            if student_name in annotates:
+                for doc, eg in zip(
+                    _pipe(
+                        (eg.predicted for eg in examples),
+                        proc=student_proc,
+                        name=student_name,
+                        default_error_handler=self.default_error_handler,
+                        kwargs=pipe_kwargs[student_name],
+                    ),
+                    examples,
+                ):
+                    eg.predicted = doc
+
+            if (
+                student_name not in exclude
+                and isinstance(student_proc, ty.DistillableComponent)
+                and student_proc.is_distillable
+            ):
+                # A missing teacher pipe is not an error, some student pipes
+                # do not need a teacher, such as tok2vec layer losses.
+                teacher_name = (
+                    student_to_teacher[student_name]
+                    if student_name in student_to_teacher
+                    else student_name
+                )
+                teacher_pipe = teacher_pipes.get(teacher_name, None)
+                student_proc.distill(
+                    teacher_pipe,
+                    examples,
+                    sgd=sgd,
+                    losses=losses,
+                    **component_cfg[student_name],
+                )
+
+        return losses
 
     def disable_pipes(self, *names) -> "DisabledPipes":
         """Disable one or more pipeline components. If used as a context
@@ -1063,7 +1144,7 @@ class Language:
         """
         if enable is None and disable is None:
             raise ValueError(Errors.E991)
-        if disable is not None and isinstance(disable, str):
+        if isinstance(disable, str):
             disable = [disable]
         if enable is not None:
             if isinstance(enable, str):
@@ -1253,25 +1334,20 @@ class Language:
             sgd(key, W, dW)  # type: ignore[call-arg, misc]
         return losses
 
-    def begin_training(
-        self,
-        get_examples: Optional[Callable[[], Iterable[Example]]] = None,
-        *,
-        sgd: Optional[Optimizer] = None,
-    ) -> Optimizer:
-        warnings.warn(Warnings.W089, DeprecationWarning)
-        return self.initialize(get_examples, sgd=sgd)
-
     def initialize(
         self,
         get_examples: Optional[Callable[[], Iterable[Example]]] = None,
         *,
+        labels: Optional[Dict[str, Any]] = None,
         sgd: Optional[Optimizer] = None,
     ) -> Optimizer:
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
             returns gold-standard Example objects.
+        labels (Optional[Dict[str, Any]]): Labels to pass to pipe initialization,
+            using the names of the pipes as keys. Overrides labels that are in
+            the model configuration.
         sgd (Optional[Optimizer]): An optimizer to use for updates. If not
             provided, will be created using the .create_optimizer() method.
         RETURNS (thinc.api.Optimizer): The optimizer.
@@ -1316,6 +1392,8 @@ class Language:
         for name, proc in self.pipeline:
             if isinstance(proc, ty.InitializableComponent):
                 p_settings = I["components"].get(name, {})
+                if labels is not None and name in labels:
+                    p_settings["labels"] = labels[name]
                 p_settings = validate_init_settings(
                     proc.initialize, p_settings, section="components", name=name
                 )
@@ -1362,15 +1440,15 @@ class Language:
 
     def set_error_handler(
         self,
-        error_handler: Callable[[str, "Pipe", List[Doc], Exception], NoReturn],
+        error_handler: Callable[[str, PipeCallable, List[Doc], Exception], NoReturn],
     ):
-        """Set an error handler object for all the components in the pipeline that implement
-        a set_error_handler function.
+        """Set an error handler object for all the components in the pipeline
+        that implement a set_error_handler function.
 
-        error_handler (Callable[[str, Pipe, List[Doc], Exception], NoReturn]):
-            Function that deals with a failing batch of documents. This callable function should take in
-            the component's name, the component itself, the offending batch of documents, and the exception
-            that was thrown.
+        error_handler (Callable[[str, Callable[[Doc], Doc], List[Doc], Exception], NoReturn]):
+            Function that deals with a failing batch of documents. This callable
+            function should take in the component's name, the component itself,
+            the offending batch of documents, and the exception that was thrown.
         DOCS: https://spacy.io/api/language#set_error_handler
         """
         self.default_error_handler = error_handler
@@ -1698,9 +1776,9 @@ class Language:
         config: Union[Dict[str, Any], Config] = {},
         *,
         vocab: Union[Vocab, bool] = True,
-        disable: Iterable[str] = SimpleFrozenList(),
-        enable: Iterable[str] = SimpleFrozenList(),
-        exclude: Iterable[str] = SimpleFrozenList(),
+        disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+        enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+        exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
         meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
         validate: bool = True,
@@ -1711,12 +1789,12 @@ class Language:
 
         config (Dict[str, Any] / Config): The loaded config.
         vocab (Vocab): A Vocab object. If True, a vocab is created.
-        disable (Iterable[str]): Names of pipeline components to disable.
+        disable (Union[str, Iterable[str]]): Name(s) of pipeline component(s) to disable.
             Disabled pipes will be loaded but they won't be run unless you
             explicitly enable them by calling nlp.enable_pipe.
-        enable (Iterable[str]): Names of pipeline components to enable. All other
+        enable (Union[str, Iterable[str]]): Name(s) of pipeline component(s) to enable. All other
             pipes will be disabled (and can be enabled using `nlp.enable_pipe`).
-        exclude (Iterable[str]): Names of pipeline components to exclude.
+        exclude (Union[str, Iterable[str]]): Name(s) of pipeline component(s) to exclude.
             Excluded components won't be loaded.
         meta (Dict[str, Any]): Meta overrides for nlp.meta.
         auto_fill (bool): Automatically fill in missing values in config based
@@ -1749,6 +1827,7 @@ class Language:
         # using the nlp.config with all defaults.
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
+        orig_distill = config.pop("distill", None)
         orig_pretraining = config.pop("pretraining", None)
         config["components"] = {}
         if auto_fill:
@@ -1757,6 +1836,9 @@ class Language:
             filled = config
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
+        if orig_distill is not None:
+            filled["distill"] = orig_distill
+            config["distill"] = orig_distill
         if orig_pretraining is not None:
             filled["pretraining"] = orig_pretraining
             config["pretraining"] = orig_pretraining
@@ -1871,9 +1953,29 @@ class Language:
             nlp.vocab.from_bytes(vocab_b)
 
         # Resolve disabled/enabled settings.
+        if isinstance(disable, str):
+            disable = [disable]
+        if isinstance(enable, str):
+            enable = [enable]
+        if isinstance(exclude, str):
+            exclude = [exclude]
+
+        # `enable` should not be merged with `enabled` (the opposite is true for `disable`/`disabled`). If the config
+        # specifies values for `enabled` not included in `enable`, emit warning.
+        if id(enable) != id(_DEFAULT_EMPTY_PIPES):
+            enabled = config["nlp"].get("enabled", [])
+            if len(enabled) and not set(enabled).issubset(enable):
+                warnings.warn(
+                    Warnings.W123.format(
+                        enable=enable,
+                        enabled=enabled,
+                    )
+                )
+
+        # Ensure sets of disabled/enabled pipe names are not contradictory.
         disabled_pipes = cls._resolve_component_status(
-            [*config["nlp"]["disabled"], *disable],
-            [*config["nlp"].get("enabled", []), *enable],
+            list({*disable, *config["nlp"].get("disabled", [])}),
+            enable,
             config["nlp"]["pipeline"],
         )
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
@@ -2031,37 +2133,36 @@ class Language:
 
     @staticmethod
     def _resolve_component_status(
-        disable: Iterable[str], enable: Iterable[str], pipe_names: Collection[str]
+        disable: Union[str, Iterable[str]],
+        enable: Union[str, Iterable[str]],
+        pipe_names: Iterable[str],
     ) -> Tuple[str, ...]:
         """Derives whether (1) `disable` and `enable` values are consistent and (2)
         resolves those to a single set of disabled components. Raises an error in
         case of inconsistency.
 
-        disable (Iterable[str]): Names of components or serialization fields to disable.
-        enable (Iterable[str]): Names of pipeline components to enable.
+        disable (Union[str, Iterable[str]]): Name(s) of component(s) or serialization fields to disable.
+        enable (Union[str, Iterable[str]]): Name(s) of pipeline component(s) to enable.
         pipe_names (Iterable[str]): Names of all pipeline components.
 
         RETURNS (Tuple[str, ...]): Names of components to exclude from pipeline w.r.t.
                                    specified includes and excludes.
         """
 
-        if disable is not None and isinstance(disable, str):
+        if isinstance(disable, str):
             disable = [disable]
         to_disable = disable
 
         if enable:
-            to_disable = [
-                pipe_name for pipe_name in pipe_names if pipe_name not in enable
-            ]
-            if disable and disable != to_disable:
-                raise ValueError(
-                    Errors.E1042.format(
-                        arg1="enable",
-                        arg2="disable",
-                        arg1_values=enable,
-                        arg2_values=disable,
-                    )
-                )
+            if isinstance(enable, str):
+                enable = [enable]
+            to_disable = {
+                *[pipe_name for pipe_name in pipe_names if pipe_name not in enable],
+                *disable,
+            }
+            # If any pipe to be enabled is in to_disable, the specification is inconsistent.
+            if len(set(enable) & to_disable):
+                raise ValueError(Errors.E1042.format(enable=enable, disable=disable))
 
         return tuple(to_disable)
 

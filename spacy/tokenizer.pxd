@@ -4,7 +4,6 @@ from cymem.cymem cimport Pool
 
 from .typedefs cimport hash_t
 from .structs cimport LexemeC, SpanC, TokenC
-from .strings cimport StringStore
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab, LexemesOrTokens, _Cached
 from .matcher.phrasematcher cimport PhraseMatcher
@@ -38,7 +37,7 @@ cdef class Tokenizer:
                                      bint with_special_cases) except -1
     cdef int _tokenize(self, Doc tokens, str span, hash_t key,
                        int* has_special, bint with_special_cases) except -1
-    cdef str _split_affixes(self, Pool mem, str string,
+    cdef str _split_affixes(self, str string,
                                 vector[LexemeC*] *prefixes,
                                 vector[LexemeC*] *suffixes, int* has_special,
                                 bint with_special_cases)

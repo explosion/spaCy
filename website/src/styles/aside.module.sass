@@ -1,3 +1,4 @@
+@use 'sass:math'
 @import base
 
 $triangle-size: 2rem
@@ -55,14 +56,14 @@ $border-radius: 6px
         // Banner effect
         &:after
             position: absolute
-            bottom: -$triangle-size / 2
-            left: $border-radius / 2
+            bottom: math.div(-$triangle-size, 2)
+            left: math.div($border-radius, 2)
             width: 0
             height: 0
             border-color: transparent
             border-style: solid
             border-top-color: var(--color-dark)
-            border-width: $triangle-size / 2 0 0 calc(#{$triangle-size} - #{$border-radius / 2})
+            border-width: math.div($triangle-size, 2) 0 0 calc(#{$triangle-size} - #{math.div($border-radius, 2)})
             content: ""
 
 @include breakpoint(max, sm)
@@ -76,7 +77,7 @@ $border-radius: 6px
     padding: 1.5rem 2.5rem 2.5rem 2rem
 
     a, a:hover
-        color: var(--color-subtle)
+        color: var(--color-subtle-on-dark)
 
     & > *:last-child
         margin-bottom: 0

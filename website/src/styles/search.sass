@@ -1,0 +1,27 @@
+@import base
+
+.DocSearch-Modal
+    --docsearch-primary-color: var(--color-theme-dark)
+    --docsearch-searchbox-background: var(--color-back)
+    --docsearch-searchbox-shadow: inset 0 0 0 2px var(--docsearch-primary-color)
+    --docsearch-highlight-color: var(--docsearch-primary-color)
+    --docsearch-logo-color: var(--docsearch-primary-color)
+
+    box-shadow: inset 0 0 0 1px var(--color-subtle)
+
+.DocSearch, .DocSearch-Modal, .DocSearch-Help, .DocSearch-Input, .DocSearch-Hit-title, .DocSearch-Hit-path
+    font-family: var(--font-primary)
+    font-size: var(--font-size-md) !important
+    font-weight: 400
+
+.DocSearch-Hits mark
+    background: var(--docsearch-highlight-color) !important
+    color: var(--color-back) !important
+
+.DocSearch-Hit-source
+    font-size: var(--font-size-lg) !important
+    font-family: var(--font-secondary)
+    text-transform: uppercase
+
+.cls-1, .cls-2
+    fill: var(--docsearch-primary-color) !important

@@ -5,11 +5,12 @@ import classNames from 'classnames'
 import Button from './button'
 import Tag from './tag'
 import { OptionalLink } from './link'
-import { InlineCode } from './code'
+import { InlineCode } from './inlineCode'
 import { H1, Label, InlineList, Help } from './typography'
 import Icon from './icon'
 
 import classes from '../styles/title.module.sass'
+import Image from 'next/image'
 
 const MetaItem = ({ label, url, children, help }) => (
     <span>
@@ -36,8 +37,8 @@ export default function Title({
     children,
     ...props
 }) {
-    const hasApiDetails = Object.values(apiDetails || {}).some(v => v)
-    const metaIconProps = { className: classes.metaIcon, width: 18 }
+    const hasApiDetails = Object.values(apiDetails || {}).some((v) => v)
+    const metaIconProps = { className: classes['meta-icon'], width: 18 }
     return (
         <header className={classes.root}>
             {(image || source) && (
@@ -50,7 +51,7 @@ export default function Title({
 
                     {image && (
                         <div className={classes.image}>
-                            <img src={image} width={100} height={100} alt="" />
+                            <Image src={image} width={100} height={100} alt={`${title} Logo`} />
                         </div>
                     )}
                 </div>

@@ -30,14 +30,13 @@ MOD_NAMES = [
     "spacy.lexeme",
     "spacy.vocab",
     "spacy.attrs",
-    "spacy.kb",
-    "spacy.ml.parser_model",
+    "spacy.kb.candidate",
+    "spacy.kb.kb",
+    "spacy.kb.kb_in_memory",
+    "spacy.ml.tb_framework",
     "spacy.morphology",
-    "spacy.pipeline.dep_parser",
     "spacy.pipeline._edit_tree_internals.edit_trees",
     "spacy.pipeline.morphologizer",
-    "spacy.pipeline.multitask",
-    "spacy.pipeline.ner",
     "spacy.pipeline.pipe",
     "spacy.pipeline.trainable_pipe",
     "spacy.pipeline.sentencizer",
@@ -45,12 +44,15 @@ MOD_NAMES = [
     "spacy.pipeline.tagger",
     "spacy.pipeline.transition_parser",
     "spacy.pipeline._parser_internals.arc_eager",
+    "spacy.pipeline._parser_internals.batch",
     "spacy.pipeline._parser_internals.ner",
     "spacy.pipeline._parser_internals.nonproj",
+    "spacy.pipeline._parser_internals.search",
     "spacy.pipeline._parser_internals._state",
     "spacy.pipeline._parser_internals.stateclass",
     "spacy.pipeline._parser_internals.transition_system",
     "spacy.pipeline._parser_internals._beam_utils",
+    "spacy.pipeline._parser_internals._parser_utils",
     "spacy.tokenizer",
     "spacy.training.align",
     "spacy.training.gold_io",
@@ -60,12 +62,13 @@ MOD_NAMES = [
     "spacy.tokens.span_group",
     "spacy.tokens.graph",
     "spacy.tokens.morphanalysis",
-    "spacy.tokens._retokenize",
+    "spacy.tokens.retokenizer",
     "spacy.matcher.matcher",
     "spacy.matcher.phrasematcher",
     "spacy.matcher.dependencymatcher",
     "spacy.symbols",
     "spacy.vectors",
+    "spacy.tests.parser._search",
 ]
 COMPILE_OPTIONS = {
     "msvc": ["/Ox", "/EHsc"],
@@ -205,6 +208,17 @@ def setup_package():
         get_python_inc(plat_specific=True),
     ]
     ext_modules = []
+    ext_modules.append(
+        Extension(
+            "spacy.matcher.levenshtein",
+            [
+                "spacy/matcher/levenshtein.pyx",
+                "spacy/matcher/polyleven.c",
+            ],
+            language="c",
+            include_dirs=include_dirs,
+        )
+    )
     for name in MOD_NAMES:
         mod_path = name.replace(".", "/") + ".pyx"
         ext = Extension(

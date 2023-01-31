@@ -1,13 +1,16 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional, Callable
+from typing import Dict, Iterable, Optional, Callable, List, Union
 from itertools import islice
 
 import srsly
-from thinc.api import Model, SequenceCategoricalCrossentropy, Config
+from thinc.api import Model, Config
+from thinc.legacy import LegacySequenceCategoricalCrossentropy
+
+from thinc.types import Floats2d, Ints1d
 
 from ..tokens.doc cimport Doc
 
-from .tagger import Tagger
+from .tagger import ActivationsT, Tagger
 from ..language import Language
 from ..errors import Errors
 from ..scorer import Scorer
@@ -38,11 +41,21 @@ DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "senter",
     assigns=["token.is_sent_start"],
-    default_config={"model": DEFAULT_SENTER_MODEL, "overwrite": False, "scorer": {"@scorers": "spacy.senter_scorer.v1"}},
+    default_config={
+        "model": DEFAULT_SENTER_MODEL,
+        "overwrite": False,
+        "scorer": {"@scorers": "spacy.senter_scorer.v1"},
+        "save_activations": False,
+    },
     default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
-def make_senter(nlp: Language, name: str, model: Model, overwrite: bool, scorer: Optional[Callable]):
-    return SentenceRecognizer(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer)
+def make_senter(nlp: Language,
+                name: str,
+                model: Model,
+                overwrite: bool,
+                scorer: Optional[Callable],
+                save_activations: bool):
+    return SentenceRecognizer(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, save_activations=save_activations)
 
 
 def senter_score(examples, **kwargs):
@@ -72,6 +85,7 @@ class SentenceRecognizer(Tagger):
         *,
         overwrite=BACKWARD_OVERWRITE,
         scorer=senter_score,
+        save_activations: bool = False,
     ):
         """Initialize a sentence recognizer.
 
@@ -81,6 +95,7 @@ class SentenceRecognizer(Tagger):
             losses during training.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_spans for the attribute "sents".
+        save_activations (bool): save model activations in Doc when annotating.
 
         DOCS: https://spacy.io/api/sentencerecognizer#init
         """
@@ -90,6 +105,7 @@ class SentenceRecognizer(Tagger):
         self._rehearsal_model = None
         self.cfg = {"overwrite": overwrite}
         self.scorer = scorer
+        self.save_activations = save_activations
 
     @property
     def labels(self):
@@ -107,19 +123,24 @@ class SentenceRecognizer(Tagger):
     def label_data(self):
         return None
 
-    def set_annotations(self, docs, batch_tag_ids):
+    def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        batch_tag_ids: The IDs to set, produced by SentenceRecognizer.predict.
+        activations (ActivationsT): The activations used for setting annotations, produced by SentenceRecognizer.predict.
 
         DOCS: https://spacy.io/api/sentencerecognizer#set_annotations
         """
+        batch_tag_ids = activations["label_ids"]
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
         cdef bint overwrite = self.cfg["overwrite"]
         for i, doc in enumerate(docs):
+            if self.save_activations:
+                doc.activations[self.name] = {}
+                for act_name, acts in activations.items():
+                    doc.activations[self.name][act_name] = acts[i]
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
@@ -142,7 +163,7 @@ class SentenceRecognizer(Tagger):
         """
         validate_examples(examples, "SentenceRecognizer.get_loss")
         labels = self.labels
-        loss_func = SequenceCategoricalCrossentropy(names=labels, normalize=False)
+        loss_func = LegacySequenceCategoricalCrossentropy(names=labels, normalize=False)
         truths = []
         for eg in examples:
             eg_truth = []

@@ -82,8 +82,6 @@ class Span:
     @property
     def tensor(self) -> FloatsXd: ...
     @property
-    def sentiment(self) -> float: ...
-    @property
     def text(self) -> str: ...
     @property
     def text_with_ws(self) -> str: ...
@@ -95,8 +93,8 @@ class Span:
         self,
         start_idx: int,
         end_idx: int,
-        label: int = ...,
-        kb_id: int = ...,
+        label: Union[int, str] = ...,
+        kb_id: Union[int, str] = ...,
         vector: Optional[Floats1d] = ...,
     ) -> Span: ...
     @property

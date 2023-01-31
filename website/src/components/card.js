@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
+import ImageNext from 'next/image'
 
 import Link from './link'
 import { H5 } from './typography'
@@ -10,7 +11,7 @@ export default function Card({ title, to, image, header, small, onClick, childre
     return (
         <div className={classNames(classes.root, { [classes.small]: !!small })}>
             {header && (
-                <Link to={to} onClick={onClick} hidden>
+                <Link to={to} onClick={onClick} noLinkLayout>
                     {header}
                 </Link>
             )}
@@ -18,17 +19,17 @@ export default function Card({ title, to, image, header, small, onClick, childre
                 <H5 className={classes.title}>
                     {image && (
                         <div className={classes.image}>
-                            <img src={image} width={35} alt="" />
+                            <ImageNext src={image} height={35} width={35} alt={`${title} Logo`} />
                         </div>
                     )}
                     {title && (
-                        <Link to={to} onClick={onClick} hidden>
+                        <Link to={to} onClick={onClick} noLinkLayout>
                             {title}
                         </Link>
                     )}
                 </H5>
             )}
-            <Link to={to} onClick={onClick} hidden>
+            <Link to={to} onClick={onClick} noLinkLayout>
                 {children}
             </Link>
         </div>

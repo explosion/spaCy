@@ -2,12 +2,13 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import GitHubButton from 'react-github-btn'
+import SVG from 'react-inlinesvg'
 
 import Link from './link'
 import Icon from './icon'
 import Dropdown from './dropdown'
 import { github } from './util'
-import Logo from '-!svg-react-loader!../images/logo.svg'
+import logoSpacy from '../images/logo.svg'
 import classes from '../styles/navigation.module.sass'
 
 const NavigationDropdown = ({ items = [], section }) => {
@@ -29,9 +30,9 @@ const NavigationDropdown = ({ items = [], section }) => {
 
 export default function Navigation({ title, items = [], section, search, alert, children }) {
     const logo = (
-        <Link to="/" aria-label={title} hidden>
+        <Link to="/" aria-label={title} noLinkLayout>
             <h1 className={classes.title}>{title}</h1>
-            <Logo className={classes.logo} width={300} height={96} />
+            <SVG src={logoSpacy.src} className={classes.logo} width={300} height={96} />
         </Link>
     )
 
@@ -40,7 +41,7 @@ export default function Navigation({ title, items = [], section, search, alert, 
             {!alert ? (
                 logo
             ) : (
-                <span className={classes.hasAlert}>
+                <span className={classes['has-alert']}>
                     {logo} <span className={classes.alert}>{alert}</span>
                 </span>
             )}
@@ -52,11 +53,11 @@ export default function Navigation({ title, items = [], section, search, alert, 
                     {items.map(({ text, url }, i) => {
                         const isActive = section && text.toLowerCase() === section
                         const itemClassNames = classNames(classes.item, {
-                            [classes.isActive]: isActive,
+                            [classes['is-active']]: isActive,
                         })
                         return (
                             <li key={i} className={itemClassNames}>
-                                <Link to={url} tabIndex={isActive ? '-1' : null} hidden>
+                                <Link to={url} tabIndex={isActive ? '-1' : null} noLinkLayout>
                                     {text}
                                 </Link>
                             </li>

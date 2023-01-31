@@ -3,6 +3,10 @@ from mock import Mock
 from spacy.tokens import Doc, Span, Token
 from spacy.tokens.underscore import Underscore
 
+# Helper functions
+def _get_tuple(s: Span):
+    return "._.", "span_extension", s.start_char, s.end_char, s.label, s.kb_id, s.id
+
 
 @pytest.fixture(scope="function", autouse=True)
 def clean_underscore():
@@ -171,3 +175,118 @@ def test_underscore_docstring(en_vocab):
     doc = Doc(en_vocab, words=["hello", "world"])
     assert test_method.__doc__ == "I am a docstring"
     assert doc._.test_docstrings.__doc__.rsplit(". ")[-1] == "I am a docstring"
+
+
+def test_underscore_for_unique_span(en_tokenizer):
+    """Test that spans with the same boundaries but with different labels are uniquely identified (see #9706)."""
+    Doc.set_extension(name="doc_extension", default=None)
+    Span.set_extension(name="span_extension", default=None)
+    Token.set_extension(name="token_extension", default=None)
+
+    # Initialize doc
+    text = "Hello, world!"
+    doc = en_tokenizer(text)
+    span_1 = Span(doc, 0, 2, "SPAN_1")
+    span_2 = Span(doc, 0, 2, "SPAN_2")
+
+    # Set custom extensions
+    doc._.doc_extension = "doc extension"
+    doc[0]._.token_extension = "token extension"
+    span_1._.span_extension = "span_1 extension"
+    span_2._.span_extension = "span_2 extension"
+
+    # Assert extensions
+    assert doc.user_data[_get_tuple(span_1)] == "span_1 extension"
+    assert doc.user_data[_get_tuple(span_2)] == "span_2 extension"
+
+    # Change label of span and assert extensions
+    span_1.label_ = "NEW_LABEL"
+    assert doc.user_data[_get_tuple(span_1)] == "span_1 extension"
+    assert doc.user_data[_get_tuple(span_2)] == "span_2 extension"
+
+    # Change KB_ID and assert extensions
+    span_1.kb_id_ = "KB_ID"
+    assert doc.user_data[_get_tuple(span_1)] == "span_1 extension"
+    assert doc.user_data[_get_tuple(span_2)] == "span_2 extension"
+
+    # Change extensions and assert
+    span_2._.span_extension = "updated span_2 extension"
+    assert doc.user_data[_get_tuple(span_1)] == "span_1 extension"
+    assert doc.user_data[_get_tuple(span_2)] == "updated span_2 extension"
+
+    # Change span ID and assert extensions
+    span_2.id = 2
+    assert doc.user_data[_get_tuple(span_1)] == "span_1 extension"
+    assert doc.user_data[_get_tuple(span_2)] == "updated span_2 extension"
+
+    # Assert extensions with original key
+    assert doc.user_data[("._.", "doc_extension", None, None)] == "doc extension"
+    assert doc.user_data[("._.", "token_extension", 0, None)] == "token extension"
+
+
+def test_underscore_for_unique_span_from_docs(en_tokenizer):
+    """Test that spans in the user_data keep the same data structure when using Doc.from_docs"""
+    Span.set_extension(name="span_extension", default=None)
+    Token.set_extension(name="token_extension", default=None)
+
+    # Initialize doc
+    text_1 = "Hello, world!"
+    doc_1 = en_tokenizer(text_1)
+    span_1a = Span(doc_1, 0, 2, "SPAN_1a")
+    span_1b = Span(doc_1, 0, 2, "SPAN_1b")
+
+    text_2 = "This is a test."
+    doc_2 = en_tokenizer(text_2)
+    span_2a = Span(doc_2, 0, 3, "SPAN_2a")
+
+    # Set custom extensions
+    doc_1[0]._.token_extension = "token_1"
+    doc_2[1]._.token_extension = "token_2"
+    span_1a._.span_extension = "span_1a extension"
+    span_1b._.span_extension = "span_1b extension"
+    span_2a._.span_extension = "span_2a extension"
+
+    doc = Doc.from_docs([doc_1, doc_2])
+    # Assert extensions
+    assert doc_1.user_data[_get_tuple(span_1a)] == "span_1a extension"
+    assert doc_1.user_data[_get_tuple(span_1b)] == "span_1b extension"
+    assert doc_2.user_data[_get_tuple(span_2a)] == "span_2a extension"
+
+    # Check extensions on merged doc
+    assert doc.user_data[_get_tuple(span_1a)] == "span_1a extension"
+    assert doc.user_data[_get_tuple(span_1b)] == "span_1b extension"
+    assert (
+        doc.user_data[
+            (
+                "._.",
+                "span_extension",
+                span_2a.start_char + len(doc_1.text) + 1,
+                span_2a.end_char + len(doc_1.text) + 1,
+                span_2a.label,
+                span_2a.kb_id,
+                span_2a.id,
+            )
+        ]
+        == "span_2a extension"
+    )
+
+
+def test_underscore_for_unique_span_as_span(en_tokenizer):
+    """Test that spans in the user_data keep the same data structure when using Span.as_doc"""
+    Span.set_extension(name="span_extension", default=None)
+
+    # Initialize doc
+    text = "Hello, world!"
+    doc = en_tokenizer(text)
+    span_1 = Span(doc, 0, 2, "SPAN_1")
+    span_2 = Span(doc, 0, 2, "SPAN_2")
+
+    # Set custom extensions
+    span_1._.span_extension = "span_1 extension"
+    span_2._.span_extension = "span_2 extension"
+
+    span_doc = span_1.as_doc(copy_user_data=True)
+
+    # Assert extensions
+    assert span_doc.user_data[_get_tuple(span_1)] == "span_1 extension"
+    assert span_doc.user_data[_get_tuple(span_2)] == "span_2 extension"
