@@ -225,15 +225,15 @@ in order. This is usually more efficient than processing texts one-by-one.
 >     assert doc.has_annotation("DEP")
 > ```
 
-| Name                                       | Description                                                                                                                                    |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `texts`                                    | A sequence of strings. ~~Iterable[Tuple(str, Any)]~~                                                                                           |
-| _keyword-only_                             |                                                                                                                                                |
-| `batch_size`                               | The number of texts to buffer. ~~Optional[int]~~                                                                                               |
-| `disable`                                  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                |
-| `component_cfg`                            | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
-| `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. ~~int~~                                                                                          |
-| **YIELDS**                                 | Documents in the order of the original text. ~~Tuple(Doc, Any)~~                                                                               |
+| Name            | Description                                                                                                                                    |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `texts`         | A sequence of strings. ~~Iterable[Tuple(str, Any)]~~                                                                                           |
+| _keyword-only_  |                                                                                                                                                |
+| `batch_size`    | The number of texts to buffer. ~~Optional[int]~~                                                                                               |
+| `disable`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                |
+| `component_cfg` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
+| `n_process`     | Number of processors to use. Defaults to `1`. ~~int~~                                                                                          |
+| **YIELDS**      | Documents in the order of the original text. ~~Tuple(Doc, Any)~~                                                                               |
 
 ## Language.set_error_handler {id="set_error_handler",tag="method",version="3"}
 
