@@ -3,6 +3,7 @@ import re
 from wasabi import msg
 import typer
 from thinc.api import Config
+from typing import Any, Dict, Iterable
 
 import spacy
 from spacy.language import Language
@@ -22,7 +23,7 @@ LISTENER_ARCHS = [
 ]
 
 
-def _deep_get(obj, key, default):
+def _deep_get(obj: Dict[str, Any], key: Iterable[str], default: Any):
     """Given a multi-part key, try to get the key. If at any point this isn't
     possible, return the default.
     """
