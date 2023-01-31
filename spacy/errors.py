@@ -1,5 +1,5 @@
+from typing import Literal
 import warnings
-from .compat import Literal
 
 
 class ErrorsWithCodes(type):
@@ -131,13 +131,6 @@ class Warnings(metaclass=ErrorsWithCodes):
             "and make it independent. For example, `replace_listeners = "
             "[\"model.tok2vec\"]` See the documentation for details: "
             "https://spacy.io/usage/training#config-components-listeners")
-    W088 = ("The pipeline component {name} implements a `begin_training` "
-            "method, which won't be called by spaCy. As of v3.0, `begin_training` "
-            "has been renamed to `initialize`, so you likely want to rename the "
-            "component method. See the documentation for details: "
-            "https://spacy.io/api/language#initialize")
-    W089 = ("As of spaCy v3.0, the `nlp.begin_training` method has been renamed "
-            "to `nlp.initialize`.")
     W090 = ("Could not locate any {format} files in path '{path}'.")
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
     W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")
@@ -199,7 +192,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W117 = ("No spans to visualize found in Doc object with spans_key: '{spans_key}'. If this is "
             "surprising to you, make sure the Doc was processed using a model "
             "that supports span categorization, and check the `doc.spans[spans_key]` "
-            "property manually if necessary.")
+            "property manually if necessary.\n\nAvailable keys: {keys}")
     W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
             "for the corpora used to train the language. Please check "
             "`nlp.meta[\"sources\"]` for any relevant links.")
@@ -212,8 +205,11 @@ class Warnings(metaclass=ErrorsWithCodes):
     W121 = ("Attempting to trace non-existent method '{method}' in pipe '{pipe}'")
     W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
             "is a Cython extension type.")
-    W123 = ("Argument {arg} with value {arg_value} is used instead of {config_value} as specified in the config. Be "
-            "aware that this might affect other components in your pipeline.")
+    W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
+            "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
+    W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
+
+    W400 = ("`use_upper=False` is ignored, the upper layer is always enabled")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -250,8 +246,6 @@ class Errors(metaclass=ErrorsWithCodes):
             "https://spacy.io/usage/models")
     E011 = ("Unknown operator: '{op}'. Options: {opts}")
     E012 = ("Cannot add pattern for zero tokens to matcher.\nKey: {key}")
-    E016 = ("MultitaskObjective target should be function or one of: dep, "
-            "tag, ent, dep_tag_offset, ent_tag.")
     E017 = ("Can only add 'str' inputs to StringStore. Got type: {value_type}")
     E018 = ("Can't retrieve string for hash '{hash_value}'. This usually "
             "refers to an issue with the `Vocab` or `StringStore`.")
@@ -345,6 +339,11 @@ class Errors(metaclass=ErrorsWithCodes):
             "clear the existing vectors and resize the table.")
     E074 = ("Error interpreting compiled match pattern: patterns are expected "
             "to end with the attribute {attr}. Got: {bad_attr}.")
+    E079 = ("Error computing states in beam: number of predicted beams "
+            "({pbeams}) does not equal number of gold beams ({gbeams}).")
+    E080 = ("Duplicate state found in beam: {key}.")
+    E081 = ("Error getting gradient in beam: number of histories ({n_hist}) "
+            "does not equal number of losses ({losses}).")
     E082 = ("Error deprojectivizing parse: number of heads ({n_heads}), "
             "projective heads ({n_proj_heads}) and labels ({n_labels}) do not "
             "match.")
@@ -544,6 +543,10 @@ class Errors(metaclass=ErrorsWithCodes):
             "during training, make sure to include it in 'annotating components'")
 
     # New errors added in v3.x
+    E851 = ("The 'textcat' component labels should only have values of 0 or 1, "
+            "but found value of '{val}'.")
+    E852 = ("The tar file pulled from the remote attempted an unsafe path "
+            "traversal.")
     E853 = ("Unsupported component factory name '{name}'. The character '.' is "
             "not permitted in factory names.")
     E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
@@ -723,13 +726,6 @@ class Errors(metaclass=ErrorsWithCodes):
             "method in component '{name}'. If you want to use this "
             "method, make sure it's overwritten on the subclass.")
     E940 = ("Found NaN values in scores.")
-    E941 = ("Can't find model '{name}'. It looks like you're trying to load a "
-            "model from a shortcut, which is obsolete as of spaCy v3.0. To "
-            "load the model, use its full name instead:\n\n"
-            "nlp = spacy.load(\"{full}\")\n\nFor more details on the available "
-            "models, see the models directory: https://spacy.io/models. If you "
-            "want to create a blank model, use spacy.blank: "
-            "nlp = spacy.blank(\"{name}\")")
     E942 = ("Executing `after_{name}` callback failed. Expected the function to "
             "return an initialized nlp object but got: {value}. Maybe "
             "you forgot to return the modified object in your function?")
@@ -950,20 +946,21 @@ class Errors(metaclass=ErrorsWithCodes):
              "sure it's overwritten on the subclass.")
     E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
+    E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
+    E1048 = ("Got '{unexpected}' as console progress bar type, but expected one of the following: {expected}")
+    E1049 = ("No available port found for displaCy on host {host}. Please specify an available port "
+             "with `displacy.serve(doc, port=port)`")
+    E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
+             "or use `auto_switch_port=True` to pick an available port automatically.")
 
     # v4 error strings
     E4000 = ("Expected a Doc as input, but got: '{type}'")
     E4001 = ("Expected input to be one of the following types: ({expected_types}), "
              "but got '{received_type}'")
-
-
-# Deprecated model shortcuts, only used in errors and warnings
-OLD_MODEL_SHORTCUTS = {
-    "en": "en_core_web_sm", "de": "de_core_news_sm", "es": "es_core_news_sm",
-    "pt": "pt_core_news_sm", "fr": "fr_core_news_sm", "it": "it_core_news_sm",
-    "nl": "nl_core_news_sm", "el": "el_core_news_sm", "nb": "nb_core_news_sm",
-    "lt": "lt_core_news_sm", "xx": "xx_ent_wiki_sm"
-}
+    E4002 = ("Pipe '{name}' requires a teacher pipe for distillation.")
+    E4003 = ("Training examples for distillation must have the exact same tokens in the "
+             "reference and predicted docs.")
+    E4004 = ("Backprop is not supported when is_train is not set.")
 
 
 # fmt: on

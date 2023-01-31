@@ -6,7 +6,6 @@ from libcpp.vector cimport vector
 from cymem.cymem cimport Pool
 
 from collections import Counter
-from thinc.extra.search cimport Beam
 
 from ...tokens.doc cimport Doc
 from ...tokens.span import Span
@@ -17,6 +16,7 @@ from ...attrs cimport IS_SPACE
 from ...structs cimport TokenC, SpanC
 from ...training import split_bilu_label
 from ...training.example cimport Example
+from .search cimport Beam
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition, do_func_t
@@ -156,7 +156,7 @@ cdef class BiluoPushDown(TransitionSystem):
             if token.ent_type:
                 labels.add(token.ent_type_)
         return labels
-    
+
     def move_name(self, int move, attr_t label):
         if move == OUT:
             return 'O'
@@ -306,6 +306,8 @@ cdef class BiluoPushDown(TransitionSystem):
             for span in eg.y.spans.get(neg_key, []):
                 if span.start >= start and span.end <= end:
                     return True
+        if end is not None and end < 0:
+            end = None
         for word in eg.y[start:end]:
             if word.ent_iob != 0:
                 return True
@@ -646,7 +648,7 @@ cdef class Unit:
                 cost += 1
                 break
         return cost
- 
+
 
 
 cdef class Out:

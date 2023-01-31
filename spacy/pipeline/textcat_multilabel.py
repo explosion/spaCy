@@ -74,7 +74,7 @@ subword_features = true
     default_config={
         "threshold": 0.5,
         "model": DEFAULT_MULTI_TEXTCAT_MODEL,
-        "scorer": {"@scorers": "spacy.textcat_multilabel_scorer.v1"},
+        "scorer": {"@scorers": "spacy.textcat_multilabel_scorer.v2"},
         "save_activations": False,
     },
     default_score_weights={
@@ -88,7 +88,6 @@ subword_features = true
         "cats_macro_f": None,
         "cats_macro_auc": None,
         "cats_f_per_type": None,
-        "cats_macro_auc_per_type": None,
     },
 )
 def make_multilabel_textcat(
@@ -128,7 +127,7 @@ def textcat_multilabel_score(examples: Iterable[Example], **kwargs) -> Dict[str,
     )
 
 
-@registry.scorers("spacy.textcat_multilabel_scorer.v1")
+@registry.scorers("spacy.textcat_multilabel_scorer.v2")
 def make_textcat_multilabel_scorer():
     return textcat_multilabel_score
 
@@ -156,11 +155,8 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         name (str): The component instance name, used to add entries to the
             losses during training.
         threshold (float): Cutoff to consider a prediction "positive".
-<<<<<<< HEAD
-        save_activations (bool): save model activations in Doc when annotating.
-=======
         scorer (Optional[Callable]): The scoring method.
->>>>>>> upstream/master
+        save_activations (bool): save model activations in Doc when annotating.
 
         DOCS: https://spacy.io/api/textcategorizer#init
         """
@@ -205,6 +201,8 @@ class MultiLabel_TextCategorizer(TextCategorizer):
             for label in labels:
                 self.add_label(label)
         subbatch = list(islice(get_examples(), 10))
+        self._validate_categories(subbatch)
+
         doc_sample = [eg.reference for eg in subbatch]
         label_sample, _ = self._examples_to_truth(subbatch)
         self._require_labels()
@@ -215,4 +213,8 @@ class MultiLabel_TextCategorizer(TextCategorizer):
     def _validate_categories(self, examples: Iterable[Example]):
         """This component allows any type of single- or multi-label annotations.
         This method overwrites the more strict one from 'textcat'."""
-        pass
+        # check that annotation values are valid
+        for ex in examples:
+            for val in ex.reference.cats.values():
+                if not (val == 1.0 or val == 0.0):
+                    raise ValueError(Errors.E851.format(val=val))

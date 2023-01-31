@@ -15,7 +15,7 @@ from ...training.example cimport Example
 from .stateclass cimport StateClass
 from ._state cimport StateC, ArcC
 from ...errors import Errors
-from thinc.extra.search cimport Beam
+from .search cimport Beam
 
 cdef weight_t MIN_SCORE = -90000
 cdef attr_t SUBTOK_LABEL = hash_string('subtok')
@@ -773,6 +773,8 @@ cdef class ArcEager(TransitionSystem):
         return list(arcs)
 
     def has_gold(self, Example eg, start=0, end=None):
+        if end is not None and end < 0:
+            end = None
         for word in eg.y[start:end]:
             if word.dep != 0:
                 return True
@@ -858,6 +860,7 @@ cdef class ArcEager(TransitionSystem):
                             state.print_state()
                         )))
                     action.do(state.c, action.label)
+                    state.c.history.push_back(i)
                     break
             else:
                 failed = False

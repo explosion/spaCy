@@ -27,8 +27,7 @@
         "indexName": "spacy"
     },
     "binderUrl": "explosion/spacy-io-binder",
-    "binderBranch": "spacy.io",
-    "binderVersion": "3.4",
+    "binderVersion": "3.5",
     "sections": [
         { "id": "usage", "title": "Usage Documentation", "theme": "blue" },
         { "id": "models", "title": "Models Documentation", "theme": "blue" },
@@ -51,7 +50,7 @@
                 { "text": "Online Course", "url": "https://course.spacy.io" },
                 {
                     "text": "Custom Solutions",
-                    "url": "https://explosion.ai/spacy-tailored-pipelines"
+                    "url": "https://explosion.ai/custom-solutions"
                 }
             ]
         },
