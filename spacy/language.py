@@ -2329,7 +2329,7 @@ class DisabledPipes(list):
 
 
 def _copy_examples(
-    examples: Iterable[Example], copy_x: bool = True, copy_y: bool = False
+    examples: Iterable[Example], *, copy_x: bool = True, copy_y: bool = False
 ) -> List[Example]:
     """Make a copy of a batch of examples, copying the predicted Doc as well.
     This is used in contexts where we need to take ownership of the examples
