@@ -9,7 +9,7 @@ from .. import util
 from ..training.initialize import init_nlp, convert_vectors
 from ..language import Language
 from ._util import init_cli, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, setup_gpu
+from ._util import import_code, setup_gpu, _handle_renamed_language_codes
 
 
 @init_cli.command("vectors")
@@ -31,6 +31,10 @@ def init_vectors_cli(
     a model with vectors.
     """
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+
+    # Throw error for renamed language codes in v4
+    _handle_renamed_language_codes(lang)
+
     msg.info(f"Creating blank nlp object for language '{lang}'")
     nlp = util.get_lang_class(lang)()
     if jsonl_loc is not None:

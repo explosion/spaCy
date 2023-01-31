@@ -86,7 +86,7 @@ def conll_ner_to_docs(
     if model:
         nlp = load_model(model)
     else:
-        nlp = get_lang_class("xx")()
+        nlp = get_lang_class("mul")()
     for conll_doc in input_data.strip().split(doc_delimiter):
         conll_doc = conll_doc.strip()
         if not conll_doc:
@@ -133,7 +133,7 @@ def segment_sents_and_docs(doc, n_sents, doc_delimiter, model=None, msg=None):
             "Segmenting sentences with sentencizer. (Use `-b model` for "
             "improved parser-based sentence segmentation.)"
         )
-        nlp = get_lang_class("xx")()
+        nlp = get_lang_class("mul")()
         sentencizer = nlp.create_pipe("sentencizer")
     lines = doc.strip().split("\n")
     words = [line.strip().split()[0] for line in lines]
