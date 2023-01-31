@@ -391,7 +391,7 @@ def horse_doc(en_vocab):
     )
 
 
-def test_viz_dep_tree_basic(en_vocab):
+def test_pprint_dep_tree_basic(en_vocab):
     """Test basic dependency tree display."""
     doc = Doc(
         en_vocab,
@@ -435,7 +435,7 @@ def test_viz_dep_tree_basic(en_vocab):
     ]
 
 
-def test_viz_dep_tree_non_initial_sent(en_vocab):
+def test_pprint_dep_tree_non_initial_sent(en_vocab):
     """Test basic dependency tree display."""
     doc = Doc(
         en_vocab,
@@ -482,7 +482,7 @@ def test_viz_dep_tree_non_initial_sent(en_vocab):
     ]
 
 
-def test_viz_dep_tree_non_projective(horse_doc):
+def test_pprint_dep_tree_non_projective(horse_doc):
     """Test dependency tree display with a non-projective dependency."""
     dep_tree = render_dep_tree(horse_doc[0 : len(horse_doc)], True)
     assert dep_tree == [
@@ -510,7 +510,7 @@ def test_viz_dep_tree_non_projective(horse_doc):
     ]
 
 
-def test_viz_dep_tree_highly_nonprojective(pl_vocab):
+def test_pprint_dep_tree_highly_nonprojective(pl_vocab):
     """Test a highly non-projective tree (colloquial Polish)."""
     doc = Doc(
         pl_vocab,
@@ -551,13 +551,13 @@ def test_viz_dep_tree_highly_nonprojective(pl_vocab):
     ]
 
 
-def test_viz_dep_tree_input_not_span(horse_doc):
+def test_pprint_dep_tree_input_not_span(horse_doc):
     """Test dependency tree display behaviour when the input is not a Span."""
     with pytest.raises(ValueError):
         render_dep_tree(horse_doc[1:3], True)
 
 
-def test_viz_render_native_attributes(horse_doc):
+def test_pprint_render_native_attributes(horse_doc):
     assert AttributeFormat("head.i").render(horse_doc[2]) == "3"
     assert AttributeFormat("head.i").render(horse_doc[2], right_pad_to_len=3) == "3  "
     assert AttributeFormat("dep_").render(horse_doc[2]) == "dep"
@@ -569,7 +569,7 @@ def test_viz_render_native_attributes(horse_doc):
         AttributeFormat("tree_right").render(horse_doc[2])
 
 
-def test_viz_render_colors(horse_doc):
+def test_pprint_render_colors(horse_doc):
     assert (
         AttributeFormat(
             "dep_",
@@ -604,7 +604,7 @@ def test_viz_render_colors(horse_doc):
     )
 
 
-def test_viz_render_custom_attributes(horse_doc):
+def test_pprint_render_custom_attributes(horse_doc):
     Token.set_extension("test", default="tested1", force=True)
     assert AttributeFormat("_.test").render(horse_doc[2]) == "tested1"
 
@@ -619,7 +619,7 @@ def test_viz_render_custom_attributes(horse_doc):
         AttributeFormat("._depp").render(horse_doc[2])
 
 
-def test_viz_minimal_render_table_one_sentence(
+def test_pprint_minimal_render_table_one_sentence(
     fully_featured_doc_one_sentence,
 ):
     formats = [
@@ -649,7 +649,7 @@ def test_viz_minimal_render_table_one_sentence(
     )
 
 
-def test_viz_minimal_render_table_empty_text(
+def test_pprint_minimal_render_table_empty_text(
     en_vocab,
 ):
     # no headers
@@ -679,7 +679,7 @@ def test_viz_minimal_render_table_empty_text(
     assert render_table(Doc(en_vocab), formats, spacing=3).strip() == ""
 
 
-def test_viz_minimal_render_table_spacing(
+def test_pprint_minimal_render_table_spacing(
     fully_featured_doc_one_sentence,
 ):
     formats = [
@@ -709,7 +709,7 @@ def test_viz_minimal_render_table_spacing(
     )
 
 
-def test_viz_minimal_render_table_two_sentences(
+def test_pprint_minimal_render_table_two_sentences(
     fully_featured_doc_two_sentences,
 ):
     formats = [
@@ -746,7 +746,7 @@ def test_viz_minimal_render_table_two_sentences(
     )
 
 
-def test_viz_rich_render_table_one_sentence(
+def test_pprint_rich_render_table_one_sentence(
     fully_featured_doc_one_sentence,
 ):
     formats = [
@@ -802,7 +802,7 @@ def test_viz_rich_render_table_one_sentence(
     )
 
 
-def test_viz_rich_render_table_two_sentences(
+def test_pprint_rich_render_table_two_sentences(
     fully_featured_doc_two_sentences,
 ):
     formats = [
@@ -844,7 +844,7 @@ def test_viz_rich_render_table_two_sentences(
     )
 
 
-def test_viz_rich_render_table_start(
+def test_pprint_rich_render_table_start(
     fully_featured_doc_two_sentences,
 ):
     formats = [
@@ -980,7 +980,7 @@ def test_viz_rich_render_table_start(
     )
 
 
-def test_viz_rich_render_table_end(
+def test_pprint_rich_render_table_end(
     fully_featured_doc_two_sentences,
 ):
     formats = [
