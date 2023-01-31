@@ -208,7 +208,7 @@ tokenization is skipped but the rest of the pipeline is run.
 | `n_process`     | Number of processors to use. Defaults to `1`. ~~int~~                                                                                          |
 | **YIELDS**      | Documents in the order of the original text. ~~Doc~~                                                                                           |
 
-## Language.pipe_as_tuples {#pipe_as_tuples tag="method"}
+## Language.pipe_as_tuples {id="pipe_as_tuples",tag="method"}
 
 Process `(text, context)` tuples as a stream, and yield `(Doc, context)` tuples
 in order. This is usually more efficient than processing texts one-by-one.
