@@ -91,7 +91,9 @@ def test_issue3611():
         optimizer = nlp.initialize()
         for i in range(3):
             losses = {}
-            batches = util.minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+            batches = util.minibatch(
+                train_data, size=compounding(4.0, 32.0, 1.001).to_generator()
+            )
 
             for batch in batches:
                 nlp.update(examples=batch, sgd=optimizer, drop=0.1, losses=losses)
@@ -128,7 +130,9 @@ def test_issue4030():
         optimizer = nlp.initialize()
         for i in range(3):
             losses = {}
-            batches = util.minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+            batches = util.minibatch(
+                train_data, size=compounding(4.0, 32.0, 1.001).to_generator()
+            )
 
             for batch in batches:
                 nlp.update(examples=batch, sgd=optimizer, drop=0.1, losses=losses)

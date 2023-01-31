@@ -918,7 +918,9 @@ def _train_tuples(train_data):
     optimizer = nlp.initialize()
     for i in range(5):
         losses = {}
-        batches = minibatch(train_examples, size=compounding(4.0, 32.0, 1.001))
+        batches = minibatch(
+            train_examples, size=compounding(4.0, 32.0, 1.001).to_generator()
+        )
         for batch in batches:
             nlp.update(batch, sgd=optimizer, losses=losses)
 

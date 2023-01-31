@@ -1,6 +1,5 @@
 from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple
-from typing import Iterable, TypeVar, TYPE_CHECKING
-from .compat import Literal
+from typing import Iterable, TypeVar, Literal, TYPE_CHECKING
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator, create_model
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, ConstrainedStr
@@ -163,15 +162,33 @@ class TokenPatternString(BaseModel):
     IS_SUPERSET: Optional[List[StrictStr]] = Field(None, alias="is_superset")
     INTERSECTS: Optional[List[StrictStr]] = Field(None, alias="intersects")
     FUZZY: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy")
-    FUZZY1: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy1")
-    FUZZY2: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy2")
-    FUZZY3: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy3")
-    FUZZY4: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy4")
-    FUZZY5: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy5")
-    FUZZY6: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy6")
-    FUZZY7: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy7")
-    FUZZY8: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy8")
-    FUZZY9: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy9")
+    FUZZY1: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy1"
+    )
+    FUZZY2: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy2"
+    )
+    FUZZY3: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy3"
+    )
+    FUZZY4: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy4"
+    )
+    FUZZY5: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy5"
+    )
+    FUZZY6: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy6"
+    )
+    FUZZY7: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy7"
+    )
+    FUZZY8: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy8"
+    )
+    FUZZY9: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy9"
+    )
 
     class Config:
         extra = "forbid"
@@ -405,6 +422,27 @@ class ConfigSchemaInit(BaseModel):
         arbitrary_types_allowed = True
 
 
+class ConfigSchemaDistillEmpty(BaseModel):
+    class Config:
+        extra = "forbid"
+
+
+class ConfigSchemaDistill(BaseModel):
+    # fmt: off
+    batcher: Batcher = Field(..., title="Batcher for the training data")
+    corpus: StrictStr = Field(..., title="Path in the config to the distillation data")
+    dropout: StrictFloat = Field(..., title="Dropout rate")
+    max_epochs: StrictInt = Field(..., title="Maximum number of epochs to distill for")
+    max_steps: StrictInt = Field(..., title="Maximum number of steps to distill for")
+    optimizer: Optimizer = Field(..., title="The optimizer to use")
+    student_to_teacher: Dict[str, str] = Field(..., title="Mapping from student to teacher pipe")
+    # fmt: on
+
+    class Config:
+        extra = "forbid"
+        arbitrary_types_allowed = True
+
+
 class ConfigSchema(BaseModel):
     training: ConfigSchemaTraining
     nlp: ConfigSchemaNlp
@@ -412,6 +450,7 @@ class ConfigSchema(BaseModel):
     components: Dict[str, Dict[str, Any]]
     corpora: Dict[str, Reader]
     initialize: ConfigSchemaInit
+    distillation: Union[ConfigSchemaDistill, ConfigSchemaDistillEmpty] = {}  # type: ignore[assignment]
 
     class Config:
         extra = "allow"
@@ -423,6 +462,7 @@ CONFIG_SCHEMAS = {
     "training": ConfigSchemaTraining,
     "pretraining": ConfigSchemaPretrain,
     "initialize": ConfigSchemaInit,
+    "distill": ConfigSchemaDistill,
 }
 
 

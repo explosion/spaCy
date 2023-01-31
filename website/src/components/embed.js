@@ -5,8 +5,8 @@ import ImageNext from 'next/image'
 
 import Link from './link'
 import Button from './button'
-import { InlineCode } from './code'
-import { MarkdownToReact } from './util'
+import { InlineCode } from './inlineCode'
+import MarkdownToReact from './markdownToReactDynamic'
 
 import classes from '../styles/embed.module.sass'
 
@@ -88,10 +88,16 @@ const Image = ({ src, alt, title, href, ...props }) => {
     const markdownComponents = { code: InlineCode, p: Fragment, a: Link }
     return (
         <figure className="gatsby-resp-image-figure">
-            <Link className={linkClassNames} href={href ?? src} hidden forceExternal>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+            {href ? (
+                <Link className={linkClassNames} href={href} noLinkLayout forceExternal>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img className={classes.image} src={src} alt={alt} width={650} height="auto" />
+                </Link>
+            ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img className={classes.image} src={src} alt={alt} width={650} height="auto" />
-            </Link>
+            )}
+
             {title && (
                 <figcaption className="gatsby-resp-image-figcaption">
                     <MarkdownToReact markdown={title} />
@@ -104,7 +110,7 @@ const Image = ({ src, alt, title, href, ...props }) => {
 const ImageFill = ({ image, ...props }) => {
     return (
         <span
-            class={classes['figure-fill']}
+            className={classes['figure-fill']}
             style={{ paddingBottom: `${(image.height / image.width) * 100}%` }}
         >
             <ImageNext src={image.src} {...props} fill />

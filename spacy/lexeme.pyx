@@ -41,7 +41,7 @@ cdef class Lexeme:
         """
         self.vocab = vocab
         self.orth = orth
-        self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
+        self.c = <LexemeC*><void*>vocab.get_by_orth(orth)
         if self.c.orth != orth:
             raise ValueError(Errors.E071.format(orth=orth, vocab_orth=self.c.orth))
 

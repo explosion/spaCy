@@ -129,15 +129,15 @@ This feature is experimental.
 > losses = student.distill(teacher_pipe, examples, sgd=optimizer)
 > ```
 
-| Name           | Description                                                                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `teacher_pipe` | The teacher pipe to learn from. ~~Optional[TrainablePipe]~~                                                                                 |
-| `examples`     | Distillation examples. The reference and predicted docs must have the same number of tokens and the same orthography. ~~Iterable[Example]~~ |
-| _keyword-only_ |                                                                                                                                             |
-| `drop`         | Dropout rate. ~~float~~                                                                                                                     |
-| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                               |
-| `losses`       | Optional record of the loss during distillation. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~                |
-| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                       |
+| Name           | Description                                                                                                                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `teacher_pipe` | The teacher pipe to learn from. ~~Optional[TrainablePipe]~~                                                                                                                                 |
+| `examples`     | A batch of [`Example`](/api/example) distillation examples. The reference (teacher) and predicted (student) docs must have the same number of tokens and orthography. ~~Iterable[Example]~~ |
+| _keyword-only_ |                                                                                                                                                                                             |
+| `drop`         | Dropout rate. ~~float~~                                                                                                                                                                     |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                                                                               |
+| `losses`       | Optional record of the loss during distillation. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~                                                                |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                                                                       |
 
 ## SentenceRecognizer.pipe {id="pipe",tag="method"}
 

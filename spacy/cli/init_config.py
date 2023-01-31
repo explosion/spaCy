@@ -8,7 +8,7 @@ import re
 from jinja2 import Template
 
 from .. import util
-from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
+from ..language import DEFAULT_CONFIG_DISTILL_PATH, DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
 from ..util import SimpleFrozenList
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
@@ -83,6 +83,7 @@ def init_fill_config_cli(
     # fmt: off
     base_path: Path = Arg(..., help="Path to base config to fill", exists=True, dir_okay=False),
     output_file: Path = Arg("-", help="Path to output .cfg file (or - for stdout)", allow_dash=True),
+    distillation: bool = Opt(False, "--distillation", "-dt", help="Include config for distillation (with 'spacy distill')"),
     pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
     diff: bool = Opt(False, "--diff", "-D", help="Print a visual diff highlighting the changes"),
     code_path: Optional[Path] = Opt(None, "--code-path", "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
@@ -98,13 +99,20 @@ def init_fill_config_cli(
     DOCS: https://spacy.io/api/cli#init-fill-config
     """
     import_code(code_path)
-    fill_config(output_file, base_path, pretraining=pretraining, diff=diff)
+    fill_config(
+        output_file,
+        base_path,
+        distillation=distillation,
+        pretraining=pretraining,
+        diff=diff,
+    )
 
 
 def fill_config(
     output_file: Path,
     base_path: Path,
     *,
+    distillation: bool = False,
     pretraining: bool = False,
     diff: bool = False,
     silent: bool = False,
@@ -123,6 +131,9 @@ def fill_config(
     # replaced with their actual config after loading, so we have to re-add them
     sourced = util.get_sourced_components(config)
     filled["components"].update(sourced)
+    if distillation:
+        distillation_config = util.load_config(DEFAULT_CONFIG_DISTILL_PATH)
+        filled = distillation_config.merge(filled)
     if pretraining:
         validate_config_for_pretrain(filled, msg)
         pretrain_config = util.load_config(DEFAULT_CONFIG_PRETRAIN_PATH)

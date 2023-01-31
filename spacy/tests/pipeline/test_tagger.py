@@ -24,7 +24,9 @@ def test_issue4348():
     optimizer = nlp.initialize()
     for i in range(5):
         losses = {}
-        batches = util.minibatch(TRAIN_DATA, size=compounding(4.0, 32.0, 1.001))
+        batches = util.minibatch(
+            TRAIN_DATA, size=compounding(4.0, 32.0, 1.001).to_generator()
+        )
         for batch in batches:
             nlp.update(batch, sgd=optimizer, losses=losses)
 
