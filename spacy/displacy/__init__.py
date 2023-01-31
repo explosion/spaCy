@@ -8,6 +8,7 @@ from typing import Union, Iterable, Optional, Dict, Any, Callable
 import warnings
 
 from .render import DependencyRenderer, EntityRenderer, SpanRenderer
+from .pprint import render_document
 from ..tokens import Doc, Span
 from ..errors import Errors, Warnings
 from ..util import is_in_jupyter
@@ -273,3 +274,41 @@ def get_doc_settings(doc: Doc) -> Dict[str, Any]:
         "lang": doc.lang_,
         "direction": doc.vocab.writing_system.get("direction", "ltr"),
     }
+
+
+def pprint(
+    doc: Doc,
+    search_attr_name: Optional[str] = None,
+    search_attr_value: Optional[str] = None,
+    *,
+    start_i: int = 0,
+    length: Optional[int] = None,
+):
+    """Prints a tabular representation of a document or of part of a document.
+    If part of the document is specified using any of the four optional
+    parameters, the sentences surrounding that part of the document are rendered;
+    if none of the four optional parameters are specified, the whole document is
+    rendered.
+
+    doc:                the document.
+    search_attr_name:   the name of an attribute to search for in order to
+                        determine where to start rendering, e.g. "lemma_",
+                        or *None* if no search is to be carried out. If either
+                        of *search_attr_name* and *search_attr_value* is *None*,
+                        the behaviour is as if both were *None*.
+    search_attr_value:  the value of an attribute to search for in order to
+                        determine where to start rendering, e.g. "be",
+                        or *None* if no search is to be carried out. If either
+                        of *search_attr_name* and *search_attr_value* is *None*,
+                        the behaviour is as if both were *None*.
+    start_i:            the token index at which to start searching, or at
+                        whose sentence to start rendering. Default: 0.
+    length:             the number of tokens after *start_i* at whose sentence
+                        to stop rendering. If *None*, the rest of the
+                        document is rendered.
+    """
+    print(
+        render_document(
+            doc, search_attr_name, search_attr_value, start_i=start_i, length=length
+        )
+    )

@@ -38,7 +38,6 @@ from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
 from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
 from ..util import get_words_and_spaces
-from ..visualization import render_document
 
 DEF PADDING = 5
 
@@ -1752,45 +1751,6 @@ cdef class Doc:
         attrs.extend(intify_attr(x) for x in DOCBIN_ALL_ATTRS)
         return tuple(attrs)
 
-    def inspect(
-        self,
-        search_attr_name=None,
-        search_attr_value=None,
-        *,
-        start_i=0,
-        length=None
-    ):
-        """Prints a tabular representation of the document or part of the document.
-        If part of the document is specified using any of the four optional 
-        parameters, the sentences surrounding that part of the document are rendered;
-        if none of the four optional parameters are specified, the whole document is
-        rendered.
-
-        search_attr_name:   the name of an attribute to search for in order to
-                            determine where to start rendering, e.g. "lemma_",
-                            or *None* if no search is to be carried out. If either
-                            of *search_attr_name* and *search_attr_value* is *None*,
-                            the behaviour is as if both were *None*.
-        search_attr_value:  the value of an attribute to search for in order to
-                            determine where to start rendering, e.g. "be",
-                            or *None* if no search is to be carried out. If either
-                            of *search_attr_name* and *search_attr_value* is *None*,
-                            the behaviour is as if both were *None*.
-        start_i:            the token index at which to start searching, or at
-                            whose sentence to start rendering. Default: 0.
-        length:             the number of tokens after *start_i* at whose sentence
-                            to stop rendering. If *None*, the rest of the
-                            document is rendered.
-        """
-        print(
-            render_document(
-                self, 
-                search_attr_name,
-                search_attr_value,
-                start_i=start_i,
-                length=length
-            )
-        )
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
     cdef int i = token_by_char(tokens, length, start_char)

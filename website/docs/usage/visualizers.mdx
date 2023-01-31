@@ -268,6 +268,32 @@ html = displacy.render(doc, style="dep")
 display(HTML(html))
 ```
 
+## Pretty printing directly to the console {id="pprint"}
+
+The `displacy.pprint()` method outputs to the Python console a human-readable,
+tabular representation of all or part of a document. If any of the first three
+optional arguments are specified, the first sentence in the document that
+corresponds to the specification is displayed, although a larger portion can be
+specified with the `length` argument; if none of the optional arguments is
+specified, the whole document is displayed.
+
+```python {title="pprint() example"}
+doc = nlp("All we have to decide is what to do with the time that is given us. Nobody knows how much time that is.")
+displacy.pprint(doc)
+displacy.pprint(doc, "lemma_", "give")
+displacy.pprint(doc, "text", "time", start_i=18)
+displacy.pprint(doc, "text", "time", length=20)
+```
+
+| Argument            | Description                                                                                                                                                                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`               | The document to render. ~~Doc~~                                                                                                                                                                                                                 |
+| `search_attr_name`  | The name of an attribute to search for in order to determine the sentence to render, e.g. `lemma_`. A value only has an effect in conjunction with a value for `search_attr_value`. ~~Optional[str]~~                                           |
+| `search_attr_value` | The value of an attribute to search for in order to determine the sentence to render, e.g. `give`. A value only has an effect in conjunction with a value for `search_attr_name`. ~~Optional[str]~~                                             |
+| _keyword-only_      |                                                                                                                                                                                                                                                 |
+| `start_i`           | The index at which to begin searching or whose containing sentence to render. ~~Optional[int]~~                                                                                                                                                 |
+| `length`            | The number of tokens to display with their containing sentences. Can be used in isolation to display a portion at the beginning of a document, or in conjunction with the other parameters to display more than one sentence. ~~Optional[int]~~ |
+
 ## Rendering HTML {id="html"}
 
 If you don't need the web server and just want to generate the markup – for
