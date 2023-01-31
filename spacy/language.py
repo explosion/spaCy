@@ -1561,7 +1561,7 @@ class Language:
         disable: Iterable[str] = SimpleFrozenList(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         n_process: int = 1,
-        as_tuples: Optional[bool] = None, # deprecated
+        as_tuples: Optional[bool] = None,  # deprecated
     ) -> Iterator[Doc]:
         """Process texts as a stream, and yield `Doc` objects in order.
 
