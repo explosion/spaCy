@@ -149,7 +149,9 @@ def make_spancat(
     threshold: float,
     max_positive: Optional[int],
 ) -> "SpanCategorizer":
-    """Create a SpanCategorizer component. The span categorizer consists of two
+    """Create a SpanCategorizer component and configure it for multilabel
+    classification to be able to assign multiple labels for each span.
+    The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
     model that predicts one or more labels for each span.
 
@@ -207,7 +209,9 @@ def make_spancat_singlelabel(
     allow_overlap: bool,
     scorer: Optional[Callable],
 ) -> "SpanCategorizer":
-    """Create a SpanCategorizer component. The span categorizer consists of two
+    """Create a SpanCategorizer component and configure it for multiclass
+    classification. With this configuration each span can get at most one
+    label. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
     model that predicts one or more labels for each span.
 
@@ -224,11 +228,11 @@ def make_spancat_singlelabel(
     scorer (Optional[Callable]): The scoring method. Defaults to
         Scorer.score_spans for the Doc.spans[spans_key] with overlapping
         spans allowed.
-    threshold (float): Minimum probability to consider a prediction positive.
-        Spans with a positive prediction will be saved on the Doc. Defaults to
-        0.5.
-    max_positive (Optional[int]): Maximum number of labels to consider positive
-        per span. Defaults to None, indicating no limit.
+    negative_weight (float): Multiplier for the loss terms.
+        Can be used to downweight the negative samples if there are too many.
+    allow_overlap (bool): If True the data is assumed to contain overlapping spans.
+        Otherwise it produces non-overlapping spans greedily prioritizing
+        higher assigned label scores.
     """
     return SpanCategorizer(
         nlp.vocab,
@@ -317,11 +321,16 @@ class SpanCategorizer(TrainablePipe):
             During initialization and training, the component will look for
             spans on the reference document under the same key. Defaults to
             `"spans"`.
-        threshold (float): Minimum probability to consider a prediction
+        threshold (Optional[float]): Minimum probability to consider a prediction
             positive. Spans with a positive prediction will be saved on the Doc.
             Defaults to 0.5.
         max_positive (Optional[int]): Maximum number of labels to consider
             positive per span. Defaults to None, indicating no limit.
+        negative_weight (float): Multiplier for the loss terms.
+            Can be used to downweight the negative samples if there are too many.
+        allow_overlap (bool): If True the data is assumed to contain overlapping spans.
+            Otherwise it produces non-overlapping spans greedily prioritizing
+            higher assigned label scores.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_spans for the Doc.spans[spans_key] with overlapping
             spans allowed.
@@ -640,6 +649,7 @@ class SpanCategorizer(TrainablePipe):
         indices: Ints2d,
         scores: Floats2d,
         labels: List[str],
+        # XXX Unused, does it make sense?
         allow_overlap: bool = True,
     ) -> SpanGroup:
         spans = SpanGroup(doc, name=self.key)
