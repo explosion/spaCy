@@ -418,7 +418,7 @@ class ConfigSchemaDistill(BaseModel):
     max_epochs: StrictInt = Field(..., title="Maximum number of epochs to distill for")
     max_steps: StrictInt = Field(..., title="Maximum number of steps to distill for")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
-    pipe_map: Dict[str, str] = Field(..., title="Mapping from teacher to student pipe")
+    student_to_teacher: Dict[str, str] = Field(..., title="Mapping from student to teacher pipe")
     # fmt: on
 
     class Config:
