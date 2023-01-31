@@ -377,7 +377,6 @@ def test_overfitting_IO_overlapping():
         assert set([span.label_ for span in spans2]) == {"LOC", "DOUBLE_LOC"}
 
 
-
 @pytest.mark.parametrize("name", SPANCAT_COMPONENTS)
 def test_zero_suggestions(name):
     # Test with a suggester that returns 0 suggestions
