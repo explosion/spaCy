@@ -129,7 +129,7 @@ def test_make_spangroup(max_positive, nr_results):
     scores = numpy.asarray(
         [[0.2, 0.4, 0.3, 0.1], [0.1, 0.6, 0.2, 0.4], [0.8, 0.7, 0.3, 0.9]], dtype="f"
     )
-    spangroup = spancat._make_span_group(doc, indices, scores, labels)
+    spangroup = spancat._make_span_group_multilabel(doc, indices, scores, labels)
     assert len(spangroup) == nr_results
 
     # first span is always the second token "London"

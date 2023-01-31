@@ -237,6 +237,7 @@ def make_spancat_singlelabel(
         allow_overlap=allow_overlap,
         name=name,
         scorer=scorer,
+        single_label=True
     )
 
 
@@ -463,9 +464,23 @@ class SpanCategorizer(TrainablePipe):
         offset = 0
         for i, doc in enumerate(docs):
             indices_i = indices[i].dataXd
-            doc.spans[self.key] = self._make_span_group(
-                doc, indices_i, scores[offset : offset + indices.lengths[i]], labels  # type: ignore[arg-type]
-            )
+            if self.single_label:
+                allow_overlap = cast(bool, self.cfg["allow_overlap"])
+                doc.spans[self.key] = self._make_span_group_singlelabel(
+                    doc,
+                    indices_i,
+                    scores[offset : offset + indices.lengths[i]],
+                    labels,  # type: ignore[arg-type]
+                    allow_overlap
+                )
+            else:
+                doc.spans[self.key] = self._make_span_group_multilabel(
+                    doc,
+                    indices_i,
+                    scores[offset : offset + indices.lengths[i]],
+                    labels,  # type: ignore[arg-type]
+                )
+
             offset += indices.lengths[i]
 
     def update(
