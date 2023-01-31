@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import Button from './button'
 import Tag from './tag'
 import { OptionalLink } from './link'
-import { InlineCode } from './code'
+import { InlineCode } from './inlineCode'
 import { H1, Label, InlineList, Help } from './typography'
 import Icon from './icon'
 
@@ -51,8 +51,7 @@ export default function Title({
 
                     {image && (
                         <div className={classes.image}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={image} width={100} height={100} alt="" />
+                            <Image src={image} width={100} height={100} alt={`${title} Logo`} />
                         </div>
                     )}
                 </div>

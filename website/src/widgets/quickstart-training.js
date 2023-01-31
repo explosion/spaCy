@@ -5,8 +5,8 @@ import 'prismjs/components/prism-ini.min.js'
 
 import { Quickstart } from '../components/quickstart'
 import generator, { DATA as GENERATOR_DATA } from './quickstart-training-generator'
-import { htmlToReact } from '../components/util'
 import models from '../../meta/languages.json'
+import dynamic from 'next/dynamic'
 
 const DEFAULT_LANG = 'en'
 const DEFAULT_HARDWARE = 'cpu'
@@ -69,6 +69,10 @@ const DATA = [
         ],
     },
 ]
+
+const HtmlToReactDynamic = dynamic(() => import('../components/htmlToReact'), {
+    loading: () => <></>,
+})
 
 export default function QuickstartTraining({ id, title, download = 'base_config.cfg' }) {
     const [lang, setLang] = useState(DEFAULT_LANG)
@@ -134,7 +138,7 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
             small
             codeLang="ini"
         >
-            {htmlToReact(displayContent)}
+            <HtmlToReactDynamic>{displayContent}</HtmlToReactDynamic>
         </Quickstart>
     )
 }

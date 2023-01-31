@@ -384,14 +384,14 @@ the more specific attributes `FUZZY1`..`FUZZY9` you can specify the maximum
 allowed edit distance directly.
 
 ```python
-# Match lowercase with fuzzy matching (allows 2 edits)
+# Match lowercase with fuzzy matching (allows 3 edits)
 pattern = [{"LOWER": {"FUZZY": "definitely"}}]
 
-# Match custom attribute values with fuzzy matching (allows 2 edits)
+# Match custom attribute values with fuzzy matching (allows 3 edits)
 pattern = [{"_": {"country": {"FUZZY": "Kyrgyzstan"}}}]
 
-# Match with exact Levenshtein edit distance limits (allows 3 edits)
-pattern = [{"_": {"country": {"FUZZY3": "Kyrgyzstan"}}}]
+# Match with exact Levenshtein edit distance limits (allows 4 edits)
+pattern = [{"_": {"country": {"FUZZY4": "Kyrgyzstan"}}}]
 ```
 
 #### Regex and fuzzy matching with lists {id="regex-fuzzy-lists", version="3.5"}

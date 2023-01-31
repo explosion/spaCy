@@ -26,6 +26,12 @@ except ImportError:
     pass
 
 
+TAGGER_TRAIN_DATA = [
+    ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
+    ("Eat blue ham", {"tags": ["V", "J", "N"]}),
+]
+
+
 def evil_component(doc):
     if "2" in doc.text:
         raise ValueError("no dice")
@@ -799,3 +805,66 @@ def test_component_return():
     nlp.add_pipe("test_component_bad_pipe")
     with pytest.raises(ValueError, match="instead of a Doc"):
         nlp("text")
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("teacher_tagger_name", ["tagger", "teacher_tagger"])
+def test_distill(teacher_tagger_name):
+    teacher = English()
+    teacher_tagger = teacher.add_pipe("tagger", name=teacher_tagger_name)
+    train_examples = []
+    for t in TAGGER_TRAIN_DATA:
+        train_examples.append(Example.from_dict(teacher.make_doc(t[0]), t[1]))
+
+    optimizer = teacher.initialize(get_examples=lambda: train_examples)
+
+    for i in range(50):
+        losses = {}
+        teacher.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses[teacher_tagger_name] < 0.00001
+
+    student = English()
+    student_tagger = student.add_pipe("tagger")
+    student_tagger.min_tree_freq = 1
+    student_tagger.initialize(
+        get_examples=lambda: train_examples, labels=teacher_tagger.label_data
+    )
+
+    distill_examples = [
+        Example.from_dict(teacher.make_doc(t[0]), {}) for t in TAGGER_TRAIN_DATA
+    ]
+
+    student_to_teacher = (
+        None
+        if teacher_tagger.name == student_tagger.name
+        else {student_tagger.name: teacher_tagger.name}
+    )
+
+    for i in range(50):
+        losses = {}
+        student.distill(
+            teacher,
+            distill_examples,
+            sgd=optimizer,
+            losses=losses,
+            student_to_teacher=student_to_teacher,
+        )
+    assert losses["tagger"] < 0.00001
+
+    test_text = "I like blue eggs"
+    doc = student(test_text)
+    assert doc[0].tag_ == "N"
+    assert doc[1].tag_ == "V"
+    assert doc[2].tag_ == "J"
+    assert doc[3].tag_ == "N"
+
+    # Do an extra update to check if annotates works, though we can't really
+    # validate the resuls, since the annotations are ephemeral.
+    student.distill(
+        teacher,
+        distill_examples,
+        sgd=optimizer,
+        losses=losses,
+        student_to_teacher=student_to_teacher,
+        annotates=["tagger"],
+    )
