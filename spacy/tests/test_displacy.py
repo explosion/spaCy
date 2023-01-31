@@ -618,6 +618,8 @@ def test_pprint_render_custom_attributes(horse_doc):
     with pytest.raises(AttributeError):
         AttributeFormat("._depp").render(horse_doc[2])
 
+    Token.remove_extension("test")
+
 
 def test_pprint_minimal_render_table_one_sentence(
     fully_featured_doc_one_sentence,
