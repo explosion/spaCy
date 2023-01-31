@@ -23,7 +23,7 @@ def get_textcat_bow_kwargs():
 
 
 def get_textcat_cnn_kwargs():
-    return {"tok2vec": test_tok2vec(), "exclusive_classes": False, "nO": 13}
+    return {"tok2vec": make_test_tok2vec(), "exclusive_classes": False, "nO": 13}
 
 
 def get_all_params(model):
@@ -65,7 +65,7 @@ def get_tok2vec_kwargs():
     }
 
 
-def test_tok2vec():
+def make_test_tok2vec():
     return build_Tok2Vec_model(**get_tok2vec_kwargs())
 
 

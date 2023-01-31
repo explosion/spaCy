@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useMemo, Fragment } from 'react'
-import { StaticQuery, graphql } from 'gatsby'
 import { window } from 'browser-monads'
 
 import Title from '../components/title'
 import Section from '../components/section'
 import Button from '../components/button'
 import Aside from '../components/aside'
-import CodeBlock, { InlineCode } from '../components/code'
+import { InlineCode } from '../components/inlineCode'
+import CodeBlock from '../components/codeBlock'
 import { Table, Tr, Td, Th } from '../components/table'
 import Tag from '../components/tag'
 import { H2, Label } from '../components/typography'
@@ -14,8 +14,11 @@ import Icon from '../components/icon'
 import Link, { OptionalLink } from '../components/link'
 import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
-import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
-import { isString, isEmptyObj } from '../components/util'
+import { isString, isEmptyObj, join, arrayToObj, abbrNum } from '../components/util'
+import MarkdownToReact from '../components/markdownToReactDynamic'
+
+import siteMetadata from '../../meta/site.json'
+import languages from '../../meta/languages.json'
 
 const COMPONENT_LINKS = {
     tok2vec: '/api/tok2vec',
@@ -70,12 +73,12 @@ const MODEL_META = {
     pipeline: 'Active processing pipeline components in order',
     components: 'All processing pipeline components (including disabled components)',
     sources: 'Sources of training data',
-    vecs:
-        'Word vectors included in the package. Packages that only support context vectors compute similarity via the tensors shared with the pipeline.',
+    vecs: 'Word vectors included in the package. Packages that only support context vectors compute similarity via the tensors shared with the pipeline.',
     benchmark_parser: 'Syntax accuracy',
     benchmark_ner: 'NER accuracy',
     benchmark_speed: 'Speed',
     compat: 'Latest compatible package version for your spaCy installation',
+    download_link: 'Download link for the pipeline',
 }
 
 const LABEL_SCHEME_META = {
@@ -112,16 +115,20 @@ function getLatestVersion(modelId, compatibility, prereleases) {
 
 function formatVectors(data) {
     if (!data) return 'n/a'
-    if (Object.values(data).every(n => n === 0)) return 'context vectors only'
+    if (Object.values(data).every((n) => n === 0)) return 'context vectors only'
     const { keys, vectors, width } = data
-    return `${abbrNum(keys)} keys, ${abbrNum(vectors)} unique vectors (${width} dimensions)`
+    if (keys >= 0) {
+        return `${abbrNum(keys)} keys, ${abbrNum(vectors)} unique vectors (${width} dimensions)`
+    } else {
+        return `${abbrNum(vectors)} floret vectors (${width} dimensions)`
+    }
 }
 
 function formatAccuracy(data, lang) {
-    const exclude = (lang !== "ja") ? ['speed'] : ['speed', 'morph_acc']
+    const exclude = lang !== 'ja' ? ['speed'] : ['speed', 'morph_acc']
     if (!data) return []
     return Object.keys(data)
-        .map(label => {
+        .map((label) => {
             const value = data[label]
             return isNaN(value) || exclude.includes(label)
                 ? null
@@ -131,7 +138,18 @@ function formatAccuracy(data, lang) {
                       help: MODEL_META[label],
                   }
         })
-        .filter(item => item)
+        .filter((item) => item)
+}
+
+function formatDownloadLink(lang, name, version) {
+    const fullName = `${lang}_${name}-${version}`
+    const filename = `${fullName}-py3-none-any.whl`
+    const url = `https://github.com/explosion/spacy-models/releases/download/${fullName}/${filename}`
+    return (
+        <Link to={url} hideIcon>
+            {filename}
+        </Link>
+    )
 }
 
 function formatModelMeta(data) {
@@ -150,11 +168,12 @@ function formatModelMeta(data) {
         labels: isEmptyObj(data.labels) ? null : data.labels,
         vectors: formatVectors(data.vectors),
         accuracy: formatAccuracy(data.performance, data.lang),
+        download_link: formatDownloadLink(data.lang, data.name, data.version),
     }
 }
 
 function formatSources(data = []) {
-    const sources = data.map(s => (isString(s) ? { name: s } : s))
+    const sources = data.map((s) => (isString(s) ? { name: s } : s))
     return sources.map(({ name, url, author }, i) => (
         <Fragment key={i}>
             {i > 0 && <br />}
@@ -166,7 +185,7 @@ function formatSources(data = []) {
 
 function linkComponents(components = []) {
     return join(
-        components.map(c => (
+        components.map((c) => (
             <Fragment key={c}>
                 <OptionalLink to={COMPONENT_LINKS[c]} hideIcon>
                     <InlineCode>{c}</InlineCode>
@@ -197,23 +216,23 @@ const Model = ({
     const [isError, setIsError] = useState(true)
     const [meta, setMeta] = useState({})
     const { type, genre, size } = getModelComponents(name)
-    const display_type = type === 'core' && (size === 'sm' || size === 'trf') ? 'core_no_vectors' : type
-    const version = useMemo(() => getLatestVersion(name, compatibility, prereleases), [
-        name,
-        compatibility,
-        prereleases,
-    ])
+    const display_type =
+        type === 'core' && (size === 'sm' || size === 'trf') ? 'core_no_vectors' : type
+    const version = useMemo(
+        () => getLatestVersion(name, compatibility, prereleases),
+        [name, compatibility, prereleases]
+    )
 
     useEffect(() => {
         window.dispatchEvent(new Event('resize')) // scroll position for progress
         if (!initialized && version) {
             setIsError(false)
             fetch(`${baseUrl}/meta/${name}-${version}.json`)
-                .then(res => res.json())
-                .then(json => {
+                .then((res) => res.json())
+                .then((json) => {
                     setMeta(formatModelMeta(json))
                 })
-                .catch(err => {
+                .catch((err) => {
                     setIsError(true)
                     console.error(err)
                 })
@@ -240,6 +259,7 @@ const Model = ({
         { label: 'Components', content: components, help: MODEL_META.components },
         { label: 'Pipeline', content: pipeline, help: MODEL_META.pipeline },
         { label: 'Vectors', content: meta.vectors, help: MODEL_META.vecs },
+        { label: 'Download Link', content: meta.download_link, help: MODEL_META.download_link },
         { label: 'Sources', content: sources, help: MODEL_META.sources },
         { label: 'Author', content: author },
         { label: 'License', content: license },
@@ -273,11 +293,11 @@ const Model = ({
                 {name}
             </H2>
             <Aside title="Installation">
-                <CodeBlock lang="cli" prompt="$">
-                    python -m spacy download {name}
+                <CodeBlock lang="bash" prompt="$">
+                    $ python -m spacy download {name}
                 </CodeBlock>
             </Aside>
-            {meta.description && markdownToReact(meta.description, MARKDOWN_COMPONENTS)}
+            {meta.description && <MarkdownToReact markdown={meta.description} />}
             {isError && error}
             <Table>
                 <tbody>
@@ -299,7 +319,7 @@ const Model = ({
                     )}
                 </tbody>
             </Table>
-            {meta.notes && markdownToReact(meta.notes, MARKDOWN_COMPONENTS)}
+            {meta.notes && <MarkdownToReact markdown={meta.notes} />}
             {hasInteractiveCode && (
                 <CodeBlock title="Try out the model" lang="python" executable={true}>
                     {[
@@ -346,11 +366,11 @@ const Model = ({
                     </p>
                     <Table fixed>
                         <tbody>
-                            {Object.keys(labels).map(pipe => {
+                            {Object.keys(labels).map((pipe) => {
                                 const labelNames = labels[pipe] || []
                                 const help = LABEL_SCHEME_META[pipe]
                                 return (
-                                    <Tr key={`${name}-${pipe}`} evenodd={false} key={pipe}>
+                                    <Tr evenodd={false} key={pipe}>
                                         <Td style={{ width: '20%' }}>
                                             <Label>
                                                 {pipe} {help && <Help>{help}</Help>}
@@ -388,9 +408,9 @@ const Models = ({ pageContext, repo, children }) => {
         window.dispatchEvent(new Event('resize')) // scroll position for progress
         if (!initialized) {
             fetch(`${baseUrl}/compatibility.json`)
-                .then(res => res.json())
+                .then((res) => res.json())
                 .then(({ spacy }) => setCompatibility(spacy))
-                .catch(err => console.error(err))
+                .catch((err) => console.error(err))
             setInitialized(true)
         }
     }, [initialized, baseUrl])
@@ -398,43 +418,23 @@ const Models = ({ pageContext, repo, children }) => {
     return (
         <>
             <Title title={title} teaser={`Available trained pipelines for ${title}`} />
-            <StaticQuery
-                query={query}
-                render={({ site }) =>
-                    models.map(modelName => (
-                        <Model
-                            key={modelName}
-                            name={modelName}
-                            langId={id}
-                            langName={title}
-                            compatibility={compatibility}
-                            baseUrl={baseUrl}
-                            repo={repo}
-                            licenses={arrayToObj(site.siteMetadata.licenses, 'id')}
-                            hasExamples={meta.hasExamples}
-                            prereleases={site.siteMetadata.nightly}
-                        />
-                    ))
-                }
-            />
-
+            {models.map((modelName) => (
+                <Model
+                    key={modelName}
+                    name={modelName}
+                    langId={id}
+                    langName={title}
+                    compatibility={compatibility}
+                    baseUrl={baseUrl}
+                    repo={repo}
+                    licenses={arrayToObj(languages.licenses, 'id')}
+                    hasExamples={meta.hasExamples}
+                    prereleases={siteMetadata.nightly}
+                />
+            ))}
             {children}
         </>
     )
 }
 
 export default Models
-
-const query = graphql`
-    query ModelsQuery {
-        site {
-            siteMetadata {
-                nightly
-                licenses {
-                    id
-                    url
-                }
-            }
-        }
-    }
-`

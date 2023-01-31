@@ -41,7 +41,7 @@ cdef class Lexeme:
         """
         self.vocab = vocab
         self.orth = orth
-        self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
+        self.c = <LexemeC*><void*>vocab.get_by_orth(orth)
         if self.c.orth != orth:
             raise ValueError(Errors.E071.format(orth=orth, vocab_orth=self.c.orth))
 
@@ -172,19 +172,6 @@ cdef class Lexeme:
 
         def __set__(self, value):
             self.c.id = value
-
-    property sentiment:
-        """RETURNS (float): A scalar value indicating the positivity or
-            negativity of the lexeme."""
-        def __get__(self):
-            sentiment_table = self.vocab.lookups.get_table("lexeme_sentiment", {})
-            return sentiment_table.get(self.c.orth, 0.0)
-
-        def __set__(self, float x):
-            if "lexeme_sentiment" not in self.vocab.lookups:
-                self.vocab.lookups.add_table("lexeme_sentiment")
-            sentiment_table = self.vocab.lookups.get_table("lexeme_sentiment")
-            sentiment_table[self.c.orth] = x
 
     @property
     def orth_(self):

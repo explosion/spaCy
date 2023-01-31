@@ -1,3 +1,4 @@
+from typing import cast
 import pickle
 import pytest
 from hypothesis import given
@@ -6,6 +7,7 @@ from spacy import util
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.pipeline._edit_tree_internals.edit_trees import EditTrees
+from spacy.pipeline.trainable_pipe import TrainablePipe
 from spacy.training import Example
 from spacy.strings import StringStore
 from spacy.util import make_tempdir
@@ -60,20 +62,56 @@ def test_initialize_from_labels():
     nlp2 = Language()
     lemmatizer2 = nlp2.add_pipe("trainable_lemmatizer")
     lemmatizer2.initialize(
-        get_examples=lambda: train_examples,
+        # We want to check that the strings in replacement nodes are
+        # added to the string store. Avoid that they get added through
+        # the examples.
+        get_examples=lambda: train_examples[:1],
         labels=lemmatizer.label_data,
     )
     assert lemmatizer2.tree2label == {1: 0, 3: 1, 4: 2, 6: 3}
+    assert lemmatizer2.label_data == {
+        "trees": [
+            {"orig": "S", "subst": "s"},
+            {
+                "prefix_len": 1,
+                "suffix_len": 0,
+                "prefix_tree": 0,
+                "suffix_tree": 4294967295,
+            },
+            {"orig": "s", "subst": ""},
+            {
+                "prefix_len": 0,
+                "suffix_len": 1,
+                "prefix_tree": 4294967295,
+                "suffix_tree": 2,
+            },
+            {
+                "prefix_len": 0,
+                "suffix_len": 0,
+                "prefix_tree": 4294967295,
+                "suffix_tree": 4294967295,
+            },
+            {"orig": "E", "subst": "e"},
+            {
+                "prefix_len": 1,
+                "suffix_len": 0,
+                "prefix_tree": 5,
+                "suffix_tree": 4294967295,
+            },
+        ],
+        "labels": (1, 3, 4, 6),
+    }
 
 
-def test_no_data():
+@pytest.mark.parametrize("top_k", (1, 5, 30))
+def test_no_data(top_k):
     # Test that the lemmatizer provides a nice error when there's no tagging data / labels
     TEXTCAT_DATA = [
         ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),
         ("I'm so angry", {"cats": {"POSITIVE": 0.0, "NEGATIVE": 1.0}}),
     ]
     nlp = English()
-    nlp.add_pipe("trainable_lemmatizer")
+    nlp.add_pipe("trainable_lemmatizer", config={"top_k": top_k})
     nlp.add_pipe("textcat")
 
     train_examples = []
@@ -84,10 +122,11 @@ def test_no_data():
         nlp.initialize(get_examples=lambda: train_examples)
 
 
-def test_incomplete_data():
+@pytest.mark.parametrize("top_k", (1, 5, 30))
+def test_incomplete_data(top_k):
     # Test that the lemmatizer works with incomplete information
     nlp = English()
-    lemmatizer = nlp.add_pipe("trainable_lemmatizer")
+    lemmatizer = nlp.add_pipe("trainable_lemmatizer", config={"top_k": top_k})
     lemmatizer.min_tree_freq = 1
     train_examples = []
     for t in PARTIAL_DATA:
@@ -104,10 +143,25 @@ def test_incomplete_data():
     assert doc[1].lemma_ == "like"
     assert doc[2].lemma_ == "blue"
 
+    # Check that incomplete annotations are ignored.
+    scores, _ = lemmatizer.model([eg.predicted for eg in train_examples], is_train=True)
+    _, dX = lemmatizer.get_loss(train_examples, scores)
+    xp = lemmatizer.model.ops.xp
 
-def test_overfitting_IO():
+    # Missing annotations.
+    assert xp.count_nonzero(dX[0][0]) == 0
+    assert xp.count_nonzero(dX[0][3]) == 0
+    assert xp.count_nonzero(dX[1][0]) == 0
+    assert xp.count_nonzero(dX[1][3]) == 0
+
+    # Misaligned annotations.
+    assert xp.count_nonzero(dX[1][1]) == 0
+
+
+@pytest.mark.parametrize("top_k", (1, 5, 30))
+def test_overfitting_IO(top_k):
     nlp = English()
-    lemmatizer = nlp.add_pipe("trainable_lemmatizer")
+    lemmatizer = nlp.add_pipe("trainable_lemmatizer", config={"top_k": top_k})
     lemmatizer.min_tree_freq = 1
     train_examples = []
     for t in TRAIN_DATA:
@@ -140,7 +194,7 @@ def test_overfitting_IO():
     # Check model after a {to,from}_bytes roundtrip
     nlp_bytes = nlp.to_bytes()
     nlp3 = English()
-    nlp3.add_pipe("trainable_lemmatizer")
+    nlp3.add_pipe("trainable_lemmatizer", config={"top_k": top_k})
     nlp3.from_bytes(nlp_bytes)
     doc3 = nlp3(test_text)
     assert doc3[0].lemma_ == "she"
@@ -156,6 +210,53 @@ def test_overfitting_IO():
     assert doc4[1].lemma_ == "like"
     assert doc4[2].lemma_ == "blue"
     assert doc4[3].lemma_ == "egg"
+
+
+def test_is_distillable():
+    nlp = English()
+    lemmatizer = nlp.add_pipe("trainable_lemmatizer")
+    assert lemmatizer.is_distillable
+
+
+def test_distill():
+    teacher = English()
+    teacher_lemmatizer = teacher.add_pipe("trainable_lemmatizer")
+    teacher_lemmatizer.min_tree_freq = 1
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(teacher.make_doc(t[0]), t[1]))
+
+    optimizer = teacher.initialize(get_examples=lambda: train_examples)
+
+    for i in range(50):
+        losses = {}
+        teacher.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["trainable_lemmatizer"] < 0.00001
+
+    student = English()
+    student_lemmatizer = student.add_pipe("trainable_lemmatizer")
+    student_lemmatizer.min_tree_freq = 1
+    student_lemmatizer.initialize(
+        get_examples=lambda: train_examples, labels=teacher_lemmatizer.label_data
+    )
+
+    distill_examples = [
+        Example.from_dict(teacher.make_doc(t[0]), {}) for t in TRAIN_DATA
+    ]
+
+    for i in range(50):
+        losses = {}
+        student_lemmatizer.distill(
+            teacher_lemmatizer, distill_examples, sgd=optimizer, losses=losses
+        )
+    assert losses["trainable_lemmatizer"] < 0.00001
+
+    test_text = "She likes blue eggs"
+    doc = student(test_text)
+    assert doc[0].lemma_ == "she"
+    assert doc[1].lemma_ == "like"
+    assert doc[2].lemma_ == "blue"
+    assert doc[3].lemma_ == "egg"
 
 
 def test_lemmatizer_requires_labels():
@@ -278,3 +379,26 @@ def test_empty_strings():
     no_change = trees.add("xyz", "xyz")
     empty = trees.add("", "")
     assert no_change == empty
+
+
+def test_save_activations():
+    nlp = English()
+    lemmatizer = cast(TrainablePipe, nlp.add_pipe("trainable_lemmatizer"))
+    lemmatizer.min_tree_freq = 1
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    nlp.initialize(get_examples=lambda: train_examples)
+    nO = lemmatizer.model.get_dim("nO")
+
+    doc = nlp("This is a test.")
+    assert "trainable_lemmatizer" not in doc.activations
+
+    lemmatizer.save_activations = True
+    doc = nlp("This is a test.")
+    assert list(doc.activations["trainable_lemmatizer"].keys()) == [
+        "probabilities",
+        "tree_ids",
+    ]
+    assert doc.activations["trainable_lemmatizer"]["probabilities"].shape == (5, nO)
+    assert doc.activations["trainable_lemmatizer"]["tree_ids"].shape == (5,)

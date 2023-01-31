@@ -1,15 +1,15 @@
 import pytest
 import numpy
 from numpy.testing import assert_array_equal, assert_almost_equal
-from thinc.api import get_current_ops, Ragged
+from thinc.api import get_current_ops, Ragged, fix_random_seed
 
 from spacy import util
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.tokens import SpanGroup
-from spacy.tokens._dict_proxies import SpanGroups
+from spacy.tokens.span_groups import SpanGroups
 from spacy.training import Example
-from spacy.util import fix_random_seed, registry, make_tempdir
+from spacy.util import registry, make_tempdir
 
 OPS = get_current_ops()
 
@@ -372,24 +372,39 @@ def test_overfitting_IO_overlapping():
 
 
 def test_zero_suggestions():
-    # Test with a suggester that returns 0 suggestions
+    # Test with a suggester that can return 0 suggestions
 
-    @registry.misc("test_zero_suggester")
-    def make_zero_suggester():
-        def zero_suggester(docs, *, ops=None):
+    @registry.misc("test_mixed_zero_suggester")
+    def make_mixed_zero_suggester():
+        def mixed_zero_suggester(docs, *, ops=None):
             if ops is None:
                 ops = get_current_ops()
-            return Ragged(
-                ops.xp.zeros((0, 0), dtype="i"), ops.xp.zeros((len(docs),), dtype="i")
-            )
+            spans = []
+            lengths = []
+            for doc in docs:
+                if len(doc) > 0 and len(doc) % 2 == 0:
+                    spans.append((0, 1))
+                    lengths.append(1)
+                else:
+                    lengths.append(0)
+            spans = ops.asarray2i(spans)
+            lengths_array = ops.asarray1i(lengths)
+            if len(spans) > 0:
+                output = Ragged(ops.xp.vstack(spans), lengths_array)
+            else:
+                output = Ragged(ops.xp.zeros((0, 0), dtype="i"), lengths_array)
+            return output
 
-        return zero_suggester
+        return mixed_zero_suggester
 
     fix_random_seed(0)
     nlp = English()
     spancat = nlp.add_pipe(
         "spancat",
-        config={"suggester": {"@misc": "test_zero_suggester"}, "spans_key": SPAN_KEY},
+        config={
+            "suggester": {"@misc": "test_mixed_zero_suggester"},
+            "spans_key": SPAN_KEY,
+        },
     )
     train_examples = make_examples(nlp)
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
@@ -397,6 +412,16 @@ def test_zero_suggestions():
     assert set(spancat.labels) == {"LOC", "PERSON"}
 
     nlp.update(train_examples, sgd=optimizer)
+    # empty doc
+    nlp("")
+    # single doc with zero suggestions
+    nlp("one")
+    # single doc with one suggestion
+    nlp("two two")
+    # batch with mixed zero/one suggestions
+    list(nlp.pipe(["one", "two two", "three three three", "", "four four four four"]))
+    # batch with no suggestions
+    list(nlp.pipe(["", "one", "three three three"]))
 
 
 def test_set_candidates():
@@ -419,3 +444,23 @@ def test_set_candidates():
     assert len(docs[0].spans["candidates"]) == 9
     assert docs[0].spans["candidates"][0].text == "Just"
     assert docs[0].spans["candidates"][4].text == "Just a"
+
+
+def test_save_activations():
+    # Test if activations are correctly added to Doc when requested.
+    nlp = English()
+    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    train_examples = make_examples(nlp)
+    nlp.initialize(get_examples=lambda: train_examples)
+    nO = spancat.model.get_dim("nO")
+    assert nO == 2
+    assert set(spancat.labels) == {"LOC", "PERSON"}
+
+    doc = nlp("This is a test.")
+    assert "spancat" not in doc.activations
+
+    spancat.save_activations = True
+    doc = nlp("This is a test.")
+    assert set(doc.activations["spancat"].keys()) == {"indices", "scores"}
+    assert doc.activations["spancat"]["indices"].shape == (12, 2)
+    assert doc.activations["spancat"]["scores"].shape == (12, nO)

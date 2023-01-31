@@ -1,5 +1,5 @@
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
-from typing import cast, overload
+from typing import Literal, cast, overload
 from pathlib import Path
 from collections import Counter
 import sys
@@ -9,17 +9,18 @@ import typer
 import math
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
-from ._util import import_code, debug_cli
+from ._util import import_code, debug_cli, _format_number
 from ..training import Example, remove_bilu_prefix
 from ..training.initialize import get_sourced_components
 from ..schemas import ConfigSchemaTraining
+from ..pipeline import TrainablePipe
 from ..pipeline._parser_internals import nonproj
 from ..pipeline._parser_internals.nonproj import DELIMITER
 from ..pipeline import Morphologizer, SpanCategorizer
+from ..pipeline._edit_tree_internals.edit_trees import EditTrees
 from ..morphology import Morphology
 from ..language import Language
 from ..util import registry, resolve_dot_names
-from ..compat import Literal
 from ..vectors import Mode as VectorsMode
 from .. import util
 
@@ -670,6 +671,59 @@ def debug_data(
                 f"Found {gold_train_data['n_cycles']} projectivized train sentence(s) with cycles"
             )
 
+    if "trainable_lemmatizer" in factory_names:
+        msg.divider("Trainable Lemmatizer")
+        trees_train: Set[str] = gold_train_data["lemmatizer_trees"]
+        trees_dev: Set[str] = gold_dev_data["lemmatizer_trees"]
+        # This is necessary context when someone is attempting to interpret whether the
+        # number of trees exclusively in the dev set is meaningful.
+        msg.info(f"{len(trees_train)} lemmatizer trees generated from training data")
+        msg.info(f"{len(trees_dev)} lemmatizer trees generated from dev data")
+        dev_not_train = trees_dev - trees_train
+
+        if len(dev_not_train) != 0:
+            pct = len(dev_not_train) / len(trees_dev)
+            msg.info(
+                f"{len(dev_not_train)} lemmatizer trees ({pct*100:.1f}% of dev trees)"
+                " were found exclusively in the dev data."
+            )
+        else:
+            # Would we ever expect this case? It seems like it would be pretty rare,
+            # and we might actually want a warning?
+            msg.info("All trees in dev data present in training data.")
+
+        if gold_train_data["n_low_cardinality_lemmas"] > 0:
+            n = gold_train_data["n_low_cardinality_lemmas"]
+            msg.warn(f"{n} training docs with 0 or 1 unique lemmas.")
+
+        if gold_dev_data["n_low_cardinality_lemmas"] > 0:
+            n = gold_dev_data["n_low_cardinality_lemmas"]
+            msg.warn(f"{n} dev docs with 0 or 1 unique lemmas.")
+
+        if gold_train_data["no_lemma_annotations"] > 0:
+            n = gold_train_data["no_lemma_annotations"]
+            msg.warn(f"{n} training docs with no lemma annotations.")
+        else:
+            msg.good("All training docs have lemma annotations.")
+
+        if gold_dev_data["no_lemma_annotations"] > 0:
+            n = gold_dev_data["no_lemma_annotations"]
+            msg.warn(f"{n} dev docs with no lemma annotations.")
+        else:
+            msg.good("All dev docs have lemma annotations.")
+
+        if gold_train_data["partial_lemma_annotations"] > 0:
+            n = gold_train_data["partial_lemma_annotations"]
+            msg.info(f"{n} training docs with partial lemma annotations.")
+        else:
+            msg.good("All training docs have complete lemma annotations.")
+
+        if gold_dev_data["partial_lemma_annotations"] > 0:
+            n = gold_dev_data["partial_lemma_annotations"]
+            msg.info(f"{n} dev docs with partial lemma annotations.")
+        else:
+            msg.good("All dev docs have complete lemma annotations.")
+
     msg.divider("Summary")
     good_counts = msg.counts[MESSAGES.GOOD]
     warn_counts = msg.counts[MESSAGES.WARN]
@@ -731,7 +785,13 @@ def _compile_gold(
         "n_cats_multilabel": 0,
         "n_cats_bad_values": 0,
         "texts": set(),
+        "lemmatizer_trees": set(),
+        "no_lemma_annotations": 0,
+        "partial_lemma_annotations": 0,
+        "n_low_cardinality_lemmas": 0,
     }
+    if "trainable_lemmatizer" in factory_names:
+        trees = EditTrees(nlp.vocab.strings)
     for eg in examples:
         gold = eg.reference
         doc = eg.predicted
@@ -861,6 +921,25 @@ def _compile_gold(
                 data["n_nonproj"] += 1
             if nonproj.contains_cycle(aligned_heads):
                 data["n_cycles"] += 1
+        if "trainable_lemmatizer" in factory_names:
+            # from EditTreeLemmatizer._labels_from_data
+            if all(token.lemma == 0 for token in gold):
+                data["no_lemma_annotations"] += 1
+                continue
+            if any(token.lemma == 0 for token in gold):
+                data["partial_lemma_annotations"] += 1
+            lemma_set = set()
+            for token in gold:
+                if token.lemma != 0:
+                    lemma_set.add(token.lemma)
+                    tree_id = trees.add(token.text, token.lemma_)
+                    tree_str = trees.tree_to_str(tree_id)
+                    data["lemmatizer_trees"].add(tree_str)
+            # We want to identify cases where lemmas aren't assigned
+            # or are all assigned the same value, as this would indicate
+            # an issue since we're expecting a large set of lemmas
+            if len(lemma_set) < 2 and len(gold) > 1:
+                data["n_low_cardinality_lemmas"] += 1
     return data
 
 
@@ -934,6 +1013,7 @@ def _get_labels_from_model(nlp: Language, factory_name: str) -> Set[str]:
     labels: Set[str] = set()
     for pipe_name in pipe_names:
         pipe = nlp.get_pipe(pipe_name)
+        assert isinstance(pipe, TrainablePipe)
         labels.update(pipe.labels)
     return labels
 
@@ -989,7 +1069,8 @@ def _get_kl_divergence(p: Counter, q: Counter) -> float:
 def _format_span_row(span_data: List[Dict], labels: List[str]) -> List[Any]:
     """Compile into one list for easier reporting"""
     d = {
-        label: [label] + list(round(d[label], 2) for d in span_data) for label in labels
+        label: [label] + list(_format_number(d[label]) for d in span_data)
+        for label in labels
     }
     return list(d.values())
 
@@ -1003,6 +1084,10 @@ def _get_span_characteristics(
     span_length = {
         label: _gmean(l)
         for label, l in compiled_gold["spans_length"][spans_key].items()
+    }
+    spans_per_type = {
+        label: len(spans)
+        for label, spans in compiled_gold["spans_per_type"][spans_key].items()
     }
     min_lengths = [min(l) for l in compiled_gold["spans_length"][spans_key].values()]
     max_lengths = [max(l) for l in compiled_gold["spans_length"][spans_key].values()]
@@ -1031,6 +1116,7 @@ def _get_span_characteristics(
     return {
         "sd": span_distinctiveness,
         "bd": sb_distinctiveness,
+        "spans_per_type": spans_per_type,
         "lengths": span_length,
         "min_length": min(min_lengths),
         "max_length": max(max_lengths),
@@ -1045,12 +1131,15 @@ def _get_span_characteristics(
 
 def _print_span_characteristics(span_characteristics: Dict[str, Any]):
     """Print all span characteristics into a table"""
-    headers = ("Span Type", "Length", "SD", "BD")
+    headers = ("Span Type", "Length", "SD", "BD", "N")
+    # Wasabi has this at 30 by default, but we might have some long labels
+    max_col = max(30, max(len(label) for label in span_characteristics["labels"]))
     # Prepare table data with all span characteristics
     table_data = [
         span_characteristics["lengths"],
         span_characteristics["sd"],
         span_characteristics["bd"],
+        span_characteristics["spans_per_type"],
     ]
     table = _format_span_row(
         span_data=table_data, labels=span_characteristics["labels"]
@@ -1061,8 +1150,18 @@ def _print_span_characteristics(span_characteristics: Dict[str, Any]):
         span_characteristics["avg_sd"],
         span_characteristics["avg_bd"],
     ]
-    footer = ["Wgt. Average"] + [str(round(f, 2)) for f in footer_data]
-    msg.table(table, footer=footer, header=headers, divider=True)
+
+    footer = (
+        ["Wgt. Average"] + ["{:.2f}".format(round(f, 2)) for f in footer_data] + ["-"]
+    )
+    msg.table(
+        table,
+        footer=footer,
+        header=headers,
+        divider=True,
+        aligns=["l"] + ["r"] * (len(footer_data) + 1),
+        max_col=max_col,
+    )
 
 
 def _get_spans_length_freq_dist(

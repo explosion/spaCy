@@ -1,6 +1,8 @@
 # cython: infer_types=True
 from __future__ import print_function
 from cymem.cymem cimport Pool
+from libc.stdlib cimport calloc, free
+from libcpp.vector cimport vector
 
 from collections import Counter
 import srsly
@@ -10,6 +12,7 @@ from ...typedefs cimport weight_t, attr_t
 from ...tokens.doc cimport Doc
 from ...structs cimport TokenC
 from .stateclass cimport StateClass
+from ._parser_utils cimport arg_max_if_valid
 
 from ...errors import Errors
 from ... import util
@@ -73,7 +76,18 @@ cdef class TransitionSystem:
             offset += len(doc)
         return states
 
+    def follow_history(self, doc, history):
+        cdef int clas
+        cdef StateClass state = StateClass(doc)
+        for clas in history:
+            action = self.c[clas]
+            action.do(state.c, action.label)
+            state.c.history.push_back(clas)
+        return state
+
     def get_oracle_sequence(self, Example example, _debug=False):
+        if not self.has_gold(example):
+            return []
         states, golds, _ = self.init_gold_batch([example])
         if not states:
             return []
@@ -85,6 +99,8 @@ cdef class TransitionSystem:
             return self.get_oracle_sequence_from_state(state, gold)
 
     def get_oracle_sequence_from_state(self, StateClass state, gold, _debug=None):
+        if state.is_final():
+            return []
         cdef Pool mem = Pool()
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         assert self.n_moves > 0
@@ -110,6 +126,7 @@ cdef class TransitionSystem:
                             "S0 head?", str(state.has_head(state.S(0))),
                         )))
                     action.do(state.c, action.label)
+                    state.c.history.push_back(i)
                     break
             else:
                 if _debug:
@@ -137,6 +154,28 @@ cdef class TransitionSystem:
             raise ValueError(Errors.E170.format(name=name))
         action = self.lookup_transition(name)
         action.do(state.c, action.label)
+        state.c.history.push_back(action.clas)
+
+    def apply_actions(self, states, const int[::1] actions):
+        assert len(states) == actions.shape[0]
+        cdef StateClass state
+        cdef vector[StateC*] c_states
+        c_states.resize(len(states))
+        cdef int i
+        for (i, state) in enumerate(states):
+            c_states[i] = state.c
+        c_apply_actions(self, &c_states[0], &actions[0], actions.shape[0])
+        return [state for state in states if not state.c.is_final()]
+
+    def transition_states(self, states, float[:, ::1] scores):
+        assert len(states) == scores.shape[0]
+        cdef StateClass state
+        cdef float* c_scores = &scores[0, 0]
+        cdef vector[StateC*] c_states
+        for state in states:
+            c_states.push_back(state.c)
+        c_transition_batch(self, &c_states[0], c_scores, scores.shape[1], scores.shape[0])
+        return [state for state in states if not state.c.is_final()]
 
     cdef Transition lookup_transition(self, object name) except *:
         raise NotImplementedError
@@ -250,3 +289,35 @@ cdef class TransitionSystem:
             self.cfg.update(msg['cfg'])
         self.initialize_actions(labels)
         return self
+
+
+cdef void c_apply_actions(TransitionSystem moves, StateC** states, const int* actions,
+    int batch_size) nogil:
+        cdef int i
+        cdef Transition action
+        cdef StateC* state
+        for i in range(batch_size):
+            state = states[i]
+            action = moves.c[actions[i]]
+            action.do(state, action.label)
+            state.history.push_back(action.clas)
+
+
+cdef void c_transition_batch(TransitionSystem moves, StateC** states, const float* scores,
+    int nr_class, int batch_size) nogil:
+    is_valid = <int*>calloc(moves.n_moves, sizeof(int))
+    cdef int i, guess
+    cdef Transition action
+    for i in range(batch_size):
+        moves.set_valid(is_valid, states[i])
+        guess = arg_max_if_valid(&scores[i*nr_class], is_valid, nr_class)
+        if guess == -1:
+            # This shouldn't happen, but it's hard to raise an error here,
+            # and we don't want to infinite loop. So, force to end state.
+            states[i].force_final()
+        else:
+            action = moves.c[guess]
+            action.do(states[i], action.label)
+            states[i].history.push_back(guess)
+    free(is_valid)
+

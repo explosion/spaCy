@@ -305,31 +305,6 @@ def test_span_similarity_match():
         assert span1[:1].similarity(doc.vocab["a"]) == 1.0
 
 
-def test_spans_default_sentiment(en_tokenizer):
-    """Test span.sentiment property's default averaging behaviour"""
-    text = "good stuff bad stuff"
-    tokens = en_tokenizer(text)
-    tokens.vocab[tokens[0].text].sentiment = 3.0
-    tokens.vocab[tokens[2].text].sentiment = -2.0
-    doc = Doc(tokens.vocab, words=[t.text for t in tokens])
-    assert doc[:2].sentiment == 3.0 / 2
-    assert doc[-2:].sentiment == -2.0 / 2
-    assert doc[:-1].sentiment == (3.0 + -2) / 3.0
-
-
-def test_spans_override_sentiment(en_tokenizer):
-    """Test span.sentiment property's default averaging behaviour"""
-    text = "good stuff bad stuff"
-    tokens = en_tokenizer(text)
-    tokens.vocab[tokens[0].text].sentiment = 3.0
-    tokens.vocab[tokens[2].text].sentiment = -2.0
-    doc = Doc(tokens.vocab, words=[t.text for t in tokens])
-    doc.user_span_hooks["sentiment"] = lambda span: 10.0
-    assert doc[:2].sentiment == 10.0
-    assert doc[-2:].sentiment == 10.0
-    assert doc[:-1].sentiment == 10.0
-
-
 def test_spans_are_hashable(en_tokenizer):
     """Test spans can be hashed."""
     text = "good stuff bad stuff"
@@ -692,3 +667,23 @@ def test_span_group_copy(doc):
     assert len(doc.spans["test"]) == 3
     # check that the copy spans were not modified and this is an isolated doc
     assert len(doc_copy.spans["test"]) == 2
+
+
+@pytest.mark.issue(11113)
+def test_span_ent_id(en_tokenizer):
+    doc = en_tokenizer("a b c d")
+    doc.ents = [Span(doc, 1, 3, label="A", span_id="ID0")]
+    span = doc.ents[0]
+    assert doc[1].ent_id_ == "ID0"
+
+    # setting Span.id sets Token.ent_id
+    span.id_ = "ID1"
+    doc.ents = [span]
+    assert doc.ents[0].ent_id_ == "ID1"
+    assert doc[1].ent_id_ == "ID1"
+
+    # Span.ent_id is an alias of Span.id
+    span.ent_id_ = "ID2"
+    doc.ents = [span]
+    assert doc.ents[0].ent_id_ == "ID2"
+    assert doc[1].ent_id_ == "ID2"

@@ -1,6 +1,10 @@
 import pytest
 from spacy.util import get_lang_class
+import functools
 from hypothesis import settings
+import inspect
+import importlib
+import sys
 
 # Functionally disable deadline settings for tests
 # to prevent spurious test failures in CI builds.
@@ -45,6 +49,33 @@ def pytest_runtest_setup(item):
                 pytest.skip(f"not referencing specified issues: {issue_nos}")
         else:
             pytest.skip("not referencing any issues")
+
+
+# Decorator for Cython-built tests
+# https://shwina.github.io/cython-testing/
+def cytest(func):
+    """
+    Wraps `func` in a plain Python function.
+    """
+
+    @functools.wraps(func)
+    def wrapped(*args, **kwargs):
+        bound = inspect.signature(func).bind(*args, **kwargs)
+        return func(*bound.args, **bound.kwargs)
+
+    return wrapped
+
+
+def register_cython_tests(cython_mod_name: str, test_mod_name: str):
+    """
+    Registers all callables with name `test_*` in Cython module `cython_mod_name`
+    as attributes in module `test_mod_name`, making them discoverable by pytest.
+    """
+    cython_mod = importlib.import_module(cython_mod_name)
+    for name in dir(cython_mod):
+        item = getattr(cython_mod, name)
+        if callable(item) and name.startswith("test_"):
+            setattr(sys.modules[test_mod_name], name, item)
 
 
 # Fixtures for language tokenizers (languages sorted alphabetically)
@@ -239,7 +270,7 @@ def hsb_tokenizer():
 
 @pytest.fixture(scope="session")
 def ko_tokenizer():
-    pytest.importorskip("natto")
+    pytest.importorskip("mecab_ko")
     return get_lang_class("ko")().tokenizer
 
 
@@ -256,9 +287,33 @@ def ko_tokenizer_tokenizer():
     return nlp.tokenizer
 
 
+@pytest.fixture(scope="module")
+def la_tokenizer():
+    return get_lang_class("la")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def ko_tokenizer_natto():
+    pytest.importorskip("natto")
+    config = {
+        "nlp": {
+            "tokenizer": {
+                "@tokenizers": "spacy.KoreanNattoTokenizer.v1",
+            }
+        }
+    }
+    nlp = get_lang_class("ko").from_config(config)
+    return nlp.tokenizer
+
+
 @pytest.fixture(scope="session")
 def lb_tokenizer():
     return get_lang_class("lb")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def lg_tokenizer():
+    return get_lang_class("lg")().tokenizer
 
 
 @pytest.fixture(scope="session")
@@ -323,14 +378,22 @@ def ro_tokenizer():
 
 @pytest.fixture(scope="session")
 def ru_tokenizer():
-    pytest.importorskip("pymorphy2")
+    pytest.importorskip("pymorphy3")
     return get_lang_class("ru")().tokenizer
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def ru_lemmatizer():
-    pytest.importorskip("pymorphy2")
+    pytest.importorskip("pymorphy3")
     return get_lang_class("ru")().add_pipe("lemmatizer")
+
+
+@pytest.fixture(scope="session")
+def ru_lookup_lemmatizer():
+    pytest.importorskip("pymorphy3")
+    return get_lang_class("ru")().add_pipe(
+        "lemmatizer", config={"mode": "pymorphy3_lookup"}
+    )
 
 
 @pytest.fixture(scope="session")
@@ -401,15 +464,24 @@ def ky_tokenizer():
 
 @pytest.fixture(scope="session")
 def uk_tokenizer():
-    pytest.importorskip("pymorphy2")
+    pytest.importorskip("pymorphy3")
     return get_lang_class("uk")().tokenizer
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def uk_lemmatizer():
-    pytest.importorskip("pymorphy2")
-    pytest.importorskip("pymorphy2_dicts_uk")
+    pytest.importorskip("pymorphy3")
+    pytest.importorskip("pymorphy3_dicts_uk")
     return get_lang_class("uk")().add_pipe("lemmatizer")
+
+
+@pytest.fixture(scope="session")
+def uk_lookup_lemmatizer():
+    pytest.importorskip("pymorphy3")
+    pytest.importorskip("pymorphy3_dicts_uk")
+    return get_lang_class("uk")().add_pipe(
+        "lemmatizer", config={"mode": "pymorphy3_lookup"}
+    )
 
 
 @pytest.fixture(scope="session")

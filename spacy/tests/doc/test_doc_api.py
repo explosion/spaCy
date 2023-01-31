@@ -3,6 +3,7 @@ import weakref
 import numpy
 from numpy.testing import assert_array_equal
 import pytest
+import warnings
 from thinc.api import NumpyOps, get_current_ops
 
 from spacy.attrs import DEP, ENT_IOB, ENT_TYPE, HEAD, IS_ALPHA, MORPH, POS
@@ -79,6 +80,21 @@ def test_issue2396(en_vocab):
     span = doc[:]
     assert (doc.get_lca_matrix() == matrix).all()
     assert (span.get_lca_matrix() == matrix).all()
+
+
+@pytest.mark.issue(11499)
+def test_init_args_unmodified(en_vocab):
+    words = ["A", "sentence"]
+    ents = ["B-TYPE1", ""]
+    sent_starts = [True, False]
+    Doc(
+        vocab=en_vocab,
+        words=words,
+        ents=ents,
+        sent_starts=sent_starts,
+    )
+    assert ents == ["B-TYPE1", ""]
+    assert sent_starts == [True, False]
 
 
 @pytest.mark.parametrize("text", ["-0.23", "+123,456", "±1"])
@@ -364,9 +380,7 @@ def test_doc_api_serialize(en_tokenizer, text):
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
 
-    new_tokens = Doc(tokens.vocab).from_bytes(
-        tokens.to_bytes(exclude=["sentiment"]), exclude=["sentiment"]
-    )
+    new_tokens = Doc(tokens.vocab).from_bytes(tokens.to_bytes())
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
@@ -529,9 +543,9 @@ def test_doc_from_array_sent_starts(en_vocab):
     # no warning using default attrs
     attrs = doc._get_array_attrs()
     arr = doc.to_array(attrs)
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         new_doc.from_array(attrs, arr)
-        assert len(record) == 0
     # only SENT_START uses SENT_START
     attrs = [SENT_START]
     arr = doc.to_array(attrs)
@@ -974,3 +988,12 @@ def test_doc_spans_setdefault(en_tokenizer):
     assert len(doc.spans["key2"]) == 1
     doc.spans.setdefault("key3", default=SpanGroup(doc, spans=[doc[0:1], doc[1:2]]))
     assert len(doc.spans["key3"]) == 2
+
+
+def test_doc_sentiment_from_bytes_v3_to_v4():
+    """Test if a doc with sentiment attribute created in v3.x works with '.from_bytes' in v4.x without throwing errors. The sentiment attribute was removed in v4"""
+    doc_bytes = b"\x89\xa4text\xa5happy\xaaarray_head\x9fGQACKOLMN\xcd\x01\xc4\xcd\x01\xc6I\xcd\x01\xc5JP\xaaarray_body\x85\xc4\x02nd\xc3\xc4\x04type\xa3<u8\xc4\x04kind\xc4\x00\xc4\x05shape\x92\x01\x0f\xc4\x04data\xc4x\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xa4\x9a\xd3\x17\xca\xf0b\x03\xa4\x9a\xd3\x17\xca\xf0b\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\xa9sentiment\xcb?\xf0\x00\x00\x00\x00\x00\x00\xa6tensor\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f4\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x00\xc4\x04data\xc4\x00\xa4cats\x80\xa5spans\xc4\x01\x90\xa7strings\x92\xa0\xa5happy\xb2has_unknown_spaces\xc2"
+    doc = Doc(Vocab()).from_bytes(doc_bytes)
+    assert doc.text == "happy"
+    with pytest.raises(AttributeError):
+        doc.sentiment == 1.0

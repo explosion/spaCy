@@ -1,5 +1,4 @@
 from collections.abc import Iterable as IterableInstance
-import warnings
 import numpy
 from murmurhash.mrmr cimport hash64
 
@@ -45,6 +44,13 @@ def validate_examples(examples, method):
     if wrong:
         err = Errors.E978.format(name=method, types=wrong)
         raise TypeError(err)
+
+
+def validate_distillation_examples(examples, method):
+    validate_examples(examples, method)
+    for eg in examples:
+        if [token.text for token in eg.reference] != [token.text for token in eg.predicted]:
+            raise ValueError(Errors.E4003)
 
 
 def validate_get_examples(get_examples, method):
@@ -361,6 +367,7 @@ cdef class Example:
             "doc_annotation": {
                 "cats": dict(self.reference.cats),
                 "entities": doc_to_biluo_tags(self.reference),
+                "spans": self._spans_to_dict(),
                 "links": self._links_to_dict()
             },
             "token_annotation": {
@@ -375,6 +382,18 @@ cdef class Example:
                 "SENT_START": [int(bool(t.is_sent_start)) for t in self.reference]
             }
         }
+
+    def _spans_to_dict(self):
+        span_dict = {}
+        for key in self.reference.spans:
+            span_tuples = []
+            for span in self.reference.spans[key]: 
+                span_tuple = (span.start_char, span.end_char, span.label_, span.kb_id_)
+                span_tuples.append(span_tuple)
+            span_dict[key] = span_tuples
+
+        return span_dict
+
 
     def _links_to_dict(self):
         links = {}
@@ -430,26 +449,27 @@ def _annot2array(vocab, tok_annot, doc_annot):
         if key not in IDS:
             raise ValueError(Errors.E974.format(obj="token", key=key))
         elif key in ["ORTH", "SPACY"]:
-            pass
+            continue
         elif key == "HEAD":
             attrs.append(key)
-            values.append([h-i if h is not None else 0 for i, h in enumerate(value)])
+            row = [h-i if h is not None else 0 for i, h in enumerate(value)]
         elif key == "DEP":
             attrs.append(key)
-            values.append([vocab.strings.add(h) if h is not None else MISSING_DEP for h in value])
+            row = [vocab.strings.add(h) if h is not None else MISSING_DEP for h in value]
         elif key == "SENT_START":
             attrs.append(key)
-            values.append([to_ternary_int(v) for v in value])
+            row = [to_ternary_int(v) for v in value]
         elif key == "MORPH":
             attrs.append(key)
-            values.append([vocab.morphology.add(v) for v in value])
+            row = [vocab.morphology.add(v) for v in value]
         else:
             attrs.append(key)
             if not all(isinstance(v, str) for v in value):
                 types = set([type(v) for v in value])
                 raise TypeError(Errors.E969.format(field=key, types=types)) from None
-            values.append([vocab.strings.add(v) for v in value])
-    array = numpy.asarray(values, dtype="uint64")
+            row = [vocab.strings.add(v) for v in value]
+        values.append([numpy.array(v, dtype=numpy.int32).astype(numpy.uint64) if v < 0 else v for v in row])
+    array = numpy.array(values, dtype=numpy.uint64)
     return attrs, array.T
 
 

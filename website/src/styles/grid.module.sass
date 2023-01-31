@@ -1,3 +1,4 @@
+@use 'sass:math'
 @import base
 
 $grid-gap-wide: 5rem
@@ -9,7 +10,7 @@ $flex-gap: 2rem
         @if $gap == 0
             flex: 0 0 100% / $cols
         @else
-            flex: 0 0 calc(#{100% / $cols} - #{$gap * ($cols - 1)})
+            flex: 0 0 calc(#{math.div(100%, $cols)} - #{$gap * ($cols - 1)})
 
 .root
     display: flex
