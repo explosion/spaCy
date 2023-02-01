@@ -795,7 +795,7 @@ def _states_diff_to_actions(
         c_state_before = before_state.c
         c_state_after = after_state.c
 
-        assert equal(c_state_before.history.begin(), c_state_before.history.begin(),
+        assert equal(c_state_before.history.begin(), c_state_before.history.end(),
             c_state_after.history.begin())
 
     actions = []
