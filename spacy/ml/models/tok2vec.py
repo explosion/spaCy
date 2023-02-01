@@ -151,7 +151,7 @@ def MultiHashEmbed(
         Requires a vectors table to be loaded in the Doc objects' vocab.
     """
     if len(rows) != len(attrs):
-        raise ValueError(f"Mismatched lengths: {len(rows)} vs {len(attrs)}")
+        raise ValueError(Errors.E1054.format(len_rows=len(rows), len_attrs=len(attrs)))
     seed = 7
 
     def make_hash_embed(index):
@@ -253,7 +253,7 @@ def RichMultiHashEmbed(
     """
 
     if len(rows) != len(attrs):
-        raise ValueError(f"Mismatched lengths: {len(rows)} vs {len(attrs)}")
+        raise ValueError(Errors.E1054.format(len_rows=len(rows), len_attrs=len(attrs)))
 
     _verify_rich_config_group("prefix", pref_lengths, pref_rows)
     _verify_rich_config_group("suffix", suff_lengths, suff_rows)
@@ -296,7 +296,7 @@ def RichMultiHashEmbed(
             ),
             max_out,
             ragged2list(),
-            Dropout(0.0)
+            Dropout(0.0),
         )
     else:
         model = chain(
@@ -305,7 +305,7 @@ def RichMultiHashEmbed(
             with_array(concatenate(*embeddings)),
             max_out,
             ragged2list(),
-            Dropout(0.0)
+            Dropout(0.0),
         )
     return model
 

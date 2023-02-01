@@ -973,6 +973,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1051 = ("Invalid rich group config '{label}'.")
     E1052 = ("Length > 63 in rich group config '{label}'.")
     E1053 = ("Rich group config {label} specifies lengths that are not in ascending order.")
+    E1054 = ("Mismatched lengths in hash embed config: {len_rows} rows, {len_attrs} attrs.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
