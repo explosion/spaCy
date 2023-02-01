@@ -527,7 +527,7 @@ class Parser(TrainablePipe):
         set_dropout_rate(self.model, 0.0)
         student_inputs = TransitionModelInputs(docs=docs, moves=self.moves)
         (student_states, student_scores), backprop_scores = self.model.begin_update(student_inputs)
-        actions = states2actions(student_states)
+        actions = _states_to_actions(student_states)
         teacher_inputs = TransitionModelInputs(docs=docs, moves=self.moves, actions=actions)
         _, teacher_scores = self._rehearsal_model.predict(teacher_inputs)
 
@@ -681,7 +681,7 @@ class Parser(TrainablePipe):
 
         # Step through the teacher's actions and store every state after
         # each multiple of max_length.
-        teacher_actions = states2actions(teacher_states)
+        teacher_actions = _states_to_actions(teacher_states)
         while to_cut:
             states.extend(state.copy() for state in to_cut)
             for step_actions in teacher_actions[:max_length]:
@@ -753,7 +753,7 @@ def _change_attrs(model, **kwargs):
             model.attrs[key] = value
 
 
-def states2actions(states: List[StateClass]) -> List[Ints1d]:
+def _states_to_actions(states: List[StateClass]) -> List[Ints1d]:
     cdef int step
     cdef StateClass state
     cdef StateC* c_state
