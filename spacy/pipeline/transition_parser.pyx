@@ -259,7 +259,7 @@ class Parser(TrainablePipe):
             # sequence, we use the teacher's predictions as the gold
             # standard.
             max_moves = int(random.uniform(max(max_moves // 2, 1), max_moves * 2))
-            states = self._init_batch(teacher_pipe, student_docs, max_moves)
+            states = self._init_batch_from_teacher(teacher_pipe, student_docs, max_moves)
         else:
             states = self.moves.init_batch(student_docs)
 
@@ -647,7 +647,7 @@ class Parser(TrainablePipe):
                     raise ValueError(Errors.E149) from None
         return self
 
-    def _init_batch(self, teacher_pipe, docs, max_length):
+    def _init_batch_from_teacher(self, teacher_pipe, docs, max_length):
         """Make a square batch of length equal to the shortest transition
         sequence or a cap. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
