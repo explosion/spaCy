@@ -782,7 +782,7 @@ def _states_diff_to_actions(
     """
     Return for two sets of states the actions to go from the first set of
     states to the second set of states. The histories of the first set of
-    states must be prefix of the second set of states.
+    states must be a prefix of the second set of states.
     """
     cdef StateClass before_state, after_state
     cdef StateC* c_state_before
