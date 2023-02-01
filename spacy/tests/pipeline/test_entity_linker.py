@@ -20,8 +20,6 @@ from spacy.training import Example
 from spacy.util import ensure_path
 from spacy.vocab import Vocab
 
-from spacy_legacy.components.entity_linker import EntityLinker_v1
-
 
 @pytest.fixture
 def nlp():
@@ -998,6 +996,8 @@ def test_scorer_links():
 )
 # fmt: on
 def test_legacy_architectures(name, config):
+    from spacy_legacy.components.entity_linker import EntityLinker_v1
+
     # Ensure that the legacy architectures still work
     vector_length = 3
     nlp = English()

@@ -123,8 +123,7 @@ def make_entity_linker(
             from spacy_legacy.components.entity_linker import EntityLinker_v1
         except:
             raise ImportError(
-                """In order to use v1 of the EntityLinker, you must use
-                    spacy-legacy>=3.0.12."""
+                "In order to use v1 of the EntityLinker, you must use spacy-legacy>=3.0.12."
             )
         # The only difference in arguments here is that use_gold_ents and threshold aren't available.
         return EntityLinker_v1(
