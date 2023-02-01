@@ -463,6 +463,7 @@ def test_is_distillable():
     assert parser.is_distillable
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("max_moves", [0, 1, 5, 100])
 def test_distill(max_moves):
     teacher = English()
