@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, List, Optional, Tuple, Iterable
+from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, Literal
 from typing import TYPE_CHECKING, overload
 import sys
 import shutil
@@ -16,10 +16,10 @@ from thinc.util import gpu_is_available
 from configparser import InterpolationError
 import os
 
-from ..compat import Literal
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
 from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
+from ..errors import RENAMED_LANGUAGE_CODES
 from .. import about
 
 if TYPE_CHECKING:
@@ -46,6 +46,7 @@ DEBUG_HELP = """Suite of helpful commands for debugging and profiling. Includes
 commands to check and validate your config files, training and evaluation data,
 and custom model implementations.
 """
+BENCHMARK_HELP = """Commands for benchmarking pipelines."""
 INIT_HELP = """Commands for initializing configs and pipeline packages."""
 
 # Wrappers for Typer's annotations. Initially created to set defaults and to
@@ -54,12 +55,14 @@ Arg = typer.Argument
 Opt = typer.Option
 
 app = typer.Typer(name=NAME, help=HELP)
+benchmark_cli = typer.Typer(name="benchmark", help=BENCHMARK_HELP, no_args_is_help=True)
 project_cli = typer.Typer(name="project", help=PROJECT_HELP, no_args_is_help=True)
 debug_cli = typer.Typer(name="debug", help=DEBUG_HELP, no_args_is_help=True)
 init_cli = typer.Typer(name="init", help=INIT_HELP, no_args_is_help=True)
 
 app.add_typer(project_cli)
 app.add_typer(debug_cli)
+app.add_typer(benchmark_cli)
 app.add_typer(init_cli)
 
 
@@ -130,6 +133,16 @@ def _parse_override(value: Any) -> Any:
         return srsly.json_loads(value)
     except ValueError:
         return str(value)
+
+
+def _handle_renamed_language_codes(lang: Optional[str]) -> None:
+    # Throw error for renamed language codes in v4
+    if lang in RENAMED_LANGUAGE_CODES:
+        msg.fail(
+            title="Renamed language code",
+            text=f"Language code '{lang}' was replaced with '{RENAMED_LANGUAGE_CODES[lang]}' in spaCy v4. Update the language code from '{lang}' to '{RENAMED_LANGUAGE_CODES[lang]}'.",
+            exits=1,
+        )
 
 
 def load_project_config(

@@ -106,9 +106,7 @@ def serve(
 
     if is_in_jupyter():
         warnings.warn(Warnings.W011)
-    render(
-        docs, style=style, page=page, minify=minify, options=options, manual=manual
-    )
+    render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
     httpd = simple_server.make_server(host, port, app)
     print(f"\nUsing the '{style}' visualizer")
     print(f"Serving on http://{host}:{port} ...\n")

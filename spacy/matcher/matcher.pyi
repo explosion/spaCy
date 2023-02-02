@@ -1,12 +1,15 @@
-from typing import Any, List, Dict, Tuple, Optional, Callable, Union
+from typing import Any, List, Dict, Tuple, Optional, Callable, Union, Literal
 from typing import Iterator, Iterable, overload
-from ..compat import Literal
 from ..vocab import Vocab
 from ..tokens import Doc, Span
 
 class Matcher:
-    def __init__(self, vocab: Vocab, validate: bool = ...,
-                 fuzzy_compare: Callable[[str, str, int], bool] = ...) -> None: ...
+    def __init__(
+        self,
+        vocab: Vocab,
+        validate: bool = ...,
+        fuzzy_compare: Callable[[str, str, int], bool] = ...,
+    ) -> None: ...
     def __reduce__(self) -> Any: ...
     def __len__(self) -> int: ...
     def __contains__(self, key: str) -> bool: ...

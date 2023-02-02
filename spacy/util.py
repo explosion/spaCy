@@ -4,6 +4,7 @@ from typing import Iterator, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
 import os
 import importlib
+import importlib.metadata
 import importlib.util
 import re
 from pathlib import Path
@@ -40,7 +41,7 @@ except ImportError:
 
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream, is_windows, importlib_metadata
+from .compat import cupy, CudaStream, is_windows
 from .errors import Errors, Warnings
 from . import about
 
@@ -282,7 +283,7 @@ def find_matching_language(lang: str) -> Optional[str]:
     import spacy.lang  # noqa: F401
 
     if lang == "xx":
-        return "xx"
+        return "mul"
 
     # Find out which language modules we have
     possible_languages = []
@@ -300,11 +301,7 @@ def find_matching_language(lang: str) -> Optional[str]:
     # is labeled that way is probably trying to be distinct from 'zh' and
     # shouldn't automatically match.
     match = langcodes.closest_supported_match(lang, possible_languages, max_distance=9)
-    if match == "mul":
-        # Convert 'mul' back to spaCy's 'xx'
-        return "xx"
-    else:
-        return match
+    return match
 
 
 def get_lang_class(lang: str) -> Type["Language"]:
@@ -706,8 +703,8 @@ def get_package_version(name: str) -> Optional[str]:
     RETURNS (str / None): The version or None if package not installed.
     """
     try:
-        return importlib_metadata.version(name)  # type: ignore[attr-defined]
-    except importlib_metadata.PackageNotFoundError:  # type: ignore[attr-defined]
+        return importlib.metadata.version(name)  # type: ignore[attr-defined]
+    except importlib.metadata.PackageNotFoundError:  # type: ignore[attr-defined]
         return None
 
 
@@ -895,7 +892,7 @@ def is_package(name: str) -> bool:
     RETURNS (bool): True if installed package, False if not.
     """
     try:
-        importlib_metadata.distribution(name)  # type: ignore[attr-defined]
+        importlib.metadata.distribution(name)  # type: ignore[attr-defined]
         return True
     except:  # noqa: E722
         return False
@@ -1583,12 +1580,12 @@ def minibatch(items, size):
     so that batch-size can vary on each step.
     """
     if isinstance(size, int):
-        size_ = constant_schedule(size)
+        size_ = itertools.repeat(size)
     else:
-        size_ = size
+        size_ = iter(size)
     items = iter(items)
-    for step in itertools.count():
-        batch_size = size_(step)
+    while True:
+        batch_size = next(size_)
         batch = list(itertools.islice(items, int(batch_size)))
         if len(batch) == 0:
             break
@@ -1718,7 +1715,7 @@ def packages_distributions() -> Dict[str, List[str]]:
     it's not available in the builtin importlib.metadata.
     """
     pkg_to_dist = defaultdict(list)
-    for dist in importlib_metadata.distributions():
+    for dist in importlib.metadata.distributions():
         for pkg in (dist.read_text("top_level.txt") or "").split():
             pkg_to_dist[pkg].append(dist.metadata["Name"])
     return dict(pkg_to_dist)

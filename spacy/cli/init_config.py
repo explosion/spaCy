@@ -8,11 +8,11 @@ import re
 from jinja2 import Template
 
 from .. import util
-from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
+from ..language import DEFAULT_CONFIG_DISTILL_PATH, DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
 from ..util import SimpleFrozenList
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
-from ._util import string_to_list, import_code
+from ._util import string_to_list, import_code, _handle_renamed_language_codes
 
 
 ROOT = Path(__file__).parent / "templates"
@@ -43,7 +43,7 @@ class InitValues:
 def init_config_cli(
     # fmt: off
     output_file: Path = Arg(..., help="File to save the config to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
-    lang: str = Opt(InitValues.lang, "--lang", "-l", help="Two-letter code of the language to use"),
+    lang: str = Opt(InitValues.lang, "--lang", "-l", help="Code of the language to use"),
     pipeline: str = Opt(",".join(InitValues.pipeline), "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
     optimize: Optimizations = Opt(InitValues.optimize, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     gpu: bool = Opt(InitValues.gpu, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
@@ -83,6 +83,7 @@ def init_fill_config_cli(
     # fmt: off
     base_path: Path = Arg(..., help="Path to base config to fill", exists=True, dir_okay=False),
     output_file: Path = Arg("-", help="Path to output .cfg file (or - for stdout)", allow_dash=True),
+    distillation: bool = Opt(False, "--distillation", "-dt", help="Include config for distillation (with 'spacy distill')"),
     pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
     diff: bool = Opt(False, "--diff", "-D", help="Print a visual diff highlighting the changes"),
     code_path: Optional[Path] = Opt(None, "--code-path", "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
@@ -98,13 +99,20 @@ def init_fill_config_cli(
     DOCS: https://spacy.io/api/cli#init-fill-config
     """
     import_code(code_path)
-    fill_config(output_file, base_path, pretraining=pretraining, diff=diff)
+    fill_config(
+        output_file,
+        base_path,
+        distillation=distillation,
+        pretraining=pretraining,
+        diff=diff,
+    )
 
 
 def fill_config(
     output_file: Path,
     base_path: Path,
     *,
+    distillation: bool = False,
     pretraining: bool = False,
     diff: bool = False,
     silent: bool = False,
@@ -123,6 +131,9 @@ def fill_config(
     # replaced with their actual config after loading, so we have to re-add them
     sourced = util.get_sourced_components(config)
     filled["components"].update(sourced)
+    if distillation:
+        distillation_config = util.load_config(DEFAULT_CONFIG_DISTILL_PATH)
+        filled = distillation_config.merge(filled)
     if pretraining:
         validate_config_for_pretrain(filled, msg)
         pretrain_config = util.load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
@@ -158,6 +169,10 @@ def init_config(
     msg = Printer(no_print=silent)
     with TEMPLATE_PATH.open("r") as f:
         template = Template(f.read())
+
+    # Throw error for renamed language codes in v4
+    _handle_renamed_language_codes(lang)
+
     # Filter out duplicates since tok2vec and transformer are added by template
     pipeline = [pipe for pipe in pipeline if pipe not in ("tok2vec", "transformer")]
     defaults = RECOMMENDATIONS["__default__"]

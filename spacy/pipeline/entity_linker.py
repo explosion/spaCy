@@ -13,7 +13,6 @@ from ..kb import KnowledgeBase, Candidate
 from ..ml import empty_kb
 from ..tokens import Doc, Span
 from .pipe import deserialize_config
-from .legacy.entity_linker import EntityLinker_v1
 from .trainable_pipe import TrainablePipe
 from ..language import Language
 from ..vocab import Vocab
@@ -120,6 +119,12 @@ def make_entity_linker(
     """
 
     if not model.attrs.get("include_span_maker", False):
+        try:
+            from spacy_legacy.components.entity_linker import EntityLinker_v1
+        except:
+            raise ImportError(
+                "In order to use v1 of the EntityLinker, you must use spacy-legacy>=3.0.12."
+            )
         # The only difference in arguments here is that use_gold_ents and threshold aren't available.
         return EntityLinker_v1(
             nlp.vocab,
@@ -453,7 +458,11 @@ class EntityLinker(TrainablePipe):
         docs_ents: List[Ragged] = []
         docs_scores: List[Ragged] = []
         if not docs:
-            return {KNOWLEDGE_BASE_IDS: final_kb_ids, "ents": docs_ents, "scores": docs_scores}
+            return {
+                KNOWLEDGE_BASE_IDS: final_kb_ids,
+                "ents": docs_ents,
+                "scores": docs_scores,
+            }
         if isinstance(docs, Doc):
             docs = [docs]
         for doc in docs:
@@ -585,7 +594,11 @@ class EntityLinker(TrainablePipe):
                 method="predict", msg="result variables not of equal length"
             )
             raise RuntimeError(err)
-        return {KNOWLEDGE_BASE_IDS: final_kb_ids, "ents": docs_ents, "scores": docs_scores}
+        return {
+            KNOWLEDGE_BASE_IDS: final_kb_ids,
+            "ents": docs_ents,
+            "scores": docs_scores,
+        }
 
     def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT) -> None:
         """Modify a batch of documents, using pre-computed scores.

@@ -103,7 +103,7 @@ const QuickstartInstall = ({ id, title, description, children }) => {
                         </QS>
                         <QS config="example" prompt="python">
                             print([
-                            {code === 'xx'
+                            {code === 'mul'
                                 ? '(ent.text, ent.label) for ent in doc.ents'
                                 : '(w.text, w.pos_) for w in doc'}
                             ])

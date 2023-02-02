@@ -266,12 +266,12 @@ cdef class Doc:
         cdef const LexemeC* lexeme
         for word, has_space in zip(words, spaces):
             if isinstance(word, str):
-                lexeme = self.vocab.get(self.mem, word)
+                lexeme = self.vocab.get(word)
             elif isinstance(word, bytes):
                 raise ValueError(Errors.E028.format(value=word))
             else:
                 try:
-                    lexeme = self.vocab.get_by_orth(self.mem, word)
+                    lexeme = self.vocab.get_by_orth(word)
                 except TypeError:
                     raise TypeError(Errors.E1022.format(wtype=type(word)))
             self.push_back(lexeme, has_space)
@@ -1430,7 +1430,7 @@ cdef class Doc:
             end = start + attrs[i, 0]
             has_space = attrs[i, 1]
             orth_ = text[start:end]
-            lex = self.vocab.get(self.mem, orth_)
+            lex = self.vocab.get(orth_)
             self.push_back(lex, has_space)
             start = end + has_space
         self.from_array(msg["array_head"][2:], attrs[:, 2:])
@@ -1536,7 +1536,7 @@ cdef class Doc:
         assert words == reconstructed_words
 
         for word, has_space in zip(words, spaces):
-            lex = self.vocab.get(self.mem, word)
+            lex = self.vocab.get(word)
             self.push_back(lex, has_space)
 
         # Set remaining token-level attributes via Doc.from_array().

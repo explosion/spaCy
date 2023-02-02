@@ -36,6 +36,7 @@ LANGUAGES = [
     "hu",
     pytest.param("id", marks=pytest.mark.slow()),
     pytest.param("it", marks=pytest.mark.slow()),
+    pytest.param("isl", marks=pytest.mark.slow()),
     pytest.param("kn", marks=pytest.mark.slow()),
     pytest.param("lb", marks=pytest.mark.slow()),
     pytest.param("lt", marks=pytest.mark.slow()),

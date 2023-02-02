@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from typing import Optional, Any, Iterable, Dict, Callable, Sequence, List
-from .compat import Protocol, runtime_checkable
 
 from thinc.api import Optimizer, Model
 
@@ -15,6 +14,25 @@ class TrainableComponent(Protocol):
 
     def update(
         self,
+        examples: Iterable["Example"],
+        *,
+        drop: float = 0.0,
+        sgd: Optional[Optimizer] = None,
+        losses: Optional[Dict[str, float]] = None
+    ) -> Dict[str, float]:
+        ...
+
+    def finish_update(self, sgd: Optimizer) -> None:
+        ...
+
+
+@runtime_checkable
+class DistillableComponent(Protocol):
+    is_distillable: bool
+
+    def distill(
+        self,
+        teacher_pipe: Optional[TrainableComponent],
         examples: Iterable["Example"],
         *,
         drop: float = 0.0,

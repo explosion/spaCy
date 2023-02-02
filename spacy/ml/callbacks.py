@@ -23,6 +23,7 @@ DEFAULT_NVTX_ANNOTATABLE_PIPE_METHODS = [
     "update",
     "rehearse",
     "get_loss",
+    "get_teacher_student_loss",
     "initialize",
     "begin_update",
     "finish_update",

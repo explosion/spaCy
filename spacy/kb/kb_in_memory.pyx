@@ -25,7 +25,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
     """An `InMemoryLookupKB` instance stores unique identifiers for entities and their textual aliases,
     to support entity linking of named entities to real-world concepts.
 
-    DOCS: https://spacy.io/api/kb_in_memory
+    DOCS: https://spacy.io/api/inmemorylookupkb
     """
 
     def __init__(self, Vocab vocab, entity_vector_length):
