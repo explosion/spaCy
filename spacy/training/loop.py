@@ -370,6 +370,6 @@ def clean_output_dir(path: Optional[Path]) -> None:
             if subdir.exists():
                 try:
                     shutil.rmtree(str(subdir))
-                    logger.debug(f"Removed existing output directory: {subdir}")
+                    logger.debug("Removed existing output directory: %s", subdir)
                 except Exception as e:
                     raise IOError(Errors.E901.format(path=path)) from e
