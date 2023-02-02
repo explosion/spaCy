@@ -176,13 +176,16 @@ def make_spancat(
     """
     return SpanCategorizer(
         nlp.vocab,
-        suggester=suggester,
         model=model,
-        spans_key=spans_key,
-        threshold=threshold,
-        max_positive=max_positive,
+        suggester=suggester,
         name=name,
-        scorer=scorer,
+        single_label=False,
+        spans_key=spans_key,
+        negative_weight=None,
+        allow_overlap=None,
+        max_positive=max_positive,
+        threshold=threshold,
+        scorer=scorer
     )
 
 
@@ -236,14 +239,16 @@ def make_spancat_singlelabel(
     """
     return SpanCategorizer(
         nlp.vocab,
-        suggester=suggester,
         model=model,
+        suggester=suggester,
+        name=name,
+        single_label=True,
         spans_key=spans_key,
         negative_weight=negative_weight,
         allow_overlap=allow_overlap,
-        name=name,
-        scorer=scorer,
-        single_label=True,
+        max_positive=None,
+        threshold=None,
+        scorer=scorer
     )
 
 
@@ -488,7 +493,12 @@ class SpanCategorizer(TrainablePipe):
         for i, doc in enumerate(docs):
             indices_i = indices[i].dataXd
             if self.single_label:
-                allow_overlap = cast(bool, self.cfg["allow_overlap"])
+                allow_overlap = self.cfg["allow_overlap"]
+                # Interpret None as False if allow_overlap is not provided
+                if allow_overlap is None:
+                    allow_overlap = False
+                else:
+                    allow_overlap = cast(bool, self.cfg["allow_overlap"])
                 doc.spans[self.key] = self._make_span_group_singlelabel(
                     doc,
                     indices_i,
