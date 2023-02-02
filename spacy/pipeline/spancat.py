@@ -185,7 +185,7 @@ def make_spancat(
         allow_overlap=None,
         max_positive=max_positive,
         threshold=threshold,
-        scorer=scorer
+        scorer=scorer,
     )
 
 
@@ -248,7 +248,7 @@ def make_spancat_singlelabel(
         allow_overlap=allow_overlap,
         max_positive=None,
         threshold=None,
-        scorer=scorer
+        scorer=scorer,
     )
 
 
