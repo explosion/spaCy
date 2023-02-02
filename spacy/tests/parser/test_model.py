@@ -31,7 +31,7 @@ def nlp_parser():
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
-        for dep in annotations.get("deps", []):
+        for dep in annotations["deps"]:
             parser.add_label(dep)
     nlp.initialize()
 
