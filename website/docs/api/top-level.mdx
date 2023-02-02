@@ -373,6 +373,7 @@ displaCy's different data formats below.
 | -------------- | ----------------------------------------------------------------------------------------------------------- |
 | `words`        | List of dictionaries describing a word token (see structure below). ~~List[Dict[str, Any]]~~                |
 | `arcs`         | List of dictionaries describing the relations between words (see structure below). ~~List[Dict[str, Any]]~~ |
+| _Optional_     |                                                                                                             |
 | `settings`     | Dependency Visualizer options (see [here](/api/top-level#displacy_options)). ~~Dict[str, Any]~~             |
 
 <Accordion title="Words data structure">
@@ -413,6 +414,7 @@ displaCy's different data formats below.
 | `text`         | String representation of the document text. ~~str~~                                         |
 | `ents`         | List of dictionaries describing entities (see structure below). ~~List[Dict[str, Any]]~~    |
 | `title`        | Title of the visualization. ~~str~~                                                         |
+| _Optional_     |                                                                                             |
 | `settings`     | Entity Visualizer options (see [here](/api/top-level#displacy_options)). ~~Dict[str, Any]~~ |
 
 <Accordion title="Ents data structure">
@@ -422,6 +424,7 @@ displaCy's different data formats below.
 | `start`        | The index of the first token of the entity. ~~int~~ |
 | `end`          | The index of the last token of the entity. ~~int~~  |
 | `label`        | Label attached to the entity. ~~str~~               |
+| _Optional_     |                                                     |
 | `kb_id`        | `KnowledgeBase` ID. ~~str~~                         |
 | `kb_url`       | `KnowledgeBase` URL. ~~str~~                        |
 
@@ -448,6 +451,7 @@ displaCy's different data formats below.
 | `spans`        | List of dictionaries describing spans (see structure below). ~~List[Dict[str, Any]]~~     |
 | `title`        | Title of the visualization. ~~str~~                                                       |
 | `tokens`       | List of word tokens. ~~List[str]~~                                                        |
+| _Optional_     |                                                                                           |
 | `settings`     | Span Visualizer options (see [here](/api/top-level#displacy_options)). ~~Dict[str, Any]~~ |
 
 <Accordion title="Spans data structure">
@@ -459,6 +463,7 @@ displaCy's different data formats below.
 | `start_token`  | The index of the first token of the span in `tokens`. ~~int~~ |
 | `end_token`    | The index of the last token of the span in `tokens`. ~~int~~  |
 | `label`        | Label attached to the span. ~~str~~                           |
+| _Optional_     |                                                               |
 | `kb_id`        | `KnowledgeBase` ID. ~~str~~                                   |
 | `kb_url`       | `KnowledgeBase` URL. ~~str~~                                  |
 
