@@ -151,7 +151,7 @@ class registry(thinc.registry):
         module and path to the file it's defined in, the line number and the
         docstring, if available.
 
-        registry_name (str): Name of the catalogue registry
+        registry_name (str): Name of the catalogue registry.
         func_name (str): Name of the registered function.
         RETURNS (Dict[str, Optional[Union[str, int]]]): The function info.
         """
