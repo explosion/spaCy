@@ -1168,6 +1168,9 @@ class Language:
                     examples,
                 ):
                     eg.predicted = doc
+        # Only finish the update after all component updates are done. Some
+        # components may share weights (such as tok2vec) and we only want
+        # to apply weight updates after all gradients are accumulated.
         for name, proc in self.pipeline:
             if (
                 name not in exclude
