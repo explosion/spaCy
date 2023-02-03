@@ -238,7 +238,6 @@ def test_spans_span_sent(doc, doc_not_parsed):
     ],
 )
 def test_spans_span_sent_user_hooks(doc, start, end, expected_sentence):
-
     # Doc-level sents hook
     def user_hook(doc):
         return [doc[ii : ii + 2] for ii in range(0, len(doc), 2)]
@@ -668,7 +667,6 @@ def test_span_comparison(doc):
     ],
 )
 def test_span_sents(doc, start, end, expected_sentences, expected_sentences_with_hook):
-
     assert len(list(doc[start:end].sents)) == expected_sentences
 
     def user_hook(doc):

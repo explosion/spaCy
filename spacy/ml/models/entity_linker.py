@@ -105,7 +105,7 @@ def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
 
 
 @registry.misc("spacy.CandidateBatchGenerator.v1")
-def create_candidates_batch() -> Callable[
-    [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
-]:
+def create_candidates_batch() -> (
+    Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]]
+):
     return get_candidates_batch

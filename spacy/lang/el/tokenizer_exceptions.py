@@ -128,7 +128,6 @@ _other_exc = {
 _exc.update(_other_exc)
 
 for h in range(1, 12 + 1):
-
     for period in ["π.μ.", "πμ"]:
         _exc[f"{h}{period}"] = [
             {ORTH: f"{h}"},
