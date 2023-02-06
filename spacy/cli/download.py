@@ -7,7 +7,8 @@ import typer
 from ._util import app, Arg, Opt, WHEEL_SUFFIX, SDIST_SUFFIX
 from .. import about
 from ..util import is_package, get_minor_version, run_command
-from ..util import is_prerelease_version
+from ..util import is_prerelease_version, get_installed_models
+from ..util import get_package_version
 
 
 @app.command(
@@ -62,6 +63,14 @@ def download(
         model_name = model
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
+
+    # If we already have this version installed, skip downloading
+    installed = get_installed_models()
+    if model_name in installed:
+        installed_version = get_package_version(model_name)
+        if installed_version == version:
+            msg.warn(f"{model_name} v{version} already installed, skipping")
+            return
 
     filename = get_model_filename(model_name, version, sdist)
 

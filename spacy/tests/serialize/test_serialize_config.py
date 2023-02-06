@@ -6,10 +6,11 @@ import spacy
 from spacy.lang.de import German
 from spacy.lang.en import English
 from spacy.language import DEFAULT_CONFIG, DEFAULT_CONFIG_PRETRAIN_PATH
+from spacy.language import DEFAULT_CONFIG_DISTILL_PATH
 from spacy.language import Language
 from spacy.ml.models import MaxoutWindowEncoder, MultiHashEmbed
 from spacy.ml.models import build_tb_parser_model, build_Tok2Vec_model
-from spacy.schemas import ConfigSchema, ConfigSchemaPretrain
+from spacy.schemas import ConfigSchema, ConfigSchemaDistill, ConfigSchemaPretrain
 from spacy.util import load_config, load_config_from_str
 from spacy.util import load_model_from_config, registry
 
@@ -65,6 +66,60 @@ factory = "tagger"
 @architectures = "spacy.Tok2VecListener.v1"
 width = ${components.tok2vec.model.width}
 """
+
+distill_config_string = """
+[paths]
+train = null
+dev = null
+
+[corpora]
+
+[corpora.train]
+@readers = "spacy.Corpus.v1"
+path = ${paths.train}
+
+[corpora.dev]
+@readers = "spacy.Corpus.v1"
+path = ${paths.dev}
+
+[training]
+
+[training.batcher]
+@batchers = "spacy.batch_by_words.v1"
+size = 666
+
+[nlp]
+lang = "en"
+pipeline = ["tok2vec", "tagger"]
+
+[components]
+
+[components.tok2vec]
+factory = "tok2vec"
+
+[components.tok2vec.model]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 342
+depth = 4
+window_size = 1
+embed_size = 2000
+maxout_pieces = 3
+subword_features = true
+
+[components.tagger]
+factory = "tagger"
+
+[components.tagger.model]
+@architectures = "spacy.Tagger.v2"
+
+[components.tagger.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.width}
+
+[distill]
+"""
+
 
 pretrain_config_string = """
 [paths]
@@ -199,6 +254,14 @@ def test_create_nlp_from_config():
     with pytest.raises(ValueError):
         bad_cfg = {"pipeline": {"foo": "bar"}}
         load_model_from_config(Config(bad_cfg), auto_fill=True)
+
+
+def test_nlp_from_distillation_config():
+    """Test that the default distillation config validates properly"""
+    config = Config().from_str(distill_config_string)
+    distill_config = load_config(DEFAULT_CONFIG_DISTILL_PATH)
+    filled = config.merge(distill_config)
+    registry.resolve(filled["distillation"], schema=ConfigSchemaDistill)
 
 
 def test_create_nlp_from_pretraining_config():

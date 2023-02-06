@@ -48,6 +48,9 @@ PipeCallable = Callable[[Doc], Doc]
 # This is the base config will all settings (training etc.)
 DEFAULT_CONFIG_PATH = Path(__file__).parent / "default_config.cfg"
 DEFAULT_CONFIG = util.load_config(DEFAULT_CONFIG_PATH)
+# This is the base config for the [distillation] block and currently not included
+# in the main config and only added via the 'init fill-config' command
+DEFAULT_CONFIG_DISTILL_PATH = Path(__file__).parent / "default_config_distillation.cfg"
 # This is the base config for the [pretraining] block and currently not included
 # in the main config and only added via the 'init fill-config' command
 DEFAULT_CONFIG_PRETRAIN_PATH = Path(__file__).parent / "default_config_pretraining.cfg"
@@ -1059,7 +1062,7 @@ class Language:
             return losses
 
         validate_distillation_examples(examples, "Language.distill")
-        examples = _copy_examples(examples)
+        examples = _copy_examples(examples, copy_x=True, copy_y=True)
 
         if sgd is None:
             if self._optimizer is None:
@@ -1245,17 +1248,12 @@ class Language:
             component_cfg[name].setdefault("drop", drop)
             pipe_kwargs[name].setdefault("batch_size", self.batch_size)
         for name, proc in self.pipeline:
-            # ignore statements are used here because mypy ignores hasattr
-            if name not in exclude and hasattr(proc, "update"):
-                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])  # type: ignore
-            if sgd not in (None, False):
-                if (
-                    name not in exclude
-                    and isinstance(proc, ty.TrainableComponent)
-                    and proc.is_trainable
-                    and proc.model not in (True, False, None)
-                ):
-                    proc.finish_update(sgd)
+            if (
+                name not in exclude
+                and isinstance(proc, ty.TrainableComponent)
+                and proc.is_trainable
+            ):
+                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
             if name in annotates:
                 for doc, eg in zip(
                     _pipe(
@@ -1268,6 +1266,17 @@ class Language:
                     examples,
                 ):
                     eg.predicted = doc
+        # Only finish the update after all component updates are done. Some
+        # components may share weights (such as tok2vec) and we only want
+        # to apply weight updates after all gradients are accumulated.
+        for name, proc in self.pipeline:
+            if (
+                name not in exclude
+                and isinstance(proc, ty.TrainableComponent)
+                and proc.is_trainable
+            ):
+                proc.finish_update(sgd)
+
         return losses
 
     def rehearse(
@@ -2328,13 +2337,18 @@ class DisabledPipes(list):
         self[:] = []
 
 
-def _copy_examples(examples: Iterable[Example]) -> List[Example]:
+def _copy_examples(
+    examples: Iterable[Example], *, copy_x: bool = True, copy_y: bool = False
+) -> List[Example]:
     """Make a copy of a batch of examples, copying the predicted Doc as well.
     This is used in contexts where we need to take ownership of the examples
     so that they can be mutated, for instance during Language.evaluate and
     Language.update.
     """
-    return [Example(eg.x.copy(), eg.y) for eg in examples]
+    return [
+        Example(eg.x.copy() if copy_x else eg.x, eg.y.copy() if copy_y else eg.y)
+        for eg in examples
+    ]
 
 
 def _apply_pipes(

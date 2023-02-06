@@ -86,7 +86,7 @@ These are the main fixtures that are currently available:
 
 | Fixture                             | Description                                                                  |
 | ----------------------------------- | ---------------------------------------------------------------------------- |
-| `tokenizer`                         | Basic, language-independent tokenizer. Identical to the `xx` language class. |
+| `tokenizer`                         | Basic, language-independent tokenizer. Identical to the `mul` language class. |
 | `en_tokenizer`, `de_tokenizer`, ... | Creates an English, German etc. tokenizer.                                   |
 | `en_vocab`                          | Creates an instance of the English `Vocab`.                                  |
 

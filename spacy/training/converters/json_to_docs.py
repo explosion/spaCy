@@ -3,7 +3,7 @@ from ..gold_io import json_iterate, json_to_annotations
 from ..example import annotations_to_doc
 from ..example import _fix_legacy_dict_data, _parse_example_dict_data
 from ...util import load_model
-from ...lang.xx import MultiLanguage
+from ...lang.mul import MultiLanguage
 
 
 def json_to_docs(input_data, model=None, **kwargs):

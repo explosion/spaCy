@@ -3,10 +3,10 @@ from ...language import Language
 
 class MultiLanguage(Language):
     """Language class to be used for models that support multiple languages.
-    This module allows models to specify their language ID as 'xx'.
+    This module allows models to specify their language ID as 'mul'.
     """
 
-    lang = "xx"
+    lang = "mul"
 
 
 __all__ = ["MultiLanguage"]

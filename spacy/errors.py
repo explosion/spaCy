@@ -962,6 +962,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "reference and predicted docs.")
     E4004 = ("Backprop is not supported when is_train is not set.")
 
+RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}
 
 # fmt: on
 
