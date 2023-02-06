@@ -13,7 +13,6 @@ from .sentencizer import Sentencizer
 from .tagger import Tagger
 from .textcat import TextCategorizer
 from .spancat import SpanCategorizer
-from .spancat_exclusive import Exclusive_SpanCategorizer
 from .span_ruler import SpanRuler
 from .textcat_multilabel import MultiLabel_TextCategorizer
 from .tok2vec import Tok2Vec
@@ -32,7 +31,6 @@ __all__ = [
     "SentenceRecognizer",
     "Sentencizer",
     "SpanCategorizer",
-    "Exclusive_SpanCategorizer",
     "SpanRuler",
     "Tagger",
     "TextCategorizer",
