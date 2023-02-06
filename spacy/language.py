@@ -1598,7 +1598,6 @@ class Language:
             context = doc._context
             doc._context = None
             yield (doc, context)
-        return
 
     def _has_gpu_model(self, disable: Iterable[str]):
         for name, proc in self.pipeline:
