@@ -1516,6 +1516,7 @@ class Language:
         DOCS: https://spacy.io/api/language#pipe
         """
         if as_tuples:
+            warnings.warn(Warnings.W125, DeprecationWarning)
             texts = cast(Iterable[Tuple[Union[str, Doc], _AnyContext]], texts)
             docs_with_contexts = (
                 self._ensure_doc_with_context(text, context) for text, context in texts
@@ -1573,6 +1574,31 @@ class Language:
                 docs = pipe(docs)
         for doc in docs:
             yield doc
+
+    def pipe_as_tuples(
+        self,
+        texts: Iterable[Tuple[Union[str, Doc], _AnyContext]],
+        *,
+        batch_size: Optional[int] = None,
+        disable: Iterable[str] = SimpleFrozenList(),
+        component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
+        n_process: int = 1,
+    ) -> Iterator[Tuple[Doc, _AnyContext]]:
+        docs_with_contexts = (
+            self._ensure_doc_with_context(text, context) for text, context in texts
+        )
+        docs = self.pipe(
+            docs_with_contexts,
+            batch_size=batch_size,
+            disable=disable,
+            n_process=n_process,
+            component_cfg=component_cfg,
+        )
+        for doc in docs:
+            context = doc._context
+            doc._context = None
+            yield (doc, context)
+        return
 
     def _has_gpu_model(self, disable: Iterable[str]):
         for name, proc in self.pipeline:

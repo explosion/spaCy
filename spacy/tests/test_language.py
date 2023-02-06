@@ -362,6 +362,22 @@ def test_language_pipe_error_handler_custom(en_vocab, n_process):
             assert [doc.text for doc in docs] == ["TEXT 111", "TEXT 333", "TEXT 666"]
 
 
+def test_language_pipe_as_tuples():
+    nlp = English()
+    texts = [
+        ("TEXT 111", 111),
+        ("TEXT 222", 222),
+        ("TEXT 333", 333),
+        ("TEXT 342", 342),
+        ("TEXT 666", 666),
+    ]
+    with pytest.warns(DeprecationWarning):
+        docs_contexts = list(nlp.pipe(texts, as_tuples=True))
+        assert len(docs_contexts) == len(texts)
+    docs_contexts = list(nlp.pipe_as_tuples(texts))
+    assert len(docs_contexts) == len(texts)
+
+
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_error_handler_input_as_tuples(en_vocab, n_process):
     """Test the error handling of nlp.pipe with input as tuples"""
@@ -378,11 +394,11 @@ def test_language_pipe_error_handler_input_as_tuples(en_vocab, n_process):
             ("TEXT 666", 666),
         ]
         with pytest.raises(ValueError):
-            list(nlp.pipe(texts, as_tuples=True))
+            list(nlp.pipe_as_tuples(texts))
         nlp.set_error_handler(warn_error)
         logger = logging.getLogger("spacy")
         with mock.patch.object(logger, "warning") as mock_warning:
-            tuples = list(nlp.pipe(texts, as_tuples=True, n_process=n_process))
+            tuples = list(nlp.pipe_as_tuples(texts))
             # HACK/TODO? the warnings in child processes don't seem to be
             # detected by the mock logger
             if n_process == 1:

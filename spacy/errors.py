@@ -215,6 +215,9 @@ class Warnings(metaclass=ErrorsWithCodes):
     W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
             "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
     W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
+    W125 = ("As of spaCy v3.6, `nlp.pipe(as_tuples=True)` has been deprecated "
+            "in favor of `nlp.pipe_as_tuples()`. `nlp.pipe(as_tuples=True)` "
+            "will be removed in spaCy v4.0.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
