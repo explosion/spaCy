@@ -368,7 +368,7 @@ class SpanCategorizer(TrainablePipe):
         self.add_negative_label = add_negative_label
         if allow_overlap is None:
             self.cfg["allow_overlap"] = True
-        elif not allow_overlap and cast(int, max_positive) > 1:
+        elif not allow_overlap and max_positive is not None and max_positive > 1:
             self.cfg["allow_overlap"] = True
             msg.warn(
                 "'allow_overlap' can only be False when max_positive=1, "
