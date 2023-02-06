@@ -243,10 +243,10 @@ def get_third_party_dependencies(
         for func_name in func_names:
             # Try the lang-specific version and fall back
             try:
-                func_info = util.registry.find(reg_name, lang + "." + func_name)
+                func_info = util.registry.find(reg_name, lang + "." + func_name)  # type: ignore
             except RegistryError:
                 try:
-                    func_info = util.registry.find(reg_name, func_name)
+                    func_info = util.registry.find(reg_name, func_name)  # type: ignore
                 except RegistryError as regerr:
                     # lang-specific version being absent is not actually an issue
                     raise regerr from None
