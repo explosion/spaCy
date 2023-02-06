@@ -1160,28 +1160,6 @@ def compile_infix_regex(entries: Iterable[Union[str, Pattern]]) -> Pattern:
     return re.compile(expression)
 
 
-def add_lookups(default_func: Callable[[str], Any], *lookups) -> Callable[[str], Any]:
-    """Extend an attribute function with special cases. If a word is in the
-    lookups, the value is returned. Otherwise the previous function is used.
-
-    default_func (callable): The default function to execute.
-    *lookups (dict): Lookup dictionary mapping string to attribute value.
-    RETURNS (callable): Lexical attribute getter.
-    """
-    # This is implemented as functools.partial instead of a closure, to allow
-    # pickle to work.
-    return functools.partial(_get_attr_unless_lookup, default_func, lookups)
-
-
-def _get_attr_unless_lookup(
-    default_func: Callable[[str], Any], lookups: Dict[str, Any], string: str
-) -> Any:
-    for lookup in lookups:
-        if string in lookup:
-            return lookup[string]  # type: ignore[index]
-    return default_func(string)
-
-
 def update_exc(
     base_exceptions: Dict[str, List[dict]], *addition_dicts
 ) -> Dict[str, List[dict]]:

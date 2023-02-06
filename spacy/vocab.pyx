@@ -5,6 +5,7 @@ import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
 import functools
+import inspect
 
 from .lexeme cimport EMPTY_LEXEME, OOV_RANK
 from .lexeme cimport Lexeme
@@ -14,29 +15,26 @@ from .attrs cimport LANG, ORTH
 
 from .compat import copy_reg
 from .errors import Errors
-from .attrs import intify_attrs, NORM, IS_STOP
+from .attrs import intify_attrs, NORM
 from .vectors import Vectors, Mode as VectorsMode
 from .util import registry
 from .lookups import Lookups
 from . import util
 from .lang.norm_exceptions import BASE_NORMS
-from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang
+from .lang.lex_attrs import LEX_ATTRS
 
 
 def create_vocab(lang, defaults, vectors_name=None):
     # If the spacy-lookups-data package is installed, we pre-populate the lookups
     # with lexeme data, if available
     lex_attrs = {**LEX_ATTRS, **defaults.lex_attr_getters}
-    # This is messy, but it's the minimal working fix to Issue #639.
-    lex_attrs[IS_STOP] = functools.partial(is_stop, stops=defaults.stop_words)
-    # Ensure that getter can be pickled
-    lex_attrs[LANG] = functools.partial(get_lang, lang=lang)
-    lex_attrs[NORM] = util.add_lookups(
-        lex_attrs.get(NORM, LEX_ATTRS[NORM]),
-        BASE_NORMS,
-    )
+    defaults.lex_attr_data["stops"] = list(defaults.stop_words)
+    lookups = Lookups()
+    lookups.add_table("lexeme_norm", BASE_NORMS)
     return Vocab(
+        lang=lang,
         lex_attr_getters=lex_attrs,
+        lex_attr_data=defaults.lex_attr_data,
         writing_system=defaults.writing_system,
         get_noun_chunks=defaults.syntax_iterators.get("noun_chunks"),
         vectors_name=vectors_name,
@@ -52,7 +50,8 @@ cdef class Vocab:
     """
     def __init__(self, lex_attr_getters=None, strings=tuple(), lookups=None,
                  oov_prob=-20., vectors_name=None, writing_system={},
-                 get_noun_chunks=None, **deprecated_kwargs):
+                 get_noun_chunks=None, lang="", lex_attr_data=None,
+                 **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -66,9 +65,11 @@ cdef class Vocab:
             A function that yields base noun phrases used for Doc.noun_chunks.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
+        lex_attr_data = lex_attr_data if lex_attr_data is not None else {}
         if lookups in (None, True, False):
             lookups = Lookups()
         self.cfg = {'oov_prob': oov_prob}
+        self.lang = lang
         self.mem = Pool()
         self._by_orth = PreshMap()
         self.strings = StringStore()
@@ -77,6 +78,7 @@ cdef class Vocab:
             for string in strings:
                 _ = self[string]
         self.lex_attr_getters = lex_attr_getters
+        self.lex_attr_data = lex_attr_data
         self.morphology = Morphology(self.strings)
         self.vectors = Vectors(strings=self.strings, name=vectors_name)
         self.lookups = lookups
@@ -92,13 +94,6 @@ cdef class Vocab:
                 self.strings.add(s)
             self._vectors = vectors
             self._vectors.strings = self.strings
-
-    @property
-    def lang(self):
-        langfunc = None
-        if self.lex_attr_getters:
-            langfunc = self.lex_attr_getters.get(LANG, None)
-        return langfunc("_") if langfunc else ""
 
     def __len__(self):
         """The current number of lexemes stored.
@@ -183,7 +178,7 @@ cdef class Vocab:
             lex.id = OOV_RANK
         if self.lex_attr_getters is not None:
             for attr, func in self.lex_attr_getters.items():
-                value = func(string)
+                value = _get_lex_attr_value(self, func, string)
                 if isinstance(value, str):
                     value = self.strings.add(value)
                 if value is not None:
@@ -433,12 +428,23 @@ cdef class Vocab:
 
         def __set__(self, lookups):
             self._lookups = lookups
-            if lookups.has_table("lexeme_norm"):
-                self.lex_attr_getters[NORM] = util.add_lookups(
-                    self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
-                    self.lookups.get_table("lexeme_norm"),
-                )
+            self._reset_lexeme_cache()
 
+    property lex_attr_getters:
+        def __get__(self):
+            return self._lex_attr_getters
+
+        def __set__(self, lex_attr_getters):
+            self._lex_attr_getters = lex_attr_getters
+            self._reset_lexeme_cache()
+
+    property lex_attr_data:
+        def __get__(self):
+            return self._lex_attr_data
+
+        def __set__(self, lex_attr_data):
+            self._lex_attr_data = lex_attr_data
+            self._reset_lexeme_cache()
 
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
@@ -459,6 +465,8 @@ cdef class Vocab:
             self.vectors.to_disk(path, exclude=["strings"])
         if "lookups" not in exclude:
             self.lookups.to_disk(path)
+        if "lex_attr_data" not in exclude:
+            srsly.write_msgpack(path / "lex_attr_data", self.lex_attr_data)
 
     def from_disk(self, path, *, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
@@ -471,7 +479,6 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#to_disk
         """
         path = util.ensure_path(path)
-        getters = ["strings", "vectors"]
         if "strings" not in exclude:
             self.strings.from_disk(path / "strings.json")  # TODO: add exclude?
         if "vectors" not in exclude:
@@ -479,12 +486,9 @@ cdef class Vocab:
                 self.vectors.from_disk(path, exclude=["strings"])
         if "lookups" not in exclude:
             self.lookups.from_disk(path)
-        if "lexeme_norm" in self.lookups:
-            self.lex_attr_getters[NORM] = util.add_lookups(
-                self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]), self.lookups.get_table("lexeme_norm")
-            )
-        self.length = 0
-        self._by_orth = PreshMap()
+        if "lex_attr_data" not in exclude:
+            self.lex_attr_data = srsly.read_msgpack(path / "lex_attr_data")
+        self._reset_lexeme_cache()
         return self
 
     def to_bytes(self, *, exclude=tuple()):
@@ -505,6 +509,7 @@ cdef class Vocab:
             "strings": lambda: self.strings.to_bytes(),
             "vectors": deserialize_vectors,
             "lookups": lambda: self.lookups.to_bytes(),
+            "lex_attr_data": lambda: srsly.msgpack_dumps(self.lex_attr_data)
         }
         return util.to_bytes(getters, exclude)
 
@@ -523,23 +528,26 @@ cdef class Vocab:
             else:
                 return self.vectors.from_bytes(b, exclude=["strings"])
 
+        def serialize_lex_attr_data(b):
+            self.lex_attr_data = srsly.msgpack_loads(b)
+
         setters = {
             "strings": lambda b: self.strings.from_bytes(b),
             "vectors": lambda b: serialize_vectors(b),
             "lookups": lambda b: self.lookups.from_bytes(b),
+            "lex_attr_data": lambda b: serialize_lex_attr_data(b),
         }
         util.from_bytes(bytes_data, setters, exclude)
-        if "lexeme_norm" in self.lookups:
-            self.lex_attr_getters[NORM] = util.add_lookups(
-                self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]), self.lookups.get_table("lexeme_norm")
-            )
-        self.length = 0
-        self._by_orth = PreshMap()
+        self._reset_lexeme_cache()
         return self
 
     def _reset_cache(self, keys, strings):
         # I'm not sure this made sense. Disable it for now.
         raise NotImplementedError
+
+    def _reset_lexeme_cache(self):
+        self.length = 0
+        self._by_orth = PreshMap()
 
 
 def pickle_vocab(vocab):
@@ -565,3 +573,12 @@ def unpickle_vocab(sstore, vectors, morphology, lex_attr_getters, lookups, get_n
 
 
 copy_reg.pickle(Vocab, pickle_vocab, unpickle_vocab)
+
+
+def _get_lex_attr_value(vocab, func, string):
+    if "vocab" in inspect.signature(func).parameters:
+        value = func(vocab, string)
+    else:
+        # TODO: add deprecation warning
+        value = func(string)
+    return value

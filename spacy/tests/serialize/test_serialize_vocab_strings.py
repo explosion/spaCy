@@ -6,10 +6,12 @@ from thinc.api import get_current_ops
 import spacy
 from spacy.lang.en import English
 from spacy.strings import StringStore
+from spacy.symbols import NORM
 from spacy.tokens import Doc
 from spacy.util import ensure_path, load_model
 from spacy.vectors import Vectors
 from spacy.vocab import Vocab
+from spacy.lang.lex_attrs import norm
 
 from ..util import make_tempdir
 
@@ -73,6 +75,7 @@ def test_serialize_vocab(en_vocab, text):
     new_vocab = Vocab().from_bytes(vocab_bytes)
     assert new_vocab.strings[text_hash] == text
     assert new_vocab.to_bytes(exclude=["lookups"]) == vocab_bytes
+    assert new_vocab.lex_attr_data == en_vocab.lex_attr_data
 
 
 @pytest.mark.parametrize("strings1,strings2", test_strings)
@@ -111,12 +114,13 @@ def test_serialize_vocab_roundtrip_disk(strings1, strings2):
             assert [s for s in vocab1_d.strings] == [s for s in vocab2_d.strings]
         else:
             assert [s for s in vocab1_d.strings] != [s for s in vocab2_d.strings]
+        assert vocab1_d.lex_attr_data == vocab2_d.lex_attr_data
 
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
 def test_serialize_vocab_lex_attrs_bytes(strings, lex_attr):
-    vocab1 = Vocab(strings=strings)
-    vocab2 = Vocab()
+    vocab1 = Vocab(strings=strings, lex_attr_getters={NORM: norm})
+    vocab2 = Vocab(lex_attr_getters={NORM: norm})
     vocab1[strings[0]].norm_ = lex_attr
     assert vocab1[strings[0]].norm_ == lex_attr
     assert vocab2[strings[0]].norm_ != lex_attr
@@ -134,8 +138,8 @@ def test_deserialize_vocab_seen_entries(strings, lex_attr):
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
 def test_serialize_vocab_lex_attrs_disk(strings, lex_attr):
-    vocab1 = Vocab(strings=strings)
-    vocab2 = Vocab()
+    vocab1 = Vocab(strings=strings, lex_attr_getters={NORM: norm})
+    vocab2 = Vocab(lex_attr_getters={NORM: norm})
     vocab1[strings[0]].norm_ = lex_attr
     assert vocab1[strings[0]].norm_ == lex_attr
     assert vocab2[strings[0]].norm_ != lex_attr

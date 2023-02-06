@@ -247,13 +247,9 @@ cdef class Lexeme:
             cluster_table = self.vocab.lookups.get_table("lexeme_cluster", {})
             cluster_table[self.c.orth] = x
 
-    property lang:
-        """RETURNS (uint64): Language of the parent vocabulary."""
-        def __get__(self):
-            return self.c.lang
-
-        def __set__(self, attr_t x):
-            self.c.lang = x
+    @property
+    def lang(self):
+        return self.vocab.strings[self.vocab.lang]
 
     property prob:
         """RETURNS (float): Smoothed log probability estimate of the lexeme's
@@ -316,13 +312,9 @@ cdef class Lexeme:
         def __set__(self, str x):
             self.c.suffix = self.vocab.strings.add(x)
 
-    property lang_:
-        """RETURNS (str): Language of the parent vocabulary."""
-        def __get__(self):
-            return self.vocab.strings[self.c.lang]
-
-        def __set__(self, str x):
-            self.c.lang = self.vocab.strings.add(x)
+    @property
+    def lang_(self):
+        return self.vocab.lang
 
     property flags:
         """RETURNS (uint64): Container of the lexeme's binary flags."""

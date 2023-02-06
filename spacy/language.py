@@ -74,6 +74,7 @@ class BaseDefaults:
     url_match: Optional[Callable] = URL_MATCH
     syntax_iterators: Dict[str, Callable] = {}
     lex_attr_getters: Dict[int, Callable[[str], Any]] = {}
+    lex_attr_data: Dict[str, Any] = {}
     stop_words: Set[str] = set()
     writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
 

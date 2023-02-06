@@ -23,21 +23,21 @@ _tlds = set(
 )
 
 
-def is_punct(text: str) -> bool:
+def is_punct(vocab, text: str) -> bool:
     for char in text:
         if not unicodedata.category(char).startswith("P"):
             return False
     return True
 
 
-def is_ascii(text: str) -> bool:
+def is_ascii(vocab, text: str) -> bool:
     for char in text:
         if ord(char) >= 128:
             return False
     return True
 
 
-def like_num(text: str) -> bool:
+def like_num(vocab, text: str) -> bool:
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
     # can be overwritten by lang with list of number words
@@ -51,31 +51,31 @@ def like_num(text: str) -> bool:
     return False
 
 
-def is_bracket(text: str) -> bool:
+def is_bracket(vocab, text: str) -> bool:
     brackets = ("(", ")", "[", "]", "{", "}", "<", ">")
     return text in brackets
 
 
-def is_quote(text: str) -> bool:
+def is_quote(vocab, text: str) -> bool:
     # fmt: off
     quotes = ('"', "'", "`", "«", "»", "‘", "’", "‚", "‛", "“", "”", "„", "‟", "‹", "›", "❮", "❯", "''", "``")
     # fmt: on
     return text in quotes
 
 
-def is_left_punct(text: str) -> bool:
+def is_left_punct(vocab, text: str) -> bool:
     # fmt: off
     left_punct = ("(", "[", "{", "<", '"', "'", "«", "‘", "‚", "‛", "“", "„", "‟", "‹", "❮", "``")
     # fmt: on
     return text in left_punct
 
 
-def is_right_punct(text: str) -> bool:
+def is_right_punct(vocab, text: str) -> bool:
     right_punct = (")", "]", "}", ">", '"', "'", "»", "’", "”", "›", "❯", "''")
     return text in right_punct
 
 
-def is_currency(text: str) -> bool:
+def is_currency(vocab, text: str) -> bool:
     # can be overwritten by lang with list of currency words, e.g. dollar, euro
     for char in text:
         if unicodedata.category(char) != "Sc":
@@ -83,11 +83,11 @@ def is_currency(text: str) -> bool:
     return True
 
 
-def like_email(text: str) -> bool:
+def like_email(vocab, text: str) -> bool:
     return bool(_like_email(text))
 
 
-def like_url(text: str) -> bool:
+def like_url(vocab, text: str) -> bool:
     # We're looking for things that function in text like URLs. So, valid URL
     # or not, anything they say http:// is going to be good.
     if text.startswith("http://") or text.startswith("https://"):
@@ -115,7 +115,7 @@ def like_url(text: str) -> bool:
     return False
 
 
-def word_shape(text: str) -> str:
+def word_shape(vocab, text: str) -> str:
     if len(text) >= 100:
         return "LONG"
     shape = []
@@ -142,55 +142,54 @@ def word_shape(text: str) -> str:
     return "".join(shape)
 
 
-def lower(string: str) -> str:
+def lower(vocab, string: str) -> str:
     return string.lower()
 
 
-def prefix(string: str) -> str:
+def prefix(vocab, string: str) -> str:
     return string[0]
 
 
-def suffix(string: str) -> str:
+def suffix(vocab, string: str) -> str:
     return string[-3:]
 
 
-def is_alpha(string: str) -> bool:
+def is_alpha(vocab, string: str) -> bool:
     return string.isalpha()
 
 
-def is_digit(string: str) -> bool:
+def is_digit(vocab, string: str) -> bool:
     return string.isdigit()
 
 
-def is_lower(string: str) -> bool:
+def is_lower(vocab, string: str) -> bool:
     return string.islower()
 
 
-def is_space(string: str) -> bool:
+def is_space(vocab, string: str) -> bool:
     return string.isspace()
 
 
-def is_title(string: str) -> bool:
+def is_title(vocab, string: str) -> bool:
     return string.istitle()
 
 
-def is_upper(string: str) -> bool:
+def is_upper(vocab, string: str) -> bool:
     return string.isupper()
 
 
-def is_stop(string: str, stops: Set[str] = set()) -> bool:
+def is_stop(vocab, string: str) -> bool:
+    stops = vocab.lex_attr_data.get("stops", [])
     return string.lower() in stops
 
 
-def get_lang(text: str, lang: str = "") -> str:
-    # This function is partially applied so lang code can be passed in
-    # automatically while still allowing pickling
-    return lang
+def norm(vocab, string: str) -> str:
+    return vocab.lookups.get_table("lexeme_norm", {}).get(string, string.lower())
 
 
 LEX_ATTRS = {
     attrs.LOWER: lower,
-    attrs.NORM: lower,
+    attrs.NORM: norm,
     attrs.PREFIX: prefix,
     attrs.SUFFIX: suffix,
     attrs.IS_ALPHA: is_alpha,

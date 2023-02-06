@@ -9,8 +9,8 @@ from spacy.lang.lex_attrs import like_url, word_shape
 
 @pytest.mark.parametrize("word", ["the"])
 @pytest.mark.issue(1889)
-def test_issue1889(word):
-    assert is_stop(word, STOP_WORDS) == is_stop(word.upper(), STOP_WORDS)
+def test_issue1889(en_vocab, word):
+    assert is_stop(en_vocab, word) == is_stop(en_vocab, word.upper())
 
 
 @pytest.mark.parametrize("text", ["dog"])
@@ -59,13 +59,13 @@ def test_attrs_ent_iob_intify():
 
 
 @pytest.mark.parametrize("text,match", [(",", True), (" ", False), ("a", False)])
-def test_lex_attrs_is_punct(text, match):
-    assert is_punct(text) == match
+def test_lex_attrs_is_punct(en_vocab, text, match):
+    assert is_punct(en_vocab, text) == match
 
 
 @pytest.mark.parametrize("text,match", [(",", True), ("£", False), ("♥", False)])
-def test_lex_attrs_is_ascii(text, match):
-    assert is_ascii(text) == match
+def test_lex_attrs_is_ascii(en_vocab, text, match):
+    assert is_ascii(en_vocab, text) == match
 
 
 @pytest.mark.parametrize(
@@ -82,8 +82,8 @@ def test_lex_attrs_is_ascii(text, match):
         ("dog", False),
     ],
 )
-def test_lex_attrs_is_currency(text, match):
-    assert is_currency(text) == match
+def test_lex_attrs_is_currency(en_vocab, text, match):
+    assert is_currency(en_vocab, text) == match
 
 
 @pytest.mark.parametrize(
@@ -102,8 +102,8 @@ def test_lex_attrs_is_currency(text, match):
         ("hello.There", False),
     ],
 )
-def test_lex_attrs_like_url(text, match):
-    assert like_url(text) == match
+def test_lex_attrs_like_url(en_vocab, text, match):
+    assert like_url(en_vocab, text) == match
 
 
 @pytest.mark.parametrize(
@@ -118,5 +118,5 @@ def test_lex_attrs_like_url(text, match):
         ("``,-", "``,-"),
     ],
 )
-def test_lex_attrs_word_shape(text, shape):
-    assert word_shape(text) == shape
+def test_lex_attrs_word_shape(en_vocab, text, shape):
+    assert word_shape(en_vocab, text) == shape

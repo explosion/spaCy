@@ -11,8 +11,6 @@ from .parts_of_speech cimport univ_pos_t
 cdef struct LexemeC:
     flags_t flags
 
-    attr_t lang
-
     attr_t id
     attr_t length
 

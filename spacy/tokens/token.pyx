@@ -288,7 +288,7 @@ cdef class Token:
         """RETURNS (uint64): ID of the language of the parent document's
             vocabulary.
         """
-        return self.c.lex.lang
+        return self.doc.lang
 
     @property
     def idx(self):
@@ -844,7 +844,7 @@ cdef class Token:
         """RETURNS (str): Language of the parent document's vocabulary,
             e.g. 'en'.
         """
-        return self.vocab.strings[self.c.lex.lang]
+        return self.doc.lang_
 
     property lemma_:
         """RETURNS (str): The token lemma, i.e. the base form of the word,
