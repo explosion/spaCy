@@ -33,6 +33,7 @@ def create_vocab(lang, defaults, vectors_name=None):
     lookups.add_table("lexeme_norm", BASE_NORMS)
     return Vocab(
         lang=lang,
+        lookups=lookups,
         lex_attr_getters=lex_attrs,
         lex_attr_data=defaults.lex_attr_data,
         writing_system=defaults.writing_system,
