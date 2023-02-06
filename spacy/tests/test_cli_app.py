@@ -9,7 +9,7 @@ import spacy
 from spacy.cli._util import app
 from spacy.language import Language
 from spacy.tokens import DocBin
-from .util import make_tempdir
+from .util import make_tempdir, normalize_whitespace
 
 
 def test_convert_auto():
@@ -247,8 +247,8 @@ def test_benchmark_accuracy_alias():
     # Verify that the `evaluate` alias works correctly.
     result_benchmark = CliRunner().invoke(app, ["benchmark", "accuracy", "--help"])
     result_evaluate = CliRunner().invoke(app, ["evaluate", "--help"])
-    assert result_benchmark.stdout == result_evaluate.stdout.replace(
-        "spacy evaluate", "spacy benchmark accuracy"
+    assert normalize_whitespace(result_benchmark.stdout) == normalize_whitespace(
+        result_evaluate.stdout.replace("spacy evaluate", "spacy benchmark accuracy")
     )
 
 
