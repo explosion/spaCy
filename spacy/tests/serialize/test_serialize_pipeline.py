@@ -181,7 +181,7 @@ def test_issue4042_bug2():
 @pytest.mark.issue(4725)
 def test_issue4725_1():
     """Ensure the pickling of the NER goes well"""
-    vocab = Vocab(vectors_name="test_vocab_add_vector")
+    vocab = Vocab()
     nlp = English(vocab=vocab)
     config = {
         "update_with_oracle_cut_size": 111,
