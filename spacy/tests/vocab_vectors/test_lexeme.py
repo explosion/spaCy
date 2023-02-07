@@ -33,7 +33,7 @@ def test_vocab_lexeme_prob(word1, word2, prob1, prob2):
     assert "lexeme_prob" not in vocab.lookups.tables
     # table is added when a prob is set
     vocab[word1].prob = -1
-    assert "lexeme_prob" not in vocab.lookups.tables
+    assert "lexeme_prob" in vocab.lookups.tables
     assert word2 not in vocab.lookups.get_table("lexeme_prob")
     vocab[word2].prob = prob2
     assert vocab[word1].prob > vocab[word2].prob
