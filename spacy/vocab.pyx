@@ -556,18 +556,20 @@ def pickle_vocab(vocab):
     vectors = vocab.vectors
     morph = vocab.morphology
     lex_attr_getters = srsly.pickle_dumps(vocab.lex_attr_getters)
+    lex_attr_data = vocab.lex_attr_data
     lookups = vocab.lookups
     get_noun_chunks = vocab.get_noun_chunks
     return (unpickle_vocab,
-            (sstore, vectors, morph, lex_attr_getters, lookups, get_noun_chunks))
+            (sstore, vectors, morph, lex_attr_getters, lex_attr_data, lookups, get_noun_chunks))
 
 
-def unpickle_vocab(sstore, vectors, morphology, lex_attr_getters, lookups, get_noun_chunks):
+def unpickle_vocab(sstore, vectors, morphology, lex_attr_getters, lex_attr_data, lookups, get_noun_chunks):
     cdef Vocab vocab = Vocab()
     vocab.vectors = vectors
     vocab.strings = sstore
     vocab.morphology = morphology
     vocab.lex_attr_getters = srsly.pickle_loads(lex_attr_getters)
+    vocab.lex_attr_data = lex_attr_data
     vocab.lookups = lookups
     vocab.get_noun_chunks = get_noun_chunks
     return vocab

@@ -192,8 +192,10 @@ def test_pickle_vocab(strings, lex_attr):
     ops = get_current_ops()
     vectors = Vectors(data=ops.xp.zeros((10, 10)), mode="floret", hash_count=1)
     vocab.vectors = vectors
+    vocab.lex_attr_data = {"a": 1}
     vocab[strings[0]].norm_ = lex_attr
     vocab_pickled = pickle.dumps(vocab)
     vocab_unpickled = pickle.loads(vocab_pickled)
     assert vocab.to_bytes() == vocab_unpickled.to_bytes()
     assert vocab_unpickled.vectors.mode == "floret"
+    assert vocab_unpickled.lex_attr_data == vocab.lex_attr_data
