@@ -579,9 +579,8 @@ copy_reg.pickle(Vocab, pickle_vocab, unpickle_vocab)
 
 
 def _get_lex_attr_value(vocab, func, string):
-    if "vocab" in inspect.signature(func).parameters:
-        value = func(vocab, string)
-    else:
-        # TODO: add deprecation warning
-        value = func(string)
-    return value
+    try:
+        return func(vocab, string)
+    except TypeError:
+        # TODO: some kind of setting or deprecation warning
+        return func(string)
