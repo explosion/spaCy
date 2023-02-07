@@ -18,7 +18,7 @@ from ..errors import Errors, Warnings
 from ..schemas import ConfigSchemaTraining
 from ..util import registry, load_model_from_config, resolve_dot_names, logger
 from ..util import load_model, ensure_path, get_sourced_components
-from ..util import OOV_RANK, DEFAULT_OOV_PROB
+from ..util import OOV_RANK
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
@@ -120,11 +120,6 @@ def init_vocab(
                 continue
             lexeme = nlp.vocab[attrs["orth"]]
             lexeme.set_attrs(**attrs)
-        if len(nlp.vocab):
-            oov_prob = min(lex.prob for lex in nlp.vocab) - 1
-        else:
-            oov_prob = DEFAULT_OOV_PROB
-        nlp.vocab.cfg.update({"oov_prob": oov_prob})
         logger.info(f"Added {len(nlp.vocab)} lexical entries to the vocab")
     logger.info("Created vocabulary")
     if vectors is not None:

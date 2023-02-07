@@ -33,7 +33,6 @@ cdef class Vocab:
     cdef public object get_noun_chunks
     cdef readonly int length
     cdef public object lex_attr_getters
-    cdef public object cfg
 
     cdef const LexemeC* get(self, str string) except NULL
     cdef const LexemeC* get_by_orth(self, attr_t orth) except NULL

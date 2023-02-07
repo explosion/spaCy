@@ -51,8 +51,8 @@ cdef class Vocab:
     DOCS: https://spacy.io/api/vocab
     """
     def __init__(self, lex_attr_getters=None, strings=tuple(), lookups=None,
-                 oov_prob=-20., vectors_name=None, writing_system={},
-                 get_noun_chunks=None, **deprecated_kwargs):
+                 vectors_name=None, writing_system={}, get_noun_chunks=None,
+                 **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -60,7 +60,6 @@ cdef class Vocab:
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
         lookups (Lookups): Container for large lookup tables and dictionaries.
-        oov_prob (float): Default OOV probability.
         vectors_name (str): Optional name to identify the vectors table.
         get_noun_chunks (Optional[Callable[[Union[Doc, Span], Iterator[Tuple[int, int, int]]]]]):
             A function that yields base noun phrases used for Doc.noun_chunks.
@@ -68,7 +67,6 @@ cdef class Vocab:
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         if lookups in (None, True, False):
             lookups = Lookups()
-        self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_orth = PreshMap()
         self.strings = StringStore()

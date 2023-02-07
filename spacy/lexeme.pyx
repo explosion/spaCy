@@ -17,6 +17,7 @@ from .attrs cimport IS_CURRENCY
 
 from .attrs import intify_attrs
 from .errors import Errors, Warnings
+from .util import DEFAULT_OOV_PROB
 
 
 OOV_RANK = 0xffffffffffffffff # UINT64_MAX
@@ -244,7 +245,10 @@ cdef class Lexeme:
             return cluster_table.get(self.c.orth, 0)
 
         def __set__(self, int x):
-            cluster_table = self.vocab.lookups.get_table("lexeme_cluster", {})
+            if "lexeme_cluster" in self.vocab.lookups:
+                cluster_table = self.vocab.lookups.get_table("lexeme_cluster")
+            else:
+                cluster_table = self.vocab.lookups.add_table("lexeme_cluster")
             cluster_table[self.c.orth] = x
 
     property lang:
@@ -261,11 +265,14 @@ cdef class Lexeme:
         def __get__(self):
             prob_table = self.vocab.lookups.get_table("lexeme_prob", {})
             settings_table = self.vocab.lookups.get_table("lexeme_settings", {})
-            default_oov_prob = settings_table.get("oov_prob", -20.0)
+            default_oov_prob = settings_table.get("oov_prob", DEFAULT_OOV_PROB)
             return prob_table.get(self.c.orth, default_oov_prob)
 
         def __set__(self, float x):
-            prob_table = self.vocab.lookups.get_table("lexeme_prob", {})
+            if "lexeme_prob" in self.vocab.lookups:
+                prob_table = self.vocab.lookups.get_table("lexeme_prob")
+            else:
+                prob_table = self.vocab.lookups.add_table("lexeme_prob")
             prob_table[self.c.orth] = x
 
     property lower_:

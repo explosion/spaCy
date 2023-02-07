@@ -27,7 +27,6 @@ class Vocab:
         lex_attr_getters: Optional[Dict[str, Callable[[str], Any]]] = ...,
         strings: Optional[Union[List[str], StringStore]] = ...,
         lookups: Optional[Lookups] = ...,
-        oov_prob: float = ...,
         vectors_name: Optional[str] = ...,
         writing_system: Dict[str, Any] = ...,
         get_noun_chunks: Optional[Callable[[Union[Doc, Span]], Iterator[Span]]] = ...,

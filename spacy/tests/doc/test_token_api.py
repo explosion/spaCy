@@ -5,6 +5,7 @@ from spacy.symbols import VERB
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
 from spacy.training import Example
+from spacy.util import DEFAULT_OOV_PROB
 
 
 @pytest.fixture
@@ -48,12 +49,16 @@ def test_doc_token_api_flags(en_tokenizer):
     # TODO: Test more of these, esp. if a bug is found
 
 
-@pytest.mark.parametrize("text", ["Give it back! He pleaded."])
-def test_doc_token_api_prob_inherited_from_vocab(en_tokenizer, text):
-    word = text.split()[0]
-    en_tokenizer.vocab[word].prob = -1
-    tokens = en_tokenizer(text)
-    assert tokens[0].prob != 0
+@pytest.mark.parametrize("words", [["a", "b"]])
+def test_doc_token_api_prob_inherited_from_vocab(words):
+    vocab = Vocab()
+    # setting a prob adds lexeme_prob and sets the value
+    vocab[words[0]].prob = -1
+    assert vocab.lookups.get_table("lexeme_prob")[words[0]] == -1
+    # vocab probs are reflected in tokens
+    tokens = Doc(vocab, words=words)
+    assert tokens[0].prob == -1
+    assert tokens[1].prob == DEFAULT_OOV_PROB
 
 
 @pytest.mark.parametrize("text", ["one two"])
