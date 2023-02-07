@@ -11,7 +11,8 @@ from .vectors import Vectors
 from pathlib import Path
 
 def create_vocab(
-    lang: Optional[str], defaults: Any,
+    lang: Optional[str],
+    defaults: Any,
 ) -> Vocab: ...
 
 class Vocab:
