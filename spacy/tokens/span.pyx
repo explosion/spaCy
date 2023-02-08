@@ -666,11 +666,11 @@ cdef class Span:
         else:
             return self.doc[root]
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
+    def char_span(self, int start_idx, int end_idx, *, label=0, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
         """Create a `Span` object from the slice `span.text[start : end]`.
 
-        start (int): The index of the first character of the span.
-        end (int): The index of the first character after the span.
+        start_idx (int): The index of the first character of the span.
+        end_idx (int): The index of the first character after the span.
         label (Union[int, str]): A label to attach to the Span, e.g. for
             named entities.
         kb_id (Union[int, str]):  An ID from a KB to capture the meaning of a named entity.
