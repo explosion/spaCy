@@ -202,7 +202,6 @@ def convert_vectors(
     *,
     truncate: int,
     prune: int,
-    name: Optional[str] = None,
     mode: str = VectorsMode.default,
 ) -> None:
     vectors_loc = ensure_path(vectors_loc)
@@ -241,12 +240,6 @@ def convert_vectors(
                     strings=nlp.vocab.strings, data=vectors_data, keys=vector_keys
                 )
                 nlp.vocab.deduplicate_vectors()
-    if name is None:
-        # TODO: Is this correct? Does this matter?
-        nlp.vocab.vectors.name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"
-    else:
-        nlp.vocab.vectors.name = name
-    nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
     if prune >= 1 and mode != VectorsMode.floret:
         nlp.vocab.prune_vectors(prune)
 
