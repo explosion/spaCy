@@ -161,8 +161,8 @@ def test_make_spangroup_multilabel(max_positive, nr_results):
 
 
 @pytest.mark.parametrize(
-    "threshold,allow_overlap,nr_results", [
-        (0.05, True, 3), (0.05, False, 1), (0.5, True, 2), (0.5, False, 1)]
+    "threshold,allow_overlap,nr_results",
+    [(0.05, True, 3), (0.05, False, 1), (0.5, True, 2), (0.5, False, 1)],
 )
 def test_make_spangroup_singlelabel(threshold, allow_overlap, nr_results):
     fix_random_seed(0)
