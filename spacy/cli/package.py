@@ -65,7 +65,7 @@ def package_cli(
         version=version,
         create_meta=create_meta,
         create_sdist="sdist" in build and "none" not in build,
-        create_wheel="sdist" in build and "none" not in build,
+        create_wheel="wheel" in build and "none" not in build,
         force=force,
         silent=False,
     )
