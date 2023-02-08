@@ -52,7 +52,6 @@ cdef class Vectors:
     DOCS: https://spacy.io/api/vectors
     """
     cdef public object strings
-    cdef public object name
     cdef readonly object mode
     cdef public object data
     cdef public object key2row
@@ -64,14 +63,13 @@ cdef class Vectors:
     cdef readonly unicode bow
     cdef readonly unicode eow
 
-    def __init__(self, *, strings=None, shape=None, data=None, keys=None, name=None, mode=Mode.default, minn=0, maxn=0, hash_count=1, hash_seed=0, bow="<", eow=">"):
+    def __init__(self, *, strings=None, shape=None, data=None, keys=None, mode=Mode.default, minn=0, maxn=0, hash_count=1, hash_seed=0, bow="<", eow=">"):
         """Create a new vector store.
 
         strings (StringStore): The string store.
         shape (tuple): Size of the table, as (# entries, # columns)
         data (numpy.ndarray or cupy.ndarray): The vector data.
         keys (iterable): A sequence of keys, aligned with the data.
-        name (str): A name to identify the vectors table.
         mode (str): Vectors mode: "default" or "floret" (default: "default").
         minn (int): The floret char ngram minn (default: 0).
         maxn (int): The floret char ngram maxn (default: 0).
@@ -85,7 +83,6 @@ cdef class Vectors:
         self.strings = strings
         if self.strings is None:
             self.strings = StringStore()
-        self.name = name
         if mode not in Mode.values():
             raise ValueError(
                 Errors.E202.format(
