@@ -134,10 +134,8 @@ cdef class Span:
             else:
                 return True
 
-        cdef SpanC* span_c = self.span_c()
-        cdef SpanC* other_span_c = other.span_c()
-        self_tuple = (span_c.start_char, span_c.end_char, span_c.label, span_c.kb_id, self.id, self.doc)
-        other_tuple = (other_span_c.start_char, other_span_c.end_char, other_span_c.label, other_span_c.kb_id, other.id, other.doc)
+        self_tuple = self._cmp_tuple()
+        other_tuple = other._cmp_tuple()
         # <
         if op == 0:
             return self_tuple < other_tuple
@@ -158,8 +156,20 @@ cdef class Span:
             return self_tuple >= other_tuple
 
     def __hash__(self):
+        return hash(self._cmp_tuple())
+
+    def _cmp_tuple(self):
         cdef SpanC* span_c = self.span_c()
-        return hash((self.doc, span_c.start_char, span_c.end_char, span_c.label, span_c.kb_id, span_c.id))
+        return (
+            span_c.start_char,
+            span_c.end_char,
+            span_c.start,
+            span_c.end,
+            span_c.label,
+            span_c.kb_id,
+            span_c.id,
+            self.doc,
+        )
 
     def __len__(self):
         """Get the number of tokens in the span.
@@ -656,7 +666,7 @@ cdef class Span:
         else:
             return self.doc[root]
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, id=0, alignment_mode="strict", span_id=0):
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
         """Create a `Span` object from the slice `span.text[start : end]`.
 
         start (int): The index of the first character of the span.
@@ -666,7 +676,6 @@ cdef class Span:
         kb_id (Union[int, str]):  An ID from a KB to capture the meaning of a named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
             the span.
-        id (Union[int, str]): Unused.
         alignment_mode (str): How character indices are aligned to token
             boundaries. Options: "strict" (character indices must be aligned
             with token boundaries), "contract" (span of all tokens completely

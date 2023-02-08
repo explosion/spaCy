@@ -174,8 +174,7 @@ class Language:
         if not isinstance(vocab, Vocab) and vocab is not True:
             raise ValueError(Errors.E918.format(vocab=vocab, vocab_type=type(Vocab)))
         if vocab is True:
-            vectors_name = meta.get("vectors", {}).get("name")
-            vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)
+            vocab = create_vocab(self.lang, self.Defaults)
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
@@ -229,7 +228,6 @@ class Language:
             "width": self.vocab.vectors_length,
             "vectors": len(self.vocab.vectors),
             "keys": self.vocab.vectors.n_keys,
-            "name": self.vocab.vectors.name,
             "mode": self.vocab.vectors.mode,
         }
         self._meta["labels"] = dict(self.pipe_labels)
@@ -2197,9 +2195,6 @@ class Language:
             if path.exists():
                 data = srsly.read_json(path)
                 self.meta.update(data)
-                # self.meta always overrides meta["vectors"] with the metadata
-                # from self.vocab.vectors, so set the name directly
-                self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
         def deserialize_vocab(path: Path) -> None:
             if path.exists():
@@ -2268,9 +2263,6 @@ class Language:
         def deserialize_meta(b):
             data = srsly.json_loads(b)
             self.meta.update(data)
-            # self.meta always overrides meta["vectors"] with the metadata
-            # from self.vocab.vectors, so set the name directly
-            self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
         deserializers: Dict[str, Callable[[bytes], Any]] = {}
         deserializers["config.cfg"] = lambda b: self.config.from_bytes(

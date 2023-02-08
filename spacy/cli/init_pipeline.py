@@ -22,7 +22,6 @@ from ._util import import_code, setup_gpu, _handle_renamed_language_codes
     prune=Arg("--prune", "-p", help="Optional number of vectors to prune to"),
     truncate=Arg("--truncate", "-t", help="Optional number of vectors to truncate to when reading in vectors file"),
     mode=Arg("--mode", "-m", help="Vectors mode: default or floret"),
-    name=Arg("--name", "-n", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
     verbose=Arg("--verbose", "-V", help="Display more information for debugging purposes"),
     jsonl_loc=Arg("--lexemes-jsonl", "-j", help="Location of JSONL-formatted attributes file"),
     # fmt: on
@@ -34,7 +33,6 @@ def init_vectors_cli(
     prune: int = -1,
     truncate: int = 0,
     mode: Literal["default", "floret"] = "default",
-    name: Optional[str] = None,
     verbose: bool = False,
     jsonl_loc: Optional[Path] = None,
 ):
@@ -56,7 +54,6 @@ def init_vectors_cli(
         vectors_loc,
         truncate=truncate,
         prune=prune,
-        name=name,
         mode=mode,
     )
     msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")
