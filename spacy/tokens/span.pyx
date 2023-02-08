@@ -134,10 +134,8 @@ cdef class Span:
             else:
                 return True
 
-        cdef SpanC* span_c = self.span_c()
-        cdef SpanC* other_span_c = other.span_c()
-        self_tuple = (span_c.start_char, span_c.end_char, span_c.label, span_c.kb_id, self.id, self.doc)
-        other_tuple = (other_span_c.start_char, other_span_c.end_char, other_span_c.label, other_span_c.kb_id, other.id, other.doc)
+        self_tuple = self._cmp_tuple()
+        other_tuple = other._cmp_tuple()
         # <
         if op == 0:
             return self_tuple < other_tuple
@@ -158,8 +156,20 @@ cdef class Span:
             return self_tuple >= other_tuple
 
     def __hash__(self):
+        return hash(self._cmp_tuple())
+
+    def _cmp_tuple(self):
         cdef SpanC* span_c = self.span_c()
-        return hash((self.doc, span_c.start_char, span_c.end_char, span_c.label, span_c.kb_id, span_c.id))
+        return (
+            span_c.start_char,
+            span_c.end_char,
+            span_c.start,
+            span_c.end,
+            span_c.label,
+            span_c.kb_id,
+            span_c.id,
+            self.doc,
+        )
 
     def __len__(self):
         """Get the number of tokens in the span.
