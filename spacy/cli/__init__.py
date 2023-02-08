@@ -1,10 +1,8 @@
-from wasabi import msg
-
-from ._util import app, setup_cli  # noqa: F401
+from ._util import cli, setup_cli  # noqa: F401
 
 # These are the actual functions, NOT the wrapped CLI commands. The CLI commands
 # are registered automatically and won't have to be imported here.
-from .benchmark_speed import benchmark_speed_cli  # noqa: F401
+from .benchmark_speed import benchmark_speed  # noqa: F401
 from .download import download  # noqa: F401
 from .info import info  # noqa: F401
 from .package import package  # noqa: F401
@@ -25,18 +23,7 @@ from .validate import validate  # noqa: F401
 from .project.clone import project_clone  # noqa: F401
 from .project.assets import project_assets  # noqa: F401
 from .project.run import project_run  # noqa: F401
-from .project.dvc import project_update_dvc  # noqa: F401
 from .project.push import project_push  # noqa: F401
 from .project.pull import project_pull  # noqa: F401
 from .project.document import project_document  # noqa: F401
 from .find_threshold import find_threshold  # noqa: F401
-
-
-@app.command("link", no_args_is_help=True, deprecated=True, hidden=True)
-def link(*args, **kwargs):
-    """As of spaCy v3.0, symlinks like "en" are not supported anymore. You can load trained
-    pipeline packages using their full names or from a directory path."""
-    msg.warn(
-        "As of spaCy v3.0, model symlinks are not supported anymore. You can load trained "
-        "pipeline packages using their full names or from a directory path."
-    )

@@ -1,4 +1,4 @@
-from typing import Optional, Union, Any, Dict, List, Tuple, cast
+from typing import Optional, Union, Any, Dict, List, Tuple, Literal, cast
 import shutil
 from pathlib import Path
 from wasabi import Printer, MarkdownRenderer, get_raw_input
@@ -8,26 +8,38 @@ from catalogue import RegistryError
 import srsly
 import sys
 import re
+from radicli import Arg, ExistingDirPath, ExistingFilePath
 
-from ._util import app, Arg, Opt, string_to_list, WHEEL_SUFFIX, SDIST_SUFFIX
+from ._util import cli, convert_path_list, WHEEL_SUFFIX, SDIST_SUFFIX
 from ..schemas import validate, ModelMetaSchema
 from .. import util
 from .. import about
 
 
-@app.command("package")
-def package_cli(
+@cli.command(
+    "package",
     # fmt: off
-    input_dir: Path = Arg(..., help="Directory with pipeline data", exists=True, file_okay=False),
-    output_dir: Path = Arg(..., help="Output parent directory", exists=True, file_okay=False),
-    code_paths: str = Opt("", "--code", "-c", help="Comma-separated paths to Python file with additional code (registered functions) to be included in the package"),
-    meta_path: Optional[Path] = Opt(None, "--meta-path", "--meta", "-m", help="Path to meta.json", exists=True, dir_okay=False),
-    create_meta: bool = Opt(False, "--create-meta", "-C", help="Create meta.json, even if one exists"),
-    name: Optional[str] = Opt(None, "--name", "-n", help="Package name to override meta"),
-    version: Optional[str] = Opt(None, "--version", "-v", help="Package version to override meta"),
-    build: str = Opt("sdist", "--build", "-b", help="Comma-separated formats to build: sdist and/or wheel, or none."),
-    force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing data in output directory"),
+    input_dir=Arg(help="Directory with pipeline data"),
+    output_dir=Arg(help="Output parent directory"),
+    code_paths=Arg("--code", "-c", help="Comma-separated paths to Python file with additional code (registered functions) to be included in the package", converter=convert_path_list),
+    meta_path=Arg("--meta", "-m", help="Path to meta.json"),
+    create_meta=Arg("--create-meta", "-C", help="Create meta.json, even if one exists"),
+    name=Arg("--name", "-n", help="Package name to override meta"),
+    version=Arg("--version", "-v", help="Package version to override meta"),
+    build=Arg("--build", "-b", help="Artifact to build. Can be set multiple times, 'sdist', 'wheel' or 'none'"),
+    force=Arg("--force", "-F", help="Force overwriting existing data in output directory"),
     # fmt: on
+)
+def package_cli(
+    input_dir: ExistingDirPath,
+    output_dir: ExistingDirPath,
+    code_paths: List[Path] = [],
+    meta_path: Optional[ExistingFilePath] = None,
+    create_meta: bool = False,
+    name: Optional[str] = None,
+    version: Optional[str] = None,
+    build: List[Literal["sdist", "wheel", "none"]] = ["sdist"],
+    force: bool = False,
 ):
     """
     Generate an installable Python package for a pipeline. Includes binary data,
@@ -44,8 +56,6 @@ def package_cli(
 
     DOCS: https://spacy.io/api/cli#package
     """
-    create_sdist, create_wheel = get_build_formats(string_to_list(build))
-    code_paths = [Path(p.strip()) for p in string_to_list(code_paths)]
     package(
         input_dir,
         output_dir,
@@ -54,8 +64,8 @@ def package_cli(
         name=name,
         version=version,
         create_meta=create_meta,
-        create_sdist=create_sdist,
-        create_wheel=create_wheel,
+        create_sdist="sdist" in build and "none" not in build,
+        create_wheel="sdist" in build and "none" not in build,
         force=force,
         silent=False,
     )

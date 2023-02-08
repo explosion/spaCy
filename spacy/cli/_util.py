@@ -6,15 +6,13 @@ from pathlib import Path
 from wasabi import msg, Printer
 import srsly
 import hashlib
-import typer
-from click import NoSuchOption
-from click.parser import split_arg_string
-from typer.main import get_command
+import shlex
 from contextlib import contextmanager
 from thinc.api import Config, ConfigValidationError, require_gpu
 from thinc.util import gpu_is_available
 from configparser import InterpolationError
 import os
+import radicli
 
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
@@ -37,6 +35,8 @@ HELP = """spaCy Command-line Interface
 
 DOCS: https://spacy.io/api/cli
 """
+
+# TODO: need to find a way to inject these now
 PROJECT_HELP = f"""Command-line interface for spaCy projects and templates.
 You'd typically start by cloning a project template to a local directory and
 fetching its assets like datasets etc. See the project's {PROJECT_FILE} for the
@@ -49,29 +49,14 @@ and custom model implementations.
 BENCHMARK_HELP = """Commands for benchmarking pipelines."""
 INIT_HELP = """Commands for initializing configs and pipeline packages."""
 
-# Wrappers for Typer's annotations. Initially created to set defaults and to
-# keep the names short, but not needed at the moment.
-Arg = typer.Argument
-Opt = typer.Option
-
-app = typer.Typer(name=NAME, help=HELP)
-benchmark_cli = typer.Typer(name="benchmark", help=BENCHMARK_HELP, no_args_is_help=True)
-project_cli = typer.Typer(name="project", help=PROJECT_HELP, no_args_is_help=True)
-debug_cli = typer.Typer(name="debug", help=DEBUG_HELP, no_args_is_help=True)
-init_cli = typer.Typer(name="init", help=INIT_HELP, no_args_is_help=True)
-
-app.add_typer(project_cli)
-app.add_typer(debug_cli)
-app.add_typer(benchmark_cli)
-app.add_typer(init_cli)
+# CLI
+cli = radicli.Radicli(prog=COMMAND, help=HELP)
 
 
 def setup_cli() -> None:
     # Make sure the entry-point for CLI runs, so that they get imported.
     registry.cli.get_all()
-    # Ensure that the help messages always display the correct prompt
-    command = get_command(app)
-    command(prog_name=COMMAND)
+    cli.run()
 
 
 def parse_config_overrides(
@@ -106,7 +91,7 @@ def _parse_overrides(args: List[str], is_cli: bool = False) -> Dict[str, Any]:
             opt = opt.replace("--", "")
             if "." not in opt:
                 if is_cli:
-                    raise NoSuchOption(orig_opt)
+                    raise radicli.CliParseError(f"unrecognized argument: {orig_opt}")
                 else:
                     msg.fail(f"{err}: can't override top-level sections", exits=1)
             if "=" in opt:  # we have --opt=value
@@ -510,7 +495,7 @@ def get_git_version(
     """
     try:
         ret = run_command("git --version", capture=True)
-    except:
+    except Exception:
         raise RuntimeError(error)
     stdout = ret.stdout.strip()
     if not stdout or not stdout.startswith("git version"):
@@ -580,6 +565,18 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
     return result
 
 
+def convert_string_list(value: str) -> List[str]:
+    return string_to_list(value)
+
+
+def convert_int_list(value: str) -> List[int]:
+    return string_to_list(value, intify=True)
+
+
+def convert_path_list(value: str) -> List[Path]:
+    return [Path(p) for p in string_to_list(value)]
+
+
 def setup_gpu(use_gpu: int, silent=None) -> None:
     """Configure the GPU and log info."""
     if silent is None:
@@ -629,3 +626,20 @@ def _format_number(number: Union[int, float], ndigits: int = 2) -> str:
         return f"{number:.{ndigits}f}"
     else:
         return str(number)
+
+
+def split_arg_string(string: str) -> List[str]:
+    # Adapted from: https://github.com/pallets/click/blob/8b48450d5d63c747600e069d4c3e2274f41c8360/src/click/parser.py#L125
+    lex = shlex.shlex(string, posix=True)
+    lex.whitespace_split = True
+    lex.commenters = ""
+    out = []
+    try:
+        for token in lex:
+            out.append(token)
+    except ValueError:
+        # Raised when end-of-string is reached in an invalid state. Use
+        # the partial token as-is. The quote or escape character is in
+        # lex.state, not lex.token.
+        out.append(lex.token)
+    return out

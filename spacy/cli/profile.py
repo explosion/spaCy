@@ -7,23 +7,25 @@ import pstats
 import sys
 import itertools
 from wasabi import msg, Printer
-import typer
+from radicli import Arg, ExistingPathOrDash
 
-from ._util import app, debug_cli, Arg, Opt, NAME
+from ._util import cli
 from ..language import Language
 from ..util import load_model
 
 
-@debug_cli.command("profile")
-@app.command("profile", hidden=True)
-def profile_cli(
+@cli.subcommand(
+    "debug",
+    "profile",
     # fmt: off
-    ctx: typer.Context,  # This is only used to read current calling context
-    model: str = Arg(..., help="Trained pipeline to load"),
-    inputs: Optional[Path] = Arg(None, help="Location of input file. '-' for stdin.", exists=True, allow_dash=True),
-    n_texts: int = Opt(10000, "--n-texts", "-n", help="Maximum number of texts to use if available"),
+    model=Arg(help="Trained pipeline to load"),
+    inputs=Arg(help="Location of input file. '-' for stdin."),
+    n_texts=Arg("--n-texts", "-n", help="Maximum number of texts to use if available"),
     # fmt: on
-):
+)
+def profile(
+    model: str, inputs: Optional[ExistingPathOrDash] = None, n_texts: int = 10000
+) -> None:
     """
     Profile which functions take the most time in a spaCy pipeline.
     Input should be formatted as one JSON object per line with a key "text".
@@ -32,16 +34,6 @@ def profile_cli(
 
     DOCS: https://spacy.io/api/cli#debug-profile
     """
-    if ctx.parent.command.name == NAME:  # type: ignore[union-attr]    # called as top-level command
-        msg.warn(
-            "The profile command is now available via the 'debug profile' "
-            "subcommand. You can run python -m spacy debug --help for an "
-            "overview of the other available debugging commands."
-        )
-    profile(model, inputs=inputs, n_texts=n_texts)
-
-
-def profile(model: str, inputs: Optional[Path] = None, n_texts: int = 10000) -> None:
     if inputs is not None:
         texts = _read_inputs(inputs, msg)
         texts = list(itertools.islice(texts, n_texts))

@@ -1,19 +1,25 @@
 from pathlib import Path
 from wasabi import msg
+from radicli import Arg, ExistingDirPath
+
 from .remote_storage import RemoteStorage
 from .remote_storage import get_content_hash, get_command_hash
-from .._util import load_project_config
-from .._util import project_cli, Arg, logger
+from .._util import cli, load_project_config, logger
 
 
-@project_cli.command("push")
-def project_push_cli(
+@cli.subcommand(
+    "project",
+    "push",
     # fmt: off
-    remote: str = Arg("default", help="Name or path of remote storage"),
-    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
+    remote=Arg(help="Name or path of remote storage"),
+    project_dir=Arg(help="Location of project directory. Defaults to current working directory."),
     # fmt: on
+)
+def project_push_cli(
+    remote: str = "default", project_dir: ExistingDirPath = Path.cwd()
 ):
-    """Persist outputs to a remote storage. You can alias remotes in your
+    """
+    Persist outputs to a remote storage. You can alias remotes in your
     project.yml by mapping them to storage paths. A storage can be anything that
     the smart-open library can upload to, e.g. AWS, Google Cloud Storage, SSH,
     local directories etc.

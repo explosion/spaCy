@@ -1,14 +1,12 @@
 import tqdm
 import srsly
-
 from itertools import chain
 from pathlib import Path
 from typing import Optional, List, Iterable, cast, Union
-
 from wasabi import msg
+from radicli import Arg, ExistingPath, ExistingFilePath
 
-from ._util import app, Arg, Opt, setup_gpu, import_code, walk_directory
-
+from ._util import cli, setup_gpu, import_code, walk_directory
 from ..tokens import Doc, DocBin
 from ..vocab import Vocab
 from ..util import ensure_path, load_model
@@ -37,49 +35,30 @@ force_msg = (
 DocOrStrStream = Union[Iterable[str], Iterable[Doc]]
 
 
-def _stream_docbin(path: Path, vocab: Vocab) -> Iterable[Doc]:
-    """
-    Stream Doc objects from DocBin.
-    """
-    docbin = DocBin().from_disk(path)
-    for doc in docbin.get_docs(vocab):
-        yield doc
-
-
-def _stream_jsonl(path: Path, field: str) -> Iterable[str]:
-    """
-    Stream "text" field from JSONL. If the field "text" is
-    not found it raises error.
-    """
-    for entry in srsly.read_jsonl(path):
-        if field not in entry:
-            msg.fail(f"{path} does not contain the required '{field}' field.", exits=1)
-        else:
-            yield entry[field]
-
-
-def _stream_texts(paths: Iterable[Path]) -> Iterable[str]:
-    """
-    Yields strings from text files in paths.
-    """
-    for path in paths:
-        with open(path, "r") as fin:
-            text = fin.read()
-            yield text
-
-
-@app.command("apply")
-def apply_cli(
+@cli.command(
+    "apply",
     # fmt: off
-    model: str = Arg(..., help="Model name or path"),
-    data_path: Path = Arg(..., help=path_help, exists=True),
-    output_file: Path = Arg(..., help=out_help, dir_okay=False),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help=code_help),
-    text_key: str = Opt("text", "--text-key", "-tk", help="Key containing text string for JSONL"),
-    force_overwrite: bool = Opt(False, "--force", "-F", help="Force overwriting the output file"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU."),
-    batch_size: int = Opt(1, "--batch-size", "-b", help="Batch size."),
-    n_process: int = Opt(1, "--n-process", "-n", help="number of processors to use.")
+    model=Arg(help="Model name or path"),
+    data_path=Arg(help=path_help),
+    output_file=Arg(help=out_help),
+    code_path=Arg("--code", "-c", help=code_help),
+    text_key=Arg("--text-key", "-tk", help="Key containing text string for JSONL"),
+    force_overwrite=Arg("--force", "-F", help="Force overwriting the output file"),
+    use_gpu=Arg("--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    batch_size=Arg("--batch-size", "-b", help="Batch size"),
+    n_process=Arg("--n-process", "-n", help="Number of processors to use"),
+    # fmt: on
+)
+def apply_cli(
+    model: str,
+    data_path: ExistingPath,
+    output_file: Path,
+    code_path: Optional[ExistingFilePath] = None,
+    text_key: str = "text",
+    force_overwrite: bool = False,
+    use_gpu: int = -1,
+    batch_size: int = 1,
+    n_process: int = 1,
 ):
     """
     Apply a trained pipeline to documents to get predictions.
@@ -122,7 +101,6 @@ def apply(
         )
         return
     nlp = load_model(model)
-    msg.good(f"Loaded model {model}")
     vocab = nlp.vocab
     streams: List[DocOrStrStream] = []
     text_files = []
@@ -141,3 +119,32 @@ def apply(
     if output_file.suffix == "":
         output_file = output_file.with_suffix(".spacy")
     docbin.to_disk(output_file)
+
+
+def _stream_docbin(path: Path, vocab: Vocab) -> Iterable[Doc]:
+    """
+    Stream Doc objects from DocBin.
+    """
+    docbin = DocBin().from_disk(path)
+    for doc in docbin.get_docs(vocab):
+        yield doc
+
+
+def _stream_jsonl(path: Path, field: str) -> Iterable[str]:
+    """
+    Stream "text" field from JSONL. If the field "text" is
+    not found it raises error.
+    """
+    for entry in srsly.read_jsonl(path):
+        if field not in entry:
+            msg.fail(f"{path} does not contain the required '{field}' field.", exits=1)
+        else:
+            yield entry[field]
+
+
+def _stream_texts(paths: Iterable[Path]) -> Iterable[str]:
+    """Yields strings from text files in paths."""
+    for path in paths:
+        with open(path, "r") as fin:
+            text = fin.read()
+            yield text

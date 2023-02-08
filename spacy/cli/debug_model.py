@@ -1,41 +1,51 @@
-from typing import Dict, Any, Optional
-from pathlib import Path
+from typing import Dict, Any, Optional, List
 import itertools
-
 from spacy.training import Example
 from spacy.util import resolve_dot_names
 from wasabi import msg
 from thinc.api import fix_random_seed, set_dropout_rate
 from thinc.api import Model, data_validation, set_gpu_allocator
-import typer
+from radicli import Arg, ExistingFilePathOrDash
 
-from ._util import Arg, Opt, debug_cli, show_validation_error
-from ._util import parse_config_overrides, string_to_list, setup_gpu
+from ._util import cli, show_validation_error
+from ._util import parse_config_overrides, convert_int_list, setup_gpu
 from ..schemas import ConfigSchemaTraining
 from ..util import registry
 from .. import util
 
 
-@debug_cli.command(
+@cli.subcommand_with_extra(
+    "debug",
     "model",
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    # fmt: off
+    config_path=Arg(help="Path to config file",),
+    component=Arg(help="Name of the pipeline component of which the model should be analyzed"),
+    layers=Arg(help="Comma-separated names of layer IDs to print", converter=convert_int_list),
+    dimensions=Arg("--dimensions", "-DIM", help="Show dimensions"),
+    parameters=Arg("--parameters", "-PAR", help="Show parameters"),
+    gradients=Arg("--gradients", "-GRAD", help="Show gradients"),
+    attributes=Arg("--attributes", "-ATTR", help="Show attributes"),
+    P0=Arg("--print-step0", "-P0", help="Print model before training"),
+    P1=Arg("--print-step1", "-P1", help="Print model after initialization"),
+    P2=Arg("--print-step2", "-P2", help="Print model after training"),
+    P3=Arg("--print-step3", "-P3", help="Print final predictions"),
+    use_gpu=Arg("--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    # fmt: on
 )
 def debug_model_cli(
-    # fmt: off
-    ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
-    component: str = Arg(..., help="Name of the pipeline component of which the model should be analysed"),
-    layers: str = Opt("", "--layers", "-l", help="Comma-separated names of layer IDs to print"),
-    dimensions: bool = Opt(False, "--dimensions", "-DIM", help="Show dimensions"),
-    parameters: bool = Opt(False, "--parameters", "-PAR", help="Show parameters"),
-    gradients: bool = Opt(False, "--gradients", "-GRAD", help="Show gradients"),
-    attributes: bool = Opt(False, "--attributes", "-ATTR", help="Show attributes"),
-    P0: bool = Opt(False, "--print-step0", "-P0", help="Print model before training"),
-    P1: bool = Opt(False, "--print-step1", "-P1", help="Print model after initialization"),
-    P2: bool = Opt(False, "--print-step2", "-P2", help="Print model after training"),
-    P3: bool = Opt(False, "--print-step3", "-P3", help="Print final predictions"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
-    # fmt: on
+    config_path: ExistingFilePathOrDash,
+    component: str,
+    layers: List[int] = [],
+    dimensions: bool = False,
+    parameters: bool = False,
+    gradients: bool = False,
+    attributes: bool = False,
+    P0: bool = False,
+    P1: bool = False,
+    P2: bool = False,
+    P3: bool = False,
+    use_gpu: int = -1,
+    _extra: List[str] = [],
 ):
     """
     Analyze a Thinc model implementation. Includes checks for internal structure
@@ -44,7 +54,6 @@ def debug_model_cli(
     DOCS: https://spacy.io/api/cli#debug-model
     """
     setup_gpu(use_gpu)
-    layers = string_to_list(layers, intify=True)
     print_settings = {
         "dimensions": dimensions,
         "parameters": parameters,
@@ -56,7 +65,7 @@ def debug_model_cli(
         "print_after_training": P2,
         "print_prediction": P3,
     }
-    config_overrides = parse_config_overrides(ctx.args)
+    config_overrides = parse_config_overrides(_extra)
     with show_validation_error(config_path):
         raw_config = util.load_config(
             config_path, overrides=config_overrides, interpolate=False

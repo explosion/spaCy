@@ -3,10 +3,11 @@ from pathlib import Path
 from wasabi import msg
 import subprocess
 import re
+from radicli import Arg
 
 from ... import about
 from ...util import ensure_path
-from .._util import project_cli, Arg, Opt, COMMAND, PROJECT_FILE
+from .._util import cli, COMMAND, PROJECT_FILE
 from .._util import git_checkout, get_git_version, git_repo_branch_exists
 
 DEFAULT_REPO = about.__projects__
@@ -14,15 +15,23 @@ DEFAULT_PROJECTS_BRANCH = about.__projects_branch__
 DEFAULT_BRANCHES = ["main", "master"]
 
 
-@project_cli.command("clone")
-def project_clone_cli(
+@cli.subcommand(
+    "project",
+    "clone",
     # fmt: off
-    name: str = Arg(..., help="The name of the template to clone"),
-    dest: Optional[Path] = Arg(None, help="Where to clone the project. Defaults to current working directory", exists=False),
-    repo: str = Opt(DEFAULT_REPO, "--repo", "-r", help="The repository to clone from"),
-    branch: Optional[str] = Opt(None, "--branch", "-b", help=f"The branch to clone from. If not provided, will attempt {', '.join(DEFAULT_BRANCHES)}"),
-    sparse_checkout: bool = Opt(False, "--sparse", "-S", help="Use sparse Git checkout to only check out and clone the files needed. Requires Git v22.2+.")
+    name=Arg(help="The name of the template to clone"),
+    dest=Arg(help="Where to clone the project. Defaults to current working directory"),
+    repo=Arg("--repo", "-r", help="The repository to clone from"),
+    branch=Arg("--branch", "-b", help=f"The branch to clone from. If not provided, will attempt {', '.join(DEFAULT_BRANCHES)}"),
+    sparse_checkout=Arg("--sparse", "-S", help="Use sparse Git checkout to only check out and clone the files needed. Requires Git v22.2+"),
     # fmt: on
+)
+def project_clone_cli(
+    name: str,
+    dest: Optional[Path] = None,
+    repo: str = DEFAULT_REPO,
+    branch: Optional[str] = None,
+    sparse_checkout: bool = False,
 ):
     """Clone a project template from a repository. Calls into "git" and will
     only download the files from the given subdirectory. The GitHub repo

@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Mapping, Optional, Any, Union
+from typing import Callable, Iterable, Mapping, Optional, Any, Union, Literal
 from enum import Enum
 from pathlib import Path
 from wasabi import Printer
@@ -6,8 +6,9 @@ import srsly
 import re
 import sys
 import itertools
+from radicli import Arg, ExistingFilePath, ExistingPathOrDash, ExistingDirPathOrDash
 
-from ._util import app, Arg, Opt, _handle_renamed_language_codes, walk_directory
+from ._util import cli, _handle_renamed_language_codes, walk_directory
 from ..training import docs_to_json
 from ..tokens import Doc, DocBin
 from ..training.converters import iob_to_docs, conll_ner_to_docs, json_to_docs
@@ -27,8 +28,8 @@ CONVERTERS: Mapping[str, Callable[..., Iterable[Doc]]] = {
     "iob": iob_to_docs,
     "json": json_to_docs,
 }
-
 AUTO = "auto"
+ConvertersType = Literal["auto", "conllubio", "conllu", "conll", "ner", "iob", "json"]
 
 
 # File types that can be written to stdout
@@ -40,22 +41,36 @@ class FileTypes(str, Enum):
     spacy = "spacy"
 
 
-@app.command("convert")
-def convert_cli(
+@cli.command(
+    "convert",
     # fmt: off
-    input_path: str = Arg(..., help="Input file or directory", exists=True),
-    output_dir: Path = Arg("-", help="Output directory. '-' for stdout.", allow_dash=True, exists=True),
-    file_type: FileTypes = Opt("spacy", "--file-type", "-t", help="Type of data to produce"),
-    n_sents: int = Opt(1, "--n-sents", "-n", help="Number of sentences per doc (0 to disable)"),
-    seg_sents: bool = Opt(False, "--seg-sents", "-s", help="Segment sentences (for -c ner)"),
-    model: Optional[str] = Opt(None, "--model", "--base", "-b", help="Trained spaCy pipeline for sentence segmentation to use as base (for --seg-sents)"),
-    morphology: bool = Opt(False, "--morphology", "-m", help="Enable appending morphology to tags"),
-    merge_subtokens: bool = Opt(False, "--merge-subtokens", "-T", help="Merge CoNLL-U subtokens"),
-    converter: str = Opt(AUTO, "--converter", "-c", help=f"Converter: {tuple(CONVERTERS.keys())}"),
-    ner_map: Optional[Path] = Opt(None, "--ner-map", "-nm", help="NER tag mapping (as JSON-encoded dict of entity types)", exists=True),
-    lang: Optional[str] = Opt(None, "--lang", "-l", help="Language (if tokenizer required)"),
-    concatenate: bool = Opt(None, "--concatenate", "-C", help="Concatenate output to a single file"),
+    input_path=Arg(help="Input file or directory"),
+    output_dir=Arg(help="Output directory. '-' for stdout."),
+    file_type=Arg("--file-type", "-t", help="Type of data to produce"),
+    n_sents=Arg("--n-sents", "-n", help="Number of sentences per doc (0 to disable)"),
+    seg_sents=Arg("--seg-sents", "-s", help="Segment sentences (for -c ner)"),
+    model=Arg("--model", "-b", help="Trained spaCy pipeline for sentence segmentation to use as base (for --seg-sents)"),
+    morphology=Arg("--morphology", "-m", help="Enable appending morphology to tags"),
+    merge_subtokens=Arg("--merge-subtokens", "-T", help="Merge CoNLL-U subtokens"),
+    converter=Arg("--converter", "-c", help=f"Converter to use"),
+    ner_map=Arg("--ner-map", "-nm", help="NER tag mapping (as JSON-encoded dict of entity types)"),
+    lang=Arg("--lang", "-l", help="Language (if tokenizer required)"),
+    concatenate=Arg("--concatenate", "-C", help="Concatenate output to a single file"),
     # fmt: on
+)
+def convert_cli(
+    input_path: ExistingPathOrDash,
+    output_dir: ExistingDirPathOrDash = "-",
+    file_type: Literal["json", "spacy"] = "spacy",
+    n_sents: int = 1,
+    seg_sents: bool = False,
+    model: Optional[str] = None,
+    morphology: bool = False,
+    merge_subtokens: bool = False,
+    converter: ConvertersType = AUTO,
+    ner_map: Optional[ExistingFilePath] = None,
+    lang: Optional[str] = None,
+    concatenate: bool = False,
 ):
     """
     Convert files into json or DocBin format for training. The resulting .spacy
@@ -69,15 +84,14 @@ def convert_cli(
     DOCS: https://spacy.io/api/cli#convert
     """
     input_path = Path(input_path)
-    output_dir: Union[str, Path] = "-" if output_dir == Path("-") else output_dir
     silent = output_dir == "-"
     msg = Printer(no_print=silent)
     converter = _get_converter(msg, converter, input_path)
-    verify_cli_args(msg, input_path, output_dir, file_type.value, converter, ner_map)
+    verify_cli_args(msg, input_path, output_dir, file_type, converter, ner_map)
     convert(
         input_path,
         output_dir,
-        file_type=file_type.value,
+        file_type=file_type,
         n_sents=n_sents,
         seg_sents=seg_sents,
         model=model,

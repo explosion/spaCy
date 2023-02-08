@@ -1,33 +1,42 @@
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any
 from wasabi import Printer
 from pathlib import Path
 import re
 import srsly
 from thinc.api import fix_random_seed
+from radicli import Arg, ExistingPath, ExistingDirPath, ExistingFilePath
 
 from ..training import Corpus
 from ..tokens import Doc
-from ._util import app, Arg, Opt, setup_gpu, import_code, benchmark_cli
-from ..scorer import Scorer
+from ._util import cli, setup_gpu, import_code
 from .. import util
 from .. import displacy
 
-
-@benchmark_cli.command(
-    "accuracy",
-)
-@app.command("evaluate")
-def evaluate_cli(
+args = dict(
     # fmt: off
-    model: str = Arg(..., help="Model name or path"),
-    data_path: Path = Arg(..., help="Location of binary evaluation data in .spacy format", exists=True),
-    output: Optional[Path] = Opt(None, "--output", "-o", help="Output JSON file for metrics", dir_okay=False),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
-    gold_preproc: bool = Opt(False, "--gold-preproc", "-G", help="Use gold preprocessing"),
-    displacy_path: Optional[Path] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML", exists=True, file_okay=False),
-    displacy_limit: int = Opt(25, "--displacy-limit", "-dl", help="Limit of parses to render as HTML"),
+    model=Arg(help="Model name or path"),
+    data_path=Arg(help="Location of binary evaluation data in .spacy format"),
+    output=Arg("--output", "-o", help="Output JSON file for metrics"),
+    code_path=Arg("--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    use_gpu=Arg("--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    gold_preproc=Arg("--gold-preproc", "-G", help="Use gold preprocessing"),
+    displacy_path=Arg("--displacy-path", "-dp", help="Directory to output rendered parses as HTML"),
+    displacy_limit=Arg("--displacy-limit", "-dl", help="Limit of parses to render as HTML"),
     # fmt: on
+)
+
+
+@cli.subcommand("benchmark", "accuracy", **args)
+@cli.command("evaluate", **args)
+def evaluate_cli(
+    model: str,
+    data_path: ExistingPath,
+    output: Optional[ExistingFilePath] = None,
+    code_path: Optional[ExistingFilePath] = None,
+    use_gpu: int = -1,
+    gold_preproc: bool = False,
+    displacy_path: Optional[ExistingDirPath] = None,
+    displacy_limit: int = 25,
 ):
     """
     Evaluate a trained pipeline. Expects a loadable spaCy pipeline and evaluation

@@ -1,13 +1,12 @@
 from typing import Optional, List, Dict, Sequence, Any, Iterable, Tuple
 import os.path
 from pathlib import Path
-
 import pkg_resources
 from wasabi import msg
 from wasabi.util import locale_escape
 import sys
 import srsly
-import typer
+from radicli import Arg, ExistingDirPath
 
 from ... import about
 from ...git_info import GIT_VERSION
@@ -15,21 +14,27 @@ from ...util import working_dir, run_command, split_command, is_cwd, join_comman
 from ...util import SimpleFrozenList, is_minor_version_match, ENV_VARS
 from ...util import check_bool_env_var, SimpleFrozenDict
 from .._util import PROJECT_FILE, PROJECT_LOCK, load_project_config, get_hash
-from .._util import get_checksum, project_cli, Arg, Opt, COMMAND, parse_config_overrides
+from .._util import cli, get_checksum, COMMAND, parse_config_overrides
 
 
-@project_cli.command(
-    "run", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+@cli.subcommand_with_extra(
+    "project",
+    "run",
+    # fmt: off
+    subcommand=Arg(help=f"Name of command defined in the {PROJECT_FILE}"),
+    project_dir=Arg(help="Location of project directory. Defaults to current working directory."),
+    force=Arg("--force", "-F", help="Force re-running steps, even if nothing changed"),
+    dry=Arg("--dry", "-D", help="Perform a dry run and don't execute scripts"),
+    show_help=Arg("--help", help="Show help message and available subcommands"),
+    # fmt: on
 )
 def project_run_cli(
-    # fmt: off
-    ctx: typer.Context,  # This is only used to read additional arguments
-    subcommand: str = Arg(None, help=f"Name of command defined in the {PROJECT_FILE}"),
-    project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
-    force: bool = Opt(False, "--force", "-F", help="Force re-running steps, even if nothing changed"),
-    dry: bool = Opt(False, "--dry", "-D", help="Perform a dry run and don't execute scripts"),
-    show_help: bool = Opt(False, "--help", help="Show help message and available subcommands")
-    # fmt: on
+    subcommand: Optional[str] = None,
+    project_dir: ExistingDirPath = Path.cwd(),
+    force: bool = False,
+    dry: bool = False,
+    show_help: bool = False,
+    _extra: List[str] = [],
 ):
     """Run a named command or workflow defined in the project.yml. If a workflow
     name is specified, all commands in the workflow are run, in order. If
@@ -41,7 +46,7 @@ def project_run_cli(
     if show_help or not subcommand:
         print_run_help(project_dir, subcommand)
     else:
-        overrides = parse_config_overrides(ctx.args)
+        overrides = parse_config_overrides(_extra)
         project_run(project_dir, subcommand, overrides=overrides, force=force, dry=dry)
 
 

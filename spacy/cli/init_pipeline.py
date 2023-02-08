@@ -1,30 +1,42 @@
-from typing import Optional
+from typing import Optional, Literal, List
 import logging
 from pathlib import Path
 from wasabi import msg
-import typer
 import srsly
+from radicli import Arg, ExistingPath, ExistingFilePathOrDash, ExistingFilePath
 
 from .. import util
 from ..training.initialize import init_nlp, convert_vectors
 from ..language import Language
-from ._util import init_cli, Arg, Opt, parse_config_overrides, show_validation_error
+from ._util import cli, parse_config_overrides, show_validation_error
 from ._util import import_code, setup_gpu, _handle_renamed_language_codes
 
 
-@init_cli.command("vectors")
-def init_vectors_cli(
+@cli.subcommand(
+    "init",
+    "vectors",
     # fmt: off
-    lang: str = Arg(..., help="The language of the nlp object to create"),
-    vectors_loc: Path = Arg(..., help="Vectors file in Word2Vec format", exists=True),
-    output_dir: Path = Arg(..., help="Pipeline output directory"),
-    prune: int = Opt(-1, "--prune", "-p", help="Optional number of vectors to prune to"),
-    truncate: int = Opt(0, "--truncate", "-t", help="Optional number of vectors to truncate to when reading in vectors file"),
-    mode: str = Opt("default", "--mode", "-m", help="Vectors mode: default or floret"),
-    name: Optional[str] = Opt(None, "--name", "-n", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
-    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
-    jsonl_loc: Optional[Path] = Opt(None, "--lexemes-jsonl", "-j", help="Location of JSONL-formatted attributes file", hidden=True),
+    lang=Arg(help="The language of the nlp object to create"),
+    vectors_loc=Arg(help="Vectors file in Word2Vec format"),
+    output_dir=Arg(help="Pipeline output directory"),
+    prune=Arg("--prune", "-p", help="Optional number of vectors to prune to"),
+    truncate=Arg("--truncate", "-t", help="Optional number of vectors to truncate to when reading in vectors file"),
+    mode=Arg("--mode", "-m", help="Vectors mode: default or floret"),
+    name=Arg("--name", "-n", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
+    verbose=Arg("--verbose", "-V", help="Display more information for debugging purposes"),
+    jsonl_loc=Arg("--lexemes-jsonl", "-j", help="Location of JSONL-formatted attributes file"),
     # fmt: on
+)
+def init_vectors_cli(
+    lang: str,
+    vectors_loc: ExistingPath,
+    output_dir: Path,
+    prune: int = -1,
+    truncate: int = 0,
+    mode: Literal["default", "floret"] = "default",
+    name: Optional[str] = None,
+    verbose: bool = False,
+    jsonl_loc: Optional[Path] = None,
 ):
     """Convert word vectors for use with spaCy. Will export an nlp object that
     you can use in the [initialize] block of your config to initialize
@@ -66,23 +78,28 @@ def update_lexemes(nlp: Language, jsonl_loc: Path) -> None:
         lexeme.set_attrs(**attrs)
 
 
-@init_cli.command(
+@cli.subcommand_with_extra(
+    "init",
     "nlp",
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
-    hidden=True,
+    # fmt: off
+    config_path=Arg(help="Path to config file"),
+    output_path=Arg(help="Output directory for the prepared data"),
+    code_path=Arg("--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    verbose=Arg("--verbose", "-V", help="Display more information for debugging purposes"),
+    use_gpu=Arg("--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    # fmt: on
 )
 def init_pipeline_cli(
-    # fmt: off
-    ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
-    output_path: Path = Arg(..., help="Output directory for the prepared data"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
-    # fmt: on
+    config_path: ExistingFilePathOrDash,
+    output_path: Path,
+    code_path: Optional[ExistingFilePath] = None,
+    verbose: bool = False,
+    use_gpu: int = -1,
+    _extra: List[str] = [],
 ):
+    """Initialize a pipeline."""
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
-    overrides = parse_config_overrides(ctx.args)
+    overrides = parse_config_overrides(_extra)
     import_code(code_path)
     setup_gpu(use_gpu)
     with show_validation_error(config_path):
@@ -93,19 +110,24 @@ def init_pipeline_cli(
     msg.good(f"Saved initialized pipeline to {output_path}")
 
 
-@init_cli.command(
+@cli.subcommand_with_extra(
+    "init",
     "labels",
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    # fmt: off
+    config_path=Arg(help="Path to config file"),
+    output_path=Arg(help="Output directory for the labels"),
+    code_path=Arg("--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    verbose=Arg("--verbose", "-V", help="Display more information for debugging purposes"),
+    use_gpu=Arg("--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    # fmt: on
 )
 def init_labels_cli(
-    # fmt: off
-    ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
-    output_path: Path = Arg(..., help="Output directory for the labels"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
-    # fmt: on
+    config_path: ExistingFilePathOrDash,
+    output_path: Path,
+    code_path: Optional[ExistingFilePath] = None,
+    verbose: bool = False,
+    use_gpu: int = -1,
+    _extra: List[str] = [],
 ):
     """Generate JSON files for the labels in the data. This helps speed up the
     training process, since spaCy won't have to preprocess the data to
@@ -113,7 +135,7 @@ def init_labels_cli(
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     if not output_path.exists():
         output_path.mkdir(parents=True)
-    overrides = parse_config_overrides(ctx.args)
+    overrides = parse_config_overrides(_extra)
     import_code(code_path)
     setup_gpu(use_gpu)
     with show_validation_error(config_path):

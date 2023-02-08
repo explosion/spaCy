@@ -3,27 +3,31 @@ from pathlib import Path
 from wasabi import msg, table
 from thinc.api import Config
 from thinc.config import VARIABLE_RE
-import typer
+from radicli import Arg, ExistingFilePathOrDash, ExistingFilePath
 
-from ._util import Arg, Opt, show_validation_error, parse_config_overrides
-from ._util import import_code, debug_cli
+from ._util import cli, show_validation_error, parse_config_overrides
+from ._util import import_code
 from ..schemas import ConfigSchemaInit, ConfigSchemaTraining
 from ..util import registry
 from .. import util
 
 
-@debug_cli.command(
+@cli.subcommand_with_extra(
+    "debug",
     "config",
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    # fmt: off
+    config_path=Arg(help="Path to config file"),
+    code_path=Arg("--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    show_funcs=Arg("--show-functions", "-F", help="Show an overview of all registered functions used in the config and where they come from (modules, files etc.)"),
+    show_vars=Arg("--show-variables", "-V", help="Show an overview of all variables referenced in the config and their values. This will also reflect variables overwritten on the CLI"),
+    # fmt: on
 )
 def debug_config_cli(
-    # fmt: off
-    ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
-    code_path: Optional[Path] = Opt(None, "--code-path", "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    show_funcs: bool = Opt(False, "--show-functions", "-F", help="Show an overview of all registered functions used in the config and where they come from (modules, files etc.)"),
-    show_vars: bool = Opt(False, "--show-variables", "-V", help="Show an overview of all variables referenced in the config and their values. This will also reflect variables overwritten on the CLI.")
-    # fmt: on
+    config_path: ExistingFilePathOrDash,
+    code_path: Optional[ExistingFilePath] = None,
+    show_funcs: bool = False,
+    show_vars: bool = False,
+    _extra: List[str] = [],
 ):
     """Debug a config file and show validation errors. The command will
     create all objects in the tree and validate them. Note that some config
@@ -36,7 +40,7 @@ def debug_config_cli(
 
     DOCS: https://spacy.io/api/cli#debug-config
     """
-    overrides = parse_config_overrides(ctx.args)
+    overrides = parse_config_overrides(_extra)
     import_code(code_path)
     debug_config(
         config_path, overrides=overrides, show_funcs=show_funcs, show_vars=show_vars

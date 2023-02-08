@@ -1,29 +1,34 @@
-from typing import Optional
+from typing import Optional, List
 from pathlib import Path
 from wasabi import msg
-import typer
 import re
+from radicli import Arg, ExistingFilePathOrDash, ExistingFilePath
 
-from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
+from ._util import cli, parse_config_overrides, show_validation_error
 from ._util import import_code, setup_gpu
 from ..training.pretrain import pretrain
 from ..util import load_config
 
 
-@app.command(
+@cli.command_with_extra(
     "pretrain",
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    # fmt: off
+    config_path=Arg(help="Path to config file"),
+    output_dir=Arg(help="Directory to write weights to on each epoch"),
+    code_path=Arg("--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    resume_path=Arg("--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
+    epoch_resume=Arg("--epoch-resume", "-er", help="The epoch to resume counting from when using --resume-path. Prevents unintended overwriting of existing weight files."),
+    use_gpu=Arg("--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    # fmt: on
 )
 def pretrain_cli(
-    # fmt: off
-    ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, dir_okay=False, allow_dash=True),
-    output_dir: Path = Arg(..., help="Directory to write weights to on each epoch"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    resume_path: Optional[Path] = Opt(None, "--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
-    epoch_resume: Optional[int] = Opt(None, "--epoch-resume", "-er", help="The epoch to resume counting from when using --resume-path. Prevents unintended overwriting of existing weight files."),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
-    # fmt: on
+    config_path: ExistingFilePathOrDash,
+    output_dir: Path,
+    code_path: Optional[ExistingFilePath] = None,
+    resume_path: Optional[ExistingFilePath] = None,
+    epoch_resume: Optional[int] = None,
+    use_gpu: int = -1,
+    _extra: List[str] = [],
 ):
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
@@ -46,7 +51,7 @@ def pretrain_cli(
 
     DOCS: https://spacy.io/api/cli#pretrain
     """
-    config_overrides = parse_config_overrides(ctx.args)
+    config_overrides = parse_config_overrides(_extra)
     import_code(code_path)
     verify_cli_args(config_path, output_dir, resume_path, epoch_resume)
     setup_gpu(use_gpu)

@@ -1,27 +1,30 @@
-from typing import Optional
+from typing import Optional, List
 from pathlib import Path
 from wasabi import msg
-import typer
 import logging
+from radicli import Arg, ExistingFilePathOrDash, ExistingFilePath
 
-from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
+from ._util import cli, parse_config_overrides, show_validation_error
 from ._util import import_code
 from .. import util
 from ..util import get_sourced_components, load_model_from_config
 
 
-@app.command(
+@cli.command_with_extra(
     "assemble",
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    # fmt: off
+    config_path=Arg(help="Path to config file"),
+    output_path=Arg(help="Output directory to store assembled pipeline in"),
+    code_path=Arg("--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    verbose=Arg("--verbose", "-V", help="Display more information for debugging purposes"),
+    # fmt: on
 )
 def assemble_cli(
-    # fmt: off
-    ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
-    output_path: Path = Arg(..., help="Output directory to store assembled pipeline in"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
-    # fmt: on
+    config_path: ExistingFilePathOrDash,
+    output_path: Optional[Path] = None,
+    code_path: Optional[ExistingFilePath] = None,
+    verbose: bool = False,
+    _extra: List[str] = [],
 ):
     """
     Assemble a spaCy pipeline from a config file. The config file includes
@@ -37,7 +40,7 @@ def assemble_cli(
     # Make sure all files and paths exists if they are needed
     if not config_path or (str(config_path) != "-" and not config_path.exists()):
         msg.fail("Config file not found", config_path, exits=1)
-    overrides = parse_config_overrides(ctx.args)
+    overrides = parse_config_overrides(_extra)
     import_code(code_path)
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides, interpolate=False)

@@ -1,14 +1,14 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from pathlib import Path
 from wasabi import msg
 import os
 import re
 import shutil
 import requests
-import typer
+from radicli import Arg, ExistingDirPath
 
 from ...util import ensure_path, working_dir
-from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
+from .._util import cli, PROJECT_FILE, load_project_config
 from .._util import get_checksum, download_file, git_checkout, get_git_version
 from .._util import SimpleFrozenDict, parse_config_overrides
 
@@ -16,17 +16,20 @@ from .._util import SimpleFrozenDict, parse_config_overrides
 EXTRA_DEFAULT = False
 
 
-@project_cli.command(
+@cli.subcommand(
+    "project",
     "assets",
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    # fmt: off
+    project_dir=Arg(help="Path to cloned project. Defaults to current working directory"),
+    sparse_checkout=Arg("--sparse", "-S", help="Use sparse checkout for assets provided via Git, to only check out and clone the files needed. Requires Git v22.2+"),
+    extra=Arg("--extra", "-e", help="Download all assets, including those marked as 'extra'"),
+    # fmt: on
 )
 def project_assets_cli(
-    # fmt: off
-    ctx: typer.Context,  # This is only used to read additional arguments
-    project_dir: Path = Arg(Path.cwd(), help="Path to cloned project. Defaults to current working directory.", exists=True, file_okay=False),
-    sparse_checkout: bool = Opt(False, "--sparse", "-S", help="Use sparse checkout for assets provided via Git, to only check out and clone the files needed. Requires Git v22.2+."),
-    extra: bool = Opt(False, "--extra", "-e", help="Download all assets, including those marked as 'extra'.")
-    # fmt: on
+    project_dir: ExistingDirPath = Path.cwd(),
+    sparse_checkout: bool = False,
+    extra: bool = False,
+    _extra: List[str] = [],
 ):
     """Fetch project assets like datasets and pretrained weights. Assets are
     defined in the "assets" section of the project.yml. If a checksum is
@@ -35,7 +38,7 @@ def project_assets_cli(
 
     DOCS: https://spacy.io/api/cli#project-assets
     """
-    overrides = parse_config_overrides(ctx.args)
+    overrides = parse_config_overrides(_extra)
     project_assets(
         project_dir,
         overrides=overrides,

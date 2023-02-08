@@ -2,56 +2,56 @@ from typing import Iterable, List, Optional
 import random
 from itertools import islice
 import numpy
-from pathlib import Path
 import time
 from tqdm import tqdm
-import typer
 from wasabi import msg
+from radicli import Arg, ExistingPath
 
 from .. import util
 from ..language import Language
 from ..tokens import Doc
 from ..training import Corpus
-from ._util import Arg, Opt, benchmark_cli, setup_gpu
+from ._util import cli, setup_gpu
 
 
-@benchmark_cli.command(
+@cli.subcommand(
+    "benchmark",
     "speed",
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
-)
-def benchmark_speed_cli(
     # fmt: off
-    ctx: typer.Context,
-    model: str = Arg(..., help="Model name or path"),
-    data_path: Path = Arg(..., help="Location of binary evaluation data in .spacy format", exists=True),
-    batch_size: Optional[int] = Opt(None, "--batch-size", "-b", min=1, help="Override the pipeline batch size"),
-    no_shuffle: bool = Opt(False, "--no-shuffle", help="Do not shuffle benchmark data"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
-    n_batches: int = Opt(50, "--batches", help="Minimum number of batches to benchmark", min=30,),
-    warmup_epochs: int = Opt(3, "--warmup", "-w", min=0, help="Number of iterations over the data for warmup"),
+    model=Arg(help="Model name or path"),
+    data_path=Arg(help="Location of binary evaluation data in .spacy format"),
+    batch_size=Arg("--batch-size", "-b", help="Override the pipeline batch size"),
+    no_shuffle=Arg("--no-shuffle", help="Do not shuffle benchmark data"),
+    use_gpu=Arg("--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    n_batches=Arg("--batches", help="Minimum number of batches to benchmark"),
+    warmup_epochs=Arg("--warmup", "-w", help="Number of iterations over the data for warmup"),
     # fmt: on
+)
+def benchmark_speed(
+    model: str,
+    data_path: ExistingPath,
+    batch_size: Optional[int] = None,
+    no_shuffle: bool = False,
+    use_gpu: int = -1,
+    n_batches: int = 50,
+    warmup_epochs: int = 3,
 ):
     """
     Benchmark a pipeline. Expects a loadable spaCy pipeline and benchmark
     data in the binary .spacy format.
     """
     setup_gpu(use_gpu=use_gpu, silent=False)
-
     nlp = util.load_model(model)
     batch_size = batch_size if batch_size is not None else nlp.batch_size
     corpus = Corpus(data_path)
     docs = [eg.predicted for eg in corpus(nlp)]
-
     if len(docs) == 0:
         msg.fail("Cannot benchmark speed using an empty corpus.", exits=1)
-
     print(f"Warming up for {warmup_epochs} epochs...")
     warmup(nlp, docs, warmup_epochs, batch_size)
-
     print()
     print(f"Benchmarking {n_batches} batches...")
     wps = benchmark(nlp, docs, n_batches, batch_size, not no_shuffle)
-
     print()
     print_outliers(wps)
     print_mean_with_ci(wps)
@@ -120,7 +120,6 @@ def benchmark(
             nlp.make_doc(docs[i % len(docs)].text)
             for i in range(n_batches * batch_size)
         ]
-
     return annotate(nlp, bench_docs, batch_size)
 
 
@@ -143,17 +142,14 @@ def print_mean_with_ci(sample: numpy.ndarray):
     mean = numpy.mean(sample)
     bootstrap_means = bootstrap(sample)
     bootstrap_means.sort()
-
     # 95% confidence interval
     low = bootstrap_means[int(len(bootstrap_means) * 0.025)]
     high = bootstrap_means[int(len(bootstrap_means) * 0.975)]
-
     print(f"Mean: {mean:.1f} words/s (95% CI: {low-mean:.1f} +{high-mean:.1f})")
 
 
 def print_outliers(sample: numpy.ndarray):
     quartiles = Quartiles(sample)
-
     n_outliers = numpy.sum(
         (sample < (quartiles.q1 - 1.5 * quartiles.iqr))
         | (sample > (quartiles.q3 + 1.5 * quartiles.iqr))

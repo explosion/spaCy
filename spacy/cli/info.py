@@ -5,23 +5,31 @@ import json
 from pathlib import Path
 from wasabi import Printer, MarkdownRenderer
 import srsly
+from radicli import Arg
 
-from ._util import app, Arg, Opt, string_to_list
+from ._util import cli
 from .download import get_model_filename, get_latest_version
 from .. import util
 from .. import about
 
 
-@app.command("info")
-def info_cli(
+@cli.command(
+    "info",
     # fmt: off
-    model: Optional[str] = Arg(None, help="Optional loadable spaCy pipeline"),
-    markdown: bool = Opt(False, "--markdown", "-md", help="Generate Markdown for GitHub issues"),
-    silent: bool = Opt(False, "--silent", "-s", "-S", help="Don't print anything (just return)"),
-    exclude: str = Opt("labels", "--exclude", "-e", help="Comma-separated keys to exclude from the print-out"),
-    url: bool = Opt(False, "--url", "-u", help="Print the URL to download the most recent compatible version of the pipeline"),
+    model=Arg(help="Optional loadable spaCy pipeline"),
+    markdown=Arg("--markdown", "-md", help="Generate Markdown for GitHub issues"),
+    silent=Arg("--silent", "-S", help="Don't print anything (just return)"),
+    exclude=Arg("--exclude", "-e", help="Keys to exclude from the print-out"),
+    url=Arg("--url", "-u", help="Print the URL to download the most recent compatible version of the pipeline"),
     # fmt: on
-):
+)
+def info(
+    model: Optional[str] = None,
+    markdown: bool = False,
+    silent: bool = False,
+    exclude: List[str] = [],
+    url: bool = False,
+) -> Union[str, dict]:
     """
     Print info about spaCy installation. If a pipeline is specified as an argument,
     print its meta information. Flag --markdown prints details in Markdown for easy
@@ -32,24 +40,6 @@ def info_cli(
 
     DOCS: https://spacy.io/api/cli#info
     """
-    exclude = string_to_list(exclude)
-    info(
-        model,
-        markdown=markdown,
-        silent=silent,
-        exclude=exclude,
-        url=url,
-    )
-
-
-def info(
-    model: Optional[str] = None,
-    *,
-    markdown: bool = False,
-    silent: bool = True,
-    exclude: Optional[List[str]] = None,
-    url: bool = False,
-) -> Union[str, dict]:
     msg = Printer(no_print=silent, pretty=not silent)
     if not exclude:
         exclude = []

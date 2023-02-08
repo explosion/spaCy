@@ -5,14 +5,14 @@ import requests
 from wasabi import msg, Printer
 import warnings
 
-from ._util import app
+from ._util import cli
 from .. import about
 from ..util import get_package_version, get_installed_models, get_minor_version
 from ..util import get_package_path, get_model_meta, is_compatible_version
 
 
-@app.command("validate")
-def validate_cli():
+@cli.command("validate")
+def validate() -> None:
     """
     Validate the currently installed pipeline packages and spaCy version. Checks
     if the installed packages are compatible and shows upgrade instructions if
@@ -20,10 +20,6 @@ def validate_cli():
 
     DOCS: https://spacy.io/api/cli#validate
     """
-    validate()
-
-
-def validate() -> None:
     model_pkgs, compat = get_model_pkgs()
     spacy_version = get_minor_version(about.__version__)
     current_compat = compat.get(spacy_version, {})

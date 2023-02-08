@@ -3,14 +3,14 @@ import operator
 from pathlib import Path
 import logging
 from typing import Optional, Tuple, Any, Dict, List
-
 import numpy
 import wasabi.tables
+from radicli import Arg, ExistingPath, ExistingFilePath
 
 from ..pipeline import TextCategorizer, MultiLabel_TextCategorizer
 from ..errors import Errors
 from ..training import Corpus
-from ._util import app, Arg, Opt, import_code, setup_gpu
+from ._util import cli, import_code, setup_gpu
 from .. import util
 
 _DEFAULTS = {
@@ -20,23 +20,32 @@ _DEFAULTS = {
 }
 
 
-@app.command(
+@cli.command(
     "find-threshold",
-    context_settings={"allow_extra_args": False, "ignore_unknown_options": True},
+    # fmt: off
+    model=Arg(help="Model name or path"),
+    data_path=Arg(help="Location of binary evaluation data in .spacy format"),
+    pipe_name=Arg(help="Name of pipe to examine thresholds for"),
+    threshold_key=Arg(help="Key of threshold attribute in component's configuration"),
+    scores_key=Arg(help="Metric to optimize"),
+    n_trials=Arg("--n_trials", "-n", help="Number of trials to determine optimal thresholds"),
+    code_path=Arg("--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    use_gpu=Arg("--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    gold_preproc=Arg("--gold-preproc", "-G", help="Use gold preprocessing"),
+    verbose=Arg("--verbose", "-V", help="Display more information for debugging purposes"),
+    # fmt: on
 )
 def find_threshold_cli(
-    # fmt: off
-    model: str = Arg(..., help="Model name or path"),
-    data_path: Path = Arg(..., help="Location of binary evaluation data in .spacy format", exists=True),
-    pipe_name: str = Arg(..., help="Name of pipe to examine thresholds for"),
-    threshold_key: str = Arg(..., help="Key of threshold attribute in component's configuration"),
-    scores_key: str = Arg(..., help="Metric to optimize"),
-    n_trials: int = Opt(_DEFAULTS["n_trials"], "--n_trials", "-n", help="Number of trials to determine optimal thresholds"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    use_gpu: int = Opt(_DEFAULTS["use_gpu"], "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
-    gold_preproc: bool = Opt(_DEFAULTS["gold_preproc"], "--gold-preproc", "-G", help="Use gold preprocessing"),
-    verbose: bool = Opt(False, "--silent", "-V", "-VV", help="Display more information for debugging purposes"),
-    # fmt: on
+    model: str,
+    data_path: ExistingPath,
+    pipe_name: str,
+    threshold_key: str,
+    scores_key: str,
+    n_trials: int = _DEFAULTS["n_trials"],
+    code_path: Optional[ExistingFilePath] = None,
+    use_gpu: int = _DEFAULTS["use_gpu"],
+    gold_preproc: bool = _DEFAULTS["gold_preproc"],
+    verbose: bool = False,
 ):
     """
     Runs prediction trials for a trained model with varying tresholds to maximize
@@ -52,7 +61,6 @@ def find_threshold_cli(
 
     DOCS: https://spacy.io/api/cli#find-threshold
     """
-
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     import_code(code_path)
     find_threshold(
@@ -110,19 +118,16 @@ def find_threshold(
     pipe = nlp.get_pipe(pipe_name)
     if not hasattr(pipe, "scorer"):
         raise AttributeError(Errors.E1045)
-
     if type(pipe) == TextCategorizer:
         wasabi.msg.warn(
             "The `textcat` component doesn't use a threshold as it's not applicable to the concept of "
             "exclusive classes. All thresholds will yield the same results."
         )
-
     if not silent:
         wasabi.msg.info(
             title=f"Optimizing for {scores_key} for component '{pipe_name}' with {n_trials} "
             f"trials."
         )
-
     # Load evaluation corpus.
     corpus = Corpus(data_path, gold_preproc=gold_preproc)
     dev_dataset = list(corpus(nlp))
@@ -209,9 +214,7 @@ def find_threshold(
                 widths=table_col_widths,
             )
         )
-
     best_threshold = max(scores.keys(), key=(lambda key: scores[key]))
-
     # If all scores are identical, emit warning.
     if len(set(scores.values())) == 1:
         wasabi.msg.warn(
@@ -223,7 +226,6 @@ def find_threshold(
             )
             else "Use `cats_macro_f` or `cats_micro_f` when optimizing the threshold for `textcat_multilabel`.",
         )
-
     else:
         if not silent:
             print(

@@ -5,11 +5,11 @@ from collections import Counter
 import sys
 import srsly
 from wasabi import Printer, MESSAGES, msg
-import typer
 import math
+from radicli import Arg, ExistingFilePathOrDash, ExistingFilePath
 
-from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
-from ._util import import_code, debug_cli, _format_number
+from ._util import cli, show_validation_error, parse_config_overrides
+from ._util import import_code, _format_number
 from ..training import Example, remove_bilu_prefix
 from ..training.initialize import get_sourced_components
 from ..schemas import ConfigSchemaTraining
@@ -40,23 +40,24 @@ BOUNDARY_DISTINCT_THRESHOLD = 1
 SPAN_LENGTH_THRESHOLD_PERCENTAGE = 90
 
 
-@debug_cli.command(
-    "data", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
-)
-@app.command(
-    "debug-data",
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
-    hidden=True,  # hide this from main CLI help but still allow it to work with warning
+@cli.subcommand_with_extra(
+    "debug",
+    "data",
+    # fmt: off
+    config_path=Arg(help="Path to config file"),
+    code_path=Arg("--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    ignore_warnings=Arg("--ignore-warnings", "-IW", help="Ignore warnings, only show stats and errors"),
+    verbose=Arg("--verbose", "-V", help="Print additional information and explanations"),
+    no_format=Arg("--no-format", "-NF", help="Don't pretty-print the results"),
+    # fmt: on
 )
 def debug_data_cli(
-    # fmt: off
-    ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
-    code_path: Optional[Path] = Opt(None, "--code-path", "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    ignore_warnings: bool = Opt(False, "--ignore-warnings", "-IW", help="Ignore warnings, only show stats and errors"),
-    verbose: bool = Opt(False, "--verbose", "-V", help="Print additional information and explanations"),
-    no_format: bool = Opt(False, "--no-format", "-NF", help="Don't pretty-print the results"),
-    # fmt: on
+    config_path: ExistingFilePathOrDash,
+    code_path: Optional[ExistingFilePath] = None,
+    ignore_warnings: bool = False,
+    verbose: bool = False,
+    no_format: bool = False,
+    _extra: List[str] = [],
 ):
     """
     Analyze, debug and validate your training and development data. Outputs
@@ -65,13 +66,7 @@ def debug_data_cli(
 
     DOCS: https://spacy.io/api/cli#debug-data
     """
-    if ctx.command.name == "debug-data":
-        msg.warn(
-            "The debug-data command is now available via the 'debug data' "
-            "subcommand (without the hyphen). You can run python -m spacy debug "
-            "--help for an overview of the other available debugging commands."
-        )
-    overrides = parse_config_overrides(ctx.args)
+    overrides = parse_config_overrides(_extra)
     import_code(code_path)
     debug_data(
         config_path,

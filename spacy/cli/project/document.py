@@ -1,8 +1,9 @@
 from pathlib import Path
 from wasabi import msg, MarkdownRenderer
+from radicli import Arg, ExistingDirPath, PathOrDash
 
 from ...util import working_dir
-from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
+from .._util import cli, PROJECT_FILE, load_project_config
 
 
 DOCS_URL = "https://spacy.io"
@@ -27,14 +28,20 @@ MARKER_END = "<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->"
 MARKER_IGNORE = "<!-- SPACY PROJECT: IGNORE -->"
 
 
-@project_cli.command("document")
-def project_document_cli(
+@cli.subcommand(
+    "project",
+    "document",
     # fmt: off
-    project_dir: Path = Arg(Path.cwd(), help="Path to cloned project. Defaults to current working directory.", exists=True, file_okay=False),
-    output_file: Path = Opt("-", "--output", "-o", help="Path to output Markdown file for output. Defaults to - for standard output"),
-    no_emoji: bool = Opt(False, "--no-emoji", "-NE", help="Don't use emoji")
+    project_dir=Arg(help="Path to cloned project. Defaults to current working directory."),
+    output_file=Arg("--output", "-o", help="Path to output Markdown file for output. Defaults to - for standard output"),
+    no_emoji=Arg("--no-emoji", "-NE", help="Don't use emoji"),
     # fmt: on
-):
+)
+def project_document(
+    project_dir: ExistingDirPath = Path.cwd(),
+    output_file: PathOrDash = "-",
+    no_emoji: bool = False,
+) -> None:
     """
     Auto-generate a README.md for a project. If the content is saved to a file,
     hidden markers are added so you can add custom content before or after the
@@ -43,13 +50,7 @@ def project_document_cli(
 
     DOCS: https://spacy.io/api/cli#project-document
     """
-    project_document(project_dir, output_file, no_emoji=no_emoji)
-
-
-def project_document(
-    project_dir: Path, output_file: Path, *, no_emoji: bool = False
-) -> None:
-    is_stdout = str(output_file) == "-"
+    is_stdout = output_file == "-"
     config = load_project_config(project_dir)
     md = MarkdownRenderer(no_emoji=no_emoji)
     md.add(MARKER_START)

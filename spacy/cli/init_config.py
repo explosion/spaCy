@@ -1,18 +1,18 @@
-from typing import Optional, List, Tuple
-from enum import Enum
+from typing import Optional, List, Tuple, Literal
 from pathlib import Path
 from wasabi import Printer, diff_strings
 from thinc.api import Config
 import srsly
 import re
 from jinja2 import Template
+from radicli import Arg, PathOrDash, ExistingFilePath
 
 from .. import util
 from ..language import DEFAULT_CONFIG_DISTILL_PATH, DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
 from ..util import SimpleFrozenList
-from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
-from ._util import string_to_list, import_code, _handle_renamed_language_codes
+from ._util import cli, convert_string_list, show_validation_error, COMMAND
+from ._util import import_code, _handle_renamed_language_codes
 
 
 ROOT = Path(__file__).parent / "templates"
@@ -20,9 +20,7 @@ TEMPLATE_PATH = ROOT / "quickstart_training.jinja"
 RECOMMENDATIONS = srsly.read_yaml(ROOT / "quickstart_training_recommendations.yml")
 
 
-class Optimizations(str, Enum):
-    efficiency = "efficiency"
-    accuracy = "accuracy"
+OptimizationsType = Literal["efficiency", "accuracy"]
 
 
 class InitValues:
@@ -33,23 +31,33 @@ class InitValues:
 
     lang = "en"
     pipeline = SimpleFrozenList(["tagger", "parser", "ner"])
-    optimize = Optimizations.efficiency
+    optimize = "efficiency"
     gpu = False
     pretraining = False
     force_overwrite = False
 
 
-@init_cli.command("config")
-def init_config_cli(
+@cli.subcommand(
+    "init",
+    "config",
     # fmt: off
-    output_file: Path = Arg(..., help="File to save the config to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
-    lang: str = Opt(InitValues.lang, "--lang", "-l", help="Code of the language to use"),
-    pipeline: str = Opt(",".join(InitValues.pipeline), "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
-    optimize: Optimizations = Opt(InitValues.optimize, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
-    gpu: bool = Opt(InitValues.gpu, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
-    pretraining: bool = Opt(InitValues.pretraining, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
-    force_overwrite: bool = Opt(InitValues.force_overwrite, "--force", "-F", help="Force overwriting the output file"),
+    output_file=Arg(help="File to save the config to or - for stdout (will only output config and no additional logging info)"),
+    lang=Arg("--lang", "-l", help="Code of the language to use"),
+    pipeline=Arg("--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')", converter=convert_string_list),
+    optimize=Arg("--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
+    gpu=Arg("--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
+    pretraining=Arg("--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
+    force_overwrite=Arg("--force", "-F", help="Force overwriting the output file"),
     # fmt: on
+)
+def init_config_cli(
+    output_file: PathOrDash,
+    lang: str = InitValues.lang,
+    pipeline: List[str] = InitValues.pipeline,
+    optimize: OptimizationsType = InitValues.optimize,
+    gpu: bool = InitValues.gpu,
+    pretraining: bool = InitValues.pretraining,
+    force_overwrite: bool = InitValues.force_overwrite,
 ):
     """
     Generate a starter config file for training. Based on your requirements
@@ -59,8 +67,7 @@ def init_config_cli(
 
     DOCS: https://spacy.io/api/cli#init-config
     """
-    pipeline = string_to_list(pipeline)
-    is_stdout = str(output_file) == "-"
+    is_stdout = output_file == "-"
     if not is_stdout and output_file.exists() and not force_overwrite:
         msg = Printer()
         msg.fail(
@@ -70,7 +77,7 @@ def init_config_cli(
     config = init_config(
         lang=lang,
         pipeline=pipeline,
-        optimize=optimize.value,
+        optimize=optimize,
         gpu=gpu,
         pretraining=pretraining,
         silent=is_stdout,
@@ -78,16 +85,25 @@ def init_config_cli(
     save_config(config, output_file, is_stdout=is_stdout)
 
 
-@init_cli.command("fill-config")
-def init_fill_config_cli(
+@cli.subcommand(
+    "init",
+    "fill-config",
     # fmt: off
-    base_path: Path = Arg(..., help="Path to base config to fill", exists=True, dir_okay=False),
-    output_file: Path = Arg("-", help="Path to output .cfg file (or - for stdout)", allow_dash=True),
-    distillation: bool = Opt(False, "--distillation", "-dt", help="Include config for distillation (with 'spacy distill')"),
-    pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
-    diff: bool = Opt(False, "--diff", "-D", help="Print a visual diff highlighting the changes"),
-    code_path: Optional[Path] = Opt(None, "--code-path", "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    base_path=Arg(help="Path to base config to fill"),
+    output_file=Arg(help="Path to output .cfg file (or - for stdout)"),
+    distillation=Arg("--distillation", "-dt", help="Include config for distillation (with 'spacy distill')"),
+    pretraining=Arg("--pretraining", "-pt", help="Include config for pretraining (with `spacy pretrain`)"),
+    diff=Arg("--diff", "-D", help="Print a visual diff highlighting the changes"),
+    code_path=Arg("--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     # fmt: on
+)
+def init_fill_config_cli(
+    base_path: ExistingFilePath,
+    output_file: PathOrDash = "-",
+    distillation: bool = False,
+    pretraining: bool = False,
+    diff: bool = False,
+    code_path: Optional[ExistingFilePath] = None,
 ):
     """
     Fill partial config file with default values. Will add all missing settings

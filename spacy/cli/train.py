@@ -1,29 +1,34 @@
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any, Union, List
 from pathlib import Path
 from wasabi import msg
-import typer
 import logging
 import sys
+from radicli import Arg, ExistingFilePathOrDash
 
-from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
+from ._util import cli, parse_config_overrides, show_validation_error
 from ._util import import_code, setup_gpu
 from ..training.loop import train as train_nlp
 from ..training.initialize import init_nlp
 from .. import util
 
 
-@app.command(
-    "train", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+@cli.command_with_extra(
+    "train",
+    # fmt: off
+    config_path=Arg(help="Path to config file"),
+    output_path=Arg("--output", "-o", help="Output directory to store trained pipeline in"),
+    code_path=Arg("--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    verbose=Arg("--verbose", "-V", help="Display more information for debugging purposes"),
+    use_gpu=Arg("--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    # fmt: on
 )
 def train_cli(
-    # fmt: off
-    ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
-    output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
-    # fmt: on
+    config_path: ExistingFilePathOrDash,
+    output_path: Optional[Path] = None,
+    code_path: Optional[Path] = None,
+    verbose: bool = False,
+    use_gpu: int = -1,
+    _extra: List[str] = [],
 ):
     """
     Train or update a spaCy pipeline. Requires data in spaCy's binary format. To
@@ -40,7 +45,7 @@ def train_cli(
     DOCS: https://spacy.io/api/cli#train
     """
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
-    overrides = parse_config_overrides(ctx.args)
+    overrides = parse_config_overrides(_extra)
     import_code(code_path)
     train(config_path, output_path, use_gpu=use_gpu, overrides=overrides)
 
