@@ -36,7 +36,6 @@ HELP = """spaCy Command-line Interface
 DOCS: https://spacy.io/api/cli
 """
 
-# TODO: need to find a way to inject these now
 PROJECT_HELP = f"""Command-line interface for spaCy projects and templates.
 You'd typically start by cloning a project template to a local directory and
 fetching its assets like datasets etc. See the project's {PROJECT_FILE} for the
@@ -51,6 +50,10 @@ INIT_HELP = """Commands for initializing configs and pipeline packages."""
 
 # CLI
 cli = radicli.Radicli(prog=COMMAND, help=HELP)
+cli.placeholder("project", description=PROJECT_HELP)
+cli.placeholder("debug", description=DEBUG_HELP)
+cli.placeholder("benchmark", description=BENCHMARK_HELP)
+cli.placeholder("init", description=INIT_HELP)
 
 
 def setup_cli() -> None:
