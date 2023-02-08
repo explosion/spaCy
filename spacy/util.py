@@ -147,7 +147,7 @@ class registry(thinc.registry):
     def find(
         cls, registry_name: str, func_name: str
     ) -> Dict[str, Optional[Union[str, int]]]:
-        """Find the information about a registered function, including the
+        """Find information about a registered function, including the
         module and path to the file it's defined in, the line number and the
         docstring, if available.
 
