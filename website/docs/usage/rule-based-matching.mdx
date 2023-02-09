@@ -1442,8 +1442,8 @@ nlp.to_disk("/path/to/pipeline")
 
 The saved pipeline now includes the `"entity_ruler"` in its
 [`config.cfg`](/api/data-formats#config) and the pipeline directory contains a
-file `entityruler.jsonl` with the patterns. When you load the pipeline back in,
-all pipeline components will be restored and deserialized – including the entity
+file `patterns.jsonl` with the patterns. When you load the pipeline back in, all
+pipeline components will be restored and deserialized – including the entity
 ruler. This lets you ship powerful pipeline packages with binary weights _and_
 rules included!
 
