@@ -53,8 +53,9 @@ def assemble_cli(
     with nlp.select_pipes(disable=[*sourced]):
         nlp.initialize()
     msg.good("Initialized pipeline")
-    msg.divider("Serializing to disk")
-    if output_path is not None and not output_path.exists():
-        output_path.mkdir(parents=True)
-        msg.good(f"Created output directory: {output_path}")
-    nlp.to_disk(output_path)
+    if output_path is not None:
+        msg.divider("Serializing to disk")
+        if not output_path.exists():
+            output_path.mkdir(parents=True)
+            msg.good(f"Created output directory: {output_path}")
+        nlp.to_disk(output_path)

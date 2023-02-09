@@ -94,7 +94,7 @@ def _parse_overrides(args: List[str], is_cli: bool = False) -> Dict[str, Any]:
             opt = opt.replace("--", "")
             if "." not in opt:
                 if is_cli:
-                    raise radicli.CliParseError(f"unrecognized argument: {orig_opt}")
+                    raise radicli.CliParserError(f"unrecognized argument: {orig_opt}")
                 else:
                     msg.fail(f"{err}: can't override top-level sections", exits=1)
             if "=" in opt:  # we have --opt=value

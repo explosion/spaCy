@@ -1,5 +1,4 @@
-from typing import Callable, Iterable, Mapping, Optional, Any, Union, Literal
-from enum import Enum
+from typing import Callable, Iterable, Mapping, Optional, Any, Union, Literal, cast
 from pathlib import Path
 from wasabi import Printer
 import srsly
@@ -19,6 +18,8 @@ from ..training.converters import conllu_to_docs
 # matched by file extension and content. To add a converter, add a new
 # entry to this dict with the file extension mapped to the converter function
 # imported from /converters.
+ConvertersType = Literal["auto", "conllubio", "conllu", "conll", "ner", "iob", "json"]
+FileTypesType = Literal["json", "spacy"]
 
 CONVERTERS: Mapping[str, Callable[..., Iterable[Doc]]] = {
     "conllubio": conllu_to_docs,
@@ -28,17 +29,9 @@ CONVERTERS: Mapping[str, Callable[..., Iterable[Doc]]] = {
     "iob": iob_to_docs,
     "json": json_to_docs,
 }
-AUTO = "auto"
-ConvertersType = Literal["auto", "conllubio", "conllu", "conll", "ner", "iob", "json"]
-
-
+AUTO: ConvertersType = "auto"
 # File types that can be written to stdout
 FILE_TYPES_STDOUT = ("json",)
-
-
-class FileTypes(str, Enum):
-    json = "json"
-    spacy = "spacy"
 
 
 @cli.command(
@@ -61,7 +54,7 @@ class FileTypes(str, Enum):
 def convert_cli(
     input_path: ExistingPathOrDash,
     output_dir: ExistingDirPathOrDash = "-",
-    file_type: Literal["json", "spacy"] = "spacy",
+    file_type: FileTypesType = "spacy",
     n_sents: int = 1,
     seg_sents: bool = False,
     model: Optional[str] = None,
@@ -110,7 +103,7 @@ def convert(
     input_path: Path,
     output_dir: Union[str, Path],
     *,
-    file_type: str = "json",
+    file_type: FileTypesType = "json",
     n_sents: int = 1,
     seg_sents: bool = False,
     model: Optional[str] = None,
@@ -173,14 +166,16 @@ def convert(
             msg.good(f"Generated output file ({len_docs} documents): {output_file}")
 
 
-def _print_docs_to_stdout(data: Any, output_type: str) -> None:
+def _print_docs_to_stdout(data: Any, output_type: FileTypesType) -> None:
     if output_type == "json":
         srsly.write_json("-", data)
     else:
         sys.stdout.buffer.write(data)
 
 
-def _write_docs_to_file(data: Any, output_file: Path, output_type: str) -> None:
+def _write_docs_to_file(
+    data: Any, output_file: Path, output_type: FileTypesType
+) -> None:
     if not output_file.parent.exists():
         output_file.parent.mkdir(parents=True)
     if output_type == "json":
@@ -190,7 +185,7 @@ def _write_docs_to_file(data: Any, output_file: Path, output_type: str) -> None:
             file_.write(data)
 
 
-def autodetect_ner_format(input_data: str) -> Optional[str]:
+def autodetect_ner_format(input_data: str) -> Optional[ConvertersType]:
     # guess format from the first 20 lines
     lines = input_data.split("\n")[:20]
     format_guesses = {"ner": 0, "iob": 0}
@@ -213,7 +208,7 @@ def verify_cli_args(
     msg: Printer,
     input_path: Path,
     output_dir: Union[str, Path],
-    file_type: str,
+    file_type: FileTypesType,
     converter: str,
     ner_map: Optional[Path],
 ):
@@ -236,7 +231,7 @@ def verify_cli_args(
         msg.fail(f"Can't find converter for {converter}", exits=1)
 
 
-def _get_converter(msg, converter, input_path: Path):
+def _get_converter(msg: Printer, converter: ConvertersType, input_path: Path) -> str:
     if input_path.is_dir():
         if converter == AUTO:
             input_locs = walk_directory(input_path, suffix=None)
@@ -265,4 +260,4 @@ def _get_converter(msg, converter, input_path: Path):
                 "Conversion may not succeed. "
                 "See https://spacy.io/api/cli#convert"
             )
-    return converter
+    return cast(str, converter)

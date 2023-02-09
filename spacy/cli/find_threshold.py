@@ -4,7 +4,7 @@ from pathlib import Path
 import logging
 from typing import Optional, Tuple, Any, Dict, List
 import numpy
-import wasabi.tables
+from wasabi import msg, row
 from radicli import Arg, ExistingPath, ExistingFilePath
 
 from ..pipeline import TextCategorizer, MultiLabel_TextCategorizer
@@ -13,11 +13,9 @@ from ..training import Corpus
 from ._util import cli, import_code, setup_gpu
 from .. import util
 
-_DEFAULTS = {
-    "n_trials": 11,
-    "use_gpu": -1,
-    "gold_preproc": False,
-}
+DEFAULT_N_TRIALS: int = 11
+DEFAULT_USE_GPU: int = -1
+DEFAULT_GOLD_PREPROC: bool = False
 
 
 @cli.command(
@@ -41,10 +39,10 @@ def find_threshold_cli(
     pipe_name: str,
     threshold_key: str,
     scores_key: str,
-    n_trials: int = _DEFAULTS["n_trials"],
+    n_trials: int = DEFAULT_N_TRIALS,
     code_path: Optional[ExistingFilePath] = None,
-    use_gpu: int = _DEFAULTS["use_gpu"],
-    gold_preproc: bool = _DEFAULTS["gold_preproc"],
+    use_gpu: int = DEFAULT_USE_GPU,
+    gold_preproc: bool = DEFAULT_GOLD_PREPROC,
     verbose: bool = False,
 ):
     """
@@ -83,9 +81,9 @@ def find_threshold(
     threshold_key: str,
     scores_key: str,
     *,
-    n_trials: int = _DEFAULTS["n_trials"],  # type: ignore
-    use_gpu: int = _DEFAULTS["use_gpu"],  # type: ignore
-    gold_preproc: bool = _DEFAULTS["gold_preproc"],  # type: ignore
+    n_trials: int = DEFAULT_N_TRIALS,
+    use_gpu: int = DEFAULT_USE_GPU,
+    gold_preproc: bool = DEFAULT_GOLD_PREPROC,
     silent: bool = True,
 ) -> Tuple[float, float, Dict[float, float]]:
     """
@@ -104,30 +102,25 @@ def find_threshold(
     RETURNS (Tuple[float, float, Dict[float, float]]): Best found threshold, the corresponding score, scores for all
         evaluated thresholds.
     """
-
     setup_gpu(use_gpu, silent=silent)
     data_path = util.ensure_path(data_path)
     if not data_path.exists():
-        wasabi.msg.fail("Evaluation data not found", data_path, exits=1)
+        msg.fail("Evaluation data not found", data_path, exits=1)
     nlp = util.load_model(model)
-
     if pipe_name not in nlp.component_names:
-        raise AttributeError(
-            Errors.E001.format(name=pipe_name, opts=nlp.component_names)
-        )
+        err = Errors.E001.format(name=pipe_name, opts=nlp.component_names)
+        raise AttributeError(err)
     pipe = nlp.get_pipe(pipe_name)
     if not hasattr(pipe, "scorer"):
         raise AttributeError(Errors.E1045)
     if type(pipe) == TextCategorizer:
-        wasabi.msg.warn(
+        msg.warn(
             "The `textcat` component doesn't use a threshold as it's not applicable to the concept of "
             "exclusive classes. All thresholds will yield the same results."
         )
     if not silent:
-        wasabi.msg.info(
-            title=f"Optimizing for {scores_key} for component '{pipe_name}' with {n_trials} "
-            f"trials."
-        )
+        text = f"Optimizing for {scores_key} for component '{pipe_name}' with {n_trials} trials."
+        msg.info(text)
     # Load evaluation corpus.
     corpus = Corpus(data_path, gold_preproc=gold_preproc)
     dev_dataset = list(corpus(nlp))
@@ -155,9 +148,9 @@ def find_threshold(
         RETURNS (Dict[str, Any]): Filtered dictionary.
         """
         if keys[0] not in config:
-            wasabi.msg.fail(
-                title=f"Failed to look up `{full_key}` in config: sub-key {[keys[0]]} not found.",
-                text=f"Make sure you specified {[keys[0]]} correctly. The following sub-keys are available instead: "
+            msg.fail(
+                f"Failed to look up `{full_key}` in config: sub-key {[keys[0]]} not found.",
+                f"Make sure you specified {[keys[0]]} correctly. The following sub-keys are available instead: "
                 f"{list(config.keys())}",
                 exits=1,
             )
@@ -172,7 +165,7 @@ def find_threshold(
     config_keys_full = ["components", pipe_name, *config_keys]
     table_col_widths = (10, 10)
     thresholds = numpy.linspace(0, 1, n_trials)
-    print(wasabi.tables.row(["Threshold", f"{scores_key}"], widths=table_col_widths))
+    print(row(["Threshold", f"{scores_key}"], widths=table_col_widths))
     for threshold in thresholds:
         # Reload pipeline with overrides specifying the new threshold.
         nlp = util.load_model(
@@ -191,34 +184,28 @@ def find_threshold(
                 "cfg",
                 set_nested_item(getattr(pipe, "cfg"), config_keys, threshold),
             )
-
         eval_scores = nlp.evaluate(dev_dataset)
         if scores_key not in eval_scores:
-            wasabi.msg.fail(
+            msg.fail(
                 title=f"Failed to look up score `{scores_key}` in evaluation results.",
                 text=f"Make sure you specified the correct value for `scores_key`. The following scores are "
                 f"available: {list(eval_scores.keys())}",
                 exits=1,
             )
         scores[threshold] = eval_scores[scores_key]
-
         if not isinstance(scores[threshold], (float, int)):
-            wasabi.msg.fail(
-                f"Returned score for key '{scores_key}' is not numeric. Threshold optimization only works for numeric "
-                f"scores.",
+            msg.fail(
+                f"Returned score for key '{scores_key}' is not numeric. Threshold "
+                f"optimization only works for numeric scores.",
                 exits=1,
             )
-        print(
-            wasabi.row(
-                [round(threshold, 3), round(scores[threshold], 3)],
-                widths=table_col_widths,
-            )
-        )
+        data = [round(threshold, 3), round(scores[threshold], 3)]
+        print(row(data, widths=table_col_widths))
     best_threshold = max(scores.keys(), key=(lambda key: scores[key]))
     # If all scores are identical, emit warning.
     if len(set(scores.values())) == 1:
-        wasabi.msg.warn(
-            title="All scores are identical. Verify that all settings are correct.",
+        msg.warn(
+            "All scores are identical. Verify that all settings are correct.",
             text=""
             if (
                 not isinstance(pipe, MultiLabel_TextCategorizer)
@@ -229,7 +216,7 @@ def find_threshold(
     else:
         if not silent:
             print(
-                f"\nBest threshold: {round(best_threshold, ndigits=4)} with {scores_key} value of {scores[best_threshold]}."
+                f"\nBest threshold: {round(best_threshold, ndigits=4)} with "
+                f"{scores_key} value of {scores[best_threshold]}."
             )
-
     return best_threshold, scores[best_threshold], scores

@@ -5,15 +5,13 @@ from typing import Tuple, List, Dict, Any
 import pkg_resources
 import time
 from pathlib import Path
-
-import spacy
-import numpy
 import pytest
 import srsly
 from click import NoSuchOption
 from packaging.specifiers import SpecifierSet
 from thinc.api import Config, ConfigValidationError
 
+import spacy
 from spacy import about
 from spacy.cli import info
 from spacy.cli._util import is_subpath_of, load_project_config, walk_directory
@@ -745,13 +743,13 @@ def test_get_labels_from_model(factory_name, pipe_name):
 
 def test_permitted_package_names():
     # https://www.python.org/dev/peps/pep-0426/#name
-    assert _is_permitted_package_name("Meine_Bäume") == False
-    assert _is_permitted_package_name("_package") == False
-    assert _is_permitted_package_name("package_") == False
-    assert _is_permitted_package_name(".package") == False
-    assert _is_permitted_package_name("package.") == False
-    assert _is_permitted_package_name("-package") == False
-    assert _is_permitted_package_name("package-") == False
+    assert _is_permitted_package_name("Meine_Bäume") is False
+    assert _is_permitted_package_name("_package") is False
+    assert _is_permitted_package_name("package_") is False
+    assert _is_permitted_package_name(".package") is False
+    assert _is_permitted_package_name("package.") is False
+    assert _is_permitted_package_name("-package") is False
+    assert _is_permitted_package_name("package-") is False
 
 
 def test_debug_data_compile_gold():

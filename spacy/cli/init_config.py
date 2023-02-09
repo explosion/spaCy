@@ -1,6 +1,6 @@
-from typing import Optional, List, Tuple, Literal
+from typing import Optional, List, Tuple, Literal, cast
 from pathlib import Path
-from wasabi import Printer, diff_strings
+from wasabi import Printer, msg, diff_strings
 from thinc.api import Config
 import srsly
 import re
@@ -25,16 +25,17 @@ OptimizationsType = Literal["efficiency", "accuracy"]
 
 class InitValues:
     """
-    Default values for initialization. Dedicated class to allow synchronized default values for init_config_cli() and
-    init_config(), i.e. initialization calls via CLI respectively Python.
+    Default values for initialization. Dedicated class to allow synchronized
+    default values for init_config_cli() and init_config(), i.e. initialization
+    calls via CLI respectively Python.
     """
 
-    lang = "en"
-    pipeline = SimpleFrozenList(["tagger", "parser", "ner"])
-    optimize = "efficiency"
-    gpu = False
-    pretraining = False
-    force_overwrite = False
+    lang: str = "en"
+    pipeline: List[str] = SimpleFrozenList(["tagger", "parser", "ner"])
+    optimize: OptimizationsType = "efficiency"
+    gpu: bool = False
+    pretraining: bool = False
+    force_overwrite: bool = False
 
 
 @cli.subcommand(
@@ -68,12 +69,13 @@ def init_config_cli(
     DOCS: https://spacy.io/api/cli#init-config
     """
     is_stdout = output_file == "-"
-    if not is_stdout and output_file.exists() and not force_overwrite:
-        msg = Printer()
-        msg.fail(
-            "The provided output file already exists. To force overwriting the config file, set the --force or -F flag.",
-            exits=1,
-        )
+    if not is_stdout:
+        if output_file.exists() and not force_overwrite:
+            msg.fail(
+                "The provided output file already exists. To force overwriting "
+                "the config file, set the --force or -F flag.",
+                exits=1,
+            )
     config = init_config(
         lang=lang,
         pipeline=pipeline,
@@ -239,7 +241,10 @@ def init_config(
 
 
 def save_config(
-    config: Config, output_file: Path, is_stdout: bool = False, silent: bool = False
+    config: Config,
+    output_file: Path,
+    is_stdout: bool = False,
+    silent: bool = False,
 ) -> None:
     no_print = is_stdout or silent
     msg = Printer(no_print=no_print)
