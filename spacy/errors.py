@@ -923,7 +923,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1029 = ("Edit tree cannot be applied to form.")
     E1030 = ("Edit tree identifier out of range.")
     E1031 = ("Could not find gold transition - see logs above.")
-    E1032 = ("`{var}` should not be {forbidden}, but received {value}.")
+    E1032 = ("Span {var} {value} is out of bounds for {obj} with length {length}.")
     E1033 = ("Dimension {name} invalid -- only nO, nF, nP")
     E1034 = ("Node index {i} out of bounds ({length})")
     E1035 = ("Token index {i} out of bounds ({length})")
@@ -961,6 +961,9 @@ class Errors(metaclass=ErrorsWithCodes):
     E4003 = ("Training examples for distillation must have the exact same tokens in the "
              "reference and predicted docs.")
     E4004 = ("Backprop is not supported when is_train is not set.")
+    E4005 = ("Span {var} {value} must be {op} Span {existing_var} "
+             "{existing_value}.")
+    E4006 = ("Span {pos}_char {value} does not correspond to a token {pos}.")
 
 RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}
 
