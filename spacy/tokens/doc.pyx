@@ -520,7 +520,7 @@ cdef class Doc:
     def doc(self):
         return self
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
+    def char_span(self, int start_idx, int end_idx, label=0, *, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
         """Create a `Span` object from the slice
         `doc.text[start_idx : end_idx]`. Returns None if no valid `Span` can be
         created.
@@ -1605,7 +1605,7 @@ cdef class Doc:
         for span_group in doc_json.get("spans", {}):
             spans = []
             for span in doc_json["spans"][span_group]:
-                char_span = self.char_span(span["start"], span["end"], span["label"], span["kb_id"])
+                char_span = self.char_span(span["start"], span["end"], span["label"], kb_id=span["kb_id"])
                 if char_span is None:
                     raise ValueError(Errors.E1039.format(obj="span", start=span["start"], end=span["end"]))
                 spans.append(char_span)
