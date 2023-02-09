@@ -21,7 +21,7 @@ from spacy.cli._util import parse_config_overrides, string_to_list
 from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
 from spacy.cli._util import upload_file, download_file
-from spacy.cli.configure import configure_resume_cli, use_tok2vec, merge_pipelines
+from spacy.cli.configure import configure_resume_cli, use_tok2vec
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.debug_data import _get_distribution, _get_kl_divergence
@@ -30,6 +30,7 @@ from spacy.cli.debug_data import _print_span_characteristics
 from spacy.cli.debug_data import _get_spans_length_freq_dist
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
+from spacy.cli.merge import merge_pipelines
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.project.remote_storage import RemoteStorage

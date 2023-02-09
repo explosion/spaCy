@@ -8,6 +8,7 @@ menu:
   - ['validate', 'validate']
   - ['init', 'init']
   - ['configure', 'configure']
+  - ['merge', 'merge']
   - ['convert', 'convert']
   - ['debug', 'debug']
   - ['train', 'train']
@@ -306,11 +307,10 @@ $ python -m spacy configure tok2vec [base_model] [output_file]
 | `base_model`  | A trained pipeline to resume training (package name or path). ~~str (positional)~~                                                                                                                                                    |
 | `output_file` | Path to output `.cfg` file or `-` to write the config to stdout (so you can pipe it forward to a file or to the `train` command). Note that if you're writing to stdout, no additional logging info is printed. ~~Path (positional)~~ |
 
-### configure merge {id="configure-merge", tag="command"}
+## merge {id="merge", tag="command"}
 
 Take two pipelines and create a new one with components from both of them,
-handling the configuration of listeners. Note that unlike other commands, this
-produces a whole pipeline, not just a config.
+handling the configuration of listeners. The output is a serialized pipeline.
 
 Components in the final pipeline are in the same order as in the original
 pipelines, with the base pipeline first and the added pipeline after. Because
@@ -329,7 +329,7 @@ textcat, and want to provide with one of the official pretrained pipelines or
 another pipeline.
 
 ```cli
-$ python -m spacy configure tok2vec [base_model] [added_model] [output_file]
+$ python -m spacy merge [base_model] [added_model] [output_file]
 ```
 
 | Name          | Description                                                                              |
