@@ -27,7 +27,7 @@ def _increment_suffix(name: str) -> str:
         return f"{prefix}{int(num) + 1}"
 
 
-def _make_unique_pipeline_names(nlp: Language, nlp2: Language) -> Dict[str, str]:
+def _make_unique_pipe_names(nlp: Language, nlp2: Language) -> Dict[str, str]:
     """Given two pipelines, try to rename any collisions in component names.
 
     If a simple increment of a numeric suffix doesn't work, will give up.
@@ -66,7 +66,7 @@ def _inner_merge(
 
     # The outer merge already verified there was exactly one tok2vec
     tok2vec_name = _get_tok2vecs(nlp2.config)[0]
-    rename = _make_unique_pipeline_names(nlp, nlp2)
+    rename = _make_unique_pipe_names(nlp, nlp2)
 
     if len(_get_listeners(nlp2)) > 1:
         if replace_listeners:
