@@ -119,7 +119,7 @@ def _check_pipeline_names(nlp: Language, nlp2: Language) -> Dict[str, str]:
     fail_msg = """
         Tried automatically renaming {name} to {new_name}, but still
         had a collision, so bailing out. Please make your pipe names
-        more unique.
+        unique.
         """
 
     # map of components to be renamed

@@ -14,8 +14,8 @@ def _inner_merge(
 ) -> Language:
     """Actually do the merge.
 
-    nlp: Base pipeline to add components to.
-    nlp2: Pipeline to add components from.
+    nlp (Language): Base pipeline to add components to.
+    nlp2 (Language): Pipeline to add components from.
     replace_listeners (bool): Whether to replace listeners. Usually only true
       if there's one listener.
     returns: assembled pipeline.
