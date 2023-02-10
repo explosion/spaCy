@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 from wasabi import msg
 import typer
 from thinc.api import Config
@@ -80,23 +79,6 @@ def _get_listeners(nlp: Language) -> List[str]:
     return out
 
 
-def _increment_suffix(name: str) -> str:
-    """Given a name, return an incremented version.
-
-    If no numeric suffix is found, return the original with "2" appended.
-
-    This is used to avoid name collisions in pipelines.
-    """
-
-    res = re.search(r"\d+$", name)
-    if res is None:
-        return f"{name}2"
-    else:
-        num = res.group()
-        prefix = name[0 : -len(num)]
-        return f"{prefix}{int(num) + 1}"
-
-
 def _check_single_tok2vec(name: str, config: Config) -> None:
     """Check if there is just one tok2vec in a config.
 
@@ -108,31 +90,6 @@ def _check_single_tok2vec(name: str, config: Config) -> None:
         but {name} has {len(tok2vecs)}."""
     if len(tok2vecs) > 1:
         msg.fail(fail_msg, exits=1)
-
-
-def _check_pipeline_names(nlp: Language, nlp2: Language) -> Dict[str, str]:
-    """Given two pipelines, try to rename any collisions in component names.
-
-    If a simple increment of a numeric suffix doesn't work, will give up.
-    """
-
-    fail_msg = """
-        Tried automatically renaming {name} to {new_name}, but still
-        had a collision, so bailing out. Please make your pipe names
-        unique.
-        """
-
-    # map of components to be renamed
-    rename = {}
-    # check pipeline names
-    names = nlp.pipe_names
-    for name in nlp2.pipe_names:
-        if name in names:
-            inc = _increment_suffix(name)
-            if inc in names or inc in nlp2.pipe_names:
-                msg.fail(fail_msg.format(name=name, new_name=inc), exits=1)
-            rename[name] = inc
-    return rename
 
 
 @configure_cli.command("resume")
@@ -167,7 +124,7 @@ def configure_resume_cli(
 
 
 @configure_cli.command("transformer")
-def use_transformer(
+def configure_transformer_feature_source(
     base_model: str, output_file: Path, transformer_name: str = "roberta-base"
 ) -> Config:
     """Replace pipeline tok2vec with transformer."""
@@ -218,7 +175,7 @@ def use_transformer(
 
 
 @configure_cli.command("tok2vec")
-def use_tok2vec(base_model: str, output_file: Path) -> Config:
+def configure_tok2vec_feature_source(base_model: str, output_file: Path) -> Config:
     """Replace pipeline tok2vec with CNN tok2vec."""
     nlp = spacy.load(base_model)
     _check_single_tok2vec(base_model, nlp.config)
