@@ -109,7 +109,16 @@ def merge_pipelines(
     output_file: Path = Arg(..., help="Path to save merged model")
     # fmt: on
 ) -> Language:
-    """Combine components from multiple pipelines."""
+    """Combine components from multiple pipelines.
+
+    Given two pipelines, the components from them are merged into a single
+    pipeline. The exact way this works depends on whether the second pipeline
+    has one listener or more than one listener. In the single listener case
+    `replace_listeners` is used, otherwise components are simply appended to
+    the base pipeline.
+
+    DOCS: https://spacy.io/api/cli#merge
+    """
     nlp = spacy.load(base_model)
     nlp2 = spacy.load(added_model)
 

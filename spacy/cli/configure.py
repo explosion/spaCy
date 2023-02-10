@@ -103,6 +103,8 @@ def configure_resume_cli(
 
     A config for resuming training is the same as the input config, but with
     all components sourced.
+
+    DOCS: https://spacy.io/api/cli#configure-resume
     """
 
     nlp = spacy.load(base_model)
@@ -127,7 +129,10 @@ def configure_resume_cli(
 def configure_transformer_feature_source(
     base_model: str, output_file: Path, transformer_name: str = "roberta-base"
 ) -> Config:
-    """Replace pipeline tok2vec with transformer."""
+    """Replace pipeline tok2vec with transformer.
+
+    DOCS: https://spacy.io/api/cli#configure-transformer
+    """
 
     # 1. identify tok2vec
     # 2. replace tok2vec
@@ -176,7 +181,10 @@ def configure_transformer_feature_source(
 
 @configure_cli.command("tok2vec")
 def configure_tok2vec_feature_source(base_model: str, output_file: Path) -> Config:
-    """Replace pipeline tok2vec with CNN tok2vec."""
+    """Replace pipeline tok2vec with CNN tok2vec.
+
+    DOCS: https://spacy.io/api/cli#configure-tok2vec
+    """
     nlp = spacy.load(base_model)
     _check_single_tok2vec(base_model, nlp.config)
 
