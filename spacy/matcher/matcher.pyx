@@ -847,7 +847,7 @@ class _FuzzyPredicate:
         fuzz = self.predicate[len("FUZZY"):] # number after prefix
         self.fuzzy = int(fuzz) if fuzz else -1
         self.fuzzy_compare = fuzzy_compare
-        self.key = (self.attr, self.fuzzy, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = (self.attr, regex, self.fuzzy, self.predicate, srsly.json_dumps(value, sort_keys=True))
 
     def __call__(self, Token token):
         if self.is_extension:
@@ -869,7 +869,7 @@ class _RegexPredicate:
         self.value = re.compile(value)
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = (self.attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = (self.attr, regex, fuzzy, self.predicate, srsly.json_dumps(value, sort_keys=True))
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
 
@@ -977,7 +977,7 @@ class _ComparisonPredicate:
         self.value = value
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = (self.attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = (self.attr, regex, fuzzy, self.predicate, srsly.json_dumps(value, sort_keys=True))
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
 
@@ -1092,7 +1092,7 @@ def _get_extension_extra_predicates(spec, extra_predicates, predicate_types,
         if isinstance(value, dict):
             for type_, cls in predicate_types.items():
                 if type_ in value:
-                    key = (attr, type_, srsly.json_dumps(value[type_], sort_keys=True))
+                    key = (attr, False, None, type_, srsly.json_dumps(value[type_], sort_keys=True))
                     if key in seen_predicates:
                         output.append(seen_predicates[key])
                     else:
