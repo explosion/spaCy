@@ -89,8 +89,8 @@ have to call `list()` on it first:
 </Infobox>
 
 You can use the [`nlp.pipe_as_tuples`](/api/language#pipe_as_tuples) method to
-pass additional context along with each doc when using the functionality of
-[`nlp.pipe`](/api/language#pipe). The input should be a sequence of
+pass additional context along with each doc when using the same functionality
+as in [`nlp.pipe`](/api/language#pipe). The input should be a sequence of
 `(text, context)` tuples and the output will be a sequence of `(doc, context)`
 tuples. For example, you can pass metadata in the context and save it in a
 [custom attribute](#custom-components-attributes):
