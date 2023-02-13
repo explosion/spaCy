@@ -1198,7 +1198,7 @@ def test_configure_resume(tmp_path):
         assert "source" in val, f"Non-sourced component: {comp}"
 
 
-def test_configure_tok2vec_feature_source(tmp_path):
+def test_use_tok2vec(tmp_path):
     # Can't add a transformer here because spacy-transformers might not be present
     nlp = spacy.blank("en")
     nlp.add_pipe("tok2vec")
@@ -1206,7 +1206,7 @@ def test_configure_tok2vec_feature_source(tmp_path):
     nlp.to_disk(base_path)
 
     out_path = tmp_path / "converted_to_tok2vec"
-    conf = configure_tok2vec_feature_source(base_path, out_path)
+    conf = use_tok2vec(base_path, out_path)
     assert out_path.exists(), "No model saved"
 
     assert "tok2vec" in conf["components"], "No tok2vec component"
