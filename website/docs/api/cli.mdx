@@ -253,8 +253,11 @@ $ python -m spacy init labels [config_path] [output_path] [--code] [--verbose] [
 
 ## configure {id="configure", version="TODO"}
 
-Modify or combine existing configs in high-level ways. Can be used to automate
-config changes made as part of the development cycle.
+Modify or combine existing configs. Example uses include swapping feature
+sources or creating configs to resume training. This may simplify parts of the
+development cycle. For example, it allows starting off with a config for a
+faster, less accurate model (using the CNN tok2vec) and conveniently switching
+to transformers later, without having to manually adjust the config.
 
 ### configure resume {id="configure-resume", tag="command"}
 
@@ -1282,7 +1285,6 @@ $ python -m spacy apply [model] [data-path] [output-file] [--code] [--text-key] 
 | `--n-process`, `-n`                       | Number of processes to use for prediction. Defaults to `1`. ~~int (option)~~                                                                                                         |
 | `--help`, `-h`                            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                               | A `DocBin` with the annotations from the `model` for all the files found in `data-path`.                                                                                             |
-
 
 ## find-threshold {id="find-threshold",version="3.5",tag="command"}
 
