@@ -828,7 +828,7 @@ def _get_attr_values(spec, string_store):
     return attr_values
 
 
-def _predicate_cache_key(attr, predicate, value, regex=False, fuzzy=None):
+def _predicate_cache_key(attr, predicate, value, *, regex=False, fuzzy=None):
     # tuple order affects performance
     return (attr, regex, fuzzy, predicate, srsly.json_dumps(value, sort_keys=True))
 
@@ -910,7 +910,7 @@ class _SetPredicate:
                 self.value = set(get_string_id(v) for v in value)
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = _predicate_cache_key(self.attr, self.predicate, value, self.regex, self.fuzzy)
+        self.key = _predicate_cache_key(self.attr, self.predicate, value, regex=self.regex, fuzzy=self.fuzzy)
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
 
