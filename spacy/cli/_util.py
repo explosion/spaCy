@@ -46,6 +46,7 @@ DEBUG_HELP = """Suite of helpful commands for debugging and profiling. Includes
 commands to check and validate your config files, training and evaluation data,
 and custom model implementations.
 """
+BENCHMARK_HELP = """Commands for benchmarking pipelines."""
 INIT_HELP = """Commands for initializing configs and pipeline packages."""
 CONFIGURE_HELP = """Commands for automatically modifying configs."""
 
@@ -55,6 +56,7 @@ Arg = typer.Argument
 Opt = typer.Option
 
 app = typer.Typer(name=NAME, help=HELP)
+benchmark_cli = typer.Typer(name="benchmark", help=BENCHMARK_HELP, no_args_is_help=True)
 project_cli = typer.Typer(name="project", help=PROJECT_HELP, no_args_is_help=True)
 debug_cli = typer.Typer(name="debug", help=DEBUG_HELP, no_args_is_help=True)
 init_cli = typer.Typer(name="init", help=INIT_HELP, no_args_is_help=True)
@@ -62,6 +64,7 @@ configure_cli = typer.Typer(name="configure", help=CONFIGURE_HELP, no_args_is_he
 
 app.add_typer(project_cli)
 app.add_typer(debug_cli)
+app.add_typer(benchmark_cli)
 app.add_typer(init_cli)
 app.add_typer(configure_cli)
 
@@ -90,9 +93,9 @@ def parse_config_overrides(
     cli_overrides = _parse_overrides(args, is_cli=True)
     if cli_overrides:
         keys = [k for k in cli_overrides if k not in env_overrides]
-        logger.debug(f"Config overrides from CLI: {keys}")
+        logger.debug("Config overrides from CLI: %s", keys)
     if env_overrides:
-        logger.debug(f"Config overrides from env variables: {list(env_overrides)}")
+        logger.debug("Config overrides from env variables: %s", list(env_overrides))
     return {**cli_overrides, **env_overrides}
 
 

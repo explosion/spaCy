@@ -13,7 +13,7 @@ import {
     LandingBanner,
 } from '../src/components/landing'
 import { H2 } from '../src/components/typography'
-import { InlineCode } from '../src/components/code'
+import { InlineCode } from '../src/components/inlineCode'
 import { Ul, Li } from '../src/components/list'
 import Button from '../src/components/button'
 import Link from '../src/components/link'
@@ -89,8 +89,8 @@ const Landing = () => {
                 </LandingCard>
 
                 <LandingCard title="Awesome ecosystem" url="/usage/projects" button="Read more">
-                    In the five years since its release, spaCy has become an industry standard with
-                    a huge ecosystem. Choose from a variety of plugins, integrate with your machine
+                    Since its release in 2015, spaCy has become an industry standard with a huge
+                    ecosystem. Choose from a variety of plugins, integrate with your machine
                     learning stack and build custom components and workflows.
                 </LandingCard>
             </LandingGrid>
@@ -162,7 +162,7 @@ const Landing = () => {
                     small
                 >
                     <p>
-                        <Link to="https://prodi.gy" hidden>
+                        <Link to="https://prodi.gy" noLinkLayout>
                             <ImageFill
                                 image={prodigyImage}
                                 alt="Prodigy: Radically efficient machine teaching"
@@ -206,7 +206,10 @@ const Landing = () => {
             <LandingGrid cols={2}>
                 <LandingCol>
                     <Link to="/usage/projects" hidden>
-                        <ImageFill image={projectsImage} />
+                        <ImageFill
+                            image={projectsImage}
+                            alt="Illustration of project workflow and commands"
+                        />
                     </Link>
                     <br />
                     <br />

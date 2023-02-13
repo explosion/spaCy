@@ -62,10 +62,10 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     frozen_components = T["frozen_components"]
     # Sourced components that require resume_training
     resume_components = [p for p in sourced if p not in frozen_components]
-    logger.info(f"Pipeline: {nlp.pipe_names}")
+    logger.info("Pipeline: %s", nlp.pipe_names)
     if resume_components:
         with nlp.select_pipes(enable=resume_components):
-            logger.info(f"Resuming training for: {resume_components}")
+            logger.info("Resuming training for: %s", resume_components)
             nlp.resume_training(sgd=optimizer)
     # Make sure that listeners are defined before initializing further
     nlp._link_components()
@@ -73,16 +73,17 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
         if T["max_epochs"] == -1:
             sample_size = 100
             logger.debug(
-                f"Due to streamed train corpus, using only first {sample_size} "
-                f"examples for initialization. If necessary, provide all labels "
-                f"in [initialize]. More info: https://spacy.io/api/cli#init_labels"
+                "Due to streamed train corpus, using only first %s examples for initialization. "
+                "If necessary, provide all labels in [initialize]. "
+                "More info: https://spacy.io/api/cli#init_labels",
+                sample_size,
             )
             nlp.initialize(
                 lambda: islice(train_corpus(nlp), sample_size), sgd=optimizer
             )
         else:
             nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
-        logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
+        logger.info("Initialized pipeline components: %s", nlp.pipe_names)
     # Detect components with listeners that are not frozen consistently
     for name, proc in nlp.pipeline:
         for listener in getattr(
@@ -109,7 +110,7 @@ def init_vocab(
 ) -> None:
     if lookups:
         nlp.vocab.lookups = lookups
-        logger.info(f"Added vocab lookups: {', '.join(lookups.tables)}")
+        logger.info("Added vocab lookups: %s", ", ".join(lookups.tables))
     data_path = ensure_path(data)
     if data_path is not None:
         lex_attrs = srsly.read_jsonl(data_path)
@@ -125,11 +126,11 @@ def init_vocab(
         else:
             oov_prob = DEFAULT_OOV_PROB
         nlp.vocab.cfg.update({"oov_prob": oov_prob})
-        logger.info(f"Added {len(nlp.vocab)} lexical entries to the vocab")
+        logger.info("Added %d lexical entries to the vocab", len(nlp.vocab))
     logger.info("Created vocabulary")
     if vectors is not None:
         load_vectors_into_model(nlp, vectors)
-        logger.info(f"Added vectors: {vectors}")
+        logger.info("Added vectors: %s", vectors)
     # warn if source model vectors are not identical
     sourced_vectors_hashes = nlp.meta.pop("_sourced_vectors_hashes", {})
     vectors_hash = hash(nlp.vocab.vectors.to_bytes(exclude=["strings"]))
@@ -191,7 +192,7 @@ def init_tok2vec(
     if weights_data is not None:
         layer = get_tok2vec_ref(nlp, P)
         layer.from_bytes(weights_data)
-        logger.info(f"Loaded pretrained weights from {init_tok2vec}")
+        logger.info("Loaded pretrained weights from %s", init_tok2vec)
         return True
     return False
 
@@ -216,13 +217,13 @@ def convert_vectors(
         nlp.vocab.deduplicate_vectors()
     else:
         if vectors_loc:
-            logger.info(f"Reading vectors from {vectors_loc}")
+            logger.info("Reading vectors from %s", vectors_loc)
             vectors_data, vector_keys, floret_settings = read_vectors(
                 vectors_loc,
                 truncate,
                 mode=mode,
             )
-            logger.info(f"Loaded vectors from {vectors_loc}")
+            logger.info("Loaded vectors from %s", vectors_loc)
         else:
             vectors_data, vector_keys = (None, None)
         if vector_keys is not None and mode != VectorsMode.floret:

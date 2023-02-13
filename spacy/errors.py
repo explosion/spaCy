@@ -965,8 +965,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
     E1048 = ("Got '{unexpected}' as console progress bar type, but expected one of the following: {expected}")
     E1049 = ("No available port found for displaCy on host {host}. Please specify an available port "
-             "with `displacy.serve(doc, port)`")
-    E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port)` "
+             "with `displacy.serve(doc, port=port)`")
+    E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
              "or use `auto_switch_port=True` to pick an available port automatically.")
 
 

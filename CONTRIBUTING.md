@@ -173,6 +173,11 @@ formatting and [`flake8`](http://flake8.pycqa.org/en/latest/) for linting its
 Python modules. If you've built spaCy from source, you'll already have both
 tools installed.
 
+As a general rule of thumb, we use f-strings for any formatting of strings.
+One exception are calls to Python's `logging` functionality.
+To avoid unnecessary string conversions in these cases, we use string formatting
+templates with `%s` and `%d` etc.
+
 **⚠️ Note that formatting and linting is currently only possible for Python
 modules in `.py` files, not Cython modules in `.pyx` and `.pxd` files.**
 
