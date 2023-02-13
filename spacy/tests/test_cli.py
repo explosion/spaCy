@@ -21,8 +21,7 @@ from spacy.cli._util import parse_config_overrides, string_to_list
 from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
 from spacy.cli._util import upload_file, download_file
-from spacy.cli.configure import configure_resume_cli
-from spacy.cli.configure import configure_tok2vec_feature_source
+from spacy.cli.configure import configure_resume_cli, use_tok2vec
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.debug_data import _get_distribution, _get_kl_divergence

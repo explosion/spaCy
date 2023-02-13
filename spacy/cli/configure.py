@@ -126,7 +126,7 @@ def configure_resume_cli(
 
 
 @configure_cli.command("transformer")
-def configure_transformer_feature_source(
+def use_transformer(
     base_model: str, output_file: Path, transformer_name: str = "roberta-base"
 ) -> Config:
     """Replace pipeline tok2vec with transformer.
@@ -180,7 +180,7 @@ def configure_transformer_feature_source(
 
 
 @configure_cli.command("tok2vec")
-def configure_tok2vec_feature_source(base_model: str, output_file: Path) -> Config:
+def use_tok2vec(base_model: str, output_file: Path) -> Config:
     """Replace pipeline tok2vec with CNN tok2vec.
 
     DOCS: https://spacy.io/api/cli#configure-tok2vec
