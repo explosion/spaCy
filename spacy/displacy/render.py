@@ -313,6 +313,8 @@ class DependencyRenderer:
                 self.lang = settings.get("lang", DEFAULT_LANG)
             render_id = f"{id_prefix}-{i}"
             svg = self.render_svg(render_id, p["words"], p["arcs"])
+            if p.get("title"):
+                svg = TPL_TITLE.format(title=p.get("title")) + svg
             rendered.append(svg)
         if page:
             content = "".join([TPL_FIGURE.format(content=svg) for svg in rendered])

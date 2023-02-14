@@ -364,6 +364,7 @@ def test_displacy_render_manual_dep():
             {"start": 2, "end": 3, "label": "det", "dir": "left"},
             {"start": 1, "end": 3, "label": "attr", "dir": "right"},
         ],
+        "title": "Title",
     }
     html = displacy.render([parsed_dep], style="dep", manual=True)
     for word in parsed_dep["words"]:
