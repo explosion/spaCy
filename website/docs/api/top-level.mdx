@@ -400,11 +400,10 @@ displaCy's different data formats below.
 > #### ENT example data structure
 >
 > ```json
->  {
->    "text": "But Google is starting from behind.",
->    "ents": [{"start": 4, "end": 10, "label": "ORG"}],
->    "title": None
->  }
+> {
+>   "text": "But Google is starting from behind.",
+>   "ents": [{ "start": 4, "end": 10, "label": "ORG" }]
+> }
 > ```
 
 #### Named Entity Recognition data structure {id="structure-ent"}
@@ -413,20 +412,20 @@ displaCy's different data formats below.
 | -------------- | ------------------------------------------------------------------------------------------- |
 | `text`         | String representation of the document text. ~~str~~                                         |
 | `ents`         | List of dictionaries describing entities (see structure below). ~~List[Dict[str, Any]]~~    |
-| `title`        | Title of the visualization. ~~str~~                                                         |
 | _Optional_     |                                                                                             |
+| `title`        | Title of the visualization. ~~Optional[str]~~                                               |
 | `settings`     | Entity Visualizer options (see [here](/api/top-level#displacy_options)). ~~Dict[str, Any]~~ |
 
 <Accordion title="Ents data structure">
 
-| Dictionary Key | Description                                         |
-| -------------- | --------------------------------------------------- |
-| `start`        | The index of the first token of the entity. ~~int~~ |
-| `end`          | The index of the last token of the entity. ~~int~~  |
-| `label`        | Label attached to the entity. ~~str~~               |
-| _Optional_     |                                                     |
-| `kb_id`        | `KnowledgeBase` ID. ~~str~~                         |
-| `kb_url`       | `KnowledgeBase` URL. ~~str~~                        |
+| Dictionary Key | Description                                                            |
+| -------------- | ---------------------------------------------------------------------- |
+| `start`        | The index of the first character of the entity. ~~int~~                |
+| `end`          | The index of the last character of the entity. (not inclusive) ~~int~~ |
+| `label`        | Label attached to the entity. ~~str~~                                  |
+| _Optional_     |                                                                        |
+| `kb_id`        | `KnowledgeBase` ID. ~~str~~                                            |
+| `kb_url`       | `KnowledgeBase` URL. ~~str~~                                           |
 
 </Accordion>
 
@@ -449,17 +448,15 @@ displaCy's different data formats below.
 | -------------- | ----------------------------------------------------------------------------------------- |
 | `text`         | String representation of the document text. ~~str~~                                       |
 | `spans`        | List of dictionaries describing spans (see structure below). ~~List[Dict[str, Any]]~~     |
-| `title`        | Title of the visualization. ~~str~~                                                       |
 | `tokens`       | List of word tokens. ~~List[str]~~                                                        |
 | _Optional_     |                                                                                           |
+| `title`        | Title of the visualization. ~~Optional[str]~~                                             |
 | `settings`     | Span Visualizer options (see [here](/api/top-level#displacy_options)). ~~Dict[str, Any]~~ |
 
 <Accordion title="Spans data structure">
 
 | Dictionary Key | Description                                                   |
 | -------------- | ------------------------------------------------------------- |
-| `start`        | The index of the first token of the span. ~~int~~             |
-| `end`          | The index of the last token of the span. ~~int~~              |
 | `start_token`  | The index of the first token of the span in `tokens`. ~~int~~ |
 | `end_token`    | The index of the last token of the span in `tokens`. ~~int~~  |
 | `label`        | Label attached to the span. ~~str~~                           |
