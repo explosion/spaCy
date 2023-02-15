@@ -144,8 +144,17 @@ class registry(thinc.registry):
         return func
 
     @classmethod
-    def find(cls, registry_name: str, func_name: str) -> Callable:
-        """Get info about a registered function from the registry."""
+    def find(
+        cls, registry_name: str, func_name: str
+    ) -> Dict[str, Optional[Union[str, int]]]:
+        """Find information about a registered function, including the
+        module and path to the file it's defined in, the line number and the
+        docstring, if available.
+
+        registry_name (str): Name of the catalogue registry.
+        func_name (str): Name of the registered function.
+        RETURNS (Dict[str, Optional[Union[str, int]]]): The function info.
+        """
         # We're overwriting this classmethod so we're able to provide more
         # specific error messages and implement a fallback to spacy-legacy.
         if not hasattr(cls, registry_name):
