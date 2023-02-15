@@ -1,15 +1,40 @@
 from typing import Any, List, Union, Optional, Dict
 from pathlib import Path
+import requests
 import srsly
 from preshed.bloom import BloomFilter
 from collections import OrderedDict
 
 from .errors import Errors
 from .util import SimpleFrozenDict, ensure_path, registry, load_language_data
+from .util import logger
 from .strings import get_string_id
 
 
 UNSET = object()
+
+
+@registry.misc("spacy.LookupsDataLoader.v1")
+def load_lookups_data(lang, tables):
+    logger.debug(f"Loading lookups from spacy-lookups-data: {tables}")
+    lookups = load_lookups(lang=lang, tables=tables)
+    return lookups
+
+
+@registry.misc("spacy.LookupsDataLoaderFromURL.v1")
+def load_lookups_data_from_url(lang, tables, url):
+    logger.debug(f"Loading lookups from {url}: {tables}")
+    lookups = Lookups()
+    for table in tables:
+        table_url = url + lang + "_" + table + ".json"
+        r = requests.get(table_url)
+        if r.status_code != 200:
+            raise ValueError(
+                Errors.E4006.format(status_code=r.status_code, url=table_url)
+            )
+        table_data = r.json()
+        lookups.add_table(table, table_data)
+    return lookups
 
 
 def load_lookups(lang: str, tables: List[str], strict: bool = True) -> "Lookups":

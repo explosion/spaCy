@@ -59,19 +59,18 @@ $ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
 ```
 
 spaCy also lets you install extra dependencies by specifying the following
-keywords in brackets, e.g. `spacy[ja]` or `spacy[lookups,transformers]` (with
+keywords in brackets, e.g. `spacy[ja]` or `spacy[apple,transformers]` (with
 multiple comma-separated extras). See the `[options.extras_require]` section in
 spaCy's [`setup.cfg`](%%GITHUB_SPACY/setup.cfg) for details on what's included.
 
 > #### Example
 >
 > ```bash
-> $ pip install %%SPACY_PKG_NAME[lookups,transformers]%%SPACY_PKG_FLAGS
+> $ pip install %%SPACY_PKG_NAME[apple,transformers]%%SPACY_PKG_FLAGS
 > ```
 
 | Name             | Description                                                                                                                                                                                                                                                    |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lookups`        | Install [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) for data tables for lemmatization and lexeme normalization. The data is serialized with trained pipelines, so you only need this package if you want to train your own models. |
 | `transformers`   | Install [`spacy-transformers`](https://github.com/explosion/spacy-transformers). The package will be installed automatically when you install a transformer-based pipeline.                                                                                    |
 | `cuda`, ...      | Install spaCy with GPU support provided by [CuPy](https://cupy.chainer.org) for your given CUDA version. See the GPU [installation instructions](#gpu) for details and options.                                                                                |
 | `apple`          | Install [`thinc-apple-ops`](https://github.com/explosion/thinc-apple-ops) to improve performance on an Apple M1.                                                                                                                                               |
@@ -174,7 +173,7 @@ $ pip install --no-build-isolation --editable . # compile and install spaCy
 To install with extras:
 
 ```bash
-$ pip install --no-build-isolation --editable .[lookups,cuda102]
+$ pip install --no-build-isolation --editable .[ja,cuda102]
 ```
 
 How to install compilers and related build tools:

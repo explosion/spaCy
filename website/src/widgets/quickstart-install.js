@@ -46,7 +46,6 @@ const QuickstartInstall = ({ id, title }) => {
     const pipExtras = [
         hardware === 'gpu' && (platform !== 'arm' || os === 'linux') && cuda,
         train && 'transformers',
-        train && 'lookups',
         apple && 'apple',
         ...modelExtras,
     ]
@@ -209,9 +208,6 @@ const QuickstartInstall = ({ id, title }) => {
             </QS>
             <QS config="train" package="conda" comment prompt={false}>
                 # packages only available via pip
-            </QS>
-            <QS config="train" package="conda">
-                pip install spacy-lookups-data
             </QS>
 
             {languages.map(({ code, models: modelOptions }) => {
