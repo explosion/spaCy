@@ -143,6 +143,7 @@ def project_dir():
 
 def test_project_document(project_dir):
     readme_path = project_dir / "README.md"
+    assert not readme_path.exists(), "README already exists"
     result = CliRunner().invoke(
         app, ["project", "document", str(project_dir), "-o", str(readme_path)]
     )
@@ -154,6 +155,7 @@ def test_project_document(project_dir):
 
 def test_project_assets(project_dir):
     asset_dir = project_dir / "assets"
+    assert not asset_dir.exists(), "Assets dir is already present"
     result = CliRunner().invoke(app, ["project", "assets", str(project_dir)])
     assert result.exit_code == 0
     assert (asset_dir / "spacy-readme.md").is_file(), "Assets not downloaded"
