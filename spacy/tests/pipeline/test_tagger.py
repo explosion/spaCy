@@ -68,17 +68,22 @@ PARTIAL_DATA = [
 
 
 def test_label_smoothing():
+    util.fix_random_seed()
     nlp = Language()
-    tagger = nlp.add_pipe("tagger", config=dict(label_smoothing=True))
+    tagger_no_ls = nlp.add_pipe("tagger", "no_label_smoothing", config=dict(label_smoothing=False))
+    tagger_ls = nlp.add_pipe("tagger", "label_smoothing", config=dict(label_smoothing=True))
     train_examples = []
+    losses = {}
     for tag in TAGS:
-        tagger.add_label(tag)
+        tagger_no_ls.add_label(tag)
+        tagger_ls.add_label(tag)
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
-    for i in range(1):
+    for i in range(5):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses == {'no_label_smoothing': 1.4892945885658264, 'label_smoothing': 1.1432453989982605}
 
 
 def test_no_label():
