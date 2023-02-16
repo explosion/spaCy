@@ -1028,12 +1028,11 @@ def make_tempdir() -> Generator[Path, None, None]:
 
     YIELDS (Path): The path of the temp directory.
     """
-    d = Path(tempfile.mkdtemp())
-    yield d
     try:
-        shutil.rmtree(str(d))
+        with tempfile.TemporaryDirectory() as td:
+            yield Path(td)
     except PermissionError as e:
-        warnings.warn(Warnings.W091.format(dir=d, msg=e))
+        warnings.warn(Warnings.W091.format(dir=td, msg=e))
 
 
 def is_cwd(path: Union[Path, str]) -> bool:
