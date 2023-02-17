@@ -17,7 +17,7 @@ def test_issue361(en_vocab, text1, text2):
 
 @pytest.mark.issue(600)
 def test_issue600():
-    vocab = Vocab(tag_map={"NN": {"pos": "NOUN"}})
+    vocab = Vocab()
     doc = Doc(vocab, words=["hello"])
     doc[0].tag_ = "NN"
 
