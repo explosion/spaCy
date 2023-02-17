@@ -526,8 +526,8 @@ def debug_data(
         msg.info(f"{len(label_list)} label(s) in train data")
         p = np.array(counts)
         p = p / p.sum()
-        entropy = np.round((-p*np.log2(p)).sum(), 2)
-        msg.info(f"{entropy} is the train data label entropy")
+        norm_entropy = (-p * np.log2(p)).sum() / np.log2(len(label_list))
+        msg.info(f"{norm_entropy} is the normalised label entropy")
         model_labels = _get_labels_from_model(nlp, "tagger")
         labels = set(label_list)
         missing_labels = model_labels - labels
