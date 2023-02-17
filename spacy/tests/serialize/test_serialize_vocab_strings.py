@@ -13,7 +13,10 @@ from spacy.vocab import Vocab
 
 from ..util import make_tempdir
 
-test_strings = [(StringStore(), StringStore()), (StringStore(["rats", "are", "cute"]), StringStore(["i", "like", "rats"]))]
+test_strings = [
+    (StringStore(), StringStore()),
+    (StringStore(["rats", "are", "cute"]), StringStore(["i", "like", "rats"])),
+]
 test_strings_attrs = [(StringStore(["rats", "are", "cute"]), "Hello")]
 
 
