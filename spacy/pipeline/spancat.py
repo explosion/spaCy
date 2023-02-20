@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
 from thinc.api import Optimizer
 from thinc.types import Ragged, Ints2d, Floats2d
-from wasabi import msg
 
 import numpy
 
@@ -367,12 +366,7 @@ class SpanCategorizer(TrainablePipe):
         self.scorer = scorer
         self.add_negative_label = add_negative_label
         if not allow_overlap and max_positive is not None and max_positive > 1:
-            self.cfg["allow_overlap"] = True
-            msg.warn(
-                "'allow_overlap' can only be False when max_positive=1, "
-                f"but found 'max_positive': {max_positive} "
-                "SpanCategorizer is automatically configured with allow_overlap=True."
-            )
+            raise ValueError(Errors.E1051.format(max_positive=max_positive))
 
     @property
     def key(self) -> str:
