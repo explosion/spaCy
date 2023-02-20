@@ -68,6 +68,7 @@ PARTIAL_DATA = [
 
 
 def test_label_smoothing():
+    util.fix_random_seed()
     nlp = Language()
     tagger_no_ls = nlp.add_pipe(
         "tagger", "no_label_smoothing", config=dict(label_smoothing=0.0)
