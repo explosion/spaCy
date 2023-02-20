@@ -45,7 +45,7 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "tagger",
     assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL, "overwrite": False, "scorer": {"@scorers": "spacy.tagger_scorer.v1"}, "neg_prefix": "!", "label_smoothing": False},
+    default_config={"model": DEFAULT_TAGGER_MODEL, "overwrite": False, "scorer": {"@scorers": "spacy.tagger_scorer.v1"}, "neg_prefix": "!", "label_smoothing": 0.05},
     default_score_weights={"tag_acc": 1.0},
 )
 def make_tagger(
@@ -55,7 +55,7 @@ def make_tagger(
     overwrite: bool,
     scorer: Optional[Callable],
     neg_prefix: str,
-    label_smoothing: bool,
+    label_smoothing: float,
 ):
     """Construct a part-of-speech tagger component.
 
@@ -90,7 +90,7 @@ class Tagger(TrainablePipe):
         overwrite=BACKWARD_OVERWRITE,
         scorer=tagger_score,
         neg_prefix="!",
-        label_smoothing=False,
+        label_smoothing=0.05,
     ):
         """Initialize a part-of-speech tagger.
 
@@ -258,7 +258,6 @@ class Tagger(TrainablePipe):
         DOCS: https://spacy.io/api/tagger#get_loss
         """
         validate_examples(examples, "Tagger.get_loss")
-        self.cfg["label_smoothing"] = 0.05 if self.cfg["label_smoothing"] else 0.0
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False, neg_prefix=self.cfg["neg_prefix"], label_smoothing=self.cfg["label_smoothing"])
         # Convert empty tag "" to missing value None so that both misaligned
         # tokens and tokens with missing annotation have the default missing

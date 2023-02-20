@@ -70,10 +70,10 @@ PARTIAL_DATA = [
 def test_label_smoothing():
     nlp = Language()
     tagger_no_ls = nlp.add_pipe(
-        "tagger", "no_label_smoothing", config=dict(label_smoothing=False)
+        "tagger", "no_label_smoothing", config=dict(label_smoothing=0.0)
     )
     tagger_ls = nlp.add_pipe(
-        "tagger", "label_smoothing", config=dict(label_smoothing=True)
+        "tagger", "label_smoothing"
     )
     train_examples = []
     losses = {}
@@ -87,9 +87,9 @@ def test_label_smoothing():
     tag_scores, bp_tag_scores = tagger_ls.model.begin_update(
         [eg.predicted for eg in train_examples]
     )
-    no_ls_probs = tagger_no_ls.get_loss(train_examples, tag_scores)[1][0]
-    ls_probs = tagger_ls.get_loss(train_examples, tag_scores)[1][0]
-    assert_array_almost_equal((ls_probs - no_ls_probs)[0], [0.05, -0.025, -0.025])
+    no_ls_grads= tagger_no_ls.get_loss(train_examples, tag_scores)[1][0]
+    ls_grads= tagger_ls.get_loss(train_examples, tag_scores)[1][0]
+    assert_array_almost_equal((ls_grads - no_ls_grads)[0], [0.05, -0.025, -0.025])
 
 
 def test_no_label():

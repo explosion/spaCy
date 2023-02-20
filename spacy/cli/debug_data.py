@@ -7,7 +7,7 @@ import srsly
 from wasabi import Printer, MESSAGES, msg
 import typer
 import math
-import numpy as np
+import numpy
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
 from ._util import import_code, debug_cli, _format_number
@@ -524,9 +524,9 @@ def debug_data(
         msg.divider("Part-of-speech Tagging")
         label_list, counts = zip(*gold_train_data["tags"].items())
         msg.info(f"{len(label_list)} label(s) in train data")
-        p = np.array(counts)
+        p = numpy.array(counts)
         p = p / p.sum()
-        norm_entropy = (-p * np.log2(p)).sum() / np.log2(len(label_list))
+        norm_entropy = (-p * numpy.log2(p)).sum() / numpy.log2(len(label_list))
         msg.info(f"{norm_entropy} is the normalised label entropy")
         model_labels = _get_labels_from_model(nlp, "tagger")
         labels = set(label_list)
