@@ -425,7 +425,7 @@ class SpanCategorizer(TrainablePipe):
         return list(self.labels)
 
     @property
-    def label_map(self) -> Dict[str, int]:
+    def _label_map(self) -> Dict[str, int]:
         """RETURNS (Dict[str, int]): The label map."""
         return {label: i for i, label in enumerate(self.labels)}
 
@@ -581,7 +581,7 @@ class SpanCategorizer(TrainablePipe):
                 key = (gold_span.start, gold_span.end)
                 if key in spans_index:
                     row = spans_index[key]
-                    k = self.label_map[gold_span.label_]
+                    k = self._label_map[gold_span.label_]
                     target[row, k] = 1.0
                     if self.add_negative_label:
                         # delete negative label target.
