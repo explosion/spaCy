@@ -490,7 +490,6 @@ class SpanCategorizer(TrainablePipe):
         offset = 0
         for i, doc in enumerate(docs):
             indices_i = indices[i].dataXd
-            allow_overlap = self.cfg["allow_overlap"]
             allow_overlap = cast(bool, self.cfg["allow_overlap"])
             if self.cfg["max_positive"] == 1:
                 doc.spans[self.key] = self._make_span_group_singlelabel(

@@ -493,7 +493,7 @@ def test_overfitting_IO_overlapping():
 
 @pytest.mark.parametrize("name", SPANCAT_COMPONENTS)
 def test_zero_suggestions(name):
-    # Test with a suggester that returns 0 suggestions
+    # Test with a suggester that can return 0 suggestions
     @registry.misc("test_mixed_zero_suggester")
     def make_mixed_zero_suggester():
         def mixed_zero_suggester(docs, *, ops=None):
