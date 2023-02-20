@@ -115,6 +115,7 @@ cfg_string = """
 
     [components.tagger]
     factory = "tagger"
+    label_smoothing = 0.0
 
     [components.tagger.model]
     @architectures = "spacy.Tagger.v2"

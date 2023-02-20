@@ -160,7 +160,7 @@ def test_no_data():
 def test_incomplete_data():
     # Test that the tagger works with incomplete information
     nlp = English()
-    nlp.add_pipe("tagger")
+    nlp.add_pipe("tagger", config=dict(label_smoothing=0.0))
     train_examples = []
     for t in PARTIAL_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
@@ -180,7 +180,7 @@ def test_incomplete_data():
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
     nlp = English()
-    tagger = nlp.add_pipe("tagger")
+    tagger = nlp.add_pipe("tagger", config=dict(label_smoothing=0.0))
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
