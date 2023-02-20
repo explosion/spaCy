@@ -712,9 +712,8 @@ class SpanCategorizer(TrainablePipe):
     ) -> SpanGroup:
         """Find the argmax label for each span."""
         # Handle cases when there are zero suggestions
-        spans = SpanGroup(doc, name=self.key)
         if scores.size == 0:
-            return spans
+            return SpanGroup(doc, name=self.key)
         scores = self.model.ops.to_numpy(scores)
         indices = self.model.ops.to_numpy(indices)
         predicted = scores.argmax(axis=1)
