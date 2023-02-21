@@ -249,7 +249,7 @@ cdef list _parse_batch(CBlas cblas, TransitionSystem moves, StateC** states,
     cdef np.ndarray step_actions
 
     scores = []
-    while sizes.states >= 1 and (actions is None or actions):
+    while sizes.states >= 1 and (actions is None or len(actions) > 0):
         step_scores = numpy.empty((sizes.states, sizes.classes), dtype="f")
         step_actions = actions[0] if actions is not None else None
         assert step_actions is None or step_actions.size == sizes.states, \
