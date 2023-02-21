@@ -7,9 +7,9 @@ import time
 from pathlib import Path
 import pytest
 import srsly
-from click import NoSuchOption
 from packaging.specifiers import SpecifierSet
 from thinc.api import Config, ConfigValidationError
+from radicli import CliParserError
 
 import spacy
 from spacy import about
@@ -520,7 +520,7 @@ def test_parse_config_overrides(args, expected):
 
 @pytest.mark.parametrize("args", [["--foo"], ["--x.foo", "bar", "--baz"]])
 def test_parse_config_overrides_invalid(args):
-    with pytest.raises(NoSuchOption):
+    with pytest.raises(CliParserError):
         parse_config_overrides(args)
 
 
