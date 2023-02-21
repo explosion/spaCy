@@ -258,7 +258,7 @@ class Parser(TrainablePipe):
             # batch uniform length. Since we do not have a gold standard
             # sequence, we use the teacher's predictions as the gold
             # standard.
-            max_moves = int(random.uniform(max(max_moves // 2, 1), max_moves * 2))
+            max_moves = random.randrange(max(max_moves // 2, 1), max_moves * 2)
             states = self._init_batch_from_teacher(teacher_pipe, student_docs, max_moves)
         else:
             states = self.moves.init_batch(student_docs)
@@ -425,7 +425,7 @@ class Parser(TrainablePipe):
         if max_moves >= 1:
             # Chop sequences into lengths of this many words, to make the
             # batch uniform length.
-            max_moves = int(random.uniform(max(max_moves // 2, 1), max_moves * 2))
+            max_moves = random.randrange(max(max_moves // 2, 1), max_moves * 2)
             init_states, gold_states, _ = self._init_gold_batch(
                 examples,
                 max_length=max_moves
@@ -729,9 +729,8 @@ class Parser(TrainablePipe):
                     action.do(state.c, action.label)
                     if state.is_final():
                         break
-                if moves.has_gold(eg, start_state.B(0), state.B(0)):
-                    states.append(start_state)
-                    golds.append(gold)
+                states.append(start_state)
+                golds.append(gold)
                 if state.is_final():
                     break
         return states, golds, max_length

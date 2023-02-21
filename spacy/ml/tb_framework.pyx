@@ -338,9 +338,9 @@ def _forward_fallback(
             all_ids.append(ids)
             all_statevecs.append(statevecs)
             all_which.append(which)
+        n_moves += 1
         if n_moves >= max_moves >= 1:
             break
-        n_moves += 1
 
     def backprop_parser(d_states_d_scores):
         ids = ops.xp.vstack(all_ids)
