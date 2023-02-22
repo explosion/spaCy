@@ -540,11 +540,13 @@ def test_block_ner():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
-def test_overfitting_IO():
+@pytest.mark.parametrize("max_moves", [0, 1, 5, 100])
+def test_overfitting_IO(max_moves):
     fix_random_seed(1)
     # Simple test to try and quickly overfit the NER component
     nlp = English()
     ner = nlp.add_pipe("ner", config={"model": {}})
+    ner.cfg["update_with_oracle_cut_size"] = max_moves
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
