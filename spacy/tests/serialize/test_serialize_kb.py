@@ -117,12 +117,14 @@ def test_serialize_subclassed_kb():
             self.custom_field = custom_field
 
     @registry.misc("spacy.CustomEmptyKB.v1")
-    def empty_custom_kb(custom_field: int) -> Callable[[Vocab, int], SubInMemoryLookupKB]:
+    def empty_custom_kb(
+        custom_field: int,
+    ) -> Callable[[Vocab, int], SubInMemoryLookupKB]:
         def empty_kb_factory(vocab: Vocab, entity_vector_length: int):
             return SubInMemoryLookupKB(
                 vocab=vocab,
                 entity_vector_length=entity_vector_length,
-                custom_field=custom_field
+                custom_field=custom_field,
             )
 
         return empty_kb_factory
