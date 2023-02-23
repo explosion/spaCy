@@ -70,10 +70,10 @@ distance of 2 and up to 30% of the pattern string length. `FUZZY1`..`FUZZY9` can
 be used to specify the exact number of allowed edits.
 
 ```python
-# Match lowercase with fuzzy matching (allows up to 3 edits)
+# Match lowercase with fuzzy matching (allows up to 2 edits)
 pattern = [{"LOWER": {"FUZZY": "definitely"}}]
 
-# Match custom attribute values with fuzzy matching (allows up to 3 edits)
+# Match custom attribute values with fuzzy matching (allows up to 2 edits)
 pattern = [{"_": {"country": {"FUZZY": "Kyrgyzstan"}}}]
 
 # Match with exact Levenshtein edit distance limits (allows up to 4 edits)
