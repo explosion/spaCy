@@ -6,3 +6,4 @@ include spacy/py.typed
 recursive-include spacy/cli *.yml
 recursive-include licenses *
 recursive-exclude spacy *.cpp
+include spacy/cli.json

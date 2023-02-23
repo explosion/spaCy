@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 from spacy.tokens import DocBin, Doc
 from spacy.cli._util import cli
+from spacy.__main__ import FILE
+import json
 
 from .util import make_tempdir, normalize_whitespace
 
@@ -13,6 +15,15 @@ def all_commands():
     for subcommands in cli.subcommands.values():
         result.extend(subcommands.values())
     return result
+
+
+def test_static_up_to_date():
+    """Test that the static JSON matches the current live CLI."""
+    err = "static CLI doesn't match live CLI, re-run generate_static_cli.py"
+    with FILE.open("r", encoding="utf8") as f:
+        existing = f.read()
+    current = json.dumps(cli.to_static_json())
+    assert existing == current, err
 
 
 def test_help_texts(all_commands):

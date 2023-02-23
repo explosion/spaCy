@@ -56,10 +56,10 @@ cli.placeholder("benchmark", description=BENCHMARK_HELP)
 cli.placeholder("init", description=INIT_HELP)
 
 
-def setup_cli() -> None:
+def setup_cli() -> radicli.Radicli:
     # Make sure the entry-point for CLI runs, so that they get imported.
     registry.cli.get_all()
-    cli.run()
+    return cli
 
 
 def parse_config_overrides(

@@ -1157,10 +1157,9 @@ def test_cli_find_threshold(capsys):
 )
 def test_project_check_requirements(reqs, output):
     # excessive guard against unlikely package name
-    try:
+    with pytest.raises(pkg_resources.DistributionNotFound):
         pkg_resources.require("spacyunknowndoesnotexist12345")
-    except pkg_resources.DistributionNotFound:
-        assert output == _check_requirements([req.strip() for req in reqs.split("\n")])
+    assert output == _check_requirements([req.strip() for req in reqs.split("\n")])
 
 
 def test_upload_download_local_file():
