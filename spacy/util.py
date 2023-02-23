@@ -32,6 +32,7 @@ import inspect
 import pkgutil
 import logging
 import socket
+import stat
 
 try:
     import cupy.random
@@ -1050,8 +1051,15 @@ def make_tempdir() -> Generator[Path, None, None]:
     """
     d = Path(tempfile.mkdtemp())
     yield d
+
+    # On Windows, git clones use read-only files, which cause permission errors
+    # when being deleted. This forcibly fixes permissions.
+    def force_remove(rmfunc, path, ex):
+        os.chmod(path, stat.S_IWRITE)
+        rmfunc(path)
+
     try:
-        shutil.rmtree(str(d))
+        shutil.rmtree(str(d), onerror=force_remove)
     except PermissionError as e:
         warnings.warn(Warnings.W091.format(dir=d, msg=e))
 
