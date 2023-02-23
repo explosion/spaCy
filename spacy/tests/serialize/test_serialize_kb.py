@@ -86,12 +86,19 @@ def test_serialize_subclassed_kb():
     [nlp]
     lang = "en"
     pipeline = ["entity_linker"]
+    
+    [default_values]
+    custom_field = 666
 
     [components]
 
     [components.entity_linker]
     factory = "entity_linker"
-
+    
+    [components.entity_linker.generate_empty_kb]
+    @misc = "spacy.CustomEmptyKB.v1"
+    custom_field = ${default_values.custom_field}
+    
     [initialize]
 
     [initialize.components]
@@ -101,13 +108,24 @@ def test_serialize_subclassed_kb():
     [initialize.components.entity_linker.kb_loader]
     @misc = "spacy.CustomKB.v1"
     entity_vector_length = 342
-    custom_field = 666
+    custom_field = ${default_values.custom_field}
     """
 
     class SubInMemoryLookupKB(InMemoryLookupKB):
         def __init__(self, vocab, entity_vector_length, custom_field):
             super().__init__(vocab, entity_vector_length)
             self.custom_field = custom_field
+
+    @registry.misc("spacy.CustomEmptyKB.v1")
+    def empty_custom_kb(custom_field: int) -> Callable[[Vocab, int], SubInMemoryLookupKB]:
+        def empty_kb_factory(vocab: Vocab, entity_vector_length: int):
+            return SubInMemoryLookupKB(
+                vocab=vocab,
+                entity_vector_length=entity_vector_length,
+                custom_field=custom_field
+            )
+
+        return empty_kb_factory
 
     @registry.misc("spacy.CustomKB.v1")
     def custom_kb(
@@ -139,6 +157,6 @@ def test_serialize_subclassed_kb():
         nlp2 = util.load_model_from_path(tmp_dir)
         entity_linker2 = nlp2.get_pipe("entity_linker")
         # After IO, the KB is the standard one
-        assert type(entity_linker2.kb) == InMemoryLookupKB
+        assert type(entity_linker2.kb) == SubInMemoryLookupKB
         assert entity_linker2.kb.entity_vector_length == 342
-        assert not hasattr(entity_linker2.kb, "custom_field")
+        assert hasattr(entity_linker2.kb, "custom_field")
