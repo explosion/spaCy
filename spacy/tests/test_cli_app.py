@@ -90,57 +90,17 @@ TRAIN_EXAMPLE_2 = dict(
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "component,examples",
+    # fmt: off
     [
-        (
-            "tagger",
-            [
-                TRAIN_EXAMPLE_1,
-                TRAIN_EXAMPLE_2,
-            ],
-        ),
-        (
-            "morphologizer",
-            [
-                TRAIN_EXAMPLE_1,
-                TRAIN_EXAMPLE_2,
-            ],
-        ),
-        (
-            "trainable_lemmatizer",
-            [
-                TRAIN_EXAMPLE_1,
-                TRAIN_EXAMPLE_2,
-            ],
-        ),
-        (
-            "parser",
-            [
-                TRAIN_EXAMPLE_1,
-            ]
-            * 30,
-        ),
-        (
-            "ner",
-            [
-                TRAIN_EXAMPLE_1,
-                TRAIN_EXAMPLE_2,
-            ],
-        ),
-        (
-            "spancat",
-            [
-                TRAIN_EXAMPLE_1,
-                TRAIN_EXAMPLE_2,
-            ],
-        ),
-        (
-            "textcat",
-            [
-                TRAIN_EXAMPLE_1,
-                TRAIN_EXAMPLE_2,
-            ],
-        ),
-    ],
+        ("tagger", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2]),
+        ("morphologizer", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2]),
+        ("trainable_lemmatizer", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2]),
+        ("parser", [TRAIN_EXAMPLE_1] * 30),
+        ("ner", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2]),
+        ("spancat", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2]),
+        ("textcat", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2]),
+    ]
+    # fmt: on
 )
 def test_init_config_trainable(component, examples, en_vocab):
     if component == "textcat":
@@ -203,33 +163,16 @@ def test_init_config_trainable(component, examples, en_vocab):
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "component,examples",
-    [
-        (
-            "tagger,parser,morphologizer",
-            [
-                dict(
-                    words=example_words_1,
-                    tags=example_tags,
-                    morphs=example_morphs,
-                    deps=example_deps,
-                    heads=[1, 1, 1],
-                    pos=example_pos,
-                ),
-                dict(
-                    words=example_words_2,
-                    tags=example_tags,
-                    morphs=example_morphs,
-                    deps=example_deps,
-                    heads=[1, 1, 1],
-                    pos=example_pos,
-                ),
-            ]
-            * 15,
-        ),
-    ],
+    # fmt: off
+    [("tagger,parser,morphologizer", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2] * 15)]
+    # fmt: on
 )
 def test_init_config_trainable_multiple(component, examples, en_vocab):
-    train_docs = [Doc(en_vocab, **example) for example in examples]
+    train_docs = []
+    for example in examples:
+        example = {k: v for k, v in example.items() if k not in ("cats", "spans")}
+        doc = Doc(en_vocab, **example)
+        train_docs.append(doc)
 
     with make_tempdir() as d_in:
         train_bin = DocBin(docs=train_docs)
