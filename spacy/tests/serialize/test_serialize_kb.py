@@ -161,4 +161,4 @@ def test_serialize_subclassed_kb():
         # After IO, the KB is the standard one
         assert type(entity_linker2.kb) == SubInMemoryLookupKB
         assert entity_linker2.kb.entity_vector_length == 342
-        assert hasattr(entity_linker2.kb, "custom_field")
+        assert entity_linker2.kb.custom_field == 666
