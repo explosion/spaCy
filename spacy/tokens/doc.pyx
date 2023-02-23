@@ -657,9 +657,6 @@ cdef class Doc:
             elif self.vocab.vectors.size > 0:
                 self._vector = sum(t.vector for t in self) / len(self)
                 return self._vector
-            elif self.tensor.size > 0:
-                self._vector = self.tensor.mean(axis=0)
-                return self._vector
             else:
                 return xp.zeros((self.vocab.vectors_length,), dtype="float32")
 
