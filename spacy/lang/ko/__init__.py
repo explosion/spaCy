@@ -38,46 +38,38 @@ class KoreanTokenizer(DummyTokenizer):
     @property
     def mecab_tokenizer(self):
         # This is a property so that initializing a pipeline with blank:ko is
-        # possible without actually requiring mecab-ko, e.g. to run
+        # possible without actually requiring python-mecab-ko, e.g. to run
         # `spacy init vectors ko` for a pipeline that will have a different
         # tokenizer in the end. The languages need to match for the vectors
         # to be imported and there's no way to pass a custom config to
         # `init vectors`.
         if self._mecab_tokenizer is None:
-            self._mecab_tokenizer = self._mecab("-F%f[0],%f[7]")
+            self._mecab_tokenizer = self._mecab()
         return self._mecab_tokenizer
 
     def __reduce__(self):
         return KoreanTokenizer, (self.vocab,)
 
     def __call__(self, text: str) -> Doc:
-        dtokens = list(self.detailed_tokens(text))
-        surfaces = [dt["surface"] for dt in dtokens]
+        dtokens = self.mecab_tokenizer.parse(text)
+        surfaces = [dt.surface for dt in dtokens]
+
         doc = Doc(self.vocab, words=surfaces, spaces=list(check_spaces(text, surfaces)))
+
         for token, dtoken in zip(doc, dtokens):
-            first_tag, sep, eomi_tags = dtoken["tag"].partition("+")
-            token.tag_ = first_tag  # stem(어간) or pre-final(선어말 어미)
-            if token.tag_ in TAG_MAP:
-                token.pos = TAG_MAP[token.tag_][POS]
+            token.tag_ = dtoken.pos
+            first_tag = (
+                dtoken.feature.start_pos or dtoken.pos
+            )  # stem(어간) or pre-final(선어말 어미)
+
+            if first_tag in TAG_MAP:
+                token.pos = TAG_MAP[first_tag][POS]
             else:
                 token.pos = X
-            token.lemma_ = dtoken["lemma"]
-        doc.user_data["full_tags"] = [dt["tag"] for dt in dtokens]
-        return doc
 
-    def detailed_tokens(self, text: str) -> Iterator[Dict[str, Any]]:
-        # 품사 태그(POS)[0], 의미 부류(semantic class)[1],	종성 유무(jongseong)[2], 읽기(reading)[3],
-        # 타입(type)[4], 첫번째 품사(start pos)[5],	마지막 품사(end pos)[6], 표현(expression)[7], *
-        for node in self.mecab_tokenizer.parse(text, as_nodes=True):
-            if node.is_eos():
-                break
-            surface = node.surface
-            feature = node.feature
-            tag, _, expr = feature.partition(",")
-            lemma, _, remainder = expr.partition("/")
-            if lemma == "*":
-                lemma = surface
-            yield {"surface": surface, "lemma": lemma, "tag": tag}
+            token.lemma_ = get_lemma(dtoken)
+
+        return doc
 
     def score(self, examples):
         validate_examples(examples, "KoreanTokenizer.score")
@@ -97,18 +89,27 @@ class Korean(Language):
     Defaults = KoreanDefaults
 
 
-def try_mecab_import() -> None:
+def try_mecab_import():
     try:
-        from natto import MeCab
+        from mecab import MeCab
 
         return MeCab
     except ImportError:
         raise ImportError(
             'The Korean tokenizer ("spacy.ko.KoreanTokenizer") requires '
-            "[mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
-            "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
-            "and [natto-py](https://github.com/buruzaemon/natto-py)"
+            "[python-mecab-ko](https://github.com/jonghwanhyeon/python-mecab-ko). "
+            "Install with `pip install python-mecab-ko` or "
+            "install spaCy with `pip install spacy[ko]`."
         ) from None
+
+
+def get_lemma(m):
+    expr = m.feature.expression
+
+    if expr is None:
+        return m.surface
+    else:
+        return "+".join([e.split("/")[0] for e in expr.split("+")])
 
 
 def check_spaces(text, tokens):

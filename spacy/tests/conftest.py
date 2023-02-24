@@ -239,7 +239,7 @@ def hsb_tokenizer():
 
 @pytest.fixture(scope="session")
 def ko_tokenizer():
-    pytest.importorskip("natto")
+    pytest.importorskip("mecab")
     return get_lang_class("ko")().tokenizer
 
 

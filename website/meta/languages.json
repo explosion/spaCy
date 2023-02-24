@@ -198,16 +198,8 @@
             "name": "Korean",
             "dependencies": [
                 {
-                    "name": "mecab-ko",
-                    "url": "https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md"
-                },
-                {
-                    "name": "mecab-ko-dic",
-                    "url": "https://bitbucket.org/eunjeon/mecab-ko-dic"
-                },
-                {
-                    "name": "natto-py",
-                    "url": "https://github.com/buruzaemon/natto-py"
+                    "name": "python-mecab-ko",
+                    "url": "https://github.com/jonghwanhyeon/python-mecab-ko"
                 }
             ],
             "example": "이것은 문장입니다.",

@@ -22,7 +22,7 @@ def test_build_dependencies():
     # ignore language-specific packages that shouldn't be installed by all
     libs_ignore_setup = [
         "fugashi",
-        "natto-py",
+        "python-mecab-ko",
         "pythainlp",
         "sudachipy",
         "sudachidict_core",
