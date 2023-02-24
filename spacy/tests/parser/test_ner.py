@@ -231,7 +231,7 @@ def test_issue4313():
 
 def test_get_oracle_moves(tsys, doc, entity_annots):
     example = Example.from_dict(doc, {"entities": entity_annots})
-    act_classes = tsys.get_oracle_sequence(example, _debug=False)
+    act_classes = tsys.get_oracle_sequence(example, _debug=False).actions
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names == ["U-PERSON", "O", "O", "B-GPE", "L-GPE", "O"]
 
@@ -250,7 +250,7 @@ def test_negative_samples_two_word_input(tsys, vocab, neg_key):
         Span(example.y, 0, 1, label="O"),
         Span(example.y, 0, 2, label="PERSON"),
     ]
-    act_classes = tsys.get_oracle_sequence(example)
+    act_classes = tsys.get_oracle_sequence(example).actions
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names
     assert names[0] != "O"
@@ -270,7 +270,7 @@ def test_negative_samples_three_word_input(tsys, vocab, neg_key):
         Span(example.y, 0, 1, label="O"),
         Span(example.y, 0, 2, label="PERSON"),
     ]
-    act_classes = tsys.get_oracle_sequence(example)
+    act_classes = tsys.get_oracle_sequence(example).actions
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names
     assert names[0] != "O"
@@ -289,7 +289,7 @@ def test_negative_samples_U_entity(tsys, vocab, neg_key):
         Span(example.y, 0, 1, label="O"),
         Span(example.y, 0, 1, label="PERSON"),
     ]
-    act_classes = tsys.get_oracle_sequence(example)
+    act_classes = tsys.get_oracle_sequence(example).actions
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names
     assert names[0] != "O"

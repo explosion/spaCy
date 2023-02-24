@@ -2,6 +2,8 @@
 from cymem.cymem cimport Pool, Address
 from libc.stdint cimport int32_t
 from libcpp.vector cimport vector
+import numpy
+cimport numpy as np
 
 from collections import defaultdict, Counter
 
@@ -16,6 +18,7 @@ from .stateclass cimport StateClass
 from ._state cimport StateC, ArcC
 from ...errors import Errors
 from .search cimport Beam
+from .transition_system import OracleSequence
 
 cdef weight_t MIN_SCORE = -90000
 cdef attr_t SUBTOK_LABEL = hash_string('subtok')
@@ -834,19 +837,22 @@ cdef class ArcEager(TransitionSystem):
         cdef Pool mem = Pool()
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         assert self.n_moves > 0
-        costs = <float*>mem.alloc(self.n_moves, sizeof(float))
+        cdef np.ndarray costs
         is_valid = <int*>mem.alloc(self.n_moves, sizeof(int))
 
         history = []
+        cost_matrix = []
         debug_log = []
         failed = False
         while not state.is_final():
+            costs = numpy.zeros((self.n_moves,), dtype="f")
             try:
-                self.set_costs(is_valid, costs, state.c, gold)
+                self.set_costs(is_valid, <float*>costs.data, state.c, gold)
             except ValueError:
                 failed = True
                 break
-            min_cost = min(costs[i] for i in range(self.n_moves))
+            cost_matrix.append(costs)
+            min_cost = costs.min()
             for i in range(self.n_moves):
                 if is_valid[i] and costs[i] <= min_cost:
                     action = self.c[i]
@@ -901,4 +907,4 @@ cdef class ArcEager(TransitionSystem):
             print("Stack", [example.x[i] for i in state.stack])
             print("Buffer", [example.x[i] for i in state.queue])
             raise ValueError(Errors.E024)
-        return history
+        return OracleSequence(history, numpy.array(cost_matrix))

@@ -715,22 +715,26 @@ class Parser(TrainablePipe):
                     states.append(state)
                     golds.append(gold)
                 else:
-                    oracle_actions = moves.get_oracle_sequence_from_state(
+                    oracle_seq = moves.get_oracle_sequence_from_state(
                         state.copy(), gold)
-                    to_cut.append((eg, state, gold, oracle_actions))
+                    to_cut.append((eg, state, gold, oracle_seq))
         if not to_cut:
             return states, golds, 0
         cdef int clas
-        for eg, state, gold, oracle_actions in to_cut:
-            for i in range(0, len(oracle_actions), max_length):
+        for eg, state, gold, oracle_seq in to_cut:
+            for i in range(0, len(oracle_seq.actions), max_length):
                 start_state = state.copy()
-                for clas in oracle_actions[i:i+max_length]:
+                for clas in oracle_seq.actions[i:i+max_length]:
                     action = moves.c[clas]
                     action.do(state.c, action.label)
                     if state.is_final():
                         break
-                states.append(start_state)
-                golds.append(gold)
+                # If all actions along the history are zero-cost actions, there
+                # is nothing to learn from this state in max_length stepss, so
+                # we skip it.
+                if oracle_seq.has_cost(i, i+max_length):
+                    states.append(start_state)
+                    golds.append(gold)
                 if state.is_final():
                     break
         return states, golds, max_length

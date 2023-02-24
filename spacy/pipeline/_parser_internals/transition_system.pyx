@@ -1,8 +1,11 @@
 # cython: infer_types=True
 from __future__ import print_function
+from typing import List, Optional
 from cymem.cymem cimport Pool
 from libc.stdlib cimport calloc, free
 from libcpp.vector cimport vector
+import numpy
+cimport numpy as np
 
 from collections import Counter
 import srsly
@@ -23,6 +26,22 @@ cdef weight_t MIN_SCORE = -90000
 
 class OracleError(Exception):
     pass
+
+
+class OracleSequence:
+    actions: List[int]
+    cost_matrix: numpy.ndarray
+
+    def __init__(self, actions: List[int], cost_matrix: numpy.ndarray):
+        self.actions = actions
+        self.cost_matrix = cost_matrix
+
+    __slots = ["actions", "cost_matrix"]
+
+    def has_cost(self, begin: int=0, end: Optional[int]=None) -> bool:
+        if end is None:
+            end = self.cost_matrix.shape[0]
+        return numpy.count_nonzero(self.cost_matrix[begin:end])
 
 
 cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
@@ -87,10 +106,10 @@ cdef class TransitionSystem:
 
     def get_oracle_sequence(self, Example example, _debug=False):
         if not self.has_gold(example):
-            return []
+            return OracleSequence([], numpy.zeros(0, self.n_moves))
         states, golds, _ = self.init_gold_batch([example])
         if not states:
-            return []
+            return OracleSequence([], numpy.zeros(0, self.n_moves))
         state = states[0]
         gold = golds[0]
         if _debug:
@@ -100,17 +119,20 @@ cdef class TransitionSystem:
 
     def get_oracle_sequence_from_state(self, StateClass state, gold, _debug=None):
         if state.is_final():
-            return []
+            return OracleSequence([], numpy.zeros(0, self.n_moves))
         cdef Pool mem = Pool()
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         assert self.n_moves > 0
-        costs = <float*>mem.alloc(self.n_moves, sizeof(float))
+        cdef np.ndarray costs
         is_valid = <int*>mem.alloc(self.n_moves, sizeof(int))
 
         history = []
+        cost_matrix = []
         debug_log = []
         while not state.is_final():
-            self.set_costs(is_valid, costs, state.c, gold)
+            costs = numpy.zeros((self.n_moves,), dtype="f")
+            self.set_costs(is_valid, <float*>costs.data, state.c, gold)
+            cost_matrix.append(costs)
             for i in range(self.n_moves):
                 if is_valid[i] and costs[i] <= 0:
                     action = self.c[i]
@@ -147,7 +169,7 @@ cdef class TransitionSystem:
                     )))
                     print("\n".join(debug_log))
                 raise ValueError(Errors.E024)
-        return history
+        return OracleSequence(history, numpy.array(cost_matrix))
 
     def apply_transition(self, StateClass state, name):
         if not self.is_valid(state, name):

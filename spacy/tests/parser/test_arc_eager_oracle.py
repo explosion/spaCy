@@ -168,7 +168,7 @@ def test_get_oracle_actions():
     example = Example.from_dict(
         doc, {"words": words, "tags": tags, "heads": heads, "deps": deps}
     )
-    parser.moves.get_oracle_sequence(example)
+    parser.moves.get_oracle_sequence(example).actions
 
 
 def test_oracle_dev_sentence(vocab, arc_eager):
@@ -254,7 +254,7 @@ def test_oracle_dev_sentence(vocab, arc_eager):
         arc_eager.add_action(3, dep)  # Right
     doc = Doc(Vocab(), words=gold_words)
     example = Example.from_dict(doc, {"heads": gold_heads, "deps": gold_deps})
-    ae_oracle_actions = arc_eager.get_oracle_sequence(example, _debug=False)
+    ae_oracle_actions = arc_eager.get_oracle_sequence(example, _debug=False).actions
     ae_oracle_actions = [arc_eager.get_class_name(i) for i in ae_oracle_actions]
     assert ae_oracle_actions == expected_transitions
 
@@ -288,6 +288,6 @@ def test_oracle_bad_tokenization(vocab, arc_eager):
         reference.vocab, words=["[", "catalase", "]", ":", "that", "is", "bad"]
     )
     example = Example(predicted=predicted, reference=reference)
-    ae_oracle_actions = arc_eager.get_oracle_sequence(example, _debug=False)
+    ae_oracle_actions = arc_eager.get_oracle_sequence(example, _debug=False).actions
     ae_oracle_actions = [arc_eager.get_class_name(i) for i in ae_oracle_actions]
     assert ae_oracle_actions
