@@ -20,7 +20,7 @@ def debug_config_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
-    code_paths: str = Opt("", "--code", "-c", help="Comma-separated paths to Python files with additional code (registered functions) to be included in the package"),
+    code_path: str = Opt("", "--code", "-c", help="Comma-separated paths to Python files with additional code (registered functions) to be included in the package"),
     show_funcs: bool = Opt(False, "--show-functions", "-F", help="Show an overview of all registered functions used in the config and where they come from (modules, files etc.)"),
     show_vars: bool = Opt(False, "--show-variables", "-V", help="Show an overview of all variables referenced in the config and their values. This will also reflect variables overwritten on the CLI.")
     # fmt: on
@@ -37,7 +37,7 @@ def debug_config_cli(
     DOCS: https://spacy.io/api/cli#debug-config
     """
     overrides = parse_config_overrides(ctx.args)
-    import_code_paths(code_paths)
+    import_code_paths(code_path)
     debug_config(
         config_path, overrides=overrides, show_funcs=show_funcs, show_vars=show_vars
     )

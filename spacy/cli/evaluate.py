@@ -22,7 +22,7 @@ def evaluate_cli(
     model: str = Arg(..., help="Model name or path"),
     data_path: Path = Arg(..., help="Location of binary evaluation data in .spacy format", exists=True),
     output: Optional[Path] = Opt(None, "--output", "-o", help="Output JSON file for metrics", dir_okay=False),
-    code_paths: str = Opt("", "--code", "-c", help="Comma-separated paths to Python files with additional code (registered functions) to be included in the package"),
+    code_path: str = Opt("", "--code", "-c", help="Comma-separated paths to Python files with additional code (registered functions) to be included in the package"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     gold_preproc: bool = Opt(False, "--gold-preproc", "-G", help="Use gold preprocessing"),
     displacy_path: Optional[Path] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML", exists=True, file_okay=False),
@@ -41,7 +41,7 @@ def evaluate_cli(
 
     DOCS: https://spacy.io/api/cli#benchmark-accuracy
     """
-    import_code_paths(code_paths)
+    import_code_paths(code_path)
     evaluate(
         model,
         data_path,
