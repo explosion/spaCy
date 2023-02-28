@@ -90,7 +90,7 @@ class Tagger(TrainablePipe):
         overwrite=BACKWARD_OVERWRITE,
         scorer=tagger_score,
         neg_prefix="!",
-        label_smoothing=0.05,
+        label_smoothing=0.0,
     ):
         """Initialize a part-of-speech tagger.
 
