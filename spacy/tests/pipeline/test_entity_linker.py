@@ -7,10 +7,10 @@ from thinc.types import Ragged
 from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
-from spacy.kb import Candidate, InMemoryLookupKB, get_candidates, KnowledgeBase
+from spacy.kb import Candidate, InMemoryLookupKB, KnowledgeBase
 from spacy.lang.en import English
 from spacy.ml import load_kb
-from spacy.ml.models.entity_linker import build_span_maker
+from spacy.ml.models.entity_linker import build_span_maker, get_candidates
 from spacy.pipeline import EntityLinker, TrainablePipe
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer

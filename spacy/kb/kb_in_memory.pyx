@@ -238,14 +238,18 @@ cdef class InMemoryLookupKB(KnowledgeBase):
         alias_index = <int64_t>self._alias_index.get(alias_hash)
         alias_entry = self._aliases_table[alias_index]
 
-        return [Candidate(kb=self,
-                          entity_hash=self._entries[entry_index].entity_hash,
-                          entity_freq=self._entries[entry_index].freq,
-                          entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
-                          alias_hash=alias_hash,
-                          prior_prob=prior_prob)
-                for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)
-                if entry_index != 0]
+        return [
+            Candidate(
+                retrieve_string_from_hash=self.vocab.strings.__getitem__,
+                entity_hash=self._entries[entry_index].entity_hash,
+                entity_freq=self._entries[entry_index].freq,
+                entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
+                alias_hash=alias_hash,
+                prior_prob=prior_prob
+            )
+            for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)
+            if entry_index != 0
+        ]
 
     def get_vector(self, str entity):
         cdef hash_t entity_hash = self.vocab.strings[entity]
