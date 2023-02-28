@@ -540,7 +540,7 @@ class EntityLinker(TrainablePipe):
                                 doc_scores=doc_scores,
                                 doc_ents=doc_ents,
                                 scores=[1.0],
-                                ents=[candidates[0].entity_],
+                                ents=[candidates[0].entity],
                             )
                         else:
                             random.shuffle(candidates)
