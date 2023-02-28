@@ -69,6 +69,7 @@ grad_factor = 1.0
 {% if "tagger" in components %}
 [components.tagger]
 factory = "tagger"
+label_smoothing = 0.05
 
 [components.tagger.model]
 @architectures = "spacy.Tagger.v2"
