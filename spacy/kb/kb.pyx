@@ -1,7 +1,7 @@
 # cython: infer_types=True, profile=True
 
 from pathlib import Path
-from typing import Iterable, Tuple, Union
+from typing import Iterable, Tuple, Union, TypeVar, Type
 from cymem.cymem cimport Pool
 
 from .candidate import Candidate
@@ -17,6 +17,8 @@ cdef class KnowledgeBase:
 
     DOCS: https://spacy.io/api/kb
     """
+
+    _KBType = TypeVar("_KBType", bound=KnowledgeBase)
 
     def __init__(self, vocab: Vocab, entity_vector_length: int):
         """Create a KnowledgeBase."""
@@ -105,4 +107,26 @@ cdef class KnowledgeBase:
         """
         raise NotImplementedError(
             Errors.E1045.format(parent="KnowledgeBase", method="from_disk", name=self.__name__)
+        )
+
+    @classmethod
+    def generate_from_disk(
+        cls: Type[_KBType], path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()
+    ) -> _KBType:
+        """
+        Factory method for generating KnowledgeBase subclass instance from file.
+        path (Union[str, Path]): Target file path.
+        exclude (Iterable[str]): List of components to exclude.
+        return (_KBType): Instance of KnowledgeBase subclass generated from file.
+        """
+        raise NotImplementedError(
+            Errors.E1044.format(parent="KnowledgeBase", method="generate_from_disk", name=cls.__name__)
+        )
+
+    def __len__(self) -> int:
+        """Returns number of entities in the KnowledgeBase.
+        RETURNS (int): Number of entities in the KnowledgeBase.
+        """
+        raise NotImplementedError(
+            Errors.E1044.format(parent="KnowledgeBase", method="__len__", name=self.__name__)
         )
