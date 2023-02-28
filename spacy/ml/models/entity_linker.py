@@ -121,7 +121,9 @@ def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
     return kb.get_candidates(mention)
 
 
-def get_candidates_batch(kb: KnowledgeBase, mentions: Iterable[Span]) -> Iterable[Iterable[Candidate]]:
+def get_candidates_batch(
+    kb: KnowledgeBase, mentions: Iterable[Span]
+) -> Iterable[Iterable[Candidate]]:
     """
     Return candidate entities for the given mentions and fetching appropriate entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
