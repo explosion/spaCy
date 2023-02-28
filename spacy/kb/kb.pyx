@@ -5,7 +5,7 @@ from typing import Iterable, Tuple, Union
 from cymem.cymem cimport Pool
 
 from .candidate import Candidate
-from ..tokens import Span
+from ..tokens import Span, SpanGroup
 from ..util import SimpleFrozenList
 from ..errors import Errors
 
@@ -30,12 +30,12 @@ cdef class KnowledgeBase:
         self.entity_vector_length = entity_vector_length
         self.mem = Pool()
 
-    def get_candidates_batch(self, mentions: Iterable[Span]) -> Iterable[Iterable[Candidate]]:
+    def get_candidates_batch(self, mentions: SpanGroup) -> Iterable[Iterable[Candidate]]:
         """
         Return candidate entities for specified texts. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
         If no candidate is found for a given text, an empty list is returned.
-        mentions (Iterable[Span]): Mentions for which to get candidates.
+        mentions (SpanGroup): Mentions for which to get candidates.
         RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
         """
         return [self.get_candidates(span) for span in mentions]

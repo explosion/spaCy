@@ -9,9 +9,10 @@ import random
 from thinc.api import CosineDistance, Model, Optimizer, Config
 from thinc.api import set_dropout_rate
 
+from ..tokens import SpanGroup
 from ..kb import KnowledgeBase, Candidate
 from ..ml import empty_kb
-from ..tokens import Doc, Span
+from ..tokens import Doc, Span, SpanGroup
 from .pipe import deserialize_config
 from .trainable_pipe import TrainablePipe
 from ..language import Language
@@ -82,7 +83,7 @@ def make_entity_linker(
     entity_vector_length: int,
     get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
     get_candidates_batch: Callable[
-        [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
+        [KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]
     ],
     overwrite: bool,
     scorer: Optional[Callable],
@@ -104,7 +105,7 @@ def make_entity_linker(
     get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
         produces a list of candidates, given a certain knowledge base and a textual mention.
     get_candidates_batch (
-        Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
+        Callable[[KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
         ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
     scorer (Optional[Callable]): The scoring method.
     use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
@@ -186,7 +187,7 @@ class EntityLinker(TrainablePipe):
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         get_candidates_batch: Callable[
-            [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
+            [KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]
         ],
         overwrite: bool = False,
         scorer: Optional[Callable] = entity_linker_score,
@@ -209,9 +210,9 @@ class EntityLinker(TrainablePipe):
         get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
         get_candidates_batch (
-            Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]],
+            Callable[[KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]],
             Iterable[Candidate]]
-            ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
+        ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
         overwrite (bool): Whether to overwrite existing non-empty annotations.
         scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
         use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
@@ -485,7 +486,8 @@ class EntityLinker(TrainablePipe):
 
                 batch_candidates = list(
                     self.get_candidates_batch(
-                        self.kb, [ent_batch[idx] for idx in valid_ent_idx]
+                        self.kb,
+                        SpanGroup(doc, spans=[ent_batch[idx] for idx in valid_ent_idx]),
                     )
                     if self.candidates_batch_size > 1
                     else [
