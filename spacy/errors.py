@@ -967,7 +967,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1049 = ("No available port found for displaCy on host {host}. Please specify an available port "
              "with `displacy.serve(doc, port=port)`")
     E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
-             "or use `auto_switch_port=True` to pick an available port automatically.")
+             "or use `auto_select_port=True` to pick an available port automatically.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
