@@ -122,14 +122,18 @@ def test_serialize_subclassed_kb():
             if not path.is_dir():
                 raise ValueError(Errors.E928.format(loc=path))
 
-            def serialize_custom_fields(values: Dict[str, Any], file_path: Path) -> None:
+            def serialize_custom_fields(
+                values: Dict[str, Any], file_path: Path
+            ) -> None:
                 with open(file_path, "wb") as file:
                     pickle.dump(values, file)
 
             serialize = {
                 "contents": lambda p: self.write_contents(p),
                 "strings.json": lambda p: self.vocab.strings.to_disk(p),
-                "custom_fields": lambda p: serialize_custom_fields({"custom_field": self.custom_field}, p)
+                "custom_fields": lambda p: serialize_custom_fields(
+                    {"custom_field": self.custom_field}, p
+                ),
             }
             util.to_disk(path, serialize, exclude)
 
@@ -147,7 +151,7 @@ def test_serialize_subclassed_kb():
             deserialize: Dict[str, Callable[[Any], Any]] = {
                 "contents": lambda p: self.read_contents(p),
                 "strings.json": lambda p: self.vocab.strings.from_disk(p),
-                "custom_fields": lambda p: deserialize_custom_fields(p)
+                "custom_fields": lambda p: deserialize_custom_fields(p),
             }
             util.from_disk(path, deserialize, exclude)
 
