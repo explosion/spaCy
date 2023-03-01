@@ -54,6 +54,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "entity_vector_length": 64,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
         "get_candidates_batch": {"@misc": "spacy.CandidateBatchGenerator.v1"},
+        "generate_empty_kb": {"@misc": "spacy.EmptyKB.v2"},
         "overwrite": True,
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
         "use_gold_ents": True,
@@ -80,6 +81,7 @@ def make_entity_linker(
     get_candidates_batch: Callable[
         [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
     ],
+    generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
     overwrite: bool,
     scorer: Optional[Callable],
     use_gold_ents: bool,
@@ -101,6 +103,7 @@ def make_entity_linker(
     get_candidates_batch (
         Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
         ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
+    generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
     scorer (Optional[Callable]): The scoring method.
     use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
         component must provide entity annotations.
@@ -135,6 +138,7 @@ def make_entity_linker(
         entity_vector_length=entity_vector_length,
         get_candidates=get_candidates,
         get_candidates_batch=get_candidates_batch,
+        generate_empty_kb=generate_empty_kb,
         overwrite=overwrite,
         scorer=scorer,
         use_gold_ents=use_gold_ents,
@@ -175,6 +179,7 @@ class EntityLinker(TrainablePipe):
         get_candidates_batch: Callable[
             [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
         ],
+        generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
         use_gold_ents: bool,
@@ -198,6 +203,7 @@ class EntityLinker(TrainablePipe):
             Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]],
             Iterable[Candidate]]
             ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
+        generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
         scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
         use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
             component must provide entity annotations.
@@ -220,6 +226,7 @@ class EntityLinker(TrainablePipe):
         self.model = model
         self.name = name
         self.labels_discard = list(labels_discard)
+        # how many neighbour sentences to take into account
         self.n_sents = n_sents
         self.incl_prior = incl_prior
         self.incl_context = incl_context
@@ -227,9 +234,7 @@ class EntityLinker(TrainablePipe):
         self.get_candidates_batch = get_candidates_batch
         self.cfg: Dict[str, Any] = {"overwrite": overwrite}
         self.distance = CosineDistance(normalize=False)
-        # how many neighbour sentences to take into account
-        # create an empty KB by default
-        self.kb = empty_kb(entity_vector_length)(self.vocab)
+        self.kb = generate_empty_kb(self.vocab, entity_vector_length)
         self.scorer = scorer
         self.use_gold_ents = use_gold_ents
         self.candidates_batch_size = candidates_batch_size
