@@ -86,9 +86,6 @@ def test_serialize_subclassed_kb():
     [nlp]
     lang = "en"
     pipeline = ["entity_linker"]
-    
-    [default_values]
-    custom_field = 666
 
     [components]
 
@@ -96,8 +93,7 @@ def test_serialize_subclassed_kb():
     factory = "entity_linker"
     
     [components.entity_linker.generate_empty_kb]
-    @misc = "spacy.CustomEmptyKB.v1"
-    custom_field = ${default_values.custom_field}
+    @misc = "kb_test.CustomEmptyKB.v1"
     
     [initialize]
 
@@ -106,9 +102,9 @@ def test_serialize_subclassed_kb():
     [initialize.components.entity_linker]
 
     [initialize.components.entity_linker.kb_loader]
-    @misc = "spacy.CustomKB.v1"
+    @misc = "kb_test.CustomKB.v1"
     entity_vector_length = 342
-    custom_field = ${default_values.custom_field}
+    custom_field = 666
     """
 
     class SubInMemoryLookupKB(InMemoryLookupKB):
@@ -116,20 +112,18 @@ def test_serialize_subclassed_kb():
             super().__init__(vocab, entity_vector_length)
             self.custom_field = custom_field
 
-    @registry.misc("spacy.CustomEmptyKB.v1")
-    def empty_custom_kb(
-        custom_field: int,
-    ) -> Callable[[Vocab, int], SubInMemoryLookupKB]:
+    @registry.misc("kb_test.CustomEmptyKB.v1")
+    def empty_custom_kb() -> Callable[[Vocab, int], SubInMemoryLookupKB]:
         def empty_kb_factory(vocab: Vocab, entity_vector_length: int):
             return SubInMemoryLookupKB(
                 vocab=vocab,
                 entity_vector_length=entity_vector_length,
-                custom_field=custom_field,
+                custom_field=0,
             )
 
         return empty_kb_factory
 
-    @registry.misc("spacy.CustomKB.v1")
+    @registry.misc("kb_test.CustomKB.v1")
     def custom_kb(
         entity_vector_length: int, custom_field: int
     ) -> Callable[[Vocab], InMemoryLookupKB]:
