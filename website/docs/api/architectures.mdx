@@ -924,6 +924,15 @@ plausible [`Candidate`](/api/kb/#candidate) objects. The default
 `CandidateGenerator` uses the text of a mention to find its potential aliases in
 the `KnowledgeBase`. Note that this function is case-dependent.
 
+### spacy.CandidateBatchGenerator.v1 {id="CandidateBatchGenerator"}
+
+A function that takes as input a [`KnowledgeBase`](/api/kb) and an `Iterable` of
+[`Span`](/api/span) objects denoting named entities, and returns a list of
+plausible [`Candidate`](/api/kb/#candidate) objects per specified
+[`Span`](/api/span). The default `CandidateBatchGenerator` uses the text of a
+mention to find its potential aliases in the `KnowledgeBase`. Note that this
+function is case-dependent.
+
 ## Coreference {id="coref-architectures",tag="experimental"}
 
 A [`CoreferenceResolver`](/api/coref) component identifies tokens that refer to
