@@ -828,6 +828,11 @@ def _get_attr_values(spec, string_store):
     return attr_values
 
 
+def _predicate_cache_key(attr, predicate, value, *, regex=False, fuzzy=None):
+    # tuple order affects performance
+    return (attr, regex, fuzzy, predicate, srsly.json_dumps(value, sort_keys=True))
+
+
 # These predicate helper classes are used to match the REGEX, IN, >= etc
 # extensions to the matcher introduced in #3173.
 
@@ -847,7 +852,7 @@ class _FuzzyPredicate:
         fuzz = self.predicate[len("FUZZY"):] # number after prefix
         self.fuzzy = int(fuzz) if fuzz else -1
         self.fuzzy_compare = fuzzy_compare
-        self.key = (self.attr, self.fuzzy, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = _predicate_cache_key(self.attr, self.predicate, value, fuzzy=self.fuzzy)
 
     def __call__(self, Token token):
         if self.is_extension:
@@ -869,7 +874,7 @@ class _RegexPredicate:
         self.value = re.compile(value)
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = (self.attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = _predicate_cache_key(self.attr, self.predicate, value)
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
 
@@ -905,7 +910,7 @@ class _SetPredicate:
                 self.value = set(get_string_id(v) for v in value)
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = (self.attr, self.regex, self.fuzzy, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = _predicate_cache_key(self.attr, self.predicate, value, regex=self.regex, fuzzy=self.fuzzy)
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
 
@@ -977,7 +982,7 @@ class _ComparisonPredicate:
         self.value = value
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = (self.attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = _predicate_cache_key(self.attr, self.predicate, value)
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
 
@@ -1092,7 +1097,7 @@ def _get_extension_extra_predicates(spec, extra_predicates, predicate_types,
         if isinstance(value, dict):
             for type_, cls in predicate_types.items():
                 if type_ in value:
-                    key = (attr, type_, srsly.json_dumps(value[type_], sort_keys=True))
+                    key = _predicate_cache_key(attr, type_, value[type_])
                     if key in seen_predicates:
                         output.append(seen_predicates[key])
                     else:

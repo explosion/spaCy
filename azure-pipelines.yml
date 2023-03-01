@@ -41,7 +41,7 @@ jobs:
         inputs:
           versionSpec: "3.7"
       - script: |
-          pip install black==22.3.0
+          pip install black -c requirements.txt
           python -m black spacy --check
         displayName: "black"
       - script: |
