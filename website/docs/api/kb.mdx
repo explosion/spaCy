@@ -9,8 +9,8 @@ version: 2.2
 ---
 
 The `KnowledgeBase` object is an abstract class providing a method to generate
-[`InMemoryCandidate`](/api/kb#candidate) objects, which are plausible external
-identifiers given a certain textual mention. Each such `InMemoryCandidate` holds
+[`Candidate`](/api/kb#candidate) objects, which are plausible external
+identifiers given a certain textual mention. Each such `Candidate` holds
 information from the relevant KB entities, such as its frequency in text and
 possible aliases. Each entity in the knowledge base also has a pretrained entity
 vector of a fixed size.
@@ -72,10 +72,10 @@ of type [`Candidate`](/api/kb#candidate).
 > candidates = kb.get_candidates(doc[0:2])
 > ```
 
-| Name        | Description                                                                  |
-| ----------- | ---------------------------------------------------------------------------- |
-| `mention`   | The textual mention or alias. ~~Span~~                                       |
-| **RETURNS** | An iterable of relevant `Candidate` objects. ~~Iterable[InMemoryCandidate]~~ |
+| Name        | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `mention`   | The textual mention or alias. ~~Span~~                               |
+| **RETURNS** | An iterable of relevant `Candidate` objects. ~~Iterable[Candidate]~~ |
 
 ## KnowledgeBase.get_candidates_batch {id="get_candidates_batch",tag="method"}
 
