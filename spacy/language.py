@@ -743,6 +743,7 @@ class Language:
         """Add a component to the processing pipeline. Valid components are
         callables that take a `Doc` object, modify it and return it. Only one
         of before/after/first/last can be set. Default behaviour is "last".
+        If "last" is set to False, then the default is "first".
 
         factory_name (str): Name of the component factory.
         name (str): Name of pipeline component. Overwrites existing
@@ -816,10 +817,10 @@ class Language:
             raise ValueError(
                 Errors.E006.format(args=all_args, opts=self.component_names)
             )
-        if last or not any(value is not None for value in [first, before, after]):
-            return len(self._components)
-        elif first:
+        if first or last is False:
             return 0
+        elif last or not any(value is not None for value in [first, before, after]):
+            return len(self._components)
         elif isinstance(before, str):
             if before not in self.component_names:
                 raise ValueError(
