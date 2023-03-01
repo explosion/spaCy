@@ -45,7 +45,7 @@ class BaseCandidate(abc.ABC):
 
 
 class Candidate(BaseCandidate):
-    """`Candidate` for InMemoryLookupKBCandidate."""
+    """`Candidate` for InMemoryLookupKB."""
 
     def __init__(
         self,
