@@ -250,7 +250,7 @@ class EntityLinker(TrainablePipe):
         # Raise an error if the knowledge base is not initialized.
         if self.kb is None:
             raise ValueError(Errors.E1018.format(name=self.name))
-        if len(self.kb) == 0:
+        if hasattr(self.kb, "is_empty") and self.kb.is_empty():
             raise ValueError(Errors.E139.format(name=self.name))
 
     def initialize(
