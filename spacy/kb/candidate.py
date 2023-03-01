@@ -2,8 +2,8 @@ import abc
 from typing import List, Union, Callable
 
 
-class BaseCandidate(abc.ABC):
-    """A `BaseCandidate` object refers to a textual mention (`alias`) that may or may not be resolved
+class Candidate(abc.ABC):
+    """A `Candidate` object refers to a textual mention (`alias`) that may or may not be resolved
     to a specific `entity_id` from a Knowledge Base. This will be used as input for the entity_id linking
     algorithm which will disambiguate the various candidates to the correct one.
     Each candidate (alias, entity_id) pair is assigned a certain prior probability.
@@ -14,7 +14,7 @@ class BaseCandidate(abc.ABC):
     def __init__(
         self, mention: str, entity_id: Union[int, str], entity_vector: List[float]
     ):
-        """Initializes properties of `BaseCandidate`.
+        """Initializes properties of `Candidate` instance.
         mention (str): Mention text for this candidate.
         entity_id (Union[int, str]): Unique entity ID.
         entity_vector (List[float]): Entity embedding.
@@ -44,8 +44,8 @@ class BaseCandidate(abc.ABC):
         return self._entity_vector
 
 
-class Candidate(BaseCandidate):
-    """`Candidate` for InMemoryLookupKB."""
+class InMemoryCandidate(Candidate):
+    """Candidate for InMemoryLookupKB."""
 
     def __init__(
         self,

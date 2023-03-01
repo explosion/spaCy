@@ -36,7 +36,7 @@ cdef class KnowledgeBase:
         and the prior probability of that alias resolving to that entity.
         If no candidate is found for a given text, an empty list is returned.
         mentions (Iterable[Span]): Mentions for which to get candidates.
-        RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
+        RETURNS (Iterable[Iterable[InMemoryCandidate]]): Identified candidates.
         """
         return [self.get_candidates(span) for span in mentions]
 
@@ -46,7 +46,7 @@ cdef class KnowledgeBase:
         and the prior probability of that alias resolving to that entity.
         If the no candidate is found for a given text, an empty list is returned.
         mention (Span): Mention for which to get candidates.
-        RETURNS (Iterable[Candidate]): Identified candidates.
+        RETURNS (Iterable[InMemoryCandidate]): Identified candidates.
         """
         raise NotImplementedError(
             Errors.E1045.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)
