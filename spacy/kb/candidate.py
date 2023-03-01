@@ -57,7 +57,7 @@ class Candidate(BaseCandidate):
         prior_prob: float,
     ):
         """
-        retrieve_string_from_hash (Callable[[int], str]): Callable retrieveing entity name from provided entity/vocab
+        retrieve_string_from_hash (Callable[[int], str]): Callable retrieving entity name from provided entity/vocab
             hash.
         entity_hash (str): Hashed entity name /ID.
         entity_freq (int): Entity frequency in KB corpus.
