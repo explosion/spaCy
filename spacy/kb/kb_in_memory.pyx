@@ -46,6 +46,9 @@ cdef class InMemoryLookupKB(KnowledgeBase):
         self._alias_index = PreshMap(nr_aliases + 1)
         self._aliases_table = alias_vec(nr_aliases + 1)
 
+    def is_empty(self):
+        return len(self) == 0
+
     @classmethod
     def generate_from_disk(
         cls, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()
