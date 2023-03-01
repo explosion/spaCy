@@ -14,7 +14,7 @@ class BaseCandidate(abc.ABC):
     def __init__(
         self, mention: str, entity_id: Union[int, str], entity_vector: List[float]
     ):
-        """Create new instance of `Candidate`. Note: has to be a sub-class, otherwise error will be raised.
+        """Initializes properties of `BaseCandidate`.
         mention (str): Mention text for this candidate.
         entity_id (Union[int, str]): Unique entity ID.
         entity_vector (List[float]): Entity embedding.
