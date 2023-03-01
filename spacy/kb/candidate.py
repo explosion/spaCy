@@ -12,7 +12,12 @@ class Candidate(abc.ABC):
     """
 
     def __init__(
-        self, mention: str, entity_id: int, entity_name: str, entity_vector: List[float], prior_prob: float
+        self,
+        mention: str,
+        entity_id: int,
+        entity_name: str,
+        entity_vector: List[float],
+        prior_prob: float,
     ):
         """Initializes properties of `Candidate` instance.
         mention (str): Mention text for this candidate.
