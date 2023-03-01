@@ -138,6 +138,7 @@ def test_serialize_subclassed_kb():
             util.to_disk(path, serialize, exclude)
 
         def from_disk(self, path, exclude: Iterable[str] = SimpleFrozenList()):
+            """We overwrite InMemoryLookupKB.to_disk() to ensure that self.custom_field is loaded as well."""
             path = ensure_path(path)
             if not path.exists():
                 raise ValueError(Errors.E929.format(loc=path))
