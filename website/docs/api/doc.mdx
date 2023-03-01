@@ -654,11 +654,10 @@ the [`TextCategorizer`](/api/textcategorizer).
 
 ## Doc.noun_chunks {id="noun_chunks",tag="property",model="parser"}
 
-Iterate over the base noun phrases in the document. Yields base noun-phrase
-`Span` objects, if the document has been syntactically parsed. A base noun
-phrase, or "NP chunk", is a noun phrase that does not permit other NPs to be
-nested within it – so no NP-level coordination, no prepositional phrases, and no
-relative clauses.
+Returns a tuple of the base noun phrases in the doc, if the document has been
+syntactically parsed. A base noun phrase, or "NP chunk", is a noun phrase that
+does not permit other NPs to be nested within it – so no NP-level coordination,
+no prepositional phrases, and no relative clauses.
 
 To customize the noun chunk iterator in a loaded pipeline, modify
 [`nlp.vocab.get_noun_chunks`](/api/vocab#attributes). If the `noun_chunk`
@@ -675,13 +674,13 @@ implemented for the given language, a `NotImplementedError` is raised.
 > assert chunks[1].text == "another phrase"
 > ```
 
-| Name       | Description                           |
-| ---------- | ------------------------------------- |
-| **YIELDS** | Noun chunks in the document. ~~Span~~ |
+| Name        | Description                                  |
+| ----------- | -------------------------------------------- |
+| **RETURNS** | Noun chunks in the document. ~~Tuple[Span]~~ |
 
 ## Doc.sents {id="sents",tag="property",model="sentences"}
 
-Iterate over the sentences in the document. Sentence spans have no label.
+Returns a tuple of the sentences in the document. Sentence spans have no label.
 
 This property is only available when
 [sentence boundaries](/usage/linguistic-features#sbd) have been set on the
@@ -697,9 +696,9 @@ will raise an error otherwise.
 > assert [s.root.text for s in sents] == ["is", "'s"]
 > ```
 
-| Name       | Description                         |
-| ---------- | ----------------------------------- |
-| **YIELDS** | Sentences in the document. ~~Span~~ |
+| Name        | Description                                |
+| ----------- | ------------------------------------------ |
+| **RETURNS** | Sentences in the document. ~~Tuple[Span]~~ |
 
 ## Doc.has_vector {id="has_vector",tag="property",model="vectors"}
 
