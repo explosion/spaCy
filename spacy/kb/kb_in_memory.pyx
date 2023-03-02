@@ -49,14 +49,6 @@ cdef class InMemoryLookupKB(KnowledgeBase):
     def is_empty(self):
         return len(self) == 0
 
-    @classmethod
-    def generate_from_disk(
-        cls, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()
-    ) -> "InMemoryLookupKB":
-        kb = InMemoryLookupKB(vocab=Vocab(strings=["."]), entity_vector_length=1)
-        kb.from_disk(path)
-        return kb
-
     def __len__(self):
         return self.get_size_entities()
 
