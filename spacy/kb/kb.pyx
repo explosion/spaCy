@@ -123,10 +123,10 @@ cdef class KnowledgeBase:
             Errors.E1044.format(parent="KnowledgeBase", method="generate_from_disk", name=cls.__name__)
         )
 
-    def __len__(self) -> int:
-        """Returns number of entities in the KnowledgeBase.
-        RETURNS (int): Number of entities in the KnowledgeBase.
+    def is_empty(self) -> bool:
+        """Returns whether KnowledgeBase is empty.
+        RETURNS (bool): Whether KnowledgeBase is empty.
         """
         raise NotImplementedError(
-            Errors.E1044.format(parent="KnowledgeBase", method="__len__", name=self.__name__)
+            Errors.E1044.format(parent="KnowledgeBase", method="is_empty", name=self.__name__)
         )
