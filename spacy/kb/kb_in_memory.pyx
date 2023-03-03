@@ -224,9 +224,9 @@ cdef class InMemoryLookupKB(KnowledgeBase):
             self._aliases_table[alias_index] = alias_entry
 
     def get_candidates(self, mention: Span) -> Iterable[InMemoryCandidate]:
-        return self.get_alias_candidates(mention.text)  # type: ignore
+        return self._get_alias_candidates(mention.text)  # type: ignore
 
-    def get_alias_candidates(self, str alias) -> Iterable[InMemoryCandidate]:
+    def _get_alias_candidates(self, str alias) -> Iterable[InMemoryCandidate]:
         """
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
@@ -244,7 +244,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
                 entity_hash=self._entries[entry_index].entity_hash,
                 entity_freq=self._entries[entry_index].freq,
                 entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
-                alias_hash=alias_hash,
+                mention_hash=alias_hash,
                 prior_prob=prior_prob
             )
             for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)

@@ -29,26 +29,26 @@ class Candidate(abc.ABC):
             cases in which this isn't always possible (e.g.: the corpus to analyse contains mentions that the KB corpus
             doesn't) it might be better to eschew this information and always supply the same value.
         """
-        self._mention = mention
-        self._entity_id = entity_id
-        self._entity_name = entity_name
+        self._mention_ = mention
+        self._entity = entity_id
+        self._entity_ = entity_name
         self._entity_vector = entity_vector
         self._prior_prob = prior_prob
 
     @property
     def entity(self) -> int:
         """RETURNS (int): Unique entity ID."""
-        return self._entity_id
+        return self._entity
 
     @property
     def entity_(self) -> str:
         """RETURNS (int): Entity name."""
-        return self._entity_name
+        return self._entity_
 
     @property
-    def mention(self) -> str:
+    def mention_(self) -> str:
         """RETURNS (str): Mention."""
-        return self._mention
+        return self._mention_
 
     @property
     def entity_vector(self) -> List[float]:
@@ -93,20 +93,20 @@ class InMemoryCandidate(Candidate):
             prior_prob=prior_prob,
         )
         self._retrieve_string_from_hash = retrieve_string_from_hash
-        self._entity_hash = entity_hash
+        self._entity = entity_hash
         self._entity_freq = entity_freq
-        self._mention_hash = mention_hash
+        self._mention = mention_hash
         self._prior_prob = prior_prob
 
     @property
     def entity(self) -> int:
         """RETURNS (int): hash of the entity_id's KB ID/name"""
-        return self._entity_hash
+        return self._entity
 
     @property
-    def mention_hash(self) -> int:
+    def mention(self) -> int:
         """RETURNS (int): Mention hash."""
-        return self._mention_hash
+        return self._mention
 
     @property
     def entity_freq(self) -> float:
