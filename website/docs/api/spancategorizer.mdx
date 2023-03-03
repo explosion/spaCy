@@ -18,7 +18,7 @@ need to perform multi-label classification on your spans, use `spancat`. The
 `spancat` component uses a `Logistic` layer where the output class probabilities
 are independent for each class. However, if you need to predict at most one true
 class for a span, then use `spancat_singlelabel`. It uses a `Softmax` layer and
-treats the entities as a multi-class problem.
+treats the spans as a multi-class problem.
 
 Predicted spans will be saved in a [`SpanGroup`](/api/spangroup) on the doc.
 Individual span scores can be found in `spangroup.attrs["scores"]`.
