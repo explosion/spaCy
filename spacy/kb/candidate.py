@@ -3,10 +3,10 @@ from typing import List, Union, Callable
 
 
 class Candidate(abc.ABC):
-    """A `Candidate` object refers to a textual mention (`alias`) that may or may not be resolved
+    """A `Candidate` object refers to a textual mention that may or may not be resolved
     to a specific `entity_id` from a Knowledge Base. This will be used as input for the entity_id linking
     algorithm which will disambiguate the various candidates to the correct one.
-    Each candidate (alias, entity_id) pair is assigned a certain prior probability.
+    Each candidate (mention, entity_id) pair is assigned a certain prior probability.
 
     DOCS: https://spacy.io/api/kb/#candidate-init
     """
@@ -70,7 +70,7 @@ class InMemoryCandidate(Candidate):
         entity_hash: int,
         entity_freq: int,
         entity_vector: List[float],
-        alias_hash: int,
+        mention_hash: int,
         prior_prob: float,
     ):
         """
@@ -79,14 +79,14 @@ class InMemoryCandidate(Candidate):
         entity_hash (str): Hashed entity name /ID.
         entity_freq (int): Entity frequency in KB corpus.
         entity_vector (List[float]): Entity embedding.
-        alias_hash (int): Hashed alias.
+        mention_hash (int): Hashed mention.
         prior_prob (float): Prior probability of entity for this mention - i.e. the probability that, independent of
             the context, this mention resolves to this entity_id in the corpus used to build the knowledge base. In
             cases in which this isn't always possible (e.g.: the corpus to analyse contains mentions that the KB corpus
             doesn't) it might be better to eschew this information and always supply the same value.
         """
         super().__init__(
-            mention=retrieve_string_from_hash(alias_hash),
+            mention=retrieve_string_from_hash(mention_hash),
             entity_id=entity_hash,
             entity_name=retrieve_string_from_hash(entity_hash),
             entity_vector=entity_vector,
@@ -95,7 +95,7 @@ class InMemoryCandidate(Candidate):
         self._retrieve_string_from_hash = retrieve_string_from_hash
         self._entity_hash = entity_hash
         self._entity_freq = entity_freq
-        self._alias_hash = alias_hash
+        self._mention_hash = mention_hash
         self._prior_prob = prior_prob
 
     @property
@@ -104,15 +104,11 @@ class InMemoryCandidate(Candidate):
         return self._entity_hash
 
     @property
-    def alias(self) -> int:
-        """RETURNS (int): hash of the alias"""
-        return self._alias_hash
-
-    @property
-    def alias_(self) -> str:
-        """RETURNS (str): ID of the original alias"""
-        return self._retrieve_string_from_hash(self._alias_hash)
+    def mention_hash(self) -> int:
+        """RETURNS (int): Mention hash."""
+        return self._mention_hash
 
     @property
     def entity_freq(self) -> float:
+        """RETURNS (float): Relative entity frequency."""
         return self._entity_freq
