@@ -7,7 +7,7 @@ from thinc.types import Ragged
 from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
-from spacy.kb import Candidate, InMemoryLookupKB, KnowledgeBase
+from spacy.kb import InMemoryCandidate, InMemoryLookupKB, KnowledgeBase
 from spacy.lang.en import English
 from spacy.ml import load_kb
 from spacy.ml.models.entity_linker import build_span_maker, get_candidates
@@ -506,13 +506,13 @@ def test_el_pipe_configuration(nlp):
 
     @registry.misc("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[
-        [InMemoryLookupKB, "Span"], Iterable[Candidate]
+        [InMemoryLookupKB, "Span"], Iterable[InMemoryCandidate]
     ]:
         return get_lowercased_candidates
 
     @registry.misc("spacy.LowercaseCandidateBatchGenerator.v1")
     def create_candidates_batch() -> Callable[
-        [InMemoryLookupKB, Iterable["Span"]], Iterable[Iterable[Candidate]]
+        [InMemoryLookupKB, Iterable["Span"]], Iterable[Iterable[InMemoryCandidate]]
     ]:
         return get_lowercased_candidates_batch
 

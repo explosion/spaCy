@@ -18,7 +18,7 @@ from .. import util
 from ..util import SimpleFrozenList, ensure_path
 from ..vocab cimport Vocab
 from .kb cimport KnowledgeBase
-from .candidate import Candidate as Candidate
+from .candidate import InMemoryCandidate
 
 
 cdef class InMemoryLookupKB(KnowledgeBase):
@@ -223,10 +223,10 @@ cdef class InMemoryLookupKB(KnowledgeBase):
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
 
-    def get_candidates(self, mention: Span) -> Iterable[Candidate]:
+    def get_candidates(self, mention: Span) -> Iterable[InMemoryCandidate]:
         return self.get_alias_candidates(mention.text)  # type: ignore
 
-    def get_alias_candidates(self, str alias) -> Iterable[Candidate]:
+    def get_alias_candidates(self, str alias) -> Iterable[InMemoryCandidate]:
         """
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
@@ -239,7 +239,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
         alias_entry = self._aliases_table[alias_index]
 
         return [
-            Candidate(
+            InMemoryCandidate(
                 retrieve_string_from_hash=self.vocab.strings.__getitem__,
                 entity_hash=self._entries[entry_index].entity_hash,
                 entity_freq=self._entries[entry_index].freq,
