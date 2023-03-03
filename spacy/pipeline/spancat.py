@@ -567,6 +567,7 @@ class SpanCategorizer(TrainablePipe):
         if self.add_negative_label:
             negative_spans = numpy.ones((scores.shape[0]))
         offset = 0
+        label_map = self._label_map
         for i, eg in enumerate(examples):
             # Map (start, end) offset of spans to the row in the d_scores array,
             # so that we can adjust the gradient for predictions that were
@@ -581,7 +582,7 @@ class SpanCategorizer(TrainablePipe):
                 key = (gold_span.start, gold_span.end)
                 if key in spans_index:
                     row = spans_index[key]
-                    k = self._label_map[gold_span.label_]
+                    k = label_map[gold_span.label_]
                     target[row, k] = 1.0
                     if self.add_negative_label:
                         # delete negative label target.
