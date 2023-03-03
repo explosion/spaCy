@@ -1,7 +1,7 @@
 # cython: infer_types=True, profile=True
 
 from pathlib import Path
-from typing import Iterable, Tuple, Union
+from typing import Iterable, Tuple, Union, Iterator
 from cymem.cymem cimport Pool
 
 from .candidate import Candidate
@@ -30,23 +30,13 @@ cdef class KnowledgeBase:
         self.entity_vector_length = entity_vector_length
         self.mem = Pool()
 
-    def get_candidates_batch(self, mentions: SpanGroup) -> Iterable[Iterable[Candidate]]:
+    def get_candidates(self, mentions: Iterator[SpanGroup]) -> Iterator[Iterable[Iterable[Candidate]]]:
         """
-        Return candidate entities for specified texts. Each candidate defines the entity, the original alias,
-        and the prior probability of that alias resolving to that entity.
-        If no candidate is found for a given text, an empty list is returned.
-        mentions (SpanGroup): Mentions for which to get candidates.
-        RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
-        """
-        return [self.get_candidates(span) for span in mentions]
-
-    def get_candidates(self, mention: Span) -> Iterable[Candidate]:
-        """
-        Return candidate entities for specified text. Each candidate defines the entity, the original alias,
-        and the prior probability of that alias resolving to that entity.
-        If the no candidate is found for a given text, an empty list is returned.
-        mention (Span): Mention for which to get candidates.
-        RETURNS (Iterable[Candidate]): Identified candidates.
+        Return candidate entities for mentions stored in `ent` attribute in passed docs. Each candidate defines the
+        entity, the original alias, and the prior probability of that alias resolving to that entity.
+        If no candidate is found for a given mention, an empty list is returned.
+        mentions (Iterator[SpanGroup]): Mentions per doc as SpanGroup instance.
+        RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
         """
         raise NotImplementedError(
             Errors.E1045.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)

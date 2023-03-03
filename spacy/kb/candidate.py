@@ -1,5 +1,5 @@
 import abc
-from typing import List, Union, Callable
+from typing import List, Callable
 
 
 class Candidate(abc.ABC):

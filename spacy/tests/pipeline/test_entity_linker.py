@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Dict, Any, cast
+from typing import Callable, Iterable, Dict, Any, cast, Iterator
 
 import pytest
 from numpy.testing import assert_equal
@@ -15,7 +15,7 @@ from spacy.pipeline import EntityLinker, TrainablePipe
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
 from spacy.tests.util import make_tempdir
-from spacy.tokens import Span, Doc
+from spacy.tokens import Doc, Span, SpanGroup
 from spacy.training import Example
 from spacy.util import ensure_path
 from spacy.vocab import Vocab
@@ -462,16 +462,17 @@ def test_candidate_generation(nlp):
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
-    assert len(get_candidates(mykb, douglas_ent)) == 2
-    assert len(get_candidates(mykb, adam_ent)) == 1
-    assert len(get_candidates(mykb, Adam_ent)) == 0  # default case sensitive
-    assert len(get_candidates(mykb, shrubbery_ent)) == 0
+    adam_ent_cands = next(get_candidates(mykb, SpanGroup(doc=doc, spans=[adam_ent])))[0]
+    assert len(adam_ent_cands) == 1
+    assert len(next(get_candidates(mykb, SpanGroup(doc=doc, spans=[douglas_ent])))[0]) == 2
+    assert len(next(get_candidates(mykb, SpanGroup(doc=doc, spans=[Adam_ent])))[0]) == 0  # default case sensitive
+    assert len(next(get_candidates(mykb, SpanGroup(doc=doc, spans=[shrubbery_ent])))[0]) == 0
 
     # test the content of the candidates
-    assert get_candidates(mykb, adam_ent)[0].entity_ == "Q2"
-    assert get_candidates(mykb, adam_ent)[0].alias_ == "adam"
-    assert_almost_equal(get_candidates(mykb, adam_ent)[0].entity_freq, 12)
-    assert_almost_equal(get_candidates(mykb, adam_ent)[0].prior_prob, 0.9)
+    assert adam_ent_cands[0].entity_ == "Q2"
+    assert adam_ent_cands[0].alias_ == "adam"
+    assert_almost_equal(adam_ent_cands[0].entity_freq, 12)
+    assert_almost_equal(adam_ent_cands[0].prior_prob, 0.9)
 
 
 def test_el_pipe_configuration(nlp):
@@ -498,23 +499,15 @@ def test_el_pipe_configuration(nlp):
     assert doc[1].ent_kb_id_ == ""
     assert doc[2].ent_kb_id_ == "Q2"
 
-    def get_lowercased_candidates(kb, span):
-        return kb.get_alias_candidates(span.text.lower())
-
-    def get_lowercased_candidates_batch(kb, spans):
-        return [get_lowercased_candidates(kb, span) for span in spans]
+    def get_lowercased_candidates(kb: InMemoryLookupKB, mentions: Iterator[SpanGroup]):
+        for mentions_for_doc in mentions:
+            yield [kb.get_alias_candidates(ent_span.text.lower()) for ent_span in mentions_for_doc]
 
     @registry.misc("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[
-        [InMemoryLookupKB, "Span"], Iterable[InMemoryCandidate]
+        [InMemoryLookupKB, Iterator[SpanGroup]], Iterator[Iterable[Iterable[InMemoryCandidate]]]
     ]:
         return get_lowercased_candidates
-
-    @registry.misc("spacy.LowercaseCandidateBatchGenerator.v1")
-    def create_candidates_batch() -> Callable[
-        [InMemoryLookupKB, Iterable["Span"]], Iterable[Iterable[InMemoryCandidate]]
-    ]:
-        return get_lowercased_candidates_batch
 
     # replace the pipe with a new one with with a different candidate generator
     entity_linker = nlp.replace_pipe(
@@ -523,9 +516,6 @@ def test_el_pipe_configuration(nlp):
         config={
             "incl_context": False,
             "get_candidates": {"@misc": "spacy.LowercaseCandidateGenerator.v1"},
-            "get_candidates_batch": {
-                "@misc": "spacy.LowercaseCandidateBatchGenerator.v1"
-            },
         },
     )
     entity_linker.set_kb(create_kb)

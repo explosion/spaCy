@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Callable, Iterable, List, Tuple
+from typing import Optional, Callable, Iterable, List, Tuple, Iterator
 from thinc.types import Floats2d
 from thinc.api import chain, list2ragged, reduce_mean, residual
 from thinc.api import Model, Maxout, Linear, tuplify, Ragged
@@ -100,34 +100,20 @@ def empty_kb(
 
 
 @registry.misc("spacy.CandidateGenerator.v1")
-def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
+def create_candidates_all() -> Callable[
+    [KnowledgeBase, Iterator[SpanGroup]],
+    Iterator[Iterable[Iterable[Candidate]]],
+]:
     return get_candidates
 
 
-@registry.misc("spacy.CandidateBatchGenerator.v1")
-def create_candidates_batch() -> Callable[
-    [KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]
-]:
-    return get_candidates_batch
-
-
-def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
-    """
-    Return candidate entities for a given mention and fetching appropriate entries from the index.
-    kb (KnowledgeBase): Knowledge base to query.
-    mention (Span): Entity mention for which to identify candidates.
-    RETURNS (Iterable[InMemoryCandidate]): Identified candidates.
-    """
-    return kb.get_candidates(mention)
-
-
-def get_candidates_batch(
-    kb: KnowledgeBase, mentions: SpanGroup
-) -> Iterable[Iterable[Candidate]]:
+def get_candidates(
+    kb: KnowledgeBase, mentions: Iterator[SpanGroup]
+) -> Iterator[Iterable[Iterable[Candidate]]]:
     """
     Return candidate entities for the given mentions and fetching appropriate entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
-    mention (SpanGroup): Entity mentions for which to identify candidates.
-    RETURNS (Iterable[Iterable[InMemoryCandidate]]): Identified candidates.
+    mentions (Iterator[SpanGroup]): Mentions per doc as SpanGroup instance.
+    RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
     """
-    return kb.get_candidates_batch(mentions)
+    return kb.get_candidates(mentions)
