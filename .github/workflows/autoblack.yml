@@ -16,7 +16,7 @@ jobs:
         with:
             ref: ${{ github.head_ref }}
       - uses: actions/setup-python@v4
-      - run: pip install black
+      - run: pip install black -c requirements.txt
       - name: Auto-format code if needed
         run: black spacy
       # We can't run black --check here because that returns a non-zero excit

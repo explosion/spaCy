@@ -39,14 +39,17 @@ def project_pull(project_dir: Path, remote: str, *, verbose: bool = False):
     # in the list.
     while commands:
         for i, cmd in enumerate(list(commands)):
-            logger.debug(f"CMD: {cmd['name']}.")
+            logger.debug("CMD: %s.", cmd["name"])
             deps = [project_dir / dep for dep in cmd.get("deps", [])]
             if all(dep.exists() for dep in deps):
                 cmd_hash = get_command_hash("", "", deps, cmd["script"])
                 for output_path in cmd.get("outputs", []):
                     url = storage.pull(output_path, command_hash=cmd_hash)
                     logger.debug(
-                        f"URL: {url} for {output_path} with command hash {cmd_hash}"
+                        "URL: %s for %s with command hash %s",
+                        url,
+                        output_path,
+                        cmd_hash,
                     )
                     yield url, output_path
 
@@ -58,7 +61,7 @@ def project_pull(project_dir: Path, remote: str, *, verbose: bool = False):
                 commands.pop(i)
                 break
             else:
-                logger.debug(f"Dependency missing. Skipping {cmd['name']} outputs.")
+                logger.debug("Dependency missing. Skipping %s outputs.", cmd["name"])
         else:
             # If we didn't break the for loop, break the while loop.
             break
