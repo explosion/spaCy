@@ -316,10 +316,10 @@ class SpanCategorizer(TrainablePipe):
     ) -> None:
         """Initialize the multi-label or multi-class span categorizer.
         The 'single_label' argument configures whether the component
-        should only produce one label per span (multiclass) or if it
-        can produce multiple labels per span (multilabel). In the
-        multilabel case the classification layer is expected to be
-        Logistic and Softmax in the multiclass case.
+        should only produce one label per span (multi-class) or if it
+        can produce multiple labels per span (multi-label). In the
+        multi-label case the classification layer is expected to be
+        Logistic and Softmax in the multi-class case.
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         suggester (Callable[[Iterable[Doc], Optional[Ops]], Ragged]): A function that suggests spans.
