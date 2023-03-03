@@ -212,7 +212,7 @@ def make_spancat_singlelabel(
     allow_overlap: bool,
     scorer: Optional[Callable],
 ) -> "SpanCategorizer":
-    """Create a SpanCategorizer component and configure it for multiclass
+    """Create a SpanCategorizer component and configure it for multi-class
     classification. With this configuration each span can get at most one
     label. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
