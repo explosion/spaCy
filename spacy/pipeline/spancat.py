@@ -149,7 +149,7 @@ def make_spancat(
     threshold: float,
     max_positive: Optional[int],
 ) -> "SpanCategorizer":
-    """Create a SpanCategorizer component and configure it for multilabel
+    """Create a SpanCategorizer component and configure it for multi-label
     classification to be able to assign multiple labels for each span.
     The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
