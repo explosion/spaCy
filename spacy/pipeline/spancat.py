@@ -314,7 +314,7 @@ class SpanCategorizer(TrainablePipe):
         threshold: Optional[float] = 0.5,
         scorer: Optional[Callable] = spancat_score,
     ) -> None:
-        """Initialize the multilabel or multiclass span categorizer.
+        """Initialize the multi-label or multi-class span categorizer.
         The 'single_label' argument configures whether the component
         should only produce one label per span (multiclass) or if it
         can produce multiple labels per span (multilabel). In the
