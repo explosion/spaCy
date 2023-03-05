@@ -63,7 +63,9 @@ def _check_kb(kb):
         assert alias_string not in kb.get_alias_strings()
 
     # check candidates & probabilities
-    candidates = sorted(kb._get_alias_candidates("double07"), key=lambda x: x.entity_id_str)
+    candidates = sorted(
+        kb._get_alias_candidates("double07"), key=lambda x: x.entity_id_str
+    )
     assert len(candidates) == 2
 
     assert candidates[0].entity_id_str == "Q007"

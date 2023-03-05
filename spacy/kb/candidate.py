@@ -76,7 +76,7 @@ class InMemoryCandidate(Candidate):
         mention: str,
         entity_vector: List[float],
         prior_prob: float,
-        entity_freq: int
+        entity_freq: int,
     ):
         """
         hash_to_str (Callable[[int], str]): Callable retrieving entity name from provided entity/vocab hash.
