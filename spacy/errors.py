@@ -952,6 +952,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "with `displacy.serve(doc, port=port)`")
     E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
              "or use `auto_switch_port=True` to pick an available port automatically.")
+    E1051 = ("Expected `entity_id` to be of type {should_type}, but is of type {is_type}.")
 
     # v4 error strings
     E4000 = ("Expected a Doc as input, but got: '{type}'")

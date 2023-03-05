@@ -1,6 +1,8 @@
 import abc
 from typing import List, Union, Callable
 
+from ..errors import Errors
+
 
 class Candidate(abc.ABC):
     """A `Candidate` object refers to a textual mention that may or may not be resolved
@@ -97,6 +99,10 @@ class InMemoryCandidate(Candidate):
         )
         self._hash_to_str = hash_to_str
         self._entity_freq = entity_freq
+        if not isinstance(self._entity_id, int):
+            raise ValueError(
+                Errors.E1051.format(should_type="int", is_type=str(type(entity_id)))
+            )
         self._entity_id_str = self._hash_to_str(self._entity_id)
 
     @property
