@@ -14,41 +14,46 @@ class Candidate(abc.ABC):
     def __init__(
         self,
         mention: str,
-        entity_id: int,
-        entity_name: str,
+        entity_id: Union[str, int],
         entity_vector: List[float],
         prior_prob: float,
     ):
         """Initializes properties of `Candidate` instance.
         mention (str): Mention text for this candidate.
-        entity_id (int): Unique entity ID.
-        entity_name (str): Entity name.
+        entity_id (Union[str, int]): Unique entity ID.
         entity_vector (List[float]): Entity embedding.
         prior_prob (float): Prior probability of entity for this mention - i.e. the probability that, independent of
             the context, this mention resolves to this entity_id in the corpus used to build the knowledge base. In
             cases in which this isn't always possible (e.g.: the corpus to analyse contains mentions that the KB corpus
             doesn't) it might be better to eschew this information and always supply the same value.
         """
-        self._mention_ = mention
-        self._entity = entity_id
-        self._entity_ = entity_name
+        self._mention = mention
+        self._entity_id = entity_id
+        # Note that hashing an int value yields the same int value.
+        self._entity_id_hash = hash(entity_id)
         self._entity_vector = entity_vector
         self._prior_prob = prior_prob
 
     @property
-    def entity(self) -> int:
-        """RETURNS (int): Unique entity ID."""
-        return self._entity
+    def entity_id(self) -> Union[str, int]:
+        """RETURNS (Union[str, int]): Unique entity ID."""
+        return self._entity_id
 
     @property
-    def entity_(self) -> str:
-        """RETURNS (int): Entity name."""
-        return self._entity_
+    def entity_id_int(self) -> int:
+        """RETURNS (int): Numerical representation of entity ID (if entity ID is numerical, this is just the entity ID,
+        otherwise the hash of the entity ID string)."""
+        return self._entity_id_hash
 
     @property
-    def mention_(self) -> str:
+    def entity_id_str(self) -> str:
+        """RETURNS (str): String representation of entity ID."""
+        return str(self._entity_id)
+
+    @property
+    def mention(self) -> str:
         """RETURNS (str): Mention."""
-        return self._mention_
+        return self._mention
 
     @property
     def entity_vector(self) -> List[float]:
@@ -66,49 +71,40 @@ class InMemoryCandidate(Candidate):
 
     def __init__(
         self,
-        retrieve_string_from_hash: Callable[[int], str],
-        entity_hash: int,
-        entity_freq: int,
+        hash_to_str: Callable[[int], str],
+        entity_id: int,
+        mention: str,
         entity_vector: List[float],
-        mention_hash: int,
         prior_prob: float,
+        entity_freq: int
     ):
         """
-        retrieve_string_from_hash (Callable[[int], str]): Callable retrieving entity name from provided entity/vocab
-            hash.
-        entity_hash (str): Hashed entity name /ID.
+        hash_to_str (Callable[[int], str]): Callable retrieving entity name from provided entity/vocab hash.
+        entity_id (str): Entity ID as hash that can be looked up with InMemoryKB.vocab.strings.__getitem__().
         entity_freq (int): Entity frequency in KB corpus.
         entity_vector (List[float]): Entity embedding.
-        mention_hash (int): Hashed mention.
+        mention (str): Mention.
         prior_prob (float): Prior probability of entity for this mention - i.e. the probability that, independent of
             the context, this mention resolves to this entity_id in the corpus used to build the knowledge base. In
             cases in which this isn't always possible (e.g.: the corpus to analyse contains mentions that the KB corpus
             doesn't) it might be better to eschew this information and always supply the same value.
         """
         super().__init__(
-            mention=retrieve_string_from_hash(mention_hash),
-            entity_id=entity_hash,
-            entity_name=retrieve_string_from_hash(entity_hash),
+            mention=mention,
+            entity_id=entity_id,
             entity_vector=entity_vector,
             prior_prob=prior_prob,
         )
-        self._retrieve_string_from_hash = retrieve_string_from_hash
-        self._entity = entity_hash
+        self._hash_to_str = hash_to_str
         self._entity_freq = entity_freq
-        self._mention = mention_hash
-        self._prior_prob = prior_prob
-
-    @property
-    def entity(self) -> int:
-        """RETURNS (int): hash of the entity_id's KB ID/name"""
-        return self._entity
-
-    @property
-    def mention(self) -> int:
-        """RETURNS (int): Mention hash."""
-        return self._mention
+        self._entity_id_str = self._hash_to_str(self._entity_id)
 
     @property
     def entity_freq(self) -> float:
         """RETURNS (float): Relative entity frequency."""
         return self._entity_freq
+
+    @property
+    def entity_id_str(self) -> str:
+        """RETURNS (str): String representation of entity ID."""
+        return self._entity_id_str
