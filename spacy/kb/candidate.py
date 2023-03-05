@@ -101,7 +101,7 @@ class InMemoryCandidate(Candidate):
         self._entity_freq = entity_freq
         if not isinstance(self._entity_id, int):
             raise ValueError(
-                Errors.E1051.format(should_type="int", is_type=str(type(entity_id)))
+                Errors.E4005.format(should_type="int", is_type=str(type(entity_id)))
             )
         self._entity_id_str = self._hash_to_str(self._entity_id)
 

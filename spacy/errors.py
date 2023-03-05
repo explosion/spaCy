@@ -952,7 +952,6 @@ class Errors(metaclass=ErrorsWithCodes):
              "with `displacy.serve(doc, port=port)`")
     E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
              "or use `auto_switch_port=True` to pick an available port automatically.")
-    E1051 = ("Expected `entity_id` to be of type {should_type}, but is of type {is_type}.")
 
     # v4 error strings
     E4000 = ("Expected a Doc as input, but got: '{type}'")
@@ -962,6 +961,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E4003 = ("Training examples for distillation must have the exact same tokens in the "
              "reference and predicted docs.")
     E4004 = ("Backprop is not supported when is_train is not set.")
+    E4005 = ("Expected `entity_id` to be of type {should_type}, but is of type {is_type}.")
 
 RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}
 
