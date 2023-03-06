@@ -138,13 +138,11 @@ def info_installed_model_url(model: str) -> Optional[str]:
     """
     try:
         dist = importlib_metadata.distribution(model)
-        data = json.loads(dist.read_text("direct_url.json"))
-        return data["url"]
-    except importlib_metadata.PackageNotFoundError:
-        # no such package
-        return None
-    except Exception:
-        # something else, like no file or invalid JSON
+        text = dist.read_text("direct_url.json")
+        if isinstance(text, str):
+            data = json.loads(text)
+            return data["url"]
+    finally:
         return None
 
 
