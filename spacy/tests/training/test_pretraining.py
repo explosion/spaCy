@@ -2,17 +2,19 @@ from pathlib import Path
 import numpy as np
 import pytest
 import srsly
-from spacy.vocab import Vocab
-from thinc.api import Config
+from thinc.api import Config, get_current_ops
 
+from spacy import util
+from spacy.lang.en import English
+from spacy.training.initialize import init_nlp
+from spacy.training.loop import train
+from spacy.training.pretrain import pretrain
+from spacy.tokens import Doc, DocBin
+from spacy.language import DEFAULT_CONFIG_PRETRAIN_PATH, DEFAULT_CONFIG_PATH
+from spacy.ml.models.multi_task import create_pretrain_vectors
+from spacy.vectors import Vectors
+from spacy.vocab import Vocab
 from ..util import make_tempdir
-from ... import util
-from ...lang.en import English
-from ...training.initialize import init_nlp
-from ...training.loop import train
-from ...training.pretrain import pretrain
-from ...tokens import Doc, DocBin
-from ...language import DEFAULT_CONFIG_PRETRAIN_PATH, DEFAULT_CONFIG_PATH
 
 pretrain_string_listener = """
 [nlp]
@@ -346,3 +348,30 @@ def write_vectors_model(tmp_dir):
     nlp = English(vocab)
     nlp.to_disk(nlp_path)
     return str(nlp_path)
+
+
+def test_pretrain_default_vectors():
+    nlp = English()
+    nlp.add_pipe("tok2vec")
+    nlp.initialize()
+
+    # default vectors are supported
+    nlp.vocab.vectors = Vectors(shape=(10, 10))
+    create_pretrain_vectors(1, 1, "cosine")(nlp.vocab, nlp.get_pipe("tok2vec").model)
+
+    # error for no vectors
+    with pytest.raises(ValueError, match="E875"):
+        nlp.vocab.vectors = Vectors()
+        create_pretrain_vectors(1, 1, "cosine")(
+            nlp.vocab, nlp.get_pipe("tok2vec").model
+        )
+
+    # error for floret vectors
+    with pytest.raises(ValueError, match="E850"):
+        ops = get_current_ops()
+        nlp.vocab.vectors = Vectors(
+            data=ops.xp.zeros((10, 10)), mode="floret", hash_count=1
+        )
+        create_pretrain_vectors(1, 1, "cosine")(
+            nlp.vocab, nlp.get_pipe("tok2vec").model
+        )
