@@ -28,6 +28,7 @@ from spacy.cli.debug_data import _print_span_characteristics
 from spacy.cli.debug_data import _get_spans_length_freq_dist
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
+from spacy.cli.init_pipeline import _init_labels
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.project.remote_storage import RemoteStorage
@@ -46,7 +47,6 @@ from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
 from spacy.training.converters import iob_to_docs
 from spacy.util import ENV_VARS, get_minor_version, load_model_from_config, load_config
 
-from ..cli.init_pipeline import _init_labels
 from .util import make_tempdir
 
 
