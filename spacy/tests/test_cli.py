@@ -1159,6 +1159,7 @@ def test_cli_find_threshold(capsys):
 )
 def test_project_check_requirements(reqs, output):
     import pkg_resources
+
     # excessive guard against unlikely package name
     try:
         pkg_resources.require("spacyunknowndoesnotexist12345")
