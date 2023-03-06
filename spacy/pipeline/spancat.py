@@ -306,8 +306,6 @@ class SpanCategorizer(TrainablePipe):
         vocab: Vocab,
         model: Model[Tuple[List[Doc], Ragged], Floats2d],
         suggester: Suggester,
-        # TODO Not sure what's the best default name when it can both be spancat
-        # and spancat_singlelabel
         name: str = "spancat",
         *,
         add_negative_label: bool = False,
