@@ -1,6 +1,5 @@
 from typing import Optional, Dict, Any, Union, List
 import platform
-import pkg_resources
 import json
 from pathlib import Path
 from wasabi import Printer, MarkdownRenderer
@@ -10,6 +9,7 @@ from ._util import app, Arg, Opt, string_to_list
 from .download import get_model_filename, get_latest_version
 from .. import util
 from .. import about
+from ..compat import importlib_metadata
 
 
 @app.command("info")
@@ -137,15 +137,14 @@ def info_installed_model_url(model: str) -> Optional[str]:
     dist-info available.
     """
     try:
-        dist = pkg_resources.get_distribution(model)
-        data = json.loads(dist.get_metadata("direct_url.json"))
-        return data["url"]
-    except pkg_resources.DistributionNotFound:
-        # no such package
-        return None
+        dist = importlib_metadata.distribution(model)
+        text = dist.read_text("direct_url.json")
+        if isinstance(text, str):
+            data = json.loads(text)
+            return data["url"]
     except Exception:
-        # something else, like no file or invalid JSON
-        return None
+        pass
+    return None
 
 
 def info_model_url(model: str) -> Dict[str, Any]:
