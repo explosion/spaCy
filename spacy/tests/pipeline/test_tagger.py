@@ -1,5 +1,5 @@
 import pytest
-from numpy.testing import assert_equal, assert_array_almost_equal
+from numpy.testing import assert_equal, assert_almost_equal
 from spacy.attrs import TAG
 
 from spacy import util
@@ -68,7 +68,6 @@ PARTIAL_DATA = [
 
 
 def test_label_smoothing():
-    util.fix_random_seed()
     nlp = Language()
     tagger_no_ls = nlp.add_pipe("tagger", "no_label_smoothing")
     tagger_ls = nlp.add_pipe(
@@ -88,7 +87,7 @@ def test_label_smoothing():
     )
     no_ls_grads = tagger_no_ls.get_loss(train_examples, tag_scores)[1][0]
     ls_grads = tagger_ls.get_loss(train_examples, tag_scores)[1][0]
-    assert_array_almost_equal((ls_grads - no_ls_grads)[0], [0.05, -0.025, -0.025])
+    assert_almost_equal(ls_grads / no_ls_grads, 0.925)
 
 
 def test_no_label():
