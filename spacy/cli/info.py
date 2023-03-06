@@ -143,7 +143,8 @@ def info_installed_model_url(model: str) -> Optional[str]:
             data = json.loads(text)
             return data["url"]
     except Exception:
-        return None
+        pass
+    return None
 
 
 def info_model_url(model: str) -> Dict[str, Any]:
