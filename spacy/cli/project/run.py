@@ -330,11 +330,6 @@ def _check_requirements(requirements: List[str]) -> Tuple[bool, bool]:
     RETURNS (Tuple[bool, bool]): Whether (1) any packages couldn't be imported, (2) any packages with version conflicts
         exist.
     """
-    msg.warn("Requirements checks are being skipped.")
-    return False, False
-
-
-def _check_requirements_pkg_resources(requirements: List[str]) -> Tuple[bool, bool]:
     import pkg_resources
 
     failed_pkgs_msgs: List[str] = []
