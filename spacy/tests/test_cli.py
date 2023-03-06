@@ -1125,7 +1125,7 @@ def test_cli_find_threshold(capsys):
                 )
 
 
-@pytest.mark.skip
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "reqs,output",
     [
