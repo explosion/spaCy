@@ -467,9 +467,16 @@ def test_candidate_generation(nlp):
     # test the size of the relevant candidates
     adam_ent_cands = next(get_candidates(mykb, SpanGroup(doc=doc, spans=[adam_ent])))[0]
     assert len(adam_ent_cands) == 1
-    assert len(next(get_candidates(mykb, SpanGroup(doc=doc, spans=[douglas_ent])))[0]) == 2
-    assert len(next(get_candidates(mykb, SpanGroup(doc=doc, spans=[Adam_ent])))[0]) == 0  # default case sensitive
-    assert len(next(get_candidates(mykb, SpanGroup(doc=doc, spans=[shrubbery_ent])))[0]) == 0
+    assert (
+        len(next(get_candidates(mykb, SpanGroup(doc=doc, spans=[douglas_ent])))[0]) == 2
+    )
+    assert (
+        len(next(get_candidates(mykb, SpanGroup(doc=doc, spans=[Adam_ent])))[0]) == 0
+    )  # default case sensitive
+    assert (
+        len(next(get_candidates(mykb, SpanGroup(doc=doc, spans=[shrubbery_ent])))[0])
+        == 0
+    )
 
     # test the content of the candidates
     assert adam_ent_cands[0].entity_ == "Q2"
@@ -504,11 +511,15 @@ def test_el_pipe_configuration(nlp):
 
     def get_lowercased_candidates(kb: InMemoryLookupKB, mentions: Iterator[SpanGroup]):
         for mentions_for_doc in mentions:
-            yield [kb.get_alias_candidates(ent_span.text.lower()) for ent_span in mentions_for_doc]
+            yield [
+                kb.get_alias_candidates(ent_span.text.lower())
+                for ent_span in mentions_for_doc
+            ]
 
     @registry.misc("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[
-        [InMemoryLookupKB, Iterator[SpanGroup]], Iterator[Iterable[Iterable[InMemoryCandidate]]]
+        [InMemoryLookupKB, Iterator[SpanGroup]],
+        Iterator[Iterable[Iterable[InMemoryCandidate]]],
     ]:
         return get_lowercased_candidates
 

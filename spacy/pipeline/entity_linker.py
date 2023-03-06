@@ -1,4 +1,14 @@
-from typing import Optional, Iterable, Callable, Dict, Sequence, Union, List, Any, Iterator
+from typing import (
+    Optional,
+    Iterable,
+    Callable,
+    Dict,
+    Sequence,
+    Union,
+    List,
+    Any,
+    Iterator,
+)
 from typing import cast
 from numpy import dtype
 from thinc.types import Floats1d, Floats2d, Ints1d, Ragged
@@ -79,7 +89,9 @@ def make_entity_linker(
     incl_prior: bool,
     incl_context: bool,
     entity_vector_length: int,
-    get_candidates: Callable[[KnowledgeBase, Iterator[SpanGroup]], Iterator[Iterable[Iterable[Candidate]]]],
+    get_candidates: Callable[
+        [KnowledgeBase, Iterator[SpanGroup]], Iterator[Iterable[Iterable[Candidate]]]
+    ],
     generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
     overwrite: bool,
     scorer: Optional[Callable],
@@ -177,7 +189,10 @@ class EntityLinker(TrainablePipe):
         incl_prior: bool,
         incl_context: bool,
         entity_vector_length: int,
-        get_candidates: Callable[[KnowledgeBase, Iterator[SpanGroup]], Iterator[Iterable[Iterable[Candidate]]]],
+        get_candidates: Callable[
+            [KnowledgeBase, Iterator[SpanGroup]],
+            Iterator[Iterable[Iterable[Candidate]]],
+        ],
         generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
         overwrite: bool = False,
         scorer: Optional[Callable] = entity_linker_score,
@@ -313,7 +328,8 @@ class EntityLinker(TrainablePipe):
         If one isn't present, then the update step needs to be skipped.
         """
         for candidates_for_doc in self.get_candidates(
-            self.kb, (SpanGroup(doc=eg.predicted, spans=eg.predicted.ents) for eg in examples)
+            self.kb,
+            (SpanGroup(doc=eg.predicted, spans=eg.predicted.ents) for eg in examples),
         ):
             for candidates_for_mention in candidates_for_doc:
                 if list(candidates_for_mention):
