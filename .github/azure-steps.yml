@@ -60,8 +60,8 @@ steps:
     condition: eq(variables['python_version'], '3.8')
 
   - script: |
-      python -W error -m spacy info ca_core_news_sm --url
-    displayName: 'Test info --url CLI'
+      python -W error -m spacy info ca_core_news_sm | grep -q download_url
+    displayName: 'Test download_url in info CLI'
     condition: eq(variables['python_version'], '3.8')
 
   - script: |
