@@ -142,7 +142,7 @@ def info_installed_model_url(model: str) -> Optional[str]:
         if isinstance(text, str):
             data = json.loads(text)
             return data["url"]
-    finally:
+    except Exception:
         return None
 
 
