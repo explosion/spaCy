@@ -322,6 +322,7 @@ class SpanCategorizer(TrainablePipe):
         can produce multiple labels per span (multi-label). In the
         multi-label case the classification layer is expected to be
         Logistic and Softmax in the multi-class case.
+
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         suggester (Callable[[Iterable[Doc], Optional[Ops]], Ragged]): A function that suggests spans.
