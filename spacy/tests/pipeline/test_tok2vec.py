@@ -602,10 +602,6 @@ def test_tok2vec_distillation_teacher_annotations():
         )
 
     optimizer = teacher_nlp.initialize(lambda: train_examples_teacher)
-    for i in range(50):
-        losses = {}
-        teacher_nlp.update(train_examples_teacher, sgd=optimizer, losses=losses)
-
     student_nlp.initialize(lambda: train_examples_student)
 
     # Since Language.distill creates a copy of the examples to use as
@@ -626,6 +622,4 @@ def test_tok2vec_distillation_teacher_annotations():
         return out
 
     student_tok2vec.distill = tok2vec_distill_wrapper.__get__(student_tok2vec, Tok2Vec)
-    student_nlp.distill(
-        teacher_nlp, train_examples_student, sgd=optimizer, losses=losses
-    )
+    student_nlp.distill(teacher_nlp, train_examples_student, sgd=optimizer, losses={})
