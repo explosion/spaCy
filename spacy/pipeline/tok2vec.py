@@ -199,14 +199,14 @@ class Tok2Vec(TrainablePipe):
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
     ) -> Dict[str, float]:
-        """Train a pipe (the student) on the predictions of another pipe
-        (the teacher). The student is typically trained on the probability
-        distribution of the teacher, but details may differ per pipe.
+        """Performs an update of the student pipe's model using the
+        student's distillation examples and sets the annotations
+        of the teacher's distillation examples using the teacher pipe.
 
-        teacher_pipe (Optional[TrainablePipe]): The teacher pipe to learn
-            from.
-        examples (Iterable[Example]): Distillation examples. The reference
-            and predicted docs must have the same number of tokens and the
+        teacher_pipe (Optional[TrainablePipe]): The teacher pipe to use
+            for prediction.
+        examples (Iterable[Example]): Distillation examples. The reference (teacher)
+            and predicted (student) docs must have the same number of tokens and the
             same orthography.
         drop (float): dropout rate.
         sgd (Optional[Optimizer]): An optimizer. Will be created via
