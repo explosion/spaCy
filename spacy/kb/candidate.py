@@ -82,7 +82,7 @@ class InMemoryCandidate(Candidate):
     ):
         """
         hash_to_str (Callable[[int], str]): Callable retrieving entity name from provided entity/vocab hash.
-        entity_id (str): Entity ID as hash that can be looked up with InMemoryKB.vocab.strings.__getitem__().
+        entity_id (int): Entity ID as hash that can be looked up with InMemoryKB.vocab.strings.__getitem__().
         entity_freq (int): Entity frequency in KB corpus.
         entity_vector (List[float]): Entity embedding.
         mention (str): Mention.
