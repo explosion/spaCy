@@ -9,7 +9,6 @@ import random
 from thinc.api import CosineDistance, Model, Optimizer, Config
 from thinc.api import set_dropout_rate
 
-from ..tokens import SpanGroup
 from ..kb import KnowledgeBase, Candidate
 from ..ml import empty_kb
 from ..tokens import Doc, Span, SpanGroup
@@ -58,6 +57,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "entity_vector_length": 64,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
         "get_candidates_batch": {"@misc": "spacy.CandidateBatchGenerator.v1"},
+        "generate_empty_kb": {"@misc": "spacy.EmptyKB.v2"},
         "overwrite": False,
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
         "use_gold_ents": True,
@@ -85,6 +85,7 @@ def make_entity_linker(
     get_candidates_batch: Callable[
         [KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]
     ],
+    generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
     overwrite: bool,
     scorer: Optional[Callable],
     use_gold_ents: bool,
@@ -107,6 +108,7 @@ def make_entity_linker(
     get_candidates_batch (
         Callable[[KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
         ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
+    generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
     scorer (Optional[Callable]): The scoring method.
     use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
         component must provide entity annotations.
@@ -148,6 +150,7 @@ def make_entity_linker(
         entity_vector_length=entity_vector_length,
         get_candidates=get_candidates,
         get_candidates_batch=get_candidates_batch,
+        generate_empty_kb=generate_empty_kb,
         overwrite=overwrite,
         scorer=scorer,
         use_gold_ents=use_gold_ents,
@@ -189,6 +192,7 @@ class EntityLinker(TrainablePipe):
         get_candidates_batch: Callable[
             [KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]
         ],
+        generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
         overwrite: bool = False,
         scorer: Optional[Callable] = entity_linker_score,
         use_gold_ents: bool,
@@ -212,7 +216,8 @@ class EntityLinker(TrainablePipe):
         get_candidates_batch (
             Callable[[KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]],
             Iterable[Candidate]]
-        ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
+            ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
+        generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
         overwrite (bool): Whether to overwrite existing non-empty annotations.
         scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
         use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
@@ -220,6 +225,7 @@ class EntityLinker(TrainablePipe):
         candidates_batch_size (int): Size of batches for entity candidate generation.
         threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
             threshold, prediction is discarded. If None, predictions are not filtered by any threshold.
+        save_activations (bool): save model activations in Doc when annotating.
         DOCS: https://spacy.io/api/entitylinker#init
         """
 
@@ -236,6 +242,7 @@ class EntityLinker(TrainablePipe):
         self.model = model
         self.name = name
         self.labels_discard = list(labels_discard)
+        # how many neighbour sentences to take into account
         self.n_sents = n_sents
         self.incl_prior = incl_prior
         self.incl_context = incl_context
@@ -243,9 +250,7 @@ class EntityLinker(TrainablePipe):
         self.get_candidates_batch = get_candidates_batch
         self.cfg: Dict[str, Any] = {"overwrite": overwrite}
         self.distance = CosineDistance(normalize=False)
-        # how many neighbour sentences to take into account
-        # create an empty KB by default
-        self.kb = empty_kb(entity_vector_length)(self.vocab)
+        self.kb = generate_empty_kb(self.vocab, entity_vector_length)
         self.scorer = scorer
         self.use_gold_ents = use_gold_ents
         self.candidates_batch_size = candidates_batch_size
@@ -267,7 +272,7 @@ class EntityLinker(TrainablePipe):
         # Raise an error if the knowledge base is not initialized.
         if self.kb is None:
             raise ValueError(Errors.E1018.format(name=self.name))
-        if len(self.kb) == 0:
+        if hasattr(self.kb, "is_empty") and self.kb.is_empty():
             raise ValueError(Errors.E139.format(name=self.name))
 
     def initialize(
@@ -537,12 +542,12 @@ class EntityLinker(TrainablePipe):
                             )
                         elif len(candidates) == 1 and self.threshold is None:
                             # shortcut for efficiency reasons: take the 1 candidate
-                            final_kb_ids.append(candidates[0].entity_)
+                            final_kb_ids.append(candidates[0].entity_id_str)
                             self._add_activations(
                                 doc_scores=doc_scores,
                                 doc_ents=doc_ents,
                                 scores=[1.0],
-                                ents=[candidates[0].entity],
+                                ents=[candidates[0].entity_id_int],
                             )
                         else:
                             random.shuffle(candidates)
@@ -572,7 +577,7 @@ class EntityLinker(TrainablePipe):
                                     raise ValueError(Errors.E161)
                                 scores = prior_probs + sims - (prior_probs * sims)
                             final_kb_ids.append(
-                                candidates[scores.argmax().item()].entity_
+                                candidates[scores.argmax().item()].entity_id_str
                                 if self.threshold is None
                                 or scores.max() >= self.threshold
                                 else EntityLinker.NIL
@@ -581,7 +586,7 @@ class EntityLinker(TrainablePipe):
                                 doc_scores=doc_scores,
                                 doc_ents=doc_ents,
                                 scores=scores,
-                                ents=[c.entity for c in candidates],
+                                ents=[c.entity_id_int for c in candidates],
                             )
             self._add_doc_activations(
                 docs_scores=docs_scores,

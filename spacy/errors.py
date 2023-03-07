@@ -437,8 +437,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E133 = ("The sum of prior probabilities for alias '{alias}' should not "
             "exceed 1, but found {sum}.")
     E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
-    E139 = ("Knowledge base for component '{name}' is empty. Use the methods "
-            "`kb.add_entity` and `kb.add_alias` to add entries.")
+    E139 = ("Knowledge base for component '{name}' is empty.")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
@@ -951,7 +950,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1049 = ("No available port found for displaCy on host {host}. Please specify an available port "
              "with `displacy.serve(doc, port=port)`")
     E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
-             "or use `auto_switch_port=True` to pick an available port automatically.")
+             "or use `auto_select_port=True` to pick an available port automatically.")
 
     # v4 error strings
     E4000 = ("Expected a Doc as input, but got: '{type}'")
@@ -961,6 +960,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E4003 = ("Training examples for distillation must have the exact same tokens in the "
              "reference and predicted docs.")
     E4004 = ("Backprop is not supported when is_train is not set.")
+    E4005 = ("Expected `entity_id` to be of type {should_type}, but is of type {is_type}.")
 
 RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}
 

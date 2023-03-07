@@ -29,7 +29,7 @@ def create_docbin_reader(
 ) -> Callable[["Language"], Iterable[Example]]:
     if path is None:
         raise ValueError(Errors.E913)
-    util.logger.debug(f"Loading corpus from path: {path}")
+    util.logger.debug("Loading corpus from path: %s", path)
     return Corpus(
         path,
         gold_preproc=gold_preproc,
