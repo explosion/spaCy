@@ -471,7 +471,7 @@ def test_candidate_generation(nlp):
     assert len(get_candidates(mykb, shrubbery_ent)) == 0
 
     # test the content of the candidates
-    assert get_candidates(mykb, adam_ent)[0].entity_id_str == "Q2"
+    assert get_candidates(mykb, adam_ent)[0].entity_id_ == "Q2"
     assert get_candidates(mykb, adam_ent)[0].mention == "adam"
     assert_almost_equal(get_candidates(mykb, adam_ent)[0].entity_freq, 12)
     assert_almost_equal(get_candidates(mykb, adam_ent)[0].prior_prob, 0.9)
@@ -563,8 +563,8 @@ def test_vocab_serialization(nlp):
 
     candidates = mykb._get_alias_candidates("adam")
     assert len(candidates) == 1
-    assert candidates[0].entity_id_int == q2_hash
-    assert candidates[0].entity_id_str == "Q2"
+    assert candidates[0].entity_id == q2_hash
+    assert candidates[0].entity_id_ == "Q2"
     assert candidates[0].mention == "adam"
 
     with make_tempdir() as d:
@@ -574,8 +574,8 @@ def test_vocab_serialization(nlp):
 
         candidates = kb_new_vocab._get_alias_candidates("adam")
         assert len(candidates) == 1
-        assert candidates[0].entity_id_int == q2_hash
-        assert candidates[0].entity_id_str == "Q2"
+        assert candidates[0].entity_id == q2_hash
+        assert candidates[0].entity_id_ == "Q2"
         assert candidates[0].mention == "adam"
 
         assert kb_new_vocab.get_vector("Q2") == [2]

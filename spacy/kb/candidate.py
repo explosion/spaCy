@@ -37,18 +37,13 @@ class Candidate(abc.ABC):
         self._prior_prob = prior_prob
 
     @property
-    def entity_id(self) -> Union[str, int]:
-        """RETURNS (Union[str, int]): Unique entity ID."""
-        return self._entity_id
-
-    @property
-    def entity_id_int(self) -> int:
+    def entity_id(self) -> int:
         """RETURNS (int): Numerical representation of entity ID (if entity ID is numerical, this is just the entity ID,
         otherwise the hash of the entity ID string)."""
         return self._entity_id_hash
 
     @property
-    def entity_id_str(self) -> str:
+    def entity_id_(self) -> str:
         """RETURNS (str): String representation of entity ID."""
         return str(self._entity_id)
 
@@ -111,6 +106,6 @@ class InMemoryCandidate(Candidate):
         return self._entity_freq
 
     @property
-    def entity_id_str(self) -> str:
+    def entity_id_(self) -> str:
         """RETURNS (str): String representation of entity ID."""
         return self._entity_id_str
