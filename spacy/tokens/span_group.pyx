@@ -4,9 +4,12 @@ import struct
 from copy import deepcopy
 import srsly
 
-from spacy.errors import Errors
-from .span cimport Span
 from libcpp.memory cimport make_shared
+
+from .span cimport Span
+
+from ..errors import Errors
+from .. import util
 
 
 cdef class SpanGroup:
@@ -93,7 +96,7 @@ cdef class SpanGroup:
         """
         return self.c.size()
 
-    def __getitem__(self, int i) -> Span:
+    def __getitem__(self, object i) -> Span:
         """Get a span from the group. Note that a copy of the span is returned,
         so if any changes are made to this span, they are not reflected in the
         corresponding member of the span group.
@@ -103,6 +106,10 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#getitem
         """
+        if isinstance(i, slice):
+            start, stop = util.normalize_slice(len(self), i.start, i.stop, i.step)
+            spans = [self[i] for i in range(start, stop)]
+            return SpanGroup(self.doc, spans=spans)
         i = self._normalize_index(i)
         return Span.cinit(self.doc, self.c[i])
 
@@ -155,8 +162,10 @@ cdef class SpanGroup:
         """
         # For Cython 0.x and __add__, you cannot rely on `self` as being `self`
         # or being the right type, so both types need to be checked explicitly.
-        if isinstance(self, SpanGroup) and isinstance(other, SpanGroup):
+        if isinstance(self, SpanGroup):
             return self._concat(other)
+        if isinstance(other, SpanGroup):
+            return other._concat(self)
         return NotImplemented
 
     def __iter__(self):

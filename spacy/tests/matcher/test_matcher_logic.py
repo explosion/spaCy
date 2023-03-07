@@ -87,7 +87,10 @@ def test_issue118_prefix_reorder(en_tokenizer, patterns):
     matcher.add("BostonCeltics", patterns)
     assert len(list(doc.ents)) == 0
     matches = [(ORG, start, end) for _, start, end in matcher(doc)]
-    doc.ents += tuple(matches)[1:]
+    matches_spans = matcher(doc, as_spans=True)
+    for span in matches_spans:
+        span.label = ORG
+    doc.ents += matches_spans[1:]
     assert matches == [(ORG, 9, 10), (ORG, 9, 11)]
     ents = doc.ents
     assert len(ents) == 1
@@ -116,7 +119,8 @@ def test_issue242(en_tokenizer):
     with pytest.raises(ValueError):
         # One token can only be part of one entity, so test that the matches
         # can't be added as entities
-        doc.ents += tuple(matches)
+        matches_spans = matcher(doc, as_spans=True)
+        doc.ents += tuple(matches_spans)
 
 
 @pytest.mark.issue(587)

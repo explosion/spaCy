@@ -19,6 +19,7 @@ import warnings
 
 from .span cimport Span
 from .token cimport MISSING_DEP
+from .span_group import SpanGroup
 from .span_groups import SpanGroups
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
@@ -743,7 +744,7 @@ cdef class Doc:
                 output.append(Span(self, start, self.length, label=label, kb_id=kb_id, span_id=ent_id))
             # remove empty-label spans
             output = [o for o in output if o.label_ != ""]
-            return tuple(output)
+            return SpanGroup(self, spans=output)
 
         def __set__(self, ents):
             # TODO:

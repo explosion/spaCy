@@ -4,6 +4,7 @@ from cymem.cymem import Pool
 from thinc.types import ArrayXd, Floats1d, Floats2d, Ints2d, Ragged
 from .span import Span
 from .token import Token
+from .span_group import SpanGroup
 from .span_groups import SpanGroups
 from .retokenizer import Retokenizer
 from ..lexeme import Lexeme
@@ -120,7 +121,7 @@ class Doc:
     def text(self) -> str: ...
     @property
     def text_with_ws(self) -> str: ...
-    ents: Tuple[Span]
+    ents: SpanGroup
     def set_ents(
         self,
         entities: List[Span],

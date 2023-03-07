@@ -815,7 +815,7 @@ def test_doc_set_ents(en_tokenizer):
     doc.set_ents([], blocked=[doc[1:2], doc[3:5]], default="unmodified")
     assert [t.ent_iob for t in doc] == [0, 3, 0, 3, 3]
     assert [t.ent_type for t in doc] == [0, 0, 0, 0, 0]
-    assert doc.ents == tuple()
+    assert len(doc.ents) == 0
 
     # invalid IOB repaired after blocked
     doc.ents = [Span(doc, 3, 5, "ENT")]
@@ -892,7 +892,7 @@ def test_doc_init_iob():
     words = ["a", "b", "c", "d", "e"]
     ents = ["O"] * len(words)
     doc = Doc(Vocab(), words=words, ents=ents)
-    assert doc.ents == ()
+    assert len(doc.ents) == 0
 
     ents = ["B-PERSON", "I-PERSON", "O", "I-PERSON", "I-PERSON"]
     doc = Doc(Vocab(), words=words, ents=ents)
