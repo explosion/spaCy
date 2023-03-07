@@ -33,6 +33,7 @@ import inspect
 import pkgutil
 import logging
 import socket
+import stat
 
 try:
     import cupy.random
@@ -55,7 +56,7 @@ if TYPE_CHECKING:
 # fmt: off
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 DEFAULT_OOV_PROB = -20
-LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
+LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "grc", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
 
 # Default order of sections in the config file. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
@@ -139,8 +140,17 @@ class registry(thinc.registry):
         return func
 
     @classmethod
-    def find(cls, registry_name: str, func_name: str) -> Callable:
-        """Get info about a registered function from the registry."""
+    def find(
+        cls, registry_name: str, func_name: str
+    ) -> Dict[str, Optional[Union[str, int]]]:
+        """Find information about a registered function, including the
+        module and path to the file it's defined in, the line number and the
+        docstring, if available.
+
+        registry_name (str): Name of the catalogue registry.
+        func_name (str): Name of the registered function.
+        RETURNS (Dict[str, Optional[Union[str, int]]]): The function info.
+        """
         # We're overwriting this classmethod so we're able to provide more
         # specific error messages and implement a fallback to spacy-legacy.
         if not hasattr(cls, registry_name):
@@ -283,7 +293,7 @@ def find_matching_language(lang: str) -> Optional[str]:
     import spacy.lang  # noqa: F401
 
     if lang == "xx":
-        return "xx"
+        return "mul"
 
     # Find out which language modules we have
     possible_languages = []
@@ -301,11 +311,7 @@ def find_matching_language(lang: str) -> Optional[str]:
     # is labeled that way is probably trying to be distinct from 'zh' and
     # shouldn't automatically match.
     match = langcodes.closest_supported_match(lang, possible_languages, max_distance=9)
-    if match == "mul":
-        # Convert 'mul' back to spaCy's 'xx'
-        return "xx"
-    else:
-        return match
+    return match
 
 
 def get_lang_class(lang: str) -> Type["Language"]:
@@ -1034,8 +1040,15 @@ def make_tempdir() -> Generator[Path, None, None]:
     """
     d = Path(tempfile.mkdtemp())
     yield d
+
+    # On Windows, git clones use read-only files, which cause permission errors
+    # when being deleted. This forcibly fixes permissions.
+    def force_remove(rmfunc, path, ex):
+        os.chmod(path, stat.S_IWRITE)
+        rmfunc(path)
+
     try:
-        shutil.rmtree(str(d))
+        shutil.rmtree(str(d), onerror=force_remove)
     except PermissionError as e:
         warnings.warn(Warnings.W091.format(dir=d, msg=e))
 

@@ -83,7 +83,7 @@ def register_cython_tests(cython_mod_name: str, test_mod_name: str):
 
 @pytest.fixture(scope="module")
 def tokenizer():
-    return get_lang_class("xx")().tokenizer
+    return get_lang_class("mul")().tokenizer
 
 
 @pytest.fixture(scope="session")
@@ -243,8 +243,8 @@ def id_tokenizer():
 
 
 @pytest.fixture(scope="session")
-def is_tokenizer():
-    return get_lang_class("is")().tokenizer
+def isl_tokenizer():
+    return get_lang_class("isl")().tokenizer
 
 
 @pytest.fixture(scope="session")
@@ -496,8 +496,8 @@ def vi_tokenizer():
 
 
 @pytest.fixture(scope="session")
-def xx_tokenizer():
-    return get_lang_class("xx")().tokenizer
+def mul_tokenizer():
+    return get_lang_class("mul")().tokenizer
 
 
 @pytest.fixture(scope="session")

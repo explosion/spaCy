@@ -84,7 +84,7 @@ def test_issue1539():
 @pytest.mark.issue(1807)
 def test_issue1807():
     """Test vocab.set_vector also adds the word to the vocab."""
-    vocab = Vocab(vectors_name="test_issue1807")
+    vocab = Vocab()
     assert "hello" not in vocab
     vocab.set_vector("hello", numpy.ones((50,), dtype="f"))
     assert "hello" in vocab
@@ -94,13 +94,12 @@ def test_issue1807():
 def test_issue2871():
     """Test that vectors recover the correct key for spaCy reserved words."""
     words = ["dog", "cat", "SUFFIX"]
-    vocab = Vocab(vectors_name="test_issue2871")
+    vocab = Vocab()
     vocab.vectors.resize(shape=(3, 10))
     vector_data = numpy.zeros((3, 10), dtype="f")
     for word in words:
         _ = vocab[word]  # noqa: F841
         vocab.set_vector(word, vector_data[0])
-    vocab.vectors.name = "dummy_vectors"
     assert vocab["dog"].rank == 0
     assert vocab["cat"].rank == 1
     assert vocab["SUFFIX"].rank == 2
@@ -125,7 +124,7 @@ def test_issue4725_2():
         # ensures that this runs correctly and doesn't hang or crash because of the global vectors
         # if it does crash, it's usually because of calling 'spawn' for multiprocessing (e.g. on Windows),
         # or because of issues with pickling the NER (cf test_issue4725_1)
-        vocab = Vocab(vectors_name="test_vocab_add_vector")
+        vocab = Vocab()
         data = numpy.ndarray((5, 3), dtype="f")
         data[0] = 1.0
         data[1] = 2.0
@@ -340,7 +339,7 @@ def test_vectors_doc_doc_similarity(vocab, text1, text2):
 
 
 def test_vocab_add_vector():
-    vocab = Vocab(vectors_name="test_vocab_add_vector")
+    vocab = Vocab()
     data = OPS.xp.ndarray((5, 3), dtype="f")
     data[0] = 1.0
     data[1] = 2.0
@@ -356,7 +355,7 @@ def test_vocab_add_vector():
 
 
 def test_vocab_prune_vectors():
-    vocab = Vocab(vectors_name="test_vocab_prune_vectors")
+    vocab = Vocab()
     _ = vocab["cat"]  # noqa: F841
     _ = vocab["dog"]  # noqa: F841
     _ = vocab["kitten"]  # noqa: F841
@@ -405,7 +404,7 @@ def test_vectors_serialize():
 
 
 def test_vector_is_oov():
-    vocab = Vocab(vectors_name="test_vocab_is_oov")
+    vocab = Vocab()
     data = OPS.xp.ndarray((5, 3), dtype="f")
     data[0] = 1.0
     data[1] = 2.0

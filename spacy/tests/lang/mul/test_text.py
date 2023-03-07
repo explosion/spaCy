@@ -1,7 +1,7 @@
 import pytest
 
 
-def test_long_text(xx_tokenizer):
+def test_long_text(mul_tokenizer):
     # Excerpt: Text in Skolt Sami taken from https://www.samediggi.fi
     text = """
 Säʹmmla lie Euroopp unioon oʹdinakai alggmeer. Säʹmmlai alggmeerstatus lij raʹvvjum Lääʹddjânnam vuâđđlääʹjjest.  
@@ -20,5 +20,5 @@ vuâđđlääʹjj meâldlaž jiõččvaaldâšm. Säʹmmlai jiõččvaldšma kuu
 Sääʹmteʹǧǧ.
 """
 
-    tokens = xx_tokenizer(text)
+    tokens = mul_tokenizer(text)
     assert len(tokens) == 179

@@ -37,7 +37,7 @@ Construct a `Doc` object. The most common way to get a `Doc` object is via the
 | `words`                                  | A list of strings or integer hash values to add to the document as words. ~~Optional[List[Union[str,int]]]~~                                                                                            |
 | `spaces`                                 | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. ~~Optional[List[bool]]~~            |
 | _keyword-only_                           |                                                                                                                                                                                                         |
-| `user\_data`                             | Optional extra data to attach to the Doc. ~~Dict~~                                                                                                                                                      |
+| `user_data`                              | Optional extra data to attach to the Doc. ~~Dict~~                                                                                                                                                      |
 | `tags` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.tag` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                   |
 | `pos` <Tag variant="new">3</Tag>         | A list of strings, of the same length as `words`, to assign as `token.pos` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                   |
 | `morphs` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.morph` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                 |
@@ -209,15 +209,17 @@ alignment mode `"strict".
 > assert span.text == "New York"
 > ```
 
-| Name             | Description                                                                                                                                                                                                                                                                  |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `start`          | The index of the first character of the span. ~~int~~                                                                                                                                                                                                                        |
-| `end`            | The index of the last character after the span. ~~int~~                                                                                                                                                                                                                      |
-| `label`          | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~                                                                                                                                                                                                  |
-| `kb_id`          | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~                                                                                                                                                                                    |
-| `vector`         | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~                                                                                                                                                                                               |
-| `alignment_mode` | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"contract"` (span of all tokens completely within the character span), `"expand"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
-| **RETURNS**      | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                   |
+| Name                                     | Description                                                                                                                                                                                                                                                                  |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start`                                  | The index of the first character of the span. ~~int~~                                                                                                                                                                                                                        |
+| `end`                                    | The index of the last character after the span. ~~int~~                                                                                                                                                                                                                      |
+| `label`                                  | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~                                                                                                                                                                                                  |
+| _keyword-only_                           |                                                                                                                                                                                                                                                                              |
+| `kb_id`                                  | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~                                                                                                                                                                                    |
+| `vector`                                 | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~                                                                                                                                                                                               |
+| `alignment_mode`                         | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"contract"` (span of all tokens completely within the character span), `"expand"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
+| `span_id` <Tag variant="new">3.3.1</Tag> | An identifier to associate with the span. ~~Union[int, str]~~                                                                                                                                                                                                                |
+| **RETURNS**                              | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                   |
 
 ## Doc.set_ents {id="set_ents",tag="method",version="3"}
 
@@ -652,11 +654,10 @@ the [`TextCategorizer`](/api/textcategorizer).
 
 ## Doc.noun_chunks {id="noun_chunks",tag="property",model="parser"}
 
-Iterate over the base noun phrases in the document. Yields base noun-phrase
-`Span` objects, if the document has been syntactically parsed. A base noun
-phrase, or "NP chunk", is a noun phrase that does not permit other NPs to be
-nested within it – so no NP-level coordination, no prepositional phrases, and no
-relative clauses.
+Returns a tuple of the base noun phrases in the doc, if the document has been
+syntactically parsed. A base noun phrase, or "NP chunk", is a noun phrase that
+does not permit other NPs to be nested within it – so no NP-level coordination,
+no prepositional phrases, and no relative clauses.
 
 To customize the noun chunk iterator in a loaded pipeline, modify
 [`nlp.vocab.get_noun_chunks`](/api/vocab#attributes). If the `noun_chunk`
@@ -673,13 +674,13 @@ implemented for the given language, a `NotImplementedError` is raised.
 > assert chunks[1].text == "another phrase"
 > ```
 
-| Name       | Description                           |
-| ---------- | ------------------------------------- |
-| **YIELDS** | Noun chunks in the document. ~~Span~~ |
+| Name        | Description                                  |
+| ----------- | -------------------------------------------- |
+| **RETURNS** | Noun chunks in the document. ~~Tuple[Span]~~ |
 
 ## Doc.sents {id="sents",tag="property",model="sentences"}
 
-Iterate over the sentences in the document. Sentence spans have no label.
+Returns a tuple of the sentences in the document. Sentence spans have no label.
 
 This property is only available when
 [sentence boundaries](/usage/linguistic-features#sbd) have been set on the
@@ -695,9 +696,9 @@ will raise an error otherwise.
 > assert [s.root.text for s in sents] == ["is", "'s"]
 > ```
 
-| Name       | Description                         |
-| ---------- | ----------------------------------- |
-| **YIELDS** | Sentences in the document. ~~Span~~ |
+| Name        | Description                                |
+| ----------- | ------------------------------------------ |
+| **RETURNS** | Sentences in the document. ~~Tuple[Span]~~ |
 
 ## Doc.has_vector {id="has_vector",tag="property",model="vectors"}
 

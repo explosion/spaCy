@@ -12,7 +12,7 @@ from ..language import DEFAULT_CONFIG_DISTILL_PATH, DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
 from ..util import SimpleFrozenList
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
-from ._util import string_to_list, import_code
+from ._util import string_to_list, import_code, _handle_renamed_language_codes
 
 
 ROOT = Path(__file__).parent / "templates"
@@ -43,7 +43,7 @@ class InitValues:
 def init_config_cli(
     # fmt: off
     output_file: Path = Arg(..., help="File to save the config to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
-    lang: str = Opt(InitValues.lang, "--lang", "-l", help="Two-letter code of the language to use"),
+    lang: str = Opt(InitValues.lang, "--lang", "-l", help="Code of the language to use"),
     pipeline: str = Opt(",".join(InitValues.pipeline), "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
     optimize: Optimizations = Opt(InitValues.optimize, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     gpu: bool = Opt(InitValues.gpu, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
@@ -169,6 +169,10 @@ def init_config(
     msg = Printer(no_print=silent)
     with TEMPLATE_PATH.open("r") as f:
         template = Template(f.read())
+
+    # Throw error for renamed language codes in v4
+    _handle_renamed_language_codes(lang)
+
     # Filter out duplicates since tok2vec and transformer are added by template
     pipeline = [pipe for pipe in pipeline if pipe not in ("tok2vec", "transformer")]
     defaults = RECOMMENDATIONS["__default__"]

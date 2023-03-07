@@ -10,8 +10,9 @@ from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.util import registry, ignore_error, raise_error, find_matching_language
+from spacy.util import load_model_from_config
 import spacy
-from thinc.api import CupyOps, NumpyOps, get_current_ops
+from thinc.api import Config, CupyOps, NumpyOps, get_array_module, get_current_ops
 
 from .util import add_vecs_to_vocab, assert_docs_equal
 
@@ -24,6 +25,51 @@ try:
     torch.set_num_interop_threads(1)
 except ImportError:
     pass
+
+TAGGER_CFG_STRING = """
+    [nlp]
+    lang = "en"
+    pipeline = ["tok2vec","tagger"]
+
+    [components]
+
+    [components.tagger]
+    factory = "tagger"
+
+    [components.tagger.model]
+    @architectures = "spacy.Tagger.v2"
+    nO = null
+
+    [components.tagger.model.tok2vec]
+    @architectures = "spacy.Tok2VecListener.v1"
+    width = ${components.tok2vec.model.encode.width}
+
+    [components.tok2vec]
+    factory = "tok2vec"
+
+    [components.tok2vec.model]
+    @architectures = "spacy.Tok2Vec.v2"
+
+    [components.tok2vec.model.embed]
+    @architectures = "spacy.MultiHashEmbed.v1"
+    width = ${components.tok2vec.model.encode.width}
+    rows = [2000, 1000, 1000, 1000]
+    attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
+    include_static_vectors = false
+
+    [components.tok2vec.model.encode]
+    @architectures = "spacy.MaxoutWindowEncoder.v2"
+    width = 96
+    depth = 4
+    window_size = 1
+    maxout_pieces = 3
+    """
+
+
+TAGGER_TRAIN_DATA = [
+    ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
+    ("Eat blue ham", {"tags": ["V", "J", "N"]}),
+]
 
 
 TAGGER_TRAIN_DATA = [
@@ -52,7 +98,7 @@ def assert_sents_error(doc):
 
 def warn_error(proc_name, proc, docs, e):
     logger = logging.getLogger("spacy")
-    logger.warning(f"Trouble with component {proc_name}.")
+    logger.warning("Trouble with component %s.", proc_name)
 
 
 @pytest.fixture
@@ -89,6 +135,26 @@ def test_language_update(nlp):
         example = Example.from_dict(doc, None)
     with pytest.raises(KeyError):
         example = Example.from_dict(doc, wrongkeyannots)
+
+
+def test_language_update_updates():
+    config = Config().from_str(TAGGER_CFG_STRING)
+    nlp = load_model_from_config(config, auto_fill=True, validate=True)
+
+    train_examples = []
+    for t in TAGGER_TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+
+    docs_before_update = list(nlp.pipe([eg.predicted.copy() for eg in train_examples]))
+    nlp.update(train_examples, sgd=optimizer)
+    docs_after_update = list(nlp.pipe([eg.predicted.copy() for eg in train_examples]))
+
+    xp = get_array_module(docs_after_update[0].tensor)
+    assert xp.any(
+        xp.not_equal(docs_before_update[0].tensor, docs_after_update[0].tensor)
+    )
 
 
 def test_language_evaluate(nlp):
@@ -664,11 +730,12 @@ def test_spacy_blank():
         ("fra", "fr"),
         ("fre", "fr"),
         ("iw", "he"),
+        ("is", "isl"),
         ("mo", "ro"),
-        ("mul", "xx"),
+        ("mul", "mul"),
         ("no", "nb"),
         ("pt-BR", "pt"),
-        ("xx", "xx"),
+        ("xx", "mul"),
         ("zh-Hans", "zh"),
         ("zh-Hant", None),
         ("zxx", None),
@@ -689,11 +756,11 @@ def test_language_matching(lang, target):
         ("fra", "fr"),
         ("fre", "fr"),
         ("iw", "he"),
+        ("is", "isl"),
         ("mo", "ro"),
-        ("mul", "xx"),
+        ("xx", "mul"),
         ("no", "nb"),
         ("pt-BR", "pt"),
-        ("xx", "xx"),
         ("zh-Hans", "zh"),
     ],
 )

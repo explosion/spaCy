@@ -201,7 +201,7 @@ This functionality was previously available as part of the command `init-model`.
 </Infobox>
 
 ```bash
-$ python -m spacy init vectors [lang] [vectors_loc] [output_dir] [--prune] [--truncate] [--name] [--verbose]
+$ python -m spacy init vectors [lang] [vectors_loc] [output_dir] [--prune] [--truncate] [--verbose]
 ```
 
 | Name               | Description                                                                                                                                                                                                                                                         |
@@ -212,7 +212,6 @@ $ python -m spacy init vectors [lang] [vectors_loc] [output_dir] [--prune] [--tr
 | `--truncate`, `-t` | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation. ~~int (option)~~                                                                                                                                                  |
 | `--prune`, `-p`    | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning. ~~int (option)~~                                                                                                                                                                     |
 | `--mode`, `-m`     | Vectors mode: `default` or [`floret`](https://github.com/explosion/floret). Defaults to `default`. ~~Optional[str] \(option)~~                                                                                                                                      |
-| `--name`, `-n`     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`. ~~Optional[str] \(option)~~                                                                                                                                                   |
 | `--verbose`, `-V`  | Print additional information and explanations. ~~bool (flag)~~                                                                                                                                                                                                      |
 | `--help`, `-h`     | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                          |
 | **CREATES**        | A spaCy pipeline directory containing the vocab and vectors.                                                                                                                                                                                                        |
@@ -1410,12 +1409,13 @@ $ python -m spacy project assets [project_dir]
 > $ python -m spacy project assets [--sparse]
 > ```
 
-| Name             | Description                                                                                                                                               |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `project_dir`    | Path to project directory. Defaults to current working directory. ~~Path (positional)~~                                                                   |
-| `--sparse`, `-S` | Enable [sparse checkout](https://git-scm.com/docs/git-sparse-checkout) to only check out and download what's needed. Requires Git v22.2+. ~~bool (flag)~~ |
-| `--help`, `-h`   | Show help message and available arguments. ~~bool (flag)~~                                                                                                |
-| **CREATES**      | Downloaded or copied assets defined in the `project.yml`.                                                                                                 |
+| Name                                           | Description                                                                                                                                               |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_dir`                                  | Path to project directory. Defaults to current working directory. ~~Path (positional)~~                                                                   |
+| `--extra`, `-e` <Tag variant="new">3.3.1</Tag> | Download assets marked as "extra". Default false. ~~bool (flag)~~                                                                                         |
+| `--sparse`, `-S`                               | Enable [sparse checkout](https://git-scm.com/docs/git-sparse-checkout) to only check out and download what's needed. Requires Git v22.2+. ~~bool (flag)~~ |
+| `--help`, `-h`                                 | Show help message and available arguments. ~~bool (flag)~~                                                                                                |
+| **CREATES**                                    | Downloaded or copied assets defined in the `project.yml`.                                                                                                 |
 
 ### project run {id="project-run",tag="command"}
 
@@ -1491,7 +1491,7 @@ $ python -m spacy project push [remote] [project_dir]
 ### project pull {id="project-pull",tag="command"}
 
 Download all files or directories listed as `outputs` for commands, unless they
-are not already present locally. When searching for files in the remote, `pull`
+are already present locally. When searching for files in the remote, `pull`
 won't just look at the output path, but will also consider the **command
 string** and the **hashes of the dependencies**. For instance, let's say you've
 previously pushed a checkpoint to the remote, but now you've changed some

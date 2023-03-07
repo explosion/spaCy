@@ -7,7 +7,7 @@ import re
 import sys
 import itertools
 
-from ._util import app, Arg, Opt, walk_directory
+from ._util import app, Arg, Opt, _handle_renamed_language_codes, walk_directory
 from ..training import docs_to_json
 from ..tokens import Doc, DocBin
 from ..training.converters import iob_to_docs, conll_ner_to_docs, json_to_docs
@@ -112,6 +112,10 @@ def convert(
     input_path = Path(input_path)
     if not msg:
         msg = Printer(no_print=silent)
+
+    # Throw error for renamed language codes in v4
+    _handle_renamed_language_codes(lang)
+
     ner_map = srsly.read_json(ner_map) if ner_map is not None else None
     doc_files = []
     for input_loc in walk_directory(input_path, converter):

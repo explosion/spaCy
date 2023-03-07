@@ -19,6 +19,7 @@ import os
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
 from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
+from ..errors import RENAMED_LANGUAGE_CODES
 from .. import about
 
 if TYPE_CHECKING:
@@ -89,9 +90,9 @@ def parse_config_overrides(
     cli_overrides = _parse_overrides(args, is_cli=True)
     if cli_overrides:
         keys = [k for k in cli_overrides if k not in env_overrides]
-        logger.debug(f"Config overrides from CLI: {keys}")
+        logger.debug("Config overrides from CLI: %s", keys)
     if env_overrides:
-        logger.debug(f"Config overrides from env variables: {list(env_overrides)}")
+        logger.debug("Config overrides from env variables: %s", list(env_overrides))
     return {**cli_overrides, **env_overrides}
 
 
@@ -132,6 +133,16 @@ def _parse_override(value: Any) -> Any:
         return srsly.json_loads(value)
     except ValueError:
         return str(value)
+
+
+def _handle_renamed_language_codes(lang: Optional[str]) -> None:
+    # Throw error for renamed language codes in v4
+    if lang in RENAMED_LANGUAGE_CODES:
+        msg.fail(
+            title="Renamed language code",
+            text=f"Language code '{lang}' was replaced with '{RENAMED_LANGUAGE_CODES[lang]}' in spaCy v4. Update the language code from '{lang}' to '{RENAMED_LANGUAGE_CODES[lang]}'.",
+            exits=1,
+        )
 
 
 def load_project_config(
