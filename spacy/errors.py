@@ -960,6 +960,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E4003 = ("Training examples for distillation must have the exact same tokens in the "
              "reference and predicted docs.")
     E4004 = ("Backprop is not supported when is_train is not set.")
+    E4005 = ("EntityLinker_v1 is not supported in spaCy v4. Update your configuration.")
 
 RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}
 

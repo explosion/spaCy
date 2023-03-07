@@ -993,13 +993,11 @@ def test_scorer_links():
 @pytest.mark.parametrize(
     "name,config",
     [
-        ("entity_linker", {"@architectures": "spacy.EntityLinker.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
         ("entity_linker", {"@architectures": "spacy.EntityLinker.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
     ],
 )
 # fmt: on
 def test_legacy_architectures(name, config):
-    from spacy_legacy.components.entity_linker import EntityLinker_v1
 
     # Ensure that the legacy architectures still work
     vector_length = 3
@@ -1022,10 +1020,7 @@ def test_legacy_architectures(name, config):
         return mykb
 
     entity_linker = nlp.add_pipe(name, config={"model": config})
-    if config["@architectures"] == "spacy.EntityLinker.v1":
-        assert isinstance(entity_linker, EntityLinker_v1)
-    else:
-        assert isinstance(entity_linker, EntityLinker)
+    assert isinstance(entity_linker, EntityLinker)
     entity_linker.set_kb(create_kb)
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
 
