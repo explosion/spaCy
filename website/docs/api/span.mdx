@@ -275,17 +275,16 @@ The named entities that fall completely within the span. Returns a tuple of
 > assert ents[0].text == "Mr. Best"
 > ```
 
-| Name        | Description                                                       |
-| ----------- | ----------------------------------------------------------------- |
-| **RETURNS** | Entities in the span, one `Span` per entity. ~~Tuple[Span, ...]~~ |
+| Name        | Description                                                  |
+| ----------- | ------------------------------------------------------------ |
+| **RETURNS** | Entities in the span, one `Span` per entity. ~~Tuple[Span]~~ |
 
 ## Span.noun_chunks {id="noun_chunks",tag="property",model="parser"}
 
-Iterate over the base noun phrases in the span. Yields base noun-phrase `Span`
-objects, if the document has been syntactically parsed. A base noun phrase, or
-"NP chunk", is a noun phrase that does not permit other NPs to be nested within
-it – so no NP-level coordination, no prepositional phrases, and no relative
-clauses.
+Returns a tuple of the base noun phrases in the span if the document has been
+syntactically parsed. A base noun phrase, or "NP chunk", is a noun phrase that
+does not permit other NPs to be nested within it – so no NP-level coordination,
+no prepositional phrases, and no relative clauses.
 
 If the `noun_chunk` [syntax iterator](/usage/linguistic-features#language-data)
 has not been implemeted for the given language, a `NotImplementedError` is
@@ -301,9 +300,9 @@ raised.
 > assert chunks[0].text == "another phrase"
 > ```
 
-| Name       | Description                       |
-| ---------- | --------------------------------- |
-| **YIELDS** | Noun chunks in the span. ~~Span~~ |
+| Name        | Description                              |
+| ----------- | ---------------------------------------- |
+| **RETURNS** | Noun chunks in the span. ~~Tuple[Span]~~ |
 
 ## Span.as_doc {id="as_doc",tag="method"}
 
@@ -525,9 +524,9 @@ sent = doc[sent.start : max(sent.end, span.end)]
 
 ## Span.sents {id="sents",tag="property",model="sentences",version="3.2.1"}
 
-Returns a generator over the sentences the span belongs to. This property is
-only available when [sentence boundaries](/usage/linguistic-features#sbd) have
-been set on the document by the `parser`, `senter`, `sentencizer` or some custom
+Returns a tuple of the sentences the span belongs to. This property is only
+available when [sentence boundaries](/usage/linguistic-features#sbd) have been
+set on the document by the `parser`, `senter`, `sentencizer` or some custom
 function. It will raise an error otherwise.
 
 If the span happens to cross sentence boundaries, all sentences the span
@@ -541,9 +540,9 @@ overlaps with will be returned.
 > assert len(span.sents) == 2
 > ```
 
-| Name        | Description                                                                |
-| ----------- | -------------------------------------------------------------------------- |
-| **RETURNS** | A generator yielding sentences this `Span` is a part of ~~Iterable[Span]~~ |
+| Name        | Description                                                   |
+| ----------- | ------------------------------------------------------------- |
+| **RETURNS** | A tuple of sentences this `Span` is a part of ~~Tuple[Span]~~ |
 
 ## Attributes {id="attributes"}
 

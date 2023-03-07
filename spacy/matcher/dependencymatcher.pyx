@@ -82,8 +82,12 @@ cdef class DependencyMatcher:
             "$-": self._imm_left_sib,
             "$++": self._right_sib,
             "$--": self._left_sib,
+            ">+": self._imm_right_child,
+            ">-": self._imm_left_child,
             ">++": self._right_child,
             ">--": self._left_child,
+            "<+": self._imm_right_parent,
+            "<-": self._imm_left_parent,
             "<++": self._right_parent,
             "<--": self._left_parent,
         }
@@ -427,11 +431,33 @@ cdef class DependencyMatcher:
     def _left_sib(self, doc, node):
         return [doc[child.i] for child in doc[node].head.children if child.i < node]
 
+    def _imm_right_child(self, doc, node):
+        for child in doc[node].children:
+            if child.i == node + 1:
+                return [doc[child.i]]
+        return []
+
+    def _imm_left_child(self, doc, node):
+        for child in doc[node].children:
+            if child.i == node - 1:
+                return [doc[child.i]]
+        return []
+
     def _right_child(self, doc, node):
         return [doc[child.i] for child in doc[node].children if child.i > node]
     
     def _left_child(self, doc, node):
         return [doc[child.i] for child in doc[node].children if child.i < node]
+
+    def _imm_right_parent(self, doc, node):
+        if doc[node].head.i == node + 1:
+            return [doc[node].head]
+        return []
+
+    def _imm_left_parent(self, doc, node):
+        if doc[node].head.i == node - 1:
+            return [doc[node].head]
+        return []
 
     def _right_parent(self, doc, node):
         if doc[node].head.i > node:

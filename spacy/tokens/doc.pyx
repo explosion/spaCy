@@ -703,10 +703,10 @@ cdef class Doc:
         return self.text
 
     property ents:
-        """The named entities in the document. Returns a tuple of named entity
+        """The named entities in the document. Returns a list of named entity
         `Span` objects, if the entity recognizer has been applied.
 
-        RETURNS (tuple): Entities in the document, one `Span` per entity.
+        RETURNS (Tuple[Span]): Entities in the document, one `Span` per entity.
 
         DOCS: https://spacy.io/api/doc#ents
         """
@@ -864,7 +864,7 @@ cdef class Doc:
         NP-level coordination, no prepositional phrases, and no relative
         clauses.
 
-        YIELDS (Span): Noun chunks in the document.
+        RETURNS (Tuple[Span]): Noun chunks in the document.
 
         DOCS: https://spacy.io/api/doc#noun_chunks
         """
@@ -873,36 +873,35 @@ cdef class Doc:
 
         # Accumulate the result before beginning to iterate over it. This
         # prevents the tokenization from being changed out from under us
-        # during the iteration. The tricky thing here is that Span accepts
-        # its tokenization changing, so it's okay once we have the Span
-        # objects. See Issue #375.
+        # during the iteration.
         spans = []
         for start, end, label in self.noun_chunks_iterator(self):
             spans.append(Span(self, start, end, label=label))
-        for span in spans:
-            yield span
+        return tuple(spans)
 
     @property
     def sents(self):
         """Iterate over the sentences in the document. Yields sentence `Span`
         objects. Sentence spans have no label.
 
-        YIELDS (Span): Sentences in the document.
+        RETURNS (Tuple[Span]): Sentences in the document.
 
         DOCS: https://spacy.io/api/doc#sents
         """
         if not self.has_annotation("SENT_START"):
             raise ValueError(Errors.E030)
         if "sents" in self.user_hooks:
-            yield from self.user_hooks["sents"](self)
+            return tuple(self.user_hooks["sents"](self))
         else:
             start = 0
+            spans = []
             for i in range(1, self.length):
                 if self.c[i].sent_start == 1:
-                    yield Span(self, start, i)
+                    spans.append(Span(self, start, i))
                     start = i
             if start != self.length:
-                yield Span(self, start, self.length)
+                spans.append(Span(self, start, self.length))
+            return tuple(spans)
 
     @property
     def lang(self):

@@ -353,6 +353,9 @@ def test_kb_default(nlp):
     """Test that the default (empty) KB is loaded upon construction"""
     entity_linker = nlp.add_pipe("entity_linker", config={})
     assert len(entity_linker.kb) == 0
+    with pytest.raises(ValueError, match="E139"):
+        # this raises an error because the KB is empty
+        entity_linker.validate_kb()
     assert entity_linker.kb.get_size_entities() == 0
     assert entity_linker.kb.get_size_aliases() == 0
     # 64 is the default value from pipeline.entity_linker
