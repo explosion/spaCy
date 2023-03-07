@@ -6,7 +6,6 @@ import time
 from pathlib import Path
 
 import spacy
-import numpy
 import pytest
 import srsly
 from click import NoSuchOption
@@ -15,10 +14,8 @@ from thinc.api import Config, ConfigValidationError
 
 from spacy import about
 from spacy.cli import info
-from spacy.cli._util import is_subpath_of, load_project_config, walk_directory
+from spacy.cli._util import walk_directory
 from spacy.cli._util import parse_config_overrides, string_to_list
-from spacy.cli._util import substitute_project_variables
-from spacy.cli._util import validate_project_commands
 from spacy.cli._util import upload_file, download_file
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
@@ -39,7 +36,7 @@ from spacy.cli.find_threshold import find_threshold
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import Language
-from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
+from spacy.schemas import RecommendationSchema
 from spacy.tokens import Doc, DocBin
 from spacy.tokens.span import Span
 from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
@@ -125,23 +122,7 @@ def test_issue7055():
     assert "model" in filled_cfg["components"]["ner"]
 
 
-@pytest.mark.issue(11235)
-def test_issue11235():
-    """
-    Test that the cli handles interpolation in the directory names correctly when loading project config.
-    """
-    lang_var = "en"
-    variables = {"lang": lang_var}
-    commands = [{"name": "x", "script": ["hello ${vars.lang}"]}]
-    directories = ["cfg", "${vars.lang}_model"]
-    project = {"commands": commands, "vars": variables, "directories": directories}
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d)
-        # Check that the directories are interpolated and created correctly
-        assert os.path.exists(d / "cfg")
-        assert os.path.exists(d / f"{lang_var}_model")
-    assert cfg["commands"][0]["script"][0] == f"hello {lang_var}"
+
 
 
 def test_cli_info():
@@ -370,134 +351,12 @@ def test_cli_converters_conll_ner_to_docs():
         assert ent.text in ["New York City", "London"]
 
 
-def test_project_config_validation_full():
-    config = {
-        "vars": {"some_var": 20},
-        "directories": ["assets", "configs", "corpus", "scripts", "training"],
-        "assets": [
-            {
-                "dest": "x",
-                "extra": True,
-                "url": "https://example.com",
-                "checksum": "63373dd656daa1fd3043ce166a59474c",
-            },
-            {
-                "dest": "y",
-                "git": {
-                    "repo": "https://github.com/example/repo",
-                    "branch": "develop",
-                    "path": "y",
-                },
-            },
-            {
-                "dest": "z",
-                "extra": False,
-                "url": "https://example.com",
-                "checksum": "63373dd656daa1fd3043ce166a59474c",
-            },
-        ],
-        "commands": [
-            {
-                "name": "train",
-                "help": "Train a model",
-                "script": ["python -m spacy train config.cfg -o training"],
-                "deps": ["config.cfg", "corpus/training.spcy"],
-                "outputs": ["training/model-best"],
-            },
-            {"name": "test", "script": ["pytest", "custom.py"], "no_skip": True},
-        ],
-        "workflows": {"all": ["train", "test"], "train": ["train"]},
-    }
-    errors = validate(ProjectConfigSchema, config)
-    assert not errors
 
 
-@pytest.mark.parametrize(
-    "config",
-    [
-        {"commands": [{"name": "a"}, {"name": "a"}]},
-        {"commands": [{"name": "a"}], "workflows": {"a": []}},
-        {"commands": [{"name": "a"}], "workflows": {"b": ["c"]}},
-    ],
-)
-def test_project_config_validation1(config):
-    with pytest.raises(SystemExit):
-        validate_project_commands(config)
 
 
-@pytest.mark.parametrize(
-    "config,n_errors",
-    [
-        ({"commands": {"a": []}}, 1),
-        ({"commands": [{"help": "..."}]}, 1),
-        ({"commands": [{"name": "a", "extra": "b"}]}, 1),
-        ({"commands": [{"extra": "b"}]}, 2),
-        ({"commands": [{"name": "a", "deps": [123]}]}, 1),
-    ],
-)
-def test_project_config_validation2(config, n_errors):
-    errors = validate(ProjectConfigSchema, config)
-    assert len(errors) == n_errors
 
 
-@pytest.mark.parametrize(
-    "int_value",
-    [10, pytest.param("10", marks=pytest.mark.xfail)],
-)
-def test_project_config_interpolation(int_value):
-    variables = {"a": int_value, "b": {"c": "foo", "d": True}}
-    commands = [
-        {"name": "x", "script": ["hello ${vars.a} ${vars.b.c}"]},
-        {"name": "y", "script": ["${vars.b.c} ${vars.b.d}"]},
-    ]
-    project = {"commands": commands, "vars": variables}
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d)
-    assert type(cfg) == dict
-    assert type(cfg["commands"]) == list
-    assert cfg["commands"][0]["script"][0] == "hello 10 foo"
-    assert cfg["commands"][1]["script"][0] == "foo true"
-    commands = [{"name": "x", "script": ["hello ${vars.a} ${vars.b.e}"]}]
-    project = {"commands": commands, "vars": variables}
-    with pytest.raises(ConfigValidationError):
-        substitute_project_variables(project)
-
-
-@pytest.mark.parametrize(
-    "greeting",
-    [342, "everyone", "tout le monde", pytest.param("42", marks=pytest.mark.xfail)],
-)
-def test_project_config_interpolation_override(greeting):
-    variables = {"a": "world"}
-    commands = [
-        {"name": "x", "script": ["hello ${vars.a}"]},
-    ]
-    overrides = {"vars.a": greeting}
-    project = {"commands": commands, "vars": variables}
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d, overrides=overrides)
-    assert type(cfg) == dict
-    assert type(cfg["commands"]) == list
-    assert cfg["commands"][0]["script"][0] == f"hello {greeting}"
-
-
-def test_project_config_interpolation_env():
-    variables = {"a": 10}
-    env_var = "SPACY_TEST_FOO"
-    env_vars = {"foo": env_var}
-    commands = [{"name": "x", "script": ["hello ${vars.a} ${env.foo}"]}]
-    project = {"commands": commands, "vars": variables, "env": env_vars}
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d)
-    assert cfg["commands"][0]["script"][0] == "hello 10 "
-    os.environ[env_var] = "123"
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d)
-    assert cfg["commands"][0]["script"][0] == "hello 10 123"
 
 
 @pytest.mark.parametrize(
@@ -700,21 +559,6 @@ def test_get_third_party_dependencies():
     nlp.add_pipe("third_party_test")
     # Before #9674 this would throw an exception
     get_third_party_dependencies(nlp.config)
-
-
-@pytest.mark.parametrize(
-    "parent,child,expected",
-    [
-        ("/tmp", "/tmp", True),
-        ("/tmp", "/", False),
-        ("/tmp", "/tmp/subdir", True),
-        ("/tmp", "/tmpdir", False),
-        ("/tmp", "/tmp/subdir/..", True),
-        ("/tmp", "/tmp/..", False),
-    ],
-)
-def test_is_subpath_of(parent, child, expected):
-    assert is_subpath_of(parent, child) == expected
 
 
 @pytest.mark.slow
