@@ -120,7 +120,7 @@ def test_issue242(en_tokenizer):
         # One token can only be part of one entity, so test that the matches
         # can't be added as entities
         matches_spans = matcher(doc, as_spans=True)
-        doc.ents += tuple(matches_spans)
+        doc.ents += matches_spans
 
 
 @pytest.mark.issue(587)
