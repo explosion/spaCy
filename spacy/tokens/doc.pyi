@@ -4,6 +4,7 @@ from cymem.cymem import Pool
 from thinc.types import ArrayXd, Floats1d, Floats2d, Ints2d, Ragged
 from .span import Span
 from .token import Token
+from .span_group import SpanGroup
 from .span_groups import SpanGroups
 from .retokenizer import Retokenizer
 from ..lexeme import Lexeme
@@ -130,6 +131,8 @@ class Doc:
         outside: Optional[List[Span]] = ...,
         default: str = ...,
     ) -> None: ...
+    @property
+    def ents_spangroup(self) -> SpanGroup: ...
     @property
     def noun_chunks(self) -> Tuple[Span]: ...
     @property

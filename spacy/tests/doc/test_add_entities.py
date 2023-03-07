@@ -81,3 +81,24 @@ def test_add_overlapping_entities(en_vocab):
     new_entity = Span(doc, 0, 1, label=392)
     with pytest.raises(ValueError):
         doc.ents = list(doc.ents) + [new_entity]
+
+
+def test_ents_spangroup(en_vocab):
+    text = [
+        "Louisiana",
+        "Office",
+        "of",
+        "Conservation",
+        "in",
+        "the",
+        "United",
+        "States",
+    ]
+    doc = Doc(en_vocab, words=text)
+    doc.ents = [Span(doc, 0, 4, label=391), Span(doc, 6, 8, label=391)]
+
+    assert doc.ents_spangroup.doc == doc
+    assert len(doc.ents_spangroup) == 2
+    assert doc.ents_spangroup.name == "ents"
+    assert str(doc.ents_spangroup[0]) == " ".join(text[:4])
+    assert str(doc.ents_spangroup[1]) == " ".join(text[6:])

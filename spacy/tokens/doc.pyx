@@ -18,6 +18,7 @@ from thinc.util import copy_array
 import warnings
 
 from .span cimport Span
+from .span_group import SpanGroup
 from .token cimport MISSING_DEP
 from .span_groups import SpanGroups
 from .token cimport Token
@@ -701,6 +702,14 @@ cdef class Doc:
         RETURNS (str): The original verbatim text of the document.
         """
         return self.text
+
+    @property
+    def ents_spangroup(self) -> SpanGroup:
+        """
+        Returns entities (in `.ents`) as `SpanGroup`.
+        RETURNS (SpanGroup): All entities (in `.ents`) as `SpanGroup`.
+        """
+        return SpanGroup(self, spans=self.ents, name="ents")
 
     property ents:
         """The named entities in the document. Returns a list of named entity
