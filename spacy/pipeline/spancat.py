@@ -306,8 +306,6 @@ class SpanCategorizer(TrainablePipe):
         vocab: Vocab,
         model: Model[Tuple[List[Doc], Ragged], Floats2d],
         suggester: Suggester,
-        # TODO Not sure what's the best default name when it can both be spancat
-        # and spancat_singlelabel
         name: str = "spancat",
         *,
         add_negative_label: bool = False,
@@ -324,6 +322,7 @@ class SpanCategorizer(TrainablePipe):
         can produce multiple labels per span (multi-label). In the
         multi-label case the classification layer is expected to be
         Logistic and Softmax in the multi-class case.
+
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         suggester (Callable[[Iterable[Doc], Optional[Ops]], Ragged]): A function that suggests spans.
