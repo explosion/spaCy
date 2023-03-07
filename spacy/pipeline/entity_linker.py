@@ -117,28 +117,9 @@ def make_entity_linker(
         prediction is discarded. If None, predictions are not filtered by any threshold.
     save_activations (bool): save model activations in Doc when annotating.
     """
-
     if not model.attrs.get("include_span_maker", False):
-        try:
-            from spacy_legacy.components.entity_linker import EntityLinker_v1
-        except:
-            raise ImportError(
-                "In order to use v1 of the EntityLinker, you must use spacy-legacy>=3.0.12."
-            )
-        # The only difference in arguments here is that use_gold_ents and threshold aren't available.
-        return EntityLinker_v1(
-            nlp.vocab,
-            model,
-            name,
-            labels_discard=labels_discard,
-            n_sents=n_sents,
-            incl_prior=incl_prior,
-            incl_context=incl_context,
-            entity_vector_length=entity_vector_length,
-            get_candidates=get_candidates,
-            overwrite=overwrite,
-            scorer=scorer,
-        )
+        raise ValueError(Errors.E4005)
+
     return EntityLinker(
         nlp.vocab,
         model,
