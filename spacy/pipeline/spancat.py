@@ -317,7 +317,8 @@ class SpanCategorizer(TrainablePipe):
         scorer: Optional[Callable] = spancat_score,
     ) -> None:
         """Initialize the multi-label or multi-class span categorizer.
-        The 'single_label' argument configures whether the component
+
+        argument configures whether the component
         should only produce one label per span (multi-class) or if it
         can produce multiple labels per span (multi-label). In the
         multi-label case the classification layer is expected to be
@@ -325,6 +326,9 @@ class SpanCategorizer(TrainablePipe):
 
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
+            For multi-class classification (single label per span) we recommend
+            using a Softmax classifier as a the final layer, while for multi-label
+            classification (multiple possible labels per span) we recommend Logistic.
         suggester (Callable[[Iterable[Doc], Optional[Ops]], Ragged]): A function that suggests spans.
             Spans are returned as a ragged array with two integer columns, for the
             start and end positions.
@@ -340,14 +344,13 @@ class SpanCategorizer(TrainablePipe):
             positive. Defaults to 0.5. Spans with a positive prediction will be saved
             on the Doc.
         max_positive (Optional[int]): Maximum number of labels to consider
-            positive per span. Defaults to None, indicating no limit. This is
-            unused when single_label is True.
+            positive per span. Defaults to None, indicating no limit.
         negative_weight (float): Multiplier for the loss terms.
             Can be used to downweight the negative samples if there are too many
-            when single_label is True. Otherwise its unused.
+            when add_negative_label is True. Otherwise its unused.
         allow_overlap (bool): If True the data is assumed to contain overlapping spans.
             Otherwise it produces non-overlapping spans greedily prioritizing
-            higher assigned label scores. Only used when single_label is True.
+            higher assigned label scores. Only used when max_positive is 1.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_spans for the Doc.spans[spans_key] with overlapping
             spans allowed.
