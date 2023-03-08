@@ -188,6 +188,7 @@ grad_factor = 1.0
 @misc = "spacy.ngram_suggester.v1"
 sizes = [1,2,3]
 {% endif %}
+
 {% if "trainable_lemmatizer" in components -%}
 [components.trainable_lemmatizer]
 factory = "trainable_lemmatizer"
