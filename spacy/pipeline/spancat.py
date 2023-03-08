@@ -318,12 +318,6 @@ class SpanCategorizer(TrainablePipe):
     ) -> None:
         """Initialize the multi-label or multi-class span categorizer.
 
-        argument configures whether the component
-        should only produce one label per span (multi-class) or if it
-        can produce multiple labels per span (multi-label). In the
-        multi-label case the classification layer is expected to be
-        Logistic and Softmax in the multi-class case.
-
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
             For multi-class classification (single label per span) we recommend
