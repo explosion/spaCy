@@ -553,8 +553,6 @@ class Errors(metaclass=ErrorsWithCodes):
             "vectors, not {mode} vectors.")
     E851 = ("The 'textcat' component labels should only have values of 0 or 1, "
             "but found value of '{val}'.")
-    E852 = ("The tar file pulled from the remote attempted an unsafe path "
-            "traversal.")
     E853 = ("Unsupported component factory name '{name}'. The character '.' is "
             "not permitted in factory names.")
     E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
@@ -828,7 +826,6 @@ class Errors(metaclass=ErrorsWithCodes):
             "assign it a name, e.g. `@Language.component('your_name')`. You can "
             "then run `nlp.replace_pipe('{name}', 'your_name')`.")
     E969 = ("Expected string values for field '{field}', but received {types} instead. ")
-    E970 = ("Can not execute command '{str_command}'. Do you have '{tool}' installed?")
     E971 = ("Found incompatible lengths in `Doc.from_array`: {array_length} for the "
             "array and {doc_length} for the Doc itself.")
     E972 = ("`Example.__init__` got None for '{arg}'. Requires Doc.")
