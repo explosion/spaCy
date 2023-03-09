@@ -969,6 +969,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "with `displacy.serve(doc, port=port)`")
     E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
              "or use `auto_select_port=True` to pick an available port automatically.")
+    E1051 = ("'allow_overlap' can only be False when max_positive is 1, but found 'max_positive': {max_positive}.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
