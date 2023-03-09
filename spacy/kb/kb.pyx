@@ -11,7 +11,7 @@ from ..errors import Errors
 
 
 cdef class KnowledgeBase:
-    """A `KnowledgeBase` instance stores unique identifiers for entities and their textual aliases,
+    """A `KnowledgeBase` instance stores unique identifiers for entities and their textual mentions,
     to support entity linking of named entities to real-world concepts.
     This is an abstract class and requires its operations to be implemented.
 
@@ -32,8 +32,8 @@ cdef class KnowledgeBase:
 
     def get_candidates_batch(self, mentions: Iterable[Span]) -> Iterable[Iterable[Candidate]]:
         """
-        Return candidate entities for specified texts. Each candidate defines the entity, the original alias,
-        and the prior probability of that alias resolving to that entity.
+        Return candidate entities for specified texts. Each candidate defines the entity, the original mention,
+        and the prior probability of this mention resolving to that entity.
         If no candidate is found for a given text, an empty list is returned.
         mentions (Iterable[Span]): Mentions for which to get candidates.
         RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
@@ -42,8 +42,8 @@ cdef class KnowledgeBase:
 
     def get_candidates(self, mention: Span) -> Iterable[Candidate]:
         """
-        Return candidate entities for specified text. Each candidate defines the entity, the original alias,
-        and the prior probability of that alias resolving to that entity.
+        Return candidate entities for specified text. Each candidate defines the entity, the original mention,
+        and the prior probability of that mention resolving to that entity.
         If the no candidate is found for a given text, an empty list is returned.
         mention (Span): Mention for which to get candidates.
         RETURNS (Iterable[Candidate]): Identified candidates.

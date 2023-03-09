@@ -22,7 +22,7 @@ from .candidate import InMemoryCandidate
 
 
 cdef class InMemoryLookupKB(KnowledgeBase):
-    """An `InMemoryLookupKB` instance stores unique identifiers for entities and their textual aliases,
+    """An `InMemoryLookupKB` instance stores unique identifiers for entities and their textual mentions,
     to support entity linking of named entities to real-world concepts.
 
     DOCS: https://spacy.io/api/inmemorylookupkb
@@ -216,7 +216,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
 
         if is_present:
             if not ignore_warnings:
-                warnings.warn(Warnings.W024.format(entity=entity, alias=alias))
+                warnings.warn(Warnings.W024.format(entity=entity, mention=alias))
         else:
             entry_indices.push_back(int(entry_index))
             alias_entry.entry_indices = entry_indices
