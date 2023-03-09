@@ -30,6 +30,8 @@ MOD_NAMES = [
     "spacy.lexeme",
     "spacy.vocab",
     "spacy.attrs",
+    "spacy.kb.candidate",
+    # "spacy.kb.inmemorycandidate",
     "spacy.kb.kb",
     "spacy.kb.kb_in_memory",
     "spacy.ml.tb_framework",

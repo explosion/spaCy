@@ -1,10 +1,12 @@
-import abc
-from typing import List, Union, Callable
+# cython: infer_types=True, profile=True
 
-from ..errors import Errors
+from ..typedefs cimport hash_t
+
+from .kb cimport KnowledgeBase
+from .kb_in_memory cimport InMemoryLookupKB
 
 
-class Candidate(abc.ABC):
+cdef class Candidate:
     """A `Candidate` object refers to a textual mention that may or may not be resolved
     to a specific `entity_id` from a Knowledge Base. This will be used as input for the entity_id linking
     algorithm which will disambiguate the various candidates to the correct one.
@@ -16,8 +18,8 @@ class Candidate(abc.ABC):
     def __init__(
         self,
         mention: str,
-        entity_id: Union[str, int],
-        entity_vector: List[float],
+        entity_id: str,
+        entity_vector: vector[float],
         prior_prob: float,
     ):
         """Initializes properties of `Candidate` instance.
@@ -30,22 +32,23 @@ class Candidate(abc.ABC):
             doesn't) it might be better to eschew this information and always supply the same value.
         """
         self._mention = mention
-        self._entity_id = entity_id
+        self._entity_id_ = entity_id
         # Note that hashing an int value yields the same int value.
-        self._entity_id_hash = hash(entity_id)
+        self._entity_id = hash(entity_id)
         self._entity_vector = entity_vector
         self._prior_prob = prior_prob
+        # todo raise exception if this is instantiated class
 
     @property
     def entity_id(self) -> int:
         """RETURNS (int): Numerical representation of entity ID (if entity ID is numerical, this is just the entity ID,
         otherwise the hash of the entity ID string)."""
-        return self._entity_id_hash
+        return self._entity_id
 
     @property
     def entity_id_(self) -> str:
         """RETURNS (str): String representation of entity ID."""
-        return str(self._entity_id)
+        return self._entity_id_
 
     @property
     def mention(self) -> str:
@@ -53,8 +56,8 @@ class Candidate(abc.ABC):
         return self._mention
 
     @property
-    def entity_vector(self) -> List[float]:
-        """RETURNS (List[float]): Entity vector."""
+    def entity_vector(self) -> vector[float]:
+        """RETURNS (vector[float]): Entity vector."""
         return self._entity_vector
 
     @property
@@ -63,20 +66,20 @@ class Candidate(abc.ABC):
         return self._prior_prob
 
 
-class InMemoryCandidate(Candidate):
+cdef class InMemoryCandidate(Candidate):
     """Candidate for InMemoryLookupKB."""
 
     def __init__(
         self,
-        hash_to_str: Callable[[int], str],
-        entity_id: int,
+        kb: InMemoryLookupKB,
+        entity_hash: int,
         mention: str,
-        entity_vector: List[float],
+        entity_vector: vector[float],
         prior_prob: float,
-        entity_freq: int,
+        entity_freq: float
     ):
         """
-        hash_to_str (Callable[[int], str]): Callable retrieving entity name from provided entity/vocab hash.
+        kb (InMemoryLookupKB]): InMemoryLookupKB instance.
         entity_id (int): Entity ID as hash that can be looked up with InMemoryKB.vocab.strings.__getitem__().
         entity_freq (int): Entity frequency in KB corpus.
         entity_vector (List[float]): Entity embedding.
@@ -88,24 +91,19 @@ class InMemoryCandidate(Candidate):
         """
         super().__init__(
             mention=mention,
-            entity_id=entity_id,
+            entity_id=kb.vocab.strings[entity_hash],
             entity_vector=entity_vector,
             prior_prob=prior_prob,
         )
-        self._hash_to_str = hash_to_str
+        self._kb = kb
+        self._entity_id = entity_hash
         self._entity_freq = entity_freq
-        if not isinstance(self._entity_id, int):
-            raise ValueError(
-                Errors.E4006.format(exp_type="int", found_type=str(type(entity_id)))
-            )
-        self._entity_id_str = self._hash_to_str(self._entity_id)
-
-    @property
-    def entity_freq(self) -> float:
-        """RETURNS (float): Relative entity frequency."""
-        return self._entity_freq
 
     @property
     def entity_id_(self) -> str:
-        """RETURNS (str): String representation of entity ID."""
-        return self._entity_id_str
+        """RETURNS (str): ID/name of this entity in the KB"""
+        return self._kb.vocab.strings[self._entity_id]
+
+    @property
+    def entity_freq(self) -> float:
+        return self._entity_freq

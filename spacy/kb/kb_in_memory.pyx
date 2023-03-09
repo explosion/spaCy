@@ -243,8 +243,8 @@ cdef class InMemoryLookupKB(KnowledgeBase):
 
         return [
             InMemoryCandidate(
-                hash_to_str=self.vocab.strings.__getitem__,
-                entity_id=self._entries[entry_index].entity_hash,
+                kb=self,
+                entity_hash=self._entries[entry_index].entity_hash,
                 mention=alias,
                 entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
                 prior_prob=prior_prob,

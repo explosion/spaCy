@@ -465,16 +465,17 @@ def test_candidate_generation(nlp):
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
+    adam_ent_cands = get_candidates(mykb, adam_ent)
     assert len(get_candidates(mykb, douglas_ent)) == 2
-    assert len(get_candidates(mykb, adam_ent)) == 1
+    assert len(adam_ent_cands) == 1
     assert len(get_candidates(mykb, Adam_ent)) == 0  # default case sensitive
     assert len(get_candidates(mykb, shrubbery_ent)) == 0
 
     # test the content of the candidates
-    assert get_candidates(mykb, adam_ent)[0].entity_id_ == "Q2"
-    assert get_candidates(mykb, adam_ent)[0].mention == "adam"
-    assert_almost_equal(get_candidates(mykb, adam_ent)[0].entity_freq, 12)
-    assert_almost_equal(get_candidates(mykb, adam_ent)[0].prior_prob, 0.9)
+    assert adam_ent_cands[0].entity_id_ == "Q2"
+    assert adam_ent_cands[0].mention == "adam"
+    assert_almost_equal(adam_ent_cands[0].entity_freq, 12)
+    assert_almost_equal(adam_ent_cands[0].prior_prob, 0.9)
 
 
 def test_el_pipe_configuration(nlp):
