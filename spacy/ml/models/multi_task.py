@@ -8,6 +8,7 @@ from thinc.loss import Loss
 from ...util import registry, OOV_RANK
 from ...errors import Errors
 from ...attrs import ID
+from ...vectors import Mode as VectorsMode
 
 import numpy
 from functools import partial
@@ -23,6 +24,8 @@ def create_pretrain_vectors(
     maxout_pieces: int, hidden_size: int, loss: str
 ) -> Callable[["Vocab", Model], Model]:
     def create_vectors_objective(vocab: "Vocab", tok2vec: Model) -> Model:
+        if vocab.vectors.mode != VectorsMode.default:
+            raise ValueError(Errors.E850.format(mode=vocab.vectors.mode))
         if vocab.vectors.shape[1] == 0:
             raise ValueError(Errors.E875)
         model = build_cloze_multi_task_model(
