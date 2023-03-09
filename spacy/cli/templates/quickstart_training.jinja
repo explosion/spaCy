@@ -3,7 +3,7 @@ the docs and the init config command. It encodes various best practices and
 can help generate the best possible configuration, given a user's requirements. #}
 {%- set use_transformer = hardware != "cpu" and transformer_data -%}
 {%- set transformer = transformer_data[optimize] if use_transformer else {} -%}
-{%- set listener_components = ["tagger", "morphologizer", "parser", "ner", "textcat", "textcat_multilabel", "entity_linker", "spancat", "trainable_lemmatizer"] -%}
+{%- set listener_components = ["tagger", "morphologizer", "parser", "ner", "textcat", "textcat_multilabel", "entity_linker", "spancat", "spancat_singlelabel", "trainable_lemmatizer"] -%}
 [paths]
 train = null
 dev = null
@@ -28,7 +28,7 @@ lang = "{{ lang }}"
 tok2vec/transformer. #}
 {%- set with_accuracy_or_transformer = (use_transformer or with_accuracy) -%}
 {%- set textcat_needs_features = has_textcat and with_accuracy_or_transformer -%}
-{%- if ("tagger" in components or "morphologizer" in components or "parser" in components or "ner" in components or "spancat" in components or "trainable_lemmatizer" in components or "entity_linker" in components or textcat_needs_features) -%}
+{%- if ("tagger" in components or "morphologizer" in components or "parser" in components or "ner" in components or "spancat" in components or "spancat_singlelabel" in components or "trainable_lemmatizer" in components or "entity_linker" in components or textcat_needs_features) -%}
 {%- set full_pipeline = ["transformer" if use_transformer else "tok2vec"] + components -%}
 {%- else -%}
 {%- set full_pipeline = components -%}
@@ -158,6 +158,36 @@ grad_factor = 1.0
 @misc = "spacy.ngram_suggester.v1"
 sizes = [1,2,3]
 {% endif -%}
+
+{% if "spancat_singlelabel" in components %}
+[components.spancat_singlelabel]
+factory = "spancat_singlelabel"
+negative_weight = 1.0
+allow_overlap = true
+scorer = {"@scorers":"spacy.spancat_scorer.v1"}
+spans_key = "sc"
+
+[components.spancat_singlelabel.model]
+@architectures = "spacy.SpanCategorizer.v1"
+
+[components.spancat_singlelabel.model.reducer]
+@layers = "spacy.mean_max_reducer.v1"
+hidden_size = 128
+
+[components.spancat_singlelabel.model.scorer]
+@layers = "Softmax.v2"
+
+[components.spancat_singlelabel.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.spancat_singlelabel.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+
+[components.spancat_singlelabel.suggester]
+@misc = "spacy.ngram_suggester.v1"
+sizes = [1,2,3]
+{% endif %}
 
 {% if "trainable_lemmatizer" in components -%}
 [components.trainable_lemmatizer]
@@ -385,6 +415,33 @@ nI = null
 width = ${components.tok2vec.model.encode.width}
 
 [components.spancat.suggester]
+@misc = "spacy.ngram_suggester.v1"
+sizes = [1,2,3]
+{% endif %}
+
+{% if "spancat_singlelabel" in components %}
+[components.spancat_singlelabel]
+factory = "spancat_singlelabel"
+negative_weight = 1.0
+allow_overlap = true
+scorer = {"@scorers":"spacy.spancat_scorer.v1"}
+spans_key = "sc"
+
+[components.spancat_singlelabel.model]
+@architectures = "spacy.SpanCategorizer.v1"
+
+[components.spancat_singlelabel.model.reducer]
+@layers = "spacy.mean_max_reducer.v1"
+hidden_size = 128
+
+[components.spancat_singlelabel.model.scorer]
+@layers = "Softmax.v2"
+
+[components.spancat_singlelabel.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+
+[components.spancat_singlelabel.suggester]
 @misc = "spacy.ngram_suggester.v1"
 sizes = [1,2,3]
 {% endif %}

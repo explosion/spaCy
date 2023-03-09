@@ -552,7 +552,14 @@ def test_parse_cli_overrides():
 
 @pytest.mark.parametrize("lang", ["en", "nl"])
 @pytest.mark.parametrize(
-    "pipeline", [["tagger", "parser", "ner"], [], ["ner", "textcat", "sentencizer"]]
+    "pipeline",
+    [
+        ["tagger", "parser", "ner"],
+        [],
+        ["ner", "textcat", "sentencizer"],
+        ["morphologizer", "spancat", "entity_linker"],
+        ["spancat_singlelabel", "textcat_multilabel"],
+    ],
 )
 @pytest.mark.parametrize("optimize", ["efficiency", "accuracy"])
 @pytest.mark.parametrize("pretraining", [True, False])
