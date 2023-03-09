@@ -5,8 +5,16 @@ import srsly
 from typer.testing import CliRunner
 from spacy.tokens import DocBin, Doc
 
-from spacy.cli._util import app
+from spacy.cli._util import app, get_git_version
 from .util import make_tempdir, normalize_whitespace
+
+
+def has_git():
+    try:
+        get_git_version()
+        return True
+    except RuntimeError:
+        return False
 
 
 def test_convert_auto():
@@ -181,6 +189,7 @@ def test_project_run(project_dir):
     assert "okokok" in result.stdout
 
 
+@pytest.mark.skipif(not has_git(), reason="git not installed")
 @pytest.mark.parametrize(
     "options",
     [
