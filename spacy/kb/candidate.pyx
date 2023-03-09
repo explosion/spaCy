@@ -17,13 +17,11 @@ cdef class Candidate:
 
     def __init__(
         self,
-        mention: str,
         entity_id: str,
         entity_vector: vector[float],
         prior_prob: float,
     ):
         """Initializes properties of abstract base class `Candidate`.
-        mention (str): Mention text for this candidate.
         entity_id (Union[str, int]): Unique entity ID.
         entity_vector (List[float]): Entity embedding.
         prior_prob (float): Prior probability of entity for this mention - i.e. the probability that, independent of
@@ -37,7 +35,6 @@ cdef class Candidate:
                 Errors.E1046.format(cls_name=self.__class__.__name__)
             )
 
-        self._mention = mention
         self._entity_id_ = entity_id
         # Note that hashing an int value yields the same int value.
         self._entity_id = hash(entity_id)
@@ -58,7 +55,7 @@ cdef class Candidate:
     @property
     def mention(self) -> str:
         """RETURNS (str): Mention."""
-        return self._mention
+        raise NotImplementedError
 
     @property
     def entity_vector(self) -> vector[float]:
@@ -78,7 +75,7 @@ cdef class InMemoryCandidate(Candidate):
         self,
         kb: InMemoryLookupKB,
         entity_hash: int,
-        mention: str,
+        mention_hash: int,
         entity_vector: vector[float],
         prior_prob: float,
         entity_freq: float
@@ -88,21 +85,26 @@ cdef class InMemoryCandidate(Candidate):
         entity_id (int): Entity ID as hash that can be looked up with InMemoryKB.vocab.strings.__getitem__().
         entity_freq (int): Entity frequency in KB corpus.
         entity_vector (List[float]): Entity embedding.
-        mention (str): Mention.
+        mention_hash (int): Mention hash.
         prior_prob (float): Prior probability of entity for this mention - i.e. the probability that, independent of
             the context, this mention resolves to this entity_id in the corpus used to build the knowledge base. In
             cases in which this isn't always possible (e.g.: the corpus to analyse contains mentions that the KB corpus
             doesn't) it might be better to eschew this information and always supply the same value.
         """
         super().__init__(
-            mention=mention,
             entity_id=kb.vocab.strings[entity_hash],
             entity_vector=entity_vector,
             prior_prob=prior_prob,
         )
         self._kb = kb
+        self._mention = mention_hash
         self._entity_id = entity_hash
         self._entity_freq = entity_freq
+
+    @property
+    def mention(self) -> str:
+        """RETURNS (str): ID/name of this entity in the KB"""
+        return self._kb.vocab.strings[self._mention]
 
     @property
     def entity_id_(self) -> str:

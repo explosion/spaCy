@@ -245,7 +245,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
             InMemoryCandidate(
                 kb=self,
                 entity_hash=self._entries[entry_index].entity_hash,
-                mention=alias,
+                mention_hash=alias_hash,
                 entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
                 prior_prob=prior_prob,
                 entity_freq=self._entries[entry_index].freq
