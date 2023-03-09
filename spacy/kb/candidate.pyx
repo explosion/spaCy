@@ -4,7 +4,7 @@ from ..typedefs cimport hash_t
 
 from .kb cimport KnowledgeBase
 from .kb_in_memory cimport InMemoryLookupKB
-
+from ..errors import Errors
 
 cdef class Candidate:
     """A `Candidate` object refers to a textual mention that may or may not be resolved
@@ -22,7 +22,7 @@ cdef class Candidate:
         entity_vector: vector[float],
         prior_prob: float,
     ):
-        """Initializes properties of `Candidate` instance.
+        """Initializes properties of abstract base class `Candidate`.
         mention (str): Mention text for this candidate.
         entity_id (Union[str, int]): Unique entity ID.
         entity_vector (List[float]): Entity embedding.
@@ -31,13 +31,18 @@ cdef class Candidate:
             cases in which this isn't always possible (e.g.: the corpus to analyse contains mentions that the KB corpus
             doesn't) it might be better to eschew this information and always supply the same value.
         """
+        # Make sure abstract KB is not instantiated.
+        if self.__class__ == Candidate:
+            raise TypeError(
+                Errors.E1046.format(cls_name=self.__class__.__name__)
+            )
+
         self._mention = mention
         self._entity_id_ = entity_id
         # Note that hashing an int value yields the same int value.
         self._entity_id = hash(entity_id)
         self._entity_vector = entity_vector
         self._prior_prob = prior_prob
-        # todo raise exception if this is instantiated class
 
     @property
     def entity_id(self) -> int:
