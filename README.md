@@ -16,6 +16,9 @@ production-ready [**training system**](https://spacy.io/usage/training) and easy
 model packaging, deployment and workflow management. spaCy is commercial
 open-source software, released under the [MIT license](https://github.com/explosion/spaCy/blob/master/LICENSE).
 
+💥 **We'd love to hear more about your experience with spaCy!**
+[Fill out our survey here.](https://form.typeform.com/to/aMel9q9f)
+
 💫 **Version 3.5 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
