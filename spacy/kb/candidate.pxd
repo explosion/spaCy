@@ -11,6 +11,5 @@ cdef class Candidate:
 
 cdef class InMemoryCandidate(Candidate):
     cdef readonly InMemoryLookupKB _kb
-    cdef hash_t _entity_hash
     cdef float _entity_freq
     cdef hash_t _mention
