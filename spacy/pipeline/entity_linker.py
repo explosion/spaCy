@@ -490,7 +490,10 @@ class EntityLinker(TrainablePipe):
                             sentences.index(sents[0]) + len(sents) - 1,
                         )
                     else:
-                        sent_indices = (sentences.index(ent.sent), sentences.index(ent.sent))
+                        sent_indices = (
+                            sentences.index(ent.sent),
+                            sentences.index(ent.sent),
+                        )
                     assert all([si >= 0 for si in sent_indices])
 
                     if self.incl_context:
