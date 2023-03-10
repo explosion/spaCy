@@ -1219,3 +1219,46 @@ def test_span_maker_forward_with_empty():
     # just to get a model
     span_maker = build_span_maker()
     span_maker([doc1, doc2], False)
+
+@pytest.mark.skip(reason="Not fixed yet, expected to fail")
+def test_sentence_crossing_ents():
+    """Tests if NEL crashes if entities cross sentence boundaries and the first associated sentence doesn't have an
+    entity.
+    """
+    nlp = English()
+    vector_length = 3
+    nlp.add_pipe("sentencizer")
+    text = "Mahler 's Symphony No. 8 was beautiful."
+    entities = [(10, 24, "WORK")]
+    links = {(10, 24): {"Q7304": 0.0, "Q270853": 1.0},
+    }
+    sent_starts = [1, -1, 0, 0, 0, 1, 0, 0, 0]
+    doc = nlp(text)
+    example = Example.from_dict(
+        doc, {"entities": entities, "links": links, "sent_starts": sent_starts}
+    )
+    train_examples = [example]
+
+    def create_kb(vocab):
+        # create artificial KB
+        mykb = InMemoryLookupKB(vocab, entity_vector_length=vector_length)
+        mykb.add_entity(entity="Q270853", freq=12, entity_vector=[9, 1, -7])
+        mykb.add_alias(
+            alias="No. 8",
+            entities=["Q270853"],
+            probabilities=[1.0],
+        )
+        return mykb
+
+    # Create the Entity Linker component and add it to the pipeline
+    entity_linker = nlp.add_pipe("entity_linker", last=True)
+    entity_linker.set_kb(create_kb)
+    # train the NEL pipe
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(2):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    # This shouldn't crash.
+    entity_linker.predict([example.reference])
+
