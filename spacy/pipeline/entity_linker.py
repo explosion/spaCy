@@ -474,6 +474,7 @@ class EntityLinker(TrainablePipe):
 
                 # Looping through each entity in batch (TODO: rewrite)
                 for j, ent in enumerate(ent_batch):
+                    assert hasattr(ent, "sents")
                     sents = list(ent.sents)
                     # Note: the last sentence associated with an sentence-crossing entity isn't complete. E. g. if you
                     # have "Mahler's Symphony No. 8 was beautiful", the entity being "No. 8", ent.sents would be:
