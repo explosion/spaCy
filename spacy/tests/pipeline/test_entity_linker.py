@@ -1221,7 +1221,6 @@ def test_span_maker_forward_with_empty():
     span_maker([doc1, doc2], False)
 
 
-@pytest.mark.skip(reason="Not fixed yet, expected to fail")
 def test_sentence_crossing_ents():
     """Tests if NEL crashes if entities cross sentence boundaries and the first associated sentence doesn't have an
     entity.
@@ -1239,6 +1238,7 @@ def test_sentence_crossing_ents():
     example = Example.from_dict(
         doc, {"entities": entities, "links": links, "sent_starts": sent_starts}
     )
+    assert len(list(example.reference.ents[0].sents)) == 2
     train_examples = [example]
 
     def create_kb(vocab):
