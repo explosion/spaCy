@@ -484,10 +484,13 @@ class EntityLinker(TrainablePipe):
                     #   2. "8 was beautiful"
                     # This makes it tricky to receive the last sentence by indexing doc.sents - hence we use an offset
                     # to determine sent_indices[1].
-                    sent_indices = (
-                        sentences.index(sents[0]),
-                        sentences.index(sents[0]) + len(sents) - 1,
-                    )
+                    if len(sents) > 1:
+                        sent_indices = (
+                            sentences.index(sents[0]),
+                            sentences.index(sents[0]) + len(sents) - 1,
+                        )
+                    else:
+                        sent_indices = (sentences.index(ent.sent), sentences.index(ent.sent))
                     assert all([si >= 0 for si in sent_indices])
 
                     if self.incl_context:
