@@ -100,14 +100,15 @@ cdef class InMemoryCandidate(Candidate):
 
     @property
     def mention(self) -> str:
-        """RETURNS (str): ID/name of this entity in the KB"""
+        """RETURNS (str): Mention."""
         return self._kb.vocab.strings[self._mention]
 
     @property
     def entity_id_(self) -> str:
-        """RETURNS (str): ID/name of this entity in the KB"""
+        """RETURNS (str): ID/name of this entity in the KB."""
         return self._kb.vocab.strings[self._entity_id]
 
     @property
     def entity_freq(self) -> float:
+        """RETURNS (float): Entity frequence of this candidate's entity in the KB."""
         return self._entity_freq
