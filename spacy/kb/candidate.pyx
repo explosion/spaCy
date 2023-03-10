@@ -1,14 +1,11 @@
 # cython: infer_types=True, profile=True
 
-from ..typedefs cimport hash_t
-
-from .kb cimport KnowledgeBase
 from .kb_in_memory cimport InMemoryLookupKB
 from ..errors import Errors
 
 cdef class Candidate:
     """A `Candidate` object refers to a textual mention that may or may not be resolved
-    to a specific `entity_id` from a Knowledge Base. This will be used as input for the entity_id linking
+    to a specific entity from a Knowledge Base. This will be used as input for the entity linking
     algorithm which will disambiguate the various candidates to the correct one.
     Each candidate (mention, entity_id) pair is assigned a certain prior probability.
 
@@ -87,7 +84,7 @@ cdef class InMemoryCandidate(Candidate):
         entity_vector (List[float]): Entity embedding.
         mention_hash (int): Mention hash.
         prior_prob (float): Prior probability of entity for this mention - i.e. the probability that, independent of
-            the context, this mention resolves to this entity_id in the corpus used to build the knowledge base. In
+            the context, this mention resolves to this entity in the corpus used to build the knowledge base. In
             cases in which this isn't always possible (e.g.: the corpus to analyse contains mentions that the KB corpus
             doesn't) it might be better to eschew this information and always supply the same value.
         """
