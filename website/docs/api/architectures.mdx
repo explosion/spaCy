@@ -899,14 +899,20 @@ The `EntityLinker` model architecture is a Thinc `Model` with a
 | `nO`        | Output dimension, determined by the length of the vectors encoding each entity in the KB. If the `nO` dimension is not set, the entity linking component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                                                    |
 
-### spacy.EmptyKB.v1 {id="EmptyKB"}
+### spacy.EmptyKB.v1 {id="EmptyKB.v1"}
 
 A function that creates an empty `KnowledgeBase` from a [`Vocab`](/api/vocab)
-instance. This is the default when a new entity linker component is created.
+instance.
 
 | Name                   | Description                                                                         |
 | ---------------------- | ----------------------------------------------------------------------------------- |
 | `entity_vector_length` | The length of the vectors encoding each entity in the KB. Defaults to `64`. ~~int~~ |
+
+### spacy.EmptyKB.v2 {id="EmptyKB"}
+
+A function that creates an empty `KnowledgeBase` from a [`Vocab`](/api/vocab)
+instance. This is the default when a new entity linker component is created. It
+returns a `Callable[[Vocab, int], InMemoryLookupKB]`.
 
 ### spacy.KBFromFile.v1 {id="KBFromFile"}
 

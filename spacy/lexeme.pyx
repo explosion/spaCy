@@ -199,7 +199,7 @@ cdef class Lexeme:
         return self.orth_
 
     property lower:
-        """RETURNS (str): Lowercase form of the lexeme."""
+        """RETURNS (uint64): Lowercase form of the lexeme."""
         def __get__(self):
             return self.c.lower
 

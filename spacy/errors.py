@@ -444,8 +444,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E133 = ("The sum of prior probabilities for alias '{alias}' should not "
             "exceed 1, but found {sum}.")
     E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
-    E139 = ("Knowledge base for component '{name}' is empty. Use the methods "
-            "`kb.add_entity` and `kb.add_alias` to add entries.")
+    E139 = ("Knowledge base for component '{name}' is empty.")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
@@ -550,6 +549,8 @@ class Errors(metaclass=ErrorsWithCodes):
             "during training, make sure to include it in 'annotating components'")
 
     # New errors added in v3.x
+    E850 = ("The PretrainVectors objective currently only supports default "
+            "vectors, not {mode} vectors.")
     E851 = ("The 'textcat' component labels should only have values of 0 or 1, "
             "but found value of '{val}'.")
     E852 = ("The tar file pulled from the remote attempted an unsafe path "
@@ -967,7 +968,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1049 = ("No available port found for displaCy on host {host}. Please specify an available port "
              "with `displacy.serve(doc, port=port)`")
     E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
-             "or use `auto_switch_port=True` to pick an available port automatically.")
+             "or use `auto_select_port=True` to pick an available port automatically.")
+    E1051 = ("'allow_overlap' can only be False when max_positive is 1, but found 'max_positive': {max_positive}.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
