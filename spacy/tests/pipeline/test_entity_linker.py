@@ -1220,6 +1220,7 @@ def test_span_maker_forward_with_empty():
     span_maker = build_span_maker()
     span_maker([doc1, doc2], False)
 
+
 @pytest.mark.skip(reason="Not fixed yet, expected to fail")
 def test_sentence_crossing_ents():
     """Tests if NEL crashes if entities cross sentence boundaries and the first associated sentence doesn't have an
@@ -1230,7 +1231,8 @@ def test_sentence_crossing_ents():
     nlp.add_pipe("sentencizer")
     text = "Mahler 's Symphony No. 8 was beautiful."
     entities = [(10, 24, "WORK")]
-    links = {(10, 24): {"Q7304": 0.0, "Q270853": 1.0},
+    links = {
+        (10, 24): {"Q7304": 0.0, "Q270853": 1.0},
     }
     sent_starts = [1, -1, 0, 0, 0, 1, 0, 0, 0]
     doc = nlp(text)
@@ -1261,4 +1263,3 @@ def test_sentence_crossing_ents():
 
     # This shouldn't crash.
     entity_linker.predict([example.reference])
-
