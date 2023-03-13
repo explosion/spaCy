@@ -58,6 +58,9 @@ jobs:
         run: |
           python -m pip install flake8==5.0.4
           python -m flake8 spacy --count --select=E901,E999,F821,F822,F823,W605 --show-source --statistics
+      - name: Validate website/meta/universe.json
+        run: |
+          python .github/validate_universe_json.py website/meta/universe.json
   tests:
     name: Test
     needs: Validate
@@ -188,8 +191,3 @@ jobs:
           python -m pip install 'spacy[apple]'
           python -m pytest --pyargs spacy
         if: startsWith(matrix.os, 'macos') && matrix.python_version == '3.8'
-
-      - run: |
-          python .github/validate_universe_json.py website/meta/universe.json
-        name: "Test website/meta/universe.json"
-        if: matrix.python_version == '3.8'
