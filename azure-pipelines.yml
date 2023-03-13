@@ -50,7 +50,7 @@ jobs:
         displayName: "flake8"
       - script: |
           python .github/validate_universe_json.py website/meta/universe.json
-          displayName: 'Validate website/meta/universe.json'
+        displayName: 'Validate website/meta/universe.json'
 
   - job: "Test"
     dependsOn: "Validate"
