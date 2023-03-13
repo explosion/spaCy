@@ -1,5 +1,5 @@
-from typing import Optional, Iterable, Callable, Dict, Sequence, Union, List, Any
-from typing import cast
+import warnings
+from typing import Optional, Iterable, Callable, Dict, Sequence, Union, List, Any, cast
 from numpy import dtype
 from thinc.types import Floats1d, Floats2d, Ints1d, Ragged
 from pathlib import Path
@@ -10,14 +10,13 @@ from thinc.api import CosineDistance, Model, Optimizer, Config
 from thinc.api import set_dropout_rate
 
 from ..kb import KnowledgeBase, Candidate
-from ..ml import empty_kb
 from ..tokens import Doc, Span
 from .pipe import deserialize_config
 from .trainable_pipe import TrainablePipe
 from ..language import Language
 from ..vocab import Vocab
 from ..training import Example, validate_examples, validate_get_examples
-from ..errors import Errors
+from ..errors import Errors, Warnings
 from ..util import SimpleFrozenList, registry
 from .. import util
 from ..scorer import Scorer
@@ -240,6 +239,8 @@ class EntityLinker(TrainablePipe):
 
         if candidates_batch_size < 1:
             raise ValueError(Errors.E1044)
+        if self.incl_prior and not self.kb.supports_prior_probs:
+            warnings.warn(Warnings.W401)
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -532,8 +533,9 @@ class EntityLinker(TrainablePipe):
                         else:
                             random.shuffle(candidates)
                             # set all prior probabilities to 0 if incl_prior=False
-                            prior_probs = xp.asarray([c.prior_prob for c in candidates])
-                            if not self.incl_prior:
+                            if self.incl_prior and self.kb.supports_prior_probs:
+                                prior_probs = xp.asarray([c.prior_prob for c in candidates])  # type: ignore
+                            else:
                                 prior_probs = xp.asarray([0.0 for _ in candidates])
                             scores = prior_probs
                             # add in similarity from the context

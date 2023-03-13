@@ -283,6 +283,9 @@ cdef class InMemoryLookupKB(KnowledgeBase):
 
         return 0.0
 
+    def supports_prior_probs(self) -> bool:
+        return True
+
     def to_bytes(self, **kwargs):
         """Serialize the current state to a binary string.
         """

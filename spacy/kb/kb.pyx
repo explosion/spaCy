@@ -106,3 +106,10 @@ cdef class KnowledgeBase:
         raise NotImplementedError(
             Errors.E1045.format(parent="KnowledgeBase", method="from_disk", name=self.__name__)
         )
+
+    @property
+    def supports_prior_probs(self) -> bool:
+        """RETURNS (bool): Whether this KB type supports looking up prior probabilities for entity mentions."""
+        raise NotImplementedError(
+            Errors.E1045.format(parent="KnowledgeBase", method="supports_prior_probs", name=self.__name__)
+        )

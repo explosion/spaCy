@@ -209,7 +209,10 @@ class Warnings(metaclass=ErrorsWithCodes):
             "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
     W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
 
+    # v4 warning strings
     W400 = ("`use_upper=False` is ignored, the upper layer is always enabled")
+    W401 = ("`incl_prior is True`, but the selected knowledge base type {kb_type} doesn't support prior probability "
+            "lookups.")
 
 
 class Errors(metaclass=ErrorsWithCodes):

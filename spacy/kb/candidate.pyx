@@ -41,11 +41,6 @@ cdef class Candidate:
         """RETURNS (vector[float]): Entity vector."""
         raise NotImplementedError
 
-    @property
-    def prior_prob(self) -> float:
-        """RETURNS (List[float]): Entity vector."""
-        raise NotImplementedError
-
 
 cdef class InMemoryCandidate(Candidate):
     """Candidate for InMemoryLookupKB."""
@@ -89,6 +84,7 @@ cdef class InMemoryCandidate(Candidate):
 
     @property
     def prior_prob(self) -> float:
+        """RETURNS (float): Prior probability that this mention resolves to this entity."""
         return self._prior_prob
 
     @property
@@ -101,4 +97,5 @@ cdef class InMemoryCandidate(Candidate):
 
     @property
     def entity_freq(self) -> float:
+        """RETURNS (float): Entity frequency in KB corpus."""
         return self._entity_freq
