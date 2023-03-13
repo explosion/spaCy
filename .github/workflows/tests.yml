@@ -1,0 +1,195 @@
+name: tests
+
+on:
+  push:
+    branches-ignore:
+      - "spacy.io"
+      - "nightly.spacy.io"
+      - "v2.spacy.io"
+    paths-ignore:
+      - "*.md"
+      - "*.mdx"
+      - "website/docs/**"
+      - "website/src/**"
+      - "website/meta/*.tsx"
+      - "website/meta/*.mjs"
+      - "website/meta/languages.json"
+      - "website/meta/site.json"
+      - "website/meta/sidebars.json"
+      - "website/meta/type-annotations.json"
+      - "website/pages/**"
+      - ".github/workflows/**"
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    paths:
+      - "!*.md"
+      - "!*.mdx"
+      - "!website/docs/**"
+      - "!website/src/**"
+      - "!website/meta/*.tsx"
+      - "!website/meta/*.mjs"
+      - "!website/meta/languages.json"
+      - "!website/meta/site.json"
+      - "!website/meta/sidebars.json"
+      - "!website/meta/type-annotations.json"
+      - "!website/pages/**"
+      - "!.github/workflows/**"
+      - ".github/workflows/tests.yml"
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Configure Python version
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.7"
+          architecture: x64
+
+      - name: black
+        run: |
+          python -m pip install black -c requirements.txt
+          python -m black spacy --check
+      - name: flake8
+        run: |
+          python -m pip install flake8==5.0.4
+          python -m flake8 spacy --count --select=E901,E999,F821,F822,F823,W605 --show-source --statistics
+  tests:
+    name: Test
+    needs: Validate
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python_version: ["3.11"]
+        include:
+          - os: ubuntu-20.04
+            python_version: "3.6"
+          - os: windows-latest
+            python_version: "3.7"
+          - os: macos-latest
+            python_version: "3.8"
+          - os: ubuntu-latest
+            python_version: "3.9"
+          - os: windows-latest
+            python_version: "3.10"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Configure Python version
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python_version }}
+          architecture: x64
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -U build pip setuptools
+          python -m pip install -U -r requirements.txt
+
+      - name: Build sdist
+        run: |
+          python -m build --sdist
+
+      - name: Run mypy
+        run: |
+          python -m mypy spacy
+        if: matrix.python_version != '3.6'
+
+      - name: Delete source directory and .egg-info
+        run: |
+          rm -rf spacy *.egg-info
+        shell: bash
+
+      - name: Uninstall all packages
+        run: |
+          python -m pip freeze
+          python -m pip freeze --exclude pywin32 > installed.txt
+          python -m pip uninstall -y -r installed.txt
+
+      - name: Install from sdist
+        run: |
+          SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
+          SPACY_NUM_BUILD_JOBS=2 python -m pip install dist/$SDIST
+        shell: bash
+
+      - name: Test import
+        run: python -W error -c "import spacy"
+
+      - name: "Test download CLI"
+        run: |
+          python -m spacy download ca_core_news_sm
+          python -m spacy download ca_core_news_md
+          python -c "import spacy; nlp=spacy.load('ca_core_news_sm'); doc=nlp('test')"
+        if: matrix.python_version == '3.8'
+
+      - name: "Test download_url in info CLI"
+        run: |
+          python -W error -m spacy info ca_core_news_sm | grep -q download_url
+        if: matrix.python_version == '3.8'
+
+      - name: "Test no warnings on load (#11713)"
+        run: |
+          python -W error -c "import ca_core_news_sm; nlp = ca_core_news_sm.load(); doc=nlp('test')"
+        if: matrix.python_version == '3.8'
+
+      - name: "Test convert CLI"
+        run: |
+          python -m spacy convert extra/example_data/ner_example_data/ner-token-per-line-conll2003.json .
+        if: matrix.python_version == '3.8'
+
+      - name: "Test debug config CLI"
+        run: |
+          python -m spacy init config -p ner -l ca ner.cfg
+          python -m spacy debug config ner.cfg --paths.train ner-token-per-line-conll2003.spacy --paths.dev ner-token-per-line-conll2003.spacy
+        if: matrix.python_version == '3.8'
+
+      - name: "Test debug data CLI"
+        run: |
+          # will have errors due to sparse data, check for summary in output
+          python -m spacy debug data ner.cfg --paths.train ner-token-per-line-conll2003.spacy --paths.dev ner-token-per-line-conll2003.spacy | grep -q Summary
+        if: matrix.python_version == '3.8'
+
+      - name: "Test train CLI"
+        run: |
+          python -m spacy train ner.cfg --paths.train ner-token-per-line-conll2003.spacy --paths.dev ner-token-per-line-conll2003.spacy --training.max_steps 10 --gpu-id -1
+        if: matrix.python_version == '3.8'
+
+      - name: "Test assemble CLI"
+        run: |
+          python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_sm'}; config.to_disk('ner_source_sm.cfg')"
+          PYTHONWARNINGS="error,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
+        if: matrix.python_version == '3.8'
+
+      - name: "Test assemble CLI vectors warning"
+        run: |
+          python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_md'}; config.to_disk('ner_source_md.cfg')"
+          python -m spacy assemble ner_source_md.cfg output_dir 2>&1 | grep -q W113
+        if: matrix.python_version == '3.8'
+
+      - name: "Install test requirements"
+        run: |
+          python -m pip install -U -r requirements.txt
+
+      - name: "Run CPU tests"
+        run: |
+          python -m pytest --pyargs spacy -W error
+
+      - name: "Run CPU tests with thinc-apple-ops"
+        run: |
+          python -m pip install 'spacy[apple]'
+          python -m pytest --pyargs spacy
+        if: startsWith(matrix.os, 'macos') && matrix.python_version == '3.8'
+
+      - run: |
+          python .github/validate_universe_json.py website/meta/universe.json
+        name: "Test website/meta/universe.json"
+        if: matrix.python_version == '3.8'
