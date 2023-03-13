@@ -150,15 +150,14 @@ def test_sentence_crossing_ents(entity_in_first_sentence: bool):
 
     # Create the Entity Linker component and add it to the pipeline
     entity_linker = nlp.add_pipe("entity_linker", last=True)
-    entity_linker.set_kb(create_kb)
+    entity_linker.set_kb(create_kb)  # type: ignore
     # train the NEL pipe
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
     for i in range(2):
-        losses = {}
-        nlp.update(train_examples, sgd=optimizer, losses=losses)
+        nlp.update(train_examples, sgd=optimizer)
 
     # This shouldn't crash.
-    entity_linker.predict([example.reference])
+    entity_linker.predict([example.reference])  # type: ignore
 
 
 def test_no_entities():
