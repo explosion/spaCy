@@ -60,10 +60,8 @@ cdef class InMemoryCandidate(Candidate):
         entity_freq (int): Entity frequency in KB corpus.
         entity_vector (List[float]): Entity embedding.
         mention_hash (int): Mention hash.
-        prior_prob (float): Prior probability of entity for this mention - i.e. the probability that, independent of
-            the context, this mention resolves to this entity in the corpus used to build the knowledge base. In
-            cases in which this isn't always possible (e.g.: the corpus to analyse contains mentions that the KB corpus
-            doesn't) it might be better to eschew this information and always supply the same value.
+        prior_prob (float): Prior probability of entity for this mention. I. e. the probability that, independent of
+            the context, this mention - which matches one of this entity's aliases - resolves to one this entity.
         """
         super().__init__()
 
@@ -84,7 +82,8 @@ cdef class InMemoryCandidate(Candidate):
 
     @property
     def prior_prob(self) -> float:
-        """RETURNS (float): Prior probability that this mention resolves to this entity."""
+        """RETURNS (float): Prior probability that this mention, which matches one of this entity's aliases, resolves to
+        this entity."""
         return self._prior_prob
 
     @property
