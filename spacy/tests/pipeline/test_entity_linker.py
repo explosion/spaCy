@@ -118,7 +118,6 @@ def test_sentence_crossing_ents(entity_in_first_sentence: bool):
     # Test that the NEL doesn't crash when an entity crosses a sentence boundary
     nlp = English()
     vector_length = 3
-    nlp.add_pipe("sentencizer")
     text = "Mahler 's Symphony No. 8 was beautiful."
     entities = [(10, 24, "WORK")]
     links = {(10, 24): {"Q7304": 0.0, "Q270853": 1.0}}
