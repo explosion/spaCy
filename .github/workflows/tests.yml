@@ -190,4 +190,4 @@ jobs:
         run: |
           python -m pip install 'spacy[apple]'
           python -m pytest --pyargs spacy
-        if: startsWith(matrix.os, 'macos') && matrix.python_version == '3.8'
+        if: startsWith(matrix.os, 'macos') && matrix.python_version == '3.11'
