@@ -461,7 +461,7 @@ cdef class Span:
                     if start >= self.end:
                         break
                 elif i == self.doc.length - 1:
-                    yield Span(self.doc, start, i + 1)
+                    yield Span(self.doc, start, self.doc.length)
 
     @property
     def ents(self):
