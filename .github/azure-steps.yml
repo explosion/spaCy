@@ -116,9 +116,3 @@ steps:
       python -m pytest --pyargs spacy
     displayName: "Run CPU tests with thinc-apple-ops"
     condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.11'))
-
-  - script: |
-      python .github/validate_universe_json.py website/meta/universe.json
-    displayName: 'Test website/meta/universe.json'
-    condition: eq(variables['python_version'], '3.8')
-
