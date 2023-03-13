@@ -22,7 +22,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
     paths:
-      - ".github/workflows/tests.yml"
       - "!*.md"
       - "!*.mdx"
       - "!website/docs/**"
@@ -35,6 +34,7 @@ on:
       - "!website/meta/type-annotations.json"
       - "!website/pages/**"
       - "!.github/workflows/**"
+      - ".github/workflows/tests.yml"
 
 jobs:
   validate:
