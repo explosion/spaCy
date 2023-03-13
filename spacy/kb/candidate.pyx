@@ -7,7 +7,8 @@ cdef class Candidate:
     """A `Candidate` object refers to a textual mention that may or may not be resolved
     to a specific entity from a Knowledge Base. This will be used as input for the entity linking
     algorithm which will disambiguate the various candidates to the correct one.
-    Each candidate (mention, entity_id) pair is assigned a certain prior probability.
+    Each candidate, which represents a possible link between one textual mention and one entity in the knowledge base,
+    is assigned a certain prior probability.
 
     DOCS: https://spacy.io/api/kb/#candidate-init
     """
@@ -76,7 +77,6 @@ cdef class InMemoryCandidate(Candidate):
         self._prior_prob = prior_prob
         self._kb = kb
         self._mention = mention_hash
-        self._entity_id = entity_hash
         self._entity_freq = entity_freq
 
     @property
@@ -97,7 +97,7 @@ cdef class InMemoryCandidate(Candidate):
 
     @property
     def entity_id_(self) -> str:
-        return self._kb.vocab.strings[self._entity_id]
+        return self._kb.vocab.strings[self._entity_hash]
 
     @property
     def entity_freq(self) -> float:

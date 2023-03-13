@@ -82,7 +82,7 @@ class Warnings(metaclass=ErrorsWithCodes):
             "ignoring the duplicate entry.")
     W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
             "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
-    W024 = ("Entity '{entity}' - mention '{mention}' combination already exists in "
+    W024 = ("Entity '{entity}' - alias '{alias}' combination already exists in "
             "the Knowledge Base.")
     W026 = ("Unable to set all sentence boundaries from dependency parses. If "
             "you are constructing a parse tree incrementally by setting "

@@ -11,7 +11,7 @@ from ..errors import Errors
 
 
 cdef class KnowledgeBase:
-    """A `KnowledgeBase` instance stores unique identifiers for entities and their textual mentions,
+    """A `KnowledgeBase` instance stores unique identifiers for entities and their textual aliases,
     to support entity linking of named entities to real-world concepts.
     This is an abstract class and requires its operations to be implemented.
 
