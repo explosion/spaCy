@@ -480,7 +480,7 @@ class EntityLinker(TrainablePipe):
                         sentences.index(sents[0]),
                         sentences.index(sents[-1]),
                     )
-                    assert sent_indices[-1] >= sent_indices[0] >= 0
+                    assert sent_indices[1] >= sent_indices[0] >= 0
 
                     if self.incl_context:
                         # get n_neighbour sentences, clipped to the length of the document
