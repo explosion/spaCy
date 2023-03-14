@@ -1254,19 +1254,19 @@ be provided.
 > $ python -m spacy find-threshold my_nlp data.spacy spancat threshold spans_sc_f
 > ```
 
-| Name                    | Description                                                                                                                                                                          |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `model`                 | Pipeline to evaluate. Can be a package or a path to a data directory. ~~str (positional)~~                                                                                           |
-| `data_path`             | Path to file with DocBin with docs to use for threshold search. ~~Path (positional)~~                                                                                                |
-| `pipe_name`             | Name of pipe to examine thresholds for. ~~str (positional)~~                                                                                                                         |
-| `threshold_key`         | Key of threshold attribute in component's configuration. ~~str (positional)~~                                                                                                        |
-| `scores_key`            | Name of score to metric to optimize. ~~str (positional)~~                                                                                                                            |
-| `--n_trials`, `-n`      | Number of trials to determine optimal thresholds. ~~int (option)~~                                                                                                                   |
-| `--code`, `-c`          | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~ |
-| `--gpu-id`, `-g`        | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                                       |
-| `--gold-preproc`, `-G`  | Use gold preprocessing. ~~bool (flag)~~                                                                                                                                              |
-| `--silent`, `-V`, `-VV` | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                                       |
-| `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
+| Name                     | Description                                                                                                                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`                  | Pipeline to evaluate. Can be a package or a path to a data directory. ~~str (positional)~~                                                                                           |
+| `data_path`              | Path to file with DocBin with docs to use for threshold search. ~~Path (positional)~~                                                                                                |
+| `pipe_name`              | Name of pipe to examine thresholds for. ~~str (positional)~~                                                                                                                         |
+| `threshold_key`          | Key of threshold attribute in component's configuration. ~~str (positional)~~                                                                                                        |
+| `scores_key`             | Name of score to metric to optimize. ~~str (positional)~~                                                                                                                            |
+| `--n_trials`, `-n`       | Number of trials to determine optimal thresholds. ~~int (option)~~                                                                                                                   |
+| `--code`, `-c`           | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~ |
+| `--gpu-id`, `-g`         | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                                       |
+| `--gold-preproc`, `-G`   | Use gold preprocessing. ~~bool (flag)~~                                                                                                                                              |
+| `--verbose`, `-V`, `-VV` | Display more information for debugging purposes. ~~bool (flag)~~                                                                                                                     |
+| `--help`, `-h`           | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 
 ## assemble {id="assemble",tag="command"}
 
