@@ -476,8 +476,11 @@ class EntityLinker(TrainablePipe):
                 for j, ent in enumerate(ent_batch):
                     assert hasattr(ent, "sents")
                     sents = list(ent.sents)
-                    sent_indices = (sentences.index(sents[0]), sentences.index(sents[-1]))
-                    assert all([si >= 0 for si in sent_indices])
+                    sent_indices = (
+                        sentences.index(sents[0]),
+                        sentences.index(sents[-1]),
+                    )
+                    assert sent_indices[-1] >= sent_indices[0] >= 0
 
                     if self.incl_context:
                         # get n_neighbour sentences, clipped to the length of the document
