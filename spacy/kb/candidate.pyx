@@ -49,7 +49,7 @@ cdef class InMemoryCandidate(Candidate):
         self,
         kb: InMemoryLookupKB,
         entity_hash: int,
-        mention_hash: int,
+        alias_hash: int,
         entity_vector: vector[float],
         prior_prob: float,
         entity_freq: float
@@ -59,9 +59,9 @@ cdef class InMemoryCandidate(Candidate):
         entity_id (int): Entity ID as hash that can be looked up with InMemoryKB.vocab.strings.__getitem__().
         entity_freq (int): Entity frequency in KB corpus.
         entity_vector (List[float]): Entity embedding.
-        mention_hash (int): Mention hash.
-        prior_prob (float): Prior probability of entity for this mention. I. e. the probability that, independent of
-            the context, this mention - which matches one of this entity's aliases - resolves to one this entity.
+        alias_hash (int): Alias hash.
+        prior_prob (float): Prior probability of entity for this alias. I. e. the probability that, independent of
+            the context, this alias - which matches one of this entity's aliases - resolves to one this entity.
         """
         super().__init__()
 
@@ -69,7 +69,7 @@ cdef class InMemoryCandidate(Candidate):
         self._entity_vector = entity_vector
         self._prior_prob = prior_prob
         self._kb = kb
-        self._mention = mention_hash
+        self._mention = alias_hash
         self._entity_freq = entity_freq
 
     @property
@@ -82,7 +82,7 @@ cdef class InMemoryCandidate(Candidate):
 
     @property
     def prior_prob(self) -> float:
-        """RETURNS (float): Prior probability that this mention, which matches one of this entity's aliases, resolves to
+        """RETURNS (float): Prior probability that this alias, which matches one of this entity's synonyms, resolves to
         this entity."""
         return self._prior_prob
 
