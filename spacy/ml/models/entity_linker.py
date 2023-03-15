@@ -124,7 +124,7 @@ def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
     Return candidate entities for a given mention and fetching appropriate entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
     mention (Span): Entity mention for which to identify candidates.
-    RETURNS (Iterable[InMemoryCandidate]): Identified candidates.
+    RETURNS (Iterable[Candidate]): Identified candidates.
     """
     return kb.get_candidates(mention)
 
