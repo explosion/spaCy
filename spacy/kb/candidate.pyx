@@ -64,7 +64,7 @@ cdef class InMemoryCandidate(Candidate):
         self._entity_vector = entity_vector
         self._prior_prob = prior_prob
         self._kb = kb
-        self._alias = alias_hash
+        self._alias_hash = alias_hash
         self._entity_freq = entity_freq
 
     @property
@@ -84,7 +84,7 @@ cdef class InMemoryCandidate(Candidate):
     @property
     def alias(self) -> str:
         """RETURNS (str): Alias."""
-        return self._kb.vocab.strings[self._alias]
+        return self._kb.vocab.strings[self._alias_hash]
 
     @property
     def entity_id_(self) -> str:
