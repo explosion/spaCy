@@ -136,6 +136,6 @@ def get_candidates_batch(
     Return candidate entities for the given mentions and fetching appropriate entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
     mention (Iterable[Span]): Entity mentions for which to identify candidates.
-    RETURNS (Iterable[Iterable[InMemoryCandidate]]): Identified candidates.
+    RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
     """
     return kb.get_candidates_batch(mentions)
