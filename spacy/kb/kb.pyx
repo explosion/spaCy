@@ -32,9 +32,10 @@ cdef class KnowledgeBase:
 
     def get_candidates_batch(self, mentions: Iterable[Span]) -> Iterable[Iterable[Candidate]]:
         """
-        Return candidate entities for specified texts. Each candidate defines the entity, the original mention,
-        and the prior probability of this mention resolving to that entity.
-        If no candidate is found for a given text, an empty list is returned.
+        Return candidate entities for specified mention texts. Each candidate defines at least the entity and the
+        entity's embedding vector. Depending on the KB implementation, further properties - such as the prior
+        probability of the specified mention text resolving to that entity - might be included.
+        If the no candidates are found for a given mention text, an empty list is returned.
         mentions (Iterable[Span]): Mentions for which to get candidates.
         RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
         """
@@ -42,10 +43,10 @@ cdef class KnowledgeBase:
 
     def get_candidates(self, mention: Span) -> Iterable[Candidate]:
         """
-        Return candidate entities for specified text. Each candidate defines at least the entity and the entity's
-        embedding vector. Depending on the KB implementation, further properties - such as the prior probability of the
-        specified mention text resolving to that entity - might be included.
-        If the no candidate is found for a given text, an empty list is returned.
+        Return candidate entities for  specified mention text. Each candidate defines at least the entity and the
+        entity's embedding vector. Depending on the KB implementation, further properties - such as the prior
+        probability of the specified mention text resolving to that entity - might be included.
+        If the no candidate is found for the given mention text, an empty list is returned.
         mention (Span): Mention for which to get candidates.
         RETURNS (Iterable[Candidate]): Identified candidates.
         """
