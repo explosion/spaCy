@@ -3248,7 +3248,7 @@
                 "    (\"i like movies on wednesdays\", \"Positive\"),",
                 "    (\"i find your argument ridiculous\", \"Negative\"),",
                 "    (\"soda with straws are my favorite\", \"Positive\"),",
-                "]",
+                "]"
             ],
             "thumb": "https://raw.githubusercontent.com/sloev/sentimental-onix/master/.github/onix.webp",
             "author": "Johannes Valbjørn",
