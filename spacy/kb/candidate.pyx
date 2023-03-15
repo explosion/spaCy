@@ -32,11 +32,6 @@ cdef class Candidate:
         raise NotImplementedError
 
     @property
-    def mention(self) -> str:
-        """RETURNS (str): Mention."""
-        raise NotImplementedError
-
-    @property
     def entity_vector(self) -> vector[float]:
         """RETURNS (vector[float]): Entity vector."""
         raise NotImplementedError
@@ -69,7 +64,7 @@ cdef class InMemoryCandidate(Candidate):
         self._entity_vector = entity_vector
         self._prior_prob = prior_prob
         self._kb = kb
-        self._mention = alias_hash
+        self._alias = alias_hash
         self._entity_freq = entity_freq
 
     @property
@@ -87,8 +82,9 @@ cdef class InMemoryCandidate(Candidate):
         return self._prior_prob
 
     @property
-    def mention(self) -> str:
-        return self._kb.vocab.strings[self._mention]
+    def alias(self) -> str:
+        """RETURNS (str): Alias."""
+        return self._kb.vocab.strings[self._alias]
 
     @property
     def entity_id_(self) -> str:

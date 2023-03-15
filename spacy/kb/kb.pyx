@@ -42,8 +42,9 @@ cdef class KnowledgeBase:
 
     def get_candidates(self, mention: Span) -> Iterable[Candidate]:
         """
-        Return candidate entities for specified text. Each candidate defines the entity, the original mention,
-        and the prior probability of that mention resolving to that entity.
+        Return candidate entities for specified text. Each candidate defines at least the entity and the entity's
+        embedding vector. Depending on the KB implementation, further properties - such as the prior probability of the
+        specified mention text resolving to that entity - might be included.
         If the no candidate is found for a given text, an empty list is returned.
         mention (Span): Mention for which to get candidates.
         RETURNS (Iterable[Candidate]): Identified candidates.
