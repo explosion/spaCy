@@ -3221,7 +3221,7 @@
             "slogan": "Use onnx for sentiment models",
             "description": "spacy pipeline component for sentiment analysis using onnx",
             "github": "sloev/sentimental-onix",
-            "pip": "sentimental-onixh",
+            "pip": "sentimental-onix",
             "code_example": [
                 "import spacy",
                 "from sentimental_onix import pipeline",
