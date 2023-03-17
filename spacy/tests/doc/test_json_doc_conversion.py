@@ -313,7 +313,7 @@ def test_json_to_doc_spans(doc):
     """Test that Doc.from_json() includes correct.spans."""
     doc.spans["test"] = [
         Span(doc, 0, 2, label="test"),
-        Span(doc, 0, 1, label="test", kb_id=7),
+        Span(doc, 0, 1, label="test", kb_id="7"),
     ]
     json_doc = doc.to_json()
     new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)

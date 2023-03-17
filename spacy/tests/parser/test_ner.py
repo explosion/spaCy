@@ -599,22 +599,22 @@ def test_overfitting_IO(use_upper):
     # test that kb_id is preserved
     test_text = "I like London and London."
     doc = nlp.make_doc(test_text)
-    doc.ents = [Span(doc, 2, 3, label="LOC", kb_id=1234)]
+    doc.ents = [Span(doc, 2, 3, label="LOC", kb_id="1234")]
     ents = doc.ents
     assert len(ents) == 1
     assert ents[0].text == "London"
     assert ents[0].label_ == "LOC"
-    assert ents[0].kb_id == 1234
+    assert ents[0].kb_id_ == "1234"
     doc = nlp.get_pipe("ner")(doc)
     ents = doc.ents
     assert len(ents) == 2
     assert ents[0].text == "London"
     assert ents[0].label_ == "LOC"
-    assert ents[0].kb_id == 1234
-    # ent added by ner has kb_id == 0
+    assert ents[0].kb_id_ == "1234"
+    # ent added by ner has kb_id == ""
     assert ents[1].text == "London"
     assert ents[1].label_ == "LOC"
-    assert ents[1].kb_id == 0
+    assert ents[1].kb_id_ == ""
 
 
 def test_beam_ner_scores():

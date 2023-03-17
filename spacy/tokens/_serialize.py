@@ -124,6 +124,8 @@ class DocBin:
         for key, group in doc.spans.items():
             for span in group:
                 self.strings.add(span.label_)
+                self.strings.add(span.kb_id_)
+                self.strings.add(span.id_)
 
     def get_docs(self, vocab: Vocab) -> Iterator[Doc]:
         """Recover Doc objects from the annotations, using the given vocab.

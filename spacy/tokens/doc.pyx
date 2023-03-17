@@ -1350,6 +1350,8 @@ cdef class Doc:
         for group in self.spans.values():
             for span in group:
                 strings.add(span.label_)
+                strings.add(span.kb_id_)
+                strings.add(span.id_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
