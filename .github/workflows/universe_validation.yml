@@ -1,4 +1,4 @@
-name: tests
+name: universe validation
 
 on:
   push:
