@@ -212,8 +212,8 @@ class Warnings(metaclass=ErrorsWithCodes):
     # v4 warning strings
     W400 = ("`use_upper=False` is ignored, the upper layer is always enabled")
     W401 = ("`incl_prior is True`, but the selected knowledge base type {kb_type} doesn't support prior probability "
-            "lookups (`.supports_prior_probs is False`). If your KB does support prior probability lookups, make sure "
-            "to return True in `.supports_prior_probs`.")
+            "lookups so this setting will be ignored. If your KB does support prior probability lookups, make sure "
+            "to return `True` in `.supports_prior_probs`.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
