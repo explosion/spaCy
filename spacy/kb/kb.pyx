@@ -32,10 +32,10 @@ cdef class KnowledgeBase:
 
     def get_candidates_batch(self, mentions: Iterable[Span]) -> Iterable[Iterable[Candidate]]:
         """
-        Return candidate entities for specified mention texts. Each candidate defines at least the entity and the
+        Return candidate entities for a specified Span mention. Each candidate defines at least the entity and the
         entity's embedding vector. Depending on the KB implementation, further properties - such as the prior
         probability of the specified mention text resolving to that entity - might be included.
-        If the no candidates are found for a given mention text, an empty list is returned.
+        If no candidates are found for a given mention, an empty list is returned.
         mentions (Iterable[Span]): Mentions for which to get candidates.
         RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
         """
