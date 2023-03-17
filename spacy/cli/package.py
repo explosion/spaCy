@@ -252,7 +252,7 @@ def get_third_party_dependencies(
                     raise regerr from None
             module_name = func_info.get("module")  # type: ignore[attr-defined]
             if module_name:  # the code is part of a module, not a --code file
-                modules.add(func_info["module"].split(".")[0])  # type: ignore[index]
+                modules.add(func_info["module"].split(".")[0])  # type: ignore[union-attr]
     dependencies = []
     for module_name in modules:
         if module_name in distributions:

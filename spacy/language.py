@@ -106,7 +106,7 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
 
 @registry.misc("spacy.LookupsDataLoader.v1")
 def load_lookups_data(lang, tables):
-    util.logger.debug(f"Loading lookups from spacy-lookups-data: {tables}")
+    util.logger.debug("Loading lookups from spacy-lookups-data: %s", tables)
     lookups = load_lookups(lang=lang, tables=tables)
     return lookups
 
@@ -174,8 +174,7 @@ class Language:
         if not isinstance(vocab, Vocab) and vocab is not True:
             raise ValueError(Errors.E918.format(vocab=vocab, vocab_type=type(Vocab)))
         if vocab is True:
-            vectors_name = meta.get("vectors", {}).get("name")
-            vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)
+            vocab = create_vocab(self.lang, self.Defaults)
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
@@ -229,7 +228,6 @@ class Language:
             "width": self.vocab.vectors_length,
             "vectors": len(self.vocab.vectors),
             "keys": self.vocab.vectors.n_keys,
-            "name": self.vocab.vectors.name,
             "mode": self.vocab.vectors.mode,
         }
         self._meta["labels"] = dict(self.pipe_labels)
@@ -2074,7 +2072,7 @@ class Language:
         pipe = self.get_pipe(pipe_name)
         pipe_cfg = self._pipe_configs[pipe_name]
         if listeners:
-            util.logger.debug(f"Replacing listeners of component '{pipe_name}'")
+            util.logger.debug("Replacing listeners of component '%s'", pipe_name)
             if len(list(listeners)) != len(pipe_listeners):
                 # The number of listeners defined in the component model doesn't
                 # match the listeners to replace, so we won't be able to update
@@ -2197,9 +2195,6 @@ class Language:
             if path.exists():
                 data = srsly.read_json(path)
                 self.meta.update(data)
-                # self.meta always overrides meta["vectors"] with the metadata
-                # from self.vocab.vectors, so set the name directly
-                self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
         def deserialize_vocab(path: Path) -> None:
             if path.exists():
@@ -2268,9 +2263,6 @@ class Language:
         def deserialize_meta(b):
             data = srsly.json_loads(b)
             self.meta.update(data)
-            # self.meta always overrides meta["vectors"] with the metadata
-            # from self.vocab.vectors, so set the name directly
-            self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
         deserializers: Dict[str, Callable[[bytes], Any]] = {}
         deserializers["config.cfg"] = lambda b: self.config.from_bytes(

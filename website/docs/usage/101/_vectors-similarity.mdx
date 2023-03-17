@@ -22,16 +22,19 @@ array([2.02280000e-01,  -7.66180009e-02,   3.70319992e-01,
 <Infobox title="Important note" variant="warning">
 
 To make them compact and fast, spaCy's small [pipeline packages](/models) (all
-packages that end in `sm`) **don't ship with word vectors**, and only include
-context-sensitive **tensors**. This means you can still use the `similarity()`
-methods to compare documents, spans and tokens – but the result won't be as
-good, and individual tokens won't have any vectors assigned. So in order to use
-_real_ word vectors, you need to download a larger pipeline package:
+packages that end in `sm`) **don't ship with word vectors**. In order to use
+`similarity()`, you need to download a larger pipeline package that includes
+vectors:
 
 ```diff
 - python -m spacy download en_core_web_sm
-+ python -m spacy download en_core_web_lg
++ python -m spacy download en_core_web_md
 ```
+
+In spaCy v3 and earlier, small pipeline packages supported `similarity()` by
+backing off to context-sensitive tensors from the `tok2vec` component. These
+tensors do not work well for this purpose and this backoff has been removed in
+spaCy v4.
 
 </Infobox>
 

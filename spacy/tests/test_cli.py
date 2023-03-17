@@ -2,7 +2,6 @@ import os
 import math
 from collections import Counter
 from typing import Tuple, List, Dict, Any
-import pkg_resources
 import time
 from pathlib import Path
 
@@ -1126,6 +1125,7 @@ def test_cli_find_threshold(capsys):
                 )
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "reqs,output",
     [
@@ -1158,6 +1158,8 @@ def test_cli_find_threshold(capsys):
     ],
 )
 def test_project_check_requirements(reqs, output):
+    import pkg_resources
+
     # excessive guard against unlikely package name
     try:
         pkg_resources.require("spacyunknowndoesnotexist12345")
