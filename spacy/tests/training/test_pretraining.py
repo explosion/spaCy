@@ -360,7 +360,9 @@ def test_pretrain_default_vectors():
     create_pretrain_vectors(1, 1, "cosine")(nlp.vocab, nlp.get_pipe("tok2vec").model)
 
     # floret vectors are supported
-    nlp.vocab.vectors = Vectors(data=get_current_ops().xp.zeros((10, 10)), mode="floret", hash_count=1)
+    nlp.vocab.vectors = Vectors(
+        data=get_current_ops().xp.zeros((10, 10)), mode="floret", hash_count=1
+    )
     create_pretrain_vectors(1, 1, "cosine")(nlp.vocab, nlp.get_pipe("tok2vec").model)
 
     # error for no vectors
