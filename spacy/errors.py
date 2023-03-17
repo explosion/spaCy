@@ -356,7 +356,7 @@ class Errors(metaclass=ErrorsWithCodes):
             "match.")
     E083 = ("Error setting extension: only one of `default`, `method`, or "
             "`getter` (plus optional `setter`) is allowed. Got: {nr_defined}")
-    E084 = ("Error assigning label ID {label} to span: not in StringStore.")
+    E084 = ("Error assigning {name} ID '{value}' to span: not in StringStore.")
     E085 = ("Can't create lexeme for string '{string}'.")
     E087 = ("Unknown displaCy style: {style}.")
     E088 = ("Text of length {length} exceeds maximum of {max_length}. The "

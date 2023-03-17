@@ -456,6 +456,16 @@ def test_span_string_label_id(doc):
     assert span.id == doc.vocab.strings["Q342"]
 
 
+def test_span_attrs_in_strings(doc):
+    unusual_label = "test_spans_attrs_in_strings_label"
+    with pytest.raises(ValueError):
+        span = Span(doc, 0, 1, label=doc.vocab.strings[unusual_label])
+    with pytest.raises(ValueError):
+        span = Span(doc, 0, 1, kb_id=doc.vocab.strings[unusual_label])
+    with pytest.raises(ValueError):
+        span = Span(doc, 0, 1, span_id=doc.vocab.strings[unusual_label])
+
+
 def test_span_attrs_writable(doc):
     span = Span(doc, 0, 1)
     span.label_ = "label"

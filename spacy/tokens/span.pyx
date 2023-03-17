@@ -107,7 +107,11 @@ cdef class Span:
         if isinstance(span_id, str):
             span_id = doc.vocab.strings.add(span_id)
         if label not in doc.vocab.strings:
-            raise ValueError(Errors.E084.format(label=label))
+            raise ValueError(Errors.E084.format(name="label", value=label))
+        if kb_id not in doc.vocab.strings:
+            raise ValueError(Errors.E084.format(name="kb_id", value=kb_id))
+        if span_id not in doc.vocab.strings:
+            raise ValueError(Errors.E084.format(name="span_id", value=span_id))
 
         start_char = doc[start].idx if start < doc.length else len(doc.text)
         if start == end:
