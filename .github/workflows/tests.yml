@@ -21,21 +21,18 @@ on:
       - ".github/workflows/**"
   pull_request:
     types: [opened, synchronize, reopened, edited]
-    paths:
-      - "**"
-      - "!*.md"
-      - "!*.mdx"
-      - "!website/docs/**"
-      - "!website/src/**"
-      - "!website/meta/*.tsx"
-      - "!website/meta/*.mjs"
-      - "!website/meta/languages.json"
-      - "!website/meta/site.json"
-      - "!website/meta/sidebars.json"
-      - "!website/meta/type-annotations.json"
-      - "!website/pages/**"
-      - "!.github/workflows/**"
-      - ".github/workflows/tests.yml"
+    paths-ignore:
+      - "*.md"
+      - "*.mdx"
+      - "website/docs/**"
+      - "website/src/**"
+      - "website/meta/*.tsx"
+      - "website/meta/*.mjs"
+      - "website/meta/languages.json"
+      - "website/meta/site.json"
+      - "website/meta/sidebars.json"
+      - "website/meta/type-annotations.json"
+      - "website/pages/**"
 
 jobs:
   validate:
