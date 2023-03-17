@@ -9,30 +9,14 @@ on:
     paths-ignore:
       - "*.md"
       - "*.mdx"
-      - "website/docs/**"
-      - "website/src/**"
-      - "website/meta/*.tsx"
-      - "website/meta/*.mjs"
-      - "website/meta/languages.json"
-      - "website/meta/site.json"
-      - "website/meta/sidebars.json"
-      - "website/meta/type-annotations.json"
-      - "website/pages/**"
+      - "website/**"
       - ".github/workflows/**"
   pull_request:
     types: [opened, synchronize, reopened, edited]
     paths-ignore:
       - "*.md"
       - "*.mdx"
-      - "website/docs/**"
-      - "website/src/**"
-      - "website/meta/*.tsx"
-      - "website/meta/*.mjs"
-      - "website/meta/languages.json"
-      - "website/meta/site.json"
-      - "website/meta/sidebars.json"
-      - "website/meta/type-annotations.json"
-      - "website/pages/**"
+      - "website/**"
 
 jobs:
   validate:
@@ -56,9 +40,6 @@ jobs:
         run: |
           python -m pip install flake8==5.0.4
           python -m flake8 spacy --count --select=E901,E999,F821,F822,F823,W605 --show-source --statistics
-      - name: Validate website/meta/universe.json
-        run: |
-          python .github/validate_universe_json.py website/meta/universe.json
   tests:
     name: Test
     needs: Validate
