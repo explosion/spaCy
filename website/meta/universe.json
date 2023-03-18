@@ -3219,7 +3219,7 @@
             "id": "sentimental-onix",
             "title": "Sentimental Onix",
             "slogan": "Use onnx for sentiment models",
-            "description": "spacy pipeline component for sentiment analysis using onnx",
+            "description": "spaCy pipeline component for sentiment analysis using onnx",
             "github": "sloev/sentimental-onix",
             "pip": "sentimental-onix",
             "code_example": [
