@@ -3223,6 +3223,8 @@
             "github": "sloev/sentimental-onix",
             "pip": "sentimental-onix",
             "code_example": [
+                "# Download model:",
+                "#   python -m sentimental_onix download en",
                 "import spacy",
                 "from sentimental_onix import pipeline",
                 "",
