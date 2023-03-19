@@ -9,6 +9,7 @@ from spacy.lang.en import English
 from spacy.lang.en.syntax_iterators import noun_chunks
 from spacy.language import Language
 from spacy.pipeline import TrainablePipe
+from spacy.strings import StringStore
 from spacy.tokens import Doc
 from spacy.training import Example
 from spacy.util import SimpleFrozenList, get_arg_names, make_tempdir
@@ -131,7 +132,7 @@ def test_issue5458():
     # Test that the noun chuncker does not generate overlapping spans
     # fmt: off
     words = ["In", "an", "era", "where", "markets", "have", "brought", "prosperity", "and", "empowerment", "."]
-    vocab = Vocab(strings=words)
+    vocab = Vocab(strings=StringStore(words))
     deps = ["ROOT", "det", "pobj", "advmod", "nsubj", "aux", "relcl", "dobj", "cc", "conj", "punct"]
     pos = ["ADP", "DET", "NOUN", "ADV", "NOUN", "AUX", "VERB", "NOUN", "CCONJ", "NOUN", "PUNCT"]
     heads = [0, 2, 0, 9, 6, 6, 2, 6, 7, 7, 0]
