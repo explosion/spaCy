@@ -10,9 +10,9 @@ version: 3.5
 
 The `InMemoryLookupKB` class inherits from [`KnowledgeBase`](/api/kb) and
 implements all of its methods. It stores all KB data in-memory and generates
-[`Candidate`](/api/kb#candidate) objects by exactly matching mentions with
-entity names. It's highly optimized for both a low memory footprint and speed of
-retrieval.
+[`InMemoryCandidate`](/api/kb#candidate) objects by exactly matching mentions
+with entity names. It's highly optimized for both a low memory footprint and
+speed of retrieval.
 
 ## InMemoryLookupKB.\_\_init\_\_ {id="init",tag="method"}
 
@@ -156,7 +156,7 @@ Get a list of all aliases in the knowledge base.
 ## InMemoryLookupKB.get_candidates {id="get_candidates",tag="method"}
 
 Given a certain textual mention as input, retrieve a list of candidate entities
-of type [`Candidate`](/api/kb#candidate). Wraps
+of type [`InMemoryCandidate`](/api/kb#candidate). Wraps
 [`get_alias_candidates()`](/api/inmemorylookupkb#get_alias_candidates).
 
 > #### Example
@@ -168,10 +168,10 @@ of type [`Candidate`](/api/kb#candidate). Wraps
 > candidates = kb.get_candidates(doc[0:2])
 > ```
 
-| Name        | Description                                                          |
-| ----------- | -------------------------------------------------------------------- |
-| `mention`   | The textual mention or alias. ~~Span~~                               |
-| **RETURNS** | An iterable of relevant `Candidate` objects. ~~Iterable[Candidate]~~ |
+| Name        | Description                                                                          |
+| ----------- | ------------------------------------------------------------------------------------ |
+| `mention`   | The textual mention or alias. ~~Span~~                                               |
+| **RETURNS** | An iterable of relevant `InMemoryCandidate` objects. ~~Iterable[InMemoryCandidate]~~ |
 
 ## InMemoryLookupKB.get_candidates_batch {id="get_candidates_batch",tag="method"}
 
@@ -194,26 +194,10 @@ to you.
 > candidates = kb.get_candidates((doc[0:2], doc[3:]))
 > ```
 
-| Name        | Description                                                                                  |
-| ----------- | -------------------------------------------------------------------------------------------- |
-| `mentions`  | The textual mention or alias. ~~Iterable[Span]~~                                             |
-| **RETURNS** | An iterable of iterable with relevant `Candidate` objects. ~~Iterable[Iterable[Candidate]]~~ |
-
-## InMemoryLookupKB.get_alias_candidates {id="get_alias_candidates",tag="method"}
-
-Given a certain textual mention as input, retrieve a list of candidate entities
-of type [`Candidate`](/api/kb#candidate).
-
-> #### Example
->
-> ```python
-> candidates = kb.get_alias_candidates("Douglas")
-> ```
-
-| Name        | Description                                                   |
-| ----------- | ------------------------------------------------------------- |
-| `alias`     | The textual mention or alias. ~~str~~                         |
-| **RETURNS** | The list of relevant `Candidate` objects. ~~List[Candidate]~~ |
+| Name        | Description                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------ |
+| `mentions`  | The textual mentions. ~~Iterable[Span]~~                                                                     |
+| **RETURNS** | An iterable of iterable with relevant `InMemoryCandidate` objects. ~~Iterable[Iterable[InMemoryCandidate]]~~ |
 
 ## InMemoryLookupKB.get_vector {id="get_vector",tag="method"}
 

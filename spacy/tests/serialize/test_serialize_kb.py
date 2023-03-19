@@ -66,19 +66,21 @@ def _check_kb(kb):
         assert alias_string not in kb.get_alias_strings()
 
     # check candidates & probabilities
-    candidates = sorted(kb.get_alias_candidates("double07"), key=lambda x: x.entity_)
+    candidates = sorted(
+        kb._get_alias_candidates("double07"), key=lambda x: x.entity_id_
+    )
     assert len(candidates) == 2
 
-    assert candidates[0].entity_ == "Q007"
+    assert candidates[0].entity_id_ == "Q007"
     assert 6.999 < candidates[0].entity_freq < 7.01
     assert candidates[0].entity_vector == [0, 0, 7]
-    assert candidates[0].alias_ == "double07"
+    assert candidates[0].alias == "double07"
     assert 0.899 < candidates[0].prior_prob < 0.901
 
-    assert candidates[1].entity_ == "Q17"
+    assert candidates[1].entity_id_ == "Q17"
     assert 1.99 < candidates[1].entity_freq < 2.01
     assert candidates[1].entity_vector == [7, 1, 0]
-    assert candidates[1].alias_ == "double07"
+    assert candidates[1].alias == "double07"
     assert 0.099 < candidates[1].prior_prob < 0.101
 
 

@@ -103,23 +103,6 @@ to you.
 | `mentions`  | The textual mention or alias. ~~Iterable[Span]~~                                             |
 | **RETURNS** | An iterable of iterable with relevant `Candidate` objects. ~~Iterable[Iterable[Candidate]]~~ |
 
-## KnowledgeBase.get_alias_candidates {id="get_alias_candidates",tag="method"}
-
-<Infobox variant="warning">
-  This method is _not_ available from spaCy 3.5 onwards.
-</Infobox>
-
-From spaCy 3.5 on `KnowledgeBase` is an abstract class (with
-[`InMemoryLookupKB`](/api/inmemorylookupkb) being a drop-in replacement) to
-allow more flexibility in customizing knowledge bases. Some of its methods were
-moved to [`InMemoryLookupKB`](/api/inmemorylookupkb) during this refactoring,
-one of those being `get_alias_candidates()`. This method is now available as
-[`InMemoryLookupKB.get_alias_candidates()`](/api/inmemorylookupkb#get_alias_candidates).
-Note:
-[`InMemoryLookupKB.get_candidates()`](/api/inmemorylookupkb#get_candidates)
-defaults to
-[`InMemoryLookupKB.get_alias_candidates()`](/api/inmemorylookupkb#get_alias_candidates).
-
 ## KnowledgeBase.get_vector {id="get_vector",tag="method"}
 
 Given a certain entity ID, retrieve its pretrained entity vector.
@@ -190,25 +173,27 @@ Restore the state of the knowledge base from a given directory. Note that the
 | `exclude`   | List of components to exclude. ~~Iterable[str]~~                                                |
 | **RETURNS** | The modified `KnowledgeBase` object. ~~KnowledgeBase~~                                          |
 
-## Candidate {id="candidate",tag="class"}
+## InMemoryCandidate {id="candidate",tag="class"}
 
-A `Candidate` object refers to a textual mention (alias) that may or may not be
-resolved to a specific entity from a `KnowledgeBase`. This will be used as input
-for the entity linking algorithm which will disambiguate the various candidates
-to the correct one. Each candidate `(alias, entity)` pair is assigned to a
-certain prior probability.
+An `InMemoryCandidate` object refers to a textual mention (alias) that may or
+may not be resolved to a specific entity from a `KnowledgeBase`. This will be
+used as input for the entity linking algorithm which will disambiguate the
+various candidates to the correct one. Each candidate `(alias, entity)` pair is
+assigned to a certain prior probability.
 
-### Candidate.\_\_init\_\_ {id="candidate-init",tag="method"}
+### InMemoryCandidate.\_\_init\_\_ {id="candidate-init",tag="method"}
 
-Construct a `Candidate` object. Usually this constructor is not called directly,
-but instead these objects are returned by the `get_candidates` method of the
-[`entity_linker`](/api/entitylinker) pipe.
+Construct an `InMemoryCandidate` object. Usually this constructor is not called
+directly, but instead these objects are returned by the `get_candidates` method
+of the [`entity_linker`](/api/entitylinker) pipe.
 
-> #### Example
+> #### Example```python
 >
-> ```python
-> from spacy.kb import Candidate
-> candidate = Candidate(kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob)
+> from spacy.kb import InMemoryCandidate candidate = InMemoryCandidate(kb,
+> entity_hash, entity_freq, entity_vector, alias_hash, prior_prob)
+>
+> ```
+>
 > ```
 
 | Name          | Description                                                               |
@@ -216,10 +201,10 @@ but instead these objects are returned by the `get_candidates` method of the
 | `kb`          | The knowledge base that defined this candidate. ~~KnowledgeBase~~         |
 | `entity_hash` | The hash of the entity's KB ID. ~~int~~                                   |
 | `entity_freq` | The entity frequency as recorded in the KB. ~~float~~                     |
-| `alias_hash`  | The hash of the textual mention or alias. ~~int~~                         |
+| `alias_hash`  | The hash of the entity alias. ~~int~~                                     |
 | `prior_prob`  | The prior probability of the `alias` referring to the `entity`. ~~float~~ |
 
-## Candidate attributes {id="candidate-attributes"}
+## InMemoryCandidate attributes {id="candidate-attributes"}
 
 | Name            | Description                                                              |
 | --------------- | ------------------------------------------------------------------------ |
