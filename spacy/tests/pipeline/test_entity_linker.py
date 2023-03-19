@@ -7,7 +7,7 @@ from thinc.types import Ragged
 from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
-from spacy.kb import InMemoryCandidate, InMemoryLookupKB, KnowledgeBase
+from spacy.kb import Candidate, InMemoryLookupKB, KnowledgeBase
 from spacy.lang.en import English
 from spacy.ml import load_kb
 from spacy.ml.models.entity_linker import build_span_maker, get_candidates
