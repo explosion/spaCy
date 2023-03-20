@@ -510,13 +510,13 @@ def test_el_pipe_configuration(nlp):
 
     @registry.misc("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[
-        [InMemoryLookupKB, "Span"], Iterable[InMemoryCandidate]
+        [InMemoryLookupKB, "Span"], Iterable[Candidate]
     ]:
         return get_lowercased_candidates
 
     @registry.misc("spacy.LowercaseCandidateBatchGenerator.v1")
     def create_candidates_batch() -> Callable[
-        [InMemoryLookupKB, Iterable["Span"]], Iterable[Iterable[InMemoryCandidate]]
+        [InMemoryLookupKB, Iterable["Span"]], Iterable[Iterable[Candidate]]
     ]:
         return get_lowercased_candidates_batch
 
