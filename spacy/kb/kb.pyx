@@ -32,11 +32,12 @@ cdef class KnowledgeBase:
 
     def get_candidates(self, mentions: Iterator[SpanGroup]) -> Iterator[Iterable[Iterable[Candidate]]]:
         """
-        Return candidate entities for mentions stored in `ent` attribute in passed docs. Each candidate defines the
-        entity, the original alias, and the prior probability of that alias resolving to that entity.
-        If no candidate is found for a given mention, an empty list is returned.
-        mentions (Iterator[SpanGroup]): Mentions per doc as SpanGroup instance.
-        RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
+        Return candidate entities for a specified Span mention. Each candidate defines at least the entity and the
+        entity's embedding vector. Depending on the KB implementation, further properties - such as the prior
+        probability of the specified mention text resolving to that entity - might be included.
+        If no candidates are found for a given mention, an empty list is returned.
+        mentions (Iterable[SpangGroup]): Mentions for which to get candidates.
+        RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
         """
         raise NotImplementedError(
             Errors.E1045.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)
@@ -95,4 +96,11 @@ cdef class KnowledgeBase:
         """
         raise NotImplementedError(
             Errors.E1045.format(parent="KnowledgeBase", method="from_disk", name=self.__name__)
+        )
+
+    @property
+    def supports_prior_probs(self) -> bool:
+        """RETURNS (bool): Whether this KB type supports looking up prior probabilities for entity mentions."""
+        raise NotImplementedError(
+            Errors.E1045.format(parent="KnowledgeBase", method="supports_prior_probs", name=self.__name__)
         )

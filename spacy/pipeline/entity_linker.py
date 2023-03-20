@@ -1,4 +1,6 @@
+import warnings
 from typing import (
+    cast,
     Optional,
     Iterable,
     Callable,
@@ -9,7 +11,6 @@ from typing import (
     Any,
     Iterator,
 )
-from typing import cast
 from numpy import dtype
 from thinc.types import Floats1d, Floats2d, Ints1d, Ragged
 from pathlib import Path
@@ -27,7 +28,7 @@ from .trainable_pipe import TrainablePipe
 from ..language import Language
 from ..vocab import Vocab
 from ..training import Example, validate_examples, validate_get_examples
-from ..errors import Errors
+from ..errors import Errors, Warnings
 from ..util import SimpleFrozenList, registry
 from .. import util
 from ..scorer import Scorer
@@ -120,28 +121,9 @@ def make_entity_linker(
         prediction is discarded. If None, predictions are not filtered by any threshold.
     save_activations (bool): save model activations in Doc when annotating.
     """
-
     if not model.attrs.get("include_span_maker", False):
-        try:
-            from spacy_legacy.components.entity_linker import EntityLinker_v1
-        except:
-            raise ImportError(
-                "In order to use v1 of the EntityLinker, you must use spacy-legacy>=3.0.12."
-            )
-        # The only difference in arguments here is that use_gold_ents and threshold aren't available.
-        return EntityLinker_v1(
-            nlp.vocab,
-            model,
-            name,
-            labels_discard=labels_discard,
-            n_sents=n_sents,
-            incl_prior=incl_prior,
-            incl_context=incl_context,
-            entity_vector_length=entity_vector_length,
-            get_candidates=get_candidates,
-            overwrite=overwrite,
-            scorer=scorer,
-        )
+        raise ValueError(Errors.E4005)
+
     return EntityLinker(
         nlp.vocab,
         model,
@@ -250,6 +232,9 @@ class EntityLinker(TrainablePipe):
         self.use_gold_ents = use_gold_ents
         self.threshold = threshold
         self.save_activations = save_activations
+
+        if self.incl_prior and not self.kb.supports_prior_probs:
+            warnings.warn(Warnings.W401)
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will

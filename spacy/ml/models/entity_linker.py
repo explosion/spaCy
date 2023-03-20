@@ -108,7 +108,7 @@ def empty_kb(
 
 
 @registry.misc("spacy.CandidateGenerator.v1")
-def create_candidates_all() -> Callable[
+def create_get_candidates() -> Callable[
     [KnowledgeBase, Iterator[SpanGroup]],
     Iterator[Iterable[Iterable[Candidate]]],
 ]:

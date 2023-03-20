@@ -230,7 +230,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
         for mentions_for_doc in mentions:
             yield [self.get_alias_candidates(ent_span.text) for ent_span in mentions_for_doc]
 
-    def get_alias_candidates(self, str alias) -> Iterable[InMemoryCandidate]:
+    def _get_alias_candidates(self, str alias) -> Iterable[InMemoryCandidate]:
         """
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
@@ -244,12 +244,12 @@ cdef class InMemoryLookupKB(KnowledgeBase):
 
         return [
             InMemoryCandidate(
-                retrieve_string_from_hash=self.vocab.strings.__getitem__,
+                kb=self,
                 entity_hash=self._entries[entry_index].entity_hash,
-                entity_freq=self._entries[entry_index].freq,
-                entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
                 alias_hash=alias_hash,
-                prior_prob=prior_prob
+                entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
+                prior_prob=prior_prob,
+                entity_freq=self._entries[entry_index].freq
             )
             for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)
             if entry_index != 0
@@ -283,6 +283,9 @@ cdef class InMemoryLookupKB(KnowledgeBase):
                 return prior_prob
 
         return 0.0
+
+    def supports_prior_probs(self) -> bool:
+        return True
 
     def to_bytes(self, **kwargs):
         """Serialize the current state to a binary string.

@@ -178,22 +178,6 @@ implementation of `KnowledgeBase.get_candidates()`.
 | `mentions`  | The textual mention or alias. ~~Iterable[SpanGroup]~~                                                                                                                             |
 | **RETURNS** | An iterator over iterables of iterables with relevant [`InMemoryCandidate`](/api/kb#candidate) objects (per mention and doc). ~~Iterator[Iterable[Iterable[InMemoryCandidate]]]~~ |
 
-## InMemoryLookupKB.get_alias_candidates {id="get_alias_candidates",tag="method"}
-
-Given a certain textual mention as input, retrieve a list of candidate entities
-of type [`InMemoryCandidate`](/api/kb#candidate).
-
-> #### Example
->
-> ```python
-> candidates = kb.get_alias_candidates("Douglas")
-> ```
-
-| Name        | Description                                                                   |
-| ----------- | ----------------------------------------------------------------------------- |
-| `alias`     | The textual mention or alias. ~~str~~                                         |
-| **RETURNS** | The list of relevant `InMemoryCandidate` objects. ~~List[InMemoryCandidate]~~ |
-
 ## InMemoryLookupKB.get_vector {id="get_vector",tag="method"}
 
 Given a certain entity ID, retrieve its pretrained entity vector.
