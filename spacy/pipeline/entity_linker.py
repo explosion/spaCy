@@ -11,6 +11,8 @@ from thinc.api import set_dropout_rate
 
 from ..kb import KnowledgeBase, Candidate
 from ..tokens import Doc, Span
+from ..ml import empty_kb
+from ..tokens import Doc, Span, SpanGroup
 from .pipe import deserialize_config
 from .trainable_pipe import TrainablePipe
 from ..language import Language
@@ -82,7 +84,7 @@ def make_entity_linker(
     entity_vector_length: int,
     get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
     get_candidates_batch: Callable[
-        [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
+        [KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]
     ],
     generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
     overwrite: bool,
@@ -105,7 +107,7 @@ def make_entity_linker(
     get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
         produces a list of candidates, given a certain knowledge base and a textual mention.
     get_candidates_batch (
-        Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
+        Callable[[KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
         ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
     generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
     scorer (Optional[Callable]): The scoring method.
@@ -170,7 +172,7 @@ class EntityLinker(TrainablePipe):
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         get_candidates_batch: Callable[
-            [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
+            [KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]
         ],
         generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
         overwrite: bool = False,
@@ -194,7 +196,7 @@ class EntityLinker(TrainablePipe):
         get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
         get_candidates_batch (
-            Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]],
+            Callable[[KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]],
             Iterable[Candidate]]
             ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
         generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
@@ -473,7 +475,8 @@ class EntityLinker(TrainablePipe):
 
                 batch_candidates = list(
                     self.get_candidates_batch(
-                        self.kb, [ent_batch[idx] for idx in valid_ent_idx]
+                        self.kb,
+                        SpanGroup(doc, spans=[ent_batch[idx] for idx in valid_ent_idx]),
                     )
                     if self.candidates_batch_size > 1
                     else [

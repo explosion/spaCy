@@ -189,14 +189,15 @@ to you.
 >
 > ```python
 > from spacy.lang.en import English
+> from spacy.tokens import SpanGroup
 > nlp = English()
 > doc = nlp("Douglas Adams wrote 'The Hitchhiker's Guide to the Galaxy'.")
-> candidates = kb.get_candidates((doc[0:2], doc[3:]))
+> candidates = kb.get_candidates_batch([SpanGroup(doc, spans=[doc[0:2], doc[3:]]])
 > ```
 
 | Name        | Description                                                                                                  |
 | ----------- | ------------------------------------------------------------------------------------------------------------ |
-| `mentions`  | The textual mentions. ~~Iterable[Span]~~                                                                     |
+| `mentions`  | The textual mentions. ~~SpanGroup~~                                                                          |
 | **RETURNS** | An iterable of iterable with relevant `InMemoryCandidate` objects. ~~Iterable[Iterable[InMemoryCandidate]]~~ |
 
 ## InMemoryLookupKB.get_vector {id="get_vector",tag="method"}
