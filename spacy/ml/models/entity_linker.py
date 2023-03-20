@@ -5,8 +5,7 @@ from thinc.api import chain, list2ragged, reduce_mean, residual
 from thinc.api import Model, Maxout, Linear, tuplify, Ragged
 
 from ...util import registry
-from ...kb import KnowledgeBase, InMemoryLookupKB
-from ...kb import Candidate
+from ...kb import KnowledgeBase, InMemoryLookupKB, Candidate
 from ...vocab import Vocab
 from ...tokens import Doc, Span, SpanGroup
 from ..extract_spans import extract_spans

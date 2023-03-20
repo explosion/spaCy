@@ -36,8 +36,20 @@ cdef class KnowledgeBase:
         entity's embedding vector. Depending on the KB implementation, further properties - such as the prior
         probability of the specified mention text resolving to that entity - might be included.
         If no candidates are found for a given mention, an empty list is returned.
-        mentions (Iterable[SpangGroup]): Mentions for which to get candidates.
+        mentions (Iterable[SpanGroup]): Mentions for which to get candidates.
         RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
+        """
+        raise NotImplementedError(
+            Errors.E1045.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)
+        )
+
+    def get_candidates(self, mention: Span) -> Iterable[Candidate]:
+        """
+        Return candidate entities for specified text. Each candidate defines the entity, the original alias,
+        and the prior probability of that alias resolving to that entity.
+        If the no candidate is found for a given text, an empty list is returned.
+        mention (Span): Mention for which to get candidates.
+        RETURNS (Iterable[Candidate]): Identified candidates.
         """
         raise NotImplementedError(
             Errors.E1045.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)

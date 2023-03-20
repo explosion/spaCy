@@ -81,7 +81,7 @@ implementation of `KnowledgeBase.get_candidates()`.
 | Name        | Description                                                                                                                                  |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `mentions`  | The textual mention or alias. ~~Iterable[SpanGroup]~~                                                                                        |
-| **RETURNS** | An iterator over iterables of iterables with relevant `Candidate` objects (per mention and doc). ~~Iterator[Iterable[Iterable[Candidate]]]~~ |
+| **RETURNS** | An iterator (per document) over iterables (per mention) of iterables (per candidate for this mention) with relevant `Candidate` objects. ~~Iterator[Iterable[Iterable[Candidate]]]~~ |
 
 ## KnowledgeBase.get_vector {id="get_vector",tag="method"}
 
@@ -167,13 +167,11 @@ Construct an `InMemoryCandidate` object. Usually this constructor is not called
 directly, but instead these objects are returned by the `get_candidates` method
 of the [`entity_linker`](/api/entitylinker) pipe.
 
-> #### Example```python
+> #### Example
 >
+> ```python
 > from spacy.kb import InMemoryCandidate candidate = InMemoryCandidate(kb,
 > entity_hash, entity_freq, entity_vector, alias_hash, prior_prob)
->
-> ```
->
 > ```
 
 | Name          | Description                                                               |
