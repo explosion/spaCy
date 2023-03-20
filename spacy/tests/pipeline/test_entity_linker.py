@@ -512,7 +512,7 @@ def test_el_pipe_configuration(nlp):
     def get_lowercased_candidates(kb: InMemoryLookupKB, mentions: Iterator[SpanGroup]):
         for mentions_for_doc in mentions:
             yield [
-                kb.get_alias_candidates(ent_span.text.lower())
+                kb._get_alias_candidates(ent_span.text.lower())
                 for ent_span in mentions_for_doc
             ]
 

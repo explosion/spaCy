@@ -521,12 +521,12 @@ class EntityLinker(TrainablePipe):
                         )
                     elif len(candidates) == 1 and self.threshold is None:
                         # shortcut for efficiency reasons: take the 1 candidate
-                        final_kb_ids.append(candidates[0].entity_)
+                        final_kb_ids.append(candidates[0].entity_id_)
                         self._add_activations(
                             doc_scores=doc_scores,
                             doc_ents=doc_ents,
                             scores=[1.0],
-                            ents=[candidates[0].entity],
+                            ents=[candidates[0].entity_id],
                         )
                     else:
                         random.shuffle(candidates)
@@ -558,7 +558,7 @@ class EntityLinker(TrainablePipe):
                                 raise ValueError(Errors.E161)
                             scores = prior_probs + sims - (prior_probs * sims)
                         final_kb_ids.append(
-                            candidates[scores.argmax().item()].entity_
+                            candidates[scores.argmax().item()].entity_id_
                             if self.threshold is None or scores.max() >= self.threshold
                             else EntityLinker.NIL
                         )
@@ -566,7 +566,7 @@ class EntityLinker(TrainablePipe):
                             doc_scores=doc_scores,
                             doc_ents=doc_ents,
                             scores=scores,
-                            ents=[c.entity for c in candidates],
+                            ents=[c.entity_id for c in candidates],
                         )
 
             self._add_doc_activations(
