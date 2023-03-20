@@ -7,7 +7,7 @@ from thinc.types import Ragged
 from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
-from spacy.kb import InMemoryCandidate, InMemoryLookupKB, KnowledgeBase
+from spacy.kb import Candidate, InMemoryLookupKB, KnowledgeBase
 from spacy.lang.en import English
 from spacy.ml import load_kb
 from spacy.ml.models.entity_linker import build_span_maker, get_candidates
@@ -465,16 +465,17 @@ def test_candidate_generation(nlp):
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
+    adam_ent_cands = get_candidates(mykb, adam_ent)
     assert len(get_candidates(mykb, douglas_ent)) == 2
-    assert len(get_candidates(mykb, adam_ent)) == 1
+    assert len(adam_ent_cands) == 1
     assert len(get_candidates(mykb, Adam_ent)) == 0  # default case sensitive
     assert len(get_candidates(mykb, shrubbery_ent)) == 0
 
     # test the content of the candidates
-    assert get_candidates(mykb, adam_ent)[0].entity_id_str == "Q2"
-    assert get_candidates(mykb, adam_ent)[0].mention == "adam"
-    assert_almost_equal(get_candidates(mykb, adam_ent)[0].entity_freq, 12)
-    assert_almost_equal(get_candidates(mykb, adam_ent)[0].prior_prob, 0.9)
+    assert adam_ent_cands[0].entity_id_ == "Q2"
+    assert adam_ent_cands[0].alias == "adam"
+    assert_almost_equal(adam_ent_cands[0].entity_freq, 12)
+    assert_almost_equal(adam_ent_cands[0].prior_prob, 0.9)
 
 
 def test_el_pipe_configuration(nlp):
@@ -563,9 +564,9 @@ def test_vocab_serialization(nlp):
 
     candidates = mykb._get_alias_candidates("adam")
     assert len(candidates) == 1
-    assert candidates[0].entity_id_int == q2_hash
-    assert candidates[0].entity_id_str == "Q2"
-    assert candidates[0].mention == "adam"
+    assert candidates[0].entity_id == q2_hash
+    assert candidates[0].entity_id_ == "Q2"
+    assert candidates[0].alias == "adam"
 
     with make_tempdir() as d:
         mykb.to_disk(d / "kb")
@@ -574,9 +575,9 @@ def test_vocab_serialization(nlp):
 
         candidates = kb_new_vocab._get_alias_candidates("adam")
         assert len(candidates) == 1
-        assert candidates[0].entity_id_int == q2_hash
-        assert candidates[0].entity_id_str == "Q2"
-        assert candidates[0].mention == "adam"
+        assert candidates[0].entity_id == q2_hash
+        assert candidates[0].entity_id_ == "Q2"
+        assert candidates[0].alias == "adam"
 
         assert kb_new_vocab.get_vector("Q2") == [2]
         assert_almost_equal(kb_new_vocab.get_prior_prob("Q2", "douglas"), 0.4)
@@ -991,14 +992,11 @@ def test_scorer_links():
 @pytest.mark.parametrize(
     "name,config",
     [
-        ("entity_linker", {"@architectures": "spacy.EntityLinker.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
         ("entity_linker", {"@architectures": "spacy.EntityLinker.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
     ],
 )
 # fmt: on
 def test_legacy_architectures(name, config):
-    from spacy_legacy.components.entity_linker import EntityLinker_v1
-
     # Ensure that the legacy architectures still work
     vector_length = 3
     nlp = English()
@@ -1020,10 +1018,7 @@ def test_legacy_architectures(name, config):
         return mykb
 
     entity_linker = nlp.add_pipe(name, config={"model": config})
-    if config["@architectures"] == "spacy.EntityLinker.v1":
-        assert isinstance(entity_linker, EntityLinker_v1)
-    else:
-        assert isinstance(entity_linker, EntityLinker)
+    assert isinstance(entity_linker, EntityLinker)
     entity_linker.set_kb(create_kb)
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
 

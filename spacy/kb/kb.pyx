@@ -32,9 +32,10 @@ cdef class KnowledgeBase:
 
     def get_candidates_batch(self, mentions: SpanGroup) -> Iterable[Iterable[Candidate]]:
         """
-        Return candidate entities for specified texts. Each candidate defines the entity, the original alias,
-        and the prior probability of that alias resolving to that entity.
-        If no candidate is found for a given text, an empty list is returned.
+        Return candidate entities for a specified Span mention. Each candidate defines at least the entity and the
+        entity's embedding vector. Depending on the KB implementation, further properties - such as the prior
+        probability of the specified mention text resolving to that entity - might be included.
+        If no candidates are found for a given mention, an empty list is returned.
         mentions (SpanGroup): Mentions for which to get candidates.
         RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
         """
@@ -42,9 +43,10 @@ cdef class KnowledgeBase:
 
     def get_candidates(self, mention: Span) -> Iterable[Candidate]:
         """
-        Return candidate entities for specified text. Each candidate defines the entity, the original alias,
-        and the prior probability of that alias resolving to that entity.
-        If the no candidate is found for a given text, an empty list is returned.
+        Return candidate entities for a specific mention. Each candidate defines at least the entity and the
+        entity's embedding vector. Depending on the KB implementation, further properties - such as the prior
+        probability of the specified mention text resolving to that entity - might be included.
+        If no candidate is found for the given mention, an empty list is returned.
         mention (Span): Mention for which to get candidates.
         RETURNS (Iterable[Candidate]): Identified candidates.
         """
@@ -105,4 +107,11 @@ cdef class KnowledgeBase:
         """
         raise NotImplementedError(
             Errors.E1045.format(parent="KnowledgeBase", method="from_disk", name=self.__name__)
+        )
+
+    @property
+    def supports_prior_probs(self) -> bool:
+        """RETURNS (bool): Whether this KB type supports looking up prior probabilities for entity mentions."""
+        raise NotImplementedError(
+            Errors.E1045.format(parent="KnowledgeBase", method="supports_prior_probs", name=self.__name__)
         )

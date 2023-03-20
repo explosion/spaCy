@@ -243,9 +243,9 @@ cdef class InMemoryLookupKB(KnowledgeBase):
 
         return [
             InMemoryCandidate(
-                hash_to_str=self.vocab.strings.__getitem__,
-                entity_id=self._entries[entry_index].entity_hash,
-                mention=alias,
+                kb=self,
+                entity_hash=self._entries[entry_index].entity_hash,
+                alias_hash=alias_hash,
                 entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
                 prior_prob=prior_prob,
                 entity_freq=self._entries[entry_index].freq
@@ -282,6 +282,9 @@ cdef class InMemoryLookupKB(KnowledgeBase):
                 return prior_prob
 
         return 0.0
+
+    def supports_prior_probs(self) -> bool:
+        return True
 
     def to_bytes(self, **kwargs):
         """Serialize the current state to a binary string.
