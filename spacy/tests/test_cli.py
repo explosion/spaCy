@@ -122,9 +122,6 @@ def test_issue7055():
     assert "model" in filled_cfg["components"]["ner"]
 
 
-
-
-
 def test_cli_info():
     nlp = Dutch()
     nlp.add_pipe("textcat")
@@ -349,14 +346,6 @@ def test_cli_converters_conll_ner_to_docs():
     assert len(converted_docs[0].ents) == 10
     for ent in converted_docs[0].ents:
         assert ent.text in ["New York City", "London"]
-
-
-
-
-
-
-
-
 
 
 @pytest.mark.parametrize(
