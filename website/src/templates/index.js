@@ -25,11 +25,6 @@ const AlertSpace = ({ nightly, legacy }) => {
     const isOnline = useOnlineStatus()
     return (
         <>
-            {isOnline && (
-                <Alert title="💥 We'd love to learn more about your experience with spaCy!">
-                    <Link to="https://form.typeform.com/to/aMel9q9f">Take our survey here.</Link>
-                </Alert>
-            )}
             {nightly && (
                 <Alert
                     title="You're viewing the pre-release docs."
@@ -62,9 +57,15 @@ const AlertSpace = ({ nightly, legacy }) => {
     )
 }
 
+// const navAlert = (
+//     <Link to="/usage/v3-5" noLinkLayout>
+//         <strong>💥 Out now:</strong> spaCy v3.5
+//     </Link>
+// )
+
 const navAlert = (
-    <Link to="/usage/v3-5" noLinkLayout>
-        <strong>💥 Out now:</strong> spaCy v3.5
+    <Link to="https://form.typeform.com/to/aMel9q9f" noLinkLayout>
+        <strong>💥 Take the user survey!</strong>
     </Link>
 )
 
