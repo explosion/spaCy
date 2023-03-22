@@ -52,7 +52,8 @@ DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "morphologizer",
     assigns=["token.morph", "token.pos"],
-    default_config={"model": DEFAULT_MORPH_MODEL, "overwrite": True, "extend": False, "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"}},
+    default_config={"model": DEFAULT_MORPH_MODEL, "overwrite": True, "extend": False,
+                    "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"}, "label_smoothing": 0.0},
     default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
 )
 def make_morphologizer(
@@ -61,9 +62,10 @@ def make_morphologizer(
     name: str,
     overwrite: bool,
     extend: bool,
+    label_smoothing: float,
     scorer: Optional[Callable],
 ):
-    return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, scorer=scorer)
+    return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, label_smoothing=label_smoothing, scorer=scorer)
 
 
 def morphologizer_score(examples, **kwargs):
@@ -94,6 +96,7 @@ class Morphologizer(Tagger):
         *,
         overwrite: bool = BACKWARD_OVERWRITE,
         extend: bool = BACKWARD_EXTEND,
+        label_smoothing: float = 0.0,
         scorer: Optional[Callable] = morphologizer_score,
     ):
         """Initialize a morphologizer.
@@ -121,6 +124,7 @@ class Morphologizer(Tagger):
             "labels_pos": {},
             "overwrite": overwrite,
             "extend": extend,
+            "label_smoothing": label_smoothing,
         }
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
@@ -270,7 +274,8 @@ class Morphologizer(Tagger):
         DOCS: https://spacy.io/api/morphologizer#get_loss
         """
         validate_examples(examples, "Morphologizer.get_loss")
-        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
+        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False,
+                                                    label_smoothing=self.cfg["label_smoothing"])
         truths = []
         for eg in examples:
             eg_truths = []

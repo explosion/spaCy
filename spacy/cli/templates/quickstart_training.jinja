@@ -331,6 +331,7 @@ maxout_pieces = 3
 {% if "morphologizer" in components %}
 [components.morphologizer]
 factory = "morphologizer"
+label_smoothing = 0.05
 
 [components.morphologizer.model]
 @architectures = "spacy.Tagger.v2"
@@ -344,6 +345,7 @@ width = ${components.tok2vec.model.encode.width}
 {% if "tagger" in components %}
 [components.tagger]
 factory = "tagger"
+label_smoothing = 0.05
 
 [components.tagger.model]
 @architectures = "spacy.Tagger.v2"
