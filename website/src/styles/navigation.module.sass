@@ -111,11 +111,12 @@
     line-height: var(--line-height-xs)
     text-align: center
 
-@include breakpoint(max, xs)
-    .list
+@include breakpoint(max, md)
+    .alert
         display: none
 
-    .alert
+@include breakpoint(max, xs)
+    .list
         display: none
 
     .has-alert
