@@ -2,7 +2,6 @@ import os
 import math
 from collections import Counter
 from typing import Tuple, List, Dict, Any
-import time
 from pathlib import Path
 
 import spacy
@@ -790,60 +789,6 @@ def test_applycli_user_data():
         apply(data_path, output, "blank:en", "", 1, 1)
         result = list(DocBin().from_disk(output).get_docs(nlp.vocab))
         assert result[0]._.ext == val
-
-
-def test_local_remote_storage():
-    with make_tempdir() as d:
-        filename = "a.txt"
-
-        content_hashes = ("aaaa", "cccc", "bbbb")
-        for i, content_hash in enumerate(content_hashes):
-            # make sure that each subsequent file has a later timestamp
-            if i > 0:
-                time.sleep(1)
-            content = f"{content_hash} content"
-            loc_file = d / "root" / filename
-            if not loc_file.parent.exists():
-                loc_file.parent.mkdir(parents=True)
-            with loc_file.open(mode="w") as file_:
-                file_.write(content)
-
-            # push first version to remote storage
-            remote = RemoteStorage(d / "root", str(d / "remote"))
-            remote.push(filename, "aaaa", content_hash)
-
-            # retrieve with full hashes
-            loc_file.unlink()
-            remote.pull(filename, command_hash="aaaa", content_hash=content_hash)
-            with loc_file.open(mode="r") as file_:
-                assert file_.read() == content
-
-            # retrieve with command hash
-            loc_file.unlink()
-            remote.pull(filename, command_hash="aaaa")
-            with loc_file.open(mode="r") as file_:
-                assert file_.read() == content
-
-            # retrieve with content hash
-            loc_file.unlink()
-            remote.pull(filename, content_hash=content_hash)
-            with loc_file.open(mode="r") as file_:
-                assert file_.read() == content
-
-            # retrieve with no hashes
-            loc_file.unlink()
-            remote.pull(filename)
-            with loc_file.open(mode="r") as file_:
-                assert file_.read() == content
-
-
-def test_local_remote_storage_pull_missing():
-    # pulling from a non-existent remote pulls nothing gracefully
-    with make_tempdir() as d:
-        filename = "a.txt"
-        remote = RemoteStorage(d / "root", str(d / "remote"))
-        assert remote.pull(filename, command_hash="aaaa") is None
-        assert remote.pull(filename) is None
 
 
 def test_cli_find_threshold(capsys):
