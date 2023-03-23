@@ -15,6 +15,8 @@ OPS = get_current_ops()
 
 SPAN_KEY = "labeled_spans"
 
+SPANCAT_COMPONENTS = ["spancat", "spancat_singlelabel"]
+
 TRAIN_DATA = [
     ("Who is Shaka Khan?", {"spans": {SPAN_KEY: [(7, 17, "PERSON")]}}),
     (
@@ -41,38 +43,42 @@ def make_examples(nlp, data=TRAIN_DATA):
     return train_examples
 
 
-def test_no_label():
+@pytest.mark.parametrize("name", SPANCAT_COMPONENTS)
+def test_no_label(name):
     nlp = Language()
-    nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    nlp.add_pipe(name, config={"spans_key": SPAN_KEY})
     with pytest.raises(ValueError):
         nlp.initialize()
 
 
-def test_no_resize():
+@pytest.mark.parametrize("name", SPANCAT_COMPONENTS)
+def test_no_resize(name):
     nlp = Language()
-    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    spancat = nlp.add_pipe(name, config={"spans_key": SPAN_KEY})
     spancat.add_label("Thing")
     spancat.add_label("Phrase")
     assert spancat.labels == ("Thing", "Phrase")
     nlp.initialize()
-    assert spancat.model.get_dim("nO") == 2
+    assert spancat.model.get_dim("nO") == spancat._n_labels
     # this throws an error because the spancat can't be resized after initialization
     with pytest.raises(ValueError):
         spancat.add_label("Stuff")
 
 
-def test_implicit_labels():
+@pytest.mark.parametrize("name", SPANCAT_COMPONENTS)
+def test_implicit_labels(name):
     nlp = Language()
-    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    spancat = nlp.add_pipe(name, config={"spans_key": SPAN_KEY})
     assert len(spancat.labels) == 0
     train_examples = make_examples(nlp)
     nlp.initialize(get_examples=lambda: train_examples)
     assert spancat.labels == ("PERSON", "LOC")
 
 
-def test_explicit_labels():
+@pytest.mark.parametrize("name", SPANCAT_COMPONENTS)
+def test_explicit_labels(name):
     nlp = Language()
-    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    spancat = nlp.add_pipe(name, config={"spans_key": SPAN_KEY})
     assert len(spancat.labels) == 0
     spancat.add_label("PERSON")
     spancat.add_label("LOC")
@@ -102,13 +108,13 @@ def test_doc_gc():
             # XXX This fails with length 0 sometimes
             assert len(spangroup) > 0
             with pytest.raises(RuntimeError):
-                span = spangroup[0]
+                spangroup[0]
 
 
 @pytest.mark.parametrize(
     "max_positive,nr_results", [(None, 4), (1, 2), (2, 3), (3, 4), (4, 4)]
 )
-def test_make_spangroup(max_positive, nr_results):
+def test_make_spangroup_multilabel(max_positive, nr_results):
     fix_random_seed(0)
     nlp = Language()
     spancat = nlp.add_pipe(
@@ -120,10 +126,12 @@ def test_make_spangroup(max_positive, nr_results):
     indices = ngram_suggester([doc])[0].dataXd
     assert_array_equal(OPS.to_numpy(indices), numpy.asarray([[0, 1], [1, 2], [0, 2]]))
     labels = ["Thing", "City", "Person", "GreatCity"]
+    for label in labels:
+        spancat.add_label(label)
     scores = numpy.asarray(
         [[0.2, 0.4, 0.3, 0.1], [0.1, 0.6, 0.2, 0.4], [0.8, 0.7, 0.3, 0.9]], dtype="f"
     )
-    spangroup = spancat._make_span_group(doc, indices, scores, labels)
+    spangroup = spancat._make_span_group_multilabel(doc, indices, scores)
     assert len(spangroup) == nr_results
 
     # first span is always the second token "London"
@@ -152,6 +160,118 @@ def test_make_spangroup(max_positive, nr_results):
     assert spangroup[-1].text == "Greater London"
     assert spangroup[-1].label_ == "GreatCity"
     assert_almost_equal(0.9, spangroup.attrs["scores"][-1], 5)
+
+
+@pytest.mark.parametrize(
+    "threshold,allow_overlap,nr_results",
+    [(0.05, True, 3), (0.05, False, 1), (0.5, True, 2), (0.5, False, 1)],
+)
+def test_make_spangroup_singlelabel(threshold, allow_overlap, nr_results):
+    fix_random_seed(0)
+    nlp = Language()
+    spancat = nlp.add_pipe(
+        "spancat",
+        config={
+            "spans_key": SPAN_KEY,
+            "threshold": threshold,
+            "max_positive": 1,
+        },
+    )
+    doc = nlp.make_doc("Greater London")
+    ngram_suggester = registry.misc.get("spacy.ngram_suggester.v1")(sizes=[1, 2])
+    indices = ngram_suggester([doc])[0].dataXd
+    assert_array_equal(OPS.to_numpy(indices), numpy.asarray([[0, 1], [1, 2], [0, 2]]))
+    labels = ["Thing", "City", "Person", "GreatCity"]
+    for label in labels:
+        spancat.add_label(label)
+    scores = numpy.asarray(
+        [[0.2, 0.4, 0.3, 0.1], [0.1, 0.6, 0.2, 0.4], [0.8, 0.7, 0.3, 0.9]], dtype="f"
+    )
+    spangroup = spancat._make_span_group_singlelabel(
+        doc, indices, scores, allow_overlap
+    )
+    assert len(spangroup) == nr_results
+    if threshold > 0.4:
+        if allow_overlap:
+            assert spangroup[0].text == "London"
+            assert spangroup[0].label_ == "City"
+            assert spangroup[1].text == "Greater London"
+            assert spangroup[1].label_ == "GreatCity"
+
+        else:
+            assert spangroup[0].text == "Greater London"
+            assert spangroup[0].label_ == "GreatCity"
+    else:
+        if allow_overlap:
+            assert spangroup[0].text == "Greater"
+            assert spangroup[0].label_ == "City"
+            assert spangroup[1].text == "London"
+            assert spangroup[1].label_ == "City"
+            assert spangroup[2].text == "Greater London"
+            assert spangroup[2].label_ == "GreatCity"
+        else:
+            assert spangroup[0].text == "Greater London"
+
+
+def test_make_spangroup_negative_label():
+    fix_random_seed(0)
+    nlp_single = Language()
+    nlp_multi = Language()
+    spancat_single = nlp_single.add_pipe(
+        "spancat",
+        config={
+            "spans_key": SPAN_KEY,
+            "threshold": 0.1,
+            "max_positive": 1,
+        },
+    )
+    spancat_multi = nlp_multi.add_pipe(
+        "spancat",
+        config={
+            "spans_key": SPAN_KEY,
+            "threshold": 0.1,
+            "max_positive": 2,
+        },
+    )
+    spancat_single.add_negative_label = True
+    spancat_multi.add_negative_label = True
+    doc = nlp_single.make_doc("Greater London")
+    labels = ["Thing", "City", "Person", "GreatCity"]
+    for label in labels:
+        spancat_multi.add_label(label)
+        spancat_single.add_label(label)
+    ngram_suggester = registry.misc.get("spacy.ngram_suggester.v1")(sizes=[1, 2])
+    indices = ngram_suggester([doc])[0].dataXd
+    assert_array_equal(OPS.to_numpy(indices), numpy.asarray([[0, 1], [1, 2], [0, 2]]))
+    scores = numpy.asarray(
+        [
+            [0.2, 0.4, 0.3, 0.1, 0.1],
+            [0.1, 0.6, 0.2, 0.4, 0.9],
+            [0.8, 0.7, 0.3, 0.9, 0.1],
+        ],
+        dtype="f",
+    )
+    spangroup_multi = spancat_multi._make_span_group_multilabel(doc, indices, scores)
+    spangroup_single = spancat_single._make_span_group_singlelabel(doc, indices, scores)
+    assert len(spangroup_single) == 2
+    assert spangroup_single[0].text == "Greater"
+    assert spangroup_single[0].label_ == "City"
+    assert spangroup_single[1].text == "Greater London"
+    assert spangroup_single[1].label_ == "GreatCity"
+
+    assert len(spangroup_multi) == 6
+    assert spangroup_multi[0].text == "Greater"
+    assert spangroup_multi[0].label_ == "City"
+    assert spangroup_multi[1].text == "Greater"
+    assert spangroup_multi[1].label_ == "Person"
+    assert spangroup_multi[2].text == "London"
+    assert spangroup_multi[2].label_ == "City"
+    assert spangroup_multi[3].text == "London"
+    assert spangroup_multi[3].label_ == "GreatCity"
+    assert spangroup_multi[4].text == "Greater London"
+    assert spangroup_multi[4].label_ == "Thing"
+    assert spangroup_multi[5].text == "Greater London"
+    assert spangroup_multi[5].label_ == "GreatCity"
 
 
 def test_ngram_suggester(en_tokenizer):
@@ -371,9 +491,9 @@ def test_overfitting_IO_overlapping():
         assert set([span.label_ for span in spans2]) == {"LOC", "DOUBLE_LOC"}
 
 
-def test_zero_suggestions():
+@pytest.mark.parametrize("name", SPANCAT_COMPONENTS)
+def test_zero_suggestions(name):
     # Test with a suggester that can return 0 suggestions
-
     @registry.misc("test_mixed_zero_suggester")
     def make_mixed_zero_suggester():
         def mixed_zero_suggester(docs, *, ops=None):
@@ -400,7 +520,7 @@ def test_zero_suggestions():
     fix_random_seed(0)
     nlp = English()
     spancat = nlp.add_pipe(
-        "spancat",
+        name,
         config={
             "suggester": {"@misc": "test_mixed_zero_suggester"},
             "spans_key": SPAN_KEY,
@@ -408,7 +528,7 @@ def test_zero_suggestions():
     )
     train_examples = make_examples(nlp)
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
-    assert spancat.model.get_dim("nO") == 2
+    assert spancat.model.get_dim("nO") == spancat._n_labels
     assert set(spancat.labels) == {"LOC", "PERSON"}
 
     nlp.update(train_examples, sgd=optimizer)
@@ -424,9 +544,10 @@ def test_zero_suggestions():
     list(nlp.pipe(["", "one", "three three three"]))
 
 
-def test_set_candidates():
+@pytest.mark.parametrize("name", SPANCAT_COMPONENTS)
+def test_set_candidates(name):
     nlp = Language()
-    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    spancat = nlp.add_pipe(name, config={"spans_key": SPAN_KEY})
     train_examples = make_examples(nlp)
     nlp.initialize(get_examples=lambda: train_examples)
     texts = [
