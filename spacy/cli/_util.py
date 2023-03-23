@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, List, Optional, Iterable
+from typing import Dict, Any, Union, List, Optional, Tuple, Iterable
 from typing import TYPE_CHECKING, overload
 import sys
 import shutil
@@ -17,7 +17,7 @@ from configparser import InterpolationError
 import os
 
 from ..compat import Literal
-from ..util import import_file, registry, logger, ENV_VARS
+from ..util import import_file, run_command, registry, logger, ENV_VARS
 
 if TYPE_CHECKING:
     from pathy import FluidPath  # noqa: F401
@@ -266,6 +266,25 @@ def ensure_pathy(path):
     from pathy import Pathy  # noqa: F811
 
     return Pathy.fluid(path)
+
+
+def get_git_version(
+    error: str = "Could not run 'git'. Make sure it's installed and the executable is available.",
+) -> Tuple[int, int]:
+    """Get the version of git and raise an error if calling 'git --version' fails.
+    error (str): The error message to show.
+    RETURNS (Tuple[int, int]): The version as a (major, minor) tuple. Returns
+        (0, 0) if the version couldn't be determined.
+    """
+    try:
+        ret = run_command("git --version", capture=True)
+    except:
+        raise RuntimeError(error)
+    stdout = ret.stdout.strip()
+    if not stdout or not stdout.startswith("git version"):
+        return 0, 0
+    version = stdout[11:].strip().split(".")
+    return int(version[0]), int(version[1])
 
 
 @overload
