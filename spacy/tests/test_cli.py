@@ -901,48 +901,6 @@ def test_cli_find_threshold(capsys):
                 )
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
-@pytest.mark.parametrize(
-    "reqs,output",
-    [
-        [
-            """
-            spacy
-
-            # comment
-
-            thinc""",
-            (False, False),
-        ],
-        [
-            """# comment
-            --some-flag
-            spacy""",
-            (False, False),
-        ],
-        [
-            """# comment
-            --some-flag
-            spacy; python_version >= '3.6'""",
-            (False, False),
-        ],
-        [
-            """# comment
-             spacyunknowndoesnotexist12345""",
-            (True, False),
-        ],
-    ],
-)
-def test_project_check_requirements(reqs, output):
-    import pkg_resources
-
-    # excessive guard against unlikely package name
-    try:
-        pkg_resources.require("spacyunknowndoesnotexist12345")
-    except pkg_resources.DistributionNotFound:
-        assert output == _check_requirements([req.strip() for req in reqs.split("\n")])
-
-
 def test_upload_download_local_file():
     with make_tempdir() as d1, make_tempdir() as d2:
         filename = "f.txt"
