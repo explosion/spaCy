@@ -28,8 +28,6 @@ from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.init_pipeline import _init_labels
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
-from spacy.cli.project.remote_storage import RemoteStorage
-from spacy.cli.project.run import _check_requirements
 from spacy.cli.validate import get_model_pkgs
 from spacy.cli.apply import apply
 from spacy.cli.find_threshold import find_threshold
