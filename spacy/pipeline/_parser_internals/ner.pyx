@@ -563,7 +563,7 @@ cdef class Last:
             pass
         elif g_act == IN:
             # L, Gold I --> True iff this entity sunk or there is sentence
-            #               break after the first buffer token.
+            #               break after the next buffer token.
             cost += not (_entity_is_sunk(s, gold.ner) or _next_is_sent_start(s))
         elif g_act == LAST:
             # L, Gold L --> True
