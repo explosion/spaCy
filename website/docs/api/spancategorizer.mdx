@@ -20,8 +20,9 @@ output class probabilities are independent for each class. However, if you need
 to predict at most one true class for a span, then use `spancat_singlelabel`. It
 uses a `Softmax` layer and treats the task as a multi-class problem.
 
-Predicted spans will be saved in a [`SpanGroup`](/api/spangroup) on the doc.
-Individual span scores can be found in `spangroup.attrs["scores"]`.
+Predicted spans will be saved in a [`SpanGroup`](/api/spangroup) on the `doc.spans["spans_key"]`,
+where `"spans_key"` can be specified for the component.
+Individual span scores are stored in `spangroup.attrs["scores"]`.
 
 ## Assigned Attributes {id="assigned-attributes"}
 
@@ -30,6 +31,8 @@ Predictions will be saved to `Doc.spans[spans_key]` as a
 be saved in `SpanGroup.attrs["scores"]`.
 
 `spans_key` defaults to `"sc"`, but can be passed as a parameter.
+If spans are already stored in the provided `"spans_key"` the `spancat` component will
+overwrite the existing ones.
 
 | Location                               | Value                                                    |
 | -------------------------------------- | -------------------------------------------------------- |
