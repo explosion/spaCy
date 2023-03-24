@@ -359,19 +359,15 @@ def test_pretrain_default_vectors():
     nlp.vocab.vectors = Vectors(shape=(10, 10))
     create_pretrain_vectors(1, 1, "cosine")(nlp.vocab, nlp.get_pipe("tok2vec").model)
 
+    # floret vectors are supported
+    nlp.vocab.vectors = Vectors(
+        data=get_current_ops().xp.zeros((10, 10)), mode="floret", hash_count=1
+    )
+    create_pretrain_vectors(1, 1, "cosine")(nlp.vocab, nlp.get_pipe("tok2vec").model)
+
     # error for no vectors
     with pytest.raises(ValueError, match="E875"):
         nlp.vocab.vectors = Vectors()
-        create_pretrain_vectors(1, 1, "cosine")(
-            nlp.vocab, nlp.get_pipe("tok2vec").model
-        )
-
-    # error for floret vectors
-    with pytest.raises(ValueError, match="E850"):
-        ops = get_current_ops()
-        nlp.vocab.vectors = Vectors(
-            data=ops.xp.zeros((10, 10)), mode="floret", hash_count=1
-        )
         create_pretrain_vectors(1, 1, "cosine")(
             nlp.vocab, nlp.get_pipe("tok2vec").model
         )
