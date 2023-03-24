@@ -31,8 +31,7 @@ Predictions will be saved to `Doc.spans[spans_key]` as a
 be saved in `SpanGroup.attrs["scores"]`.
 
 `spans_key` defaults to `"sc"`, but can be passed as a parameter.
-If spans are already stored in the provided `"spans_key"` the `spancat` component will
-overwrite the existing ones.
+The `spancat` component will overwrite any existing spans under the spans key `doc.spans[spans_key]`.
 
 | Location                               | Value                                                    |
 | -------------------------------------- | -------------------------------------------------------- |
