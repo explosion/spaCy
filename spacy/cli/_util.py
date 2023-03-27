@@ -16,6 +16,8 @@ from thinc.util import gpu_is_available
 from configparser import InterpolationError
 import os
 
+from weasel._util import app as project_cli
+
 from ..compat import Literal
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
@@ -56,11 +58,10 @@ Opt = typer.Option
 
 app = typer.Typer(name=NAME, help=HELP)
 benchmark_cli = typer.Typer(name="benchmark", help=BENCHMARK_HELP, no_args_is_help=True)
-project_cli = typer.Typer(name="project", help=PROJECT_HELP, no_args_is_help=True)
 debug_cli = typer.Typer(name="debug", help=DEBUG_HELP, no_args_is_help=True)
 init_cli = typer.Typer(name="init", help=INIT_HELP, no_args_is_help=True)
 
-app.add_typer(project_cli)
+app.add_typer(project_cli, name="project", help=PROJECT_HELP, no_args_is_help=True)
 app.add_typer(debug_cli)
 app.add_typer(benchmark_cli)
 app.add_typer(init_cli)
