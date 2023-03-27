@@ -64,7 +64,7 @@ def pretrain(
         is_temp_str = ".temp" if is_temp else ""
         with model.use_params(optimizer.averages):
             if is_last:
-                save_path = output_dir / f"model_last.bin"
+                save_path = output_dir / f"model-last.bin"
             else:
                 save_path = output_dir / f"model{epoch}{is_temp_str}.bin"
             with (save_path).open("wb") as file_:
