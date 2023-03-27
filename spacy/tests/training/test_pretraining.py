@@ -181,7 +181,7 @@ def test_pretraining_tok2vec_characters(objective):
         pretrain(filled, tmp_dir)
         assert Path(tmp_dir / "model0.bin").exists()
         assert Path(tmp_dir / "model4.bin").exists()
-        assert Path(tmp_dir / "model_last.bin").exists()
+        assert Path(tmp_dir / "model-last.bin").exists()
         assert not Path(tmp_dir / "model5.bin").exists()
 
 
@@ -238,7 +238,7 @@ def test_pretraining_tagger_tok2vec(config):
         pretrain(filled, tmp_dir)
         assert Path(tmp_dir / "model0.bin").exists()
         assert Path(tmp_dir / "model4.bin").exists()
-        assert Path(tmp_dir / "model_last.bin").exists()
+        assert Path(tmp_dir / "model-last.bin").exists()
         assert not Path(tmp_dir / "model5.bin").exists()
 
 

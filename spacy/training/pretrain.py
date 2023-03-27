@@ -80,8 +80,8 @@ def pretrain(
 
     # TODO: I think we probably want this to look more like the
     # 'create_train_batches' function?
-    for epoch in range(epoch_resume, P["max_epochs"]):
-        try:
+    try:
+        for epoch in range(epoch_resume, P["max_epochs"]):
             for batch_id, batch in enumerate(batcher(corpus(nlp))):
                 docs = ensure_docs(batch)
                 loss = make_update(model, docs, optimizer, objective)
@@ -97,8 +97,8 @@ def pretrain(
             else:
                 _save_model(epoch)
             tracker.epoch_loss = 0.0
-        finally:
-            _save_model(epoch, is_last=True)
+    finally:
+        _save_model(P["max_epochs"], is_last=True)
 
 
 def ensure_docs(examples_or_docs: Iterable[Union[Doc, Example]]) -> List[Doc]:
