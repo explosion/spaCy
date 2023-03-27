@@ -167,7 +167,7 @@ class Lemmatizer(Pipe):
             missing_tables = set(required_tables) - set(lookups.tables)
             if len(missing_tables) > 0:
                 raise ValueError(
-                    Errors.E4005.format(
+                    Errors.E4007.format(
                         missing_tables=list(missing_tables),
                         pipe_name=self.name,
                         required_tables=srsly.json_dumps(required_tables),

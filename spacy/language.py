@@ -2065,7 +2065,7 @@ class Language:
         pipe = self.get_pipe(pipe_name)
         pipe_cfg = self._pipe_configs[pipe_name]
         if listeners:
-            util.logger.debug(f"Replacing listeners of component '{pipe_name}'")
+            util.logger.debug("Replacing listeners of component '%s'", pipe_name)
             if len(list(listeners)) != len(pipe_listeners):
                 # The number of listeners defined in the component model doesn't
                 # match the listeners to replace, so we won't be able to update

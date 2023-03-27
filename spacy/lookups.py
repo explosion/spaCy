@@ -30,7 +30,7 @@ def load_lookups_data_from_url(lang, tables, url):
         r = requests.get(table_url)
         if r.status_code != 200:
             raise ValueError(
-                Errors.E4006.format(status_code=r.status_code, url=table_url)
+                Errors.E4008.format(status_code=r.status_code, url=table_url)
             )
         table_data = r.json()
         lookups.add_table(table, table_data)

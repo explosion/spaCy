@@ -105,6 +105,7 @@ class Doc:
         start_idx: int,
         end_idx: int,
         label: Union[int, str] = ...,
+        *,
         kb_id: Union[int, str] = ...,
         vector: Optional[Floats1d] = ...,
         alignment_mode: str = ...,
@@ -127,12 +128,12 @@ class Doc:
         blocked: Optional[List[Span]] = ...,
         missing: Optional[List[Span]] = ...,
         outside: Optional[List[Span]] = ...,
-        default: str = ...
+        default: str = ...,
     ) -> None: ...
     @property
-    def noun_chunks(self) -> Iterator[Span]: ...
+    def noun_chunks(self) -> Tuple[Span]: ...
     @property
-    def sents(self) -> Iterator[Span]: ...
+    def sents(self) -> Tuple[Span]: ...
     @property
     def lang(self) -> int: ...
     @property

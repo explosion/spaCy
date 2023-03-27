@@ -90,9 +90,9 @@ def parse_config_overrides(
     cli_overrides = _parse_overrides(args, is_cli=True)
     if cli_overrides:
         keys = [k for k in cli_overrides if k not in env_overrides]
-        logger.debug(f"Config overrides from CLI: {keys}")
+        logger.debug("Config overrides from CLI: %s", keys)
     if env_overrides:
-        logger.debug(f"Config overrides from env variables: {list(env_overrides)}")
+        logger.debug("Config overrides from env variables: %s", list(env_overrides))
     return {**cli_overrides, **env_overrides}
 
 

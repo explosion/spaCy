@@ -84,7 +84,7 @@ class Warnings(metaclass=ErrorsWithCodes):
             "ignoring the duplicate entry.")
     W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
             "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
-    W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
+    W024 = ("Entity '{entity}' - alias '{alias}' combination already exists in "
             "the Knowledge Base.")
     W026 = ("Unable to set all sentence boundaries from dependency parses. If "
             "you are constructing a parse tree incrementally by setting "
@@ -212,7 +212,11 @@ class Warnings(metaclass=ErrorsWithCodes):
             "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
     W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
 
+    # v4 warning strings
     W400 = ("`use_upper=False` is ignored, the upper layer is always enabled")
+    W401 = ("`incl_prior is True`, but the selected knowledge base type {kb_type} doesn't support prior probability "
+            "lookups so this setting will be ignored. If your KB does support prior probability lookups, make sure "
+            "to return `True` in `.supports_prior_probs`.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -440,8 +444,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E133 = ("The sum of prior probabilities for alias '{alias}' should not "
             "exceed 1, but found {sum}.")
     E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
-    E139 = ("Knowledge base for component '{name}' is empty. Use the methods "
-            "`kb.add_entity` and `kb.add_alias` to add entries.")
+    E139 = ("Knowledge base for component '{name}' is empty.")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
@@ -954,7 +957,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1049 = ("No available port found for displaCy on host {host}. Please specify an available port "
              "with `displacy.serve(doc, port=port)`")
     E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
-             "or use `auto_switch_port=True` to pick an available port automatically.")
+             "or use `auto_select_port=True` to pick an available port automatically.")
 
     # v4 error strings
     E4000 = ("Expected a Doc as input, but got: '{type}'")
@@ -964,7 +967,9 @@ class Errors(metaclass=ErrorsWithCodes):
     E4003 = ("Training examples for distillation must have the exact same tokens in the "
              "reference and predicted docs.")
     E4004 = ("Backprop is not supported when is_train is not set.")
-    E4005 = ("Required lemmatizer table(s) {missing_tables} not found in "
+    E4005 = ("EntityLinker_v1 is not supported in spaCy v4. Update your configuration.")
+    E4006 = ("Expected `entity_id` to be of type {exp_type}, but is of type {found_type}.")
+    E4007 = ("Required lemmatizer table(s) {missing_tables} not found in "
              "[initialize] or in registered lookups (spacy-lookups-data). An "
              "example for how to load lemmatizer tables in [initialize]:\n\n"
              "[initialize.components]\n\n"
@@ -975,7 +980,8 @@ class Errors(metaclass=ErrorsWithCodes):
              f'url = "{about.__lookups_url__}"\n'
              "tables = {tables}\n"
              "# or required tables only: tables = {required_tables}\n")
-    E4006 = ("Server error ({status_code}), couldn't fetch {url}")
+    E4008 = ("Server error ({status_code}), couldn't fetch {url}")
+
 
 RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}
 
