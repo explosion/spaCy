@@ -22,7 +22,7 @@ uses a `Softmax` layer and treats the task as a multi-class problem.
 
 Predicted spans will be saved in a [`SpanGroup`](/api/spangroup) on the doc under `doc.spans[spans_key]`,
 where `spans_key` is a component config setting.
-Individual span scores are stored in `spangroup.attrs["scores"]`.
+Individual span scores are stored in `doc.spans[spans_key].attrs["scores"]`.
 
 ## Assigned Attributes {id="assigned-attributes"}
 
