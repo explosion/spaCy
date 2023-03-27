@@ -37,15 +37,15 @@ def project_push(project_dir: Path, remote: str):
         remote = config["remotes"][remote]
     storage = RemoteStorage(project_dir, remote)
     for cmd in config.get("commands", []):
-        logger.debug(f"CMD: cmd['name']")
+        logger.debug("CMD: %s", cmd["name"])
         deps = [project_dir / dep for dep in cmd.get("deps", [])]
         if any(not dep.exists() for dep in deps):
-            logger.debug(f"Dependency missing. Skipping {cmd['name']} outputs")
+            logger.debug("Dependency missing. Skipping %s outputs", cmd["name"])
             continue
         cmd_hash = get_command_hash(
             "", "", [project_dir / dep for dep in cmd.get("deps", [])], cmd["script"]
         )
-        logger.debug(f"CMD_HASH: {cmd_hash}")
+        logger.debug("CMD_HASH: %s", cmd_hash)
         for output_path in cmd.get("outputs", []):
             output_loc = project_dir / output_path
             if output_loc.exists() and _is_not_empty_dir(output_loc):
@@ -55,7 +55,7 @@ def project_push(project_dir: Path, remote: str):
                     content_hash=get_content_hash(output_loc),
                 )
                 logger.debug(
-                    f"URL: {url} for output {output_path} with cmd_hash {cmd_hash}"
+                    "URL: %s for output %s with cmd_hash %s", url, output_path, cmd_hash
                 )
                 yield output_path, url
 

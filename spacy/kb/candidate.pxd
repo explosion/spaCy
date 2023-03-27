@@ -1,12 +1,15 @@
-from .kb cimport KnowledgeBase
 from libcpp.vector cimport vector
+from .kb_in_memory cimport InMemoryLookupKB
 from ..typedefs cimport hash_t
 
-# Object used by the Entity Linker that summarizes one entity-alias candidate combination.
 cdef class Candidate:
-    cdef readonly KnowledgeBase kb
-    cdef hash_t entity_hash
-    cdef float entity_freq
-    cdef vector[float] entity_vector
-    cdef hash_t alias_hash
-    cdef float prior_prob
+    pass
+
+
+cdef class InMemoryCandidate(Candidate):
+    cdef readonly hash_t _entity_hash
+    cdef readonly hash_t _alias_hash
+    cpdef vector[float] _entity_vector
+    cdef float _prior_prob
+    cdef readonly InMemoryLookupKB _kb
+    cdef float _entity_freq

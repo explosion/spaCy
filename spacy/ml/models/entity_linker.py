@@ -6,9 +6,9 @@ from thinc.api import Model, Maxout, Linear, tuplify, Ragged
 
 from ...util import registry
 from ...kb import KnowledgeBase, InMemoryLookupKB
-from ...kb import Candidate, get_candidates, get_candidates_batch
+from ...kb import Candidate
 from ...vocab import Vocab
-from ...tokens import Span, Doc
+from ...tokens import Doc, Span, SpanGroup
 from ..extract_spans import extract_spans
 from ...errors import Errors
 
@@ -89,6 +89,14 @@ def load_kb(
     return kb_from_file
 
 
+@registry.misc("spacy.EmptyKB.v2")
+def empty_kb_for_config() -> Callable[[Vocab, int], KnowledgeBase]:
+    def empty_kb_factory(vocab: Vocab, entity_vector_length: int):
+        return InMemoryLookupKB(vocab=vocab, entity_vector_length=entity_vector_length)
+
+    return empty_kb_factory
+
+
 @registry.misc("spacy.EmptyKB.v1")
 def empty_kb(
     entity_vector_length: int,
@@ -106,6 +114,28 @@ def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
 
 @registry.misc("spacy.CandidateBatchGenerator.v1")
 def create_candidates_batch() -> Callable[
-    [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
+    [KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]
 ]:
     return get_candidates_batch
+
+
+def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
+    """
+    Return candidate entities for a given mention and fetching appropriate entries from the index.
+    kb (KnowledgeBase): Knowledge base to query.
+    mention (Span): Entity mention for which to identify candidates.
+    RETURNS (Iterable[Candidate]): Identified candidates.
+    """
+    return kb.get_candidates(mention)
+
+
+def get_candidates_batch(
+    kb: KnowledgeBase, mentions: SpanGroup
+) -> Iterable[Iterable[Candidate]]:
+    """
+    Return candidate entities for the given mentions and fetching appropriate entries from the index.
+    kb (KnowledgeBase): Knowledge base to query.
+    mentions (SpanGroup): Entity mentions for which to identify candidates.
+    RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
+    """
+    return kb.get_candidates_batch(mentions)

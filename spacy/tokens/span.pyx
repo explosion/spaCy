@@ -461,20 +461,21 @@ cdef class Span:
         """Obtain the sentences that contain this span. If the given span
         crosses sentence boundaries, return all sentences it is a part of.
 
-        RETURNS (Iterable[Span]): All sentences that the span is a part of.
+        RETURNS (Tuple[Span]): All sentences that the span is a part of.
 
-         DOCS: https://spacy.io/api/span#sents
+        DOCS: https://spacy.io/api/span#sents
         """
         cdef int start
         cdef int i
 
         if "sents" in self.doc.user_span_hooks:
-            yield from self.doc.user_span_hooks["sents"](self)
-        elif "sents" in self.doc.user_hooks:
+            return tuple(self.doc.user_span_hooks["sents"](self))
+        spans = []
+        if "sents" in self.doc.user_hooks:
             for sentence in self.doc.user_hooks["sents"](self.doc):
                 if sentence.end > self.start:
                     if sentence.start < self.end or sentence.start == self.start == self.end:
-                        yield sentence
+                        spans.append(sentence)
                     else:
                         break
         else:
@@ -489,12 +490,13 @@ cdef class Span:
             # Now, find all the sentences in the span
             for i in range(start + 1, self.doc.length):
                 if self.doc.c[i].sent_start == 1:
-                    yield Span(self.doc, start, i)
+                    spans.append(Span(self.doc, start, i))
                     start = i
                     if start >= self.end:
                         break
             if start < self.end:
-                yield Span(self.doc, start, self.end)
+                spans.append(Span(self.doc, start, self.end))
+        return tuple(spans)
 
 
     @property
@@ -502,7 +504,7 @@ cdef class Span:
         """The named entities that fall completely within the span. Returns
         a tuple of `Span` objects.
 
-        RETURNS (tuple): Entities in the span, one `Span` per entity.
+        RETURNS (Tuple[Span]): Entities in the span, one `Span` per entity.
 
         DOCS: https://spacy.io/api/span#ents
         """
@@ -517,7 +519,7 @@ cdef class Span:
                     ents.append(ent)
                 else:
                     break
-        return ents
+        return tuple(ents)
 
     @property
     def has_vector(self):
@@ -532,8 +534,6 @@ cdef class Span:
             return self.doc.user_span_hooks["has_vector"](self)
         elif self.vocab.vectors.size > 0:
             return any(token.has_vector for token in self)
-        elif self.doc.tensor.size > 0:
-            return True
         else:
             return False
 
@@ -615,13 +615,15 @@ cdef class Span:
         NP-level coordination, no prepositional phrases, and no relative
         clauses.
 
-        YIELDS (Span): Noun chunks in the span.
+        RETURNS (Tuple[Span]): Noun chunks in the span.
 
         DOCS: https://spacy.io/api/span#noun_chunks
         """
+        spans = []
         for span in self.doc.noun_chunks:
             if span.start >= self.start and span.end <= self.end:
-                yield span
+                spans.append(span)
+        return tuple(spans)
 
     @property
     def root(self):
@@ -666,11 +668,11 @@ cdef class Span:
         else:
             return self.doc[root]
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
+    def char_span(self, int start_idx, int end_idx, label=0, *, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
         """Create a `Span` object from the slice `span.text[start : end]`.
 
-        start (int): The index of the first character of the span.
-        end (int): The index of the first character after the span.
+        start_idx (int): The index of the first character of the span.
+        end_idx (int): The index of the first character after the span.
         label (Union[int, str]): A label to attach to the Span, e.g. for
             named entities.
         kb_id (Union[int, str]):  An ID from a KB to capture the meaning of a named entity.

@@ -26,7 +26,7 @@ class Vocab:
     def __init__(
         self,
         lex_attr_getters: Optional[Dict[str, Callable[[str], Any]]] = ...,
-        strings: Optional[Union[List[str], StringStore]] = ...,
+        strings: Optional[StringStore] = ...,
         lookups: Optional[Lookups] = ...,
         writing_system: Dict[str, Any] = ...,
         get_noun_chunks: Optional[Callable[[Union[Doc, Span]], Iterator[Span]]] = ...,

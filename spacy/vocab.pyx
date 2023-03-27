@@ -49,8 +49,8 @@ cdef class Vocab:
 
     DOCS: https://spacy.io/api/vocab
     """
-    def __init__(self, lex_attr_getters=None, strings=tuple(), lookups=None,
-                 writing_system={}, get_noun_chunks=None, **deprecated_kwargs):
+    def __init__(self, lex_attr_getters=None, strings=None, lookups=None,
+                 writing_system=None, get_noun_chunks=None):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -66,16 +66,19 @@ cdef class Vocab:
             lookups = Lookups()
         self.mem = Pool()
         self._by_orth = PreshMap()
-        self.strings = StringStore()
         self.length = 0
-        if strings:
-            for string in strings:
-                _ = self[string]
+        if strings is None:
+            self.strings = StringStore()
+        else:
+            self.strings = strings
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings)
         self.vectors = Vectors(strings=self.strings)
         self.lookups = lookups
-        self.writing_system = writing_system
+        if writing_system is None:
+            self.writing_system = {}
+        else:
+            self.writing_system = writing_system
         self.get_noun_chunks = get_noun_chunks
 
     property vectors:
