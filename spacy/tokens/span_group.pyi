@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, Optional, Union, overload
+from typing import Any, Dict, Iterable, Optional, overload
 from .doc import Doc
 from .span import Span
 
