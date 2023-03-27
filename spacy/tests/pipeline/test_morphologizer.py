@@ -1,6 +1,8 @@
 import pytest
 from numpy.testing import assert_equal, assert_almost_equal
 
+from thinc.api import get_current_ops
+
 from spacy import util
 from spacy.training import Example
 from spacy.lang.en import English
@@ -52,8 +54,9 @@ def test_label_smoothing():
     tag_scores, bp_tag_scores = morph_ls.model.begin_update(
         [eg.predicted for eg in train_examples]
     )
-    no_ls_grads = morph_no_ls.get_loss(train_examples, tag_scores)[1][0]
-    ls_grads = morph_ls.get_loss(train_examples, tag_scores)[1][0]
+    ops = get_current_ops()
+    no_ls_grads = ops.to_numpy(morph_no_ls.get_loss(train_examples, tag_scores)[1][0])
+    ls_grads = ops.to_numpy(morph_ls.get_loss(train_examples, tag_scores)[1][0])
     assert_almost_equal(ls_grads / no_ls_grads, 0.94285715)
 
 
