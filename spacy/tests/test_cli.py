@@ -15,7 +15,6 @@ from spacy import about
 from spacy.cli import info
 from spacy.cli._util import walk_directory
 from spacy.cli._util import parse_config_overrides, string_to_list
-from spacy.cli._util import upload_file, download_file
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.debug_data import _get_distribution, _get_kl_divergence
@@ -906,21 +905,6 @@ def test_cli_find_threshold(capsys):
                     scores_key="cats_macro_f",
                     silent=True,
                 )
-
-
-def test_upload_download_local_file():
-    with make_tempdir() as d1, make_tempdir() as d2:
-        filename = "f.txt"
-        content = "content"
-        local_file = d1 / filename
-        remote_file = d2 / filename
-        with local_file.open(mode="w") as file_:
-            file_.write(content)
-        upload_file(local_file, remote_file)
-        local_file.unlink()
-        download_file(remote_file, local_file)
-        with local_file.open(mode="r") as file_:
-            assert file_.read() == content
 
 
 def test_walk_directory():
