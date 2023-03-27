@@ -16,6 +16,7 @@ on:
 jobs:
   validate:
     name: Validate
+    if: github.repository_owner == 'explosion'
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
