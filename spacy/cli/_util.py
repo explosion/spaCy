@@ -188,14 +188,6 @@ def import_code(code_path: Optional[Union[Path, str]]) -> None:
             msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
 
 
-def ensure_pathy(path):
-    """Temporary helper to prevent importing Pathy globally (which can cause
-    slow and annoying Google Cloud warning)."""
-    from pathy import Pathy  # noqa: F811
-
-    return Pathy.fluid(path)
-
-
 def get_git_version(
     error: str = "Could not run 'git'. Make sure it's installed and the executable is available.",
 ) -> Tuple[int, int]:
