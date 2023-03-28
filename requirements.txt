@@ -12,7 +12,7 @@ catalogue>=2.0.6,<2.1.0
 typer>=0.3.0,<0.8.0
 pathy>=0.10.0
 smart-open>=5.2.1,<7.0.0
-git+https://github.com/explosion/weasel  # TODO: use a SemVer indentifier
+weasel@git+https://github.com/explosion/weasel.git@9a3632862b47069d2f9033b773e814d4c4e09c83  # TODO: use a SemVer indentifier
 # Third party dependencies
 numpy>=1.15.0
 requests>=2.13.0,<3.0.0
