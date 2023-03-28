@@ -130,7 +130,7 @@ def parse_deps(
 ) -> Dict[str, Any]:
     """Generate dependency parse in {'words': [], 'arcs': []} format.
 
-    orig_doc Union[Doc, Span]: Document to parse.
+    orig_doc (Union[Doc, Span]): Document to parse.
     options (Dict[str, Any]): Dependency parse specific visualisation options.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
