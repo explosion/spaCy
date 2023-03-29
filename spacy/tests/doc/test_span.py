@@ -716,3 +716,18 @@ def test_for_partial_ent_sents():
     # equal to the sentences referenced in ent.sents.
     for doc_sent, ent_sent in zip(doc.sents, doc.ents[0].sents):
         assert doc_sent == ent_sent
+
+
+def test_for_no_ent_sents():
+    """Span.sents() should set .sents correctly, even if Span in question is trailing and doesn't form a full
+    sentence.
+    """
+    doc = Doc(
+        English().vocab,
+        words=["This", "is", "a", "test.", "ENTITY"],
+        sent_starts=[1, 0, 0, 0, 1],
+    )
+    doc.set_ents([Span(doc, 4, 5, "WORK")])
+    sents = list(doc.ents[0].sents)
+    assert len(sents) == 1
+    assert str(sents[0]) == str(doc.ents[0].sent) == "ENTITY"
