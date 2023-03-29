@@ -463,6 +463,10 @@ cdef class Span:
                 elif i == self.doc.length - 1:
                     yield Span(self.doc, start, self.doc.length)
 
+            # Ensure that trailing parts of the Span instance are included in last element of .sents.
+            if start == self.doc.length - 1:
+                yield Span(self.doc, start, self.doc.length)
+
     @property
     def ents(self):
         """The named entities that fall completely within the span. Returns
