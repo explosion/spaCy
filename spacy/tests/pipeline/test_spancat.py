@@ -1,7 +1,7 @@
 import pytest
 import numpy
 from numpy.testing import assert_array_equal, assert_almost_equal
-from thinc.api import get_current_ops, Ragged
+from thinc.api import get_current_ops, NumpyOps, Ragged
 
 from spacy import util
 from spacy.lang.en import English
@@ -577,3 +577,21 @@ def test_set_candidates(name):
     assert len(docs[0].spans["candidates"]) == 9
     assert docs[0].spans["candidates"][0].text == "Just"
     assert docs[0].spans["candidates"][4].text == "Just a"
+
+
+@pytest.mark.parametrize("name", SPANCAT_COMPONENTS)
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_spancat_multiprocessing(name, n_process):
+    if isinstance(get_current_ops, NumpyOps) or n_process < 2:
+        nlp = Language()
+        spancat = nlp.add_pipe(name, config={"spans_key": SPAN_KEY})
+        train_examples = make_examples(nlp)
+        nlp.initialize(get_examples=lambda: train_examples)
+        texts = [
+            "Just a sentence.",
+            "I like London and Berlin",
+            "I like Berlin",
+            "I eat ham.",
+        ]
+        docs = list(nlp.pipe(texts, n_process=n_process))
+        assert len(docs) == len(texts)
