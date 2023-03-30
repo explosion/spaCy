@@ -291,7 +291,7 @@ the `manual=True` argument in `displacy.render`.
 
 | Name        | Description                                                         |
 | ----------- | ------------------------------------------------------------------- |
-| `orig_doc`  | Doc to parse dependencies. ~~Doc~~                                  |
+| `orig_doc`  | Doc or span to parse dependencies. ~~Union[Doc, Span]~~             |
 | `options`   | Dependency parse specific visualisation options. ~~Dict[str, Any]~~ |
 | **RETURNS** | Generated dependency parse keyed by words and arcs. ~~dict~~        |
 
