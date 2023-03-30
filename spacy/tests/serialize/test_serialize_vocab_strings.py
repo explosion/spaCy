@@ -15,8 +15,11 @@ from spacy.lang.lex_attrs import norm
 
 from ..util import make_tempdir
 
-test_strings = [([], []), (["rats", "are", "cute"], ["i", "like", "rats"])]
-test_strings_attrs = [(["rats", "are", "cute"], "Hello")]
+test_strings = [
+    (StringStore(), StringStore()),
+    (StringStore(["rats", "are", "cute"]), StringStore(["i", "like", "rats"])),
+]
+test_strings_attrs = [(StringStore(["rats", "are", "cute"]), "Hello")]
 
 
 @pytest.mark.issue(599)
@@ -84,7 +87,7 @@ def test_serialize_vocab_roundtrip_bytes(strings1, strings2):
     vocab2 = Vocab(strings=strings2)
     vocab1_b = vocab1.to_bytes()
     vocab2_b = vocab2.to_bytes()
-    if strings1 == strings2:
+    if strings1.to_bytes() == strings2.to_bytes():
         assert vocab1_b == vocab2_b
     else:
         assert vocab1_b != vocab2_b
@@ -121,11 +124,12 @@ def test_serialize_vocab_roundtrip_disk(strings1, strings2):
 def test_serialize_vocab_lex_attrs_bytes(strings, lex_attr):
     vocab1 = Vocab(strings=strings, lex_attr_getters={NORM: norm})
     vocab2 = Vocab(lex_attr_getters={NORM: norm})
-    vocab1[strings[0]].norm_ = lex_attr
-    assert vocab1[strings[0]].norm_ == lex_attr
-    assert vocab2[strings[0]].norm_ != lex_attr
+    s = next(iter(vocab1.strings))
+    vocab1[s].norm_ = lex_attr
+    assert vocab1[s].norm_ == lex_attr
+    assert vocab2[s].norm_ != lex_attr
     vocab2 = vocab2.from_bytes(vocab1.to_bytes())
-    assert vocab2[strings[0]].norm_ == lex_attr
+    assert vocab2[s].norm_ == lex_attr
 
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
@@ -140,14 +144,15 @@ def test_deserialize_vocab_seen_entries(strings, lex_attr):
 def test_serialize_vocab_lex_attrs_disk(strings, lex_attr):
     vocab1 = Vocab(strings=strings, lex_attr_getters={NORM: norm})
     vocab2 = Vocab(lex_attr_getters={NORM: norm})
-    vocab1[strings[0]].norm_ = lex_attr
-    assert vocab1[strings[0]].norm_ == lex_attr
-    assert vocab2[strings[0]].norm_ != lex_attr
+    s = next(iter(vocab1.strings))
+    vocab1[s].norm_ = lex_attr
+    assert vocab1[s].norm_ == lex_attr
+    assert vocab2[s].norm_ != lex_attr
     with make_tempdir() as d:
         file_path = d / "vocab"
         vocab1.to_disk(file_path)
         vocab2 = vocab2.from_disk(file_path)
-    assert vocab2[strings[0]].norm_ == lex_attr
+    assert vocab2[s].norm_ == lex_attr
 
 
 @pytest.mark.parametrize("strings1,strings2", test_strings)

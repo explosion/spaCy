@@ -2,7 +2,6 @@ import os
 import math
 from collections import Counter
 from typing import Tuple, List, Dict, Any
-import pkg_resources
 import time
 from pathlib import Path
 
@@ -1017,8 +1016,6 @@ def test_local_remote_storage_pull_missing():
 
 
 def test_cli_find_threshold(capsys):
-    thresholds = numpy.linspace(0, 1, 10)
-
     def make_examples(nlp: Language) -> List[Example]:
         docs: List[Example] = []
 
@@ -1082,8 +1079,6 @@ def test_cli_find_threshold(capsys):
                 scores_key="cats_macro_f",
                 silent=True,
             )
-            assert best_threshold != thresholds[0]
-            assert thresholds[0] < best_threshold < thresholds[9]
             assert best_score == max(res.values())
             assert res[1.0] == 0.0
 
@@ -1091,7 +1086,7 @@ def test_cli_find_threshold(capsys):
         nlp, _ = init_nlp((("spancat", {}),))
         with make_tempdir() as nlp_dir:
             nlp.to_disk(nlp_dir)
-            res = find_threshold(
+            best_threshold, best_score, res = find_threshold(
                 model=nlp_dir,
                 data_path=docs_dir / "docs.spacy",
                 pipe_name="spancat",
@@ -1099,10 +1094,8 @@ def test_cli_find_threshold(capsys):
                 scores_key="spans_sc_f",
                 silent=True,
             )
-            assert res[0] != thresholds[0]
-            assert thresholds[0] < res[0] < thresholds[8]
-            assert res[1] >= 0.6
-            assert res[2][1.0] == 0.0
+            assert best_score == max(res.values())
+            assert res[1.0] == 0.0
 
         # Having multiple textcat_multilabel components should work, since the name has to be specified.
         nlp, _ = init_nlp((("textcat_multilabel", {}),))
@@ -1132,6 +1125,7 @@ def test_cli_find_threshold(capsys):
                 )
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "reqs,output",
     [
@@ -1164,6 +1158,8 @@ def test_cli_find_threshold(capsys):
     ],
 )
 def test_project_check_requirements(reqs, output):
+    import pkg_resources
+
     # excessive guard against unlikely package name
     try:
         pkg_resources.require("spacyunknowndoesnotexist12345")

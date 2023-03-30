@@ -107,7 +107,7 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
 
 @registry.misc("spacy.LookupsDataLoader.v1")
 def load_lookups_data(lang, tables):
-    util.logger.debug(f"Loading lookups from spacy-lookups-data: {tables}")
+    util.logger.debug("Loading lookups from spacy-lookups-data: %s", tables)
     lookups = load_lookups(lang=lang, tables=tables)
     return lookups
 
@@ -175,8 +175,7 @@ class Language:
         if not isinstance(vocab, Vocab) and vocab is not True:
             raise ValueError(Errors.E918.format(vocab=vocab, vocab_type=type(Vocab)))
         if vocab is True:
-            vectors_name = meta.get("vectors", {}).get("name")
-            vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)
+            vocab = create_vocab(self.lang, self.Defaults)
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
@@ -230,7 +229,6 @@ class Language:
             "width": self.vocab.vectors_length,
             "vectors": len(self.vocab.vectors),
             "keys": self.vocab.vectors.n_keys,
-            "name": self.vocab.vectors.name,
             "mode": self.vocab.vectors.mode,
         }
         self._meta["labels"] = dict(self.pipe_labels)
@@ -1205,7 +1203,7 @@ class Language:
         _: Optional[Any] = None,
         *,
         drop: float = 0.0,
-        sgd: Optional[Optimizer] = None,
+        sgd: Union[Optimizer, None, Literal[False]] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         exclude: Iterable[str] = SimpleFrozenList(),
@@ -1216,7 +1214,9 @@ class Language:
         examples (Iterable[Example]): A batch of examples
         _: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
-        sgd (Optimizer): An optimizer.
+        sgd (Union[Optimizer, None, Literal[False]]): An optimizer. Will
+            be created via create_optimizer if 'None'. No optimizer will
+            be used when set to 'False'.
         losses (Dict[str, float]): Dictionary to update with the loss, keyed by
             component.
         component_cfg (Dict[str, Dict]): Config parameters for specific pipeline
@@ -1249,17 +1249,12 @@ class Language:
             component_cfg[name].setdefault("drop", drop)
             pipe_kwargs[name].setdefault("batch_size", self.batch_size)
         for name, proc in self.pipeline:
-            # ignore statements are used here because mypy ignores hasattr
-            if name not in exclude and hasattr(proc, "update"):
-                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])  # type: ignore
-            if sgd not in (None, False):
-                if (
-                    name not in exclude
-                    and isinstance(proc, ty.TrainableComponent)
-                    and proc.is_trainable
-                    and proc.model not in (True, False, None)
-                ):
-                    proc.finish_update(sgd)
+            if (
+                name not in exclude
+                and isinstance(proc, ty.TrainableComponent)
+                and proc.is_trainable
+            ):
+                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
             if name in annotates:
                 for doc, eg in zip(
                     _pipe(
@@ -1272,6 +1267,18 @@ class Language:
                     examples,
                 ):
                     eg.predicted = doc
+        # Only finish the update after all component updates are done. Some
+        # components may share weights (such as tok2vec) and we only want
+        # to apply weight updates after all gradients are accumulated.
+        for name, proc in self.pipeline:
+            if (
+                name not in exclude
+                and isinstance(proc, ty.TrainableComponent)
+                and proc.is_trainable
+                and sgd not in (None, False)
+            ):
+                proc.finish_update(sgd)
+
         return losses
 
     def rehearse(
@@ -2069,7 +2076,7 @@ class Language:
         pipe = self.get_pipe(pipe_name)
         pipe_cfg = self._pipe_configs[pipe_name]
         if listeners:
-            util.logger.debug(f"Replacing listeners of component '{pipe_name}'")
+            util.logger.debug("Replacing listeners of component '%s'", pipe_name)
             if len(list(listeners)) != len(pipe_listeners):
                 # The number of listeners defined in the component model doesn't
                 # match the listeners to replace, so we won't be able to update
@@ -2192,9 +2199,6 @@ class Language:
             if path.exists():
                 data = srsly.read_json(path)
                 self.meta.update(data)
-                # self.meta always overrides meta["vectors"] with the metadata
-                # from self.vocab.vectors, so set the name directly
-                self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
         def deserialize_vocab(path: Path) -> None:
             if path.exists():
@@ -2263,9 +2267,6 @@ class Language:
         def deserialize_meta(b):
             data = srsly.json_loads(b)
             self.meta.update(data)
-            # self.meta always overrides meta["vectors"] with the metadata
-            # from self.vocab.vectors, so set the name directly
-            self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
         deserializers: Dict[str, Callable[[bytes], Any]] = {}
         deserializers["config.cfg"] = lambda b: self.config.from_bytes(

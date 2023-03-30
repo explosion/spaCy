@@ -186,14 +186,17 @@ the character indices don't map to a valid span.
 > assert span.text == "New York"
 > ```
 
-| Name        | Description                                                                               |
-| ----------- | ----------------------------------------------------------------------------------------- |
-| `start`     | The index of the first character of the span. ~~int~~                                     |
-| `end`       | The index of the last character after the span. ~~int~~                                   |
-| `label`     | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~               |
-| `kb_id`     | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~ |
-| `vector`    | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~            |
-| **RETURNS** | The newly constructed object or `None`. ~~Optional[Span]~~                                |
+| Name                                            | Description                                                                                                                                                                                                                                                                  |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start_idx`                                     | The index of the first character of the span. ~~int~~                                                                                                                                                                                                                        |
+| `end_idx`                                       | The index of the last character after the span. ~~int~~                                                                                                                                                                                                                      |
+| `label`                                         | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~                                                                                                                                                                                                  |
+| _keyword-only_                                  |                                                                                                                                                                                                                                                                              |
+| `kb_id`                                         | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~                                                                                                                                                                                    |
+| `vector`                                        | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~                                                                                                                                                                                               |
+| `alignment_mode` <Tag variant="new">3.5.1</Tag> | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"contract"` (span of all tokens completely within the character span), `"expand"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
+| `span_id` <Tag variant="new">3.5.1</Tag>        | An identifier to associate with the span. ~~Union[int, str]~~                                                                                                                                                                                                                |
+| **RETURNS**                                     | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                   |
 
 ## Span.similarity {id="similarity",tag="method",model="vectors"}
 
@@ -272,17 +275,16 @@ The named entities that fall completely within the span. Returns a tuple of
 > assert ents[0].text == "Mr. Best"
 > ```
 
-| Name        | Description                                                       |
-| ----------- | ----------------------------------------------------------------- |
-| **RETURNS** | Entities in the span, one `Span` per entity. ~~Tuple[Span, ...]~~ |
+| Name        | Description                                                  |
+| ----------- | ------------------------------------------------------------ |
+| **RETURNS** | Entities in the span, one `Span` per entity. ~~Tuple[Span]~~ |
 
 ## Span.noun_chunks {id="noun_chunks",tag="property",model="parser"}
 
-Iterate over the base noun phrases in the span. Yields base noun-phrase `Span`
-objects, if the document has been syntactically parsed. A base noun phrase, or
-"NP chunk", is a noun phrase that does not permit other NPs to be nested within
-it – so no NP-level coordination, no prepositional phrases, and no relative
-clauses.
+Returns a tuple of the base noun phrases in the span if the document has been
+syntactically parsed. A base noun phrase, or "NP chunk", is a noun phrase that
+does not permit other NPs to be nested within it – so no NP-level coordination,
+no prepositional phrases, and no relative clauses.
 
 If the `noun_chunk` [syntax iterator](/usage/linguistic-features#language-data)
 has not been implemeted for the given language, a `NotImplementedError` is
@@ -298,9 +300,9 @@ raised.
 > assert chunks[0].text == "another phrase"
 > ```
 
-| Name       | Description                       |
-| ---------- | --------------------------------- |
-| **YIELDS** | Noun chunks in the span. ~~Span~~ |
+| Name        | Description                              |
+| ----------- | ---------------------------------------- |
+| **RETURNS** | Noun chunks in the span. ~~Tuple[Span]~~ |
 
 ## Span.as_doc {id="as_doc",tag="method"}
 
@@ -522,9 +524,9 @@ sent = doc[sent.start : max(sent.end, span.end)]
 
 ## Span.sents {id="sents",tag="property",model="sentences",version="3.2.1"}
 
-Returns a generator over the sentences the span belongs to. This property is
-only available when [sentence boundaries](/usage/linguistic-features#sbd) have
-been set on the document by the `parser`, `senter`, `sentencizer` or some custom
+Returns a tuple of the sentences the span belongs to. This property is only
+available when [sentence boundaries](/usage/linguistic-features#sbd) have been
+set on the document by the `parser`, `senter`, `sentencizer` or some custom
 function. It will raise an error otherwise.
 
 If the span happens to cross sentence boundaries, all sentences the span
@@ -538,9 +540,9 @@ overlaps with will be returned.
 > assert len(span.sents) == 2
 > ```
 
-| Name        | Description                                                                |
-| ----------- | -------------------------------------------------------------------------- |
-| **RETURNS** | A generator yielding sentences this `Span` is a part of ~~Iterable[Span]~~ |
+| Name        | Description                                                   |
+| ----------- | ------------------------------------------------------------- |
+| **RETURNS** | A tuple of sentences this `Span` is a part of ~~Tuple[Span]~~ |
 
 ## Attributes {id="attributes"}
 

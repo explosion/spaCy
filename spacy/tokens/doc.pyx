@@ -520,7 +520,7 @@ cdef class Doc:
     def doc(self):
         return self
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
+    def char_span(self, int start_idx, int end_idx, label=0, *, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
         """Create a `Span` object from the slice
         `doc.text[start_idx : end_idx]`. Returns None if no valid `Span` can be
         created.
@@ -528,9 +528,9 @@ cdef class Doc:
         doc (Doc): The parent document.
         start_idx (int): The index of the first character of the span.
         end_idx (int): The index of the first character after the span.
-        label (uint64 or string): A label to attach to the Span, e.g. for
+        label (Union[int, str]): A label to attach to the Span, e.g. for
             named entities.
-        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a
+        kb_id (Union[int, str]):  An ID from a KB to capture the meaning of a
             named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
             the span.
@@ -539,6 +539,7 @@ cdef class Doc:
             with token boundaries), "contract" (span of all tokens completely
             within the character span), "expand" (span of all tokens at least
             partially covered by the character span). Defaults to "strict".
+        span_id (Union[int, str]): An identifier to associate with the span.
         RETURNS (Span): The newly constructed object.
 
         DOCS: https://spacy.io/api/doc#char_span
@@ -656,9 +657,6 @@ cdef class Doc:
             elif self.vocab.vectors.size > 0:
                 self._vector = sum(t.vector for t in self) / len(self)
                 return self._vector
-            elif self.tensor.size > 0:
-                self._vector = self.tensor.mean(axis=0)
-                return self._vector
             else:
                 return xp.zeros((self.vocab.vectors_length,), dtype="float32")
 
@@ -705,10 +703,10 @@ cdef class Doc:
         return self.text
 
     property ents:
-        """The named entities in the document. Returns a tuple of named entity
+        """The named entities in the document. Returns a list of named entity
         `Span` objects, if the entity recognizer has been applied.
 
-        RETURNS (tuple): Entities in the document, one `Span` per entity.
+        RETURNS (Tuple[Span]): Entities in the document, one `Span` per entity.
 
         DOCS: https://spacy.io/api/doc#ents
         """
@@ -866,7 +864,7 @@ cdef class Doc:
         NP-level coordination, no prepositional phrases, and no relative
         clauses.
 
-        YIELDS (Span): Noun chunks in the document.
+        RETURNS (Tuple[Span]): Noun chunks in the document.
 
         DOCS: https://spacy.io/api/doc#noun_chunks
         """
@@ -875,36 +873,35 @@ cdef class Doc:
 
         # Accumulate the result before beginning to iterate over it. This
         # prevents the tokenization from being changed out from under us
-        # during the iteration. The tricky thing here is that Span accepts
-        # its tokenization changing, so it's okay once we have the Span
-        # objects. See Issue #375.
+        # during the iteration.
         spans = []
         for start, end, label in self.noun_chunks_iterator(self):
             spans.append(Span(self, start, end, label=label))
-        for span in spans:
-            yield span
+        return tuple(spans)
 
     @property
     def sents(self):
         """Iterate over the sentences in the document. Yields sentence `Span`
         objects. Sentence spans have no label.
 
-        YIELDS (Span): Sentences in the document.
+        RETURNS (Tuple[Span]): Sentences in the document.
 
         DOCS: https://spacy.io/api/doc#sents
         """
         if not self.has_annotation("SENT_START"):
             raise ValueError(Errors.E030)
         if "sents" in self.user_hooks:
-            yield from self.user_hooks["sents"](self)
+            return tuple(self.user_hooks["sents"](self))
         else:
             start = 0
+            spans = []
             for i in range(1, self.length):
                 if self.c[i].sent_start == 1:
-                    yield Span(self, start, i)
+                    spans.append(Span(self, start, i))
                     start = i
             if start != self.length:
-                yield Span(self, start, self.length)
+                spans.append(Span(self, start, self.length))
+            return tuple(spans)
 
     @property
     def lang(self):
@@ -1604,7 +1601,7 @@ cdef class Doc:
         for span_group in doc_json.get("spans", {}):
             spans = []
             for span in doc_json["spans"][span_group]:
-                char_span = self.char_span(span["start"], span["end"], span["label"], span["kb_id"])
+                char_span = self.char_span(span["start"], span["end"], span["label"], kb_id=span["kb_id"])
                 if char_span is None:
                     raise ValueError(Errors.E1039.format(obj="span", start=span["start"], end=span["end"]))
                 spans.append(char_span)

@@ -11,7 +11,8 @@ from .vectors import Vectors
 from pathlib import Path
 
 def create_vocab(
-    lang: Optional[str], defaults: Any, vectors_name: Optional[str] = ...
+    lang: Optional[str],
+    defaults: Any,
 ) -> Vocab: ...
 
 class Vocab:
@@ -25,10 +26,9 @@ class Vocab:
     def __init__(
         self,
         lex_attr_getters: Optional[Dict[str, Callable[[str], Any]]] = ...,
-        strings: Optional[Union[List[str], StringStore]] = ...,
+        strings: Optional[StringStore] = ...,
         lookups: Optional[Lookups] = ...,
         oov_prob: float = ...,
-        vectors_name: Optional[str] = ...,
         writing_system: Dict[str, Any] = ...,
         get_noun_chunks: Optional[Callable[[Union[Doc, Span]], Iterator[Span]]] = ...,
     ) -> None: ...

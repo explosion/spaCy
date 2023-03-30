@@ -10,9 +10,6 @@ from ..language import Language
 from ..scorer import Scorer
 from .. import util
 
-# see #9050
-BACKWARD_OVERWRITE = False
-
 @Language.factory(
     "sentencizer",
     assigns=["token.is_sent_start", "doc.sents"],
@@ -52,13 +49,14 @@ class Sentencizer(Pipe):
         name="sentencizer",
         *,
         punct_chars=None,
-        overwrite=BACKWARD_OVERWRITE,
+        overwrite=False,
         scorer=senter_score,
     ):
         """Initialize the sentencizer.
 
         punct_chars (list): Punctuation characters to split on. Will be
             serialized with the nlp object.
+        overwrite (bool): Whether to overwrite existing annotations.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_spans for the attribute "sents".
 

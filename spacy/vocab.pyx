@@ -24,7 +24,7 @@ from .lang.norm_exceptions import BASE_NORMS
 from .lang.lex_attrs import LEX_ATTRS
 
 
-def create_vocab(lang, defaults, vectors_name=None):
+def create_vocab(lang, defaults):
     # If the spacy-lookups-data package is installed, we pre-populate the lookups
     # with lexeme data, if available
     lex_attrs = {**LEX_ATTRS, **defaults.lex_attr_getters}
@@ -38,7 +38,6 @@ def create_vocab(lang, defaults, vectors_name=None):
         lex_attr_data=defaults.lex_attr_data,
         writing_system=defaults.writing_system,
         get_noun_chunks=defaults.syntax_iterators.get("noun_chunks"),
-        vectors_name=vectors_name,
     )
 
 
@@ -49,10 +48,9 @@ cdef class Vocab:
 
     DOCS: https://spacy.io/api/vocab
     """
-    def __init__(self, lex_attr_getters=None, strings=tuple(), lookups=None,
-                 oov_prob=-20., vectors_name=None, writing_system={},
-                 get_noun_chunks=None, lang="", lex_attr_data=None,
-                 **deprecated_kwargs):
+    def __init__(self, lex_attr_getters=None, strings=None, lookups=None,
+                 oov_prob=-20., writing_system=None, get_noun_chunks=None,
+                 lang="", lex_attr_data=None):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -61,7 +59,6 @@ cdef class Vocab:
             vice versa.
         lookups (Lookups): Container for large lookup tables and dictionaries.
         oov_prob (float): Default OOV probability.
-        vectors_name (str): Optional name to identify the vectors table.
         get_noun_chunks (Optional[Callable[[Union[Doc, Span], Iterator[Tuple[int, int, int]]]]]):
             A function that yields base noun phrases used for Doc.noun_chunks.
         """
@@ -73,17 +70,20 @@ cdef class Vocab:
         self.lang = lang
         self.mem = Pool()
         self._by_orth = PreshMap()
-        self.strings = StringStore()
         self.length = 0
-        if strings:
-            for string in strings:
-                _ = self[string]
+        if strings is None:
+            self.strings = StringStore()
+        else:
+            self.strings = strings
         self.lex_attr_getters = lex_attr_getters
         self.lex_attr_data = lex_attr_data
         self.morphology = Morphology(self.strings)
-        self.vectors = Vectors(strings=self.strings, name=vectors_name)
+        self.vectors = Vectors(strings=self.strings)
         self.lookups = lookups
-        self.writing_system = writing_system
+        if writing_system is None:
+            self.writing_system = {}
+        else:
+            self.writing_system = writing_system
         self.get_noun_chunks = get_noun_chunks
 
     property vectors:
@@ -304,7 +304,7 @@ cdef class Vocab:
             for key, row in self.vectors.key2row.items()
         }
         # replace vectors with deduplicated version
-        self.vectors = Vectors(strings=self.strings, data=data, name=self.vectors.name)
+        self.vectors = Vectors(strings=self.strings, data=data)
         for key, row in key2row.items():
             self.vectors.add(key, row=row)
 
@@ -354,7 +354,7 @@ cdef class Vocab:
         keys = xp.asarray([key for (prob, i, key) in priority], dtype="uint64")
         keep = xp.ascontiguousarray(self.vectors.data[indices[:nr_row]])
         toss = xp.ascontiguousarray(self.vectors.data[indices[nr_row:]])
-        self.vectors = Vectors(strings=self.strings, data=keep, keys=keys[:nr_row], name=self.vectors.name)
+        self.vectors = Vectors(strings=self.strings, data=keep, keys=keys[:nr_row])
         syn_keys, syn_rows, scores = self.vectors.most_similar(toss, batch_size=batch_size)
         syn_keys = ops.to_numpy(syn_keys)
         remap = {}
