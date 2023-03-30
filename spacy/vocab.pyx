@@ -1,4 +1,6 @@
 # cython: profile=True
+from dataclasses import asdict
+
 from libc.string cimport memcpy
 
 import numpy
@@ -21,14 +23,15 @@ from .util import registry
 from .lookups import Lookups
 from . import util
 from .lang.norm_exceptions import BASE_NORMS
-from .lang.lex_attrs import LEX_ATTRS
+from .lang.lex_attrs import LEX_ATTRS, LexAttrData
 
 
 def create_vocab(lang, defaults):
     # If the spacy-lookups-data package is installed, we pre-populate the lookups
     # with lexeme data, if available
     lex_attrs = {**LEX_ATTRS, **defaults.lex_attr_getters}
-    defaults.lex_attr_data["stops"] = list(defaults.stop_words)
+    if len(defaults.stop_words) > 0:
+        defaults.lex_attr_data.is_stop["stop_words"] = list(defaults.stop_words)
     lookups = Lookups()
     lookups.add_table("lexeme_norm", BASE_NORMS)
     return Vocab(
@@ -63,7 +66,7 @@ cdef class Vocab:
             A function that yields base noun phrases used for Doc.noun_chunks.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
-        lex_attr_data = lex_attr_data if lex_attr_data is not None else {}
+        lex_attr_data = lex_attr_data if lex_attr_data is not None else LexAttrData()
         if lookups in (None, True, False):
             lookups = Lookups()
         self.cfg = {'oov_prob': oov_prob}
@@ -467,7 +470,7 @@ cdef class Vocab:
         if "lookups" not in exclude:
             self.lookups.to_disk(path)
         if "lex_attr_data" not in exclude:
-            srsly.write_msgpack(path / "lex_attr_data", self.lex_attr_data)
+            srsly.write_msgpack(path / "lex_attr_data", asdict(self.lex_attr_data))
 
     def from_disk(self, path, *, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
@@ -488,7 +491,7 @@ cdef class Vocab:
         if "lookups" not in exclude:
             self.lookups.from_disk(path)
         if "lex_attr_data" not in exclude:
-            self.lex_attr_data = srsly.read_msgpack(path / "lex_attr_data")
+            self.lex_attr_data = LexAttrData(**srsly.read_msgpack(path / "lex_attr_data"))
         self._reset_lexeme_cache()
         return self
 
@@ -510,7 +513,7 @@ cdef class Vocab:
             "strings": lambda: self.strings.to_bytes(),
             "vectors": deserialize_vectors,
             "lookups": lambda: self.lookups.to_bytes(),
-            "lex_attr_data": lambda: srsly.msgpack_dumps(self.lex_attr_data)
+            "lex_attr_data": lambda: srsly.msgpack_dumps(asdict(self.lex_attr_data))
         }
         return util.to_bytes(getters, exclude)
 
@@ -530,7 +533,7 @@ cdef class Vocab:
                 return self.vectors.from_bytes(b, exclude=["strings"])
 
         def serialize_lex_attr_data(b):
-            self.lex_attr_data = srsly.msgpack_loads(b)
+            self.lex_attr_data = LexAttrData(**srsly.msgpack_loads(b))
 
         setters = {
             "strings": lambda b: self.strings.from_bytes(b),

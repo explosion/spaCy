@@ -11,7 +11,7 @@ from spacy.tokens import Doc
 from spacy.util import ensure_path, load_model
 from spacy.vectors import Vectors
 from spacy.vocab import Vocab
-from spacy.lang.lex_attrs import norm
+from spacy.lang.lex_attrs import norm, LexAttrData
 
 from ..util import make_tempdir
 
@@ -142,7 +142,12 @@ def test_deserialize_vocab_seen_entries(strings, lex_attr):
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
 def test_serialize_vocab_lex_attrs_disk(strings, lex_attr):
-    vocab1 = Vocab(strings=strings, lex_attr_getters={NORM: norm})
+    stop_words_data = {"stop_words": ["a", "b", "c"]}
+    vocab1 = Vocab(
+        strings=strings,
+        lex_attr_getters={NORM: norm},
+        lex_attr_data=LexAttrData(is_stop=stop_words_data),
+    )
     vocab2 = Vocab(lex_attr_getters={NORM: norm})
     s = next(iter(vocab1.strings))
     vocab1[s].norm_ = lex_attr
@@ -153,6 +158,8 @@ def test_serialize_vocab_lex_attrs_disk(strings, lex_attr):
         vocab1.to_disk(file_path)
         vocab2 = vocab2.from_disk(file_path)
     assert vocab2[s].norm_ == lex_attr
+    assert vocab1.lex_attr_data == vocab2.lex_attr_data
+    assert vocab2.lex_attr_data.is_stop == stop_words_data
 
 
 @pytest.mark.parametrize("strings1,strings2", test_strings)
@@ -197,7 +204,7 @@ def test_pickle_vocab(strings, lex_attr):
     ops = get_current_ops()
     vectors = Vectors(data=ops.xp.zeros((10, 10)), mode="floret", hash_count=1)
     vocab.vectors = vectors
-    vocab.lex_attr_data = {"a": 1}
+    vocab.lex_attr_data.is_stop = {"stop_words": [1, 2, 3]}
     vocab[strings[0]].norm_ = lex_attr
     vocab_pickled = pickle.dumps(vocab)
     vocab_unpickled = pickle.loads(vocab_pickled)

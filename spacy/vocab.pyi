@@ -3,6 +3,7 @@ from typing import Any, Iterable
 from thinc.types import Floats1d, FloatsXd
 from . import Language
 from .strings import StringStore
+from .lang.lex_attrs import LexAttrData
 from .lexeme import Lexeme
 from .lookups import Lookups
 from .morphology import Morphology
@@ -31,6 +32,7 @@ class Vocab:
         oov_prob: float = ...,
         writing_system: Dict[str, Any] = ...,
         get_noun_chunks: Optional[Callable[[Union[Doc, Span]], Iterator[Span]]] = ...,
+        lex_attr_data=LexAttrData,
     ) -> None: ...
     @property
     def lang(self) -> str: ...

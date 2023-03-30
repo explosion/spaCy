@@ -1,9 +1,36 @@
 from typing import Set
+from dataclasses import dataclass, field
 import unicodedata
 import re
 
 from .. import attrs
 from .tokenizer_exceptions import URL_MATCH
+
+
+@dataclass
+class LexAttrData:
+    lower: dict = field(default_factory=dict)
+    norm: dict = field(default_factory=dict)
+    prefix: dict = field(default_factory=dict)
+    suffix: dict = field(default_factory=dict)
+    is_alpha: dict = field(default_factory=dict)
+    is_digit: dict = field(default_factory=dict)
+    is_lower: dict = field(default_factory=dict)
+    is_space: dict = field(default_factory=dict)
+    is_title: dict = field(default_factory=dict)
+    is_upper: dict = field(default_factory=dict)
+    is_stop: dict = field(default_factory=dict)
+    like_email: dict = field(default_factory=dict)
+    like_num: dict = field(default_factory=dict)
+    is_punct: dict = field(default_factory=dict)
+    is_ascii: dict = field(default_factory=dict)
+    shape: dict = field(default_factory=dict)
+    is_bracket: dict = field(default_factory=dict)
+    is_quote: dict = field(default_factory=dict)
+    is_left_punct: dict = field(default_factory=dict)
+    is_right_punct: dict = field(default_factory=dict)
+    is_currency: dict = field(default_factory=dict)
+    like_url: dict = field(default_factory=dict)
 
 
 _like_email = re.compile(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)").match
@@ -179,8 +206,8 @@ def is_upper(vocab, string: str) -> bool:
 
 
 def is_stop(vocab, string: str) -> bool:
-    stops = vocab.lex_attr_data.get("stops", [])
-    return string.lower() in stops
+    stop_words = vocab.lex_attr_data.is_stop.get("stop_words", set())
+    return string.lower() in stop_words
 
 
 def norm(vocab, string: str) -> str:
