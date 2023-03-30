@@ -323,15 +323,15 @@ and custom registered functions if needed. See the
 >     nlp.update([example], sgd=optimizer)
 > ```
 
-| Name            | Description                                                                                                                                    |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`      | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                              |
-| _keyword-only_  |                                                                                                                                                |
-| `drop`          | The dropout rate. ~~float~~                                                                                                                    |
-| `sgd`           | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                                  |
-| `losses`        | Dictionary to update with the loss, keyed by pipeline component. ~~Optional[Dict[str, float]]~~                                                |
-| `component_cfg` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
-| **RETURNS**     | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                          |
+| Name            | Description                                                                                                                                                                                        |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`      | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                                                                                  |
+| _keyword-only_  |                                                                                                                                                                                                    |
+| `drop`          | The dropout rate. Defaults to `0.0`. ~~float~~                                                                                                                                                     |
+| `sgd`           | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if `None`. No optimizer will be used when set to `False`. Defaults to `None`. ~~Union[Optimizer, None, Literal[False]]~~ |
+| `losses`        | Dictionary to update with the loss, keyed by pipeline component. Defaults to `None`. ~~Optional[Dict[str, float]]~~                                                                                |
+| `component_cfg` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~                                                     |
+| **RETURNS**     | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                                                                              |
 
 ## Language.distill {id="distill",tag="method,experimental",version="4"}
 

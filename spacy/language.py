@@ -1202,7 +1202,7 @@ class Language:
         _: Optional[Any] = None,
         *,
         drop: float = 0.0,
-        sgd: Optional[Optimizer] = None,
+        sgd: Union[Optimizer, None, Literal[False]] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         exclude: Iterable[str] = SimpleFrozenList(),
@@ -1213,7 +1213,9 @@ class Language:
         examples (Iterable[Example]): A batch of examples
         _: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
-        sgd (Optimizer): An optimizer.
+        sgd (Union[Optimizer, None, Literal[False]]): An optimizer. Will
+            be created via create_optimizer if 'None'. No optimizer will
+            be used when set to 'False'.
         losses (Dict[str, float]): Dictionary to update with the loss, keyed by
             component.
         component_cfg (Dict[str, Dict]): Config parameters for specific pipeline
@@ -1272,6 +1274,7 @@ class Language:
                 name not in exclude
                 and isinstance(proc, ty.TrainableComponent)
                 and proc.is_trainable
+                and sgd not in (None, False)
             ):
                 proc.finish_update(sgd)
 
