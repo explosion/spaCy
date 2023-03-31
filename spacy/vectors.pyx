@@ -1,3 +1,5 @@
+# cython: infer_types=True, profile=True, binding=True
+from typing import Callable
 cimport numpy as np
 from libc.stdint cimport uint32_t, uint64_t
 from cython.operator cimport dereference as deref
@@ -6,7 +8,8 @@ from murmurhash.mrmr cimport hash128_x64
 
 import functools
 import numpy
-from typing import cast
+from pathlib import Path
+from typing import cast, TYPE_CHECKING, Union
 import warnings
 from enum import Enum
 import srsly
@@ -19,6 +22,10 @@ from .strings cimport StringStore
 from .strings import get_string_id
 from .errors import Errors, Warnings
 from . import util
+
+
+if TYPE_CHECKING:
+    from .vocab import Vocab  # noqa: F401
 
 
 def unpickle_vectors(bytes_data):
@@ -34,7 +41,51 @@ class Mode(str, Enum):
         return list(cls.__members__.keys())
 
 
-cdef class Vectors:
+cdef class BaseVectors:
+    def __init__(self, *, strings=None):
+        # Make sure abstract BaseVectors is not instantiated.
+        if self.__class__ == BaseVectors:
+            raise TypeError(
+                Errors.E1046.format(cls_name=self.__class__.__name__)
+            )
+
+    def __getitem__(self, key):
+        raise NotImplementedError
+
+    def get_batch(self, keys):
+        raise NotImplementedError
+
+    @property
+    def vectors_length(self):
+        raise NotImplementedError
+
+    def add(self, key, *, vector=None):
+        raise NotImplementedError
+
+    # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
+    # allow serialization
+    def to_bytes(self, **kwargs):
+        return b""
+
+    def from_bytes(self, data: bytes, **kwargs):
+        return self
+
+    def to_disk(self, path: Union[str, Path], **kwargs):
+        return None
+
+    def from_disk(self, path: Union[str, Path], **kwargs):
+        return self
+
+
+@util.registry.misc("spacy.Vectors.v1")
+def create_mode_vectors() -> Callable[["Vocab"], BaseVectors]:
+    def vectors_factory(vocab: "Vocab") -> BaseVectors:
+        return Vectors(strings=vocab.strings)
+
+    return vectors_factory
+
+
+cdef class Vectors(BaseVectors):
     """Store, save and load word vectors.
 
     Vectors data is kept in the vectors.data attribute, which should be an

@@ -20,6 +20,8 @@ import traceback
 
 from . import ty
 from .tokens.underscore import Underscore
+from .strings import StringStore
+from .vectors import BaseVectors
 from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
@@ -134,6 +136,7 @@ class Language:
         max_length: int = 10**6,
         meta: Dict[str, Any] = {},
         create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
+        create_vectors: Optional[Callable[["Vocab"], BaseVectors]] = None,
         batch_size: int = 1000,
         **kwargs,
     ) -> None:
@@ -174,6 +177,10 @@ class Language:
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
             vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)
+            if not create_vectors:
+                vectors_cfg = {"vectors": self._config["nlp"]["vectors"]}
+                create_vectors = registry.resolve(vectors_cfg)["vectors"]
+            vocab.vectors = create_vectors(vocab)
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
@@ -1750,6 +1757,7 @@ class Language:
             filled["nlp"], validate=validate, schema=ConfigSchemaNlp
         )
         create_tokenizer = resolved_nlp["tokenizer"]
+        create_vectors = resolved_nlp["vectors"]
         before_creation = resolved_nlp["before_creation"]
         after_creation = resolved_nlp["after_creation"]
         after_pipeline_creation = resolved_nlp["after_pipeline_creation"]
@@ -1770,7 +1778,7 @@ class Language:
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
         # and then again when we load from disk.
-        nlp = lang_cls(vocab=vocab, create_tokenizer=create_tokenizer, meta=meta)
+        nlp = lang_cls(vocab=vocab, create_tokenizer=create_tokenizer, create_vectors=create_vectors, meta=meta)
         if after_creation is not None:
             nlp = after_creation(nlp)
             if not isinstance(nlp, cls):

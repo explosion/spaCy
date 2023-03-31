@@ -6,7 +6,7 @@ from thinc.api import Model, Ops, registry
 
 from ..tokens import Doc
 from ..errors import Errors
-from ..vectors import Mode
+from ..vectors import Vectors, Mode
 from ..vocab import Vocab
 
 
@@ -43,11 +43,14 @@ def forward(
     keys = model.ops.flatten([cast(Ints1d, doc.to_array(key_attr)) for doc in docs])
     vocab: Vocab = docs[0].vocab
     W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
-    if vocab.vectors.mode == Mode.default:
+    if isinstance(vocab.vectors, Vectors) and vocab.vectors.mode == Mode.default:
         V = model.ops.asarray(vocab.vectors.data)
         rows = vocab.vectors.find(keys=keys)
         V = model.ops.as_contig(V[rows])
-    elif vocab.vectors.mode == Mode.floret:
+    elif isinstance(vocab.vectors, Vectors) and vocab.vectors.mode == Mode.floret:
+        V = vocab.vectors.get_batch(keys)
+        V = model.ops.as_contig(V)
+    elif hasattr(vocab.vectors, "get_batch"):
         V = vocab.vectors.get_batch(keys)
         V = model.ops.as_contig(V)
     else:
@@ -56,7 +59,7 @@ def forward(
         vectors_data = model.ops.gemm(V, W, trans2=True)
     except ValueError:
         raise RuntimeError(Errors.E896)
-    if vocab.vectors.mode == Mode.default:
+    if isinstance(vocab.vectors, Vectors) and vocab.vectors.mode == Mode.default:
         # Convert negative indices to 0-vectors
         # TODO: more options for UNK tokens
         vectors_data[rows < 0] = 0
