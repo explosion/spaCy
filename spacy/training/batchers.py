@@ -2,7 +2,7 @@ from typing import Union, Iterable, Sequence, TypeVar, List, Callable, Iterator
 from typing import Optional, Any
 from functools import partial
 import itertools
-from thinc.schedules import Schedule
+from thinc.schedules import Schedule #type:ignore[attr-defined]
 
 from ..util import registry, minibatch
 
@@ -221,7 +221,7 @@ def _batch_by_length(
         if not batch:
             batch.append(i)
         elif length * (len(batch) + 1) <= max_words:
-            batch.append(i)
+            batch.append(i) 
         else:
             batches.append(batch)
             batch = [i]
