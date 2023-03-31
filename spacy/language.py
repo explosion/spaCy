@@ -1778,7 +1778,12 @@ class Language:
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
         # and then again when we load from disk.
-        nlp = lang_cls(vocab=vocab, create_tokenizer=create_tokenizer, create_vectors=create_vectors, meta=meta)
+        nlp = lang_cls(
+            vocab=vocab,
+            create_tokenizer=create_tokenizer,
+            create_vectors=create_vectors,
+            meta=meta,
+        )
         if after_creation is not None:
             nlp = after_creation(nlp)
             if not isinstance(nlp, cls):
