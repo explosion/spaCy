@@ -6,7 +6,7 @@ from spacy import util
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.language import Language
-from thinc.api import compounding
+from thinc.api import compounding, get_current_ops
 
 from ..util import make_tempdir
 
@@ -85,8 +85,9 @@ def test_label_smoothing():
     tag_scores, bp_tag_scores = tagger_ls.model.begin_update(
         [eg.predicted for eg in train_examples]
     )
-    no_ls_grads = tagger_no_ls.get_loss(train_examples, tag_scores)[1][0]
-    ls_grads = tagger_ls.get_loss(train_examples, tag_scores)[1][0]
+    ops = get_current_ops()
+    no_ls_grads = ops.to_numpy(tagger_no_ls.get_loss(train_examples, tag_scores)[1][0])
+    ls_grads = ops.to_numpy(tagger_ls.get_loss(train_examples, tag_scores)[1][0])
     assert_almost_equal(ls_grads / no_ls_grads, 0.925)
 
 
