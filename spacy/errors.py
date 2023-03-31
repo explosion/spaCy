@@ -542,6 +542,8 @@ class Errors(metaclass=ErrorsWithCodes):
             "during training, make sure to include it in 'annotating components'")
 
     # New errors added in v3.x
+    E850 = ("The PretrainVectors objective currently only supports default or "
+            "floret vectors, not {mode} vectors.")
     E851 = ("The 'textcat' component labels should only have values of 0 or 1, "
             "but found value of '{val}'.")
     E852 = ("The tar file pulled from the remote attempted an unsafe path "
@@ -951,6 +953,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "with `displacy.serve(doc, port=port)`")
     E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
              "or use `auto_select_port=True` to pick an available port automatically.")
+    E1051 = ("'allow_overlap' can only be False when max_positive is 1, but found 'max_positive': {max_positive}.")
 
     # v4 error strings
     E4000 = ("Expected a Doc as input, but got: '{type}'")

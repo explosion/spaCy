@@ -2,7 +2,6 @@ import os
 import math
 from collections import Counter
 from typing import Tuple, List, Dict, Any
-import pkg_resources
 import time
 from pathlib import Path
 
@@ -29,6 +28,7 @@ from spacy.cli.debug_data import _print_span_characteristics
 from spacy.cli.debug_data import _get_spans_length_freq_dist
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
+from spacy.cli.init_pipeline import _init_labels
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.project.remote_storage import RemoteStorage
@@ -47,7 +47,6 @@ from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
 from spacy.training.converters import iob_to_docs
 from spacy.util import ENV_VARS, get_minor_version, load_model_from_config, load_config
 
-from ..cli.init_pipeline import _init_labels
 from .util import make_tempdir
 
 
@@ -553,7 +552,14 @@ def test_parse_cli_overrides():
 
 @pytest.mark.parametrize("lang", ["en", "nl"])
 @pytest.mark.parametrize(
-    "pipeline", [["tagger", "parser", "ner"], [], ["ner", "textcat", "sentencizer"]]
+    "pipeline",
+    [
+        ["tagger", "parser", "ner"],
+        [],
+        ["ner", "textcat", "sentencizer"],
+        ["morphologizer", "spancat", "entity_linker"],
+        ["spancat_singlelabel", "textcat_multilabel"],
+    ],
 )
 @pytest.mark.parametrize("optimize", ["efficiency", "accuracy"])
 @pytest.mark.parametrize("pretraining", [True, False])
@@ -1126,6 +1132,7 @@ def test_cli_find_threshold(capsys):
                 )
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "reqs,output",
     [
@@ -1158,6 +1165,8 @@ def test_cli_find_threshold(capsys):
     ],
 )
 def test_project_check_requirements(reqs, output):
+    import pkg_resources
+
     # excessive guard against unlikely package name
     try:
         pkg_resources.require("spacyunknowndoesnotexist12345")

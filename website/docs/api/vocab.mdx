@@ -10,6 +10,13 @@ The `Vocab` object provides a lookup table that allows you to access
 [`StringStore`](/api/stringstore). It also owns underlying C-data that is shared
 between `Doc` objects.
 
+<Infobox variant ="warning">
+
+Note that a `Vocab` instance is not static. It increases in size as texts with
+new tokens are processed.
+
+</Infobox>
+
 ## Vocab.\_\_init\_\_ {id="init",tag="method"}
 
 Create the vocabulary.

@@ -9,6 +9,8 @@ from spacy.lang.en import English
 from spacy.lang.it import Italian
 from spacy.language import Language
 from spacy.lookups import Lookups
+from spacy.pipeline import EntityRecognizer
+from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.pipeline._parser_internals.ner import BiluoPushDown
 from spacy.training import Example, iob_to_biluo, split_bilu_label
 from spacy.tokens import Doc, Span
@@ -17,8 +19,6 @@ from thinc.api import fix_random_seed
 import logging
 
 from ..util import make_tempdir
-from ...pipeline import EntityRecognizer
-from ...pipeline.ner import DEFAULT_NER_MODEL
 
 TRAIN_DATA = [
     ("Who is Shaka Khan?", {"entities": [(7, 17, "PERSON")]}),
