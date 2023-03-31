@@ -228,7 +228,7 @@ class Tagger(TrainablePipe):
         loss_func = SequenceCategoricalCrossentropy()
         if losses is None:
             losses = {}
-        losses.setdefault(self.name, 0.0)
+        losses.setdefault(self.name+"_rehearse", 0.0)
         validate_examples(examples, "Tagger.rehearse")
         docs = [eg.predicted for eg in examples]
         if self._rehearsal_model is None:
@@ -243,7 +243,7 @@ class Tagger(TrainablePipe):
         bp_tag_scores(grads)
         if sgd is not None:
             self.finish_update(sgd)
-        losses[self.name] += loss
+        losses[self.name+"_rehearse"] += loss
         return losses
 
     def get_loss(self, examples, scores):

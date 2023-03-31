@@ -78,7 +78,7 @@ def train(
     # Components that should set annotations on update
     annotating_components = T["annotating_components"]
     # Components that should be rehearsed after update
-    rehearse_components = T["rehearse_components"]
+    rehearsal_components = T["rehearsal_components"]
     # Create iterator, which yields out info after each optimization step.
     training_step_iterator = train_while_improving(
         nlp,
@@ -92,7 +92,7 @@ def train(
         eval_frequency=T["eval_frequency"],
         exclude=frozen_components,
         annotating_components=annotating_components,
-        rehearse_components=rehearse_components,
+        rehearsal_components=rehearsal_components,
         before_update=before_update,
     )
     clean_output_dir(output_path)
@@ -155,7 +155,7 @@ def train_while_improving(
     max_steps: int,
     exclude: List[str],
     annotating_components: List[str],
-    rehearse_components: List[str],
+    rehearsal_components: List[str],
     before_update: Optional[Callable[["Language", Dict[str, Any]], None]],
 ):
     """Train until an evaluation stops improving. Works as a generator,
@@ -223,7 +223,7 @@ def train_while_improving(
                 losses=losses,
                 sgd=None,
                 exclude=exclude,
-                rehearse_components=rehearse_components,
+                rehearsal_components=rehearsal_components,
             )
         # TODO: refactor this so we don't have to run it separately in here
         for name, proc in nlp.pipeline:

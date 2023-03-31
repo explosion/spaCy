@@ -67,10 +67,10 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
         with nlp.select_pipes(enable=resume_components):
             logger.info(f"Resuming training for: {resume_components}")
             nlp.resume_training(sgd=optimizer)
-    # Components that shouldn't be updated during training
-    rehearse_components = T["rehearse_components"]
-    if rehearse_components:
-        logger.info(f"Rehearsing components: {rehearse_components}")
+    # Components that should be updated during training
+    rehearsal_components = T["rehearsal_components"]
+    if rehearsal_components:
+        logger.info(f"Rehearsing components: {rehearsal_components}")
     # Make sure that listeners are defined before initializing further
     nlp._link_components()
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):

@@ -276,7 +276,7 @@ class TextCategorizer(TrainablePipe):
         """
         if losses is None:
             losses = {}
-        losses.setdefault(self.name, 0.0)
+        losses.setdefault(self.name+"_rehearse", 0.0)
         if self._rehearsal_model is None:
             return losses
         validate_examples(examples, "TextCategorizer.rehearse")
@@ -292,7 +292,7 @@ class TextCategorizer(TrainablePipe):
         bp_scores(gradient)
         if sgd is not None:
             self.finish_update(sgd)
-        losses[self.name] += (gradient**2).sum()
+        losses[self.name+"_rehearse"] += (gradient**2).sum()
         return losses
 
     def _examples_to_truth(

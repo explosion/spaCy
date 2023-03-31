@@ -577,7 +577,15 @@ now-updated model to the predicted docs.
 
 ### Using rehearsing to address catastrophic forgetting {id="rehearse-components", tag="experimental", version="3.5.1"}
 
-Perform “rehearsal” updates to pre-trained components. Rehearsal updates teach the current component to make predictions similar to an initial model, to try to address the “catastrophic forgetting” problem. This feature is experimental.
+When fine-tuning pre-trained components, we can perform an additional
+`rehearsal` update after every regular update to address the problem of
+[`catastrophic forgetting`](https://explosion.ai/blog/pseudo-rehearsal-catastrophic-forgetting).
+These updates teach the fine-tuned component to make predictions similar to its
+initial, pre-trained version.
+
+Perform “rehearsal” updates to pre-trained components. Rehearsal updates teach
+the current component to make predictions similar to an initial model, to try to
+address the “catastrophic forgetting” problem. This feature is experimental.
 
 ```ini {title="config.cfg (excerpt)"}
 [nlp]
@@ -587,16 +595,8 @@ pipeline = ["sentencizer", "ner", "entity_linker"]
 source = "en_core_web_sm"
 
 [training]
-rehearse_components = ["ner"]
+rehearsal_components = ["ner"]
 ```
-
-<Infobox variant="warning" title="Loss calculation" id="rehearse-components-loss">
-
-Be aware that the loss is calculated by the sum of both the `update` and `rehearse` function. 
-If both the loss and accuracy of the component increases over time, it can be caused due to the trained component making more different predictions that the inital model,
-indicating `catastrophic forgetting`.
-
-</Infobox>
 
 ### Using registered functions {id="config-functions"}
 

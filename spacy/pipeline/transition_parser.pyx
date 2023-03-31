@@ -444,7 +444,7 @@ cdef class Parser(TrainablePipe):
                 multitask.rehearse(examples, losses=losses, sgd=sgd)
         if self._rehearsal_model is None:
             return None
-        losses.setdefault(self.name, 0.)
+        losses.setdefault(self.name+"_rehearse", 0.)
         validate_examples(examples, "Parser.rehearse")
         docs = [eg.predicted for eg in examples]
         states = self.moves.init_batch(docs)
@@ -475,7 +475,7 @@ cdef class Parser(TrainablePipe):
         backprop_tok2vec(docs)
         if sgd is not None:
             self.finish_update(sgd)
-        losses[self.name] += loss / n_scores
+        losses[self.name+"_rehearse"] += loss / n_scores
         del backprop
         del backprop_tok2vec
         model.clear_memory()
