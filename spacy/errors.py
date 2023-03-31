@@ -1,5 +1,5 @@
+from typing import Literal
 import warnings
-from .compat import Literal
 
 
 class ErrorsWithCodes(type):
@@ -131,13 +131,6 @@ class Warnings(metaclass=ErrorsWithCodes):
             "and make it independent. For example, `replace_listeners = "
             "[\"model.tok2vec\"]` See the documentation for details: "
             "https://spacy.io/usage/training#config-components-listeners")
-    W088 = ("The pipeline component {name} implements a `begin_training` "
-            "method, which won't be called by spaCy. As of v3.0, `begin_training` "
-            "has been renamed to `initialize`, so you likely want to rename the "
-            "component method. See the documentation for details: "
-            "https://spacy.io/api/language#initialize")
-    W089 = ("As of spaCy v3.0, the `nlp.begin_training` method has been renamed "
-            "to `nlp.initialize`.")
     W090 = ("Could not locate any {format} files in path '{path}'.")
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
     W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")
@@ -216,6 +209,8 @@ class Warnings(metaclass=ErrorsWithCodes):
             "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
     W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
 
+    W400 = ("`use_upper=False` is ignored, the upper layer is always enabled")
+
 
 class Errors(metaclass=ErrorsWithCodes):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
@@ -251,9 +246,7 @@ class Errors(metaclass=ErrorsWithCodes):
             "https://spacy.io/usage/models")
     E011 = ("Unknown operator: '{op}'. Options: {opts}")
     E012 = ("Cannot add pattern for zero tokens to matcher.\nKey: {key}")
-    E016 = ("MultitaskObjective target should be function or one of: dep, "
-            "tag, ent, dep_tag_offset, ent_tag.")
-    E017 = ("Can only add unicode or bytes. Got type: {value_type}")
+    E017 = ("Can only add 'str' inputs to StringStore. Got type: {value_type}")
     E018 = ("Can't retrieve string for hash '{hash_value}'. This usually "
             "refers to an issue with the `Vocab` or `StringStore`.")
     E019 = ("Can't create transition with unknown action ID: {action}. Action "
@@ -444,8 +437,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E133 = ("The sum of prior probabilities for alias '{alias}' should not "
             "exceed 1, but found {sum}.")
     E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
-    E139 = ("Knowledge base for component '{name}' is empty. Use the methods "
-            "`kb.add_entity` and `kb.add_alias` to add entries.")
+    E139 = ("Knowledge base for component '{name}' is empty.")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
@@ -466,13 +458,13 @@ class Errors(metaclass=ErrorsWithCodes):
             "same, but found '{nlp}' and '{vocab}' respectively.")
     E152 = ("The attribute {attr} is not supported for token patterns. "
             "Please use the option `validate=True` with the Matcher, PhraseMatcher, "
-            "EntityRuler or AttributeRuler for more details.")
+            "SpanRuler or AttributeRuler for more details.")
     E153 = ("The value type {vtype} is not supported for token patterns. "
             "Please use the option validate=True with Matcher, PhraseMatcher, "
-            "EntityRuler or AttributeRuler for more details.")
+            "SpanRuler or AttributeRuler for more details.")
     E154 = ("One of the attributes or values is not supported for token "
             "patterns. Please use the option `validate=True` with the Matcher, "
-            "PhraseMatcher, or EntityRuler for more details.")
+            "PhraseMatcher, or SpanRuler for more details.")
     E155 = ("The pipeline needs to include a {pipe} in order to use "
             "Matcher or PhraseMatcher with the attribute {attr}. "
             "Try using `nlp()` instead of `nlp.make_doc()` or `list(nlp.pipe())` "
@@ -496,7 +488,7 @@ class Errors(metaclass=ErrorsWithCodes):
             "Current DocBin: {current}\nOther DocBin: {other}")
     E169 = ("Can't find module: {module}")
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
-    E171 = ("Matcher.add received invalid 'on_match' callback argument: expected "
+    E171 = ("{name}.add received invalid 'on_match' callback argument: expected "
             "callable or None, but got: {arg_type}")
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
     E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
@@ -733,13 +725,6 @@ class Errors(metaclass=ErrorsWithCodes):
             "method in component '{name}'. If you want to use this "
             "method, make sure it's overwritten on the subclass.")
     E940 = ("Found NaN values in scores.")
-    E941 = ("Can't find model '{name}'. It looks like you're trying to load a "
-            "model from a shortcut, which is obsolete as of spaCy v3.0. To "
-            "load the model, use its full name instead:\n\n"
-            "nlp = spacy.load(\"{full}\")\n\nFor more details on the available "
-            "models, see the models directory: https://spacy.io/models. If you "
-            "want to create a blank model, use spacy.blank: "
-            "nlp = spacy.blank(\"{name}\")")
     E942 = ("Executing `after_{name}` callback failed. Expected the function to "
             "return an initialized nlp object but got: {value}. Maybe "
             "you forgot to return the modified object in your function?")
@@ -753,7 +738,7 @@ class Errors(metaclass=ErrorsWithCodes):
             "loaded nlp object, but got: {source}")
     E947 = ("`Matcher.add` received invalid `greedy` argument: expected "
             "a string value from {expected} but got: '{arg}'")
-    E948 = ("`Matcher.add` received invalid 'patterns' argument: expected "
+    E948 = ("`{name}.add` received invalid 'patterns' argument: expected "
             "a list, but got: {arg_type}")
     E949 = ("Unable to align tokens for the predicted and reference docs. It "
             "is only possible to align the docs when both texts are the same "
@@ -927,8 +912,6 @@ class Errors(metaclass=ErrorsWithCodes):
     E1021 = ("`pos` value \"{pp}\" is not a valid Universal Dependencies tag. "
              "Non-UD tags should use the `tag` property.")
     E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
-    E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't "
-             "exist.")
     E1024 = ("A pattern with {attr_type} '{label}' is not present in "
              "'{component}' patterns.")
     E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
@@ -967,17 +950,19 @@ class Errors(metaclass=ErrorsWithCodes):
     E1049 = ("No available port found for displaCy on host {host}. Please specify an available port "
              "with `displacy.serve(doc, port=port)`")
     E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
-             "or use `auto_switch_port=True` to pick an available port automatically.")
+             "or use `auto_select_port=True` to pick an available port automatically.")
 
+    # v4 error strings
+    E4000 = ("Expected a Doc as input, but got: '{type}'")
+    E4001 = ("Expected input to be one of the following types: ({expected_types}), "
+             "but got '{received_type}'")
+    E4002 = ("Pipe '{name}' requires a teacher pipe for distillation.")
+    E4003 = ("Training examples for distillation must have the exact same tokens in the "
+             "reference and predicted docs.")
+    E4004 = ("Backprop is not supported when is_train is not set.")
+    E4005 = ("EntityLinker_v1 is not supported in spaCy v4. Update your configuration.")
 
-# Deprecated model shortcuts, only used in errors and warnings
-OLD_MODEL_SHORTCUTS = {
-    "en": "en_core_web_sm", "de": "de_core_news_sm", "es": "es_core_news_sm",
-    "pt": "pt_core_news_sm", "fr": "fr_core_news_sm", "it": "it_core_news_sm",
-    "nl": "nl_core_news_sm", "el": "el_core_news_sm", "nb": "nb_core_news_sm",
-    "lt": "lt_core_news_sm", "xx": "xx_ent_wiki_sm"
-}
-
+RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}
 
 # fmt: on
 

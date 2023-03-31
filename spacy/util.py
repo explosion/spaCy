@@ -4,12 +4,13 @@ from typing import Iterator, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
 import os
 import importlib
+import importlib.metadata
 import importlib.util
 import re
 from pathlib import Path
 import thinc
 from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
-from thinc.api import ConfigValidationError, Model
+from thinc.api import ConfigValidationError, Model, constant as constant_schedule
 import functools
 import itertools
 import numpy
@@ -32,22 +33,17 @@ import inspect
 import pkgutil
 import logging
 import socket
+import stat
 
 try:
     import cupy.random
 except ImportError:
     cupy = None
 
-# These are functions that were previously (v2.x) available from spacy.util
-# and have since moved to Thinc. We're importing them here so people's code
-# doesn't break, but they should always be imported from Thinc from now on,
-# not from spacy.util.
-from thinc.api import fix_random_seed, compounding, decaying  # noqa: F401
-
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream, is_windows, importlib_metadata
-from .errors import Errors, Warnings, OLD_MODEL_SHORTCUTS
+from .compat import cupy, CudaStream, is_windows
+from .errors import Errors, Warnings
 from . import about
 
 if TYPE_CHECKING:
@@ -60,7 +56,7 @@ if TYPE_CHECKING:
 # fmt: off
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 DEFAULT_OOV_PROB = -20
-LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
+LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "grc", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
 
 # Default order of sections in the config file. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
@@ -144,8 +140,17 @@ class registry(thinc.registry):
         return func
 
     @classmethod
-    def find(cls, registry_name: str, func_name: str) -> Callable:
-        """Get info about a registered function from the registry."""
+    def find(
+        cls, registry_name: str, func_name: str
+    ) -> Dict[str, Optional[Union[str, int]]]:
+        """Find information about a registered function, including the
+        module and path to the file it's defined in, the line number and the
+        docstring, if available.
+
+        registry_name (str): Name of the catalogue registry.
+        func_name (str): Name of the registered function.
+        RETURNS (Dict[str, Optional[Union[str, int]]]): The function info.
+        """
         # We're overwriting this classmethod so we're able to provide more
         # specific error messages and implement a fallback to spacy-legacy.
         if not hasattr(cls, registry_name):
@@ -288,7 +293,7 @@ def find_matching_language(lang: str) -> Optional[str]:
     import spacy.lang  # noqa: F401
 
     if lang == "xx":
-        return "xx"
+        return "mul"
 
     # Find out which language modules we have
     possible_languages = []
@@ -306,11 +311,7 @@ def find_matching_language(lang: str) -> Optional[str]:
     # is labeled that way is probably trying to be distinct from 'zh' and
     # shouldn't automatically match.
     match = langcodes.closest_supported_match(lang, possible_languages, max_distance=9)
-    if match == "mul":
-        # Convert 'mul' back to spaCy's 'xx'
-        return "xx"
-    else:
-        return match
+    return match
 
 
 def get_lang_class(lang: str) -> Type["Language"]:
@@ -434,8 +435,6 @@ def load_model(
             return load_model_from_path(Path(name), **kwargs)  # type: ignore[arg-type]
     elif hasattr(name, "exists"):  # Path or Path-like to model data
         return load_model_from_path(name, **kwargs)  # type: ignore[arg-type]
-    if name in OLD_MODEL_SHORTCUTS:
-        raise IOError(Errors.E941.format(name=name, full=OLD_MODEL_SHORTCUTS[name]))  # type: ignore[index]
     raise IOError(Errors.E050.format(name=name))
 
 
@@ -714,8 +713,8 @@ def get_package_version(name: str) -> Optional[str]:
     RETURNS (str / None): The version or None if package not installed.
     """
     try:
-        return importlib_metadata.version(name)  # type: ignore[attr-defined]
-    except importlib_metadata.PackageNotFoundError:  # type: ignore[attr-defined]
+        return importlib.metadata.version(name)  # type: ignore[attr-defined]
+    except importlib.metadata.PackageNotFoundError:  # type: ignore[attr-defined]
         return None
 
 
@@ -903,7 +902,7 @@ def is_package(name: str) -> bool:
     RETURNS (bool): True if installed package, False if not.
     """
     try:
-        importlib_metadata.distribution(name)  # type: ignore[attr-defined]
+        importlib.metadata.distribution(name)  # type: ignore[attr-defined]
         return True
     except:  # noqa: E722
         return False
@@ -1041,8 +1040,15 @@ def make_tempdir() -> Generator[Path, None, None]:
     """
     d = Path(tempfile.mkdtemp())
     yield d
+
+    # On Windows, git clones use read-only files, which cause permission errors
+    # when being deleted. This forcibly fixes permissions.
+    def force_remove(rmfunc, path, ex):
+        os.chmod(path, stat.S_IWRITE)
+        rmfunc(path)
+
     try:
-        shutil.rmtree(str(d))
+        shutil.rmtree(str(d), onerror=force_remove)
     except PermissionError as e:
         warnings.warn(Warnings.W091.format(dir=d, msg=e))
 
@@ -1593,7 +1599,7 @@ def minibatch(items, size):
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     else:
-        size_ = size
+        size_ = iter(size)
     items = iter(items)
     while True:
         batch_size = next(size_)
@@ -1726,7 +1732,7 @@ def packages_distributions() -> Dict[str, List[str]]:
     it's not available in the builtin importlib.metadata.
     """
     pkg_to_dist = defaultdict(list)
-    for dist in importlib_metadata.distributions():
+    for dist in importlib.metadata.distributions():
         for pkg in (dist.read_text("top_level.txt") or "").split():
             pkg_to_dist[pkg].append(dist.metadata["Name"])
     return dict(pkg_to_dist)

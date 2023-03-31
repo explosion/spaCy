@@ -16,7 +16,7 @@ production-ready [**training system**](https://spacy.io/usage/training) and easy
 model packaging, deployment and workflow management. spaCy is commercial
 open-source software, released under the [MIT license](https://github.com/explosion/spaCy/blob/master/LICENSE).
 
-💫 **Version 3.4 out now!**
+💫 **Version 3.5 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
 [![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
@@ -105,7 +105,7 @@ For detailed installation instructions, see the
 
 - **Operating system**: macOS / OS X · Linux · Windows (Cygwin, MinGW, Visual
   Studio)
-- **Python version**: Python 3.6+ (only 64 bit)
+- **Python version**: Python 3.8+ (only 64 bit)
 - **Package managers**: [pip] · [conda] (via `conda-forge`)
 
 [pip]: https://pypi.org/project/spacy/

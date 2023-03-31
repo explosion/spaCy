@@ -187,13 +187,13 @@ the data to and from a JSON file.
 
 > #### Real-world example
 >
-> To see custom serialization methods in action, check out the new
-> [`EntityRuler`](/api/entityruler) component and its
-> [source](%%GITHUB_SPACY/spacy/pipeline/entityruler.py). Patterns added to the
+> To see custom serialization methods in action, check out the
+> [`SpanRuler`](/api/spanruler) component and its
+> [source](%%GITHUB_SPACY/spacy/pipeline/span_ruler.py). Patterns added to the
 > component will be saved to a `.jsonl` file if the pipeline is serialized to
 > disk, and to a bytestring if the pipeline is serialized to bytes. This allows
-> saving out a pipeline with a rule-based entity recognizer and including all
-> rules _with_ the component data.
+> saving out a pipeline with rule-based components _with_ all the component
+> data.
 
 ```python {highlight="16-23,25-30"}
 import json
@@ -303,6 +303,28 @@ installed in the same environment – that's it.
 | [`spacy_languages`](#entry-points-languages)      | Group of entry points for custom [`Language` subclasses](/usage/linguistic-features#language-data), keyed by language shortcut.                                                                                                                          |
 | `spacy_lookups`                                   | Group of entry points for custom [`Lookups`](/api/lookups), including lemmatizer data. Used by spaCy's [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) package.                                                                  |
 | [`spacy_displacy_colors`](#entry-points-displacy) | Group of entry points of custom label colors for the [displaCy visualizer](/usage/visualizers#ent). The key name doesn't matter, but it should point to a dict of labels and color values. Useful for custom models that predict different entity types. |
+
+### Loading probability tables into existing models
+
+You can load a probability table from [spacy-lookups-data](https://github.com/explosion/spacy-lookups-data) into an existing spaCy model like `en_core_web_sm`.
+
+```python
+# Requirements: pip install spacy-lookups-data
+import spacy
+from spacy.lookups import load_lookups
+nlp = spacy.load("en_core_web_sm")
+lookups = load_lookups("en", ["lexeme_prob"])
+nlp.vocab.lookups.add_table("lexeme_prob", lookups.get_table("lexeme_prob"))
+```
+
+When training a model from scratch you can also specify probability tables in the `config.cfg`.
+
+```ini {title="config.cfg (excerpt)"}
+[initialize.lookups]
+@misc = "spacy.LookupsDataLoader.v1"
+lang = ${nlp.lang}
+tables = ["lexeme_prob"]
+```
 
 ### Custom components via entry points {id="entry-points-components"}
 

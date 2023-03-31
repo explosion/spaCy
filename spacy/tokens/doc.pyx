@@ -19,7 +19,7 @@ import warnings
 
 from .span cimport Span
 from .token cimport MISSING_DEP
-from ._dict_proxies import SpanGroups
+from .span_groups import SpanGroups
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
@@ -35,8 +35,8 @@ from .. import util
 from .. import parts_of_speech
 from .. import schemas
 from .underscore import Underscore, get_ext_args
-from ._retokenize import Retokenizer
-from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
+from .retokenizer import Retokenizer
+from .doc_bin import ALL_ATTRS as DOCBIN_ALL_ATTRS
 from ..util import get_words_and_spaces
 
 DEF PADDING = 5
@@ -243,8 +243,8 @@ cdef class Doc:
         self.c = data_start + PADDING
         self.max_length = size
         self.length = 0
-        self.sentiment = 0.0
         self.cats = {}
+        self.activations = {}
         self.user_hooks = {}
         self.user_token_hooks = {}
         self.user_span_hooks = {}
@@ -266,12 +266,12 @@ cdef class Doc:
         cdef const LexemeC* lexeme
         for word, has_space in zip(words, spaces):
             if isinstance(word, str):
-                lexeme = self.vocab.get(self.mem, word)
+                lexeme = self.vocab.get(word)
             elif isinstance(word, bytes):
                 raise ValueError(Errors.E028.format(value=word))
             else:
                 try:
-                    lexeme = self.vocab.get_by_orth(self.mem, word)
+                    lexeme = self.vocab.get_by_orth(word)
                 except TypeError:
                     raise TypeError(Errors.E1022.format(wtype=type(word)))
             self.push_back(lexeme, has_space)
@@ -520,7 +520,7 @@ cdef class Doc:
     def doc(self):
         return self
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
+    def char_span(self, int start_idx, int end_idx, label=0, *, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
         """Create a `Span` object from the slice
         `doc.text[start_idx : end_idx]`. Returns None if no valid `Span` can be
         created.
@@ -528,9 +528,9 @@ cdef class Doc:
         doc (Doc): The parent document.
         start_idx (int): The index of the first character of the span.
         end_idx (int): The index of the first character after the span.
-        label (uint64 or string): A label to attach to the Span, e.g. for
+        label (Union[int, str]): A label to attach to the Span, e.g. for
             named entities.
-        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a
+        kb_id (Union[int, str]):  An ID from a KB to capture the meaning of a
             named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
             the span.
@@ -539,6 +539,7 @@ cdef class Doc:
             with token boundaries), "contract" (span of all tokens completely
             within the character span), "expand" (span of all tokens at least
             partially covered by the character span). Defaults to "strict".
+        span_id (Union[int, str]): An identifier to associate with the span.
         RETURNS (Span): The newly constructed object.
 
         DOCS: https://spacy.io/api/doc#char_span
@@ -656,9 +657,6 @@ cdef class Doc:
             elif self.vocab.vectors.size > 0:
                 self._vector = sum(t.vector for t in self) / len(self)
                 return self._vector
-            elif self.tensor.size > 0:
-                self._vector = self.tensor.mean(axis=0)
-                return self._vector
             else:
                 return xp.zeros((self.vocab.vectors_length,), dtype="float32")
 
@@ -705,10 +703,10 @@ cdef class Doc:
         return self.text
 
     property ents:
-        """The named entities in the document. Returns a tuple of named entity
+        """The named entities in the document. Returns a list of named entity
         `Span` objects, if the entity recognizer has been applied.
 
-        RETURNS (tuple): Entities in the document, one `Span` per entity.
+        RETURNS (Tuple[Span]): Entities in the document, one `Span` per entity.
 
         DOCS: https://spacy.io/api/doc#ents
         """
@@ -809,27 +807,33 @@ cdef class Doc:
                     self.c[i].ent_iob = 1
                 self.c[i].ent_type = span.label
                 self.c[i].ent_kb_id = span.kb_id
-                # for backwards compatibility in v3, only set ent_id from
-                # span.id if it's set, otherwise don't override
-                self.c[i].ent_id = span.id if span.id else self.c[i].ent_id
+                self.c[i].ent_id = span.id
         for span in blocked:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 3
                 self.c[i].ent_type = 0
+                self.c[i].ent_kb_id = 0
+                self.c[i].ent_id = 0
         for span in missing:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 0
                 self.c[i].ent_type = 0
+                self.c[i].ent_kb_id = 0
+                self.c[i].ent_id = 0
         for span in outside:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 2
                 self.c[i].ent_type = 0
+                self.c[i].ent_kb_id = 0
+                self.c[i].ent_id = 0
 
         # Set tokens outside of all provided spans
         if default != SetEntsDefault.unmodified:
             for i in range(self.length):
                 if i not in seen_tokens:
                     self.c[i].ent_type = 0
+                    self.c[i].ent_kb_id = 0
+                    self.c[i].ent_id = 0
                     if default == SetEntsDefault.outside:
                         self.c[i].ent_iob = 2
                     elif default == SetEntsDefault.missing:
@@ -860,7 +864,7 @@ cdef class Doc:
         NP-level coordination, no prepositional phrases, and no relative
         clauses.
 
-        YIELDS (Span): Noun chunks in the document.
+        RETURNS (Tuple[Span]): Noun chunks in the document.
 
         DOCS: https://spacy.io/api/doc#noun_chunks
         """
@@ -869,36 +873,35 @@ cdef class Doc:
 
         # Accumulate the result before beginning to iterate over it. This
         # prevents the tokenization from being changed out from under us
-        # during the iteration. The tricky thing here is that Span accepts
-        # its tokenization changing, so it's okay once we have the Span
-        # objects. See Issue #375.
+        # during the iteration.
         spans = []
         for start, end, label in self.noun_chunks_iterator(self):
             spans.append(Span(self, start, end, label=label))
-        for span in spans:
-            yield span
+        return tuple(spans)
 
     @property
     def sents(self):
         """Iterate over the sentences in the document. Yields sentence `Span`
         objects. Sentence spans have no label.
 
-        YIELDS (Span): Sentences in the document.
+        RETURNS (Tuple[Span]): Sentences in the document.
 
         DOCS: https://spacy.io/api/doc#sents
         """
         if not self.has_annotation("SENT_START"):
             raise ValueError(Errors.E030)
         if "sents" in self.user_hooks:
-            yield from self.user_hooks["sents"](self)
+            return tuple(self.user_hooks["sents"](self))
         else:
             start = 0
+            spans = []
             for i in range(1, self.length):
                 if self.c[i].sent_start == 1:
-                    yield Span(self, start, i)
+                    spans.append(Span(self, start, i))
                     start = i
             if start != self.length:
-                yield Span(self, start, self.length)
+                spans.append(Span(self, start, self.length))
+            return tuple(spans)
 
     @property
     def lang(self):
@@ -969,22 +972,26 @@ cdef class Doc:
             py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                        for id_ in py_attr_ids]
         except KeyError as msg:
-            keys = [k for k in IDS.keys() if not k.startswith("FLAG")]
+            keys = list(IDS.keys())
             raise KeyError(Errors.E983.format(dict="IDS", key=msg, keys=keys)) from None
         # Make an array from the attributes --- otherwise our inner loop is
         # Python dict iteration.
-        cdef np.ndarray attr_ids = numpy.asarray(py_attr_ids, dtype="i")
-        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
+        cdef Pool mem = Pool()
+        cdef int n_attrs = len(py_attr_ids)
+        cdef attr_id_t* c_attr_ids
+        if n_attrs > 0:
+            c_attr_ids = <attr_id_t*>mem.alloc(n_attrs, sizeof(attr_id_t))
+            for i, attr_id in enumerate(py_attr_ids):
+                c_attr_ids[i] = attr_id
+        output = numpy.ndarray(shape=(self.length, n_attrs), dtype=numpy.uint64)
         c_output = <attr_t*>output.data
-        c_attr_ids = <attr_id_t*>attr_ids.data
         cdef TokenC* token
-        cdef int nr_attr = attr_ids.shape[0]
         for i in range(self.length):
             token = &self.c[i]
-            for j in range(nr_attr):
-                c_output[i*nr_attr + j] = get_token_attr(token, c_attr_ids[j])
+            for j in range(n_attrs):
+                c_output[i*n_attrs + j] = get_token_attr(token, c_attr_ids[j])
         # Handle 1d case
-        return output if len(attr_ids) >= 2 else output.reshape((self.length,))
+        return output if n_attrs >= 2 else output.reshape((self.length,))
 
     def count_by(self, attr_id_t attr_id, exclude=None, object counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
@@ -1168,13 +1175,22 @@ cdef class Doc:
 
             if "user_data" not in exclude:
                 for key, value in doc.user_data.items():
-                    if isinstance(key, tuple) and len(key) == 4 and key[0] == "._.":
-                        data_type, name, start, end = key
+                    if isinstance(key, tuple) and len(key) >= 4 and key[0] == "._.":
+                        data_type = key[0]
+                        name = key[1]
+                        start = key[2]
+                        end = key[3]
                         if start is not None or end is not None:
                             start += char_offset
                             if end is not None:
                                 end += char_offset
-                            concat_user_data[(data_type, name, start, end)] = copy.copy(value)
+                                _label = key[4]
+                                _kb_id = key[5]
+                                _span_id = key[6]
+                                concat_user_data[(data_type, name, start, end, _label, _kb_id, _span_id)] = copy.copy(value)
+                            else:
+                                concat_user_data[(data_type, name, start, end)] = copy.copy(value)
+
                         else:
                             warnings.warn(Warnings.W101.format(name=name))
                     else:
@@ -1260,7 +1276,6 @@ cdef class Doc:
         other.tensor = copy.deepcopy(self.tensor)
         other.cats = copy.deepcopy(self.cats)
         other.user_data = copy.deepcopy(self.user_data)
-        other.sentiment = self.sentiment
         other.has_unknown_spaces = self.has_unknown_spaces
         other.user_hooks = dict(self.user_hooks)
         other.user_token_hooks = dict(self.user_token_hooks)
@@ -1357,7 +1372,6 @@ cdef class Doc:
             "text": lambda: self.text,
             "array_head": lambda: array_head,
             "array_body": lambda: self.to_array(array_head),
-            "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
             "cats": lambda: self.cats,
             "spans": lambda: self.spans.to_bytes(),
@@ -1395,8 +1409,6 @@ cdef class Doc:
             for key, value in zip(user_data_keys, user_data_values):
                 self.user_data[key] = value
         cdef int i, start, end, has_space
-        if "sentiment" not in exclude and "sentiment" in msg:
-            self.sentiment = msg["sentiment"]
         if "tensor" not in exclude and "tensor" in msg:
             self.tensor = msg["tensor"]
         if "cats" not in exclude and "cats" in msg:
@@ -1415,7 +1427,7 @@ cdef class Doc:
             end = start + attrs[i, 0]
             has_space = attrs[i, 1]
             orth_ = text[start:end]
-            lex = self.vocab.get(self.mem, orth_)
+            lex = self.vocab.get(orth_)
             self.push_back(lex, has_space)
             start = end + has_space
         self.from_array(msg["array_head"][2:], attrs[:, 2:])
@@ -1521,7 +1533,7 @@ cdef class Doc:
         assert words == reconstructed_words
 
         for word, has_space in zip(words, spaces):
-            lex = self.vocab.get(self.mem, word)
+            lex = self.vocab.get(word)
             self.push_back(lex, has_space)
 
         # Set remaining token-level attributes via Doc.from_array().
@@ -1589,7 +1601,7 @@ cdef class Doc:
         for span_group in doc_json.get("spans", {}):
             spans = []
             for span in doc_json["spans"][span_group]:
-                char_span = self.char_span(span["start"], span["end"], span["label"], span["kb_id"])
+                char_span = self.char_span(span["start"], span["end"], span["label"], kb_id=span["kb_id"])
                 if char_span is None:
                     raise ValueError(Errors.E1039.format(obj="span", start=span["start"], end=span["end"]))
                 spans.append(char_span)
@@ -1623,7 +1635,11 @@ cdef class Doc:
                 Span.set_extension(span_attr)
             for span_data in doc_json["underscore_span"][span_attr]:
                 value = span_data["value"]
-                self.char_span(span_data["start"], span_data["end"])._.set(span_attr, value)
+                span = self.char_span(span_data["start"], span_data["end"])
+                span.label = span_data["label"]
+                span.kb_id = span_data["kb_id"]
+                span.id = span_data["id"]
+                span._.set(span_attr, value)
         return self
 
     def to_json(self, underscore=None):
@@ -1701,13 +1717,16 @@ cdef class Doc:
                                 if attr not in data["underscore_token"]:
                                     data["underscore_token"][attr] = []
                                 data["underscore_token"][attr].append({"start": start, "value": value})
-                            # Span attribute
-                            elif start is not None and end is not None:
+                            # Else span attribute
+                            elif end is not None:
+                                _label = data_key[4]
+                                _kb_id = data_key[5]
+                                _span_id = data_key[6]
                                 if "underscore_span" not in data:
                                     data["underscore_span"] = {}
                                 if attr not in data["underscore_span"]:
                                     data["underscore_span"][attr] = []
-                                data["underscore_span"][attr].append({"start": start, "end": end, "value": value})
+                                data["underscore_span"][attr].append({"start": start, "end": end, "value": value, "label": _label, "kb_id": _kb_id, "id":_span_id})
 
             for attr in underscore:
                 if attr not in user_keys:

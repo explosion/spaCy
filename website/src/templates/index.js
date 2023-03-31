@@ -13,7 +13,7 @@ import Progress from '../components/progress'
 import Footer from '../components/footer'
 import SEO from '../components/seo'
 import Link from '../components/link'
-import { InlineCode } from '../components/code'
+import { InlineCode } from '../components/inlineCode'
 import Alert from '../components/alert'
 import Search from '../components/search'
 
@@ -58,8 +58,8 @@ const AlertSpace = ({ nightly, legacy }) => {
 }
 
 const navAlert = (
-    <Link to="/usage/v3-4" hidden>
-        <strong>💥 Out now:</strong> spaCy v3.4
+    <Link to="/usage/v3-5" noLinkLayout>
+        <strong>💥 Out now:</strong> spaCy v3.5
     </Link>
 )
 

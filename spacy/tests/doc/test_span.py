@@ -4,7 +4,7 @@ from numpy.testing import assert_array_equal
 
 from spacy.attrs import ORTH, LENGTH
 from spacy.lang.en import English
-from spacy.tokens import Doc, Span, Token
+from spacy.tokens import Doc, Span, SpanGroup, Token
 from spacy.vocab import Vocab
 from spacy.util import filter_spans
 from thinc.api import get_current_ops
@@ -163,6 +163,30 @@ def test_char_span(doc, i_sent, i, j, text):
         assert span.text == text
 
 
+@pytest.mark.issue(9556)
+def test_modify_span_group(doc):
+    group = SpanGroup(doc, spans=doc.ents)
+    for span in group:
+        span.start = 0
+        span.label = doc.vocab.strings["TEST"]
+
+    # Span changes must be reflected in the span group
+    assert group[0].start == 0
+    assert group[0].label == doc.vocab.strings["TEST"]
+
+
+def test_char_span_attributes(doc):
+    label = "LABEL"
+    kb_id = "KB_ID"
+    span_id = "SPAN_ID"
+    span1 = doc.char_span(20, 45, label=label, kb_id=kb_id, span_id=span_id)
+    span2 = doc[1:].char_span(15, 40, label=label, kb_id=kb_id, span_id=span_id)
+    assert span1.text == span2.text
+    assert span1.label_ == span2.label_ == label
+    assert span1.kb_id_ == span2.kb_id_ == kb_id
+    assert span1.id_ == span2.id_ == span_id
+
+
 def test_spans_sent_spans(doc):
     sents = list(doc.sents)
     assert sents[0].start == 0
@@ -293,31 +317,6 @@ def test_span_similarity_match():
         assert span1[:1].similarity(doc.vocab["a"]) == 1.0
 
 
-def test_spans_default_sentiment(en_tokenizer):
-    """Test span.sentiment property's default averaging behaviour"""
-    text = "good stuff bad stuff"
-    tokens = en_tokenizer(text)
-    tokens.vocab[tokens[0].text].sentiment = 3.0
-    tokens.vocab[tokens[2].text].sentiment = -2.0
-    doc = Doc(tokens.vocab, words=[t.text for t in tokens])
-    assert doc[:2].sentiment == 3.0 / 2
-    assert doc[-2:].sentiment == -2.0 / 2
-    assert doc[:-1].sentiment == (3.0 + -2) / 3.0
-
-
-def test_spans_override_sentiment(en_tokenizer):
-    """Test span.sentiment property's default averaging behaviour"""
-    text = "good stuff bad stuff"
-    tokens = en_tokenizer(text)
-    tokens.vocab[tokens[0].text].sentiment = 3.0
-    tokens.vocab[tokens[2].text].sentiment = -2.0
-    doc = Doc(tokens.vocab, words=[t.text for t in tokens])
-    doc.user_span_hooks["sentiment"] = lambda span: 10.0
-    assert doc[:2].sentiment == 10.0
-    assert doc[-2:].sentiment == 10.0
-    assert doc[:-1].sentiment == 10.0
-
-
 def test_spans_are_hashable(en_tokenizer):
     """Test spans can be hashed."""
     text = "good stuff bad stuff"
@@ -366,6 +365,14 @@ def test_spans_by_character(doc):
         span2 = doc.char_span(
             span1.start_char + 1, span1.end_char, label="GPE", alignment_mode="unk"
         )
+
+    # Span.char_span + alignment mode "contract"
+    span2 = doc[0:2].char_span(
+        span1.start_char - 3, span1.end_char, label="GPE", alignment_mode="contract"
+    )
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
 
 
 def test_span_to_array(doc):
@@ -680,3 +687,23 @@ def test_span_group_copy(doc):
     assert len(doc.spans["test"]) == 3
     # check that the copy spans were not modified and this is an isolated doc
     assert len(doc_copy.spans["test"]) == 2
+
+
+@pytest.mark.issue(11113)
+def test_span_ent_id(en_tokenizer):
+    doc = en_tokenizer("a b c d")
+    doc.ents = [Span(doc, 1, 3, label="A", span_id="ID0")]
+    span = doc.ents[0]
+    assert doc[1].ent_id_ == "ID0"
+
+    # setting Span.id sets Token.ent_id
+    span.id_ = "ID1"
+    doc.ents = [span]
+    assert doc.ents[0].ent_id_ == "ID1"
+    assert doc[1].ent_id_ == "ID1"
+
+    # Span.ent_id is an alias of Span.id
+    span.ent_id_ = "ID2"
+    doc.ents = [span]
+    assert doc.ents[0].ent_id_ == "ID2"
+    assert doc[1].ent_id_ == "ID2"

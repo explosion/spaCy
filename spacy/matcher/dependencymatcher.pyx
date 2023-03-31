@@ -82,8 +82,12 @@ cdef class DependencyMatcher:
             "$-": self._imm_left_sib,
             "$++": self._right_sib,
             "$--": self._left_sib,
+            ">+": self._imm_right_child,
+            ">-": self._imm_left_child,
             ">++": self._right_child,
             ">--": self._left_child,
+            "<+": self._imm_right_parent,
+            "<-": self._imm_left_parent,
             "<++": self._right_parent,
             "<--": self._left_parent,
         }
@@ -165,9 +169,9 @@ cdef class DependencyMatcher:
         on_match (callable): Optional callback executed on match.
         """
         if on_match is not None and not hasattr(on_match, "__call__"):
-            raise ValueError(Errors.E171.format(arg_type=type(on_match)))
-        if patterns is None or not isinstance(patterns, List):  # old API
-            raise ValueError(Errors.E948.format(arg_type=type(patterns)))
+            raise ValueError(Errors.E171.format(name="DependencyMatcher", arg_type=type(on_match)))
+        if patterns is None or not isinstance(patterns, List):
+            raise ValueError(Errors.E948.format(name="DependencyMatcher", arg_type=type(patterns)))
         for pattern in patterns:
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
@@ -427,11 +431,33 @@ cdef class DependencyMatcher:
     def _left_sib(self, doc, node):
         return [doc[child.i] for child in doc[node].head.children if child.i < node]
 
+    def _imm_right_child(self, doc, node):
+        for child in doc[node].children:
+            if child.i == node + 1:
+                return [doc[child.i]]
+        return []
+
+    def _imm_left_child(self, doc, node):
+        for child in doc[node].children:
+            if child.i == node - 1:
+                return [doc[child.i]]
+        return []
+
     def _right_child(self, doc, node):
         return [doc[child.i] for child in doc[node].children if child.i > node]
     
     def _left_child(self, doc, node):
         return [doc[child.i] for child in doc[node].children if child.i < node]
+
+    def _imm_right_parent(self, doc, node):
+        if doc[node].head.i == node + 1:
+            return [doc[node].head]
+        return []
+
+    def _imm_left_parent(self, doc, node):
+        if doc[node].head.i == node - 1:
+            return [doc[node].head]
+        return []
 
     def _right_parent(self, doc, node):
         if doc[node].head.i > node:

@@ -1,6 +1,5 @@
 from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple
-from typing import Iterable, TypeVar, TYPE_CHECKING
-from .compat import Literal
+from typing import Iterable, TypeVar, Literal, TYPE_CHECKING
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator, create_model
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, ConstrainedStr
@@ -144,7 +143,7 @@ def validate_init_settings(
 
 def validate_token_pattern(obj: list) -> List[str]:
     # Try to convert non-string keys (e.g. {ORTH: "foo"} -> {"ORTH": "foo"})
-    get_key = lambda k: NAMES[k] if isinstance(k, int) and k < len(NAMES) else k
+    get_key = lambda k: NAMES[k] if isinstance(k, int) and k in NAMES else k
     if isinstance(obj, list):
         converted = []
         for pattern in obj:
@@ -424,6 +423,27 @@ class ConfigSchemaInit(BaseModel):
         arbitrary_types_allowed = True
 
 
+class ConfigSchemaDistillEmpty(BaseModel):
+    class Config:
+        extra = "forbid"
+
+
+class ConfigSchemaDistill(BaseModel):
+    # fmt: off
+    batcher: Batcher = Field(..., title="Batcher for the training data")
+    corpus: StrictStr = Field(..., title="Path in the config to the distillation data")
+    dropout: StrictFloat = Field(..., title="Dropout rate")
+    max_epochs: StrictInt = Field(..., title="Maximum number of epochs to distill for")
+    max_steps: StrictInt = Field(..., title="Maximum number of steps to distill for")
+    optimizer: Optimizer = Field(..., title="The optimizer to use")
+    student_to_teacher: Dict[str, str] = Field(..., title="Mapping from student to teacher pipe")
+    # fmt: on
+
+    class Config:
+        extra = "forbid"
+        arbitrary_types_allowed = True
+
+
 class ConfigSchema(BaseModel):
     training: ConfigSchemaTraining
     nlp: ConfigSchemaNlp
@@ -431,6 +451,7 @@ class ConfigSchema(BaseModel):
     components: Dict[str, Dict[str, Any]]
     corpora: Dict[str, Reader]
     initialize: ConfigSchemaInit
+    distillation: Union[ConfigSchemaDistill, ConfigSchemaDistillEmpty] = {}  # type: ignore[assignment]
 
     class Config:
         extra = "allow"
@@ -442,6 +463,7 @@ CONFIG_SCHEMAS = {
     "training": ConfigSchemaTraining,
     "pretraining": ConfigSchemaPretrain,
     "initialize": ConfigSchemaInit,
+    "distill": ConfigSchemaDistill,
 }
 
 

@@ -74,23 +74,23 @@ your data.
 
 > ```python
 > # Standard import
-> from spacy.lang.xx import MultiLanguage
+> from spacy.lang.mul import MultiLanguage
 > nlp = MultiLanguage()
 >
 > # With lazy-loading
-> nlp = spacy.blank("xx")
+> nlp = spacy.blank("mul")
 > ```
 
 spaCy also supports pipelines trained on more than one language. This is
 especially useful for named entity recognition. The language ID used for
-multi-language or language-neutral pipelines is `xx`. The language class, a
+multi-language or language-neutral pipelines is `mul`. The language class, a
 generic subclass containing only the base language data, can be found in
-[`lang/xx`](%%GITHUB_SPACY/spacy/lang/xx).
+[`lang/mul`](%%GITHUB_SPACY/spacy/lang/mul).
 
 To train a pipeline using the neutral multi-language class, you can set
-`lang = "xx"` in your [training config](/usage/training#config). You can also
+`lang = "mul"` in your [training config](/usage/training#config). You can also
 \import the `MultiLanguage` class directly, or call
-[`spacy.blank("xx")`](/api/top-level#spacy.blank) for lazy-loading.
+[`spacy.blank("mul")`](/api/top-level#spacy.blank) for lazy-loading.
 
 ### Chinese language support {id="chinese",version="2.3"}
 
@@ -264,17 +264,48 @@ used for training the current [Japanese pipelines](/models/ja).
 
 ### Korean language support {id="korean"}
 
-> #### mecab-ko tokenizer
+There are currently three built-in options for Korean tokenization, two based on
+[mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md) and one
+using the rule-based tokenizer.
+
+> #### Default mecab-ko tokenizer
 >
 > ```python
+> # uses mecab-ko-dic
 > nlp = spacy.blank("ko")
+>
+> # with custom mecab args
+> mecab_args = "-d /path/to/dicdir -u /path/to/userdic"
+> config = {"nlp": {"tokenizer": {"mecab_args": mecab_args}}}
+> nlp = spacy.blank("ko", config=config)
 > ```
 
-The default MeCab-based Korean tokenizer requires:
+The default MeCab-based Korean tokenizer requires the python package
+[`mecab-ko`](https://pypi.org/project/mecab-ko/) and no further system
+requirements.
+
+The `natto-py` MeCab-based tokenizer (the previous default for spaCy v3.4 and
+earlier) is available as `spacy.KoreanNattoTokenizer.v1`. It requires:
 
 - [mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md)
 - [mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic)
 - [natto-py](https://github.com/buruzaemon/natto-py)
+
+To use this tokenizer, edit `[nlp.tokenizer]` in your config:
+
+> #### natto-py MeCab-ko tokenizer
+>
+> ```python
+> config = {"nlp": {"tokenizer": {"@tokenizers": "spacy.KoreanNattoTokenizer.v1"}}}
+> nlp = spacy.blank("ko", config=config)
+> ```
+
+```ini
+### config.cfg
+[nlp]
+lang = "ko"
+tokenizer = {"@tokenizers" = "spacy.KoreanNattoTokenizer.v1"}
+```
 
 For some Korean datasets and tasks, the
 [rule-based tokenizer](/usage/linguistic-features#tokenization) is better-suited
@@ -305,22 +336,6 @@ additional dependencies are required.
 The easiest way to download a trained pipeline is via spaCy's
 [`download`](/api/cli#download) command. It takes care of finding the
 best-matching package compatible with your spaCy installation.
-
-> #### Important note for v3.0
->
-> Note that as of spaCy v3.0, shortcut links like `en` that create (potentially
-> brittle) symlinks in your spaCy installation are **deprecated**. To download
-> and load an installed pipeline package, use its full name:
->
-> ```diff
-> - python -m spacy download en
-> + python -m spacy download en_core_web_sm
-> ```
->
-> ```diff
-> - nlp = spacy.load("en")
-> + nlp = spacy.load("en_core_web_sm")
-> ```
 
 ```bash
 # Download best-matching version of a package for your spaCy installation
@@ -451,17 +466,6 @@ spacy.cli.download("en_core_web_sm")
 
 To load a pipeline package, use [`spacy.load`](/api/top-level#spacy.load) with
 the package name or a path to the data directory:
-
-> #### Important note for v3.0
->
-> Note that as of spaCy v3.0, shortcut links like `en` that create (potentially
-> brittle) symlinks in your spaCy installation are **deprecated**. To download
-> and load an installed pipeline package, use its full name:
->
-> ```diff
-> - python -m spacy download en
-> + python -m spacy download en_core_web_sm
-> ```
 
 ```python
 import spacy

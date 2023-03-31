@@ -44,14 +44,15 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("trainable_lemmatizer", config=config, name="lemmatizer")
 > ```
 
-| Setting         | Description                                                                                                                                                                                                                                                                                                        |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `model`         | A model instance that predicts the edit tree probabilities. The output vectors should match the number of edit trees in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
-| `backoff`       | ~~Token~~ attribute to use when no applicable edit tree is found. Defaults to `orth`. ~~str~~                                                                                                                                                                                                                      |
-| `min_tree_freq` | Minimum frequency of an edit tree in the training set to be used. Defaults to `3`. ~~int~~                                                                                                                                                                                                                         |
-| `overwrite`     | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                                                                                                                                                                          |
-| `top_k`         | The number of most probable edit trees to try before resorting to `backoff`. Defaults to `1`. ~~int~~                                                                                                                                                                                                              |
-| `scorer`        | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attribute `"lemma"`. ~~Optional[Callable]~~                                                                                                                                                                      |
+| Setting                                         | Description                                                                                                                                                                                                                                                                                                        |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`                                         | A model instance that predicts the edit tree probabilities. The output vectors should match the number of edit trees in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
+| `backoff`                                       | ~~Token~~ attribute to use when no applicable edit tree is found. Defaults to `orth`. ~~str~~                                                                                                                                                                                                                      |
+| `min_tree_freq`                                 | Minimum frequency of an edit tree in the training set to be used. Defaults to `3`. ~~int~~                                                                                                                                                                                                                         |
+| `overwrite`                                     | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                                                                                                                                                                          |
+| `top_k`                                         | The number of most probable edit trees to try before resorting to `backoff`. Defaults to `1`. ~~int~~                                                                                                                                                                                                              |
+| `scorer`                                        | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attribute `"lemma"`. ~~Optional[Callable]~~                                                                                                                                                                      |
+| `save_activations` <Tag variant="new">4.0</Tag> | Save activations in `Doc` when annotating. Saved activations are `"probabilities"` and `"tree_ids"`. ~~Union[bool, list[str]]~~                                                                                                                                                                                    |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/edit_tree_lemmatizer.py
@@ -113,6 +114,39 @@ and all pipeline components are applied to the `Doc` in order. Both
 | ----------- | -------------------------------- |
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
+
+## EditTreeLemmatizer.distill {id="distill", tag="method,experimental", version="4"}
+
+Train a pipe (the student) on the predictions of another pipe (the teacher). The
+student is typically trained on the probability distribution of the teacher, but
+details may differ per pipe. The goal of distillation is to transfer knowledge
+from the teacher to the student.
+
+The distillation is performed on ~~Example~~ objects. The `Example.reference`
+and `Example.predicted` ~~Doc~~s must have the same number of tokens and the
+same orthography. Even though the reference does not need have to have gold
+annotations, the teacher could adds its own annotations when necessary.
+
+This feature is experimental.
+
+> #### Example
+>
+> ```python
+> teacher_pipe = teacher.add_pipe("trainable_lemmatizer")
+> student_pipe = student.add_pipe("trainable_lemmatizer")
+> optimizer = nlp.resume_training()
+> losses = student.distill(teacher_pipe, examples, sgd=optimizer)
+> ```
+
+| Name           | Description                                                                                                                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `teacher_pipe` | The teacher pipe to learn from. ~~Optional[TrainablePipe]~~                                                                                                                                 |
+| `examples`     | A batch of [`Example`](/api/example) distillation examples. The reference (teacher) and predicted (student) docs must have the same number of tokens and orthography. ~~Iterable[Example]~~ |
+| _keyword-only_ |                                                                                                                                                                                             |
+| `drop`         | Dropout rate. ~~float~~                                                                                                                                                                     |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                                                                               |
+| `losses`       | Optional record of the loss during distillation. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~                                                                |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                                                                       |
 
 ## EditTreeLemmatizer.pipe {id="pipe",tag="method"}
 
@@ -267,6 +301,27 @@ Create an optimizer for the pipeline component.
 | Name        | Description                  |
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
+
+## EditTreeLemmatizer.get_teacher_student_loss {id="get_teacher_student_loss", tag="method", version="4"}
+
+Calculate the loss and its gradient for the batch of student scores relative to
+the teacher scores.
+
+> #### Example
+>
+> ```python
+> teacher_lemmatizer = teacher.get_pipe("trainable_lemmatizer")
+> student_lemmatizer = student.add_pipe("trainable_lemmatizer")
+> student_scores = student_lemmatizer.predict([eg.predicted for eg in examples])
+> teacher_scores = teacher_lemmatizer.predict([eg.predicted for eg in examples])
+> loss, d_loss = student_lemmatizer.get_teacher_student_loss(teacher_scores, student_scores)
+> ```
+
+| Name             | Description                                                                 |
+| ---------------- | --------------------------------------------------------------------------- |
+| `teacher_scores` | Scores representing the teacher model's predictions.                        |
+| `student_scores` | Scores representing the student model's predictions.                        |
+| **RETURNS**      | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
 ## EditTreeLemmatizer.use_params {id="use_params",tag="method, contextmanager"}
 

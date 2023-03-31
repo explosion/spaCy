@@ -11,7 +11,8 @@ from .vectors import Vectors
 from pathlib import Path
 
 def create_vocab(
-    lang: Optional[str], defaults: Any, vectors_name: Optional[str] = ...
+    lang: Optional[str],
+    defaults: Any,
 ) -> Vocab: ...
 
 class Vocab:
@@ -28,7 +29,6 @@ class Vocab:
         strings: Optional[Union[List[str], StringStore]] = ...,
         lookups: Optional[Lookups] = ...,
         oov_prob: float = ...,
-        vectors_name: Optional[str] = ...,
         writing_system: Dict[str, Any] = ...,
         get_noun_chunks: Optional[Callable[[Union[Doc, Span]], Iterator[Span]]] = ...,
     ) -> None: ...
@@ -72,7 +72,6 @@ def unpickle_vocab(
     sstore: StringStore,
     vectors: Any,
     morphology: Any,
-    _unused_object: Any,
     lex_attr_getters: Any,
     lookups: Any,
     get_noun_chunks: Any,

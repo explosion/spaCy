@@ -1,5 +1,7 @@
-from typing import Optional, Iterable, Callable, Dict, Union, List, Any
-from thinc.types import Floats2d
+from typing import Optional, Iterable, Callable, Dict, Sequence, Union, List, Any
+from typing import cast
+from numpy import dtype
+from thinc.types import Floats1d, Floats2d, Ints1d, Ragged
 from pathlib import Path
 from itertools import islice
 import srsly
@@ -11,7 +13,6 @@ from ..kb import KnowledgeBase, Candidate
 from ..ml import empty_kb
 from ..tokens import Doc, Span
 from .pipe import deserialize_config
-from .legacy.entity_linker import EntityLinker_v1
 from .trainable_pipe import TrainablePipe
 from ..language import Language
 from ..vocab import Vocab
@@ -21,8 +22,10 @@ from ..util import SimpleFrozenList, registry
 from .. import util
 from ..scorer import Scorer
 
-# See #9050
-BACKWARD_OVERWRITE = True
+
+ActivationsT = Dict[str, Union[List[Ragged], List[str]]]
+
+KNOWLEDGE_BASE_IDS = "kb_ids"
 
 default_model_config = """
 [model]
@@ -54,11 +57,13 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "entity_vector_length": 64,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
         "get_candidates_batch": {"@misc": "spacy.CandidateBatchGenerator.v1"},
-        "overwrite": True,
+        "overwrite": False,
+        "generate_empty_kb": {"@misc": "spacy.EmptyKB.v2"},
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
         "use_gold_ents": True,
         "candidates_batch_size": 1,
         "threshold": None,
+        "save_activations": False,
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -80,11 +85,13 @@ def make_entity_linker(
     get_candidates_batch: Callable[
         [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
     ],
+    generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
     overwrite: bool,
     scorer: Optional[Callable],
     use_gold_ents: bool,
     candidates_batch_size: int,
     threshold: Optional[float] = None,
+    save_activations: bool,
 ):
     """Construct an EntityLinker component.
 
@@ -101,29 +108,18 @@ def make_entity_linker(
     get_candidates_batch (
         Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
         ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
+    generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
     scorer (Optional[Callable]): The scoring method.
     use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
         component must provide entity annotations.
     candidates_batch_size (int): Size of batches for entity candidate generation.
     threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the threshold,
         prediction is discarded. If None, predictions are not filtered by any threshold.
+    save_activations (bool): save model activations in Doc when annotating.
     """
-
     if not model.attrs.get("include_span_maker", False):
-        # The only difference in arguments here is that use_gold_ents and threshold aren't available.
-        return EntityLinker_v1(
-            nlp.vocab,
-            model,
-            name,
-            labels_discard=labels_discard,
-            n_sents=n_sents,
-            incl_prior=incl_prior,
-            incl_context=incl_context,
-            entity_vector_length=entity_vector_length,
-            get_candidates=get_candidates,
-            overwrite=overwrite,
-            scorer=scorer,
-        )
+        raise ValueError(Errors.E4005)
+
     return EntityLinker(
         nlp.vocab,
         model,
@@ -135,11 +131,13 @@ def make_entity_linker(
         entity_vector_length=entity_vector_length,
         get_candidates=get_candidates,
         get_candidates_batch=get_candidates_batch,
+        generate_empty_kb=generate_empty_kb,
         overwrite=overwrite,
         scorer=scorer,
         use_gold_ents=use_gold_ents,
         candidates_batch_size=candidates_batch_size,
         threshold=threshold,
+        save_activations=save_activations,
     )
 
 
@@ -175,11 +173,13 @@ class EntityLinker(TrainablePipe):
         get_candidates_batch: Callable[
             [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
         ],
-        overwrite: bool = BACKWARD_OVERWRITE,
+        generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
+        overwrite: bool = False,
         scorer: Optional[Callable] = entity_linker_score,
         use_gold_ents: bool,
         candidates_batch_size: int,
         threshold: Optional[float] = None,
+        save_activations: bool = False,
     ) -> None:
         """Initialize an entity linker.
 
@@ -198,12 +198,15 @@ class EntityLinker(TrainablePipe):
             Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]],
             Iterable[Candidate]]
             ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
+        generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
+        overwrite (bool): Whether to overwrite existing non-empty annotations.
         scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
         use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
             component must provide entity annotations.
         candidates_batch_size (int): Size of batches for entity candidate generation.
         threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
             threshold, prediction is discarded. If None, predictions are not filtered by any threshold.
+        save_activations (bool): save model activations in Doc when annotating.
         DOCS: https://spacy.io/api/entitylinker#init
         """
 
@@ -220,6 +223,7 @@ class EntityLinker(TrainablePipe):
         self.model = model
         self.name = name
         self.labels_discard = list(labels_discard)
+        # how many neighbour sentences to take into account
         self.n_sents = n_sents
         self.incl_prior = incl_prior
         self.incl_context = incl_context
@@ -227,13 +231,12 @@ class EntityLinker(TrainablePipe):
         self.get_candidates_batch = get_candidates_batch
         self.cfg: Dict[str, Any] = {"overwrite": overwrite}
         self.distance = CosineDistance(normalize=False)
-        # how many neighbour sentences to take into account
-        # create an empty KB by default
-        self.kb = empty_kb(entity_vector_length)(self.vocab)
+        self.kb = generate_empty_kb(self.vocab, entity_vector_length)
         self.scorer = scorer
         self.use_gold_ents = use_gold_ents
         self.candidates_batch_size = candidates_batch_size
         self.threshold = threshold
+        self.save_activations = save_activations
 
         if candidates_batch_size < 1:
             raise ValueError(Errors.E1044)
@@ -250,7 +253,7 @@ class EntityLinker(TrainablePipe):
         # Raise an error if the knowledge base is not initialized.
         if self.kb is None:
             raise ValueError(Errors.E1018.format(name=self.name))
-        if len(self.kb) == 0:
+        if hasattr(self.kb, "is_empty") and self.kb.is_empty():
             raise ValueError(Errors.E139.format(name=self.name))
 
     def initialize(
@@ -422,7 +425,7 @@ class EntityLinker(TrainablePipe):
         loss = loss / len(entity_encodings)
         return float(loss), out
 
-    def predict(self, docs: Iterable[Doc]) -> List[str]:
+    def predict(self, docs: Iterable[Doc]) -> ActivationsT:
         """Apply the pipeline's model to a batch of docs, without modifying them.
         Returns the KB IDs for each entity in each doc, including NIL if there is
         no prediction.
@@ -435,13 +438,24 @@ class EntityLinker(TrainablePipe):
         self.validate_kb()
         entity_count = 0
         final_kb_ids: List[str] = []
-        xp = self.model.ops.xp
+        ops = self.model.ops
+        xp = ops.xp
+        docs_ents: List[Ragged] = []
+        docs_scores: List[Ragged] = []
         if not docs:
-            return final_kb_ids
+            return {
+                KNOWLEDGE_BASE_IDS: final_kb_ids,
+                "ents": docs_ents,
+                "scores": docs_scores,
+            }
         if isinstance(docs, Doc):
             docs = [docs]
-        for i, doc in enumerate(docs):
+        for doc in docs:
+            doc_ents: List[Ints1d] = []
+            doc_scores: List[Floats1d] = []
             if len(doc) == 0:
+                docs_scores.append(Ragged(ops.alloc1f(0), ops.alloc1i(0)))
+                docs_ents.append(Ragged(xp.zeros(0, dtype="uint64"), ops.alloc1i(0)))
                 continue
             sentences = [s for s in doc.sents]
 
@@ -489,14 +503,32 @@ class EntityLinker(TrainablePipe):
                     if ent.label_ in self.labels_discard:
                         # ignoring this entity - setting to NIL
                         final_kb_ids.append(self.NIL)
+                        self._add_activations(
+                            doc_scores=doc_scores,
+                            doc_ents=doc_ents,
+                            scores=[0.0],
+                            ents=[0],
+                        )
                     else:
                         candidates = list(batch_candidates[j])
                         if not candidates:
                             # no prediction possible for this entity - setting to NIL
                             final_kb_ids.append(self.NIL)
+                            self._add_activations(
+                                doc_scores=doc_scores,
+                                doc_ents=doc_ents,
+                                scores=[0.0],
+                                ents=[0],
+                            )
                         elif len(candidates) == 1 and self.threshold is None:
                             # shortcut for efficiency reasons: take the 1 candidate
                             final_kb_ids.append(candidates[0].entity_)
+                            self._add_activations(
+                                doc_scores=doc_scores,
+                                doc_ents=doc_ents,
+                                scores=[1.0],
+                                ents=[candidates[0].entity_],
+                            )
                         else:
                             random.shuffle(candidates)
                             # set all prior probabilities to 0 if incl_prior=False
@@ -530,28 +562,52 @@ class EntityLinker(TrainablePipe):
                                 or scores.max() >= self.threshold
                                 else EntityLinker.NIL
                             )
-
+                            self._add_activations(
+                                doc_scores=doc_scores,
+                                doc_ents=doc_ents,
+                                scores=scores,
+                                ents=[c.entity for c in candidates],
+                            )
+            self._add_doc_activations(
+                docs_scores=docs_scores,
+                docs_ents=docs_ents,
+                doc_scores=doc_scores,
+                doc_ents=doc_ents,
+            )
         if not (len(final_kb_ids) == entity_count):
             err = Errors.E147.format(
                 method="predict", msg="result variables not of equal length"
             )
             raise RuntimeError(err)
-        return final_kb_ids
+        return {
+            KNOWLEDGE_BASE_IDS: final_kb_ids,
+            "ents": docs_ents,
+            "scores": docs_scores,
+        }
 
-    def set_annotations(self, docs: Iterable[Doc], kb_ids: List[str]) -> None:
+    def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT) -> None:
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        kb_ids (List[str]): The IDs to set, produced by EntityLinker.predict.
+        activations (ActivationsT): The activations used for setting annotations, produced
+                                 by EntityLinker.predict.
 
         DOCS: https://spacy.io/api/entitylinker#set_annotations
         """
+        kb_ids = cast(List[str], activations[KNOWLEDGE_BASE_IDS])
         count_ents = len([ent for doc in docs for ent in doc.ents])
         if count_ents != len(kb_ids):
             raise ValueError(Errors.E148.format(ents=count_ents, ids=len(kb_ids)))
         i = 0
         overwrite = self.cfg["overwrite"]
-        for doc in docs:
+        for j, doc in enumerate(docs):
+            if self.save_activations:
+                doc.activations[self.name] = {}
+                for act_name, acts in activations.items():
+                    if act_name != KNOWLEDGE_BASE_IDS:
+                        # We only copy activations that are Ragged.
+                        doc.activations[self.name][act_name] = cast(Ragged, acts[j])
+
             for ent in doc.ents:
                 kb_id = kb_ids[i]
                 i += 1
@@ -650,3 +706,32 @@ class EntityLinker(TrainablePipe):
 
     def add_label(self, label):
         raise NotImplementedError
+
+    def _add_doc_activations(
+        self,
+        *,
+        docs_scores: List[Ragged],
+        docs_ents: List[Ragged],
+        doc_scores: List[Floats1d],
+        doc_ents: List[Ints1d],
+    ):
+        if not self.save_activations:
+            return
+        ops = self.model.ops
+        lengths = ops.asarray1i([s.shape[0] for s in doc_scores])
+        docs_scores.append(Ragged(ops.flatten(doc_scores), lengths))
+        docs_ents.append(Ragged(ops.flatten(doc_ents), lengths))
+
+    def _add_activations(
+        self,
+        *,
+        doc_scores: List[Floats1d],
+        doc_ents: List[Ints1d],
+        scores: Sequence[float],
+        ents: Sequence[int],
+    ):
+        if not self.save_activations:
+            return
+        ops = self.model.ops
+        doc_scores.append(ops.asarray1f(scores))
+        doc_ents.append(ops.asarray1i(ents, dtype="uint64"))

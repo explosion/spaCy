@@ -1,7 +1,7 @@
 import pytest
 
 from spacy.tokens import Span, SpanGroup
-from spacy.tokens._dict_proxies import SpanGroups
+from spacy.tokens.span_groups import SpanGroups
 
 
 @pytest.mark.issue(10685)

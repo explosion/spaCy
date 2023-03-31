@@ -6,10 +6,11 @@ import spacy
 from spacy.lang.de import German
 from spacy.lang.en import English
 from spacy.language import DEFAULT_CONFIG, DEFAULT_CONFIG_PRETRAIN_PATH
+from spacy.language import DEFAULT_CONFIG_DISTILL_PATH
 from spacy.language import Language
 from spacy.ml.models import MaxoutWindowEncoder, MultiHashEmbed
 from spacy.ml.models import build_tb_parser_model, build_Tok2Vec_model
-from spacy.schemas import ConfigSchema, ConfigSchemaPretrain
+from spacy.schemas import ConfigSchema, ConfigSchemaDistill, ConfigSchemaPretrain
 from spacy.util import load_config, load_config_from_str
 from spacy.util import load_model_from_config, registry
 
@@ -65,6 +66,60 @@ factory = "tagger"
 @architectures = "spacy.Tok2VecListener.v1"
 width = ${components.tok2vec.model.width}
 """
+
+distill_config_string = """
+[paths]
+train = null
+dev = null
+
+[corpora]
+
+[corpora.train]
+@readers = "spacy.Corpus.v1"
+path = ${paths.train}
+
+[corpora.dev]
+@readers = "spacy.Corpus.v1"
+path = ${paths.dev}
+
+[training]
+
+[training.batcher]
+@batchers = "spacy.batch_by_words.v1"
+size = 666
+
+[nlp]
+lang = "en"
+pipeline = ["tok2vec", "tagger"]
+
+[components]
+
+[components.tok2vec]
+factory = "tok2vec"
+
+[components.tok2vec.model]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 342
+depth = 4
+window_size = 1
+embed_size = 2000
+maxout_pieces = 3
+subword_features = true
+
+[components.tagger]
+factory = "tagger"
+
+[components.tagger.model]
+@architectures = "spacy.Tagger.v2"
+
+[components.tagger.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.width}
+
+[distill]
+"""
+
 
 pretrain_config_string = """
 [paths]
@@ -122,33 +177,11 @@ width = ${components.tok2vec.model.width}
 
 parser_config_string_upper = """
 [model]
-@architectures = "spacy.TransitionBasedParser.v2"
+@architectures = "spacy.TransitionBasedParser.v3"
 state_type = "parser"
 extra_state_tokens = false
 hidden_width = 66
 maxout_pieces = 2
-use_upper = true
-
-[model.tok2vec]
-@architectures = "spacy.HashEmbedCNN.v1"
-pretrained_vectors = null
-width = 333
-depth = 4
-embed_size = 5555
-window_size = 1
-maxout_pieces = 7
-subword_features = false
-"""
-
-
-parser_config_string_no_upper = """
-[model]
-@architectures = "spacy.TransitionBasedParser.v2"
-state_type = "parser"
-extra_state_tokens = false
-hidden_width = 66
-maxout_pieces = 2
-use_upper = false
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v1"
@@ -179,7 +212,6 @@ def my_parser():
         extra_state_tokens=True,
         hidden_width=65,
         maxout_pieces=5,
-        use_upper=True,
     )
     return parser
 
@@ -222,6 +254,14 @@ def test_create_nlp_from_config():
     with pytest.raises(ValueError):
         bad_cfg = {"pipeline": {"foo": "bar"}}
         load_model_from_config(Config(bad_cfg), auto_fill=True)
+
+
+def test_nlp_from_distillation_config():
+    """Test that the default distillation config validates properly"""
+    config = Config().from_str(distill_config_string)
+    distill_config = load_config(DEFAULT_CONFIG_DISTILL_PATH)
+    filled = config.merge(distill_config)
+    registry.resolve(filled["distillation"], schema=ConfigSchemaDistill)
 
 
 def test_create_nlp_from_pretraining_config():
@@ -285,15 +325,16 @@ def test_serialize_custom_nlp():
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
         model = nlp2.get_pipe("parser").model
-        model.get_ref("tok2vec")
-        # check that we have the correct settings, not the default ones
-        assert model.get_ref("upper").get_dim("nI") == 65
-        assert model.get_ref("lower").get_dim("nI") == 65
+        assert model.get_ref("tok2vec") is not None
+        assert model.has_param("hidden_W")
+        assert model.has_param("hidden_b")
+        output = model.get_ref("output")
+        assert output is not None
+        assert output.has_param("W")
+        assert output.has_param("b")
 
 
-@pytest.mark.parametrize(
-    "parser_config_string", [parser_config_string_upper, parser_config_string_no_upper]
-)
+@pytest.mark.parametrize("parser_config_string", [parser_config_string_upper])
 def test_serialize_parser(parser_config_string):
     """Create a non-default parser config to check nlp serializes it correctly"""
     nlp = English()
@@ -306,11 +347,13 @@ def test_serialize_parser(parser_config_string):
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
         model = nlp2.get_pipe("parser").model
-        model.get_ref("tok2vec")
-        # check that we have the correct settings, not the default ones
-        if model.attrs["has_upper"]:
-            assert model.get_ref("upper").get_dim("nI") == 66
-        assert model.get_ref("lower").get_dim("nI") == 66
+        assert model.get_ref("tok2vec") is not None
+        assert model.has_param("hidden_W")
+        assert model.has_param("hidden_b")
+        output = model.get_ref("output")
+        assert output is not None
+        assert output.has_param("b")
+        assert output.has_param("W")
 
 
 def test_config_nlp_roundtrip():
@@ -457,9 +500,7 @@ def test_config_auto_fill_extra_fields():
     load_model_from_config(nlp.config)
 
 
-@pytest.mark.parametrize(
-    "parser_config_string", [parser_config_string_upper, parser_config_string_no_upper]
-)
+@pytest.mark.parametrize("parser_config_string", [parser_config_string_upper])
 def test_config_validate_literal(parser_config_string):
     nlp = English()
     config = Config().from_str(parser_config_string)

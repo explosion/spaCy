@@ -211,20 +211,6 @@ will be overwritten.
 > matches = matcher(doc)
 > ```
 
-<Infobox title="Changed in v3.0" variant="warning">
-
-As of spaCy v3.0, `Matcher.add` takes a list of patterns as the second argument
-(instead of a variable number of arguments). The `on_match` callback becomes an
-optional keyword argument.
-
-```diff
-patterns = [[{"TEXT": "Google"}, {"TEXT": "Now"}], [{"TEXT": "GoogleNow"}]]
-- matcher.add("GoogleNow", on_match, *patterns)
-+ matcher.add("GoogleNow", patterns, on_match=on_match)
-```
-
-</Infobox>
-
 | Name                                | Description                                                                                                                                                |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `match_id`                          | An ID for the thing you're matching. ~~str~~                                                                                                               |

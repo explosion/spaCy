@@ -1,3 +1,4 @@
+from typing import cast
 import pytest
 from numpy.testing import assert_equal
 from spacy.attrs import TAG
@@ -6,6 +7,7 @@ from spacy import util
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.language import Language
+from spacy.pipeline import TrainablePipe
 from thinc.api import compounding
 
 from ..util import make_tempdir
@@ -22,7 +24,9 @@ def test_issue4348():
     optimizer = nlp.initialize()
     for i in range(5):
         losses = {}
-        batches = util.minibatch(TRAIN_DATA, size=compounding(4.0, 32.0, 1.001))
+        batches = util.minibatch(
+            TRAIN_DATA, size=compounding(4.0, 32.0, 1.001).to_generator()
+        )
         for batch in batches:
             nlp.update(batch, sgd=optimizer, losses=losses)
 
@@ -209,6 +213,72 @@ def test_overfitting_IO():
     # test the "untrained" tag
     doc3 = nlp(test_text)
     assert doc3[0].tag_ != "N"
+
+
+def test_is_distillable():
+    nlp = English()
+    tagger = nlp.add_pipe("tagger")
+    assert tagger.is_distillable
+
+
+def test_distill():
+    teacher = English()
+    teacher_tagger = teacher.add_pipe("tagger")
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(teacher.make_doc(t[0]), t[1]))
+
+    optimizer = teacher.initialize(get_examples=lambda: train_examples)
+
+    for i in range(50):
+        losses = {}
+        teacher.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["tagger"] < 0.00001
+
+    student = English()
+    student_tagger = student.add_pipe("tagger")
+    student_tagger.min_tree_freq = 1
+    student_tagger.initialize(
+        get_examples=lambda: train_examples, labels=teacher_tagger.label_data
+    )
+
+    distill_examples = [
+        Example.from_dict(teacher.make_doc(t[0]), {}) for t in TRAIN_DATA
+    ]
+
+    for i in range(50):
+        losses = {}
+        student_tagger.distill(
+            teacher_tagger, distill_examples, sgd=optimizer, losses=losses
+        )
+    assert losses["tagger"] < 0.00001
+
+    test_text = "I like blue eggs"
+    doc = student(test_text)
+    assert doc[0].tag_ == "N"
+    assert doc[1].tag_ == "V"
+    assert doc[2].tag_ == "J"
+    assert doc[3].tag_ == "N"
+
+
+def test_save_activations():
+    # Test if activations are correctly added to Doc when requested.
+    nlp = English()
+    tagger = cast(TrainablePipe, nlp.add_pipe("tagger"))
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    doc = nlp("This is a test.")
+    assert "tagger" not in doc.activations
+
+    tagger.save_activations = True
+    doc = nlp("This is a test.")
+    assert "tagger" in doc.activations
+    assert set(doc.activations["tagger"].keys()) == {"label_ids", "probabilities"}
+    assert doc.activations["tagger"]["probabilities"].shape == (5, len(TAGS))
+    assert doc.activations["tagger"]["label_ids"].shape == (5,)
 
 
 def test_tagger_requires_labels():

@@ -23,7 +23,7 @@ from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH
 from .levenshtein import levenshtein_compare
 from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
-from ..strings import get_string_id
+from ..strings cimport get_string_id
 from ..attrs import IDS
 from ..util import registry
 
@@ -115,9 +115,9 @@ cdef class Matcher:
         """
         errors = {}
         if on_match is not None and not hasattr(on_match, "__call__"):
-            raise ValueError(Errors.E171.format(arg_type=type(on_match)))
-        if patterns is None or not isinstance(patterns, List):  # old API
-            raise ValueError(Errors.E948.format(arg_type=type(patterns)))
+            raise ValueError(Errors.E171.format(name="Matcher", arg_type=type(on_match)))
+        if patterns is None or not isinstance(patterns, List):
+            raise ValueError(Errors.E948.format(name="Matcher", arg_type=type(patterns)))
         if greedy is not None and greedy not in ["FIRST", "LONGEST"]:
             raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=greedy))
         for i, pattern in enumerate(patterns):
@@ -265,6 +265,10 @@ cdef class Matcher:
         # non-overlapping ones this `match` can be either (start, end) or
         # (start, end, alignments) depending on `with_alignments=` option.
         for key, *match in matches:
+            # Adjust span matches to doc offsets
+            if isinstance(doclike, Span):
+                match[0] += doclike.start
+                match[1] += doclike.start
             span_filter = self._filter.get(key)
             if span_filter is not None:
                 pairs = pairs_by_id.get(key, [])
@@ -295,9 +299,6 @@ cdef class Matcher:
         if as_spans:
             final_results = []
             for key, start, end, *_ in final_matches:
-                if isinstance(doclike, Span):
-                    start += doclike.start
-                    end += doclike.start
                 final_results.append(Span(doc, start, end, label=key))
         elif with_alignments:
             # convert alignments List[Dict[str, int]] --> List[int]
@@ -828,6 +829,11 @@ def _get_attr_values(spec, string_store):
     return attr_values
 
 
+def _predicate_cache_key(attr, predicate, value, *, regex=False, fuzzy=None):
+    # tuple order affects performance
+    return (attr, regex, fuzzy, predicate, srsly.json_dumps(value, sort_keys=True))
+
+
 # These predicate helper classes are used to match the REGEX, IN, >= etc
 # extensions to the matcher introduced in #3173.
 
@@ -847,7 +853,7 @@ class _FuzzyPredicate:
         fuzz = self.predicate[len("FUZZY"):] # number after prefix
         self.fuzzy = int(fuzz) if fuzz else -1
         self.fuzzy_compare = fuzzy_compare
-        self.key = (self.attr, self.fuzzy, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = _predicate_cache_key(self.attr, self.predicate, value, fuzzy=self.fuzzy)
 
     def __call__(self, Token token):
         if self.is_extension:
@@ -869,7 +875,7 @@ class _RegexPredicate:
         self.value = re.compile(value)
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = (self.attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = _predicate_cache_key(self.attr, self.predicate, value)
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
 
@@ -905,7 +911,7 @@ class _SetPredicate:
                 self.value = set(get_string_id(v) for v in value)
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = (self.attr, self.regex, self.fuzzy, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = _predicate_cache_key(self.attr, self.predicate, value, regex=self.regex, fuzzy=self.fuzzy)
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
 
@@ -977,7 +983,7 @@ class _ComparisonPredicate:
         self.value = value
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = (self.attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = _predicate_cache_key(self.attr, self.predicate, value)
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
 
@@ -1092,7 +1098,7 @@ def _get_extension_extra_predicates(spec, extra_predicates, predicate_types,
         if isinstance(value, dict):
             for type_, cls in predicate_types.items():
                 if type_ in value:
-                    key = (attr, type_, srsly.json_dumps(value[type_], sort_keys=True))
+                    key = _predicate_cache_key(attr, type_, value[type_])
                     if key in seen_predicates:
                         output.append(seen_predicates[key])
                     else:

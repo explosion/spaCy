@@ -6,6 +6,7 @@ import srsly
 
 from spacy.errors import Errors
 from .span cimport Span
+from libcpp.memory cimport make_shared
 
 
 cdef class SpanGroup:
@@ -197,10 +198,12 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#to_bytes
         """
+        cdef SpanC* span_c
         output = {"name": self.name, "attrs": self.attrs, "spans": []}
         cdef int i
         for i in range(self.c.size()):
             span = self.c[i]
+            span_c = span.get()
             # The struct.pack here is probably overkill, but it might help if
             # you're saving tonnes of spans, and it doesn't really add any
             # complexity. We do take care to specify little-endian byte order
@@ -212,13 +215,13 @@ cdef class SpanGroup:
             # l: int32_t
             output["spans"].append(struct.pack(
                 ">QQQllll",
-                span.id,
-                span.kb_id,
-                span.label,
-                span.start,
-                span.end,
-                span.start_char,
-                span.end_char
+                span_c.id,
+                span_c.kb_id,
+                span_c.label,
+                span_c.start,
+                span_c.end,
+                span_c.start_char,
+                span_c.end_char
             ))
         return srsly.msgpack_dumps(output)
 
@@ -245,10 +248,10 @@ cdef class SpanGroup:
             span.end = items[4]
             span.start_char = items[5]
             span.end_char = items[6]
-            self.c.push_back(span)
+            self.c.push_back(make_shared[SpanC](span))
         return self
 
-    cdef void push_back(self, SpanC span) nogil:
+    cdef void push_back(self, const shared_ptr[SpanC] &span):
         self.c.push_back(span)
 
     def copy(self, doc: Optional["Doc"] = None) -> SpanGroup:

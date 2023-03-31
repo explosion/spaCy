@@ -1,0 +1,230 @@
+---
+title: What's New in v3.5
+teaser: New features and how to upgrade
+menu:
+  - ['New Features', 'features']
+  - ['Upgrading Notes', 'upgrading']
+---
+
+## New features {id="features",hidden="true"}
+
+spaCy v3.5 introduces three new CLI commands, `apply`, `benchmark` and
+`find-threshold`, adds fuzzy matching, provides improvements to our entity
+linking functionality, and includes a range of language updates and bug fixes.
+
+### New CLI commands {id="cli"}
+
+#### apply CLI
+
+The [`apply` CLI](/api/cli#apply) can be used to apply a pipeline to one or more
+`.txt`, `.jsonl` or `.spacy` input files, saving the annotated docs in a single
+`.spacy` file.
+
+```bash
+$ spacy apply en_core_web_sm my_texts/ output.spacy
+```
+
+#### benchmark CLI
+
+The [`benchmark` CLI](/api/cli#benchmark) has been added to extend the existing
+`evaluate` functionality with a wider range of profiling subcommands.
+
+The `benchmark accuracy` CLI is introduced as an alias for `evaluate`. The new
+`benchmark speed` CLI performs warmup rounds before measuring the speed in words
+per second on batches of randomly shuffled documents from the provided data.
+
+```bash
+$ spacy benchmark speed my_pipeline data.spacy
+```
+
+The output is the mean performance using batches (`nlp.pipe`) with a 95%
+confidence interval, e.g., profiling `en_core_web_sm` on CPU:
+
+```none
+Outliers: 2.0%, extreme outliers: 0.0%
+Mean: 18904.1 words/s (95% CI: -256.9 +244.1)
+```
+
+#### find-threshold CLI
+
+The [`find-threshold` CLI](/api/cli#find-threshold) runs a series of trials
+across threshold values from `0.0` to `1.0` and identifies the best threshold
+for the provided score metric.
+
+The following command runs 20 trials for the `spancat` component in
+`my_pipeline`, recording the `spans_sc_f` score for each value of the threshold
+`[components.spancat.threshold]` from `0.0` to `1.0`:
+
+```bash
+$ spacy find-threshold my_pipeline data.spacy spancat threshold spans_sc_f --n_trials 20
+```
+
+The `find-threshold` CLI can be used with `textcat_multilabel`, `spancat` and
+custom components with thresholds that are applied while predicting or scoring.
+
+### Fuzzy matching {id="fuzzy"}
+
+New `FUZZY` operators support [fuzzy matching](/usage/rule-based-matching#fuzzy)
+with the `Matcher`. By default, the `FUZZY` operator allows a Levenshtein edit
+distance of 2 and up to 30% of the pattern string length. `FUZZY1`..`FUZZY9` can
+be used to specify the exact number of allowed edits.
+
+```python
+# Match lowercase with fuzzy matching (allows up to 3 edits)
+pattern = [{"LOWER": {"FUZZY": "definitely"}}]
+
+# Match custom attribute values with fuzzy matching (allows up to 3 edits)
+pattern = [{"_": {"country": {"FUZZY": "Kyrgyzstan"}}}]
+
+# Match with exact Levenshtein edit distance limits (allows up to 4 edits)
+pattern = [{"_": {"country": {"FUZZY4": "Kyrgyzstan"}}}]
+```
+
+Note that `FUZZY` uses Levenshtein edit distance rather than Damerau-Levenshtein
+edit distance, so a transposition like `teh` for `the` counts as two edits, one
+insertion and one deletion.
+
+If you'd prefer an alternate fuzzy matching algorithm, you can provide your own
+custom method to the `Matcher` or as a config option for an entity ruler and
+span ruler.
+
+### FUZZY and REGEX with lists {id="fuzzy-regex-lists"}
+
+The `FUZZY` and `REGEX` operators are also now supported for lists with `IN` and
+`NOT_IN`:
+
+```python
+pattern = [{"TEXT": {"FUZZY": {"IN": ["awesome", "cool", "wonderful"]}}}]
+pattern = [{"TEXT": {"REGEX": {"NOT_IN": ["^awe(some)?$", "^wonder(ful)?"]}}}]
+```
+
+### Entity linking generalization {id="el"}
+
+The knowledge base used for entity linking is now easier to customize and has a
+new default implementation [`InMemoryLookupKB`](/api/inmemorylookupkb).
+
+### Additional features and improvements {id="additional-features-and-improvements"}
+
+- Language updates:
+  - Extended support for Slovenian
+  - Fixed lookup fallback for French and Catalan lemmatizers
+  - Switch Russian and Ukrainian lemmatizers to `pymorphy3`
+  - Support for editorial punctuation in Ancient Greek
+  - Update to Russian tokenizer exceptions
+  - Small fix for Dutch stop words
+- Allow up to `typer` v0.7.x, `mypy` 0.990 and `typing_extensions` v4.4.x.
+- New `spacy.ConsoleLogger.v3` with expanded progress
+  [tracking](/api/top-level#ConsoleLogger).
+- Improved scoring behavior for `textcat` with `spacy.textcat_scorer.v2` and
+  `spacy.textcat_multilabel_scorer.v2`.
+- Updates so that downstream components can train properly on a frozen `tok2vec`
+  or `transformer` layer.
+- Allow interpolation of variables in directory names in projects.
+- Support for local file system [remotes](/usage/projects#remote) for projects.
+- Improve UX around `displacy.serve` when the default port is in use.
+- Optional `before_update` callback that is invoked at the start of each
+  [training step](/api/data-formats#config-training).
+- Improve performance of `SpanGroup` and fix typing issues for `SpanGroup` and
+  `Span` objects.
+- Patch a
+  [security vulnerability](https://github.com/advisories/GHSA-gw9q-c7gh-j9vm) in
+  extracting tar files.
+- Add equality definition for `Vectors`.
+- Ensure `Vocab.to_disk` respects the exclude setting for `lookups` and
+  `vectors`.
+- Correctly handle missing annotations in the edit tree lemmatizer.
+
+### Trained pipeline updates {id="pipelines"}
+
+- The CNN pipelines add `IS_SPACE` as a `tok2vec` feature for `tagger` and
+  `morphologizer` components to improve tagging of non-whitespace vs. whitespace
+  tokens.
+- The transformer pipelines require `spacy-transformers` v1.2, which uses the
+  exact alignment from `tokenizers` for fast tokenizers instead of the heuristic
+  alignment from `spacy-alignments`. For all trained pipelines except
+  `ja_core_news_trf`, the alignments between spaCy tokens and transformer tokens
+  may be slightly different. More details about the `spacy-transformers` changes
+  in the
+  [v1.2.0 release notes](https://github.com/explosion/spacy-transformers/releases/tag/v1.2.0).
+
+## Notes about upgrading from v3.4 {id="upgrading"}
+
+### Validation of textcat values {id="textcat-validation"}
+
+An error is now raised when unsupported values are given as input to train a
+`textcat` or `textcat_multilabel` model - ensure that values are `0.0` or `1.0`
+as explained in the [docs](/api/textcategorizer#assigned-attributes).
+
+### Using the default knowledge base
+
+As `KnowledgeBase` is now an abstract class, you should call the constructor of
+the new `InMemoryLookupKB` instead when you want to use spaCy's default KB
+implementation:
+
+```diff
+- kb = KnowledgeBase()
++ kb = InMemoryLookupKB()
+```
+
+If you've written a custom KB that inherits from `KnowledgeBase`, you'll need to
+implement its abstract methods, or alternatively inherit from `InMemoryLookupKB`
+instead.
+
+### Updated scorers for tokenization and textcat {id="scores"}
+
+We fixed a bug that inflated the `token_acc` scores in v3.0-v3.4. The reported
+`token_acc` will drop from v3.4 to v3.5, but if `token_p/r/f` stay the same,
+your tokenization performance has not changed from v3.4.
+
+For new `textcat` or `textcat_multilabel` configs, the new default `v2` scorers:
+
+- ignore `threshold` for `textcat`, so the reported `cats_p/r/f` may increase
+  slightly in v3.5 even though the underlying predictions are unchanged
+- report the performance of only the **final** `textcat` or `textcat_multilabel`
+  component in the pipeline by default
+- allow custom scorers to be used to score multiple `textcat` and
+  `textcat_multilabel` components with `Scorer.score_cats` by restricting the
+  evaluation to the component's provided labels
+
+### Pipeline package version compatibility {id="version-compat"}
+
+> #### Using legacy implementations
+>
+> In spaCy v3, you'll still be able to load and reference legacy implementations
+> via [`spacy-legacy`](https://github.com/explosion/spacy-legacy), even if the
+> components or architectures change and newer versions are available in the
+> core library.
+
+When you're loading a pipeline package trained with an earlier version of spaCy
+v3, you will see a warning telling you that the pipeline may be incompatible.
+This doesn't necessarily have to be true, but we recommend running your
+pipelines against your test suite or evaluation data to make sure there are no
+unexpected results.
+
+If you're using one of the [trained pipelines](/models) we provide, you should
+run [`spacy download`](/api/cli#download) to update to the latest version. To
+see an overview of all installed packages and their compatibility, you can run
+[`spacy validate`](/api/cli#validate).
+
+If you've trained your own custom pipeline and you've confirmed that it's still
+working as expected, you can update the spaCy version requirements in the
+[`meta.json`](/api/data-formats#meta):
+
+```diff
+- "spacy_version": ">=3.4.0,<3.5.0",
++ "spacy_version": ">=3.4.0,<3.6.0",
+```
+
+### Updating v3.4 configs
+
+To update a config from spaCy v3.4 with the new v3.5 settings, run
+[`init fill-config`](/api/cli#init-fill-config):
+
+```cli
+$ python -m spacy init fill-config config-v3.4.cfg config-v3.5.cfg
+```
+
+In many cases ([`spacy train`](/api/cli#train),
+[`spacy.load`](/api/top-level#spacy.load)), the new defaults will be filled in
+automatically, but you'll need to fill in the new settings to run
+[`debug config`](/api/cli#debug) and [`debug data`](/api/cli#debug-data).

@@ -116,10 +116,10 @@ Check whether the matcher contains rules for a match ID.
 ## PhraseMatcher.add {id="add",tag="method"}
 
 Add a rule to the matcher, consisting of an ID key, one or more patterns, and a
-callback function to act on the matches. The callback function will receive the
-arguments `matcher`, `doc`, `i` and `matches`. If a pattern already exists for
-the given ID, the patterns will be extended. An `on_match` callback will be
-overwritten.
+optional callback function to act on the matches. The callback function will
+receive the arguments `matcher`, `doc`, `i` and `matches`. If a pattern already
+exists for the given ID, the patterns will be extended. An `on_match` callback
+will be overwritten.
 
 > #### Example
 >
@@ -133,20 +133,6 @@ overwritten.
 >   doc = nlp("Barack Obama urges Congress to find courage to defend his healthcare reforms")
 >   matches = matcher(doc)
 > ```
-
-<Infobox title="Changed in v3.0" variant="warning">
-
-As of spaCy v3.0, `PhraseMatcher.add` takes a list of patterns as the second
-argument (instead of a variable number of arguments). The `on_match` callback
-becomes an optional keyword argument.
-
-```diff
-patterns = [nlp("health care reform"), nlp("healthcare reform")]
-- matcher.add("HEALTH", on_match, *patterns)
-+ matcher.add("HEALTH", patterns, on_match=on_match)
-```
-
-</Infobox>
 
 | Name           | Description                                                                                                                                                |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |

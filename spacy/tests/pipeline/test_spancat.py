@@ -1,15 +1,15 @@
 import pytest
 import numpy
 from numpy.testing import assert_array_equal, assert_almost_equal
-from thinc.api import get_current_ops, Ragged
+from thinc.api import get_current_ops, Ragged, fix_random_seed
 
 from spacy import util
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.tokens import SpanGroup
-from spacy.tokens._dict_proxies import SpanGroups
+from spacy.tokens.span_groups import SpanGroups
 from spacy.training import Example
-from spacy.util import fix_random_seed, registry, make_tempdir
+from spacy.util import registry, make_tempdir
 
 OPS = get_current_ops()
 
@@ -444,3 +444,23 @@ def test_set_candidates():
     assert len(docs[0].spans["candidates"]) == 9
     assert docs[0].spans["candidates"][0].text == "Just"
     assert docs[0].spans["candidates"][4].text == "Just a"
+
+
+def test_save_activations():
+    # Test if activations are correctly added to Doc when requested.
+    nlp = English()
+    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    train_examples = make_examples(nlp)
+    nlp.initialize(get_examples=lambda: train_examples)
+    nO = spancat.model.get_dim("nO")
+    assert nO == 2
+    assert set(spancat.labels) == {"LOC", "PERSON"}
+
+    doc = nlp("This is a test.")
+    assert "spancat" not in doc.activations
+
+    spancat.save_activations = True
+    doc = nlp("This is a test.")
+    assert set(doc.activations["spancat"].keys()) == {"indices", "scores"}
+    assert doc.activations["spancat"]["indices"].shape == (12, 2)
+    assert doc.activations["spancat"]["scores"].shape == (12, nO)

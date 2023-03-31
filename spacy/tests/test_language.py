@@ -10,8 +10,9 @@ from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.util import registry, ignore_error, raise_error, find_matching_language
+from spacy.util import load_model_from_config
 import spacy
-from thinc.api import CupyOps, NumpyOps, get_current_ops
+from thinc.api import Config, CupyOps, NumpyOps, get_array_module, get_current_ops
 
 from .util import add_vecs_to_vocab, assert_docs_equal
 
@@ -24,6 +25,57 @@ try:
     torch.set_num_interop_threads(1)
 except ImportError:
     pass
+
+TAGGER_CFG_STRING = """
+    [nlp]
+    lang = "en"
+    pipeline = ["tok2vec","tagger"]
+
+    [components]
+
+    [components.tagger]
+    factory = "tagger"
+
+    [components.tagger.model]
+    @architectures = "spacy.Tagger.v2"
+    nO = null
+
+    [components.tagger.model.tok2vec]
+    @architectures = "spacy.Tok2VecListener.v1"
+    width = ${components.tok2vec.model.encode.width}
+
+    [components.tok2vec]
+    factory = "tok2vec"
+
+    [components.tok2vec.model]
+    @architectures = "spacy.Tok2Vec.v2"
+
+    [components.tok2vec.model.embed]
+    @architectures = "spacy.MultiHashEmbed.v1"
+    width = ${components.tok2vec.model.encode.width}
+    rows = [2000, 1000, 1000, 1000]
+    attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
+    include_static_vectors = false
+
+    [components.tok2vec.model.encode]
+    @architectures = "spacy.MaxoutWindowEncoder.v2"
+    width = 96
+    depth = 4
+    window_size = 1
+    maxout_pieces = 3
+    """
+
+
+TAGGER_TRAIN_DATA = [
+    ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
+    ("Eat blue ham", {"tags": ["V", "J", "N"]}),
+]
+
+
+TAGGER_TRAIN_DATA = [
+    ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
+    ("Eat blue ham", {"tags": ["V", "J", "N"]}),
+]
 
 
 def evil_component(doc):
@@ -46,7 +98,7 @@ def assert_sents_error(doc):
 
 def warn_error(proc_name, proc, docs, e):
     logger = logging.getLogger("spacy")
-    logger.warning(f"Trouble with component {proc_name}.")
+    logger.warning("Trouble with component %s.", proc_name)
 
 
 @pytest.fixture
@@ -83,6 +135,26 @@ def test_language_update(nlp):
         example = Example.from_dict(doc, None)
     with pytest.raises(KeyError):
         example = Example.from_dict(doc, wrongkeyannots)
+
+
+def test_language_update_updates():
+    config = Config().from_str(TAGGER_CFG_STRING)
+    nlp = load_model_from_config(config, auto_fill=True, validate=True)
+
+    train_examples = []
+    for t in TAGGER_TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+
+    docs_before_update = list(nlp.pipe([eg.predicted.copy() for eg in train_examples]))
+    nlp.update(train_examples, sgd=optimizer)
+    docs_after_update = list(nlp.pipe([eg.predicted.copy() for eg in train_examples]))
+
+    xp = get_array_module(docs_after_update[0].tensor)
+    assert xp.any(
+        xp.not_equal(docs_before_update[0].tensor, docs_after_update[0].tensor)
+    )
 
 
 def test_language_evaluate(nlp):
@@ -658,11 +730,12 @@ def test_spacy_blank():
         ("fra", "fr"),
         ("fre", "fr"),
         ("iw", "he"),
+        ("is", "isl"),
         ("mo", "ro"),
-        ("mul", "xx"),
+        ("mul", "mul"),
         ("no", "nb"),
         ("pt-BR", "pt"),
-        ("xx", "xx"),
+        ("xx", "mul"),
         ("zh-Hans", "zh"),
         ("zh-Hant", None),
         ("zxx", None),
@@ -683,11 +756,11 @@ def test_language_matching(lang, target):
         ("fra", "fr"),
         ("fre", "fr"),
         ("iw", "he"),
+        ("is", "isl"),
         ("mo", "ro"),
-        ("mul", "xx"),
+        ("xx", "mul"),
         ("no", "nb"),
         ("pt-BR", "pt"),
-        ("xx", "xx"),
         ("zh-Hans", "zh"),
     ],
 )
@@ -799,3 +872,66 @@ def test_component_return():
     nlp.add_pipe("test_component_bad_pipe")
     with pytest.raises(ValueError, match="instead of a Doc"):
         nlp("text")
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("teacher_tagger_name", ["tagger", "teacher_tagger"])
+def test_distill(teacher_tagger_name):
+    teacher = English()
+    teacher_tagger = teacher.add_pipe("tagger", name=teacher_tagger_name)
+    train_examples = []
+    for t in TAGGER_TRAIN_DATA:
+        train_examples.append(Example.from_dict(teacher.make_doc(t[0]), t[1]))
+
+    optimizer = teacher.initialize(get_examples=lambda: train_examples)
+
+    for i in range(50):
+        losses = {}
+        teacher.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses[teacher_tagger_name] < 0.00001
+
+    student = English()
+    student_tagger = student.add_pipe("tagger")
+    student_tagger.min_tree_freq = 1
+    student_tagger.initialize(
+        get_examples=lambda: train_examples, labels=teacher_tagger.label_data
+    )
+
+    distill_examples = [
+        Example.from_dict(teacher.make_doc(t[0]), {}) for t in TAGGER_TRAIN_DATA
+    ]
+
+    student_to_teacher = (
+        None
+        if teacher_tagger.name == student_tagger.name
+        else {student_tagger.name: teacher_tagger.name}
+    )
+
+    for i in range(50):
+        losses = {}
+        student.distill(
+            teacher,
+            distill_examples,
+            sgd=optimizer,
+            losses=losses,
+            student_to_teacher=student_to_teacher,
+        )
+    assert losses["tagger"] < 0.00001
+
+    test_text = "I like blue eggs"
+    doc = student(test_text)
+    assert doc[0].tag_ == "N"
+    assert doc[1].tag_ == "V"
+    assert doc[2].tag_ == "J"
+    assert doc[3].tag_ == "N"
+
+    # Do an extra update to check if annotates works, though we can't really
+    # validate the resuls, since the annotations are ephemeral.
+    student.distill(
+        teacher,
+        distill_examples,
+        sgd=optimizer,
+        losses=losses,
+        student_to_teacher=student_to_teacher,
+        annotates=["tagger"],
+    )

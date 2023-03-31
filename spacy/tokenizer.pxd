@@ -4,7 +4,6 @@ from cymem.cymem cimport Pool
 
 from .typedefs cimport hash_t
 from .structs cimport LexemeC, SpanC, TokenC
-from .strings cimport StringStore
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab, LexemesOrTokens, _Cached
 from .matcher.phrasematcher cimport PhraseMatcher
@@ -23,11 +22,7 @@ cdef class Tokenizer:
     cdef object _infix_finditer
     cdef object _rules
     cdef PhraseMatcher _special_matcher
-    # TODO convert to bool in v4
-    cdef int _faster_heuristics
-    # TODO next one is unused and should be removed in v4
-    # https://github.com/explosion/spaCy/pull/9150
-    cdef int _unused_int2
+    cdef bint _faster_heuristics
 
     cdef Doc _tokenize_affixes(self, str string, bint with_special_cases)
     cdef int _apply_special_cases(self, Doc doc) except -1
@@ -42,7 +37,7 @@ cdef class Tokenizer:
                                      bint with_special_cases) except -1
     cdef int _tokenize(self, Doc tokens, str span, hash_t key,
                        int* has_special, bint with_special_cases) except -1
-    cdef str _split_affixes(self, Pool mem, str string,
+    cdef str _split_affixes(self, str string,
                                 vector[LexemeC*] *prefixes,
                                 vector[LexemeC*] *suffixes, int* has_special,
                                 bint with_special_cases)

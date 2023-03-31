@@ -1,5 +1,5 @@
-from typing import List, Tuple, Union, Optional, Callable, Any, Dict, overload
-from ..compat import Literal
+from typing import List, Tuple, Union, Optional, Callable, Any, Dict, Literal
+from typing import overload
 from .matcher import Matcher
 from ..vocab import Vocab
 from ..tokens import Doc, Span
@@ -15,6 +15,15 @@ class PhraseMatcher:
         self,
         key: str,
         docs: List[Doc],
+        *,
+        on_match: Optional[
+            Callable[[Matcher, Doc, int, List[Tuple[Any, ...]]], Any]
+        ] = ...,
+    ) -> None: ...
+    def _add_from_arrays(
+        self,
+        key: str,
+        specs: List[List[int]],
         *,
         on_match: Optional[
             Callable[[Matcher, Doc, int, List[Tuple[Any, ...]]], Any]

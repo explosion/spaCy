@@ -9,7 +9,7 @@ from .. import util
 from ..training.initialize import init_nlp, convert_vectors
 from ..language import Language
 from ._util import init_cli, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, setup_gpu
+from ._util import import_code, setup_gpu, _handle_renamed_language_codes
 
 
 @init_cli.command("vectors")
@@ -21,7 +21,6 @@ def init_vectors_cli(
     prune: int = Opt(-1, "--prune", "-p", help="Optional number of vectors to prune to"),
     truncate: int = Opt(0, "--truncate", "-t", help="Optional number of vectors to truncate to when reading in vectors file"),
     mode: str = Opt("default", "--mode", "-m", help="Vectors mode: default or floret"),
-    name: Optional[str] = Opt(None, "--name", "-n", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     jsonl_loc: Optional[Path] = Opt(None, "--lexemes-jsonl", "-j", help="Location of JSONL-formatted attributes file", hidden=True),
     # fmt: on
@@ -31,6 +30,10 @@ def init_vectors_cli(
     a model with vectors.
     """
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+
+    # Throw error for renamed language codes in v4
+    _handle_renamed_language_codes(lang)
+
     msg.info(f"Creating blank nlp object for language '{lang}'")
     nlp = util.get_lang_class(lang)()
     if jsonl_loc is not None:
@@ -40,7 +43,6 @@ def init_vectors_cli(
         vectors_loc,
         truncate=truncate,
         prune=prune,
-        name=name,
         mode=mode,
     )
     msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")

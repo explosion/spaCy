@@ -12,7 +12,7 @@ from murmurhash.mrmr cimport hash64
 
 from .. import Errors
 from ..typedefs cimport hash_t
-from ..strings import get_string_id
+from ..strings cimport get_string_id
 from ..structs cimport EdgeC, GraphC
 from .token import Token
 

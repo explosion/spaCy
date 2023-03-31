@@ -2,7 +2,6 @@ from typing import Optional, List, Dict, Sequence, Any, Iterable, Tuple
 import os.path
 from pathlib import Path
 
-import pkg_resources
 from wasabi import msg
 from wasabi.util import locale_escape
 import sys
@@ -331,6 +330,7 @@ def _check_requirements(requirements: List[str]) -> Tuple[bool, bool]:
     RETURNS (Tuple[bool, bool]): Whether (1) any packages couldn't be imported, (2) any packages with version conflicts
         exist.
     """
+    import pkg_resources
 
     failed_pkgs_msgs: List[str] = []
     conflicting_pkgs_msgs: List[str] = []
