@@ -532,7 +532,7 @@ def load_model_from_config(
     disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
-    auto_fill: bool = False,
+    auto_fill: bool = True,
     validate: bool = True,
 ) -> "Language":
     """Create an nlp object from a config. Expects the full config file including

@@ -2101,6 +2101,13 @@ class Language:
         DOCS: https://spacy.io/api/language#from_disk
         """
 
+        def deserialize_config(path: Path) -> None:
+            if path.exists():
+                config = Config().from_disk(
+                    path, interpolate=False, overrides=overrides
+                )
+                self.config.merge(config)
+
         def deserialize_meta(path: Path) -> None:
             if path.exists():
                 data = srsly.read_json(path)
@@ -2115,12 +2122,9 @@ class Language:
 
         path = util.ensure_path(path)
         deserializers = {}
-        if Path(path / "config.cfg").exists():  # type: ignore[operator]
-            deserializers["config.cfg"] = lambda p: self.config.from_disk(
-                p, interpolate=False, overrides=overrides
-            )
-        deserializers["meta.json"] = deserialize_meta  # type: ignore[assignment]
-        deserializers["vocab"] = deserialize_vocab  # type: ignore[assignment]
+        deserializers["config.cfg"] = deserialize_config
+        deserializers["meta.json"] = deserialize_meta
+        deserializers["vocab"] = deserialize_vocab
         deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(  # type: ignore[union-attr]
             p, exclude=["vocab"]
         )
@@ -2173,6 +2177,10 @@ class Language:
         DOCS: https://spacy.io/api/language#from_bytes
         """
 
+        def deserialize_config(b):
+            config = Config().from_bytes(b, interpolate=False)
+            self.config.merge(config)
+
         def deserialize_meta(b):
             data = srsly.json_loads(b)
             self.meta.update(data)
@@ -2181,9 +2189,7 @@ class Language:
             self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
         deserializers: Dict[str, Callable[[bytes], Any]] = {}
-        deserializers["config.cfg"] = lambda b: self.config.from_bytes(
-            b, interpolate=False
-        )
+        deserializers["config.cfg"] = deserialize_config
         deserializers["meta.json"] = deserialize_meta
         deserializers["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)
         deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(  # type: ignore[union-attr]
