@@ -2117,12 +2117,12 @@ class Language:
 
         path = util.ensure_path(path)
         deserializers = {}
-        if Path(path / "config.cfg").exists():
+        if Path(path / "config.cfg").exists():  # type: ignore[operator]
             deserializers["config.cfg"] = lambda p: self.config.from_disk(
                 p, interpolate=False, overrides=overrides
             )
-        deserializers["meta.json"] = deserialize_meta
-        deserializers["vocab"] = deserialize_vocab
+        deserializers["meta.json"] = deserialize_meta  # type: ignore[assignment]
+        deserializers["vocab"] = deserialize_vocab  # type: ignore[assignment]
         deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(  # type: ignore[union-attr]
             p, exclude=["vocab"]
         )
