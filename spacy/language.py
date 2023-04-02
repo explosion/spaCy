@@ -1726,6 +1726,8 @@ class Language:
             ).merge(config)
         if "nlp" not in config:
             raise ValueError(Errors.E985.format(config=config))
+        # auto-fill [nlp]
+        config["nlp"] = Config(cls.default_config["nlp"]).merge(config["nlp"])
         config_lang = config["nlp"].get("lang")
         if config_lang is not None and config_lang != cls.lang:
             raise ValueError(
@@ -2101,13 +2103,6 @@ class Language:
         DOCS: https://spacy.io/api/language#from_disk
         """
 
-        def deserialize_config(path: Path) -> None:
-            if path.exists():
-                config = Config().from_disk(
-                    path, interpolate=False, overrides=overrides
-                )
-                self.config.merge(config)
-
         def deserialize_meta(path: Path) -> None:
             if path.exists():
                 data = srsly.read_json(path)
@@ -2122,7 +2117,10 @@ class Language:
 
         path = util.ensure_path(path)
         deserializers = {}
-        deserializers["config.cfg"] = deserialize_config
+        if Path(path / "config.cfg").exists():
+            deserializers["config.cfg"] = lambda p: self.config.from_disk(
+                p, interpolate=False, overrides=overrides
+            )
         deserializers["meta.json"] = deserialize_meta
         deserializers["vocab"] = deserialize_vocab
         deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(  # type: ignore[union-attr]
@@ -2177,10 +2175,6 @@ class Language:
         DOCS: https://spacy.io/api/language#from_bytes
         """
 
-        def deserialize_config(b):
-            config = Config().from_bytes(b, interpolate=False)
-            self.config.merge(config)
-
         def deserialize_meta(b):
             data = srsly.json_loads(b)
             self.meta.update(data)
@@ -2189,7 +2183,9 @@ class Language:
             self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
         deserializers: Dict[str, Callable[[bytes], Any]] = {}
-        deserializers["config.cfg"] = deserialize_config
+        deserializers["config.cfg"] = lambda b: self.config.from_bytes(
+            b, interpolate=False
+        )
         deserializers["meta.json"] = deserialize_meta
         deserializers["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)
         deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(  # type: ignore[union-attr]
