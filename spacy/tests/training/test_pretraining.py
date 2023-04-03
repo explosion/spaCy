@@ -165,7 +165,8 @@ def test_pretraining_default():
 
 
 @pytest.mark.parametrize("objective", CHAR_OBJECTIVES)
-def test_pretraining_tok2vec_characters(objective):
+@pytest.mark.parametrize("skip_last", (True, False))
+def test_pretraining_tok2vec_characters(objective, skip_last):
     """Test that pretraining works with the character objective"""
     config = Config().from_str(pretrain_string_listener)
     config["pretraining"]["objective"] = objective
@@ -178,10 +179,14 @@ def test_pretraining_tok2vec_characters(objective):
         filled["paths"]["raw_text"] = file_path
         filled = filled.interpolate()
         assert filled["pretraining"]["component"] == "tok2vec"
-        pretrain(filled, tmp_dir)
+        pretrain(filled, tmp_dir, skip_last=skip_last)
         assert Path(tmp_dir / "model0.bin").exists()
         assert Path(tmp_dir / "model4.bin").exists()
         assert not Path(tmp_dir / "model5.bin").exists()
+        if skip_last:
+            assert not Path(tmp_dir / "model-last.bin").exists()
+        else:
+            assert Path(tmp_dir / "model-last.bin").exists()
 
 
 @pytest.mark.parametrize("objective", VECTOR_OBJECTIVES)
@@ -237,6 +242,7 @@ def test_pretraining_tagger_tok2vec(config):
         pretrain(filled, tmp_dir)
         assert Path(tmp_dir / "model0.bin").exists()
         assert Path(tmp_dir / "model4.bin").exists()
+        assert Path(tmp_dir / "model-last.bin").exists()
         assert not Path(tmp_dir / "model5.bin").exists()
 
 
