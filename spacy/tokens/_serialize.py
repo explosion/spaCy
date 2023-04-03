@@ -129,7 +129,6 @@ class DocBin:
                 if span.id in span.doc.vocab.strings:
                     self.strings.add(span.id_)
 
-
     def get_docs(self, vocab: Vocab) -> Iterator[Doc]:
         """Recover Doc objects from the annotations, using the given vocab.
         Note that the user data of each doc will be read (if available) and returned,
