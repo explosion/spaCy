@@ -24,6 +24,7 @@ def pretrain(
     epoch_resume: Optional[int] = None,
     use_gpu: int = -1,
     silent: bool = True,
+    skip_last: bool = False,
 ):
     msg = Printer(no_print=silent)
     if config["training"]["seed"] is not None:
@@ -98,7 +99,8 @@ def pretrain(
                 _save_model(epoch)
             tracker.epoch_loss = 0.0
     finally:
-        _save_model(P["max_epochs"], is_last=True)
+        if not skip_last:
+            _save_model(P["max_epochs"], is_last=True)
 
 
 def ensure_docs(examples_or_docs: Iterable[Union[Doc, Example]]) -> List[Doc]:

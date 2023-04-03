@@ -23,6 +23,7 @@ def pretrain_cli(
     resume_path: Optional[Path] = Opt(None, "--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
     epoch_resume: Optional[int] = Opt(None, "--epoch-resume", "-er", help="The epoch to resume counting from when using --resume-path. Prevents unintended overwriting of existing weight files."),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    skip_last: bool = Opt(False, "--skip-last", "-L", help="Skip saving model-last.bin"),
     # fmt: on
 ):
     """
@@ -74,6 +75,7 @@ def pretrain_cli(
         epoch_resume=epoch_resume,
         use_gpu=use_gpu,
         silent=False,
+        skip_last=skip_last,
     )
     msg.good("Successfully finished pretrain")
 
