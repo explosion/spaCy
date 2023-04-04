@@ -52,14 +52,34 @@ cdef class BaseVectors:
     def __getitem__(self, key):
         raise NotImplementedError
 
+    def __contains__(self, key):
+        raise NotImplementedError
+
+    def is_full(self):
+        raise NotImplementedError
+
     def get_batch(self, keys):
+        raise NotImplementedError
+
+    @property
+    def shape(self):
+        raise NotImplementedError
+
+    def __len__(self):
         raise NotImplementedError
 
     @property
     def vectors_length(self):
         raise NotImplementedError
 
+    @property
+    def size(self):
+        raise NotImplementedError
+
     def add(self, key, *, vector=None):
+        raise NotImplementedError
+
+    def to_ops(self, ops: Ops):
         raise NotImplementedError
 
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
