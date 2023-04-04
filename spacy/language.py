@@ -793,6 +793,7 @@ class Language:
         pipe_index = self._get_pipe_index(before, after, first, last)
         self._pipe_meta[name] = self.get_factory_meta(factory_name)
         self._components.insert(pipe_index, (name, pipe_component))
+        self._link_components()
         return pipe_component
 
     def _get_pipe_index(
@@ -951,6 +952,7 @@ class Language:
         # Make sure the name is also removed from the set of disabled components
         if name in self.disabled:
             self._disabled.remove(name)
+        self._link_components()
         return removed
 
     def disable_pipe(self, name: str) -> None:
@@ -1675,6 +1677,7 @@ class Language:
         # here :(
         for i, (name1, proc1) in enumerate(self.pipeline):
             if isinstance(proc1, ty.ListenedToComponent):
+                proc1.listener_map = {}
                 for name2, proc2 in self.pipeline[i + 1 :]:
                     proc1.find_listeners(proc2)
 
@@ -1827,6 +1830,12 @@ class Language:
                     source_name = pipe_cfg.get("component", pipe_name)
                     listeners_replaced = False
                     if "replace_listeners" in pipe_cfg:
+                        # HACK: Reset any listened-to components to the listener
+                        # state of the source pipeline for the purpose of
+                        # replacing listeners. The add_pipe below will set
+                        # the state back to the listener state for the new
+                        # pipeline.
+                        source_nlps[model]._link_components()
                         for name, proc in source_nlps[model].pipeline:
                             if source_name in getattr(proc, "listening_components", []):
                                 source_nlps[model].replace_listeners(
@@ -1892,27 +1901,6 @@ class Language:
                 raise ValueError(
                     Errors.E942.format(name="pipeline_creation", value=type(nlp))
                 )
-        # Detect components with listeners that are not frozen consistently
-        for name, proc in nlp.pipeline:
-            if isinstance(proc, ty.ListenedToComponent):
-                # Remove listeners not in the pipeline
-                listener_names = proc.listening_components
-                unused_listener_names = [
-                    ll for ll in listener_names if ll not in nlp.pipe_names
-                ]
-                for listener_name in unused_listener_names:
-                    for listener in proc.listener_map.get(listener_name, []):
-                        proc.remove_listener(listener, listener_name)
-
-                for listener_name in proc.listening_components:
-                    # e.g. tok2vec/transformer
-                    # If it's a component sourced from another pipeline, we check if
-                    # the tok2vec listeners should be replaced with standalone tok2vec
-                    # models (e.g. so component can be frozen without its performance
-                    # degrading when other components/tok2vec are updated)
-                    paths = sourced.get(listener_name, {}).get("replace_listeners", [])
-                    if paths:
-                        nlp.replace_listeners(name, listener_name, paths)
         return nlp
 
     def replace_listeners(

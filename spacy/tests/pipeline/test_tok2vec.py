@@ -189,9 +189,8 @@ def test_tok2vec_listener(with_vectors):
             tagger.add_label(tag)
 
     # Check that the Tok2Vec component finds it listeners
-    assert tok2vec.listeners == []
-    optimizer = nlp.initialize(lambda: train_examples)
     assert tok2vec.listeners == [tagger_tok2vec]
+    optimizer = nlp.initialize(lambda: train_examples)
 
     for i in range(5):
         losses = {}
@@ -540,3 +539,17 @@ def test_tok2vec_listeners_textcat():
     assert cats1["imperative"] < 0.9
     assert [t.tag_ for t in docs[0]] == ["V", "J", "N"]
     assert [t.tag_ for t in docs[1]] == ["N", "V", "J", "N"]
+
+
+def test_tok2vec_listener_source_link():
+    orig_config = Config().from_str(cfg_string_multi)
+    nlp1 = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    assert list(nlp1.get_pipe("tok2vec").listener_map.keys()) == ["tagger", "ner"]
+
+    nlp2 = English()
+    nlp2.add_pipe("tok2vec", source=nlp1)
+    assert nlp2.get_pipe("tok2vec").listener_map == {}
+    nlp2.add_pipe("tagger", source=nlp1)
+    assert list(nlp2.get_pipe("tok2vec").listener_map.keys()) == ["tagger"]
+    nlp2.add_pipe("ner", source=nlp1)
+    assert list(nlp2.get_pipe("tok2vec").listener_map.keys()) == ["tagger", "ner"]
