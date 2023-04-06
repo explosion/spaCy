@@ -926,7 +926,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1029 = ("Edit tree cannot be applied to form.")
     E1030 = ("Edit tree identifier out of range.")
     E1031 = ("Could not find gold transition - see logs above.")
-    E1032 = ("`{var}` should not be {forbidden}, but received {value}.")
+    E1032 = ("Span {var} {value} is out of bounds for {obj} with length {length}.")
     E1033 = ("Dimension {name} invalid -- only nO, nF, nP")
     E1034 = ("Node index {i} out of bounds ({length})")
     E1035 = ("Token index {i} out of bounds ({length})")
@@ -966,6 +966,9 @@ class Errors(metaclass=ErrorsWithCodes):
     E4004 = ("Backprop is not supported when is_train is not set.")
     E4005 = ("EntityLinker_v1 is not supported in spaCy v4. Update your configuration.")
     E4006 = ("Expected `entity_id` to be of type {exp_type}, but is of type {found_type}.")
+    E4007 = ("Span {var} {value} must be {op} Span {existing_var} "
+             "{existing_value}.")
+    E4008 = ("Span {pos}_char {value} does not correspond to a token {pos}.")
 
 
 RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}

@@ -707,3 +707,50 @@ def test_span_ent_id(en_tokenizer):
     doc.ents = [span]
     assert doc.ents[0].ent_id_ == "ID2"
     assert doc[1].ent_id_ == "ID2"
+
+
+def test_span_start_end_sync(en_tokenizer):
+    doc = en_tokenizer("a bc def e fghij kl")
+    # can create and edit span starts/ends
+    span = doc[2:4]
+    span.start_char = 2
+    span.end = 5
+    assert span == doc[span.start : span.end]
+    assert span == doc.char_span(span.start_char, span.end_char)
+    # cannot set completely out of bounds starts/ends
+    with pytest.raises(IndexError):
+        span.start = -1
+    with pytest.raises(IndexError):
+        span.end = -1
+    with pytest.raises(IndexError):
+        span.start_char = len(doc.text) + 1
+    with pytest.raises(IndexError):
+        span.end = len(doc.text) + 1
+    # test all possible char starts/ends
+    span = doc[0 : len(doc)]
+    token_char_starts = [token.idx for token in doc]
+    token_char_ends = [token.idx + len(token.text) for token in doc]
+    for i in range(len(doc.text)):
+        if i not in token_char_starts:
+            with pytest.raises(ValueError):
+                span.start_char = i
+        else:
+            span.start_char = i
+    span = doc[0 : len(doc)]
+    for i in range(len(doc.text)):
+        if i not in token_char_ends:
+            with pytest.raises(ValueError):
+                span.end_char = i
+        else:
+            span.end_char = i
+    # start must be <= end
+    span = doc[1:3]
+    with pytest.raises(ValueError):
+        span.start = 4
+    with pytest.raises(ValueError):
+        span.end = 0
+    span = doc.char_span(2, 8)
+    with pytest.raises(ValueError):
+        span.start_char = 9
+    with pytest.raises(ValueError):
+        span.end_char = 1
