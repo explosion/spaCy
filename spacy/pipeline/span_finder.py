@@ -356,6 +356,7 @@ class SpanFinder(TrainablePipe):
         else:
             self.model.initialize()
 
+
 @registry.misc("spacy.span_finder_suggester.v1")
 def build_span_finder_suggester(candidates_key: str) -> Suggester:
     """Suggest every candidate predicted by the SpanFinder"""

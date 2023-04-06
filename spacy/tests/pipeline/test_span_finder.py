@@ -62,9 +62,7 @@ def test_loss_alignment_example(tokens_predicted, tokens_reference, reference_tr
     )
     example = Example(predicted, reference)
     example.reference.spans[TRAINING_KEY] = [example.reference.char_span(5, 9)]
-    span_finder = nlp.add_pipe(
-        "span_finder", config={"training_key": TRAINING_KEY}
-    )
+    span_finder = nlp.add_pipe("span_finder", config={"training_key": TRAINING_KEY})
     nlp.initialize()
 
     truth_scores = span_finder._get_aligned_truth_scores([example])
@@ -100,9 +98,7 @@ def test_span_finder_component():
     docs[0].spans[TRAINING_KEY] = [docs[0][3:4]]
     docs[1].spans[TRAINING_KEY] = [docs[1][3:5]]
 
-    span_finder = nlp.add_pipe(
-        "span_finder", config={"training_key": TRAINING_KEY}
-    )
+    span_finder = nlp.add_pipe("span_finder", config={"training_key": TRAINING_KEY})
     nlp.initialize()
     docs = list(span_finder.pipe(docs))
 
@@ -159,9 +155,7 @@ def test_span_finder_suggester():
     docs = [nlp("This is an example."), nlp("This is the second example.")]
     docs[0].spans[TRAINING_KEY] = [docs[0][3:4]]
     docs[1].spans[TRAINING_KEY] = [docs[1][3:5]]
-    span_finder = nlp.add_pipe(
-        "span_finder", config={"training_key": TRAINING_KEY}
-    )
+    span_finder = nlp.add_pipe("span_finder", config={"training_key": TRAINING_KEY})
     nlp.initialize()
     span_finder.set_annotations(docs, span_finder.predict(docs))
 
