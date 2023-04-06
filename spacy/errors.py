@@ -970,6 +970,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "{existing_value}.")
     E4008 = ("Span {pos}_char {value} does not correspond to a token {pos}.")
 
+
 RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}
 
 # fmt: on
