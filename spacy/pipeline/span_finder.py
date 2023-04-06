@@ -1,17 +1,18 @@
-from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast
 from functools import partial
-from thinc.api import Config, Model, set_dropout_rate
-from thinc.api import Optimizer, get_current_ops, Ops
-from thinc.types import Floats2d, Ragged, Ints1d
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
+
+from thinc.api import (Config, Model, Ops, Optimizer, get_current_ops,
+                       set_dropout_rate)
+from thinc.types import Floats2d, Ints1d, Ragged
 
 from spacy.language import Language
 from spacy.pipeline.trainable_pipe import TrainablePipe
+from spacy.scorer import Scorer
 from spacy.tokens import Doc
 from spacy.training import Example
-from spacy.scorer import Scorer
+
 from ..util import registry
 from .spancat import Suggester
-
 
 span_finder_default_config = """
 [model]

@@ -1,9 +1,11 @@
 from typing import Callable, List, Tuple
-from thinc.api import Model, chain, with_array
-from thinc.types import Floats2d, Floats1d
-from spacy.tokens import Doc
-from ...util import registry
 
+from thinc.api import Model, chain, with_array
+from thinc.types import Floats1d, Floats2d
+
+from spacy.tokens import Doc
+
+from ...util import registry
 
 InT = List[Doc]
 OutT = Floats2d
