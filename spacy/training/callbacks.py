@@ -11,7 +11,7 @@ def create_copy_from_base_model(
 ) -> Callable[[Language], Language]:
     def copy_from_base_model(nlp):
         if tokenizer:
-            logger.info(f"Copying tokenizer from: {tokenizer}")
+            logger.info("Copying tokenizer from: %s", tokenizer)
             base_nlp = load_model(tokenizer)
             if nlp.config["nlp"]["tokenizer"] == base_nlp.config["nlp"]["tokenizer"]:
                 nlp.tokenizer.from_bytes(base_nlp.tokenizer.to_bytes(exclude=["vocab"]))
@@ -23,7 +23,7 @@ def create_copy_from_base_model(
                     )
                 )
         if vocab:
-            logger.info(f"Copying vocab from: {vocab}")
+            logger.info("Copying vocab from: %s", vocab)
             # only reload if the vocab is from a different model
             if tokenizer != vocab:
                 base_nlp = load_model(vocab)
