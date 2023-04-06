@@ -14,6 +14,7 @@ from .tagger import Tagger
 from .textcat import TextCategorizer
 from .spancat import SpanCategorizer
 from .span_ruler import SpanRuler
+from .span_finder import SpanFinder
 from .textcat_multilabel import MultiLabel_TextCategorizer
 from .tok2vec import Tok2Vec
 from .functions import merge_entities, merge_noun_chunks, merge_subtokens
@@ -32,6 +33,7 @@ __all__ = [
     "Sentencizer",
     "SpanCategorizer",
     "SpanRuler",
+    "SpanFinder",
     "Tagger",
     "TextCategorizer",
     "Tok2Vec",
