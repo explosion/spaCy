@@ -8,6 +8,13 @@ Look up strings by 64-bit hashes. As of v2.0, spaCy uses hash values instead of
 integer IDs. This ensures that strings always map to the same ID, even from
 different `StringStores`.
 
+<Infobox variant ="warning">
+
+Note that a `StringStore` instance is not static. It increases in size as texts
+with new tokens are processed.
+
+</Infobox>
+
 ## StringStore.\_\_init\_\_ {id="init",tag="method"}
 
 Create the `StringStore`.

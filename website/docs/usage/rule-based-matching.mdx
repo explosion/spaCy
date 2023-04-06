@@ -1682,6 +1682,8 @@ def expand_person_entities(doc):
             if prev_token.text in ("Dr", "Dr.", "Mr", "Mr.", "Ms", "Ms."):
                 new_ent = Span(doc, ent.start - 1, ent.end, label=ent.label)
                 new_ents.append(new_ent)
+            else:
+                new_ents.append(ent)
         else:
             new_ents.append(ent)
     doc.ents = new_ents

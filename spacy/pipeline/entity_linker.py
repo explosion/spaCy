@@ -474,18 +474,24 @@ class EntityLinker(TrainablePipe):
 
                 # Looping through each entity in batch (TODO: rewrite)
                 for j, ent in enumerate(ent_batch):
-                    sent_index = sentences.index(ent.sent)
-                    assert sent_index >= 0
+                    assert hasattr(ent, "sents")
+                    sents = list(ent.sents)
+                    sent_indices = (
+                        sentences.index(sents[0]),
+                        sentences.index(sents[-1]),
+                    )
+                    assert sent_indices[1] >= sent_indices[0] >= 0
 
                     if self.incl_context:
                         # get n_neighbour sentences, clipped to the length of the document
-                        start_sentence = max(0, sent_index - self.n_sents)
+                        start_sentence = max(0, sent_indices[0] - self.n_sents)
                         end_sentence = min(
-                            len(sentences) - 1, sent_index + self.n_sents
+                            len(sentences) - 1, sent_indices[1] + self.n_sents
                         )
                         start_token = sentences[start_sentence].start
                         end_token = sentences[end_sentence].end
                         sent_doc = doc[start_token:end_token].as_doc()
+
                         # currently, the context is the same for each entity in a sentence (should be refined)
                         sentence_encoding = self.model.predict([sent_doc])[0]
                         sentence_encoding_t = sentence_encoding.T

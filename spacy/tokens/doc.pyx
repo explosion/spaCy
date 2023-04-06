@@ -544,10 +544,6 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#char_span
         """
-        if not isinstance(label, int):
-            label = self.vocab.strings.add(label)
-        if not isinstance(kb_id, int):
-            kb_id = self.vocab.strings.add(kb_id)
         alignment_modes = ("strict", "contract", "expand")
         if alignment_mode not in alignment_modes:
             raise ValueError(
@@ -1350,6 +1346,10 @@ cdef class Doc:
         for group in self.spans.values():
             for span in group:
                 strings.add(span.label_)
+                if span.kb_id in span.doc.vocab.strings:
+                    strings.add(span.kb_id_)
+                if span.id in span.doc.vocab.strings:
+                    strings.add(span.id_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope

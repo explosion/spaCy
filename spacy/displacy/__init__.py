@@ -125,13 +125,17 @@ def app(environ, start_response):
     return [res]
 
 
-def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
+def parse_deps(
+    orig_doc: Union[Doc, Span], options: Dict[str, Any] = {}
+) -> Dict[str, Any]:
     """Generate dependency parse in {'words': [], 'arcs': []} format.
 
-    orig_doc (Doc): Document to parse.
+    orig_doc (Union[Doc, Span]): Document to parse.
     options (Dict[str, Any]): Dependency parse specific visualisation options.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
+    if isinstance(orig_doc, Span):
+        orig_doc = orig_doc.as_doc()
     doc = Doc(orig_doc.vocab).from_bytes(
         orig_doc.to_bytes(exclude=["user_data", "user_hooks"])
     )
