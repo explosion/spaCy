@@ -3,8 +3,7 @@ from thinc.api import Config
 from thinc.types import Ragged
 
 from spacy.language import Language
-from spacy.pipeline.span_finder import (DEFAULT_PREDICTED_KEY,
-                                        span_finder_default_config)
+from spacy.pipeline.span_finder import DEFAULT_PREDICTED_KEY, span_finder_default_config
 from spacy.tokens import Doc
 from spacy.training import Example
 from spacy.util import registry
