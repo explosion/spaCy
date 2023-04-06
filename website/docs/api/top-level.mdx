@@ -25,7 +25,10 @@ and call the package's own `load()` method. If a pipeline is loaded from a path,
 spaCy will assume it's a data directory, load its
 [`config.cfg`](/api/data-formats#config) and use the language and pipeline
 information to construct the `Language` class. The data will be loaded in via
-[`Language.from_disk`](/api/language#from_disk).
+[`Language.from_disk`](/api/language#from_disk). Loading a pipeline from a
+package will also import any custom code, if present, whereas loading from a
+directory does not. For these cases, you need to manually import your custom
+code.
 
 <Infobox variant="warning" title="Changed in v3.0">
 
