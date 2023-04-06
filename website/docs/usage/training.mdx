@@ -758,6 +758,15 @@ any custom architectures, functions or
 your pipeline and registered when it's loaded. See the documentation on
 [saving and loading pipelines](/usage/saving-loading#models-custom) for details.
 
+<Infobox variant="warning">
+
+Note that the unpackaged models produced by `spacy train` are data directories
+that **do not include custom code**. You need to import the code in your script
+before loading in unpackaged models. For more details, see
+[`spacy.load`](/api/top-level#spacy.load).
+
+</Infobox>
+
 #### Example: Modifying the nlp object {id="custom-code-nlp-callbacks"}
 
 For many use cases, you don't necessarily want to implement the whole `Language`
