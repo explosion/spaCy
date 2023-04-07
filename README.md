@@ -8,7 +8,7 @@ be used in real products.
 
 spaCy comes with
 [pretrained pipelines](https://spacy.io/models) and
-currently supports tokenization and training for **70+ languages**. It features
+currently supports tokenization and training for **72+ languages**. It features
 state-of-the-art speed and **neural network models** for tagging,
 parsing, **named entity recognition**, **text classification** and more,
 multi-task learning with pretrained **transformers** like BERT, as well as a
