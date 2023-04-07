@@ -1555,7 +1555,7 @@
                 "twitter": "allenai_org",
                 "website": "http://allenai.org"
             },
-            "category": ["scientific", "models", "research"]
+            "category": ["scientific", "models", "research", "biomedical"]
         },
         {
             "id": "textacy",
