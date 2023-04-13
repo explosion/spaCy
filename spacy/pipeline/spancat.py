@@ -1,11 +1,9 @@
 from dataclasses import dataclass
 from functools import partial
-from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
-                    Union, cast)
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy
-from thinc.api import (Config, Model, Ops, Optimizer, get_current_ops,
-                       set_dropout_rate)
+from thinc.api import Config, Model, Ops, Optimizer, get_current_ops, set_dropout_rate
 from thinc.types import Floats2d, Ints2d, Ragged
 
 from ..compat import Protocol, runtime_checkable

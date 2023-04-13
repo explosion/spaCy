@@ -1,8 +1,7 @@
 from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
 
-from thinc.api import (Config, Model, Ops, Optimizer, get_current_ops,
-                       set_dropout_rate)
+from thinc.api import Config, Model, Ops, Optimizer, get_current_ops, set_dropout_rate
 from thinc.types import Floats2d, Ints1d, Ragged
 
 from spacy.language import Language
