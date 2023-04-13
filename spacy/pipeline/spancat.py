@@ -1,22 +1,22 @@
-from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast, Union
 from dataclasses import dataclass
 from functools import partial
-from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
-from thinc.api import Optimizer
-from thinc.types import Ragged, Ints2d, Floats2d
+from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
+                    Union, cast)
 
 import numpy
+from thinc.api import (Config, Model, Ops, Optimizer, get_current_ops,
+                       set_dropout_rate)
+from thinc.types import Floats2d, Ints2d, Ragged
 
 from ..compat import Protocol, runtime_checkable
-from ..scorer import Scorer
-from ..language import Language
-from .trainable_pipe import TrainablePipe
-from ..tokens import Doc, SpanGroup, Span
-from ..vocab import Vocab
-from ..training import Example, validate_examples
 from ..errors import Errors
+from ..language import Language
+from ..scorer import Scorer
+from ..tokens import Doc, Span, SpanGroup
+from ..training import Example, validate_examples
 from ..util import registry
-
+from ..vocab import Vocab
+from .trainable_pipe import TrainablePipe
 
 spancat_default_config = """
 [model]
@@ -71,6 +71,7 @@ maxout_pieces = 3
 depth = 4
 """
 
+DEFAULT_SPAN_KEY = "sc"
 DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_default_config)["model"]
 DEFAULT_SPANCAT_SINGLELABEL_MODEL = Config().from_str(
     spancat_singlelabel_default_config
@@ -135,7 +136,7 @@ def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
     assigns=["doc.spans"],
     default_config={
         "threshold": 0.5,
-        "spans_key": "sc",
+        "spans_key": DEFAULT_SPAN_KEY,
         "max_positive": None,
         "model": DEFAULT_SPANCAT_MODEL,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
@@ -199,7 +200,7 @@ def make_spancat(
     "spancat_singlelabel",
     assigns=["doc.spans"],
     default_config={
-        "spans_key": "sc",
+        "spans_key": DEFAULT_SPAN_KEY,
         "model": DEFAULT_SPANCAT_SINGLELABEL_MODEL,
         "negative_weight": 1.0,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},

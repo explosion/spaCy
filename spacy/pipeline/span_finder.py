@@ -1,7 +1,8 @@
 from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
 
-from thinc.api import Config, Model, Ops, Optimizer, get_current_ops, set_dropout_rate
+from thinc.api import (Config, Model, Ops, Optimizer, get_current_ops,
+                       set_dropout_rate)
 from thinc.types import Floats2d, Ints1d, Ragged
 
 from spacy.language import Language
@@ -11,7 +12,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ..util import registry
-from .spancat import Suggester
+from .spancat import DEFAULT_SPAN_KEY, Suggester
 
 span_finder_default_config = """
 [model]
@@ -41,8 +42,6 @@ depth = 4
 
 DEFAULT_SPAN_FINDER_MODEL = Config().from_str(span_finder_default_config)["model"]
 DEFAULT_PREDICTED_KEY = "span_candidates"
-# XXX What was this TODO for?
-DEFAULT_TRAINING_KEY = "sc"  # TODO: define in spancat
 
 
 @Language.factory(
@@ -52,14 +51,14 @@ DEFAULT_TRAINING_KEY = "sc"  # TODO: define in spancat
         "threshold": 0.5,
         "model": DEFAULT_SPAN_FINDER_MODEL,
         "predicted_key": DEFAULT_PREDICTED_KEY,
-        "training_key": DEFAULT_TRAINING_KEY,
+        "training_key": DEFAULT_SPAN_KEY,
         # XXX Doesn't 0 seem bad compared to None instead?
         "max_length": 0,
         "min_length": 0,
         "scorer": {
             "@scorers": "spacy.span_finder_scorer.v1",
             "predicted_key": DEFAULT_PREDICTED_KEY,
-            "training_key": DEFAULT_TRAINING_KEY,
+            "training_key": DEFAULT_SPAN_KEY,
         },
     },
     default_score_weights={
@@ -77,7 +76,7 @@ def make_span_finder(
     max_length: int,
     min_length: int,
     predicted_key: str = DEFAULT_PREDICTED_KEY,
-    training_key: str = DEFAULT_TRAINING_KEY,
+    training_key: str = DEFAULT_SPAN_KEY,
 ) -> "SpanFinder":
     """Create a SpanFinder component. The component predicts whether a token is
     the start or the end of a potential span.
@@ -110,7 +109,7 @@ def make_span_finder(
 @registry.scorers("spacy.span_finder_scorer.v1")
 def make_span_finder_scorer(
     predicted_key: str = DEFAULT_PREDICTED_KEY,
-    training_key: str = DEFAULT_TRAINING_KEY,
+    training_key: str = DEFAULT_SPAN_KEY,
 ):
     return partial(
         span_finder_score, predicted_key=predicted_key, training_key=training_key
@@ -121,7 +120,7 @@ def span_finder_score(
     examples: Iterable[Example],
     *,
     predicted_key: str = DEFAULT_PREDICTED_KEY,
-    training_key: str = DEFAULT_TRAINING_KEY,
+    training_key: str = DEFAULT_SPAN_KEY,
     **kwargs,
 ) -> Dict[str, Any]:
     kwargs = dict(kwargs)
@@ -165,10 +164,10 @@ class SpanFinder(TrainablePipe):
         scorer: Optional[Callable] = partial(
             span_finder_score,
             predicted_key=DEFAULT_PREDICTED_KEY,
-            training_key=DEFAULT_TRAINING_KEY,
+            training_key=DEFAULT_SPAN_KEY,
         ),
         predicted_key: str = DEFAULT_PREDICTED_KEY,
-        training_key: str = DEFAULT_TRAINING_KEY,
+        training_key: str = DEFAULT_SPAN_KEY,
     ) -> None:
         """Initialize the span boundary detector.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
