@@ -134,7 +134,7 @@ def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
     assigns=["doc.spans"],
     default_config={
         "threshold": 0.5,
-        "spans_key": DEFAULT_SPAN_KEY,
+        "spans_key": DEFAULT_SPANS_KEY,
         "max_positive": None,
         "model": DEFAULT_SPANCAT_MODEL,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
@@ -198,7 +198,7 @@ def make_spancat(
     "spancat_singlelabel",
     assigns=["doc.spans"],
     default_config={
-        "spans_key": DEFAULT_SPAN_KEY,
+        "spans_key": DEFAULT_SPANS_KEY,
         "model": DEFAULT_SPANCAT_SINGLELABEL_MODEL,
         "negative_weight": 1.0,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
