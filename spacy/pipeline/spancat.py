@@ -69,7 +69,7 @@ maxout_pieces = 3
 depth = 4
 """
 
-DEFAULT_SPAN_KEY = "sc"
+DEFAULT_SPANS_KEY = "sc"
 DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_default_config)["model"]
 DEFAULT_SPANCAT_SINGLELABEL_MODEL = Config().from_str(
     spancat_singlelabel_default_config
