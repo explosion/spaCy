@@ -21,7 +21,6 @@ from thinc.api import CosineDistance, Model, Optimizer, Config
 from thinc.api import set_dropout_rate
 
 from ..kb import KnowledgeBase, Candidate
-from ..ml import empty_kb
 from ..tokens import Doc, SpanGroup
 from .pipe import deserialize_config
 from .trainable_pipe import TrainablePipe

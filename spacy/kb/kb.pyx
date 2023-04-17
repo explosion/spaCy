@@ -43,18 +43,6 @@ cdef class KnowledgeBase:
             Errors.E1045.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)
         )
 
-    def get_candidates(self, mention: Span) -> Iterable[Candidate]:
-        """
-        Return candidate entities for specified text. Each candidate defines the entity, the original alias,
-        and the prior probability of that alias resolving to that entity.
-        If the no candidate is found for a given text, an empty list is returned.
-        mention (Span): Mention for which to get candidates.
-        RETURNS (Iterable[Candidate]): Identified candidates.
-        """
-        raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)
-        )
-
     def get_vectors(self, entities: Iterable[str]) -> Iterable[Iterable[float]]:
         """
         Return vectors for entities.
