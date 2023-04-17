@@ -11,7 +11,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 from ..util import registry
-from .spancat import DEFAULT_SPAN_KEY, Suggester
+from .spancat import DEFAULT_SPANS_KEY, Suggester
 
 span_finder_default_config = """
 [model]
@@ -50,14 +50,14 @@ DEFAULT_PREDICTED_KEY = "span_candidates"
         "threshold": 0.5,
         "model": DEFAULT_SPAN_FINDER_MODEL,
         "predicted_key": DEFAULT_PREDICTED_KEY,
-        "training_key": DEFAULT_SPAN_KEY,
+        "training_key": DEFAULT_SPANS_KEY,
         # XXX Doesn't 0 seem bad compared to None instead?
         "max_length": 0,
         "min_length": 0,
         "scorer": {
             "@scorers": "spacy.span_finder_scorer.v1",
             "predicted_key": DEFAULT_PREDICTED_KEY,
-            "training_key": DEFAULT_SPAN_KEY,
+            "training_key": DEFAULT_SPANS_KEY,
         },
     },
     default_score_weights={
@@ -75,7 +75,7 @@ def make_span_finder(
     max_length: int,
     min_length: int,
     predicted_key: str = DEFAULT_PREDICTED_KEY,
-    training_key: str = DEFAULT_SPAN_KEY,
+    training_key: str = DEFAULT_SPANS_KEY,
 ) -> "SpanFinder":
     """Create a SpanFinder component. The component predicts whether a token is
     the start or the end of a potential span.
@@ -108,7 +108,7 @@ def make_span_finder(
 @registry.scorers("spacy.span_finder_scorer.v1")
 def make_span_finder_scorer(
     predicted_key: str = DEFAULT_PREDICTED_KEY,
-    training_key: str = DEFAULT_SPAN_KEY,
+    training_key: str = DEFAULT_SPANS_KEY,
 ):
     return partial(
         span_finder_score, predicted_key=predicted_key, training_key=training_key
@@ -119,7 +119,7 @@ def span_finder_score(
     examples: Iterable[Example],
     *,
     predicted_key: str = DEFAULT_PREDICTED_KEY,
-    training_key: str = DEFAULT_SPAN_KEY,
+    training_key: str = DEFAULT_SPANS_KEY,
     **kwargs,
 ) -> Dict[str, Any]:
     kwargs = dict(kwargs)
@@ -163,10 +163,10 @@ class SpanFinder(TrainablePipe):
         scorer: Optional[Callable] = partial(
             span_finder_score,
             predicted_key=DEFAULT_PREDICTED_KEY,
-            training_key=DEFAULT_SPAN_KEY,
+            training_key=DEFAULT_SPANS_KEY,
         ),
         predicted_key: str = DEFAULT_PREDICTED_KEY,
-        training_key: str = DEFAULT_SPAN_KEY,
+        training_key: str = DEFAULT_SPANS_KEY,
     ) -> None:
         """Initialize the span boundary detector.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
