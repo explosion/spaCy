@@ -2,7 +2,7 @@ from typing import Callable, Iterable, Iterator
 import pytest
 from spacy import Language
 from spacy.training import Example
-from spacy.training.initialize import init_nlp_distill
+from spacy.training.initialize import init_nlp_student
 from spacy.training.loop import distill, train
 from spacy.util import load_model_from_config, registry
 from thinc.api import Config
@@ -101,7 +101,7 @@ def test_distill_loop(config_str):
     train(teacher)
 
     orig_config = Config().from_str(config_str)
-    student = init_nlp_distill(orig_config, teacher)
+    student = init_nlp_student(orig_config, teacher)
     student.initialize()
     distill(teacher, student)
 

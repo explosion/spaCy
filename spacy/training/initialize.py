@@ -94,9 +94,16 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     return nlp
 
 
-def init_nlp_distill(
+def init_nlp_student(
     config: Config, teacher: "Language", *, use_gpu: int = -1
 ) -> "Language":
+    """Initialize student pipeline for distillation.
+
+    config (Config): Student model configuration.
+    teacher (Language): The teacher pipeline to distill from.
+    use_gpu (int): Whether to train on GPU. Make sure to call require_gpu
+        before calling this function.
+    """
     raw_config = config
     config = raw_config.interpolate()
     _set_seed_from_config(config)
