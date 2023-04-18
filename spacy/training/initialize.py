@@ -124,13 +124,11 @@ def init_nlp_distill(
     config = nlp.config.interpolate()
     # Resolve all training-relevant sections using the filled nlp config
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
-    D = registry.resolve(config["distill"], schema=ConfigSchemaDistill)
+    D = registry.resolve(config["distillation"], schema=ConfigSchemaDistill)
     dot_names = [D["corpus"], T["dev_corpus"]]
     if not isinstance(D["corpus"], str):
         raise ConfigValidationError(
-            desc=Errors.E897.format(
-                field="distill.corpus", type=type(D["corpus"])
-            )
+            desc=Errors.E897.format(field="distillation.corpus", type=type(D["corpus"]))
         )
     if not isinstance(T["dev_corpus"], str):
         raise ConfigValidationError(
@@ -158,7 +156,9 @@ def init_nlp_distill(
     labels = {}
     for name, pipe in nlp.pipeline:
         # Copy teacher labels.
-        teacher_pipe_name = student_to_teacher[name] if name in student_to_teacher else name
+        teacher_pipe_name = (
+            student_to_teacher[name] if name in student_to_teacher else name
+        )
         teacher_pipe = teacher_pipes.get(teacher_pipe_name, None)
         if (
             teacher_pipe is not None

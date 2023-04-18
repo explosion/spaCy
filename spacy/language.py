@@ -1837,7 +1837,7 @@ class Language:
         # using the nlp.config with all defaults.
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
-        orig_distill = config.pop("distill", None)
+        orig_distill = config.pop("distillation", None)
         orig_pretraining = config.pop("pretraining", None)
         config["components"] = {}
         if auto_fill:
@@ -1847,8 +1847,8 @@ class Language:
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
         if orig_distill is not None:
-            filled["distill"] = orig_distill
-            config["distill"] = orig_distill
+            filled["distillation"] = orig_distill
+            config["distillation"] = orig_distill
         if orig_pretraining is not None:
             filled["pretraining"] = orig_pretraining
             config["pretraining"] = orig_pretraining

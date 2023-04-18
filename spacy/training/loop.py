@@ -57,7 +57,7 @@ def distill(
     if use_gpu >= 0 and allocator:
         set_gpu_allocator(allocator)
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
-    D = registry.resolve(config["distill"], schema=ConfigSchemaDistill)
+    D = registry.resolve(config["distillation"], schema=ConfigSchemaDistill)
     dot_names = [D["corpus"], T["dev_corpus"]]
     distill_corpus, dev_corpus = resolve_dot_names(config, dot_names)
     optimizer = D["optimizer"]
@@ -333,7 +333,7 @@ def _distill_loop(
         if before_update:
             before_update_args = {"step": step, "epoch": epoch}
             before_update(student, before_update_args)
-        dropout = dropouts(optimizer.step) 
+        dropout = dropouts(optimizer.step)
         for subbatch in subdivide_batch(batch, accumulate_gradient):
             student.distill(
                 teacher,
