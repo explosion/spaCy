@@ -565,6 +565,8 @@ def create_distill_batches(
     batcher: Callable[[Iterable[Example]], Iterable[List[Example]]],
     max_epochs: int,
 ):
+    """Create distillation batches. In contrast to training, the corpus
+    is normally too large to load into memory and shuffle."""
     epoch = 0
     while max_epochs < 1 or epoch != max_epochs:
         examples = corpus(nlp)
