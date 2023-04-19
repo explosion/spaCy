@@ -117,7 +117,7 @@ def init_nlp_student(
     # Resolve all training-relevant sections using the filled nlp config
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     D = registry.resolve(config["distillation"], schema=ConfigSchemaDistill)
-    dot_names = [D["corpus"], T["dev_corpus"]]
+    dot_names = [T["dev_corpus"]]
     if not isinstance(D["corpus"], str):
         raise ConfigValidationError(
             desc=Errors.E897.format(field="distillation.corpus", type=type(D["corpus"]))
@@ -128,7 +128,7 @@ def init_nlp_student(
                 field="training.dev_corpus", type=type(T["dev_corpus"])
             )
         )
-    distill_corpus, dev_corpus = resolve_dot_names(config, dot_names)
+    (dev_corpus,) = resolve_dot_names(config, dot_names)
     optimizer = T["optimizer"]
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
