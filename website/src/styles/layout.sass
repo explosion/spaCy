@@ -65,9 +65,10 @@
     --color-dark: hsl(214, 15%, 32%)
     --color-dark-secondary: hsl(214, 14%, 22%)
     --color-subtle-opaque: hsla(0, 0%, 96%, 0.56)
-    --color-subtle: hsl(0, 0%, 87%)
-    --color-subtle-light: hsl(0, 0%, 96%)
-    --color-subtle-dark: hsl(162, 5%, 60%)
+    --color-subtle: hsla(0, 0%, 0%, 0.13)
+    --color-subtle-light: hsla(0, 0%, 0%, 0.04)
+    --color-subtle-dark: hsla(162, 5%, 0%, 0.55)
+    --color-subtle-on-dark: hsla(0, 0%, 100%, 0.87)
 
     --color-green-medium: hsl(108, 66%, 63%)
     --color-green-transparent: hsla(108, 66%, 63%, 0.12)
@@ -254,8 +255,11 @@ pre
     overflow: auto
 
 code, pre
-    font-family: monospace, monospace
-    font-size: 1em
+    font-family: var(--font-code)
+    font-size: var(--font-size-code)
+    font-variant-ligatures: none
+    -webkit-font-smoothing: subpixel-antialiased
+    -moz-osx-font-smoothing: auto
 
 table
     text-align: left
@@ -298,13 +302,13 @@ p
         margin-bottom: 0
 
 a:focus
-    outline: 1px dotted var(--color-theme)
+    outline: 1px dotted var(--color-theme-dark)
 
 body [id]:target
     padding-top: calc(var(--height-nav) * 1.25) !important
 
 ::selection
-    background: var(--color-theme)
+    background: var(--color-theme-dark)
     color: var(--color-back)
     text-shadow: none
 
@@ -384,7 +388,7 @@ body [id]:target
 
 [class*="language-bash"] .token
     &.function
-        color: var(--color-subtle)
+        color: var(--color-subtle-on-dark)
 
     &.operator, &.variable
         color: var(--syntax-comment)
@@ -394,7 +398,7 @@ body [id]:target
     color: var(--syntax-comment)
 
     .token
-        color: var(--color-subtle)
+        color: var(--color-subtle-on-dark)
 
 .gatsby-highlight-code-line
     background-color: var(--color-dark-secondary)
@@ -408,44 +412,6 @@ body [id]:target
     &:empty:before
         // Fix issue where empty lines would disappear
         content: " "
-
-// CodeMirror
-
-.CodeMirror.cm-s-default
-    background: var(--color-front)
-    color: var(--color-subtle)
-
-    .CodeMirror-line
-        color: var(--syntax-comment)
-        padding: 0
-
-    .CodeMirror-selected
-        background: var(--color-theme)
-        color: var(--color-back)
-
-    .CodeMirror-cursor
-        border-left-color: currentColor
-
-    .cm-property, .cm-variable, .cm-variable-2, .cm-meta // decorators
-        color: var(--color-subtle)
-
-    .cm-comment
-        color: var(--syntax-comment)
-
-    .cm-keyword, .cm-builtin
-        color: var(--syntax-keyword)
-
-    .cm-operator
-        color: var(--syntax-operator)
-
-    .cm-string
-        color: var(--syntax-selector)
-
-    .cm-number
-        color: var(--syntax-number)
-
-    .cm-def
-        color: var(--syntax-function)
 
 // Jupyter
 
@@ -546,3 +512,34 @@ body [id]:target
 
     code, a
         color: inherit
+
+
+/* Algolia DocSearch */
+
+@include breakpoint(max, xs)
+    .algolia-autocomplete .ds-dropdown-menu
+        max-width: 90vw !important
+        min-width: 90vw !important
+
+.algolia-autocomplete .algolia-docsearch-suggestion--category-header
+    display: block
+    font: bold var(--font-size-lg)/var(--line-height-md) var(--font-secondary)
+    text-transform: uppercase
+    color: var(--color-theme-dark)
+
+.algolia-autocomplete .algolia-docsearch-suggestion--subcategory-column
+    color: var(--color-dark)
+
+.algolia-autocomplete .algolia-docsearch-suggestion--title
+    font-size: var(--font-size-sm)
+
+.algolia-autocomplete .ds-dropdown-menu .ds-suggestion.ds-cursor .algolia-docsearch-suggestion--content
+    background: var(--color-subtle-opaque) !important
+
+.algolia-autocomplete .algolia-docsearch-suggestion--text
+    font-size: var(--font-size-sm)
+
+.algolia-autocomplete .algolia-docsearch-suggestion--highlight
+    box-shadow: none !important
+    background: var(--color-theme-opaque) !important
+    color: var(--color-theme-dark) !important

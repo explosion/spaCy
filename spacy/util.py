@@ -31,6 +31,8 @@ import shlex
 import inspect
 import pkgutil
 import logging
+import socket
+import stat
 
 try:
     import cupy.random
@@ -59,7 +61,7 @@ if TYPE_CHECKING:
 # fmt: off
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 DEFAULT_OOV_PROB = -20
-LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
+LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "grc", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
 
 # Default order of sections in the config file. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
@@ -143,8 +145,17 @@ class registry(thinc.registry):
         return func
 
     @classmethod
-    def find(cls, registry_name: str, func_name: str) -> Callable:
-        """Get info about a registered function from the registry."""
+    def find(
+        cls, registry_name: str, func_name: str
+    ) -> Dict[str, Optional[Union[str, int]]]:
+        """Find information about a registered function, including the
+        module and path to the file it's defined in, the line number and the
+        docstring, if available.
+
+        registry_name (str): Name of the catalogue registry.
+        func_name (str): Name of the registered function.
+        RETURNS (Dict[str, Optional[Union[str, int]]]): The function info.
+        """
         # We're overwriting this classmethod so we're able to provide more
         # specific error messages and implement a fallback to spacy-legacy.
         if not hasattr(cls, registry_name):
@@ -1040,8 +1051,15 @@ def make_tempdir() -> Generator[Path, None, None]:
     """
     d = Path(tempfile.mkdtemp())
     yield d
+
+    # On Windows, git clones use read-only files, which cause permission errors
+    # when being deleted. This forcibly fixes permissions.
+    def force_remove(rmfunc, path, ex):
+        os.chmod(path, stat.S_IWRITE)
+        rmfunc(path)
+
     try:
-        shutil.rmtree(str(d))
+        shutil.rmtree(str(d), onerror=force_remove)
     except PermissionError as e:
         warnings.warn(Warnings.W091.format(dir=d, msg=e))
 
@@ -1736,3 +1754,50 @@ def all_equal(iterable):
     (or if the input is an empty sequence), False otherwise."""
     g = itertools.groupby(iterable)
     return next(g, True) and not next(g, False)
+
+
+def _is_port_in_use(port: int, host: str = "localhost") -> bool:
+    """Check if 'host:port' is in use. Return True if it is, False otherwise.
+
+    port (int): the port to check
+    host (str): the host to check (default "localhost")
+    RETURNS (bool): Whether 'host:port' is in use.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind((host, port))
+        return False
+    except socket.error:
+        return True
+    finally:
+        s.close()
+
+
+def find_available_port(start: int, host: str, auto_select: bool = False) -> int:
+    """Given a starting port and a host, handle finding a port.
+
+    If `auto_select` is False, a busy port will raise an error.
+
+    If `auto_select` is True, the next free higher port will be used.
+
+    start (int): the port to start looking from
+    host (str): the host to find a port on
+    auto_select (bool): whether to automatically select a new port if the given port is busy (default False)
+    RETURNS (int): The port to use.
+    """
+    if not _is_port_in_use(start, host):
+        return start
+
+    port = start
+    if not auto_select:
+        raise ValueError(Errors.E1050.format(port=port))
+
+    while _is_port_in_use(port, host) and port < 65535:
+        port += 1
+
+    if port == 65535 and _is_port_in_use(port, host):
+        raise ValueError(Errors.E1049.format(host=host))
+
+    # if we get here, the port changed
+    warnings.warn(Warnings.W124.format(host=host, port=start, serve_port=port))
+    return port

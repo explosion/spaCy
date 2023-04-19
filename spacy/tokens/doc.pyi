@@ -110,6 +110,7 @@ class Doc:
         kb_id: Union[int, str] = ...,
         vector: Optional[Floats1d] = ...,
         alignment_mode: str = ...,
+        span_id: Union[int, str] = ...,
     ) -> Span: ...
     def similarity(self, other: Union[Doc, Span, Token, Lexeme]) -> float: ...
     @property

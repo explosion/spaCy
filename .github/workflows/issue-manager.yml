@@ -13,6 +13,7 @@ on:
 
 jobs:
   issue-manager:
+    if: github.repository_owner == 'explosion'
     runs-on: ubuntu-latest
     steps:
       - uses: tiangolo/issue-manager@0.4.0

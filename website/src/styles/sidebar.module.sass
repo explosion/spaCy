@@ -1,3 +1,4 @@
+@use 'sass:math'
 @import base
 
 $crumb-bullet: 14px
@@ -31,10 +32,10 @@ $crumb-bar: 2px
     text-transform: uppercase
 
 .item
-    color: var(--color-theme)
+    color: var(--color-theme-dark)
 
     &:hover
-        color: var(--color-theme-dark)
+        color: var(--color-front)
 
 .link
     border: none
@@ -58,20 +59,20 @@ $crumb-bar: 2px
     position: relative
 
 .crumb
-    margin-bottom: $crumb-bullet / 2
+    margin-bottom: math.div($crumb-bullet, 2)
     position: relative
     padding-left: 2rem
-    color: var(--color-theme)
+    color: var(--color-theme-dark)
     font-size: 1.2rem
 
     &:hover
-        color: var(--color-theme-dark)
+        color: var(--color-front)
 
     &:after
         width: $crumb-bullet
         height: $crumb-bullet
         position: absolute
-        top: $crumb-bullet / 4
+        top: math.div($crumb-bullet, 4)
         left: 0
         content: ""
         border-radius: 50%
@@ -83,13 +84,13 @@ $crumb-bar: 2px
         height: 100%
         position: absolute
         top: $crumb-bullet
-        left: ($crumb-bullet - $crumb-bar) / 2
+        left: math.div(($crumb-bullet - $crumb-bar), 2)
         content: ""
         background: var(--color-subtle)
 
     &:first-child:before
         height: calc(100% + #{$crumb-bullet * 2})
-        top: -$crumb-bullet / 2
+        top: math.div(-$crumb-bullet, 2)
 
 .crumb-active
     color: var(--color-dark)

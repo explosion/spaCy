@@ -2,9 +2,10 @@ import os
 import math
 from collections import Counter
 from typing import Tuple, List, Dict, Any
-import pkg_resources
 import time
+from pathlib import Path
 
+import spacy
 import numpy
 import pytest
 import srsly
@@ -14,7 +15,7 @@ from thinc.api import Config, ConfigValidationError
 
 from spacy import about
 from spacy.cli import info
-from spacy.cli._util import is_subpath_of, load_project_config
+from spacy.cli._util import is_subpath_of, load_project_config, walk_directory
 from spacy.cli._util import parse_config_overrides, string_to_list
 from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
@@ -27,11 +28,13 @@ from spacy.cli.debug_data import _print_span_characteristics
 from spacy.cli.debug_data import _get_spans_length_freq_dist
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
+from spacy.cli.init_pipeline import _init_labels
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.project.remote_storage import RemoteStorage
 from spacy.cli.project.run import _check_requirements
 from spacy.cli.validate import get_model_pkgs
+from spacy.cli.apply import apply
 from spacy.cli.find_threshold import find_threshold
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
@@ -44,7 +47,6 @@ from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
 from spacy.training.converters import iob_to_docs
 from spacy.util import ENV_VARS, get_minor_version, load_model_from_config, load_config
 
-from ..cli.init_pipeline import _init_labels
 from .util import make_tempdir
 
 
@@ -550,7 +552,14 @@ def test_parse_cli_overrides():
 
 @pytest.mark.parametrize("lang", ["en", "nl"])
 @pytest.mark.parametrize(
-    "pipeline", [["tagger", "parser", "ner"], [], ["ner", "textcat", "sentencizer"]]
+    "pipeline",
+    [
+        ["tagger", "parser", "ner"],
+        [],
+        ["ner", "textcat", "sentencizer"],
+        ["morphologizer", "spancat", "entity_linker"],
+        ["spancat_singlelabel", "textcat_multilabel"],
+    ],
 )
 @pytest.mark.parametrize("optimize", ["efficiency", "accuracy"])
 @pytest.mark.parametrize("pretraining", [True, False])
@@ -615,7 +624,6 @@ def test_string_to_list_intify(value):
     assert string_to_list(value, intify=True) == [1, 2, 3]
 
 
-@pytest.mark.skip(reason="Temporarily skip for dev version")
 def test_download_compatibility():
     spec = SpecifierSet("==" + about.__version__)
     spec.prereleases = False
@@ -626,7 +634,6 @@ def test_download_compatibility():
         assert get_minor_version(about.__version__) == get_minor_version(version)
 
 
-@pytest.mark.skip(reason="Temporarily skip for dev version")
 def test_validate_compatibility_table():
     spec = SpecifierSet("==" + about.__version__)
     spec.prereleases = False
@@ -885,6 +892,82 @@ def test_span_length_freq_dist_output_must_be_correct():
     assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
 
 
+def test_applycli_empty_dir():
+    with make_tempdir() as data_path:
+        output = data_path / "test.spacy"
+        apply(data_path, output, "blank:en", "text", 1, 1)
+
+
+def test_applycli_docbin():
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        nlp = spacy.blank("en")
+        doc = nlp("testing apply cli.")
+        # test empty DocBin case
+        docbin = DocBin()
+        docbin.to_disk(data_path / "testin.spacy")
+        apply(data_path, output, "blank:en", "text", 1, 1)
+        docbin.add(doc)
+        docbin.to_disk(data_path / "testin.spacy")
+        apply(data_path, output, "blank:en", "text", 1, 1)
+
+
+def test_applycli_jsonl():
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        data = [{"field": "Testing apply cli.", "key": 234}]
+        data2 = [{"field": "234"}]
+        srsly.write_jsonl(data_path / "test.jsonl", data)
+        apply(data_path, output, "blank:en", "field", 1, 1)
+        srsly.write_jsonl(data_path / "test2.jsonl", data2)
+        apply(data_path, output, "blank:en", "field", 1, 1)
+
+
+def test_applycli_txt():
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        with open(data_path / "test.foo", "w") as ftest:
+            ftest.write("Testing apply cli.")
+        apply(data_path, output, "blank:en", "text", 1, 1)
+
+
+def test_applycli_mixed():
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        text = "Testing apply cli"
+        nlp = spacy.blank("en")
+        doc = nlp(text)
+        jsonl_data = [{"text": text}]
+        srsly.write_jsonl(data_path / "test.jsonl", jsonl_data)
+        docbin = DocBin()
+        docbin.add(doc)
+        docbin.to_disk(data_path / "testin.spacy")
+        with open(data_path / "test.txt", "w") as ftest:
+            ftest.write(text)
+        apply(data_path, output, "blank:en", "text", 1, 1)
+        # Check whether it worked
+        result = list(DocBin().from_disk(output).get_docs(nlp.vocab))
+        assert len(result) == 3
+        for doc in result:
+            assert doc.text == text
+
+
+def test_applycli_user_data():
+    Doc.set_extension("ext", default=0)
+    val = ("ext", 0)
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        nlp = spacy.blank("en")
+        doc = nlp("testing apply cli.")
+        doc._.ext = val
+        docbin = DocBin(store_user_data=True)
+        docbin.add(doc)
+        docbin.to_disk(data_path / "testin.spacy")
+        apply(data_path, output, "blank:en", "", 1, 1)
+        result = list(DocBin().from_disk(output).get_docs(nlp.vocab))
+        assert result[0]._.ext == val
+
+
 def test_local_remote_storage():
     with make_tempdir() as d:
         filename = "a.txt"
@@ -940,8 +1023,6 @@ def test_local_remote_storage_pull_missing():
 
 
 def test_cli_find_threshold(capsys):
-    thresholds = numpy.linspace(0, 1, 10)
-
     def make_examples(nlp: Language) -> List[Example]:
         docs: List[Example] = []
 
@@ -997,7 +1078,7 @@ def test_cli_find_threshold(capsys):
         )
         with make_tempdir() as nlp_dir:
             nlp.to_disk(nlp_dir)
-            res = find_threshold(
+            best_threshold, best_score, res = find_threshold(
                 model=nlp_dir,
                 data_path=docs_dir / "docs.spacy",
                 pipe_name="tc_multi",
@@ -1005,16 +1086,14 @@ def test_cli_find_threshold(capsys):
                 scores_key="cats_macro_f",
                 silent=True,
             )
-            assert res[0] != thresholds[0]
-            assert thresholds[0] < res[0] < thresholds[9]
-            assert res[1] == 1.0
-            assert res[2][1.0] == 0.0
+            assert best_score == max(res.values())
+            assert res[1.0] == 0.0
 
         # Test with spancat.
         nlp, _ = init_nlp((("spancat", {}),))
         with make_tempdir() as nlp_dir:
             nlp.to_disk(nlp_dir)
-            res = find_threshold(
+            best_threshold, best_score, res = find_threshold(
                 model=nlp_dir,
                 data_path=docs_dir / "docs.spacy",
                 pipe_name="spancat",
@@ -1022,10 +1101,8 @@ def test_cli_find_threshold(capsys):
                 scores_key="spans_sc_f",
                 silent=True,
             )
-            assert res[0] != thresholds[0]
-            assert thresholds[0] < res[0] < thresholds[8]
-            assert res[1] >= 0.6
-            assert res[2][1.0] == 0.0
+            assert best_score == max(res.values())
+            assert res[1.0] == 0.0
 
         # Having multiple textcat_multilabel components should work, since the name has to be specified.
         nlp, _ = init_nlp((("textcat_multilabel", {}),))
@@ -1055,6 +1132,7 @@ def test_cli_find_threshold(capsys):
                 )
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize(
     "reqs,output",
     [
@@ -1087,6 +1165,8 @@ def test_cli_find_threshold(capsys):
     ],
 )
 def test_project_check_requirements(reqs, output):
+    import pkg_resources
+
     # excessive guard against unlikely package name
     try:
         pkg_resources.require("spacyunknowndoesnotexist12345")
@@ -1107,3 +1187,92 @@ def test_upload_download_local_file():
         download_file(remote_file, local_file)
         with local_file.open(mode="r") as file_:
             assert file_.read() == content
+
+
+def test_walk_directory():
+    with make_tempdir() as d:
+        files = [
+            "data1.iob",
+            "data2.iob",
+            "data3.json",
+            "data4.conll",
+            "data5.conll",
+            "data6.conll",
+            "data7.txt",
+        ]
+
+        for f in files:
+            Path(d / f).touch()
+
+        assert (len(walk_directory(d))) == 7
+        assert (len(walk_directory(d, suffix=None))) == 7
+        assert (len(walk_directory(d, suffix="json"))) == 1
+        assert (len(walk_directory(d, suffix="iob"))) == 2
+        assert (len(walk_directory(d, suffix="conll"))) == 3
+        assert (len(walk_directory(d, suffix="pdf"))) == 0
+
+
+def test_debug_data_trainable_lemmatizer_basic():
+    examples = [
+        ("She likes green eggs", {"lemmas": ["she", "like", "green", "egg"]}),
+        ("Eat blue ham", {"lemmas": ["eat", "blue", "ham"]}),
+    ]
+    nlp = Language()
+    train_examples = []
+    for t in examples:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
+    # ref test_edit_tree_lemmatizer::test_initialize_from_labels
+    # this results in 4 trees
+    assert len(data["lemmatizer_trees"]) == 4
+
+
+def test_debug_data_trainable_lemmatizer_partial():
+    partial_examples = [
+        # partial annotation
+        ("She likes green eggs", {"lemmas": ["", "like", "green", ""]}),
+        # misaligned partial annotation
+        (
+            "He hates green eggs",
+            {
+                "words": ["He", "hat", "es", "green", "eggs"],
+                "lemmas": ["", "hat", "e", "green", ""],
+            },
+        ),
+    ]
+    nlp = Language()
+    train_examples = []
+    for t in partial_examples:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
+    assert data["partial_lemma_annotations"] == 2
+
+
+def test_debug_data_trainable_lemmatizer_low_cardinality():
+    low_cardinality_examples = [
+        ("She likes green eggs", {"lemmas": ["no", "no", "no", "no"]}),
+        ("Eat blue ham", {"lemmas": ["no", "no", "no"]}),
+    ]
+    nlp = Language()
+    train_examples = []
+    for t in low_cardinality_examples:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
+    assert data["n_low_cardinality_lemmas"] == 2
+
+
+def test_debug_data_trainable_lemmatizer_not_annotated():
+    unannotated_examples = [
+        ("She likes green eggs", {}),
+        ("Eat blue ham", {}),
+    ]
+    nlp = Language()
+    train_examples = []
+    for t in unannotated_examples:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
+    assert data["no_lemma_annotations"] == 2

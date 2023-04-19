@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 
 import Icon from './icon'
 import classes from '../styles/copy.module.sass'
@@ -14,9 +14,13 @@ export function copyToClipboard(ref, callback) {
     }
 }
 
-export default function CopyInput({ text, prefix }) {
+export default function CopyInput({ text, description, prefix }) {
     const isClient = typeof window !== 'undefined'
-    const supportsCopy = isClient && document.queryCommandSupported('copy')
+    const [supportsCopy, setSupportsCopy] = useState(false)
+
+    useEffect(() => {
+        setSupportsCopy(isClient && document.queryCommandSupported('copy'))
+    }, [isClient])
     const textareaRef = useRef()
     const [copySuccess, setCopySuccess] = useState(false)
     const onClick = () => copyToClipboard(textareaRef, setCopySuccess)
@@ -37,6 +41,7 @@ export default function CopyInput({ text, prefix }) {
                 defaultValue={text}
                 rows={1}
                 onClick={selectText}
+                aria-label={description}
             />
             {supportsCopy && (
                 <button title="Copy to clipboard" onClick={onClick}>

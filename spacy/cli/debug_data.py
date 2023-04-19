@@ -7,6 +7,7 @@ import srsly
 from wasabi import Printer, MESSAGES, msg
 import typer
 import math
+import numpy
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
 from ._util import import_code, debug_cli, _format_number
@@ -17,6 +18,7 @@ from ..pipeline import TrainablePipe
 from ..pipeline._parser_internals import nonproj
 from ..pipeline._parser_internals.nonproj import DELIMITER
 from ..pipeline import Morphologizer, SpanCategorizer
+from ..pipeline._edit_tree_internals.edit_trees import EditTrees
 from ..morphology import Morphology
 from ..language import Language
 from ..util import registry, resolve_dot_names
@@ -520,9 +522,13 @@ def debug_data(
 
     if "tagger" in factory_names:
         msg.divider("Part-of-speech Tagging")
-        label_list = [label for label in gold_train_data["tags"]]
-        model_labels = _get_labels_from_model(nlp, "tagger")
+        label_list, counts = zip(*gold_train_data["tags"].items())
         msg.info(f"{len(label_list)} label(s) in train data")
+        p = numpy.array(counts)
+        p = p / p.sum()
+        norm_entropy = (-p * numpy.log2(p)).sum() / numpy.log2(len(label_list))
+        msg.info(f"{norm_entropy} is the normalised label entropy")
+        model_labels = _get_labels_from_model(nlp, "tagger")
         labels = set(label_list)
         missing_labels = model_labels - labels
         if missing_labels:
@@ -671,6 +677,59 @@ def debug_data(
                 f"Found {gold_train_data['n_cycles']} projectivized train sentence(s) with cycles"
             )
 
+    if "trainable_lemmatizer" in factory_names:
+        msg.divider("Trainable Lemmatizer")
+        trees_train: Set[str] = gold_train_data["lemmatizer_trees"]
+        trees_dev: Set[str] = gold_dev_data["lemmatizer_trees"]
+        # This is necessary context when someone is attempting to interpret whether the
+        # number of trees exclusively in the dev set is meaningful.
+        msg.info(f"{len(trees_train)} lemmatizer trees generated from training data")
+        msg.info(f"{len(trees_dev)} lemmatizer trees generated from dev data")
+        dev_not_train = trees_dev - trees_train
+
+        if len(dev_not_train) != 0:
+            pct = len(dev_not_train) / len(trees_dev)
+            msg.info(
+                f"{len(dev_not_train)} lemmatizer trees ({pct*100:.1f}% of dev trees)"
+                " were found exclusively in the dev data."
+            )
+        else:
+            # Would we ever expect this case? It seems like it would be pretty rare,
+            # and we might actually want a warning?
+            msg.info("All trees in dev data present in training data.")
+
+        if gold_train_data["n_low_cardinality_lemmas"] > 0:
+            n = gold_train_data["n_low_cardinality_lemmas"]
+            msg.warn(f"{n} training docs with 0 or 1 unique lemmas.")
+
+        if gold_dev_data["n_low_cardinality_lemmas"] > 0:
+            n = gold_dev_data["n_low_cardinality_lemmas"]
+            msg.warn(f"{n} dev docs with 0 or 1 unique lemmas.")
+
+        if gold_train_data["no_lemma_annotations"] > 0:
+            n = gold_train_data["no_lemma_annotations"]
+            msg.warn(f"{n} training docs with no lemma annotations.")
+        else:
+            msg.good("All training docs have lemma annotations.")
+
+        if gold_dev_data["no_lemma_annotations"] > 0:
+            n = gold_dev_data["no_lemma_annotations"]
+            msg.warn(f"{n} dev docs with no lemma annotations.")
+        else:
+            msg.good("All dev docs have lemma annotations.")
+
+        if gold_train_data["partial_lemma_annotations"] > 0:
+            n = gold_train_data["partial_lemma_annotations"]
+            msg.info(f"{n} training docs with partial lemma annotations.")
+        else:
+            msg.good("All training docs have complete lemma annotations.")
+
+        if gold_dev_data["partial_lemma_annotations"] > 0:
+            n = gold_dev_data["partial_lemma_annotations"]
+            msg.info(f"{n} dev docs with partial lemma annotations.")
+        else:
+            msg.good("All dev docs have complete lemma annotations.")
+
     msg.divider("Summary")
     good_counts = msg.counts[MESSAGES.GOOD]
     warn_counts = msg.counts[MESSAGES.WARN]
@@ -732,7 +791,13 @@ def _compile_gold(
         "n_cats_multilabel": 0,
         "n_cats_bad_values": 0,
         "texts": set(),
+        "lemmatizer_trees": set(),
+        "no_lemma_annotations": 0,
+        "partial_lemma_annotations": 0,
+        "n_low_cardinality_lemmas": 0,
     }
+    if "trainable_lemmatizer" in factory_names:
+        trees = EditTrees(nlp.vocab.strings)
     for eg in examples:
         gold = eg.reference
         doc = eg.predicted
@@ -862,6 +927,25 @@ def _compile_gold(
                 data["n_nonproj"] += 1
             if nonproj.contains_cycle(aligned_heads):
                 data["n_cycles"] += 1
+        if "trainable_lemmatizer" in factory_names:
+            # from EditTreeLemmatizer._labels_from_data
+            if all(token.lemma == 0 for token in gold):
+                data["no_lemma_annotations"] += 1
+                continue
+            if any(token.lemma == 0 for token in gold):
+                data["partial_lemma_annotations"] += 1
+            lemma_set = set()
+            for token in gold:
+                if token.lemma != 0:
+                    lemma_set.add(token.lemma)
+                    tree_id = trees.add(token.text, token.lemma_)
+                    tree_str = trees.tree_to_str(tree_id)
+                    data["lemmatizer_trees"].add(tree_str)
+            # We want to identify cases where lemmas aren't assigned
+            # or are all assigned the same value, as this would indicate
+            # an issue since we're expecting a large set of lemmas
+            if len(lemma_set) < 2 and len(gold) > 1:
+                data["n_low_cardinality_lemmas"] += 1
     return data
 
 
