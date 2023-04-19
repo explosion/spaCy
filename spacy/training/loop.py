@@ -284,11 +284,12 @@ def _distill_loop(
     before_update: Optional[Callable[["Language", Dict[str, Any]], None]],
     student_to_teacher: Dict[str, str],
 ):
-    """Train until an evaluation stops improving. Works as a generator,
-    with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
-    where info is a dict, and is_best_checkpoint is in [True, False, None] --
-    None indicating that the iteration was not evaluated as a checkpoint.
-    The evaluation is conducted by calling the evaluate callback.
+    """Distill until the data is exhausted or the maximum number of steps
+    has been reached. Works as a generator, with each iteration yielding
+    a tuple `(batch, info, is_best_checkpoint)`, where info is a dict, and
+    is_best_checkpoint is in [True, False, None] -- None indicating that
+    the iteration was not evaluated as a checkpoint. The evaluation is
+    conducted by calling the evaluate callback.
 
     Positional arguments:
         teacher (Language): The teacher pipeline to distill from.
