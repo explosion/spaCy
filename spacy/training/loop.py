@@ -8,10 +8,12 @@ import random
 import sys
 import shutil
 
+
 from .example import Example
 from ..schemas import ConfigSchemaDistill, ConfigSchemaTraining
 from ..errors import Errors
 from ..tokens.doc import Doc
+from .. import ty
 from ..util import resolve_dot_names, registry, logger
 
 if TYPE_CHECKING:
@@ -340,20 +342,20 @@ def _distill_loop(
                 subbatch,
                 drop=dropout,
                 losses=losses,
-                sgd=None,
+                sgd=False,
                 exclude=exclude,
                 annotates=annotating_components,
                 student_to_teacher=student_to_teacher,
             )
         # TODO: refactor this so we don't have to run it separately in here
-        for name, proc in student.pipeline:
+        for student_name, student_proc in student.pipeline:
             if (
-                name not in exclude
-                and hasattr(proc, "is_trainable")
-                and proc.is_trainable
-                and proc.model not in (True, False, None)  # type: ignore[attr-defined]
+                student_name not in exclude
+                and isinstance(student_proc, ty.DistillableComponent)
+                and student_proc.is_distillable
+                and student_proc.model not in (False, None)  # type: ignore[attr-defined]
             ):
-                proc.finish_update(optimizer)  # type: ignore[attr-defined]
+                student_proc.finish_update(optimizer)  # type: ignore[attr-defined]
         optimizer.step_schedules()
         if not (step % eval_frequency):
             if optimizer.averages:
