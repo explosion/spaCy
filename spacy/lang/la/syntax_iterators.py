@@ -1,11 +1,9 @@
-# NB: Modified from da on suggestion from https://github.com/explosion/spaCy/issues/7457#issuecomment-800349751 [PJB]
-
 from typing import Union, Iterator, Tuple
 from ...tokens import Doc, Span
 from ...symbols import NOUN, PROPN, PRON, VERB, AUX
 from ...errors import Errors
 
-
+# NB: Modified from da on suggestion from https://github.com/explosion/spaCy/issues/7457#issuecomment-800349751 [PJB]
 def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     def is_verb_token(tok):
         return tok.pos in [VERB, AUX]
