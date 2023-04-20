@@ -506,7 +506,7 @@ def train_while_improving(
 
 
 def subdivide_batch(
-    batch: Union[Iterable[Doc], Iterable[Example]], accumulate_gradient
+    batch: Union[Iterable[Doc], Iterable[Example]], accumulate_gradient: int
 ):
     batch = list(batch)
     if len(batch):
