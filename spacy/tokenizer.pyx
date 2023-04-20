@@ -834,10 +834,12 @@ cdef class Tokenizer:
             self.token_match = re.compile(data["token_match"]).match
         if "url_match" in data and isinstance(data["url_match"], str):
             self.url_match = re.compile(data["url_match"]).match
-        if "rules" in data and isinstance(data["rules"], dict):
-            self.rules = data["rules"]
         if "faster_heuristics" in data:
             self.faster_heuristics = data["faster_heuristics"]
+        # always load rules last so that all other settings are set before the
+        # internal tokenization for the phrase matcher
+        if "rules" in data and isinstance(data["rules"], dict):
+            self.rules = data["rules"]
         return self
 
 
