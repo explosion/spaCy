@@ -1,6 +1,5 @@
 from typing import Union, Dict, Optional, Any, IO, TYPE_CHECKING
-from thinc.api import Config, fix_random_seed, set_gpu_allocator
-from thinc.api import ConfigValidationError
+from thinc.api import Config, ConfigValidationError
 from pathlib import Path
 import srsly
 import numpy
@@ -19,6 +18,7 @@ from ..schemas import ConfigSchemaDistill, ConfigSchemaTraining
 from ..util import registry, load_model_from_config, resolve_dot_names, logger
 from ..util import load_model, ensure_path, get_sourced_components
 from ..util import OOV_RANK, DEFAULT_OOV_PROB
+from ..util import set_gpu_allocator_from_config, set_seed_from_config
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     raw_config = config
     config = raw_config.interpolate()
-    _set_seed_from_config(config)
-    _set_gpu_allocator_from_config(config, use_gpu)
+    set_seed_from_config(config)
+    set_gpu_allocator_from_config(config, use_gpu)
     # Use original config here before it's resolved to functions
     sourced = get_sourced_components(config)
     nlp = load_model_from_config(raw_config, auto_fill=True)
@@ -106,8 +106,8 @@ def init_nlp_student(
     """
     raw_config = config
     config = raw_config.interpolate()
-    _set_seed_from_config(config)
-    _set_gpu_allocator_from_config(config, use_gpu)
+    set_seed_from_config(config)
+    set_gpu_allocator_from_config(config, use_gpu)
 
     # Use original config here before it's resolved to functions
     sourced = get_sourced_components(config)
@@ -422,18 +422,3 @@ def ensure_shape(vectors_loc):
         yield from lines2
         lines2.close()
     lines.close()
-
-
-def _set_gpu_allocator_from_config(config: Config, use_gpu: int):
-    if "gpu_allocator" not in config["training"]:
-        raise ValueError(Errors.E1015.format(value="[training] gpu_allocator"))
-    allocator = config["training"]["gpu_allocator"]
-    if use_gpu >= 0 and allocator:
-        set_gpu_allocator(allocator)
-
-
-def _set_seed_from_config(config: Config):
-    if "seed" not in config["training"]:
-        raise ValueError(Errors.E1015.format(value="[training] seed"))
-    if config["training"]["seed"] is not None:
-        fix_random_seed(config["training"]["seed"])

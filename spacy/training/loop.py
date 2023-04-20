@@ -2,7 +2,7 @@ from typing import List, Callable, Tuple, Dict, Iterable, Union, Any, IO
 from typing import Optional, TYPE_CHECKING
 from pathlib import Path
 from timeit import default_timer as timer
-from thinc.api import Optimizer, Config, constant, fix_random_seed, set_gpu_allocator
+from thinc.api import Optimizer, Config, constant
 from wasabi import Printer
 import random
 import sys
@@ -15,6 +15,7 @@ from ..errors import Errors
 from ..tokens.doc import Doc
 from .. import ty
 from ..util import resolve_dot_names, registry, logger
+from ..util import set_gpu_allocator_from_config, set_seed_from_config
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
@@ -53,11 +54,8 @@ def distill(
     msg = Printer(no_print=True)
     # Create iterator, which yields out info after each optimization step.
     config = student.config.interpolate()
-    if config["training"]["seed"] is not None:
-        fix_random_seed(config["training"]["seed"])
-    allocator = config["training"]["gpu_allocator"]
-    if use_gpu >= 0 and allocator:
-        set_gpu_allocator(allocator)
+    set_seed_from_config(config)
+    set_gpu_allocator_from_config(config, use_gpu)
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     D = registry.resolve(config["distillation"], schema=ConfigSchemaDistill)
     dot_names = [D["corpus"], T["dev_corpus"]]
@@ -175,11 +173,8 @@ def train(
     msg = Printer(no_print=True)
     # Create iterator, which yields out info after each optimization step.
     config = nlp.config.interpolate()
-    if config["training"]["seed"] is not None:
-        fix_random_seed(config["training"]["seed"])
-    allocator = config["training"]["gpu_allocator"]
-    if use_gpu >= 0 and allocator:
-        set_gpu_allocator(allocator)
+    set_seed_from_config(config)
+    set_gpu_allocator_from_config(config, use_gpu)
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"]]
     train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
