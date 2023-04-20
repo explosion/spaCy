@@ -347,19 +347,19 @@ Distill the models in a student pipeline from a teacher pipeline.
 > student.distill(teacher, examples, sgd=optimizer)
 > ```
 
-| Name                 | Description                                                                                                                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `teacher`            | The teacher pipeline to distill from. ~~Language~~                                                                                                                                          |
-| `examples`           | A batch of [`Example`](/api/example) distillation examples. The reference (teacher) and predicted (student) docs must have the same number of tokens and orthography. ~~Iterable[Example]~~ |
-| _keyword-only_       |                                                                                                                                                                                             |
-| `drop`               | The dropout rate. ~~float~~                                                                                                                                                                 |
-| `sgd`                | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                                                                               |
-| `losses`             | Dictionary to update with the loss, keyed by pipeline component. ~~Optional[Dict[str, float]]~~                                                                                             |
-| `component_cfg`      | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~                                              |
-| `exclude`            | Names of components that shouldn't be updated. Defaults to `[]`. ~~Iterable[str]~~                                                                                                          |
-| `annotates`          | Names of components that should set annotations on the prediced examples after updating. Defaults to `[]`. ~~Iterable[str]~~                                                                |
-| `student_to_teacher` | Map student component names to teacher component names, only necessary when the names differ. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                              |
-| **RETURNS**          | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                                                                       |
+| Name                 | Description                                                                                                                                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `teacher`            | The teacher pipeline to distill from. ~~Language~~                                                                                                                                                 |
+| `examples`           | A batch of [`Example`](/api/example) distillation examples. The reference (teacher) and predicted (student) docs must have the same number of tokens and orthography. ~~Iterable[Example]~~        |
+| _keyword-only_       |                                                                                                                                                                                                    |
+| `drop`               | The dropout rate. ~~float~~                                                                                                                                                                        |
+| `sgd`                | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if `None`. No optimizer will be used when set to `False`. Defaults to `None`. ~~Union[Optimizer, None, Literal[False]]~~ |
+| `losses`             | Dictionary to update with the loss, keyed by pipeline component. ~~Optional[Dict[str, float]]~~                                                                                                    |
+| `component_cfg`      | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~                                                     |
+| `exclude`            | Names of components that shouldn't be updated. Defaults to `[]`. ~~Iterable[str]~~                                                                                                                 |
+| `annotates`          | Names of components that should set annotations on the prediced examples after updating. Defaults to `[]`. ~~Iterable[str]~~                                                                       |
+| `student_to_teacher` | Map student component names to teacher component names, only necessary when the names differ. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                     |
+| **RETURNS**          | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                                                                              |
 
 ## Language.rehearse {id="rehearse",tag="method,experimental",version="3"}
 
