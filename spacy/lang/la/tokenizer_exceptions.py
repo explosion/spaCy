@@ -20,7 +20,7 @@ _abbrev_exc += [item.replace("v", "u").replace("V", "U") for item in _abbrev_exc
 
 _abbrev_exc += ["d.N."]
 
-for orth in _abbrev_exc:
+for orth in set(_abbrev_exc):
     _exc[orth] = [{ORTH: orth}]
 
 TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

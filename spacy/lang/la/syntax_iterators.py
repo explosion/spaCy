@@ -4,11 +4,13 @@ from ...symbols import NOUN, PROPN, PRON, VERB, AUX
 from ...errors import Errors
 
 # NB: Modified from da on suggestion from https://github.com/explosion/spaCy/issues/7457#issuecomment-800349751 [PJB]
+
+
 def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     def is_verb_token(tok):
         return tok.pos in [VERB, AUX]
 
-    def get_left_bound(doc, root):
+    def get_left_bound(root):
         left_bound = root
         for tok in reversed(list(root.lefts)):
             if tok.dep in np_left_deps:

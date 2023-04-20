@@ -10,10 +10,12 @@ _num_words = """unus una unum duo duae tres tria quattuor quinque sex septem oct
 """.split()
 
 _num_words += [item.replace("v", "u") for item in _num_words]
+_num_words = set(_num_words)
 
 _ordinal_words = """primus prima primum secundus secunda secundum tertius tertia tertium quartus quarta quartum quintus quinta quintum sextus sexta sextum septimus septima septimum octavus octava octavum nonus nona nonum decimus decima decimum undecimus undecima undecimum duodecimus duodecima duodecimum duodevicesimus duodevicesima duodevicesimum undevicesimus undevicesima undevicesimum vicesimus vicesima vicesimum tricesimus tricesima tricesimum quadragesimus quadragesima quadragesimum quinquagesimus quinquagesima quinquagesimum sexagesimus sexagesima sexagesimum septuagesimus septuagesima septuagesimum octogesimus octogesima octogesimum nonagesimus nonagesima nonagesimum centesimus centesima centesimum ducentesimus ducentesima ducentesimum trecentesimus trecentesima trecentesimum quadringentesimus quadringentesima quadringentesimum quingentesimus quingentesima quingentesimum sescentesimus sescentesima sescentesimum septingentesimus septingentesima septingentesimum octingentesimus octingentesima octingentesimum nongentesimus nongentesima nongentesimum millesimus millesima millesimum""".split()
 
 _ordinal_words += [item.replace("v", "u") for item in _ordinal_words]
+_ordinal_words = set(_ordinal_words)
 
 
 def like_num(text):
