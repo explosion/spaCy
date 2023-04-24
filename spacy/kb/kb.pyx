@@ -37,7 +37,7 @@ cdef class KnowledgeBase:
         probability of the specified mention text resolving to that entity - might be included.
         If no candidates are found for a given mention, an empty list is returned.
         mentions (Iterable[SpanGroup]): Mentions for which to get candidates.
-        RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
+        RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates.
         """
         raise NotImplementedError(
             Errors.E1045.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)
