@@ -78,9 +78,9 @@ implementation of `KnowledgeBase.get_candidates()`.
 > candidates = kb.get_candidates([SpanGroup(doc, spans=[doc[0:2], doc[3:]]])
 > ```
 
-| Name        | Description                                                                                                                                  |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mentions`  | The textual mention or alias. ~~Iterator[SpanGroup]~~                                                                                        |
+| Name        | Description                                                                                                                                                                          |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `mentions`  | The textual mentions or aliases (one `SpanGroup` per `Doc` instance). ~~Iterator[SpanGroup]~~                                                                                        |
 | **RETURNS** | An iterator (per document) over iterables (per mention) of iterables (per candidate for this mention) with relevant `Candidate` objects. ~~Iterator[Iterable[Iterable[Candidate]]]~~ |
 
 ## KnowledgeBase.get_vector {id="get_vector",tag="method"}
