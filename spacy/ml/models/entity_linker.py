@@ -118,9 +118,9 @@ def get_candidates(
     kb: KnowledgeBase, mentions: Iterator[SpanGroup]
 ) -> Iterator[Iterable[Iterable[Candidate]]]:
     """
-    Return candidate entities for the given mentions and fetching appropriate entries from the index.
+    Return candidate entities for the given mentions from the KB.
     kb (KnowledgeBase): Knowledge base to query.
-    mentions (Iterator[SpanGroup]): Mentions per doc as SpanGroup instance.
-    RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
+    mentions (Iterator[SpanGroup]): Mentions per doc.
+    RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per mentions in document/SpanGroup.
     """
     return kb.get_candidates(mentions)
