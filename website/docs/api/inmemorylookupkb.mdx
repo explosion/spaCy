@@ -175,7 +175,7 @@ implementation of `KnowledgeBase.get_candidates()`.
 
 | Name        | Description                                                                                                                                                                       |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mentions`  | The textual mention or alias. ~~Iterable[SpanGroup]~~                                                                                                                             |
+| `mentions`  | The textual mention or alias. ~~Iterator[SpanGroup]~~                                                                                                                             |
 | **RETURNS** | An iterator over iterables of iterables with relevant [`InMemoryCandidate`](/api/kb#candidate) objects (per mention and doc). ~~Iterator[Iterable[Iterable[InMemoryCandidate]]]~~ |
 
 ## InMemoryLookupKB.get_vector {id="get_vector",tag="method"}
