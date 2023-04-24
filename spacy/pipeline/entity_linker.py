@@ -1,17 +1,6 @@
 import warnings
-from typing import (
-    cast,
-    Optional,
-    Iterable,
-    Callable,
-    Dict,
-    Sequence,
-    Union,
-    List,
-    Any,
-    Iterator,
-)
-from numpy import dtype
+from typing import cast, Optional, Iterable, Callable, Dict
+from typing import Union, List, Any, Iterator, Sequence
 from thinc.types import Floats1d, Floats2d, Ints1d, Ragged
 from pathlib import Path
 from itertools import islice
