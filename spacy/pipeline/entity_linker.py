@@ -436,16 +436,6 @@ class EntityLinker(TrainablePipe):
             docs = [docs]
 
         docs = list(docs)
-        # Determine which entities are to be ignored due to labels_discard.
-        valid_ent_idx_per_doc = (
-            [
-                idx
-                for idx in range(len(doc.ents))
-                if doc.ents[idx].label_ not in self.labels_discard
-            ]
-            for doc in docs
-            if len(doc) and len(doc.ents)
-        )
 
         # Call candidate generator.
         all_ent_cands = self.get_candidates(
@@ -453,7 +443,7 @@ class EntityLinker(TrainablePipe):
             (
                 SpanGroup(
                     doc,
-                    spans=[doc.ents[idx] for idx in next(valid_ent_idx_per_doc)],
+                    spans=[ent for ent in doc.ents if ent.label_ not in self.labels_discard],
                 )
                 for doc in docs
                 if len(doc) and len(doc.ents)
