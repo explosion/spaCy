@@ -462,7 +462,7 @@ CONFIG_SCHEMAS = {
     "training": ConfigSchemaTraining,
     "pretraining": ConfigSchemaPretrain,
     "initialize": ConfigSchemaInit,
-    "distill": ConfigSchemaDistill,
+    "distillation": ConfigSchemaDistill,
 }
 
 
