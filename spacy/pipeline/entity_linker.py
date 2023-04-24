@@ -448,11 +448,10 @@ class EntityLinker(TrainablePipe):
                     ],
                 )
                 for doc in docs
-                if len(doc) and len(doc.ents)
             ),
         )
 
-        for doc_idx, doc in enumerate(docs):
+        for doc in docs:
             doc_ents: List[Ints1d] = []
             doc_scores: List[Floats1d] = []
             if len(doc) == 0 or len(doc.ents) == 0:
