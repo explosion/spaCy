@@ -80,7 +80,7 @@ implementation of `KnowledgeBase.get_candidates()`.
 
 | Name        | Description                                                                                                                                  |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mentions`  | The textual mention or alias. ~~Iterable[SpanGroup]~~                                                                                        |
+| `mentions`  | The textual mention or alias. ~~Iterator[SpanGroup]~~                                                                                        |
 | **RETURNS** | An iterator (per document) over iterables (per mention) of iterables (per candidate for this mention) with relevant `Candidate` objects. ~~Iterator[Iterable[Iterable[Candidate]]]~~ |
 
 ## KnowledgeBase.get_vector {id="get_vector",tag="method"}
