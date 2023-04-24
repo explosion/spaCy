@@ -2,7 +2,9 @@ from typing import Callable, Protocol, Iterable, Iterator, Optional
 from typing import Union, Tuple, List, Dict, Any, overload
 from cymem.cymem import Pool
 from thinc.types import Floats1d, Floats2d, Ints2d
+
 from .span import Span
+from .span_group import SpanGroup
 from .token import Token
 from ._dict_proxies import SpanGroups
 from ._retokenize import Retokenizer
@@ -129,6 +131,7 @@ class Doc:
         outside: Optional[List[Span]] = ...,
         default: str = ...
     ) -> None: ...
+    ents_spangroup: SpanGroup
     @property
     def noun_chunks(self) -> Iterator[Span]: ...
     @property

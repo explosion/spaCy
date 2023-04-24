@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Dict, Any, Tuple
+from typing import Callable, Iterable, Dict, Any, Iterator, Tuple
 
 import pytest
 from numpy.testing import assert_equal
@@ -6,16 +6,16 @@ from numpy.testing import assert_equal
 from spacy import registry, util, Language
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
-from spacy.kb import Candidate, InMemoryLookupKB, get_candidates, KnowledgeBase
+from spacy.kb import Candidate, InMemoryLookupKB, KnowledgeBase
 from spacy.lang.en import English
 from spacy.ml import load_kb
-from spacy.ml.models.entity_linker import build_span_maker
+from spacy.ml.models.entity_linker import build_span_maker, get_candidates
 from spacy.pipeline import EntityLinker
 from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
 from spacy.tests.util import make_tempdir
-from spacy.tokens import Span, Doc
+from spacy.tokens import Span, Doc, SpanGroup
 from spacy.training import Example
 from spacy.util import ensure_path
 from spacy.vocab import Vocab
@@ -168,7 +168,7 @@ def test_no_entities():
             {
                 "sent_starts": [1, 0, 0, 0, 0],
             },
-        )
+        ),
     ]
     nlp = English()
     vector_length = 3
@@ -489,11 +489,19 @@ def test_el_pipe_configuration(nlp):
     assert doc[1].ent_kb_id_ == ""
     assert doc[2].ent_kb_id_ == "Q2"
 
-    def get_lowercased_candidates(kb, span):
+    # Replace the pipe with a new one with with a different candidate generator.
+
+    def get_lowercased_candidates(kb: InMemoryLookupKB, span: Span):
         return kb.get_alias_candidates(span.text.lower())
 
-    def get_lowercased_candidates_batch(kb, spans):
-        return [get_lowercased_candidates(kb, span) for span in spans]
+    def get_lowercased_candidates_all(
+        kb: InMemoryLookupKB, mentions: Iterator[SpanGroup]
+    ):
+        for doc_mentions in mentions:
+            yield [
+                get_lowercased_candidates(kb, doc_mentions[idx])
+                for idx in range(len(doc_mentions))
+            ]
 
     @registry.misc("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[
@@ -501,29 +509,40 @@ def test_el_pipe_configuration(nlp):
     ]:
         return get_lowercased_candidates
 
-    @registry.misc("spacy.LowercaseCandidateBatchGenerator.v1")
+    @registry.misc("spacy.LowercaseCandidateAllGenerator.v1")
     def create_candidates_batch() -> Callable[
-        [InMemoryLookupKB, Iterable["Span"]], Iterable[Iterable[Candidate]]
+        [InMemoryLookupKB, Iterator[SpanGroup]],
+        Iterator[Iterable[Iterable[Candidate]]],
     ]:
-        return get_lowercased_candidates_batch
+        return get_lowercased_candidates_all
 
-    # replace the pipe with a new one with with a different candidate generator
-    entity_linker = nlp.replace_pipe(
-        "entity_linker",
-        "entity_linker",
-        config={
-            "incl_context": False,
-            "get_candidates": {"@misc": "spacy.LowercaseCandidateGenerator.v1"},
-            "get_candidates_batch": {
-                "@misc": "spacy.LowercaseCandidateBatchGenerator.v1"
+    def test_reconfigured_el(candidates_doc_mode: bool, doc_text: str) -> None:
+        """Test reconfigured EL for correct results.
+        candidates_doc_mode (bool): candidates_doc_mode in pipe config.
+        doc_text (str): Text to infer.
+        """
+        _entity_linker = nlp.replace_pipe(
+            "entity_linker",
+            "entity_linker",
+            config={
+                "incl_context": False,
+                "incl_prior": True,
+                "candidates_doc_mode": candidates_doc_mode,
+                "get_candidates": {"@misc": "spacy.LowercaseCandidateGenerator.v1"},
+                "get_candidates_all": {
+                    "@misc": "spacy.LowercaseCandidateAllGenerator.v1"
+                },
             },
-        },
-    )
-    entity_linker.set_kb(create_kb)
-    doc = nlp(text)
-    assert doc[0].ent_kb_id_ == "Q2"
-    assert doc[1].ent_kb_id_ == ""
-    assert doc[2].ent_kb_id_ == "Q2"
+        )
+        _entity_linker.set_kb(create_kb)
+        _doc = nlp(doc_text)
+        assert _doc[0].ent_kb_id_ == "Q2"
+        assert _doc[1].ent_kb_id_ == ""
+        assert _doc[2].ent_kb_id_ == "Q2"
+
+    # Test individual and doc-wise candidate generation.
+    test_reconfigured_el(False, text)
+    test_reconfigured_el(True, text)
 
 
 def test_nel_nsents(nlp):
@@ -1169,18 +1188,19 @@ def test_threshold(meet_threshold: bool, config: Dict[str, Any]):
         # create artificial KB
         mykb = InMemoryLookupKB(vocab, entity_vector_length=3)
         mykb.add_entity(entity=entity_id, freq=12, entity_vector=[6, -4, 3])
-        mykb.add_alias(
-            alias="Mahler",
-            entities=[entity_id],
-            probabilities=[1 if meet_threshold else 0.01],
-        )
+        mykb.add_alias(alias="Mahler", entities=[entity_id], probabilities=[1])
         return mykb
 
     # Create the Entity Linker component and add it to the pipeline
     entity_linker = nlp.add_pipe(
         "entity_linker",
         last=True,
-        config={"threshold": 0.99, "model": config},
+        config={
+            "threshold": None if meet_threshold else 1.0,
+            # Prior for candidate may be 1.0, rendering the our test setting with threshold 1.0 useless otherwise.
+            "incl_prior": meet_threshold,
+            "model": config,
+        },
     )
     entity_linker.set_kb(create_kb)  # type: ignore
     nlp.initialize(get_examples=lambda: train_examples)
@@ -1191,7 +1211,7 @@ def test_threshold(meet_threshold: bool, config: Dict[str, Any]):
     doc = nlp(text)
 
     assert len(doc.ents) == 1
-    assert doc.ents[0].kb_id_ == entity_id if meet_threshold else EntityLinker.NIL
+    assert doc.ents[0].kb_id_ == (entity_id if meet_threshold else EntityLinker.NIL)
 
 
 def test_span_maker_forward_with_empty():
@@ -1207,3 +1227,62 @@ def test_span_maker_forward_with_empty():
     # just to get a model
     span_maker = build_span_maker()
     span_maker([doc1, doc2], False)
+
+
+def test_nel_candidate_processing():
+    """Test that NEL handles candidate streams correctly in a set of documents with & without entities as well as empty
+    documents.
+    """
+    train_data = [
+        (
+            "The sky is blue.",
+            {
+                "sent_starts": [1, 0, 0, 0, 0],
+            },
+        ),
+        (
+            "They visited New York.",
+            {
+                "sent_starts": [1, 0, 0, 0, 0],
+                "entities": [(13, 21, "GPE")],
+            },
+        ),
+        ("", {}),
+        (
+            "New York is a city.",
+            {
+                "sent_starts": [1, 0, 0, 0, 0, 0],
+                "entities": [(0, 8, "GPE")],
+            },
+        ),
+    ]
+
+    nlp = English()
+    nlp.add_pipe("sentencizer")
+
+    vector_length = 3
+    train_examples = []
+    for text, annotation in train_data:
+        train_examples.append(Example.from_dict(nlp(text), annotation))
+
+    def create_kb(vocab):
+        # create artificial KB
+        mykb = InMemoryLookupKB(vocab, entity_vector_length=vector_length)
+        mykb.add_entity(entity="Q60", freq=12, entity_vector=[1, 2, 3])
+        mykb.add_alias("New York", ["Q60"], [0.9])
+        return mykb
+
+    # Create and train the Entity Linker
+    entity_linker = nlp.add_pipe("entity_linker", last=True)
+    entity_linker.set_kb(create_kb)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(2):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    # Add a custom rule-based component to mimick NER
+    ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
+    ruler.add_patterns([{"label": "GPE", "pattern": [{"LOWER": "new york"}]}])  # type: ignore
+
+    # this will run the pipeline on the examples and shouldn't crash
+    nlp.evaluate(train_examples)

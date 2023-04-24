@@ -957,11 +957,10 @@ class Errors(metaclass=ErrorsWithCodes):
              "case pass an empty list for the previously not specified argument to avoid this error.")
     E1043 = ("Expected None or a value in range [{range_start}, {range_end}] for entity linker threshold, but got "
              "{value}.")
-    E1044 = ("Expected `candidates_batch_size` to be >= 1, but got: {value}")
-    E1045 = ("Encountered {parent} subclass without `{parent}.{method}` "
+    E1044 = ("Encountered {parent} subclass without `{parent}.{method}` "
              "method in '{name}'. If you want to use this method, make "
              "sure it's overwritten on the subclass.")
-    E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
+    E1045 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
     E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
     E1048 = ("Got '{unexpected}' as console progress bar type, but expected one of the following: {expected}")

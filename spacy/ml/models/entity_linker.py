@@ -1,14 +1,14 @@
 from pathlib import Path
-from typing import Optional, Callable, Iterable, List, Tuple
+from typing import Optional, Callable, Iterable, List, Tuple, Iterator
 from thinc.types import Floats2d
 from thinc.api import chain, list2ragged, reduce_mean, residual
 from thinc.api import Model, Maxout, Linear, tuplify, Ragged
 
 from ...util import registry
 from ...kb import KnowledgeBase, InMemoryLookupKB
-from ...kb import Candidate, get_candidates, get_candidates_batch
+from ...kb import Candidate
 from ...vocab import Vocab
-from ...tokens import Span, Doc
+from ...tokens import Span, Doc, SpanGroup
 from ..extract_spans import extract_spans
 from ...errors import Errors
 
@@ -89,14 +89,6 @@ def load_kb(
     return kb_from_file
 
 
-@registry.misc("spacy.EmptyKB.v2")
-def empty_kb_for_config() -> Callable[[Vocab, int], KnowledgeBase]:
-    def empty_kb_factory(vocab: Vocab, entity_vector_length: int):
-        return InMemoryLookupKB(vocab=vocab, entity_vector_length=entity_vector_length)
-
-    return empty_kb_factory
-
-
 @registry.misc("spacy.EmptyKB.v1")
 def empty_kb(
     entity_vector_length: int,
@@ -107,13 +99,44 @@ def empty_kb(
     return empty_kb_factory
 
 
+@registry.misc("spacy.EmptyKB.v2")
+def empty_kb_for_config() -> Callable[[Vocab, int], KnowledgeBase]:
+    def empty_kb_factory(vocab: Vocab, entity_vector_length: int):
+        return InMemoryLookupKB(vocab=vocab, entity_vector_length=entity_vector_length)
+
+    return empty_kb_factory
+
+
+def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
+    """
+    Return candidate entities for a given mention and fetching appropriate entries from the index.
+    kb (KnowledgeBase): Knowledge base to query.
+    mention (Span): Entity mention for which to identify candidates.
+    RETURNS (Iterable[Candidate]): Identified candidates.
+    """
+    return kb.get_candidates(mention)
+
+
+def get_candidates_all(
+    kb: KnowledgeBase, mentions: Iterator[SpanGroup]
+) -> Iterator[Iterable[Iterable[Candidate]]]:
+    """
+    Return candidate entities for the given mentions and fetching appropriate entries from the index.
+    kb (KnowledgeBase): Knowledge base to query.
+    mentions (Iterator[SpanGroup]): Mentions per doc as SpanGroup instance.
+    RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
+    """
+    return kb.get_candidates_all(mentions)
+
+
 @registry.misc("spacy.CandidateGenerator.v1")
 def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
     return get_candidates
 
 
-@registry.misc("spacy.CandidateBatchGenerator.v1")
-def create_candidates_batch() -> Callable[
-    [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
+@registry.misc("spacy.CandidateAllGenerator.v1")
+def create_candidates_all() -> Callable[
+    [KnowledgeBase, Iterator[SpanGroup]],
+    Iterator[Iterable[Iterable[Candidate]]],
 ]:
-    return get_candidates_batch
+    return get_candidates_all

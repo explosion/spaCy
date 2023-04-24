@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True
-from typing import Iterable, Callable, Dict, Any, Union
+from typing import Iterable, Callable, Dict, Any, Union, Optional
 
 import srsly
 from preshed.maps cimport PreshMap
@@ -11,7 +11,7 @@ from libcpp.vector cimport vector
 from pathlib import Path
 import warnings
 
-from ..tokens import Span
+from ..tokens import Span, Doc
 from ..typedefs cimport hash_t
 from ..errors import Errors, Warnings
 from .. import util
@@ -48,6 +48,14 @@ cdef class InMemoryLookupKB(KnowledgeBase):
 
     def is_empty(self):
         return len(self) == 0
+
+    @classmethod
+    def generate_from_disk(
+        cls, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()
+    ) -> "InMemoryLookupKB":
+        kb = InMemoryLookupKB(vocab=Vocab(strings=["."]), entity_vector_length=1)
+        kb.from_disk(path)
+        return kb
 
     def __len__(self):
         return self.get_size_entities()
@@ -227,7 +235,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
             self._aliases_table[alias_index] = alias_entry
 
     def get_candidates(self, mention: Span) -> Iterable[Candidate]:
-        return self.get_alias_candidates(mention.text)  # type: ignore
+        return self.get_alias_candidates(mention.text)
 
     def get_alias_candidates(self, str alias) -> Iterable[Candidate]:
         """
@@ -241,14 +249,18 @@ cdef class InMemoryLookupKB(KnowledgeBase):
         alias_index = <int64_t>self._alias_index.get(alias_hash)
         alias_entry = self._aliases_table[alias_index]
 
-        return [Candidate(kb=self,
-                          entity_hash=self._entries[entry_index].entity_hash,
-                          entity_freq=self._entries[entry_index].freq,
-                          entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
-                          alias_hash=alias_hash,
-                          prior_prob=prior_prob)
-                for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)
-                if entry_index != 0]
+        return [
+            Candidate(
+                retrieve_string_from_hash=self.vocab.strings.__getitem__,
+                entity_hash=self._entries[entry_index].entity_hash,
+                entity_freq=self._entries[entry_index].freq,
+                entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
+                alias_hash=alias_hash,
+                prior_prob=prior_prob
+            )
+            for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)
+            if entry_index != 0
+        ]
 
     def get_vector(self, str entity):
         cdef hash_t entity_hash = self.vocab.strings[entity]

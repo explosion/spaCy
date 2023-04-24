@@ -19,6 +19,8 @@ import warnings
 
 from .span cimport Span
 from .token cimport MISSING_DEP
+from .span_group cimport SpanGroup
+
 from ._dict_proxies import SpanGroups
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
@@ -700,6 +702,14 @@ cdef class Doc:
         RETURNS (str): The original verbatim text of the document.
         """
         return self.text
+
+    @property
+    def ents_spangroup(self) -> SpanGroup:
+        """
+        Returns entities (in `.ents`) as `SpanGroup`.
+        RETURNS (SpanGroup): All entities (in `.ents`) as `SpanGroup`.
+        """
+        return SpanGroup(self, spans=self.ents, name="ents")
 
     property ents:
         """The named entities in the document. Returns a tuple of named entity
