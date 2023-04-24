@@ -228,7 +228,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
 
     def get_candidates(self, mentions: Iterator[SpanGroup]) -> Iterator[Iterable[Iterable[InMemoryCandidate]]]:
         for mentions_for_doc in mentions:
-            yield [self._get_alias_candidates(ent_span.text) for ent_span in mentions_for_doc]
+            yield [self._get_alias_candidates(span.text) for span in mentions_for_doc]
 
     def _get_alias_candidates(self, str alias) -> Iterable[InMemoryCandidate]:
         """
