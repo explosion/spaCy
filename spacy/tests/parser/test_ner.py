@@ -699,7 +699,7 @@ def test_beam_overfitting_IO(neg_key):
     # Try to unlearn the entity by using negative annotations
     neg_doc = nlp.make_doc(test_text)
     neg_ex = Example(neg_doc, neg_doc)
-    neg_ex.reference.spans[neg_key] = [Span(neg_doc, 2, 3, "LOC")]
+    neg_ex.reference.spans[neg_key] = [Span(neg_ex.reference, 2, 3, "LOC")]
     neg_train_examples = [neg_ex]
 
     for i in range(20):
@@ -728,9 +728,9 @@ def test_neg_annotation(neg_key):
     ner.add_label("ORG")
     example = Example.from_dict(neg_doc, {"entities": [(7, 17, "PERSON")]})
     example.reference.spans[neg_key] = [
-        Span(neg_doc, 2, 4, "ORG"),
-        Span(neg_doc, 2, 3, "PERSON"),
-        Span(neg_doc, 1, 4, "PERSON"),
+        Span(example.reference, 2, 4, "ORG"),
+        Span(example.reference, 2, 3, "PERSON"),
+        Span(example.reference, 1, 4, "PERSON"),
     ]
 
     optimizer = nlp.initialize()
@@ -755,7 +755,7 @@ def test_neg_annotation_conflict(neg_key):
     ner.add_label("PERSON")
     ner.add_label("LOC")
     example = Example.from_dict(neg_doc, {"entities": [(7, 17, "PERSON")]})
-    example.reference.spans[neg_key] = [Span(neg_doc, 2, 4, "PERSON")]
+    example.reference.spans[neg_key] = [Span(example.reference, 2, 4, "PERSON")]
     assert len(example.reference.ents) == 1
     assert example.reference.ents[0].text == "Shaka Khan"
     assert example.reference.ents[0].label_ == "PERSON"
@@ -788,7 +788,7 @@ def test_beam_valid_parse(neg_key):
 
     doc = Doc(nlp.vocab, words=tokens)
     example = Example.from_dict(doc, {"ner": iob})
-    neg_span = Span(doc, 50, 53, "ORG")
+    neg_span = Span(example.reference, 50, 53, "ORG")
     example.reference.spans[neg_key] = [neg_span]
 
     optimizer = nlp.initialize()
