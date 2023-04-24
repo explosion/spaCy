@@ -443,7 +443,9 @@ class EntityLinker(TrainablePipe):
             (
                 SpanGroup(
                     doc,
-                    spans=[ent for ent in doc.ents if ent.label_ not in self.labels_discard],
+                    spans=[
+                        ent for ent in doc.ents if ent.label_ not in self.labels_discard
+                    ],
                 )
                 for doc in docs
                 if len(doc) and len(doc.ents)
