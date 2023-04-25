@@ -1,6 +1,33 @@
 {
     "resources": [
         {
+            "id": "spacysee",
+            "title": "spaCysee",
+            "slogan": "Visualize spaCy's Dependency Parsing, POS tagging, and morphological analysis",
+            "description": "A project that helps you visualize your spaCy docs in Jupyter notebooks. Each of the dependency tags, POS tags and morphological features are clickable. Clicking on a tag will bring up the relevant documentation for that tag.",
+            "github": "moxley01/spacysee",
+            "pip": "spacysee",
+            "code_example": [
+                "import spacy",
+                "from spacysee import render",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "doc = nlp('This is a neat way to visualize your spaCy docs')",
+                "render(doc, width='500', height='500')"
+            ],
+            "code_language": "python",
+            "thumb": "https://www.mattoxley.com/static/images/spacysee_logo.svg",
+            "image": "https://www.mattoxley.com/static/images/spacysee_logo.svg",
+            "author": "Matt Oxley",
+            "author_links": {
+                "twitter": "matt0xley",
+                "github": "moxley01",
+                "website": "https://mattoxley.com"
+            },
+            "category": ["visualizers"],
+            "tags": ["visualization"]
+        },
+        {
             "id": "grecy",
             "title": "greCy",
             "slogan": "Ancient Greek pipelines for spaCy",
