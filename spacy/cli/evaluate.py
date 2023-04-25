@@ -27,7 +27,7 @@ def evaluate_cli(
     gold_preproc: bool = Opt(False, "--gold-preproc", "-G", help="Use gold preprocessing"),
     displacy_path: Optional[Path] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML", exists=True, file_okay=False),
     displacy_limit: int = Opt(25, "--displacy-limit", "-dl", help="Limit of parses to render as HTML"),
-    per_component: bool = Opt(False, "--per-component", "-P", help="Return scores per component, can only be saved to output JSON file"),
+    per_component: bool = Opt(False, "--per-component", "-P", help="Return scores per component, only applicable when an output JSON file is specified."),
     # fmt: on
 ):
     """
@@ -84,9 +84,12 @@ def evaluate(
     scores = nlp.evaluate(dev_dataset, per_component=per_component)
     if per_component:
         data = scores
-        msg.info("Per-component scores will be saved to output JSON file.")
         if output is None:
-            msg.warn("No output JSON file provided for per-component scores.")
+            msg.warn(
+                "The per-component option is enabled but there is no output JSON file provided to save the scores to."
+            )
+        else:
+            msg.info("Per-component scores will be saved to output JSON file.")
     else:
         metrics = {
             "TOK": "token_acc",
