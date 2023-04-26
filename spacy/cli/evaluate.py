@@ -123,7 +123,7 @@ def evaluate(
         render_deps = "parser" in factory_names
         render_ents = "ner" in factory_names
         render_spans = "spancat" in factory_names
-        
+
         render_parses(
             docs,
             displacy_path,
