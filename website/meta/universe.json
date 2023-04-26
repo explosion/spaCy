@@ -1,6 +1,22 @@
 {
     "resources": [
         {
+            "id": "spacy-wasm",
+            "title": "spacy-wasm",
+            "slogan": "spaCy in the browser using WebAssembly",
+            "description": "Run spaCy directly in the browser with WebAssembly. Using Pyodide, the application loads the spaCy model and renders the text prompt with displaCy.",
+            "url": "https://spacy-wasm.vercel.app/",
+            "github": "SyedAhkam/spacy-wasm",
+            "code_language": "python",
+            "author": "Syed Ahkam",
+            "author_links": {
+                "twitter": "@SyedAhkam1",
+                "github": "SyedAhkam"
+            },
+            "category": ["visualizers"],
+            "tags": ["visualization", "deployment"]
+        },
+        {
             "id": "spacysee",
             "title": "spaCysee",
             "slogan": "Visualize spaCy's Dependency Parsing, POS tagging, and morphological analysis",
