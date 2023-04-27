@@ -202,7 +202,9 @@ def test_issue12566(factory: str, output_file: str):
         doc = Doc(nlp.vocab).from_json(doc_json)
 
         # Run the evaluate command and check if the html files exist
-        render_parses(docs=[doc], output_path=tmp_dir, **{factory: True})
+        render_parses(
+            docs=[doc], output_path=tmp_dir, model_name="", limit=1, **{factory: True}
+        )
 
         assert (tmp_dir / output_file).is_file()
 
