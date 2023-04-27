@@ -200,7 +200,7 @@ def render_parses(
             file_.write(html)
 
     if spans:
-        html = displacy.render(docs[:limit], style="spans", page=True)
+        html = displacy.render(docs[:limit], style="span", page=True)
         with (output_path / "spans.html").open("w", encoding="utf8") as file_:
             file_.write(html)
 
