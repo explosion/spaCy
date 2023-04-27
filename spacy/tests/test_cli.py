@@ -12,6 +12,7 @@ import srsly
 from click import NoSuchOption
 from packaging.specifiers import SpecifierSet
 from thinc.api import Config, ConfigValidationError
+from spacy.tokens import DocBin
 
 from spacy import about
 from spacy.cli import info
@@ -27,6 +28,7 @@ from spacy.cli.debug_data import _get_span_characteristics
 from spacy.cli.debug_data import _print_span_characteristics
 from spacy.cli.debug_data import _get_spans_length_freq_dist
 from spacy.cli.download import get_compatibility, get_version
+from spacy.cli.evaluate import evaluate
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.init_pipeline import _init_labels
 from spacy.cli.package import get_third_party_dependencies
@@ -142,6 +144,81 @@ def test_issue11235():
         assert os.path.exists(d / "cfg")
         assert os.path.exists(d / f"{lang_var}_model")
     assert cfg["commands"][0]["script"][0] == f"hello {lang_var}"
+
+
+@pytest.mark.issue(12566)
+@pytest.mark.parametrize(
+    "displacy_type,output_file",
+    [("parser", "parsers.html"), ("ner", "entities.html"), ("spancat", "spans.html")],
+)
+def test_issue12566(displacy_type: str, output_file: str):
+    """
+    Test if all displaCy types (ents, dep, spans) produce an HTML file
+    """
+    with make_tempdir() as tmp_dir:
+        # Create sample spaCy file
+        doc_json = {
+            "ents": [
+                {"end": 54, "label": "nam_adj_country", "start": 44},
+                {"end": 83, "label": "nam_liv_person", "start": 69},
+                {"end": 100, "label": "nam_pro_title_book", "start": 86},
+            ],
+            "spans": {
+                "sc": [
+                    {"end": 54, "kb_id": "", "label": "nam_adj_country", "start": 44},
+                    {"end": 83, "kb_id": "", "label": "nam_liv_person", "start": 69},
+                    {
+                        "end": 100,
+                        "kb_id": "",
+                        "label": "nam_pro_title_book",
+                        "start": 86,
+                    },
+                ]
+            },
+            "text": "Niedawno czytał em nową książkę znakomitego szkockiego medioznawcy , "
+            "Briana McNaira - Cultural Chaos .",
+            "tokens": [
+                {"end": 8, "id": 0, "start": 0},
+                {"end": 15, "id": 1, "start": 9},
+                {"end": 18, "id": 2, "start": 16},
+                {"end": 23, "id": 3, "start": 19},
+                {"end": 31, "id": 4, "start": 24},
+                {"end": 43, "id": 5, "start": 32},
+                {"end": 54, "id": 6, "start": 44},
+                {"end": 66, "id": 7, "start": 55},
+                {"end": 68, "id": 8, "start": 67},
+                {"end": 75, "id": 9, "start": 69},
+                {"end": 83, "id": 10, "start": 76},
+                {"end": 85, "id": 11, "start": 84},
+                {"end": 94, "id": 12, "start": 86},
+                {"end": 100, "id": 13, "start": 95},
+                {"end": 102, "id": 14, "start": 101},
+            ],
+        }
+
+        # Create a .spacy file
+        test_data_path = tmp_dir / "test.spacy"
+        nlp = spacy.blank("pl")
+        doc = Doc(nlp.vocab).from_json(doc_json)
+        doc_bin = DocBin(docs=[doc])
+        doc_bin.to_disk(test_data_path)
+
+        # Add 'spancat' to en_core_web_sm so that it shows up in the
+        # factory_names
+        test_model_path = tmp_dir / "test-model"
+        nlp_sm = spacy.load("en_core_web_sm")
+        if displacy_type == "spancat":
+            nlp_sm.add_pipe("spancat")
+        nlp_sm.to_disk(test_model_path)
+
+        # Run the evaluate command and check if the html files exist
+        evaluate(
+            model=str(test_model_path),
+            data_path=tmp_dir / "test.spacy",
+            displacy_path=tmp_dir,
+        )
+
+        assert (tmp_dir / output_file).is_file()
 
 
 def test_cli_info():
