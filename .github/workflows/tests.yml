@@ -45,7 +45,7 @@ jobs:
     name: Test
     needs: Validate
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python_version: ["3.11"]
