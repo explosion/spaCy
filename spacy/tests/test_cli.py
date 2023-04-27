@@ -178,26 +178,27 @@ def test_issue12566(factory: str, output_file: str):
             "text": "Niedawno czytał em nową książkę znakomitego szkockiego medioznawcy , "
             "Briana McNaira - Cultural Chaos .",
             "tokens": [
-                {"end": 8, "id": 0, "start": 0},
-                {"end": 15, "id": 1, "start": 9},
-                {"end": 18, "id": 2, "start": 16},
-                {"end": 23, "id": 3, "start": 19},
-                {"end": 31, "id": 4, "start": 24},
-                {"end": 43, "id": 5, "start": 32},
-                {"end": 54, "id": 6, "start": 44},
-                {"end": 66, "id": 7, "start": 55},
-                {"end": 68, "id": 8, "start": 67},
-                {"end": 75, "id": 9, "start": 69},
-                {"end": 83, "id": 10, "start": 76},
-                {"end": 85, "id": 11, "start": 84},
-                {"end": 94, "id": 12, "start": 86},
-                {"end": 100, "id": 13, "start": 95},
-                {"end": 102, "id": 14, "start": 101},
+                # fmt: off
+                {"id": 0, "start": 0, "end": 8, "tag": "ADV", "pos": "ADV", "morph": "Degree=Pos", "lemma": "niedawno", "dep": "advmod", "head": 1, },
+                {"id": 1, "start": 9, "end": 15, "tag": "PRAET", "pos": "VERB", "morph": "Animacy=Hum|Aspect=Imp|Gender=Masc|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act", "lemma": "czytać", "dep": "ROOT", "head": 1, },
+                {"id": 2, "start": 16, "end": 18, "tag": "AGLT", "pos": "NOUN", "morph": "Animacy=Inan|Case=Ins|Gender=Masc|Number=Sing", "lemma": "em", "dep": "iobj", "head": 1, },
+                {"id": 3, "start": 19, "end": 23, "tag": "ADJ", "pos": "ADJ", "morph": "Case=Acc|Degree=Pos|Gender=Fem|Number=Sing", "lemma": "nowy", "dep": "amod", "head": 4, },
+                {"id": 4, "start": 24, "end": 31, "tag": "SUBST", "pos": "NOUN", "morph": "Case=Acc|Gender=Fem|Number=Sing", "lemma": "książka", "dep": "obj", "head": 1, },
+                {"id": 5, "start": 32, "end": 43, "tag": "ADJ", "pos": "ADJ", "morph": "Animacy=Nhum|Case=Gen|Degree=Pos|Gender=Masc|Number=Sing", "lemma": "znakomit", "dep": "acl", "head": 4, },
+                {"id": 6, "start": 44, "end": 54, "tag": "ADJ", "pos": "ADJ", "morph": "Animacy=Hum|Case=Gen|Degree=Pos|Gender=Masc|Number=Sing", "lemma": "szkockiy", "dep": "amod", "head": 7, },
+                {"id": 7, "start": 55, "end": 66, "tag": "SUBST", "pos": "NOUN", "morph": "Animacy=Hum|Case=Gen|Gender=Masc|Number=Sing", "lemma": "medioznawca", "dep": "iobj", "head": 5, },
+                {"id": 8, "start": 67, "end": 68, "tag": "INTERP", "pos": "PUNCT", "morph": "PunctType=Comm", "lemma": ",", "dep": "punct", "head": 9, },
+                {"id": 9, "start": 69, "end": 75, "tag": "SUBST", "pos": "PROPN", "morph": "Animacy=Hum|Case=Gen|Gender=Masc|Number=Sing", "lemma": "Brian", "dep": "nmod", "head": 4, },
+                {"id": 10, "start": 76, "end": 83, "tag": "SUBST", "pos": "PROPN", "morph": "Animacy=Hum|Case=Gen|Gender=Masc|Number=Sing", "lemma": "McNair", "dep": "flat", "head": 9, },
+                {"id": 11, "start": 84, "end": 85, "tag": "INTERP", "pos": "PUNCT", "morph": "PunctType=Dash", "lemma": "-", "dep": "punct", "head": 12, },
+                {"id": 12, "start": 86, "end": 94, "tag": "SUBST", "pos": "PROPN", "morph": "Animacy=Inan|Case=Nom|Gender=Masc|Number=Sing", "lemma": "Cultural", "dep": "conj", "head": 4, },
+                {"id": 13, "start": 95, "end": 100, "tag": "SUBST", "pos": "NOUN", "morph": "Animacy=Inan|Case=Nom|Gender=Masc|Number=Sing", "lemma": "Chaos", "dep": "flat", "head": 12, },
+                {"id": 14, "start": 101, "end": 102, "tag": "INTERP", "pos": "PUNCT", "morph": "PunctType=Peri", "lemma": ".", "dep": "punct", "head": 1, },
+                # fmt: on
             ],
         }
 
         # Create a .spacy file
-        test_data_path = tmp_dir / "test.spacy"
         nlp = spacy.blank("pl")
         doc = Doc(nlp.vocab).from_json(doc_json)
 
