@@ -28,7 +28,7 @@ from spacy.cli.debug_data import _get_span_characteristics
 from spacy.cli.debug_data import _print_span_characteristics
 from spacy.cli.debug_data import _get_spans_length_freq_dist
 from spacy.cli.download import get_compatibility, get_version
-from spacy.cli.evaluate import evaluate
+from spacy.cli.evaluate import render_parses
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.init_pipeline import _init_labels
 from spacy.cli.package import get_third_party_dependencies
@@ -148,10 +148,10 @@ def test_issue11235():
 
 @pytest.mark.issue(12566)
 @pytest.mark.parametrize(
-    "displacy_type,output_file",
-    [("parser", "parsers.html"), ("ner", "entities.html"), ("spancat", "spans.html")],
+    "factory,output_file",
+    [("deps", "parses.html"), ("ents", "entities.html"), ("spans", "spans.html")],
 )
-def test_issue12566(displacy_type: str, output_file: str):
+def test_issue12566(factory: str, output_file: str):
     """
     Test if all displaCy types (ents, dep, spans) produce an HTML file
     """
@@ -200,23 +200,9 @@ def test_issue12566(displacy_type: str, output_file: str):
         test_data_path = tmp_dir / "test.spacy"
         nlp = spacy.blank("pl")
         doc = Doc(nlp.vocab).from_json(doc_json)
-        doc_bin = DocBin(docs=[doc])
-        doc_bin.to_disk(test_data_path)
-
-        # Add 'spancat' to en_core_web_sm so that it shows up in the
-        # factory_names
-        test_model_path = tmp_dir / "test-model"
-        nlp_sm = spacy.load("en_core_web_sm")
-        if displacy_type == "spancat":
-            nlp_sm.add_pipe("spancat")
-        nlp_sm.to_disk(test_model_path)
 
         # Run the evaluate command and check if the html files exist
-        evaluate(
-            model=str(test_model_path),
-            data_path=tmp_dir / "test.spacy",
-            displacy_path=tmp_dir,
-        )
+        render_parses(docs=[doc], output_path=tmp_dir, **{factory: True})
 
         assert (tmp_dir / output_file).is_file()
 
