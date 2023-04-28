@@ -699,7 +699,7 @@ def test_beam_overfitting_IO(neg_key):
     # Try to unlearn the entity by using negative annotations
     neg_doc = nlp.make_doc(test_text)
     neg_ex = Example(neg_doc, neg_doc)
-    neg_ex.reference.spans[neg_key] = [Span(neg_ex.reference, 2, 3, "LOC")]
+    neg_ex.reference.spans[neg_key] = [Span(neg_doc, 2, 3, "LOC")]
     neg_train_examples = [neg_ex]
 
     for i in range(20):
