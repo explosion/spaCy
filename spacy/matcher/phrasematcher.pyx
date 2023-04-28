@@ -47,7 +47,7 @@ cdef class PhraseMatcher:
         self.mem = Pool()
         self.c_map = <MapStruct*>self.mem.alloc(1, sizeof(MapStruct))
         self._terminal_hash = 826361138722620965
-        map_init(self.mem, self.c_map, 8)
+        map_init(self.c_map, 8)
 
         if isinstance(attr, (int, long)):
             self.attr = attr
@@ -181,17 +181,17 @@ cdef class PhraseMatcher:
                 result = <MapStruct*>map_get(current_node, token)
                 if not result:
                     internal_node = <MapStruct*>self.mem.alloc(1, sizeof(MapStruct))
-                    map_init(self.mem, internal_node, 8)
-                    map_set(self.mem, current_node, token, internal_node)
+                    map_init(internal_node, 8)
+                    map_set(current_node, token, internal_node)
                     result = internal_node
                 current_node = <MapStruct*>result
             result = <MapStruct*>map_get(current_node, self._terminal_hash)
             if not result:
                 internal_node = <MapStruct*>self.mem.alloc(1, sizeof(MapStruct))
-                map_init(self.mem, internal_node, 8)
-                map_set(self.mem, current_node, self._terminal_hash, internal_node)
+                map_init(internal_node, 8)
+                map_set(current_node, self._terminal_hash, internal_node)
                 result = internal_node
-            map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
+            map_set(<MapStruct*>result, self.vocab.strings[key], NULL)
 
 
     def add(self, key, docs, *, on_match=None):
