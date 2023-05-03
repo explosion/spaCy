@@ -9,6 +9,7 @@ from spacy.pipeline.trainable_pipe import TrainablePipe
 from spacy.scorer import Scorer
 from spacy.tokens import Doc
 from spacy.training import Example
+from spacy.errors import Errors
 
 from ..util import registry
 from .spancat import DEFAULT_SPANS_KEY, Suggester
@@ -52,8 +53,8 @@ DEFAULT_PREDICTED_KEY = "span_candidates"
         "predicted_key": DEFAULT_PREDICTED_KEY,
         "training_key": DEFAULT_SPANS_KEY,
         # XXX Doesn't 0 seem bad compared to None instead?
-        "max_length": 0,
-        "min_length": 0,
+        "max_length": None,
+        "min_length": None,
         "scorer": {
             "@scorers": "spacy.span_finder_scorer.v1",
             "predicted_key": DEFAULT_PREDICTED_KEY,
@@ -72,8 +73,8 @@ def make_span_finder(
     model: Model[Iterable[Doc], Floats2d],
     scorer: Optional[Callable],
     threshold: float,
-    max_length: int,
-    min_length: int,
+    max_length: Optional[int],
+    min_length: Optional[int],
     predicted_key: str = DEFAULT_PREDICTED_KEY,
     training_key: str = DEFAULT_SPANS_KEY,
 ) -> "SpanFinder":
@@ -157,8 +158,8 @@ class SpanFinder(TrainablePipe):
         name: str = "span_finder",
         *,
         threshold: float = 0.5,
-        max_length: int = 0,
-        min_length: int = 0,
+        max_length: Optional[int] = None,
+        min_length: Optional[int] = None,
         # XXX I think this is weird and should be just None like in
         scorer: Optional[Callable] = partial(
             span_finder_score,
@@ -182,6 +183,14 @@ class SpanFinder(TrainablePipe):
         """
         self.vocab = nlp.vocab
         self.threshold = threshold
+        if max_length is None:
+            max_length = float("inf")
+        if min_length is None:
+            min_length = 1
+        if max_length < 1 or min_length < 1:
+            raise ValueError(
+                Errors.E1052.format(min_length=min_length, max_length=max_length)
+            )
         self.max_length = max_length
         self.min_length = min_length
         self.predicted_key = predicted_key
@@ -227,16 +236,10 @@ class SpanFinder(TrainablePipe):
             for start in starts:
                 for end in ends:
                     span_length = end + 1 - start
-                    # XXX I really feel like min_length and max_length should be
-                    # None instead of 0 and then just set them to -1 and inf if they
-                    # are given as None.
-                    if span_length > 0:
-                        if (
-                            self.min_length <= 0 or span_length >= self.min_length
-                        ) and (self.max_length <= 0 or span_length <= self.max_length):
-                            doc.spans[self.predicted_key].append(doc[start : end + 1])
-                        elif self.max_length > 0 and span_length > self.max_length:
-                            break
+                    if span_length > self.max_length:
+                        break
+                    elif self.min_length <= span_length:
+                        doc.spans[self.predicted_key].append(doc[start : end + 1])
 
     def update(
         self,
