@@ -229,7 +229,7 @@ class SpanFinder(TrainablePipe):
         offset = 0
         for i, doc in enumerate(docs):
             doc.spans[self.predicted_key] = []
-            doc_scores = scores[offset:offset + len(doc)]
+            doc_scores = scores[offset : offset + len(doc)]
             for j in range(len(doc)):
                 start_token_score = doc_scores[j]
                 # If token is a START then start scanning following tokens
@@ -238,11 +238,11 @@ class SpanFinder(TrainablePipe):
                         end_token_score = doc_scores[k]
                         # If token is an END check whether the lenght contraint is met
                         if end_token_score[1] >= self.threshold:
-                            span_length = (k + 1 - j)
+                            span_length = k + 1 - j
                             if span_length > self.max_length:
                                 break
                             elif self.min_length <= span_length:
-                                span = doc[j:k + 1]
+                                span = doc[j : k + 1]
                                 doc.spans[self.predicted_key].append(span)
 
     def update(
