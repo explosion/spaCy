@@ -231,7 +231,7 @@ class SpanFinder(TrainablePipe):
             doc.spans[self.predicted_key] = []
             starts = []
             ends = []
-            doc_scores = scores[offset:offset + len(doc)]
+            doc_scores = scores[offset : offset + len(doc)]
 
             for token, token_score in zip(doc, doc_scores):
                 if token_score[0] >= self.threshold:
