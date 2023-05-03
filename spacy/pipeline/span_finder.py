@@ -152,6 +152,15 @@ class _MaxInt(int):
     def __le__(self, other):
         return False
 
+    def __lt__(self, other):
+        return False
+
+    def __ge__(self, other):
+        return True
+
+    def __gt__(self, other):
+        return True
+
 
 class SpanFinder(TrainablePipe):
     """Pipeline that learns span boundaries"""
@@ -192,7 +201,6 @@ class SpanFinder(TrainablePipe):
             max_length = _MaxInt()
         if min_length is None:
             min_length = 1
-
         if max_length < 1 or min_length < 1:
             raise ValueError(
                 Errors.E1052.format(min_length=min_length, max_length=max_length)
