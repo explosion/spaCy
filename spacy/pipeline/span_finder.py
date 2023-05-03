@@ -226,20 +226,12 @@ class SpanFinder(TrainablePipe):
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by SpanFinder predict method.
         """
-        lengths = [len(doc) for doc in docs]
-
         offset = 0
-        scores_per_doc = []
-        # XXX Isn't this really inefficient that we are creating these
-        # slices ahead of time? Couldn't we just do this in the next loop?
-        for length in lengths:
-            scores_per_doc.append(scores[offset : offset + length])
-            offset += length
-
-        for doc, doc_scores in zip(docs, scores_per_doc):
+        for i, doc in enumerate(docs):
             doc.spans[self.predicted_key] = []
             starts = []
             ends = []
+            doc_scores = scores[offset:offset + len(doc)]
 
             for token, token_score in zip(doc, doc_scores):
                 if token_score[0] >= self.threshold:
