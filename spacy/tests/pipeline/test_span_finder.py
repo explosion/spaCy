@@ -107,7 +107,7 @@ def test_span_finder_component():
 
 @pytest.mark.parametrize(
     "min_length, max_length, span_count",
-    [(0, 0, 0), (None, None, 8), (2, None, 6), (None, 1, 2), (2, 3, 2)]
+    [(0, 0, 0), (None, None, 8), (2, None, 6), (None, 1, 2), (2, 3, 2)],
 )
 def test_set_annotations_span_lengths(min_length, max_length, span_count):
     nlp = Language()
