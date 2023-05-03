@@ -193,12 +193,12 @@ class SpanFinder(TrainablePipe):
         if min_length is None:
             min_length = 1
 
-        self.min_length = min_length
-        self.max_length = max_length
         if max_length < 1 or min_length < 1:
             raise ValueError(
                 Errors.E1052.format(min_length=min_length, max_length=max_length)
             )
+        self.min_length = min_length
+        self.max_length = max_length
         self.predicted_key = predicted_key
         self.training_key = training_key
         self.model = model
