@@ -1,6 +1,34 @@
 {
     "resources": [
         {
+            "id": "latincy",
+            "title": "LatinCy",
+            "thumb": "https://raw.githubusercontent.com/diyclassics/la_core_web_lg/main/latincy-logo.png",
+            "slogan": "Synthetic trained spaCy pipelines for Latin NLP",
+            "description": "Set of trained general purpose Latin-language 'core' pipelines for use with spaCy. The models are trained on a large amount of available Latin data, including all five of the Latin Universal Dependency treebanks, which have been preprocessed to be compatible with each other.",
+            "url": "https://huggingface.co/latincy",
+            "code_example": [
+                "import spacy",
+                "nlp = spacy.load('la_core_web_lg')",
+                "doc = nlp('Haec narranatur a poetis de Perseo')",
+                "",
+                "for token in doc:",
+                "    print(f'{token.text}, {token.norm_}, {token.lemma_}, {token.pos_}')",
+                "    break",
+                "",
+                "# > Haec, haec, hic, DET"
+            ],
+            "code_language": "python",
+            "author": "Patrick J. Burns",
+            "author_links": {
+                "twitter": "@diyclassics",
+                "github": "diyclassics",
+                "website": "https://diyclassics.github.io/"
+            },
+            "category": ["pipeline", "research"],
+            "tags": ["latin"]
+        },   
+        {
             "id": "spacy-wasm",
             "title": "spacy-wasm",
             "slogan": "spaCy in the browser using WebAssembly",
