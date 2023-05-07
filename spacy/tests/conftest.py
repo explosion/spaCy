@@ -290,6 +290,7 @@ def mk_tokenizer():
 def ml_tokenizer():
     return get_lang_class("ml")().tokenizer
 
+
 @pytest.fixture(scope="session")
 def ms_tokenizer():
     return get_lang_class("ms")().tokenizer
