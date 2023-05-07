@@ -61,7 +61,7 @@ def test_ms_tokenizer_splits_uneven_wrap_interact(id_tokenizer, text):
 
 
 @pytest.mark.parametrize(
-    "text,length", [("kerana", 1), ("Mahathir-Anwar", 3), ("Tun Dr. Ismail-Abdul Rahman", 4)]
+    "text,length", [("kerana", 1), ("Mahathir-Anwar", 3), ("Tun Dr. Ismail-Abdul Rahman", 6)]
 )
 def test_my_tokenizer_splits_hyphens(ms_tokenizer, text, length):
     tokens = ms_tokenizer(text)
