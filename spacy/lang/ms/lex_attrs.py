@@ -30,7 +30,7 @@ _num_words = [
     "septilion",
     "oktilion",
     "nonilion",
-    "desilion"
+    "desilion",
 ]
 
 

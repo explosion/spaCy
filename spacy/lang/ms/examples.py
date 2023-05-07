@@ -11,8 +11,7 @@ sentences = [
     "Berapa banyak pelajar yang akan menghadiri majlis perpisahan sekolah?",
     "Pengeluaran makanan berasal dari beberapa lokasi termasuk Cameron Highlands, Johor Bahru, dan Kuching.",
     "Syarikat XYZ telah menghasilkan 20,000 unit produk baharu dalam setahun terakhir",
-    "Kuala Lumpur merupakan ibu negara Malaysia."
-    "Kau berada di mana semalam?",
+    "Kuala Lumpur merupakan ibu negara Malaysia." "Kau berada di mana semalam?",
     "Siapa yang akan memimpin projek itu?",
     "Siapa perdana menteri Malaysia sekarang?",
 ]
