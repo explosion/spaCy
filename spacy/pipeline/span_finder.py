@@ -290,7 +290,6 @@ class SpanFinder(TrainablePipe):
     def _get_aligned_truth_scores(self, examples) -> List[Tuple[int, int]]:
         """Align scores of the predictions to the references for calculating the loss"""
         # TODO: handle misaligned (None) alignments
-        # TODO: handle cases with differing whitespace in texts
         reference_truths = []
 
         for eg in examples:
