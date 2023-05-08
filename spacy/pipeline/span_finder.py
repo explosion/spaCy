@@ -88,10 +88,8 @@ def make_span_finder(
         to
     training_key (str): Name of the span group the training spans are read
         from
-    max_length (int): Max length of the produced spans (no max limitation when
-        set to 0)
-    min_length (int): Min length of the produced spans (no min limitation when
-        set to 0)
+    max_length (Optional[int]): Max length of the produced spans, defaults to None meaning unlimited length.
+    min_length (Optional[int]): Min length of the produced spans, defaults to None meaining shortest span is length 1.
     """
     return SpanFinder(
         nlp,
@@ -192,8 +190,8 @@ class SpanFinder(TrainablePipe):
         scorer (Optional[Callable]): The scoring method.
         predicted_key (str): Name of the span group the candidate spans are saved to
         training_key (str): Name of the span group the training spans are read from
-        max_length (int): Max length of the produced spans (unlimited when set to 0)
-        min_length (int): Min length of the produced spans (unlimited when set to 0)
+        max_length (Optional[int]): Max length of the produced spans, defaults to None meaning unlimited length.
+        min_length (Optional[int]): Min length of the produced spans, defaults to None meaining shortest span is length 1.
         """
         self.vocab = nlp.vocab
         self.threshold = threshold
