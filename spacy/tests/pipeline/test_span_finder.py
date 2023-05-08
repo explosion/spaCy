@@ -63,7 +63,10 @@ def test_loss_alignment_example(tokens_predicted, tokens_reference, reference_tr
     example.reference.spans[TRAINING_KEY] = [example.reference.char_span(5, 9)]
     span_finder = nlp.add_pipe("span_finder", config={"training_key": TRAINING_KEY})
     nlp.initialize()
-
+    if predicted.text != reference.text:
+        with pytest.raises(ValueError, match="must match between reference and predicted"):
+            span_finder._get_aligned_truth_scores([example])
+        return
     truth_scores = span_finder._get_aligned_truth_scores([example])
     assert len(truth_scores) == len(tokens_predicted)
     assert truth_scores == reference_truths
