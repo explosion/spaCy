@@ -1,5 +1,4 @@
 import pytest
-from spacy.lang.sr.lex_attrs import like_num, norm, prefix, suffix
 
 
 @pytest.mark.parametrize(
