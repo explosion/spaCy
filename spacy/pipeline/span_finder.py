@@ -294,6 +294,8 @@ class SpanFinder(TrainablePipe):
         reference_truths = []
 
         for eg in examples:
+            if eg.x.text != eg.y.text:
+                raise ValueError(Errors.E1053.format(component="span_finder"))
             start_indices = set()
             end_indices = set()
 

@@ -972,6 +972,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1051 = ("'allow_overlap' can only be False when max_positive is 1, but found 'max_positive': {max_positive}.")
     E1052 = ("Both 'min_length' and 'max_length' should be larger than 1, but found"
              " 'min_length': {min_length}, 'max_length': {max_length}")
+    E1053 = ("Text, including whitespace, must match between reference and "
+             "predicted docs when training {component}.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
