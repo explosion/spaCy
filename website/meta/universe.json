@@ -8,6 +8,7 @@
             "description": "Set of trained general purpose Latin-language 'core' pipelines for use with spaCy. The models are trained on a large amount of available Latin data, including all five of the Latin Universal Dependency treebanks, which have been preprocessed to be compatible with each other.",
             "url": "https://huggingface.co/latincy",
             "code_example": [
+                "# pip install https://huggingface.co/latincy/la_core_web_lg/resolve/main/la_core_web_lg-any-py3-none-any.whl",
                 "import spacy",
                 "nlp = spacy.load('la_core_web_lg')",
                 "doc = nlp('Haec narranatur a poetis de Perseo')",
