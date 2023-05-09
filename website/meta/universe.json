@@ -13,9 +13,7 @@
                 "nlp = spacy.load('la_core_web_lg')",
                 "doc = nlp('Haec narranatur a poetis de Perseo')",
                 "",
-                "for token in doc:",
-                "    print(f'{token.text}, {token.norm_}, {token.lemma_}, {token.pos_}')",
-                "    break",
+                "print(f'{doc[0].text}, {doc[0].norm_}, {doc[0].lemma_}, {doc[0].pos_}')",
                 "",
                 "# > Haec, haec, hic, DET"
             ],
