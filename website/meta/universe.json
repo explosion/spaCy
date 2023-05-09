@@ -11,7 +11,7 @@
                 "# pip install https://huggingface.co/latincy/la_core_web_lg/resolve/main/la_core_web_lg-any-py3-none-any.whl",
                 "import spacy",
                 "nlp = spacy.load('la_core_web_lg')",
-                "doc = nlp('Haec narranatur a poetis de Perseo')",
+                "doc = nlp('Haec narrantur a poetis de Perseo')",
                 "",
                 "print(f'{doc[0].text}, {doc[0].norm_}, {doc[0].lemma_}, {doc[0].pos_}')",
                 "",
