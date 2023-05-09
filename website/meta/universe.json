@@ -4,7 +4,7 @@
             "id": "parsigs",
             "title": "parsigs",
             "slogan": "Structuring prescriptions text made simple using spaCy",
-            "description": "Parsigs is an open-source project that aims to extract the relevant dosage information from prescriptions text without compromising the patient׳s privacy.",
+            "description": "Parsigs is an open-source project that aims to extract the relevant dosage information from prescriptions text without compromising the patient's privacy.",
             "github": "royashcenazi/parsigs",
             "pip": "parsigs",
             "code_language": "python",
