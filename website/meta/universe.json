@@ -2824,6 +2824,8 @@
                 "",
                 "from adept_augmentations import EntitySwapAugmenter",
                 "",
+                "nlp = spacy.load(\"en_core_web_sm\")",
+                "",
                 "TRAIN_DATA = [",
                 "    \"Apple is looking at buying U.K. startup for $1 billion\",",
                 "    \"Microsoft acquires GitHub for $7.5 billion\"",
