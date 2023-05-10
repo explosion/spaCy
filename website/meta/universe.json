@@ -10,6 +10,7 @@
             "code_language": "python",
             "author": "Roy Ashcenazi",
             "code_example": [
+                "# You'll need to install the trained model, see instructions in the description section",
                 "from parsigs.parse_sig_api import StructuredSig, SigParser",
                 "sig_parser = SigParser()",
                 "",
