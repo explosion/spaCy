@@ -2817,7 +2817,7 @@
             "description": "EntitySwapAugmenter takes either a `datasets.Dataset` or a `spacy.tokens.DocBin`. Additionally, it is optional to provide a set of labels. It initially creates a knowledge base of entities belonging to a certain label. When running `augmenter.augment()` for N runs, it then creates N new sentences with random swaps of the original entities with an entity of the same corresponding label from the knowledge base.\n\nFor example, assuming that we have knowledge base for `PERSONS`, `LOCATIONS` and `PRODUCTS`. We can then create additional data for the sentence \"Momofuko Ando created instant noodles in Osaka.\" using `augmenter.augment(N=2)`, resulting in \"David created instant noodles in Madrid.\" or \"Tom created Adept Augmentations in the Netherlands\".",
             "github": "davidberenstein1957/adept-augmentations",
             "pip": "adept-augmentations",
-            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/crosslingual-coreference/master/img/logo.png",
+            "thumb": "https://raw.githubusercontent.com/davidberenstein1957/adept-augmentations/master/logo.png",
             "code_example": [
                 "import spacy",
                 "from spacy.tokens import DocBin",
