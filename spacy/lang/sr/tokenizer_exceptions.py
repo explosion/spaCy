@@ -1,3 +1,4 @@
+from .lex_attrs import _cyr_to_latin_norm
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH, NORM
 from ...util import update_exc
@@ -89,5 +90,7 @@ _slang_exc = [
 for slang_desc in _slang_exc:
     _exc[slang_desc[ORTH]] = [slang_desc]
 
+for _exc_key in _exc:
+    _exc[_exc_key][0][NORM] = _cyr_to_latin_norm(_exc[_exc_key][0][NORM])
 
 TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)
