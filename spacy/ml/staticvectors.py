@@ -23,6 +23,8 @@ def StaticVectors(
     linear projection to control the dimensionality. If a dropout rate is
     specified, the dropout is applied per dimension over the whole batch.
     """
+    if key_attr != "ORTH":
+        warnings.warn(Warnings.W125, DeprecationWarning)
     return Model(
         "static_vectors",
         forward,
@@ -39,9 +41,9 @@ def forward(
     token_count = sum(len(doc) for doc in docs)
     if not token_count:
         return _handle_empty(model.ops, model.get_dim("nO"))
-    key_attr: int = model.attrs["key_attr"]
-    keys = model.ops.flatten([cast(Ints1d, doc.to_array(key_attr)) for doc in docs])
     vocab: Vocab = docs[0].vocab
+    key_attr: int = vocab.vectors.attr
+    keys = model.ops.flatten([cast(Ints1d, doc.to_array(key_attr)) for doc in docs])
     W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
     if vocab.vectors.mode == Mode.default:
         V = model.ops.asarray(vocab.vectors.data)

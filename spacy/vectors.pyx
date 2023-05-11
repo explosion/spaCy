@@ -14,8 +14,10 @@ from thinc.api import Ops, get_array_module, get_current_ops
 from thinc.backends import get_array_ops
 from thinc.types import Floats2d
 
+from .attrs cimport attr_id_t, ORTH
 from .strings cimport StringStore
 
+from .attrs import IDS
 from .strings import get_string_id
 from .errors import Errors, Warnings
 from . import util
@@ -63,8 +65,9 @@ cdef class Vectors:
     cdef readonly uint32_t hash_seed
     cdef readonly unicode bow
     cdef readonly unicode eow
+    cdef readonly attr_id_t attr
 
-    def __init__(self, *, strings=None, shape=None, data=None, keys=None, name=None, mode=Mode.default, minn=0, maxn=0, hash_count=1, hash_seed=0, bow="<", eow=">"):
+    def __init__(self, *, strings=None, shape=None, data=None, keys=None, name=None, mode=Mode.default, minn=0, maxn=0, hash_count=1, hash_seed=0, bow="<", eow=">", attr="ORTH"):
         """Create a new vector store.
 
         strings (StringStore): The string store.
@@ -79,6 +82,8 @@ cdef class Vectors:
         hash_seed (int): The floret hash seed (default: 0).
         bow (str): The floret BOW string (default: "<").
         eow (str): The floret EOW string (default: ">").
+        attr (Union[int, str]): The Token attribute for the vector keys
+            (default: "ORTH").
 
         DOCS: https://spacy.io/api/vectors#init
         """
@@ -102,6 +107,14 @@ cdef class Vectors:
         self.hash_seed = hash_seed
         self.bow = bow
         self.eow = eow
+        if isinstance(attr, (int, long)):
+            self.attr = attr
+        else:
+            attr = attr.upper()
+            if attr == "TEXT":
+                attr = "ORTH"
+            self.attr = IDS.get(attr, ORTH)
+
         if self.mode == Mode.default:
             if data is None:
                 if shape is None:
@@ -545,6 +558,7 @@ cdef class Vectors:
                 "hash_seed": self.hash_seed,
                 "bow": self.bow,
                 "eow": self.eow,
+                "attr": self.attr,
             }
 
     def _set_cfg(self, cfg):
@@ -555,6 +569,7 @@ cdef class Vectors:
         self.hash_seed = cfg.get("hash_seed", 0)
         self.bow = cfg.get("bow", "<")
         self.eow = cfg.get("eow", ">")
+        self.attr = cfg.get("attr", ORTH)
 
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.

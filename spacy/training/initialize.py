@@ -206,9 +206,14 @@ def convert_vectors(
     prune: int,
     name: Optional[str] = None,
     mode: str = VectorsMode.default,
+    attr: str = "ORTH",
 ) -> None:
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
+        if attr != "ORTH":
+            raise ValueError(
+                "ORTH is the only attribute supported for vectors in .npz format."
+            )
         nlp.vocab.vectors = Vectors(
             strings=nlp.vocab.strings, data=numpy.load(vectors_loc.open("rb"))
         )
@@ -236,11 +241,15 @@ def convert_vectors(
                 nlp.vocab.vectors = Vectors(
                     strings=nlp.vocab.strings,
                     data=vectors_data,
+                    attr=attr,
                     **floret_settings,
                 )
             else:
                 nlp.vocab.vectors = Vectors(
-                    strings=nlp.vocab.strings, data=vectors_data, keys=vector_keys
+                    strings=nlp.vocab.strings,
+                    data=vectors_data,
+                    keys=vector_keys,
+                    attr=attr,
                 )
                 nlp.vocab.deduplicate_vectors()
     if name is None:
