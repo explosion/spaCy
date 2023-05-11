@@ -1530,10 +1530,14 @@ def set_dot_to_object(config: Config, section: str, value: Any) -> None:
 def walk_dict(
     node: Dict[str, Any], parent: List[str] = []
 ) -> Iterator[Tuple[List[str], Any]]:
-    """Walk a dict and yield the path and values of the leaves."""
+    """Walk a dict and yield the path and values of the leaves, treating
+    registered functions that start with @ as final values rather than dicts to
+    traverse."""
     for key, value in node.items():
         key_parent = [*parent, key]
-        if isinstance(value, dict):
+        if isinstance(value, dict) and not any(
+            value_key.startswith("@") for value_key in value
+        ):
             yield from walk_dict(value, key_parent)
         else:
             yield (key_parent, value)

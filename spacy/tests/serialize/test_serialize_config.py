@@ -415,6 +415,27 @@ def test_config_overrides():
     assert nlp.pipe_names == ["tok2vec", "tagger"]
 
 
+def test_config_overrides_registered_functions():
+    nlp = spacy.blank("en")
+    nlp.add_pipe("attribute_ruler")
+    with make_tempdir() as d:
+        nlp.to_disk(d)
+        nlp = spacy.load(
+            d,
+            config={
+                "components": {
+                    "attribute_ruler": {
+                        "scorer": {"@scorers": "spacy.tagger_scorer.v1"}
+                    }
+                }
+            },
+        )
+        assert (
+            nlp.config["components"]["attribute_ruler"]["scorer"]["@scorers"]
+            == "spacy.tagger_scorer.v1"
+        )
+
+
 def test_config_interpolation():
     config = Config().from_str(nlp_config_string, interpolate=False)
     assert config["corpora"]["train"]["path"] == "${paths.train}"
