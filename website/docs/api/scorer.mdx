@@ -33,7 +33,7 @@ Create a new `Scorer`.
 | `default_lang`     | The language to use for a default pipeline if `nlp` is not provided. Defaults to `xx`. ~~str~~                                                                                                                                            |
 | `default_pipeline` | The pipeline components to use for a default pipeline if `nlp` is not provided. Defaults to `("senter", "tagger", "morphologizer", "parser", "ner", "textcat")`. ~~Iterable[string]~~                                                     |
 | _keyword-only_     |                                                                                                                                                                                                                                           |
-| `\*\*kwargs`       | Any additional settings to pass on to the individual scoring methods. ~~Any~~                                                                                                                                                             |
+| `**kwargs`         | Any additional settings to pass on to the individual scoring methods. ~~Any~~                                                                                                                                                             |
 
 ## Scorer.score {id="score",tag="method"}
 
@@ -67,10 +67,12 @@ core pipeline components, the individual score names start with the `Token` or
 > scores = scorer.score(examples)
 > ```
 
-| Name        | Description                                                                                                         |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| `examples`  | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
-| **RETURNS** | A dictionary of scores. ~~Dict[str, Union[float, Dict[str, float]]]~~                                               |
+| Name                                         | Description                                                                                                         |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `examples`                                   | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
+| _keyword-only_                               |                                                                                                                     |
+| `per_component` <Tag variant="new">3.6</Tag> | Whether to return the scores keyed by component name. Defaults to `False`. ~~bool~~                                 |
+| **RETURNS**                                  | A dictionary of scores. ~~Dict[str, Union[float, Dict[str, float]]]~~                                               |
 
 ## Scorer.score_tokenization {id="score_tokenization",tag="staticmethod",version="3"}
 
