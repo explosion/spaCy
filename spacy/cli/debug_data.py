@@ -336,7 +336,7 @@ def debug_data(
                 show=verbose,
             )
         else:
-            msg.good("Examples without ocurrences available for all labels")
+            msg.good("Examples without occurrences available for all labels")
 
     if "ner" in factory_names:
         # Get all unique NER labels present in the data

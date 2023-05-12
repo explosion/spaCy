@@ -58,10 +58,14 @@ cdef class MorphAnalysis:
     def __ne__(self, other):
         return self.key != other.key
 
-    def get(self, field):
+    def get(self, field, default=None):
         """Retrieve feature values by field."""
         cdef attr_t field_id = self.vocab.strings.as_int(field)
         cdef np.ndarray results = get_by_field(&self.c, field_id)
+        if len(results) == 0:
+            if default is None:
+                default = []
+            return default
         features = [self.vocab.strings[result] for result in results]
         return [f.split(Morphology.FIELD_SEP)[1] for f in features]
 

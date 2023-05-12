@@ -122,6 +122,8 @@ def evaluate(
         docs = list(nlp.pipe(ex.reference.text for ex in dev_dataset[:displacy_limit]))
         render_deps = "parser" in factory_names
         render_ents = "ner" in factory_names
+        render_spans = "spancat" in factory_names
+
         render_parses(
             docs,
             displacy_path,
@@ -129,6 +131,7 @@ def evaluate(
             limit=displacy_limit,
             deps=render_deps,
             ents=render_ents,
+            spans=render_spans,
         )
         msg.good(f"Generated {displacy_limit} parses as HTML", displacy_path)
 
@@ -182,6 +185,7 @@ def render_parses(
     limit: int = 250,
     deps: bool = True,
     ents: bool = True,
+    spans: bool = True,
 ):
     docs[0].user_data["title"] = model_name
     if ents:
@@ -193,6 +197,11 @@ def render_parses(
             docs[:limit], style="dep", page=True, options={"compact": True}
         )
         with (output_path / "parses.html").open("w", encoding="utf8") as file_:
+            file_.write(html)
+
+    if spans:
+        html = displacy.render(docs[:limit], style="span", page=True)
+        with (output_path / "spans.html").open("w", encoding="utf8") as file_:
             file_.write(html)
 
 
