@@ -1640,7 +1640,7 @@ with [`spacy package`](/api/cli#package) and `--build wheel`. For more details,
 see the spaCy project [integration](/usage/projects#huggingface_hub).
 
 ```bash
-$ python -m spacy huggingface-hub push [whl_path] [--org] [--msg] [--local-repo] [--verbose]
+$ python -m spacy huggingface-hub push [whl_path] [--org] [--msg] [--verbose]
 ```
 
 > #### Example
@@ -1654,6 +1654,5 @@ $ python -m spacy huggingface-hub push [whl_path] [--org] [--msg] [--local-repo]
 | `whl_path`           | The path to the `.whl` file packaged with [`spacy package`](https://spacy.io/api/cli#package). ~~Path(positional)~~                             |
 | `--org`, `-o`        | Optional name of organization to which the pipeline should be uploaded. ~~str (option)~~                                                        |
 | `--msg`, `-m`        | Commit message to use for update. Defaults to `"Update spaCy pipeline"`. ~~str (option)~~                                                       |
-| `--local-repo`, `-l` | Local path to the model repository (will be created if it doesn't exist). Defaults to `hub` in the current working directory. ~~Path (option)~~ |
 | `--verbose`, `-V`    | Output additional info for debugging, e.g. the full generated hub metadata. ~~bool (flag)~~                                                     |
 | **UPLOADS**          | The pipeline to the hub.                                                                                                                        |
