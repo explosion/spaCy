@@ -1,6 +1,56 @@
 {
     "resources": [
         {
+            "id": "parsigs",
+            "title": "parsigs",
+            "slogan": "Structuring prescriptions text made simple using spaCy",
+            "description": "Parsigs is an open-source project that aims to extract the relevant dosage information from prescriptions text without compromising the patient's privacy.\n\nNotice you also need to install the model in order to use the package: `pip install https://huggingface.co/royashcenazi/en_parsigs/resolve/main/en_parsigs-any-py3-none-any.whl`",
+            "github": "royashcenazi/parsigs",
+            "pip": "parsigs",
+            "code_language": "python",
+            "author": "Roy Ashcenazi",
+            "code_example": [
+                "# You'll need to install the trained model, see instructions in the description section",
+                "from parsigs.parse_sig_api import StructuredSig, SigParser",
+                "sig_parser = SigParser()",
+                "",
+                "sig = 'Take 1 tablet of ibuprofen 200mg 3 times every day for 3 weeks'",
+                "parsed_sig = sig_parser.parse(sig)"
+            ],
+            "author_links": {
+                "github": "royashcenazi"
+            },
+            "category": ["model", "research", "biomedical"],
+            "tags": ["sigs", "prescription","pharma"]
+        },
+        {
+            "id": "latincy",
+            "title": "LatinCy",
+            "thumb": "https://raw.githubusercontent.com/diyclassics/la_core_web_lg/main/latincy-logo.png",
+            "slogan": "Synthetic trained spaCy pipelines for Latin NLP",
+            "description": "Set of trained general purpose Latin-language 'core' pipelines for use with spaCy. The models are trained on a large amount of available Latin data, including all five of the Latin Universal Dependency treebanks, which have been preprocessed to be compatible with each other.",
+            "url": "https://huggingface.co/latincy",
+            "code_example": [
+                "# pip install https://huggingface.co/latincy/la_core_web_lg/resolve/main/la_core_web_lg-any-py3-none-any.whl",
+                "import spacy",
+                "nlp = spacy.load('la_core_web_lg')",
+                "doc = nlp('Haec narrantur a poetis de Perseo')",
+                "",
+                "print(f'{doc[0].text}, {doc[0].norm_}, {doc[0].lemma_}, {doc[0].pos_}')",
+                "",
+                "# > Haec, haec, hic, DET"
+            ],
+            "code_language": "python",
+            "author": "Patrick J. Burns",
+            "author_links": {
+                "twitter": "@diyclassics",
+                "github": "diyclassics",
+                "website": "https://diyclassics.github.io/"
+            },
+            "category": ["pipeline", "research"],
+            "tags": ["latin"]
+        },
+        {
             "id": "spacy-wasm",
             "title": "spacy-wasm",
             "slogan": "spaCy in the browser using WebAssembly",
@@ -2808,6 +2858,56 @@
             },
             "category": ["pipeline", "standalone"],
             "tags": ["coreference", "multi-lingual", "cross-lingual", "allennlp"],
+            "spacy_version": 3
+        },
+        {
+            "id": "adeptaugmentations",
+            "title": "Adept Augmentations",
+            "slogan": " A Python library aimed at dissecting and augmenting NER training data for a few-shot scenario.",
+            "description": "EntitySwapAugmenter takes either a `datasets.Dataset` or a `spacy.tokens.DocBin`. Additionally, it is optional to provide a set of labels. It initially creates a knowledge base of entities belonging to a certain label. When running `augmenter.augment()` for N runs, it then creates N new sentences with random swaps of the original entities with an entity of the same corresponding label from the knowledge base.\n\nFor example, assuming that we have knowledge base for `PERSONS`, `LOCATIONS` and `PRODUCTS`. We can then create additional data for the sentence \"Momofuko Ando created instant noodles in Osaka.\" using `augmenter.augment(N=2)`, resulting in \"David created instant noodles in Madrid.\" or \"Tom created Adept Augmentations in the Netherlands\".",
+            "github": "davidberenstein1957/adept-augmentations",
+            "pip": "adept-augmentations",
+            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/crosslingual-coreference/master/img/logo.png",
+            "code_example": [
+                "import spacy",
+                "from spacy.tokens import DocBin",
+                "",
+                "from adept_augmentations import EntitySwapAugmenter",
+                "",
+                "nlp = spacy.load(\"en_core_web_sm\")",
+                "",
+                "TRAIN_DATA = [",
+                "    \"Apple is looking at buying U.K. startup for $1 billion\",",
+                "    \"Microsoft acquires GitHub for $7.5 billion\"",
+                "]",
+                "docs = nlp.pipe(TRAIN_DATA)",
+                "",
+                "# Create a new DocBin",
+                "doc_bin = DocBin(docs=docs)",
+                "",
+                "# Augment Data",
+                "doc_bin = EntitySwapAugmenter(doc_bin).augment(4)",
+                "for doc in doc_bin.get_docs(nlp.vocab):",
+                "    print(doc.text)",
+                "",
+                "# Output",
+                "#",
+                "# GitHub is looking at buying U.K. startup for $ 7.5 billion",
+                "# Microsoft is looking at buying U.K. startup for $ 1 billion",
+                "# Microsoft is looking at buying U.K. startup for $ 7.5 billion",
+                "# GitHub is looking at buying U.K. startup for $ 1 billion",
+                "# Microsoft acquires Apple for $ 7.5 billion",
+                "# Apple acquires Microsoft for $ 1 billion",
+                "# Microsoft acquires Microsoft for $ 7.5 billion",
+                "# GitHub acquires GitHub for $ 1 billion"
+            ],
+            "author": "David Berenstein",
+            "author_links": {
+                "github": "davidberenstein1957",
+                "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
+            },
+            "category": ["standalone"],
+            "tags": ["ner", "few-shot", "augmentation", "datasets", "training"],
             "spacy_version": 3
         },
         {
