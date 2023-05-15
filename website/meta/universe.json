@@ -1,8 +1,8 @@
 {
     "resources": [
         {
-            "id": "spacy-extension",
-            "title": "spaCy VS Code Extension",
+            "id": "spacy-vscode",
+            "title": "spaCy Visual Studio Code Extension",
             "thumb": "https://raw.githubusercontent.com/explosion/spacy-vscode/main/icon.png",
             "slogan": "Work with spaCy's config files in VS Code",
             "description": "The spaCy VS Code Extension provides additional tooling and features for working with spaCy's config files. Version 1.0.0 includes hover descriptions for registry functions, variables, and section names within the config as an installable extension.",
