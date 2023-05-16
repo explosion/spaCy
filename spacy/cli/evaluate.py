@@ -27,6 +27,7 @@ def evaluate_cli(
     gold_preproc: bool = Opt(False, "--gold-preproc", "-G", help="Use gold preprocessing"),
     displacy_path: Optional[Path] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML", exists=True, file_okay=False),
     displacy_limit: int = Opt(25, "--displacy-limit", "-dl", help="Limit of parses to render as HTML"),
+    per_component: bool = Opt(False, "--per-component", "-P", help="Return scores per component, only applicable when an output JSON file is specified."),
     # fmt: on
 ):
     """
@@ -50,6 +51,7 @@ def evaluate_cli(
         gold_preproc=gold_preproc,
         displacy_path=displacy_path,
         displacy_limit=displacy_limit,
+        per_component=per_component,
         silent=False,
     )
 
@@ -64,6 +66,7 @@ def evaluate(
     displacy_limit: int = 25,
     silent: bool = True,
     spans_key: str = "sc",
+    per_component: bool = False,
 ) -> Dict[str, Any]:
     msg = Printer(no_print=silent, pretty=not silent)
     fix_random_seed()
@@ -78,44 +81,53 @@ def evaluate(
     corpus = Corpus(data_path, gold_preproc=gold_preproc)
     nlp = util.load_model(model)
     dev_dataset = list(corpus(nlp))
-    scores = nlp.evaluate(dev_dataset)
-    metrics = {
-        "TOK": "token_acc",
-        "TAG": "tag_acc",
-        "POS": "pos_acc",
-        "MORPH": "morph_acc",
-        "LEMMA": "lemma_acc",
-        "UAS": "dep_uas",
-        "LAS": "dep_las",
-        "NER P": "ents_p",
-        "NER R": "ents_r",
-        "NER F": "ents_f",
-        "TEXTCAT": "cats_score",
-        "SENT P": "sents_p",
-        "SENT R": "sents_r",
-        "SENT F": "sents_f",
-        "SPAN P": f"spans_{spans_key}_p",
-        "SPAN R": f"spans_{spans_key}_r",
-        "SPAN F": f"spans_{spans_key}_f",
-        "SPEED": "speed",
-    }
-    results = {}
-    data = {}
-    for metric, key in metrics.items():
-        if key in scores:
-            if key == "cats_score":
-                metric = metric + " (" + scores.get("cats_score_desc", "unk") + ")"
-            if isinstance(scores[key], (int, float)):
-                if key == "speed":
-                    results[metric] = f"{scores[key]:.0f}"
+    scores = nlp.evaluate(dev_dataset, per_component=per_component)
+    if per_component:
+        data = scores
+        if output is None:
+            msg.warn(
+                "The per-component option is enabled but there is no output JSON file provided to save the scores to."
+            )
+        else:
+            msg.info("Per-component scores will be saved to output JSON file.")
+    else:
+        metrics = {
+            "TOK": "token_acc",
+            "TAG": "tag_acc",
+            "POS": "pos_acc",
+            "MORPH": "morph_acc",
+            "LEMMA": "lemma_acc",
+            "UAS": "dep_uas",
+            "LAS": "dep_las",
+            "NER P": "ents_p",
+            "NER R": "ents_r",
+            "NER F": "ents_f",
+            "TEXTCAT": "cats_score",
+            "SENT P": "sents_p",
+            "SENT R": "sents_r",
+            "SENT F": "sents_f",
+            "SPAN P": f"spans_{spans_key}_p",
+            "SPAN R": f"spans_{spans_key}_r",
+            "SPAN F": f"spans_{spans_key}_f",
+            "SPEED": "speed",
+        }
+        results = {}
+        data = {}
+        for metric, key in metrics.items():
+            if key in scores:
+                if key == "cats_score":
+                    metric = metric + " (" + scores.get("cats_score_desc", "unk") + ")"
+                if isinstance(scores[key], (int, float)):
+                    if key == "speed":
+                        results[metric] = f"{scores[key]:.0f}"
+                    else:
+                        results[metric] = f"{scores[key]*100:.2f}"
                 else:
-                    results[metric] = f"{scores[key]*100:.2f}"
-            else:
-                results[metric] = "-"
-            data[re.sub(r"[\s/]", "_", key.lower())] = scores[key]
+                    results[metric] = "-"
+                data[re.sub(r"[\s/]", "_", key.lower())] = scores[key]
 
-    msg.table(results, title="Results")
-    data = handle_scores_per_type(scores, data, spans_key=spans_key, silent=silent)
+        msg.table(results, title="Results")
+        data = handle_scores_per_type(scores, data, spans_key=spans_key, silent=silent)
 
     if displacy_path:
         factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
