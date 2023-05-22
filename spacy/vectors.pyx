@@ -82,7 +82,7 @@ cdef class Vectors:
         hash_seed (int): The floret hash seed (default: 0).
         bow (str): The floret BOW string (default: "<").
         eow (str): The floret EOW string (default: ">").
-        attr (Union[int, str]): The Token attribute for the vector keys
+        attr (Union[int, str]): The token attribute for the vector keys
             (default: "ORTH").
 
         DOCS: https://spacy.io/api/vectors#init

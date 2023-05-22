@@ -303,7 +303,7 @@ mapped to a zero vector. See the documentation on
 | `nM`        | The width of the static vectors. ~~Optional[int]~~                                                                                                                                                                      |
 | `dropout`   | Optional dropout rate. If set, it's applied per dimension over the whole batch. Defaults to `None`. ~~Optional[float]~~                                                                                                 |
 | `init_W`    | The [initialization function](https://thinc.ai/docs/api-initializers). Defaults to [`glorot_uniform_init`](https://thinc.ai/docs/api-initializers#glorot_uniform_init). ~~Callable[[Ops, Tuple[int, ...]]], FloatsXd]~~ |
-| `key_attr`  | Defaults to `"ORTH"`. ~~str~~                                                                                                                                                                                           |
+| `key_attr`  | This setting is ignored in spaCy v3.6+. To set a custom key attribute for vectors, configure it through [`Vectors`](/api/vectors) or [`spacy init vectors`](/api/cli#init-vectors). Defaults to `"ORTH"`. ~~str~~       |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], Ragged]~~                                                                                                                                                          |
 
 ### spacy.FeatureExtractor.v1 {id="FeatureExtractor"}
