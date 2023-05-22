@@ -10,7 +10,7 @@ from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
 from .token cimport Token
 from ..structs cimport TokenC, LexemeC
 from ..typedefs cimport flags_t, attr_t, hash_t
-from ..attrs cimport attr_id_t
+from ..attrs cimport attr_id_t, ORTH
 from ..parts_of_speech cimport univ_pos_t
 from ..attrs cimport *
 from ..lexeme cimport Lexeme
@@ -341,7 +341,7 @@ cdef class Span:
         """
         if "similarity" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["similarity"](self, other)
-        attr = self.doc.vocab.vectors.attr
+        attr = getattr(self.doc.vocab.vectors, "attr", ORTH)
         cdef Token this_token
         cdef Token other_token
         cdef Lexeme other_lex

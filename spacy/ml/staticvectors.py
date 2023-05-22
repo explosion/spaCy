@@ -45,9 +45,7 @@ def forward(
     if not token_count:
         return _handle_empty(model.ops, model.get_dim("nO"))
     vocab: Vocab = docs[0].vocab
-    key_attr: int = ORTH
-    if hasattr(vocab.vectors, "attr"):
-        key_attr = vocab.vectors.attr
+    key_attr: int = getattr(vocab.vectors, "attr", ORTH)
     keys = model.ops.flatten([cast(Ints1d, doc.to_array(key_attr)) for doc in docs])
     W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
     if vocab.vectors.mode == Mode.default:

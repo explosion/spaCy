@@ -13,7 +13,7 @@ from ..lexeme cimport Lexeme
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
 from ..attrs cimport IS_TITLE, IS_UPPER, IS_CURRENCY, IS_STOP
-from ..attrs cimport LIKE_URL, LIKE_NUM, LIKE_EMAIL
+from ..attrs cimport LIKE_URL, LIKE_NUM, LIKE_EMAIL, ORTH
 from ..symbols cimport conj
 from .morphanalysis cimport MorphAnalysis
 from .doc cimport set_children_from_heads
@@ -197,7 +197,7 @@ cdef class Token:
         """
         if "similarity" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["similarity"](self, other)
-        attr = self.doc.vocab.vectors.attr
+        attr = getattr(self.doc.vocab.vectors, "attr", ORTH)
         cdef Token this_token = self
         cdef Token other_token
         cdef Lexeme other_lex

@@ -25,7 +25,7 @@ from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport attr_id_t
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, MORPH, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, NORM
+from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, NORM, ORTH
 
 from ..attrs import intify_attr, IDS
 from ..compat import copy_reg, pickle
@@ -591,7 +591,7 @@ cdef class Doc:
         """
         if "similarity" in self.user_hooks:
             return self.user_hooks["similarity"](self, other)
-        attr = self.doc.vocab.vectors.attr
+        attr = getattr(self.vocab.vectors, "attr", ORTH)
         cdef Token this_token
         cdef Token other_token
         cdef Lexeme other_lex
