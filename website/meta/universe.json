@@ -401,7 +401,7 @@
         },
         {
             "id": "spacypdfreader",
-            "title": "spadypdfreader",
+            "title": "spacypdfreader",
             "category": ["pipeline"],
             "tags": ["PDF"],
             "slogan": "Easy PDF to text to spaCy text extraction in Python.",
@@ -418,7 +418,7 @@
             },
             "code_example": [
                 "import spacy",
-                "from spacypdfreader import pdf_reader",
+                "from spacypdfreader.spacypdfreader import pdf_reader",
                 "",
                 "nlp = spacy.load('en_core_web_sm')",
                 "doc = pdf_reader('tests/data/test_pdf_01.pdf', nlp)",
