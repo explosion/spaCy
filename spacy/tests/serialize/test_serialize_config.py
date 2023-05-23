@@ -420,7 +420,7 @@ def test_config_overrides_registered_functions():
     nlp.add_pipe("attribute_ruler")
     with make_tempdir() as d:
         nlp.to_disk(d)
-        nlp = spacy.load(
+        nlp_re1 = spacy.load(
             d,
             config={
                 "components": {
@@ -431,8 +431,25 @@ def test_config_overrides_registered_functions():
             },
         )
         assert (
-            nlp.config["components"]["attribute_ruler"]["scorer"]["@scorers"]
+            nlp_re1.config["components"]["attribute_ruler"]["scorer"]["@scorers"]
             == "spacy.tagger_scorer.v1"
+        )
+        nlp_re2 = spacy.load(
+            d,
+            config={
+                "components": {
+                    "attribute_ruler": {
+                        "scorer": {
+                            "@scorers": "spacy.overlapping_labeled_spans_scorer.v1",
+                            "spans_key": "some_other_key",
+                        }
+                    }
+                }
+            },
+        )
+        assert (
+            nlp_re2.config["components"]["attribute_ruler"]["scorer"]["spans_key"]
+            == "some_other_key"
         )
 
 
