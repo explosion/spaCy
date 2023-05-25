@@ -50,7 +50,7 @@ def download(model: str, direct: bool = False, sdist: bool = False, *pip_args) -
         )
         pip_args = pip_args + ("--no-deps",)
     suffix = SDIST_SUFFIX if sdist else WHEEL_SUFFIX
-    dl_tpl = "{m}-{v}/{m}-{v}{s}#egg={m}=={v}"
+    dl_tpl = "{m}-{v}/{m}-{v}{s}"
     if direct:
         components = model.split("-")
         model_name = "".join(components[:-1])
