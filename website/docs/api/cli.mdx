@@ -1018,6 +1018,54 @@ $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P
 | overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **PRINTS**              | Debugging information.                                                                                                                                                                                             |
 
+### debug pieces {id="debug-pieces",version="3.6",tag="command"}
+
+Analyze word- or sentencepiece stats.
+
+```bash
+$ python -m spacy debug pieces [config_path] [code_path] [transformer_name]
+```
+
+| Name               | Description                                                                                                                                                                                |
+|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `config_path`      | Path to config file. ~~Union[Path, str] (positional)~~                                                                                                                                     |
+| `code_path`        | Path to Python file with additional code (registered functions) to be imported. ~~Union[Path, str] (option)~~                                                                              |
+| `transformer_name` | Name of the transformer pipe to gather piece statistics for (default: first transformer pipe). ~~str (option)~~                                                                            |
+| overrides          | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
+| **PRINTS**         | Debugging information.                                                                                                                                                                     |
+
+
+<Accordion title="Example outputs" spaced>
+
+```bash
+$ python -m spacy debug pieces ./config.cfg
+```
+
+```
+========================= Training corpus statistics =========================
+Median token length: 1.0
+Mean token length: 1.54
+Token length range: [1, 13]
+
+======================= Development corpus statistics =======================
+Median token length: 1.0
+Mean token length: 1.44
+Token length range: [1, 8]
+```
+</Accordion>
+
+## quantize {id="quantize",tag="command",version="3.6"}
+
+Quantize a curated transformers model to reduce its size.
+
+| Name           | Description                                                         |
+|----------------|---------------------------------------------------------------------|
+| `model_path`   | Model to quantize. ~~Path (positional)~~                            |
+| `output_path`  | Output directory to store quantized model in. ~~Path (positional)~~ |
+| `max_mse_loss` | Maximum MSE loss of quantized parameters. ~~float (option)~~        |
+| `skip_embeds`  | Do not quantize embeddings. ~~bool (option)~~                       |
+| `skip_linear`  | Do not quantize linear layers. ~~bool (option)~~                    |
+
 ## train {id="train",tag="command"}
 
 Train a pipeline. Expects data in spaCy's

@@ -483,7 +483,6 @@ Construct a callback that initializes a character piece encoder model.
 | `eos_piece` | Piece used as a end-of-sentence token. Defaults to `"[EOS]"`. ~~str~~       |
 | `unk_piece` | Piece used as a stand-in for unknown tokens. Defaults to `"[UNK]"`. ~~str~~ |
 | `normalize` | Unicode normalization form to use. Defaults to `"NFKC"`. ~~str~~            |
-| `vocab`     | The shared vocabulary to use. ~~Optional[Vocab]~~                           |
 
 
 ### HFPieceEncoderLoader.v1 {id="hf_pieceencoder_loader",tag="registered_function"}
@@ -530,4 +529,18 @@ Construct a callback that initializes a supported transformer model with weights
 | Name   | Description                              |
 |--------|------------------------------------------|
 | `path` | Path to the PyTorch checkpoint. ~~Path~~ |
+
+## Callbacks
+
+### gradual_transformer_unfreezing.v1 {id="gradual_transformer_unfreezing",tag="registered_function"}
+
+Construct a callback that can be used to gradually unfreeze the
+weights of one or more Transformer components during training. This
+can be used to prevent catastrophic forgetting during fine-tuning.
+
+
+| Name           | Description                                                                                                                                                                  |
+|----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `target_pipes` | A dictionary whose keys and values correspond to the names of Transformer components and the training step at which they should be unfrozen respectively. ~~Dict[str, int]~~ |
+
 
