@@ -102,6 +102,7 @@ jobs:
         run: |
           SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
           SPACY_NUM_BUILD_JOBS=2 python -m pip install dist/$SDIST
+          python -m pip install -U numpy --pre
         shell: bash
 
       - name: Test import
@@ -161,6 +162,7 @@ jobs:
       - name: "Install test requirements"
         run: |
           python -m pip install -U -r requirements.txt
+          python -m pip install -U numpy --pre
 
       - name: "Run CPU tests"
         run: |
