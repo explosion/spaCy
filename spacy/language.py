@@ -1811,6 +1811,7 @@ class Language:
                         raw_config=raw_config,
                     )
                 else:
+                    assert "source" in pipe_cfg
                     # We need the sourced components to reference the same
                     # vocab without modifying the current vocab state **AND**
                     # we still want to load the source model vectors to perform
