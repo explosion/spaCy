@@ -333,7 +333,7 @@ class SpanFinder(TrainablePipe):
             masks.append(mask)
         truths = ops.xp.concatenate(truths, axis=0)
         masks = ops.xp.concatenate(masks, axis=0)
-        return truths, mask
+        return truths, masks
 
     def _get_reference(self, docs) -> List[Tuple[int, int]]:
         """Create a reference list of token probabilities"""
