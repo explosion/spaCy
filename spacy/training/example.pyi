@@ -3,12 +3,24 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 from ..tokens import Doc, Span
 from .alignment import Alignment
 
-def validate_examples(examples: Iterable[Example], method: str) -> None: ...
+def annotations_to_doc(
+    vocab,
+    tok_annot,
+    doc_annot,
+) -> Doc: ...
+def validate_examples(
+    examples: Iterable[Example],
+    method: str,
+) -> None: ...
 def validate_get_examples(
-    get_examples: Callable[[], Iterable[Example]], method: str
+    get_examples: Callable[[], Iterable[Example]],
+    method: str,
 ): ...
 
 class Example:
+    x: Doc
+    y: Doc
+
     def __init__(
         self,
         predicted: Doc,
@@ -29,7 +41,7 @@ class Example:
     @classmethod
     def from_dict(cls, predicted: Doc, example_dict: Dict) -> Example: ...
     @property
-    def alignment(self) -> Optional[Alignment]: ...
+    def alignment(self) -> Alignment: ...
     def _get_aligned_vectorized(self, align, gold_values): ...
     def _get_aligned_non_vectorized(self, align, gold_values): ...
     def get_aligned(self, field, as_string=False): ...
