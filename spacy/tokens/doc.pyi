@@ -1,16 +1,30 @@
-from typing import Callable, Protocol, Iterable, Iterator, Optional
-from typing import Union, Tuple, List, Dict, Any, overload
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Protocol,
+    Sequence,
+    Tuple,
+    Union,
+    overload,
+)
+
+import numpy as np
 from cymem.cymem import Pool
 from thinc.types import Floats1d, Floats2d, Ints2d
-from .span import Span
-from .token import Token
-from ._dict_proxies import SpanGroups
-from ._retokenize import Retokenizer
+
 from ..lexeme import Lexeme
 from ..vocab import Vocab
+from ._dict_proxies import SpanGroups
+from ._retokenize import Retokenizer
+from .span import Span
+from .token import Token
 from .underscore import Underscore
-from pathlib import Path
-import numpy as np
 
 class DocMethod(Protocol):
     def __call__(self: Doc, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
@@ -119,7 +133,12 @@ class Doc:
     def text(self) -> str: ...
     @property
     def text_with_ws(self) -> str: ...
-    ents: Tuple[Span]
+    # Ideally the getter would output Tuple[Span]
+    # see https://github.com/python/mypy/issues/3004
+    @property
+    def ents(self) -> Sequence[Span]: ...
+    @ents.setter
+    def ents(self, value: Sequence[Span]) -> None: ...
     def set_ents(
         self,
         entities: List[Span],
