@@ -793,6 +793,7 @@ class Language:
         pipe_index = self._get_pipe_index(before, after, first, last)
         self._pipe_meta[name] = self.get_factory_meta(factory_name)
         self._components.insert(pipe_index, (name, pipe_component))
+        self._link_components()
         return pipe_component
 
     def _get_pipe_index(
@@ -951,6 +952,7 @@ class Language:
         # Make sure the name is also removed from the set of disabled components
         if name in self.disabled:
             self._disabled.remove(name)
+        self._link_components()
         return removed
 
     def disable_pipe(self, name: str) -> None:
@@ -1310,7 +1312,6 @@ class Language:
         if pretrain_cfg:
             P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
             init_tok2vec(self, P, I)
-        self._link_components()
         self._optimizer = sgd
         if sgd is not None:
             self._optimizer = sgd
@@ -1678,6 +1679,7 @@ class Language:
         # here :(
         for i, (name1, proc1) in enumerate(self.pipeline):
             if isinstance(proc1, ty.ListenedToComponent):
+                proc1.listener_map = {}
                 for name2, proc2 in self.pipeline[i + 1 :]:
                     proc1.find_listeners(proc2)
 
@@ -1811,6 +1813,7 @@ class Language:
                         raw_config=raw_config,
                     )
                 else:
+                    assert "source" in pipe_cfg
                     # We need the sourced components to reference the same
                     # vocab without modifying the current vocab state **AND**
                     # we still want to load the source model vectors to perform
