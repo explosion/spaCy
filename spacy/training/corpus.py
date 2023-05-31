@@ -1,11 +1,12 @@
 import random
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Iterable, List, Optional, Protocol, Union
+from typing import TYPE_CHECKING, Callable, Iterable, List, Optional, Union
 
 import srsly
 
 from .. import util
+from ..compat import Protocol
 from ..errors import Errors, Warnings
 from ..tokens import Doc, DocBin
 from ..vocab import Vocab
