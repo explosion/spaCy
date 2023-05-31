@@ -188,7 +188,7 @@ def test_tok2vec_listener(with_vectors):
         for tag in t[1]["tags"]:
             tagger.add_label(tag)
 
-    # Check that the Tok2Vec component finds it listeners
+    # Check that the Tok2Vec component finds its listeners
     assert tok2vec.listeners == [tagger_tok2vec]
     optimizer = nlp.initialize(lambda: train_examples)
 
