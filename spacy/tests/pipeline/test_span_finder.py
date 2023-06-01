@@ -191,10 +191,7 @@ def test_set_annotations_span_lengths(min_length, max_length, span_count):
     if min_length is None:
         min_length = 1
 
-    assert all(
-        min_length <= len(span) <= max_length
-        for span in doc.spans[SPANS_KEY]
-    )
+    assert all(min_length <= len(span) <= max_length for span in doc.spans[SPANS_KEY])
 
 
 def test_span_finder_suggester():
@@ -240,7 +237,11 @@ def test_overfitting_IO():
     doc = nlp(test_text)
     spans = doc.spans[span_finder.spans_key]
     assert len(spans) == 3
-    assert set([span.text for span in spans]) == {"London", "Berlin", "London and Berlin"}
+    assert set([span.text for span in spans]) == {
+        "London",
+        "Berlin",
+        "London and Berlin",
+    }
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -249,7 +250,11 @@ def test_overfitting_IO():
         doc2 = nlp2(test_text)
         spans2 = doc2.spans[span_finder.spans_key]
         assert len(spans2) == 3
-        assert set([span.text for span in spans2]) == {"London", "Berlin", "London and Berlin"}
+        assert set([span.text for span in spans2]) == {
+            "London",
+            "Berlin",
+            "London and Berlin",
+        }
 
     # Test scoring
     scores = nlp.evaluate(train_examples)
