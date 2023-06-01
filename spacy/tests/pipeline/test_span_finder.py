@@ -219,7 +219,7 @@ def test_span_finder_suggester():
 
 
 def test_overfitting_IO():
-    # Simple test to try and quickly overfit the spancat component - ensuring the ML models work correctly
+    # Simple test to try and quickly overfit the span_finder component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
     span_finder = nlp.add_pipe("span_finder", config={"spans_key": SPANS_KEY})
