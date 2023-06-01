@@ -201,6 +201,11 @@ def test_span_finder_suggester():
     docs[1].spans[SPANS_KEY] = [docs[1][3:5]]
     span_finder = nlp.add_pipe("span_finder", config={"spans_key": SPANS_KEY})
     nlp.initialize()
+    # Setting bias terms to 1000 to always make it predict something.
+    scorer_model = span_finder.model.get_ref("scorer")
+    bias = scorer_model.layers[0].get_param("b")
+    bias += 1000
+    scorer_model.layers[0].set_param("b", bias)
     span_finder.set_annotations(docs, span_finder.predict(docs))
 
     suggester = registry.misc.get("spacy.span_finder_suggester.v1")(
