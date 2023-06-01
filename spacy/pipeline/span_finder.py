@@ -321,7 +321,7 @@ class SpanFinder(TrainablePipe):
 
 
 @registry.misc("spacy.span_finder_suggester.v1")
-def build_span_finder_suggester(candidates_key: str) -> Suggester:
+def build_span_finder_suggester(spans_key: str) -> Suggester:
     """Suggest every candidate predicted by the SpanFinder"""
 
     def span_finder_suggester(
@@ -333,8 +333,8 @@ def build_span_finder_suggester(candidates_key: str) -> Suggester:
         lengths = []
         for doc in docs:
             length = 0
-            if doc.spans[candidates_key]:
-                for span in doc.spans[candidates_key]:
+            if doc.spans[spans_key]:
+                for span in doc.spans[spans_key]:
                     spans.append([span.start, span.end])
                     length += 1
 

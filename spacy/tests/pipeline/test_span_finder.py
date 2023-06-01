@@ -204,7 +204,7 @@ def test_span_finder_suggester():
     span_finder.set_annotations(docs, span_finder.predict(docs))
 
     suggester = registry.misc.get("spacy.span_finder_suggester.v1")(
-        candidates_key=SPANS_KEY
+        spans_key=SPANS_KEY
     )
 
     candidates = suggester(docs)
