@@ -272,21 +272,13 @@ class SpanFinder(TrainablePipe):
                     pred_start_char, pred_end_char = _char_indices(pred_span)
                     start_match = pred_start_char == ref_start_char
                     end_match = pred_end_char == ref_end_char
-                    # Tokenizations line up.
-                    if start_match and end_match:
+                    if start_match:
                         truth[pred_span[0].i, 0] = 1
-                        truth[pred_span[-1].i, 1] = 1
-                    # Start character index lines up, but not the end.
-                    elif start_match and not end_match:
-                        truth[pred_span[0].i, 0] = 1
-                        mask[pred_span[-1].i, 1] = 0
-                    # End character index lines up, but not the start.
-                    elif not start_match and end_match:
-                        truth[pred_span[-1].i, 1] = 1
-                        mask[pred_span[0].i, 0] = 0
-                    # Neither of them match.
                     else:
                         mask[pred_span[0].i, 0] = 0
+                    if end_match:
+                        truth[pred_span[-1].i, 1] = 1
+                    else:
                         mask[pred_span[-1].i, 1] = 0
             truths.append(truth)
             masks.append(mask)
