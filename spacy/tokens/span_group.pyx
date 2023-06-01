@@ -52,6 +52,8 @@ cdef class SpanGroup:
         if len(spans) :
             self.c.reserve(len(spans))
         for span in spans:
+            if doc is not span.doc:
+                raise ValueError(Errors.E855.format(obj="span"))
             self.push_back(span.c)
 
     def __repr__(self):
@@ -261,11 +263,22 @@ cdef class SpanGroup:
         """
         if doc is None:
             doc = self.doc
+        if doc is self.doc:
+            spans = list(self)
+        else:
+            spans = [doc.char_span(span.start_char, span.end_char, label=span.label_, kb_id=span.kb_id, span_id=span.id) for span in self]
+            for i, span in enumerate(spans):
+                if span is None:
+                    raise ValueError(Errors.E1052.format(i=i))
+                if span.kb_id in self.doc.vocab.strings:
+                    doc.vocab.strings.add(span.kb_id_)
+                if span.id in span.doc.vocab.strings:
+                    doc.vocab.strings.add(span.id_)
         return SpanGroup(
             doc,
             name=self.name,
             attrs=deepcopy(self.attrs),
-            spans=list(self),
+            spans=spans,
         )
 
     def _concat(

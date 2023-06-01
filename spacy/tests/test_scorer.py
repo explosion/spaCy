@@ -438,14 +438,14 @@ def test_score_spans():
         return doc.spans[span_key]
 
     # Predict exactly the same, but overlapping spans will be discarded
-    pred.spans[key] = spans
+    pred.spans[key] = gold.spans[key].copy(doc=pred)
     eg = Example(pred, gold)
     scores = Scorer.score_spans([eg], attr=key, getter=span_getter)
     assert scores[f"{key}_p"] == 1.0
     assert scores[f"{key}_r"] < 1.0
 
     # Allow overlapping, now both precision and recall should be 100%
-    pred.spans[key] = spans
+    pred.spans[key] = gold.spans[key].copy(doc=pred)
     eg = Example(pred, gold)
     scores = Scorer.score_spans([eg], attr=key, getter=span_getter, allow_overlap=True)
     assert scores[f"{key}_p"] == 1.0
