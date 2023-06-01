@@ -68,24 +68,28 @@ The following operators are supported by the `DependencyMatcher`, most of which
 come directly from
 [Semgrex](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html):
 
-| Symbol    | Description                                                                                                          |
-| --------- | -------------------------------------------------------------------------------------------------------------------- |
-| `A < B`   | `A` is the immediate dependent of `B`.                                                                               |
-| `A > B`   | `A` is the immediate head of `B`.                                                                                    |
-| `A << B`  | `A` is the dependent in a chain to `B` following dep &rarr; head paths.                                              |
-| `A >> B`  | `A` is the head in a chain to `B` following head &rarr; dep paths.                                                   |
-| `A . B`   | `A` immediately precedes `B`, i.e. `A.i == B.i - 1`, and both are within the same dependency tree.                   |
-| `A .* B`  | `A` precedes `B`, i.e. `A.i < B.i`, and both are within the same dependency tree _(not in Semgrex)_.                 |
-| `A ; B`   | `A` immediately follows `B`, i.e. `A.i == B.i + 1`, and both are within the same dependency tree _(not in Semgrex)_. |
-| `A ;* B`  | `A` follows `B`, i.e. `A.i > B.i`, and both are within the same dependency tree _(not in Semgrex)_.                  |
-| `A $+ B`  | `B` is a right immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i - 1`.                 |
-| `A $- B`  | `B` is a left immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i + 1`.                  |
-| `A $++ B` | `B` is a right sibling of `A`, i.e. `A` and `B` have the same parent and `A.i < B.i`.                                |
-| `A $-- B` | `B` is a left sibling of `A`, i.e. `A` and `B` have the same parent and `A.i > B.i`.                                 |
-| `A >++ B` | `B` is a right child of `A`, i.e. `A` is a parent of `B` and `A.i < B.i` _(not in Semgrex)_.                         |
-| `A >-- B` | `B` is a left child of `A`, i.e. `A` is a parent of `B` and `A.i > B.i` _(not in Semgrex)_.                          |
-| `A <++ B` | `B` is a right parent of `A`, i.e. `A` is a child of `B` and `A.i < B.i` _(not in Semgrex)_.                         |
-| `A <-- B` | `B` is a left parent of `A`, i.e. `A` is a child of `B` and `A.i > B.i` _(not in Semgrex)_.                          |
+| Symbol                                  | Description                                                                                                                     |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `A < B`                                 | `A` is the immediate dependent of `B`.                                                                                          |
+| `A > B`                                 | `A` is the immediate head of `B`.                                                                                               |
+| `A << B`                                | `A` is the dependent in a chain to `B` following dep &rarr; head paths.                                                         |
+| `A >> B`                                | `A` is the head in a chain to `B` following head &rarr; dep paths.                                                              |
+| `A . B`                                 | `A` immediately precedes `B`, i.e. `A.i == B.i - 1`, and both are within the same dependency tree.                              |
+| `A .* B`                                | `A` precedes `B`, i.e. `A.i < B.i`, and both are within the same dependency tree _(Semgrex counterpart: `..`)_.                 |
+| `A ; B`                                 | `A` immediately follows `B`, i.e. `A.i == B.i + 1`, and both are within the same dependency tree _(Semgrex counterpart: `-`)_.  |
+| `A ;* B`                                | `A` follows `B`, i.e. `A.i > B.i`, and both are within the same dependency tree _(Semgrex counterpart: `--`)_.                  |
+| `A $+ B`                                | `B` is a right immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i - 1`.                            |
+| `A $- B`                                | `B` is a left immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i + 1`.                             |
+| `A $++ B`                               | `B` is a right sibling of `A`, i.e. `A` and `B` have the same parent and `A.i < B.i`.                                           |
+| `A $-- B`                               | `B` is a left sibling of `A`, i.e. `A` and `B` have the same parent and `A.i > B.i`.                                            |
+| `A >+ B` <Tag variant="new">3.5.1</Tag> | `B` is a right immediate child of `A`, i.e. `A` is a parent of `B` and `A.i == B.i - 1` _(not in Semgrex)_.                     |
+| `A >- B` <Tag variant="new">3.5.1</Tag> | `B` is a left immediate child of `A`, i.e. `A` is a parent of `B` and `A.i == B.i + 1` _(not in Semgrex)_.                      |
+| `A >++ B`                               | `B` is a right child of `A`, i.e. `A` is a parent of `B` and `A.i < B.i`.                                                       |
+| `A >-- B`                               | `B` is a left child of `A`, i.e. `A` is a parent of `B` and `A.i > B.i`.                                                        |
+| `A <+ B` <Tag variant="new">3.5.1</Tag> | `B` is a right immediate parent of `A`, i.e. `A` is a child of `B` and `A.i == B.i - 1` _(not in Semgrex)_.                     |
+| `A <- B` <Tag variant="new">3.5.1</Tag> | `B` is a left immediate parent of `A`, i.e. `A` is a child of `B` and `A.i == B.i + 1` _(not in Semgrex)_.                      |
+| `A <++ B`                               | `B` is a right parent of `A`, i.e. `A` is a child of `B` and `A.i < B.i`.                                                       |
+| `A <-- B`                               | `B` is a left parent of `A`, i.e. `A` is a child of `B` and `A.i > B.i`.                                                        |
 
 ## DependencyMatcher.\_\_init\_\_ {id="init",tag="method"}
 

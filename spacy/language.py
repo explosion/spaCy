@@ -104,7 +104,7 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
 
 @registry.misc("spacy.LookupsDataLoader.v1")
 def load_lookups_data(lang, tables):
-    util.logger.debug(f"Loading lookups from spacy-lookups-data: {tables}")
+    util.logger.debug("Loading lookups from spacy-lookups-data: %s", tables)
     lookups = load_lookups(lang=lang, tables=tables)
     return lookups
 
@@ -1372,6 +1372,7 @@ class Language:
         scorer: Optional[Scorer] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         scorer_cfg: Optional[Dict[str, Any]] = None,
+        per_component: bool = False,
     ) -> Dict[str, Any]:
         """Evaluate a model's pipeline components.
 
@@ -1383,6 +1384,8 @@ class Language:
             arguments for specific components.
         scorer_cfg (dict): An optional dictionary with extra keyword arguments
             for the scorer.
+        per_component (bool): Whether to return the scores keyed by component
+            name. Defaults to False.
 
         RETURNS (Scorer): The scorer containing the evaluation results.
 
@@ -1415,7 +1418,7 @@ class Language:
         for eg, doc in zip(examples, docs):
             eg.predicted = doc
         end_time = timer()
-        results = scorer.score(examples)
+        results = scorer.score(examples, per_component=per_component)
         n_words = sum(len(eg.predicted) for eg in examples)
         results["speed"] = n_words / (end_time - start_time)
         return results
@@ -1969,7 +1972,7 @@ class Language:
         pipe = self.get_pipe(pipe_name)
         pipe_cfg = self._pipe_configs[pipe_name]
         if listeners:
-            util.logger.debug(f"Replacing listeners of component '{pipe_name}'")
+            util.logger.debug("Replacing listeners of component '%s'", pipe_name)
             if len(list(listeners)) != len(pipe_listeners):
                 # The number of listeners defined in the component model doesn't
                 # match the listeners to replace, so we won't be able to update

@@ -8,7 +8,8 @@ import Grid from '../components/grid'
 import Button from '../components/button'
 import Icon from '../components/icon'
 import Tag from '../components/tag'
-import CodeBlock, { InlineCode } from '../components/code'
+import { InlineCode } from '../components/inlineCode'
+import CodeBlock from '../components/codeBlock'
 import Aside from '../components/aside'
 import Sidebar from '../components/sidebar'
 import Section, { Hr } from '../components/section'
@@ -16,7 +17,8 @@ import Main from '../components/main'
 import Footer from '../components/footer'
 import { H3, H5, Label, InlineList } from '../components/typography'
 import { YouTube, SoundCloud, Iframe } from '../components/embed'
-import { github, MarkdownToReact } from '../components/util'
+import { github } from '../components/util'
+import MarkdownToReact from '../components/markdownToReactDynamic'
 
 import { nightly, legacy } from '../../meta/dynamicMeta.mjs'
 import universe from '../../meta/universe.json'
@@ -81,10 +83,11 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                                     }
                                     const url = `/universe/project/${id}`
                                     const header = youtube && (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img
+                                        <Image
                                             src={`https://img.youtube.com/vi/${youtube}/0.jpg`}
-                                            alt=""
+                                            alt={title}
+                                            width="480"
+                                            height="360"
                                             style={{
                                                 clipPath: 'inset(12.9% 0)',
                                                 marginBottom: 'calc(-12.9% + 1rem)',
@@ -93,14 +96,14 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                                     )
                                     return cover ? (
                                         <p key={id}>
-                                            <Link key={id} to={url} hidden>
+                                            <Link key={id} to={url} noLinkLayout>
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img src={cover} alt={title || id} />
                                             </Link>
                                         </p>
                                     ) : data.id === 'videos' ? (
                                         <div>
-                                            <Link key={id} to={url} hidden>
+                                            <Link key={id} to={url} noLinkLayout>
                                                 {header}
                                                 <H5>{title}</H5>
                                             </Link>
@@ -195,6 +198,19 @@ const SpaCyVersion = ({ version }) => {
     ))
 }
 
+const ImageGitHub = ({ url, isRounded, title }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+        style={{
+            borderRadius: isRounded ? '1em' : 0,
+            marginRight: '0.5rem',
+            verticalAlign: 'middle',
+        }}
+        src={`https://img.shields.io/github/${url}`}
+        alt={`${title} on GitHub`}
+    />
+)
+
 const Project = ({ data, components }) => (
     <>
         <Title title={data.title || data.id} teaser={data.slogan} image={data.thumb}>
@@ -202,24 +218,21 @@ const Project = ({ data, components }) => (
                 <p>
                     {data.spacy_version && <SpaCyVersion version={data.spacy_version} />}
                     {data.github && (
-                        <Link to={`https://github.com/${data.github}`} hidden>
-                            {[
-                                `release/${data.github}/all.svg?style=flat-square`,
-                                `license/${data.github}.svg?style=flat-square`,
-                                `stars/${data.github}.svg?style=social&label=Stars`,
-                            ].map((url, i) => (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                    style={{
-                                        borderRadius: '1em',
-                                        marginRight: '0.5rem',
-                                        verticalAlign: 'middle',
-                                    }}
-                                    key={i}
-                                    src={`https://img.shields.io/github/${url}`}
-                                    alt=""
-                                />
-                            ))}
+                        <Link to={`https://github.com/${data.github}`} noLinkLayout>
+                            <ImageGitHub
+                                title={data.title || data.id}
+                                url={`release/${data.github}/all.svg?style=flat-square`}
+                                isRounded
+                            />
+                            <ImageGitHub
+                                title={data.title || data.id}
+                                url={`license/${data.github}.svg?style=flat-square`}
+                                isRounded
+                            />
+                            <ImageGitHub
+                                title={data.title || data.id}
+                                url={`stars/${data.github}.svg?style=social&label=Stars`}
+                            />
                         </Link>
                     )}
                 </p>
@@ -293,7 +306,7 @@ const Project = ({ data, components }) => (
                             {data.author_links && data.author_links.twitter && (
                                 <Link
                                     to={`https://twitter.com/${data.author_links.twitter}`}
-                                    hidden
+                                    noLinkLayout
                                     ws
                                 >
                                     <Icon width={18} name="twitter" inline />
@@ -302,14 +315,14 @@ const Project = ({ data, components }) => (
                             {data.author_links && data.author_links.github && (
                                 <Link
                                     to={`https://github.com/${data.author_links.github}`}
-                                    hidden
+                                    noLinkLayout
                                     ws
                                 >
                                     <Icon width={18} name="github" inline />
                                 </Link>
                             )}
                             {data.author_links && data.author_links.website && (
-                                <Link to={data.author_links.website} hidden ws>
+                                <Link to={data.author_links.website} noLinkLayout ws>
                                     <Icon width={18} name="website" inline />
                                 </Link>
                             )}

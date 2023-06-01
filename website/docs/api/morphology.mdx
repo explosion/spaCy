@@ -213,10 +213,11 @@ Retrieve values for a feature by field.
 > assert morph.get("Feat1") == ["Val1", "Val2"]
 > ```
 
-| Name        | Description                                      |
-| ----------- | ------------------------------------------------ |
-| `field`     | The field to retrieve. ~~str~~                   |
-| **RETURNS** | A list of the individual features. ~~List[str]~~ |
+| Name                                     | Description                                                                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `field`                                  | The field to retrieve. ~~str~~                                                                                                 |
+| `default` <Tag variant="new">3.5.3</Tag> | The value to return if the field is not present. If unset or `None`, the default return value is `[]`. ~~Optional[List[str]]~~ |
+| **RETURNS**                              | A list of the individual features. ~~List[str]~~                                                                               |
 
 ### MorphAnalysis.to_dict {id="morphanalysis-to_dict",tag="method"}
 

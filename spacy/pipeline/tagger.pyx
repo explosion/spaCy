@@ -45,7 +45,7 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "tagger",
     assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL, "overwrite": False, "scorer": {"@scorers": "spacy.tagger_scorer.v1"}, "neg_prefix": "!"},
+    default_config={"model": DEFAULT_TAGGER_MODEL, "overwrite": False, "scorer": {"@scorers": "spacy.tagger_scorer.v1"}, "neg_prefix": "!", "label_smoothing": 0.0},
     default_score_weights={"tag_acc": 1.0},
 )
 def make_tagger(
@@ -55,6 +55,7 @@ def make_tagger(
     overwrite: bool,
     scorer: Optional[Callable],
     neg_prefix: str,
+    label_smoothing: float,
 ):
     """Construct a part-of-speech tagger component.
 
@@ -63,7 +64,7 @@ def make_tagger(
         in size, and be normalized as probabilities (all scores between 0 and 1,
         with the rows summing to 1).
     """
-    return Tagger(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, neg_prefix=neg_prefix)
+    return Tagger(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, neg_prefix=neg_prefix, label_smoothing=label_smoothing)
 
 
 def tagger_score(examples, **kwargs):
@@ -89,6 +90,7 @@ class Tagger(TrainablePipe):
         overwrite=BACKWARD_OVERWRITE,
         scorer=tagger_score,
         neg_prefix="!",
+        label_smoothing=0.0,
     ):
         """Initialize a part-of-speech tagger.
 
@@ -105,7 +107,7 @@ class Tagger(TrainablePipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg = {"labels": [], "overwrite": overwrite, "neg_prefix": neg_prefix}
+        cfg = {"labels": [], "overwrite": overwrite, "neg_prefix": neg_prefix, "label_smoothing": label_smoothing}
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
 
@@ -256,7 +258,7 @@ class Tagger(TrainablePipe):
         DOCS: https://spacy.io/api/tagger#get_loss
         """
         validate_examples(examples, "Tagger.get_loss")
-        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False, neg_prefix=self.cfg["neg_prefix"])
+        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False, neg_prefix=self.cfg["neg_prefix"], label_smoothing=self.cfg["label_smoothing"])
         # Convert empty tag "" to missing value None so that both misaligned
         # tokens and tokens with missing annotation have the default missing
         # value None.

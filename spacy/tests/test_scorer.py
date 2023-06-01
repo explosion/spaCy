@@ -115,6 +115,14 @@ def test_tokenization(sented_doc):
     assert scores["token_r"] == approx(0.33333333)
     assert scores["token_f"] == 0.4
 
+    # per-component scoring
+    scorer = Scorer()
+    scores = scorer.score([example], per_component=True)
+    assert scores["tokenizer"]["token_acc"] == 0.5
+    assert scores["tokenizer"]["token_p"] == 0.5
+    assert scores["tokenizer"]["token_r"] == approx(0.33333333)
+    assert scores["tokenizer"]["token_f"] == 0.4
+
 
 def test_sents(sented_doc):
     scorer = Scorer()
@@ -277,6 +285,13 @@ def test_tag_score(tagged_doc):
     assert results["morph_per_feat"]["NounType"]["f"] == 1.0
     assert results["morph_per_feat"]["Poss"]["f"] == 0.0
     assert results["morph_per_feat"]["Number"]["f"] == approx(0.72727272)
+
+    # per-component scoring
+    scorer = Scorer()
+    results = scorer.score([example], per_component=True)
+    assert results["tagger"]["tag_acc"] == 0.9
+    assert results["morphologizer"]["pos_acc"] == 0.9
+    assert results["morphologizer"]["morph_acc"] == approx(0.8)
 
 
 def test_partial_annotation(en_tokenizer):

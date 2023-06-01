@@ -14,7 +14,7 @@ export function copyToClipboard(ref, callback) {
     }
 }
 
-export default function CopyInput({ text, prefix }) {
+export default function CopyInput({ text, description, prefix }) {
     const isClient = typeof window !== 'undefined'
     const [supportsCopy, setSupportsCopy] = useState(false)
 
@@ -41,6 +41,7 @@ export default function CopyInput({ text, prefix }) {
                 defaultValue={text}
                 rows={1}
                 onClick={selectText}
+                aria-label={description}
             />
             {supportsCopy && (
                 <button title="Copy to clipboard" onClick={onClick}>

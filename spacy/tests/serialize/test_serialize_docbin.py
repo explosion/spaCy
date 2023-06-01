@@ -49,7 +49,11 @@ def test_serialize_doc_bin():
     nlp = English()
     for doc in nlp.pipe(texts):
         doc.cats = cats
-        doc.spans["start"] = [doc[0:2]]
+        span = doc[0:2]
+        span.label_ = "UNUSUAL_SPAN_LABEL"
+        span.id_ = "UNUSUAL_SPAN_ID"
+        span.kb_id_ = "UNUSUAL_SPAN_KB_ID"
+        doc.spans["start"] = [span]
         doc[0].norm_ = "UNUSUAL_TOKEN_NORM"
         doc[0].ent_id_ = "UNUSUAL_TOKEN_ENT_ID"
         doc_bin.add(doc)
@@ -63,6 +67,9 @@ def test_serialize_doc_bin():
         assert doc.text == texts[i]
         assert doc.cats == cats
         assert len(doc.spans) == 1
+        assert doc.spans["start"][0].label_ == "UNUSUAL_SPAN_LABEL"
+        assert doc.spans["start"][0].id_ == "UNUSUAL_SPAN_ID"
+        assert doc.spans["start"][0].kb_id_ == "UNUSUAL_SPAN_KB_ID"
         assert doc[0].norm_ == "UNUSUAL_TOKEN_NORM"
         assert doc[0].ent_id_ == "UNUSUAL_TOKEN_ENT_ID"
 

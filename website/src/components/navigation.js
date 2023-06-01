@@ -30,7 +30,7 @@ const NavigationDropdown = ({ items = [], section }) => {
 
 export default function Navigation({ title, items = [], section, search, alert, children }) {
     const logo = (
-        <Link to="/" aria-label={title} hidden>
+        <Link to="/" aria-label={title} noLinkLayout>
             <h1 className={classes.title}>{title}</h1>
             <SVG src={logoSpacy.src} className={classes.logo} width={300} height={96} />
         </Link>
@@ -57,7 +57,7 @@ export default function Navigation({ title, items = [], section, search, alert, 
                         })
                         return (
                             <li key={i} className={itemClassNames}>
-                                <Link to={url} tabIndex={isActive ? '-1' : null} hidden>
+                                <Link to={url} tabIndex={isActive ? '-1' : null} noLinkLayout>
                                     {text}
                                 </Link>
                             </li>
