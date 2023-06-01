@@ -143,7 +143,6 @@ class SpanFinder(TrainablePipe):
         threshold: float = 0.5,
         max_length: Optional[int] = None,
         min_length: Optional[int] = None,
-        # XXX I think this is weird and should be just None like in
         scorer: Optional[Callable] = span_finder_score,
         spans_key: str = DEFAULT_SPANS_KEY,
     ) -> None:
