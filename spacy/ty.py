@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING
 from typing import Optional, Any, Iterable, Dict, Callable, Sequence, List
 
-from spacy.language import Language
 from .compat import Protocol, runtime_checkable
 
 from thinc.api import Optimizer, Model
 
 if TYPE_CHECKING:
     from .training import Example
+    from spacy.language import Language
 
 
 @runtime_checkable
@@ -34,7 +34,7 @@ class InitializableComponent(Protocol):
     def initialize(
         self,
         get_examples: Callable[[], Iterable["Example"]],
-        nlp: Language,
+        nlp: "Language",
         **kwargs: Any
     ):
         ...
