@@ -4281,6 +4281,37 @@
             },
             "category": ["pipeline", "research"],
             "tags": ["Thai"]
+        },
+        {
+            "id": "vetiver",
+            "title": "Vetiver",
+            "slogan": "Version, share, deploy, and monitor models.",
+            "description": "The goal of vetiver is to provide fluent tooling to version, deploy, and monitor a trained model. Functions handle creating model objects, versioning models, predicting from a remote API endpoint, deploying Dockerfiles, and more.",
+            "github": "rstudio/vetiver-python",
+            "pip": "vetiver",
+            "code_example": [
+                "import spacy",
+                "from vetiver import VetiverModel, VetiverAPI",
+                "",
+                "# If you use this model, you'll need to download it first:",
+                "# python -m spacy download en_core_web_md",
+                "nlp = spacy.load('en_core_web_md')",
+                "# Create deployable model object with your nlp Language object",
+                "v = VetiverModel(nlp, model_name = 'my_model')",
+                "# Try out your API endpoint locally",
+                "VetiverAPI(v).run()"
+            ],
+            "code_language": "python",
+            "url": "https://vetiver.rstudio.com/",
+            "thumb": "https://raw.githubusercontent.com/rstudio/vetiver-python/main/docs/figures/square-logo.svg",
+            "author": "Posit, PBC",
+            "author_links": {
+                "twitter": "posit_pbc",
+                "github": "rstudio",
+                "website": "https://posit.co/"
+            },
+            "category": ["apis", "standalone"],
+            "tags": ["apis", "deployment"]
         }
     ],
 
