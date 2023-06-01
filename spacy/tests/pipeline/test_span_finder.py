@@ -258,8 +258,6 @@ def test_overfitting_IO():
 
     # Test scoring
     scores = nlp.evaluate(train_examples)
-    sf = nlp.get_pipe("span_finder")
-    print(sf.spans_key)
     assert f"span_finder_{span_finder.spans_key}_f" in scores
     # XXX Its not perfect 1.0 F1 because we want it to overgenerate for now.
     assert scores[f"span_finder_{span_finder.spans_key}_f"] == 0.4
