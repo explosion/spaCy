@@ -16,7 +16,7 @@ from thinc.util import gpu_is_available
 from configparser import InterpolationError
 import os
 
-from weasel._util import app as project_cli
+from weasel import app as project_cli
 
 from ..compat import Literal
 from ..schemas import ProjectConfigSchema, validate
