@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
 
 from thinc.api import Config, Model, Ops, Optimizer, get_current_ops, set_dropout_rate
@@ -41,7 +40,6 @@ depth = 4
 """
 
 DEFAULT_SPAN_FINDER_MODEL = Config().from_str(span_finder_default_config)["model"]
-DEFAULT_PREDICTED_KEY = "span_candidates"
 
 
 @Language.factory(
@@ -50,21 +48,15 @@ DEFAULT_PREDICTED_KEY = "span_candidates"
     default_config={
         "threshold": 0.5,
         "model": DEFAULT_SPAN_FINDER_MODEL,
-        "predicted_key": DEFAULT_PREDICTED_KEY,
-        "training_key": DEFAULT_SPANS_KEY,
-        # XXX Doesn't 0 seem bad compared to None instead?
+        "spans_key": DEFAULT_SPANS_KEY,
         "max_length": None,
         "min_length": None,
-        "scorer": {
-            "@scorers": "spacy.span_finder_scorer.v1",
-            "predicted_key": DEFAULT_PREDICTED_KEY,
-            "training_key": DEFAULT_SPANS_KEY,
-        },
+        "scorer": {"@scorers": "spacy.span_finder_scorer.v1"},
     },
     default_score_weights={
-        f"span_finder_{DEFAULT_PREDICTED_KEY}_f": 1.0,
-        f"span_finder_{DEFAULT_PREDICTED_KEY}_p": 0.0,
-        f"span_finder_{DEFAULT_PREDICTED_KEY}_r": 0.0,
+        f"span_finder_{DEFAULT_SPANS_KEY}_f": 1.0,
+        f"span_finder_{DEFAULT_SPANS_KEY}_p": 0.0,
+        f"span_finder_{DEFAULT_SPANS_KEY}_r": 0.0,
     },
 )
 def make_span_finder(
@@ -75,8 +67,7 @@ def make_span_finder(
     threshold: float,
     max_length: Optional[int],
     min_length: Optional[int],
-    predicted_key: str = DEFAULT_PREDICTED_KEY,
-    training_key: str = DEFAULT_SPANS_KEY,
+    spans_key: str,
 ) -> "SpanFinder":
     """Create a SpanFinder component. The component predicts whether a token is
     the start or the end of a potential span.
@@ -84,10 +75,9 @@ def make_span_finder(
     model (Model[List[Doc], Floats2d]): A model instance that
         is given a list of documents and predicts a probability for each token.
     threshold (float): Minimum probability to consider a prediction positive.
-    predicted_key (str): Name of the span group the predicted spans are saved
-        to
-    training_key (str): Name of the span group the training spans are read
-        from
+    spans_key (str): Key of the doc.spans dict to save the spans under. During
+        initialization and training, the component will look for spans on the
+        reference document under the same key.
     max_length (Optional[int]): Max length of the produced spans, defaults to None meaning unlimited length.
     min_length (Optional[int]): Min length of the produced spans, defaults to None meaining shortest span is length 1.
     """
@@ -99,51 +89,26 @@ def make_span_finder(
         scorer=scorer,
         max_length=max_length,
         min_length=min_length,
-        predicted_key=predicted_key,
-        training_key=training_key,
+        spans_key=spans_key,
     )
 
 
 @registry.scorers("spacy.span_finder_scorer.v1")
-def make_span_finder_scorer(
-    predicted_key: str = DEFAULT_PREDICTED_KEY,
-    training_key: str = DEFAULT_SPANS_KEY,
-):
-    return partial(
-        span_finder_score, predicted_key=predicted_key, training_key=training_key
-    )
+def make_span_finder_scorer():
+    return span_finder_score
 
 
-def span_finder_score(
-    examples: Iterable[Example],
-    *,
-    predicted_key: str = DEFAULT_PREDICTED_KEY,
-    training_key: str = DEFAULT_SPANS_KEY,
-    **kwargs,
-) -> Dict[str, Any]:
+def span_finder_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     kwargs = dict(kwargs)
+    print(kwargs)
     attr_prefix = "span_finder_"
-    kwargs.setdefault("attr", f"{attr_prefix}{predicted_key}")
-    kwargs.setdefault("allow_overlap", True)
+    key = kwargs["spans_key"]
+    kwargs.setdefault("attr", f"{attr_prefix}{key}")
     kwargs.setdefault(
         "getter", lambda doc, key: doc.spans.get(key[len(attr_prefix) :], [])
     )
-    kwargs.setdefault("labeled", False)
-    kwargs.setdefault("has_annotation", lambda doc: predicted_key in doc.spans)
-    # score_spans can only score spans with the same key in both the reference
-    # and predicted docs, so temporarily copy the reference spans from the
-    # reference key to the candidates key in the reference docs, restoring the
-    # original span groups afterwards
-    orig_span_groups = []
-    for eg in examples:
-        orig_span_groups.append(eg.reference.spans.get(predicted_key))
-        if training_key in eg.reference.spans:
-            eg.reference.spans[predicted_key] = eg.reference.spans[training_key]
-    scores = Scorer.score_spans(examples, **kwargs)
-    for orig_span_group, eg in zip(orig_span_groups, examples):
-        if orig_span_group is not None:
-            eg.reference.spans[predicted_key] = orig_span_group
-    return scores
+    kwargs.setdefault("has_annotation", lambda doc: key in doc.spans)
+    return Scorer.score_spans(examples, **kwargs)
 
 
 class _MaxInt(int):
@@ -179,13 +144,8 @@ class SpanFinder(TrainablePipe):
         max_length: Optional[int] = None,
         min_length: Optional[int] = None,
         # XXX I think this is weird and should be just None like in
-        scorer: Optional[Callable] = partial(
-            span_finder_score,
-            predicted_key=DEFAULT_PREDICTED_KEY,
-            training_key=DEFAULT_SPANS_KEY,
-        ),
-        predicted_key: str = DEFAULT_PREDICTED_KEY,
-        training_key: str = DEFAULT_SPANS_KEY,
+        scorer: Optional[Callable] = span_finder_score,
+        spans_key: str = DEFAULT_SPANS_KEY,
     ) -> None:
         """Initialize the span boundary detector.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
@@ -194,8 +154,9 @@ class SpanFinder(TrainablePipe):
         threshold (float): Minimum probability to consider a prediction
             positive.
         scorer (Optional[Callable]): The scoring method.
-        predicted_key (str): Name of the span group the candidate spans are saved to
-        training_key (str): Name of the span group the training spans are read from
+        spans_key (str): Key of the doc.spans dict to save the spans under. During
+            initialization and training, the component will look for spans on the
+            reference document under the same key.
         max_length (Optional[int]): Max length of the produced spans, defaults to None meaning unlimited length.
         min_length (Optional[int]): Min length of the produced spans, defaults to None meaining shortest span is length 1.
         """
@@ -211,11 +172,11 @@ class SpanFinder(TrainablePipe):
             )
         self.min_length = min_length
         self.max_length = max_length
-        self.predicted_key = predicted_key
-        self.training_key = training_key
+        self.spans_key = spans_key
         self.model = model
         self.name = name
         self.scorer = scorer
+        self.cfg = {"spans_key": spans_key}
 
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
@@ -232,7 +193,7 @@ class SpanFinder(TrainablePipe):
         """
         offset = 0
         for i, doc in enumerate(docs):
-            doc.spans[self.predicted_key] = []
+            doc.spans[self.spans_key] = []
             starts = []
             ends = []
             doc_scores = scores[offset : offset + len(doc)]
@@ -249,7 +210,7 @@ class SpanFinder(TrainablePipe):
                     if span_length > self.max_length:
                         break
                     elif self.min_length <= span_length:
-                        doc.spans[self.predicted_key].append(doc[start : end + 1])
+                        doc.spans[self.spans_key].append(doc[start : end + 1])
 
     def update(
         self,
@@ -304,8 +265,8 @@ class SpanFinder(TrainablePipe):
             n_tokens = len(eg.predicted)
             truth = ops.xp.zeros((n_tokens, 2), dtype="float32")
             mask = ops.xp.ones((n_tokens, 2), dtype="float32")
-            if self.training_key in eg.reference.spans:
-                for span in eg.reference.spans[self.training_key]:
+            if self.spans_key in eg.reference.spans:
+                for span in eg.reference.spans[self.spans_key]:
                     ref_start_char, ref_end_char = _char_indices(span)
                     pred_span = eg.predicted.char_span(
                         ref_start_char, ref_end_char, alignment_mode="expand"
@@ -342,8 +303,8 @@ class SpanFinder(TrainablePipe):
             start_indices = set()
             end_indices = set()
 
-            if self.training_key in doc.spans:
-                for span in doc.spans[self.training_key]:
+            if self.spans_key in doc.spans:
+                for span in doc.spans[self.spans_key]:
                     start_indices.add(span.start)
                     end_indices.add(span.end - 1)
 
