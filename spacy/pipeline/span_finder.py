@@ -100,7 +100,6 @@ def make_span_finder_scorer():
 
 def span_finder_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     kwargs = dict(kwargs)
-    print(kwargs)
     attr_prefix = "span_finder_"
     key = kwargs["spans_key"]
     kwargs.setdefault("attr", f"{attr_prefix}{key}")
@@ -295,28 +294,6 @@ class SpanFinder(TrainablePipe):
         masks = ops.xp.concatenate(masks, axis=0)
         return truths, masks
 
-    def _get_reference(self, docs) -> List[Tuple[int, int]]:
-        """Create a reference list of token probabilities"""
-        reference_probabilities = []
-        for doc in docs:
-            start_indices = set()
-            end_indices = set()
-
-            if self.spans_key in doc.spans:
-                for span in doc.spans[self.spans_key]:
-                    start_indices.add(span.start)
-                    end_indices.add(span.end - 1)
-
-            for token in doc:
-                reference_probabilities.append(
-                    (
-                        1 if token.i in start_indices else 0,
-                        1 if token.i in end_indices else 0,
-                    )
-                )
-
-        return reference_probabilities
-
     def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],
@@ -337,7 +314,7 @@ class SpanFinder(TrainablePipe):
 
         if subbatch:
             docs = [eg.reference for eg in subbatch]
-            Y = self.model.ops.asarray2f(self._get_reference(docs))
+            Y, _ = self._get_aligned_truth_scores(subbatch, self.model.ops)
             self.model.initialize(X=docs, Y=Y)
         else:
             self.model.initialize()
