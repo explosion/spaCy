@@ -111,6 +111,7 @@ def span_finder_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     )
     kwargs.setdefault("has_annotation", lambda doc: key in doc.spans)
     kwargs.setdefault("allow_overlap", True)
+    kwargs.setdefault("labeled", False)
     scores = Scorer.score_spans(examples, **kwargs)
     scores.pop(f"{kwargs['attr']}_per_type", None)
     return scores
@@ -215,6 +216,7 @@ class SpanFinder(TrainablePipe):
                         break
                     elif self.min_length <= span_length:
                         doc.spans[self.spans_key].append(doc[start : end + 1])
+            offset += len(doc)
 
     def update(
         self,
