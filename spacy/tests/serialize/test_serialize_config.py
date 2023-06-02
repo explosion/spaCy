@@ -416,6 +416,7 @@ def test_config_overrides():
     assert nlp.pipe_names == ["tok2vec", "tagger"]
 
 
+@pytest.mark.filterwarnings("ignore:\\[W036")
 def test_config_overrides_registered_functions():
     nlp = spacy.blank("en")
     nlp.add_pipe("attribute_ruler")
