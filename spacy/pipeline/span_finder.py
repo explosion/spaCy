@@ -107,7 +107,9 @@ def span_finder_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         "getter", lambda doc, key: doc.spans.get(key[len(attr_prefix) :], [])
     )
     kwargs.setdefault("has_annotation", lambda doc: key in doc.spans)
-    return Scorer.score_spans(examples, **kwargs)
+    scores = Scorer.score_spans(examples, **kwargs)
+    scores.pop(f"{kwargs['attr']}_per_type", None)
+    return scores
 
 
 class _MaxInt(int):

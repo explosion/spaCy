@@ -135,7 +135,6 @@ def test_span_finder_component():
     nlp.initialize()
     docs = list(span_finder.pipe(docs))
 
-    # TODO: update hard-coded name
     assert SPANS_KEY in docs[0].spans
 
 
@@ -252,8 +251,9 @@ def test_overfitting_IO():
     # Test scoring
     scores = nlp.evaluate(train_examples)
     assert f"span_finder_{span_finder.spans_key}_f" in scores
-    # XXX Its not perfect 1.0 F1 because we want it to overgenerate for now.
+    # It's not perfect 1.0 F1 because it's designed to overgenerate for now.
     assert scores[f"span_finder_{span_finder.spans_key}_f"] == 0.4
+    assert scores[f"span_finder_{span_finder.spans_key}_r"] == 1.0
 
     # also test that the spancat works for just a single entity in a sentence
     doc = nlp("London")
