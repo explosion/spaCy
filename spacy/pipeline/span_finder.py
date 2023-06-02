@@ -173,7 +173,7 @@ class SpanFinder(TrainablePipe):
             min_length = 1
         if max_length < 1 or min_length < 1:
             raise ValueError(
-                Errors.E1052.format(min_length=min_length, max_length=max_length)
+                Errors.E1053.format(min_length=min_length, max_length=max_length)
             )
         self.min_length = min_length
         self.max_length = max_length
@@ -267,7 +267,7 @@ class SpanFinder(TrainablePipe):
         masks = []
         for eg in examples:
             if eg.x.text != eg.y.text:
-                raise ValueError(Errors.E1053.format(component="span_finder"))
+                raise ValueError(Errors.E1054.format(component="span_finder"))
             n_tokens = len(eg.predicted)
             truth = ops.xp.zeros((n_tokens, 2), dtype="float32")
             mask = ops.xp.ones((n_tokens, 2), dtype="float32")
