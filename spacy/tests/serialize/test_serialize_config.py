@@ -447,7 +447,7 @@ def test_config_overrides_registered_functions():
                     "attribute_ruler": {
                         "scorer": {
                             "@scorers": "spacy.overlapping_labeled_spans_scorer.v1",
-                            "spans_key": {"@misc": "test_spans_key_value"},
+                            "spans_key": {"@misc": "test_some_other_key"},
                         }
                     }
                 }
