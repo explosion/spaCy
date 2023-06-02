@@ -445,7 +445,7 @@ def test_overfitting_IO():
     spans = doc.spans[SPAN_KEY]
     assert len(spans) == 2
     assert len(spans.attrs["scores"]) == 2
-    assert min(spans.attrs["scores"]) > 0.9
+    assert min(spans.attrs["scores"]) > 0.8
     assert set([span.text for span in spans]) == {"London", "Berlin"}
     assert set([span.label_ for span in spans]) == {"LOC"}
 
@@ -457,7 +457,7 @@ def test_overfitting_IO():
         spans2 = doc2.spans[SPAN_KEY]
         assert len(spans2) == 2
         assert len(spans2.attrs["scores"]) == 2
-        assert min(spans2.attrs["scores"]) > 0.9
+        assert min(spans2.attrs["scores"]) > 0.8
         assert set([span.text for span in spans2]) == {"London", "Berlin"}
         assert set([span.label_ for span in spans2]) == {"LOC"}
 

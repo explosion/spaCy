@@ -27,8 +27,8 @@ nO = 2
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v2"
 width = 96
-rows = [5000, 2000, 1000, 1000]
-attrs = ["ORTH", "PREFIX", "SUFFIX", "SHAPE"]
+rows = [5000, 1000, 2500, 1000]
+attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
@@ -63,23 +63,26 @@ def make_span_finder(
     nlp: Language,
     name: str,
     model: Model[Iterable[Doc], Floats2d],
-    scorer: Optional[Callable],
+    spans_key: str,
     threshold: float,
     max_length: Optional[int],
     min_length: Optional[int],
-    spans_key: str,
+    scorer: Optional[Callable],
 ) -> "SpanFinder":
     """Create a SpanFinder component. The component predicts whether a token is
     the start or the end of a potential span.
 
     model (Model[List[Doc], Floats2d]): A model instance that
         is given a list of documents and predicts a probability for each token.
-    threshold (float): Minimum probability to consider a prediction positive.
     spans_key (str): Key of the doc.spans dict to save the spans under. During
         initialization and training, the component will look for spans on the
         reference document under the same key.
+    threshold (float): Minimum probability to consider a prediction positive.
     max_length (Optional[int]): Max length of the produced spans, defaults to None meaning unlimited length.
     min_length (Optional[int]): Min length of the produced spans, defaults to None meaining shortest span is length 1.
+    scorer (Optional[Callable]): The scoring method. Defaults to
+        Scorer.score_spans for the Doc.spans[spans_key] with overlapping
+        spans allowed.
     """
     return SpanFinder(
         nlp,
@@ -107,6 +110,7 @@ def span_finder_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         "getter", lambda doc, key: doc.spans.get(key[len(attr_prefix) :], [])
     )
     kwargs.setdefault("has_annotation", lambda doc: key in doc.spans)
+    kwargs.setdefault("allow_overlap", True)
     scores = Scorer.score_spans(examples, **kwargs)
     scores.pop(f"{kwargs['attr']}_per_type", None)
     return scores
@@ -141,11 +145,11 @@ class SpanFinder(TrainablePipe):
         model: Model[Iterable[Doc], Floats2d],
         name: str = "span_finder",
         *,
+        spans_key: str = DEFAULT_SPANS_KEY,
         threshold: float = 0.5,
         max_length: Optional[int] = None,
         min_length: Optional[int] = None,
         scorer: Optional[Callable] = span_finder_score,
-        spans_key: str = DEFAULT_SPANS_KEY,
     ) -> None:
         """Initialize the span boundary detector.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.

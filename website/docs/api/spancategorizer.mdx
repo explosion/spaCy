@@ -105,7 +105,7 @@ architectures and their arguments and hyperparameters.
 >
 > # Construction via add_pipe with custom model
 > config = {"model": {"@architectures": "my_spancat"}}
-> parser = nlp.add_pipe("spancat", config=config)
+> spancat = nlp.add_pipe("spancat", config=config)
 >
 > # Construction from class
 > from spacy.pipeline import SpanCategorizer
@@ -524,3 +524,22 @@ has two columns, indicating the start and end position.
 | `min_size`  | The minimal phrase lengths to suggest (inclusive). ~~[int]~~                 |
 | `max_size`  | The maximal phrase lengths to suggest (exclusive). ~~[int]~~                 |
 | **CREATES** | The suggester function. ~~Callable[[Iterable[Doc], Optional[Ops]], Ragged]~~ |
+
+### spacy.preset_spans_suggester.v1 {id="preset_spans_suggester"}
+
+> #### Example Config
+>
+> ```ini
+> [components.spancat.suggester]
+> @misc = "spacy.preset_spans_suggester.v1"
+> spans_key = "my_spans"
+> ```
+
+Suggest all spans that are already stored in doc.spans[spans_key]. This is
+useful when an upstream component is used to set the spans on the Doc such as a
+[`SpanRuler`](/api/spanruler) or [`SpanFinder`](/api/spanfinder).
+
+| Name        | Description                                                                   |
+| ----------- | ----------------------------------------------------------------------------- |
+| `spans_key` | Key of [`Doc.spans`](/api/doc/#spans) that provides spans to suggest. ~~str~~ |
+| **CREATES** | The suggester function. ~~Callable[[Iterable[Doc], Optional[Ops]], Ragged]~~  |
