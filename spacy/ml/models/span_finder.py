@@ -19,7 +19,6 @@ def build_finder_model(
     logistic_layer: Model[List[Floats2d], List[Floats2d]] = with_array(scorer)
     model: Model[InT, OutT] = chain(tok2vec, logistic_layer, flattener())
     model.set_ref("tok2vec", tok2vec)
-    # XXX Why do we have reference for both the scorer and it being wrapped in with_array?
     model.set_ref("scorer", scorer)
     model.set_ref("logistic_layer", logistic_layer)
 
