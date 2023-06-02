@@ -453,10 +453,9 @@ def test_config_overrides_registered_functions():
                 }
             },
         )
-        assert (
-            nlp_re2.config["components"]["attribute_ruler"]["scorer"]["spans_key"]
-            == {"@misc": "test_some_other_key"}
-        )
+        assert nlp_re2.config["components"]["attribute_ruler"]["scorer"][
+            "spans_key"
+        ] == {"@misc": "test_some_other_key"}
         # run dummy evaluation (will return None scores) in order to test that
         # the spans_key value in the nested override is working as intended in
         # the config
