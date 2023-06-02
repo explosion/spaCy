@@ -20,4 +20,8 @@ cdef class Morphology:
 cdef int check_feature(const MorphAnalysisC* morph, attr_t feature) nogil
 cdef list list_features(const MorphAnalysisC* morph)
 cdef np.ndarray get_by_field(const MorphAnalysisC* morph, attr_t field)
-cdef int get_n_by_field(attr_t* results, const MorphAnalysisC* morph, attr_t field) nogil
+cdef int get_n_by_field(
+    attr_t* results,
+    const MorphAnalysisC* morph,
+    attr_t field,
+) nogil
