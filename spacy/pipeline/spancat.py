@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, 
 
 import numpy
 from thinc.api import Config, Model, Ops, Optimizer, get_current_ops, set_dropout_rate
-from thinc.types import Floats2d, Ints2d, Ragged
+from thinc.types import Floats2d, Ints1d, Ints2d, Ragged
 
 from ..compat import Protocol, runtime_checkable
 from ..errors import Errors
@@ -111,6 +111,29 @@ def ngram_suggester(
     return output
 
 
+def preset_spans_suggester(
+    docs: Iterable[Doc], spans_key: str, *, ops: Optional[Ops] = None
+) -> Ragged:
+    if ops is None:
+        ops = get_current_ops()
+    spans = []
+    lengths = []
+    for doc in docs:
+        length = 0
+        if doc.spans[spans_key]:
+            for span in doc.spans[spans_key]:
+                spans.append([span.start, span.end])
+                length += 1
+
+        lengths.append(length)
+    lengths_array = cast(Ints1d, ops.asarray(lengths, dtype="i"))
+    if len(spans) > 0:
+        output = Ragged(ops.asarray(spans, dtype="i"), lengths_array)
+    else:
+        output = Ragged(ops.xp.zeros((0, 0), dtype="i"), lengths_array)
+    return output
+
+
 @registry.misc("spacy.ngram_suggester.v1")
 def build_ngram_suggester(sizes: List[int]) -> Suggester:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
@@ -127,6 +150,14 @@ def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
     indicating the start and end position."""
     sizes = list(range(min_size, max_size + 1))
     return build_ngram_suggester(sizes)
+
+
+@registry.misc("spacy.preset_spans_suggester.v1")
+def build_preset_spans_suggester(spans_key: str) -> Suggester:
+    """Suggest all spans that are already stored in doc.spans[spans_key].
+    This is useful when an upstream component is used to set the spans
+    on the Doc such as a SpanRuler or SpanFinder."""
+    return partial(preset_spans_suggester, spans_key=spans_key)
 
 
 @Language.factory(

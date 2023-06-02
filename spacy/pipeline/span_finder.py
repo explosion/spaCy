@@ -1,7 +1,7 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
-from thinc.api import Config, Model, Ops, Optimizer, get_current_ops, set_dropout_rate
-from thinc.types import Floats2d, Ints1d, Ragged
+from thinc.api import Config, Model, Optimizer, set_dropout_rate
+from thinc.types import Floats2d
 
 from spacy.language import Language
 from spacy.pipeline.trainable_pipe import TrainablePipe
@@ -11,7 +11,7 @@ from spacy.training import Example
 from spacy.errors import Errors
 
 from ..util import registry
-from .spancat import DEFAULT_SPANS_KEY, Suggester
+from .spancat import DEFAULT_SPANS_KEY
 
 span_finder_default_config = """
 [model]
@@ -310,34 +310,3 @@ class SpanFinder(TrainablePipe):
             self.model.initialize(X=docs, Y=Y)
         else:
             self.model.initialize()
-
-
-@registry.misc("spacy.span_finder_suggester.v1")
-def build_span_finder_suggester(spans_key: str) -> Suggester:
-    """Suggest every candidate predicted by the SpanFinder"""
-
-    def span_finder_suggester(
-        docs: Iterable[Doc], *, ops: Optional[Ops] = None
-    ) -> Ragged:
-        if ops is None:
-            ops = get_current_ops()
-        spans = []
-        lengths = []
-        for doc in docs:
-            length = 0
-            if doc.spans[spans_key]:
-                for span in doc.spans[spans_key]:
-                    spans.append([span.start, span.end])
-                    length += 1
-
-            lengths.append(length)
-
-        lengths_array = cast(Ints1d, ops.asarray(lengths, dtype="i"))
-        if len(spans) > 0:
-            output = Ragged(ops.asarray(spans, dtype="i"), lengths_array)
-        else:
-            output = Ragged(ops.xp.zeros((0, 0), dtype="i"), lengths_array)
-
-        return output
-
-    return span_finder_suggester

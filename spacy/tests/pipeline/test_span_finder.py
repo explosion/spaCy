@@ -199,7 +199,7 @@ def test_span_finder_suggester():
     docs = [nlp("This is an example."), nlp("This is the second example.")]
     docs[0].spans[SPANS_KEY] = [docs[0][3:4]]
     docs[1].spans[SPANS_KEY] = [docs[1][0:4], docs[1][3:5]]
-    suggester = registry.misc.get("spacy.span_finder_suggester.v1")(
+    suggester = registry.misc.get("spacy.preset_spans_suggester.v1")(
         spans_key=SPANS_KEY
     )
     candidates = suggester(docs)
