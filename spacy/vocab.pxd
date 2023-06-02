@@ -32,7 +32,7 @@ cdef class Vocab:
     cdef public object writing_system
     cdef public object get_noun_chunks
     cdef readonly int length
-    cdef public object _unused_object # TODO remove in v4, see #9150
+    cdef public object _unused_object  # TODO remove in v4, see #9150
     cdef public object lex_attr_getters
     cdef public object cfg
 
