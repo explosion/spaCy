@@ -254,6 +254,7 @@ def test_overfitting_IO():
     assert f"span_finder_{span_finder.spans_key}_f" in scores
     # XXX Its not perfect 1.0 F1 because we want it to overgenerate for now.
     assert scores[f"span_finder_{span_finder.spans_key}_f"] == 0.4
+    assert scores[f"span_finder_{span_finder.spans_key}_r"] == 1.0
 
     # also test that the spancat works for just a single entity in a sentence
     doc = nlp("London")
