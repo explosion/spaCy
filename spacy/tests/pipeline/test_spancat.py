@@ -411,9 +411,7 @@ def test_preset_spans_suggester():
     docs = [nlp("This is an example."), nlp("This is the second example.")]
     docs[0].spans[SPAN_KEY] = [docs[0][3:4]]
     docs[1].spans[SPAN_KEY] = [docs[1][0:4], docs[1][3:5]]
-    suggester = registry.misc.get("spacy.preset_spans_suggester.v1")(
-        spans_key=SPAN_KEY
-    )
+    suggester = registry.misc.get("spacy.preset_spans_suggester.v1")(spans_key=SPAN_KEY)
     candidates = suggester(docs)
     assert type(candidates) == Ragged
     assert len(candidates) == 2
