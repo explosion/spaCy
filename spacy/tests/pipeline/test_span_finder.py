@@ -1,6 +1,5 @@
 import pytest
 from thinc.api import Config
-from thinc.types import Ragged
 
 from spacy.language import Language
 from spacy.lang.en import English
@@ -191,23 +190,6 @@ def test_set_annotations_span_lengths(min_length, max_length, span_count):
         min_length = 1
 
     assert all(min_length <= len(span) <= max_length for span in doc.spans[SPANS_KEY])
-
-
-def test_span_finder_suggester():
-    nlp = Language()
-    docs = [nlp("This is an example."), nlp("This is the second example.")]
-    docs[0].spans[SPANS_KEY] = [docs[0][3:4]]
-    docs[1].spans[SPANS_KEY] = [docs[1][0:4], docs[1][3:5]]
-    suggester = registry.misc.get("spacy.preset_spans_suggester.v1")(
-        spans_key=SPANS_KEY
-    )
-    candidates = suggester(docs)
-    assert type(candidates) == Ragged
-    assert len(candidates) == 2
-    assert list(candidates.dataXd[0]) == [3, 4]
-    assert list(candidates.dataXd[1]) == [0, 4]
-    assert list(candidates.dataXd[2]) == [3, 5]
-    assert list(candidates.lengths) == [1, 2]
 
 
 def test_overfitting_IO():
