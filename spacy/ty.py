@@ -7,7 +7,7 @@ from thinc.api import Optimizer, Model
 
 if TYPE_CHECKING:
     from .training import Example
-    from spacy.language import Language
+    from .language import Language
 
 
 @runtime_checkable
