@@ -1269,8 +1269,10 @@ class Language:
                 "No 'get_examples' callback provided to 'Language.initialize', creating dummy examples"
             )
             doc = Doc(self.vocab, words=["x", "y", "z"])
+
             def get_examples():
                 return [Example.from_dict(doc, {})]
+
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(
                 method="Language.initialize", obj=type(get_examples)
