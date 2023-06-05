@@ -209,7 +209,7 @@ def test_overfitting_IO():
     # test the trained model
     test_text = "I like London and Berlin"
     doc = nlp(test_text)
-    spans = doc.spans[span_finder.spans_key]
+    spans = doc.spans[SPANS_KEY]
     assert len(spans) == 3
     assert set([span.text for span in spans]) == {
         "London",
@@ -222,7 +222,7 @@ def test_overfitting_IO():
         nlp.to_disk(tmp_dir)
         nlp2 = util.load_model_from_path(tmp_dir)
         doc2 = nlp2(test_text)
-        spans2 = doc2.spans[span_finder.spans_key]
+        spans2 = doc2.spans[SPANS_KEY]
         assert len(spans2) == 3
         assert set([span.text for span in spans2]) == {
             "London",
@@ -232,11 +232,11 @@ def test_overfitting_IO():
 
     # Test scoring
     scores = nlp.evaluate(train_examples)
-    assert f"span_finder_{span_finder.spans_key}_f" in scores
+    assert f"span_finder_{SPANS_KEY}_f" in scores
     # It's not perfect 1.0 F1 because it's designed to overgenerate for now.
-    assert scores[f"span_finder_{span_finder.spans_key}_p"] == 0.75
-    assert scores[f"span_finder_{span_finder.spans_key}_r"] == 1.0
+    assert scores[f"span_finder_{SPANS_KEY}_p"] == 0.75
+    assert scores[f"span_finder_{SPANS_KEY}_r"] == 1.0
 
     # also test that the spancat works for just a single entity in a sentence
     doc = nlp("London")
-    assert len(doc.spans[span_finder.spans_key]) == 1
+    assert len(doc.spans[SPANS_KEY]) == 1
