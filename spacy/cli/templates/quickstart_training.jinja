@@ -3,7 +3,7 @@ the docs and the init config command. It encodes various best practices and
 can help generate the best possible configuration, given a user's requirements. #}
 {%- set use_transformer = hardware != "cpu" and transformer_data -%}
 {%- set transformer = transformer_data[optimize] if use_transformer else {} -%}
-{%- set listener_components = ["tagger", "morphologizer", "parser", "ner", "textcat", "textcat_multilabel", "entity_linker", "spancat", "spancat_singlelabel", "trainable_lemmatizer"] -%}
+{%- set listener_components = ["tagger", "morphologizer", "parser", "ner", "textcat", "textcat_multilabel", "entity_linker", "span_finder", "spancat", "spancat_singlelabel", "trainable_lemmatizer"] -%}
 [paths]
 train = null
 dev = null
@@ -28,7 +28,7 @@ lang = "{{ lang }}"
 tok2vec/transformer. #}
 {%- set with_accuracy_or_transformer = (use_transformer or with_accuracy) -%}
 {%- set textcat_needs_features = has_textcat and with_accuracy_or_transformer -%}
-{%- if ("tagger" in components or "morphologizer" in components or "parser" in components or "ner" in components or "spancat" in components or "spancat_singlelabel" in components or "trainable_lemmatizer" in components or "entity_linker" in components or textcat_needs_features) -%}
+{%- if ("tagger" in components or "morphologizer" in components or "parser" in components or "ner" in components or "span_finder" in components or "spancat" in components or "spancat_singlelabel" in components or "trainable_lemmatizer" in components or "entity_linker" in components or textcat_needs_features) -%}
 {%- set full_pipeline = ["transformer" if use_transformer else "tok2vec"] + components -%}
 {%- else -%}
 {%- set full_pipeline = components -%}
@@ -124,6 +124,30 @@ nO = null
 grad_factor = 1.0
 
 [components.ner.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{% endif -%}
+
+{% if "span_finder" in components -%}
+[components.span_finder]
+factory = "span_finder"
+max_length = null
+min_length = null
+scorer = {"@scorers":"spacy.span_finder_scorer.v1"}
+spans_key = "sc"
+threshold = 0.5
+
+[components.span_finder.model]
+@architectures = "spacy.SpanFinder.v1"
+
+[components.span_finder.model.scorer]
+@layers = "spacy.LinearLogistic.v1"
+nO = 2
+
+[components.span_finder.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.span_finder.model.tok2vec.pooling]
 @layers = "reduce_mean.v1"
 {% endif -%}
 
@@ -388,6 +412,27 @@ use_upper = true
 nO = null
 
 [components.ner.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+{% endif %}
+
+{% if "span_finder" in components %}
+[components.span_finder]
+factory = "span_finder"
+max_length = null
+min_length = null
+scorer = {"@scorers":"spacy.span_finder_scorer.v1"}
+spans_key = "sc"
+threshold = 0.5
+
+[components.span_finder.model]
+@architectures = "spacy.SpanFinder.v1"
+
+[components.span_finder.model.scorer]
+@layers = "spacy.LinearLogistic.v1"
+nO = 2
+
+[components.span_finder.model.tok2vec]
 @architectures = "spacy.Tok2VecListener.v1"
 width = ${components.tok2vec.model.encode.width}
 {% endif %}
