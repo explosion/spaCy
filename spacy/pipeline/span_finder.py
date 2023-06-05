@@ -138,18 +138,21 @@ class SpanFinder(TrainablePipe):
         min_length: Optional[int] = None,
         scorer: Optional[Callable] = span_finder_score,
     ) -> None:
-        """Initialize the span boundary detector.
-        model (thinc.api.Model): The Thinc Model powering the pipeline component.
+        """Initialize the span finder.
+        model (thinc.api.Model): The Thinc Model powering the pipeline
+            component.
         name (str): The component instance name, used to add entries to the
             losses during training.
         threshold (float): Minimum probability to consider a prediction
             positive.
         scorer (Optional[Callable]): The scoring method.
-        spans_key (str): Key of the doc.spans dict to save the spans under. During
-            initialization and training, the component will look for spans on the
-            reference document under the same key.
-        max_length (Optional[int]): Max length of the produced spans, defaults to None meaning unlimited length.
-        min_length (Optional[int]): Min length of the produced spans, defaults to None meaning shortest span is length 1.
+        spans_key (str): Key of the doc.spans dict to save the spans under.
+            During initialization and training, the component will look for
+            spans on the reference document under the same key.
+        max_length (Optional[int]): Maximum length of the produced spans,
+            defaults to None meaning unlimited length.
+        min_length (Optional[int]): Minimum length of the produced spans,
+            defaults to None meaning shortest span length is 1.
         """
         self.vocab = nlp.vocab
         if (max_length is not None and max_length < 1) or (
@@ -194,7 +197,6 @@ class SpanFinder(TrainablePipe):
                 if token_score[1] >= self.cfg["threshold"]:
                     ends.append(token.i)
 
-            print(self.cfg)
             for start in starts:
                 for end in ends:
                     span_length = end + 1 - start
