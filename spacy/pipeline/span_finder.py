@@ -78,8 +78,10 @@ def make_span_finder(
         initialization and training, the component will look for spans on the
         reference document under the same key.
     threshold (float): Minimum probability to consider a prediction positive.
-    max_length (Optional[int]): Max length of the produced spans, defaults to None meaning unlimited length.
-    min_length (Optional[int]): Min length of the produced spans, defaults to None meaining shortest span is length 1.
+    max_length (Optional[int]): Maximum length of the produced spans, defaults
+        to None meaning unlimited length.
+    min_length (Optional[int]): Minimum length of the produced spans, defaults
+        to None meaning shortest span length is 1.
     scorer (Optional[Callable]): The scoring method. Defaults to
         Scorer.score_spans for the Doc.spans[spans_key] with overlapping
         spans allowed.
@@ -124,7 +126,10 @@ def _char_indices(span: Span) -> Tuple[int, int]:
 
 
 class SpanFinder(TrainablePipe):
-    """Pipeline that learns span boundaries"""
+    """Pipeline that learns span boundaries.
+
+    DOCS: https://spacy.io/api/spancategorizer
+    """
 
     def __init__(
         self,
@@ -153,6 +158,8 @@ class SpanFinder(TrainablePipe):
             defaults to None meaning unlimited length.
         min_length (Optional[int]): Minimum length of the produced spans,
             defaults to None meaning shortest span length is 1.
+
+        DOCS: https://spacy.io/api/spanfinder#init
         """
         self.vocab = nlp.vocab
         if (max_length is not None and max_length < 1) or (
@@ -172,9 +179,13 @@ class SpanFinder(TrainablePipe):
         }
 
     def predict(self, docs: Iterable[Doc]):
-        """Apply the pipeline's model to a batch of docs, without modifying them.
+        """Apply the pipeline's model to a batch of docs, without modifying
+        them.
+
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: The models prediction for each document.
+
+        DOCS: https://spacy.io/api/spanfinder#predict
         """
         scores = self.model.predict(docs)
         return scores
@@ -183,6 +194,8 @@ class SpanFinder(TrainablePipe):
         """Modify a batch of Doc objects, using pre-computed scores.
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by SpanFinder predict method.
+
+        DOCS: https://spacy.io/api/spanfinder#set_annotations
         """
         offset = 0
         for i, doc in enumerate(docs):
@@ -225,9 +238,11 @@ class SpanFinder(TrainablePipe):
         examples (Iterable[Example]): A batch of Example objects.
         drop (float): The dropout rate.
         sgd (Optional[thinc.api.Optimizer]): The optimizer.
-        losses (Optional[Dict[str, float]]): Optional record of the loss during training.
-            Updated using the component name as the key.
+        losses (Optional[Dict[str, float]]): Optional record of the loss during
+            training. Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
+
+        DOCS: https://spacy.io/api/spanfinder#update
         """
         if losses is None:
             losses = {}
@@ -247,7 +262,9 @@ class SpanFinder(TrainablePipe):
         their predicted scores.
         examples (Iterable[Examples]): The batch of examples.
         scores: Scores representing the model's predictions.
-        RETURNS (Tuple[float, float]): The loss and the gradient.
+        RETURNS (Tuple[float, Floats2d]): The loss and the gradient.
+
+        DOCS: https://spacy.io/api/spanfinder#get_loss
         """
         truths, masks = self._get_aligned_truth_scores(examples, self.model.ops)
         d_scores = scores - self.model.ops.asarray2f(truths)
@@ -256,7 +273,9 @@ class SpanFinder(TrainablePipe):
         return loss, d_scores
 
     def _get_aligned_truth_scores(self, examples, ops) -> Tuple[Floats2d, Floats2d]:
-        """Align scores of the predictions to the references for calculating the loss"""
+        """Align scores of the predictions to the references for calculating
+        the loss.
+        """
         truths = []
         masks = []
         for eg in examples:
@@ -298,7 +317,10 @@ class SpanFinder(TrainablePipe):
         of data examples.
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
-        nlp (Optional[Language]): The current nlp object the component is part of.
+        nlp (Optional[Language]): The current nlp object the component is part
+            of.
+
+        DOCS: https://spacy.io/api/spanfinder#initialize
         """
         subbatch: List[Example] = []
 

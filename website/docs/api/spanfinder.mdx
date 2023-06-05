@@ -60,8 +60,8 @@ architectures and their arguments and hyperparameters.
 | `model`      | A model instance that is given a list of documents and predicts a probability for each token. ~~Model[List[Doc], Floats2d]~~                                                                                           |
 | `spans_key`  | Key of the [`Doc.spans`](/api/doc#spans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"sc"`. ~~str~~ |
 | `threshold`  | Minimum probability to consider a prediction positive. Defaults to `0.5`. ~~float~~                                                                                                                                    |
-| `max_length` | Max length of the produced spans, defaults to `None` meaning unlimited length. ~~Optional[int]~~                                                                                                                       |
-| `min_length` | Min length of the produced spans, defaults to `None` meaning shortest span is length 1. ~~Optional[int]~~                                                                                                              |
+| `max_length` | Maximum length of the produced spans, defaults to `None` meaning unlimited length. ~~Optional[int]~~                                                                                                                   |
+| `min_length` | Minimum length of the produced spans, defaults to `None` meaning shortest span length is 1. ~~Optional[int]~~                                                                                                          |
 | `scorer`     | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                      |
 
 ```python
@@ -97,8 +97,8 @@ shortcut for this and instantiate the component using its string name and
 | _keyword-only_ |                                                                                                                                                                                                                        |
 | `spans_key`    | Key of the [`Doc.spans`](/api/doc#spans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"sc"`. ~~str~~ |
 | `threshold`    | Minimum probability to consider a prediction positive. Defaults to `0.5`. ~~float~~                                                                                                                                    |
-| `max_length`   | Max length of the produced spans, defaults to `None` meaning unlimited length. ~~Optional[int]~~                                                                                                                       |
-| `min_length`   | Min length of the produced spans, defaults to `None` meaning shortest span is length 1. ~~Optional[int]~~                                                                                                              |
+| `max_length`   | Maximum length of the produced spans, defaults to `None` meaning unlimited length. ~~Optional[int]~~                                                                                                                   |
+| `min_length`   | Minimum length of the produced spans, defaults to `None` meaning shortest span length is 1. ~~Optional[int]~~                                                                                                          |
 | `scorer`       | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                      |
 
 ## SpanFinder.\_\_call\_\_ {id="call",tag="method"}
@@ -245,11 +245,11 @@ predicted scores.
 > loss, d_loss = span_finder.get_loss(examples, scores)
 > ```
 
-| Name           | Description                                                                 |
-| -------------- | --------------------------------------------------------------------------- |
-| `examples`     | The batch of examples. ~~Iterable[Example]~~                                |
-| `spans_scores` | Scores representing the model's predictions. ~~Tuple[Ragged, Floats2d]~~    |
-| **RETURNS**    | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
+| Name           | Description                                                                    |
+| -------------- | ------------------------------------------------------------------------------ |
+| `examples`     | The batch of examples. ~~Iterable[Example]~~                                   |
+| `spans_scores` | Scores representing the model's predictions. ~~Tuple[Ragged, Floats2d]~~       |
+| **RETURNS**    | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, Floats2d]~~ |
 
 ## SpanFinder.create_optimizer {id="create_optimizer",tag="method"}
 
