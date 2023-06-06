@@ -573,7 +573,7 @@ def test_tok2vec_listener_source_link_name():
 
     # there is no way to have the component have the right name for both
     # pipelines, right now the most recently modified pipeline is prioritized
-    #assert nlp1.get_pipe("tagger").name == nlp2.get_pipe("tagger2").name == "tagger2"  # TODO: uncomment
+    # assert nlp1.get_pipe("tagger").name == nlp2.get_pipe("tagger2").name == "tagger2"  # TODO: uncomment
 
     # there is no way to have the tok2vec have the right listener map for both
     # pipelines, right now the most recently modified pipeline is prioritized
