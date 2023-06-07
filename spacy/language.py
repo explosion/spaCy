@@ -1921,27 +1921,6 @@ class Language:
                 raise ValueError(
                     Errors.E942.format(name="pipeline_creation", value=type(nlp))
                 )
-        # Detect components with listeners that are not frozen consistently
-        for name, proc in nlp.pipeline:
-            if isinstance(proc, ty.ListenedToComponent):
-                # Remove listeners not in the pipeline
-                listener_names = proc.listening_components
-                unused_listener_names = [
-                    ll for ll in listener_names if ll not in nlp.pipe_names
-                ]
-                for listener_name in unused_listener_names:
-                    for listener in proc.listener_map.get(listener_name, []):
-                        proc.remove_listener(listener, listener_name)
-
-                for listener_name in proc.listening_components:
-                    # e.g. tok2vec/transformer
-                    # If it's a component sourced from another pipeline, we check if
-                    # the tok2vec listeners should be replaced with standalone tok2vec
-                    # models (e.g. so component can be frozen without its performance
-                    # degrading when other components/tok2vec are updated)
-                    paths = sourced.get(listener_name, {}).get("replace_listeners", [])
-                    if paths:
-                        nlp.replace_listeners(name, listener_name, paths)
         return nlp
 
     def replace_listeners(
