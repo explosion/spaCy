@@ -973,6 +973,10 @@ class Errors(metaclass=ErrorsWithCodes):
     E1052 = ("Unable to copy spans: the character offsets for the span at "
              "index {i} in the span group do not align with the tokenization "
              "in the target doc.")
+    E1053 = ("Both 'min_length' and 'max_length' should be larger than 0, but found"
+             " 'min_length': {min_length}, 'max_length': {max_length}")
+    E1054 = ("The text, including whitespace, must match between reference and "
+             "predicted docs when training {component}.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
