@@ -128,7 +128,7 @@ def _char_indices(span: Span) -> Tuple[int, int]:
 class SpanFinder(TrainablePipe):
     """Pipeline that learns span boundaries.
 
-    DOCS: https://spacy.io/api/spancategorizer
+    DOCS: https://spacy.io/api/spanfinder
     """
 
     def __init__(
