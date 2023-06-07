@@ -216,7 +216,6 @@ def test_tok2vec_listener_callback():
     assert nlp.pipe_names == ["tok2vec", "tagger"]
     tagger = nlp.get_pipe("tagger")
     tok2vec = nlp.get_pipe("tok2vec")
-    nlp._link_components()  # TODO: remove
     docs = [nlp.make_doc("A random sentence")]
     tok2vec.model.initialize(X=docs)
     gold_array = [[1.0 for tag in ["V", "Z"]] for word in docs]
@@ -564,7 +563,6 @@ def test_tok2vec_listener_source_link_name():
     """
     orig_config = Config().from_str(cfg_string_multi)
     nlp1 = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
-    nlp1._link_components()  # TODO: remove
     assert nlp1.get_pipe("tok2vec").listening_components == ["tagger", "ner"]
 
     nlp2 = English()
@@ -573,7 +571,7 @@ def test_tok2vec_listener_source_link_name():
 
     # there is no way to have the component have the right name for both
     # pipelines, right now the most recently modified pipeline is prioritized
-    # assert nlp1.get_pipe("tagger").name == nlp2.get_pipe("tagger2").name == "tagger2"  # TODO: uncomment
+    assert nlp1.get_pipe("tagger").name == nlp2.get_pipe("tagger2").name == "tagger2"
 
     # there is no way to have the tok2vec have the right listener map for both
     # pipelines, right now the most recently modified pipeline is prioritized
@@ -600,9 +598,7 @@ def test_tok2vec_listener_source_link_name():
 def test_tok2vec_listener_source_replace_listeners():
     orig_config = Config().from_str(cfg_string_multi)
     nlp1 = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
-    nlp1._link_components()  # TODO: remove
     assert nlp1.get_pipe("tok2vec").listening_components == ["tagger", "ner"]
-    nlp1._link_components()  # TODO: remove
     nlp1.replace_listeners("tok2vec", "tagger", ["model.tok2vec"])
     assert nlp1.get_pipe("tok2vec").listening_components == ["ner"]
 
