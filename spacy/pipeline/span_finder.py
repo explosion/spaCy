@@ -3,12 +3,12 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 from thinc.api import Config, Model, Optimizer, set_dropout_rate
 from thinc.types import Floats2d
 
-from spacy.language import Language
-from spacy.pipeline.trainable_pipe import TrainablePipe
-from spacy.scorer import Scorer
-from spacy.tokens import Doc, Span
-from spacy.training import Example
-from spacy.errors import Errors
+from ..language import Language
+from .trainable_pipe import TrainablePipe
+from ..scorer import Scorer
+from ..tokens import Doc, Span
+from ..training import Example
+from ..errors import Errors
 
 from ..util import registry
 from .spancat import DEFAULT_SPANS_KEY
