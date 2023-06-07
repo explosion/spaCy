@@ -11,6 +11,9 @@ from click import NoSuchOption
 from packaging.specifiers import SpecifierSet
 from thinc.api import Config, ConfigValidationError
 
+from weasel.cli.remote_storage import RemoteStorage
+from weasel.cli.run import _check_requirements
+
 from spacy import about
 from spacy.cli import info
 from spacy.cli._util import walk_directory
