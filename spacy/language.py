@@ -934,9 +934,6 @@ class Language:
         if old_name in self._config["initialize"]["components"]:
             init_cfg = self._config["initialize"]["components"].pop(old_name)
             self._config["initialize"]["components"][new_name] = init_cfg
-        pipe = self.get_pipe(new_name)
-        if hasattr(pipe, "name"):
-            pipe.name = new_name
         self._link_components()
 
     def remove_pipe(self, name: str) -> Tuple[str, PipeCallable]:
