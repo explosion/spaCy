@@ -1,20 +1,8 @@
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional
+from typing import Protocol, Sequence, Tuple, Union, overload
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Protocol,
-    Sequence,
-    Tuple,
-    Union,
-    overload,
-)
+import numpy
 
-import numpy as np
 from cymem.cymem import Pool
 from thinc.types import Floats1d, Floats2d, Ints2d
 
@@ -40,7 +28,7 @@ class Doc:
     user_hooks: Dict[str, Callable[..., Any]]
     user_token_hooks: Dict[str, Callable[..., Any]]
     user_span_hooks: Dict[str, Callable[..., Any]]
-    tensor: np.ndarray[Any, np.dtype[np.float_]]
+    tensor: numpy.ndarray[Any, numpy.dtype[numpy.float_]]
     user_data: Dict[str, Any]
     has_unknown_spaces: bool
     _context: Any
@@ -164,7 +152,7 @@ class Doc:
     ) -> Doc: ...
     def to_array(
         self, py_attr_ids: Union[int, str, List[Union[int, str]]]
-    ) -> np.ndarray[Any, np.dtype[np.float_]]: ...
+    ) -> numpy.ndarray[Any, numpy.dtype[numpy.float_]]: ...
     @staticmethod
     def from_docs(
         docs: List[Doc],
