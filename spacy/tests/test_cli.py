@@ -14,6 +14,7 @@ from spacy.tokens import DocBin
 
 from weasel.cli.remote_storage import RemoteStorage
 from weasel.cli.run import _check_requirements
+from weasel.util import load_project_config
 
 from spacy import about
 from spacy.cli import info
