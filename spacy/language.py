@@ -1847,7 +1847,7 @@ class Language:
         # and aren't built by factory.
         missing_components = _find_missing_components(pipeline, pipe_instances, exclude)
         if missing_components:
-            raise ValueError(Errors.E1052.format(", ", join(missing_components)))
+            raise ValueError(Errors.E1052.format(names=", ".join(missing_components)))
         # If components are loaded from a source (existing models), we cache
         # them here so they're only loaded once
         source_nlps = {}
@@ -2413,8 +2413,10 @@ def _get_instantiated_vocab(
 
 
 def _find_missing_components(
-    pipeline: List[str], pipe_instances: Dict[str, Any], exclude: List[str]
+    pipeline: Dict[str, Dict[str, Any]], pipe_instances: Dict[str, Any], exclude: Iterable[str]
 ) -> List[str]:
-    return [
-        name for name in pipeline if name not in pipe_instances and name not in exclude
-    ]
+    missing = []
+    for name, config in pipeline.items():
+        if config.get("factory") == INSTANCE_FACTORY_NAME and name not in pipe_instances and name not in exclude:
+            missing.append(name)
+    return missing
