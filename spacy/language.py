@@ -801,8 +801,11 @@ class Language:
         self._components.insert(pipe_index, (name, pipe_component))
         return pipe_component
 
-    def add_pipe_instance(self, component: PipeCallable,
-        /, name: Optional[str] = None,
+    def add_pipe_instance(
+        self,
+        component: PipeCallable,
+        /,
+        name: Optional[str] = None,
         *,
         before: Optional[Union[str, int]] = None,
         after: Optional[Union[str, int]] = None,
@@ -1743,7 +1746,7 @@ class Language:
         meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
         validate: bool = True,
-        pipe_instances: Dict[str, Any] = SimpleFrozenDict()
+        pipe_instances: Dict[str, Any] = SimpleFrozenDict(),
     ) -> "Language":
         """Create the nlp object from a loaded config. Will set up the tokenizer
         and language data, add pipeline components etc. If no config is provided,
@@ -1844,7 +1847,7 @@ class Language:
         # and aren't built by factory.
         missing_components = _find_missing_components(pipeline, pipe_instances, exclude)
         if missing_components:
-            raise ValueError(Errors.E1052.format(", ",join(missing_components)))
+            raise ValueError(Errors.E1052.format(", ", join(missing_components)))
         # If components are loaded from a source (existing models), we cache
         # them here so they're only loaded once
         source_nlps = {}
@@ -1858,9 +1861,7 @@ class Language:
                 if pipe_name in exclude:
                     continue
                 else:
-                    nlp.add_pipe_instance(
-                        pipe_instances[pipe_name]
-                    )
+                    nlp.add_pipe_instance(pipe_instances[pipe_name])
             # Is it important that we instantiate pipes that
             # aren't excluded? It seems like we would want
             # the exclude check above. I've left it how it
@@ -2384,7 +2385,9 @@ class _Sender:
             self.send()
 
 
-def _get_instantiated_vocab(vocab: Union[bool, Vocab], pipe_instances: Dict[str, Any]) -> Union[bool, Vocab]:
+def _get_instantiated_vocab(
+    vocab: Union[bool, Vocab], pipe_instances: Dict[str, Any]
+) -> Union[bool, Vocab]:
     vocab_instances = {}
     for name, instance in pipe_instances.items():
         if hasattr(instance, "vocab") and isinstance(instance.vocab, Vocab):
@@ -2410,8 +2413,8 @@ def _get_instantiated_vocab(vocab: Union[bool, Vocab], pipe_instances: Dict[str,
 
 
 def _find_missing_components(
-    pipeline: List[str],
-    pipe_instances: Dict[str, Any],
-    exclude: List[str]
+    pipeline: List[str], pipe_instances: Dict[str, Any], exclude: List[str]
 ) -> List[str]:
-    return [name for name in pipeline if name not in pipe_instances and name not in exclude]
+    return [
+        name for name in pipeline if name not in pipe_instances and name not in exclude
+    ]
