@@ -215,6 +215,11 @@ class Warnings(metaclass=ErrorsWithCodes):
     W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
             "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
     W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
+    W125 = (
+        "Pipe instance '{name}' is being added with a vocab "
+        "instance that will not match other components. This is "
+        "usually an error."
+    )
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -970,6 +975,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
              "or use `auto_select_port=True` to pick an available port automatically.")
     E1051 = ("'allow_overlap' can only be False when max_positive is 1, but found 'max_positive': {max_positive}.")
+    E1052 = ("Cannot create Language instance from config: missing pipeline components. The following components were added by instance (rather than config) via the 'Language.add_pipe_instance()' method, but are not present in the 'pipe_instances' variable: {names}")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
