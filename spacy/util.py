@@ -415,6 +415,7 @@ def load_model(
     enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
+    pipe_instances: Dict[str, Any] = SimpleFrozenDict()
 ) -> "Language":
     """Load a model from a package or data path.
 
@@ -426,6 +427,9 @@ def load_model(
     exclude (Union[str, Iterable[str]]):  Name(s) of pipeline component(s) to exclude.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
+    pipe_instances (Dict[str, Any]): Dictionary of components 
+        to be added to the pipeline directly (not created from
+        config)
     RETURNS (Language): The loaded nlp object.
     """
     kwargs = {
@@ -434,6 +438,7 @@ def load_model(
         "enable": enable,
         "exclude": exclude,
         "config": config,
+        "pipe_instances": pipe_instances
     }
     if isinstance(name, str):  # name or string path
         if name.startswith("blank:"):  # shortcut for blank model
@@ -457,6 +462,7 @@ def load_model_from_package(
     enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
+    pipe_instances: Dict[str, Any] = SimpleFrozenDict()
 ) -> "Language":
     """Load a model from an installed package.
 
@@ -472,10 +478,13 @@ def load_model_from_package(
         components won't be loaded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
+    pipe_instances (Dict[str, Any]): Dictionary of components 
+        to be added to the pipeline directly (not created from
+        config)
     RETURNS (Language): The loaded nlp object.
     """
     cls = importlib.import_module(name)
-    return cls.load(vocab=vocab, disable=disable, enable=enable, exclude=exclude, config=config)  # type: ignore[attr-defined]
+    return cls.load(vocab=vocab, disable=disable, enable=enable, exclude=exclude, config=config, pipe_instances=pipe_instances)  # type: ignore[attr-defined]
 
 
 def load_model_from_path(
@@ -487,6 +496,7 @@ def load_model_from_path(
     enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
+    pipe_instances: Dict[str, Any] = SimpleFrozenDict()
 ) -> "Language":
     """Load a model from a data directory path. Creates Language class with
     pipeline from config.cfg and then calls from_disk() with path.
@@ -504,6 +514,9 @@ def load_model_from_path(
         components won't be loaded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
+    pipe_instances (Dict[str, Any]): Dictionary of components
+        to be added to the pipeline directly (not created from
+        config)
     RETURNS (Language): The loaded nlp object.
     """
     if not model_path.exists():
@@ -520,6 +533,7 @@ def load_model_from_path(
         enable=enable,
         exclude=exclude,
         meta=meta,
+        pipe_instances=pipe_instances
     )
     return nlp.from_disk(model_path, exclude=exclude, overrides=overrides)
 
@@ -534,6 +548,7 @@ def load_model_from_config(
     exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     auto_fill: bool = False,
     validate: bool = True,
+    pipe_instances: Dict[str, Any] = SimpleFrozenDict()
 ) -> "Language":
     """Create an nlp object from a config. Expects the full config file including
     a section "nlp" containing the settings for the nlp object.
@@ -551,6 +566,9 @@ def load_model_from_config(
         components won't be loaded.
     auto_fill (bool): Whether to auto-fill config with missing defaults.
     validate (bool): Whether to show config validation errors.
+    pipe_instances (Dict[str, Any]): Dictionary of components
+        to be added to the pipeline directly (not created from
+        config)
     RETURNS (Language): The loaded nlp object.
     """
     if "nlp" not in config:
@@ -570,6 +588,7 @@ def load_model_from_config(
         auto_fill=auto_fill,
         validate=validate,
         meta=meta,
+        pipe_instances=pipe_instances
     )
     return nlp
 

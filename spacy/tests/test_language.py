@@ -799,3 +799,36 @@ def test_component_return():
     nlp.add_pipe("test_component_bad_pipe")
     with pytest.raises(ValueError, match="instead of a Doc"):
         nlp("text")
+
+
+@pytest.mark.parametrize("components,kwargs,position", [
+    (["t1", "t2"], {"before": "t1"}, 0),
+    (["t1", "t2"], {"after": "t1"}, 1),
+    (["t1", "t2"], {"after": "t1"}, 1),
+    (["t1", "t2"], {"first": True}, 0),
+    (["t1", "t2"], {"last": True}, 2),
+    (["t1", "t2"], {"last": False}, 2),
+    (["t1", "t2"], {"first": False}, ValueError),
+])
+def test_add_pipe_instance(components, kwargs, position):
+    nlp = Language()
+    for name in components:
+        nlp.add_pipe("textcat", name=name)
+    pipe_names = list(nlp.pipe_names)
+    if isinstance(position, int):
+        result = nlp.add_pipe_instance(evil_component, name="new_component", **kwargs)
+        assert result is evil_component
+        pipe_names.insert(position, "new_component")
+        assert nlp.pipe_names == pipe_names
+    else:
+        with pytest.raises(ValueError):
+            result = nlp.add_pipe_instance(evil_component, name="new_component", **kwargs)
+
+
+def test_add_pipe_instance_to_bytes():
+    nlp = Language()
+    nlp.add_pipe("textcat", name="t1")
+    nlp.add_pipe("textcat", name="t2")
+    nlp.add_pipe_instance(evil_component, name="new_component")
+    b = nlp.to_bytes()
+ 

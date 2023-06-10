@@ -35,6 +35,7 @@ def load(
     enable: Union[str, Iterable[str]] = util._DEFAULT_EMPTY_PIPES,
     exclude: Union[str, Iterable[str]] = util._DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict(),
+    pipe_instances: Dict[str, Any] = util.SimpleFrozenDict(),
 ) -> Language:
     """Load a spaCy model from an installed package or a local path.
 
@@ -58,6 +59,7 @@ def load(
         enable=enable,
         exclude=exclude,
         config=config,
+        pipe_instances=pipe_instances,
     )
 
 
