@@ -81,11 +81,8 @@ def download(
 
 def get_model_filename(model_name: str, version: str, sdist: bool = False) -> str:
     dl_tpl = "{m}-{v}/{m}-{v}{s}"
-    egg_tpl = "#egg={m}=={v}"
     suffix = SDIST_SUFFIX if sdist else WHEEL_SUFFIX
     filename = dl_tpl.format(m=model_name, v=version, s=suffix)
-    if sdist:
-        filename += egg_tpl.format(m=model_name, v=version)
     return filename
 
 

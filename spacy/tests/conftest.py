@@ -292,6 +292,11 @@ def ml_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def ms_tokenizer():
+    return get_lang_class("ms")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def nb_tokenizer():
     return get_lang_class("nb")().tokenizer
 

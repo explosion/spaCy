@@ -1,6 +1,6 @@
 from typing import Iterator, Optional, Any, Dict, Callable, Iterable
 from typing import Union, Tuple, List, Set, Pattern, Sequence, overload
-from typing import NoReturn, TYPE_CHECKING, TypeVar, cast
+from typing import NoReturn, TypeVar, cast
 
 from dataclasses import dataclass
 import random
@@ -1325,7 +1325,10 @@ class Language:
                 "No 'get_examples' callback provided to 'Language.initialize', creating dummy examples"
             )
             doc = Doc(self.vocab, words=["x", "y", "z"])
-            get_examples = lambda: [Example.from_dict(doc, {})]
+
+            def get_examples():
+                return [Example.from_dict(doc, {})]
+
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(
                 method="Language.initialize", obj=type(get_examples)
@@ -1428,6 +1431,7 @@ class Language:
         scorer: Optional[Scorer] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         scorer_cfg: Optional[Dict[str, Any]] = None,
+        per_component: bool = False,
     ) -> Dict[str, Any]:
         """Evaluate a model's pipeline components.
 
@@ -1439,6 +1443,8 @@ class Language:
             arguments for specific components.
         scorer_cfg (dict): An optional dictionary with extra keyword arguments
             for the scorer.
+        per_component (bool): Whether to return the scores keyed by component
+            name. Defaults to False.
 
         RETURNS (Scorer): The scorer containing the evaluation results.
 
@@ -1471,7 +1477,7 @@ class Language:
         for eg, doc in zip(examples, docs):
             eg.predicted = doc
         end_time = timer()
-        results = scorer.score(examples)
+        results = scorer.score(examples, per_component=per_component)
         n_words = sum(len(eg.predicted) for eg in examples)
         results["speed"] = n_words / (end_time - start_time)
         return results
@@ -1847,7 +1853,7 @@ class Language:
         # and aren't built by factory.
         missing_components = _find_missing_components(pipeline, pipe_instances, exclude)
         if missing_components:
-            raise ValueError(Errors.E1052.format(names=", ".join(missing_components)))
+            raise ValueError(Errors.E1055.format(names=", ".join(missing_components)))
         # If components are loaded from a source (existing models), we cache
         # them here so they're only loaded once
         source_nlps = {}
