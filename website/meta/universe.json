@@ -114,26 +114,30 @@
             "id": "grecy",
             "title": "greCy",
             "slogan": "Ancient Greek pipelines for spaCy",
-            "description": "greCy offers state-of-the-art pipelines for ancient Greek NLP. The repository makes language models available in various sizes, some of them containing floret word vectors and a BERT transformer layer.",
+            "description": "greCy offers state-of-the-art pipelines for ancient Greek NLP. It installs language models available in various sizes, some of them containing either word vectors or the aristoBERTo transformer.",
             "github": "jmyerston/greCy",
+            "pip": "grecy",
             "code_example": [
-                "import spacy",
-                "#After installing the grc_ud_proiel_trf wheel package from the greCy repository",
+                "python -m grecy install grc_proiel_trf",
                 "",
-                "nlp = spacy.load('grc_ud_proiel_trf')",
-                "doc = nlp('δοκῶ μοι περὶ ὧν πυνθάνεσθε οὐκ ἀμελέτητος εἶναι.')",
+                "#After installing grc_proiel_trf or any other model",
+                "import spacy",
+                "",
+                "nlp = spacy.load('grc_proiel_trf')",
+                "doc = nlp('δοκῶ μοι περὶ ὧν πυνθάνεσθε οὐκ ἀμελέτητος εἶναι')",
                 "",
                 "for token in doc:",
-                "   print(token.text, token.norm_, token.lemma_, token.pos_, token.tag_)"
+                "   print(f'{token.text}, lemma: {token.lemma_}, pos: {token.pos_}, dep: {token.dep_}')"
             ],
             "code_language": "python",
+            "thumb": "https://jacobo-syntax.hf.space/media/03a5317fa660c142e41dd2870b4273ce4e668e6fcdee0a276891f563.png",
             "author": "Jacobo Myerston",
             "author_links": {
                 "twitter": "@jcbmyrstn",
                 "github": "jmyerston",
                 "website": "https://huggingface.co/spaces/Jacobo/syntax"
             },
-            "category": ["pipeline", "research"],
+            "category": ["pipeline", "research","models"],
             "tags": ["ancient Greek"]
         },
         {
