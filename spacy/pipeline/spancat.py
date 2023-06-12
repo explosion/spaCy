@@ -1,22 +1,20 @@
-from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast, Union
 from dataclasses import dataclass
 from functools import partial
-from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
-from thinc.api import Optimizer
-from thinc.types import Ragged, Ints2d, Floats2d
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy
+from thinc.api import Config, Model, Ops, Optimizer, get_current_ops, set_dropout_rate
+from thinc.types import Floats2d, Ints1d, Ints2d, Ragged
 
 from ..compat import Protocol, runtime_checkable
-from ..scorer import Scorer
-from ..language import Language
-from .trainable_pipe import TrainablePipe
-from ..tokens import Doc, SpanGroup, Span
-from ..vocab import Vocab
-from ..training import Example, validate_examples
 from ..errors import Errors
+from ..language import Language
+from ..scorer import Scorer
+from ..tokens import Doc, Span, SpanGroup
+from ..training import Example, validate_examples
 from ..util import registry
-
+from ..vocab import Vocab
+from .trainable_pipe import TrainablePipe
 
 spancat_default_config = """
 [model]
@@ -33,8 +31,8 @@ hidden_size = 128
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v2"
 width = 96
-rows = [5000, 2000, 1000, 1000]
-attrs = ["ORTH", "PREFIX", "SUFFIX", "SHAPE"]
+rows = [5000, 1000, 2500, 1000]
+attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
@@ -71,6 +69,7 @@ maxout_pieces = 3
 depth = 4
 """
 
+DEFAULT_SPANS_KEY = "sc"
 DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_default_config)["model"]
 DEFAULT_SPANCAT_SINGLELABEL_MODEL = Config().from_str(
     spancat_singlelabel_default_config
@@ -112,6 +111,29 @@ def ngram_suggester(
     return output
 
 
+def preset_spans_suggester(
+    docs: Iterable[Doc], spans_key: str, *, ops: Optional[Ops] = None
+) -> Ragged:
+    if ops is None:
+        ops = get_current_ops()
+    spans = []
+    lengths = []
+    for doc in docs:
+        length = 0
+        if doc.spans[spans_key]:
+            for span in doc.spans[spans_key]:
+                spans.append([span.start, span.end])
+                length += 1
+
+        lengths.append(length)
+    lengths_array = cast(Ints1d, ops.asarray(lengths, dtype="i"))
+    if len(spans) > 0:
+        output = Ragged(ops.asarray(spans, dtype="i"), lengths_array)
+    else:
+        output = Ragged(ops.xp.zeros((0, 0), dtype="i"), lengths_array)
+    return output
+
+
 @registry.misc("spacy.ngram_suggester.v1")
 def build_ngram_suggester(sizes: List[int]) -> Suggester:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
@@ -130,12 +152,20 @@ def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
     return build_ngram_suggester(sizes)
 
 
+@registry.misc("spacy.preset_spans_suggester.v1")
+def build_preset_spans_suggester(spans_key: str) -> Suggester:
+    """Suggest all spans that are already stored in doc.spans[spans_key].
+    This is useful when an upstream component is used to set the spans
+    on the Doc such as a SpanRuler or SpanFinder."""
+    return partial(preset_spans_suggester, spans_key=spans_key)
+
+
 @Language.factory(
     "spancat",
     assigns=["doc.spans"],
     default_config={
         "threshold": 0.5,
-        "spans_key": "sc",
+        "spans_key": DEFAULT_SPANS_KEY,
         "max_positive": None,
         "model": DEFAULT_SPANCAT_MODEL,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
@@ -199,7 +229,7 @@ def make_spancat(
     "spancat_singlelabel",
     assigns=["doc.spans"],
     default_config={
-        "spans_key": "sc",
+        "spans_key": DEFAULT_SPANS_KEY,
         "model": DEFAULT_SPANCAT_SINGLELABEL_MODEL,
         "negative_weight": 1.0,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},

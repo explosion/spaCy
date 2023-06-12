@@ -103,6 +103,8 @@ def test_debug_data_trainable_lemmatizer_cli(en_vocab):
 
 # project tests
 
+CFG_FILE = "myconfig.cfg"
+
 SAMPLE_PROJECT = {
     "title": "Sample project",
     "description": "This is a project for testing",
@@ -128,13 +130,8 @@ SAMPLE_PROJECT = {
         {
             "name": "create",
             "help": "make a file",
-            "script": ["touch abc.txt"],
-            "outputs": ["abc.txt"],
-        },
-        {
-            "name": "clean",
-            "help": "remove test file",
-            "script": ["rm abc.txt"],
+            "script": [f"python -m spacy init config {CFG_FILE}"],
+            "outputs": [f"{CFG_FILE}"],
         },
     ],
 }
@@ -175,7 +172,7 @@ def test_project_assets(project_dir):
 
 def test_project_run(project_dir):
     # make sure dry run works
-    test_file = project_dir / "abc.txt"
+    test_file = project_dir / CFG_FILE
     result = CliRunner().invoke(
         app, ["project", "run", "--dry", "create", str(project_dir)]
     )
@@ -223,14 +220,13 @@ def test_project_push_pull(project_dir):
         proj_text = srsly.yaml_dumps(proj)
         (project_dir / "project.yml").write_text(proj_text)
 
-        test_file = project_dir / "abc.txt"
+        test_file = project_dir / CFG_FILE
         result = CliRunner().invoke(app, ["project", "run", "create", str(project_dir)])
         assert result.exit_code == 0
         assert test_file.is_file()
         result = CliRunner().invoke(app, ["project", "push", remote, str(project_dir)])
         assert result.exit_code == 0
-        result = CliRunner().invoke(app, ["project", "run", "clean", str(project_dir)])
-        assert result.exit_code == 0
+        test_file.unlink()
         assert not test_file.exists()
         result = CliRunner().invoke(app, ["project", "pull", remote, str(project_dir)])
         assert result.exit_code == 0

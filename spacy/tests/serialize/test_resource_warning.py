@@ -72,7 +72,7 @@ def entity_linker():
 
     def create_kb(vocab):
         kb = InMemoryLookupKB(vocab, entity_vector_length=1)
-        kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
+        kb.add_entity("test", 0.0, zeros((1,), dtype="f"))
         return kb
 
     entity_linker = nlp.add_pipe("entity_linker")
