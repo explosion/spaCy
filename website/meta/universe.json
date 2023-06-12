@@ -4121,10 +4121,37 @@
             "author": "Vishnu Nandakumar",
             "author_links": {
                 "github": "Vishnunkumar",
-                "twitter": "vishnun_uchiha"
+                "twitter": "vishnunkumar_"
             },
             "category": ["pipeline"],
             "tags": ["pipeline", "nlp", "sentiment"]
+        },
+        {
+            "id": "nligraphspacy",
+            "title": "nligraphspacy",
+            "slogan": "Knowledge graph using NLP Spacy",
+            "description": "Knowledge graph pipeline for simple english sentences using pre-trained spaCy models",
+            "github": "vishnunkumar/nligraphspacy",
+            "pip": "nligraphspacy",
+            "code_example": [
+                "# Please download the model from the repository and replace the directory with your own i.e where you have kept the model",
+                "import spacy",
+                "kgmodel = spacy.load('nligraphspacy')",
+                "text = She did well in her exams",
+                "doc = nlp(text)",
+                "for tok in doc: print(tok, tok.ent_type_)",
+                "# She SOURCE-NODE did EDGE well TARGET-NODE in her exams TARGET-NODE"
+            ],
+            "thumb": "",
+            "image": "",
+            "code_language": "python",
+            "author": "Vishnu Nandakumar",
+            "author_links": {
+                "github": "Vishnunkumar",
+                "twitter": "vishnunkumar_"
+            },
+            "category": ["pipeline"],
+            "tags": ["pipeline", "nlp", "ner", "knowlegde graph"]
         },
         {
             "id": "textnets",
