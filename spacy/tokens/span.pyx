@@ -494,10 +494,12 @@ cdef class Span:
                     start = i
                     if start >= self.end:
                         break
-            if start < self.end:
-                spans.append(Span(self.doc, start, self.end))
-        return tuple(spans)
+                elif i == self.doc.length - 1:
+                    yield Span(self.doc, start, self.doc.length)
 
+            # Ensure that trailing parts of the Span instance are included in last element of .sents.
+            if start == self.doc.length - 1:
+                yield Span(self.doc, start, self.doc.length)
 
     @property
     def ents(self):

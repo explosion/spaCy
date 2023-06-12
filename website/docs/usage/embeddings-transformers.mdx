@@ -746,13 +746,16 @@ this by setting `initialize.init_tok2vec` to the filename of the `.bin` file
 that you want to use from pretraining.
 
 A pretraining step that runs for 5 epochs with an output path of `pretrain/`, as
-an example, produces `pretrain/model0.bin` through `pretrain/model4.bin`. To
-make use of the final output, you could fill in this value in your config file:
+an example, produces `pretrain/model0.bin` through `pretrain/model4.bin` plus a
+copy of the last iteration as `pretrain/model-last.bin`. Additionally, you can
+configure `n_save_epoch` to tell pretraining in which epoch interval it should
+save the current training progress. To use the final output to initialize your
+`tok2vec` layer, you could fill in this value in your config file:
 
 ```ini {title="config.cfg"}
 
 [paths]
-init_tok2vec = "pretrain/model4.bin"
+init_tok2vec = "pretrain/model-last.bin"
 
 [initialize]
 init_tok2vec = ${paths.init_tok2vec}

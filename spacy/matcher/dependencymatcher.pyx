@@ -432,22 +432,22 @@ cdef class DependencyMatcher:
         return [doc[child.i] for child in doc[node].head.children if child.i < node]
 
     def _imm_right_child(self, doc, node):
-        for child in doc[node].children:
+        for child in doc[node].rights:
             if child.i == node + 1:
                 return [doc[child.i]]
         return []
 
     def _imm_left_child(self, doc, node):
-        for child in doc[node].children:
+        for child in doc[node].lefts:
             if child.i == node - 1:
                 return [doc[child.i]]
         return []
 
     def _right_child(self, doc, node):
-        return [doc[child.i] for child in doc[node].children if child.i > node]
+        return [child for child in doc[node].rights]
     
     def _left_child(self, doc, node):
-        return [doc[child.i] for child in doc[node].children if child.i < node]
+        return [child for child in doc[node].lefts]
 
     def _imm_right_parent(self, doc, node):
         if doc[node].head.i == node + 1:

@@ -9,7 +9,7 @@ murmurhash>=0.28.0,<1.1.0
 wasabi>=0.9.1,<1.2.0
 srsly>=2.4.3,<3.0.0
 catalogue>=2.0.6,<2.1.0
-typer>=0.3.0,<0.8.0
+typer>=0.3.0,<0.10.0
 pathy>=0.10.0
 smart-open>=5.2.1,<7.0.0
 # Third party dependencies
