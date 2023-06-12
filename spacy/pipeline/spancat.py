@@ -537,10 +537,11 @@ class SpanCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/spancategorizer#set_annotations
         """
         indices = activations["indices"]
-        scores = activations["scores"]
+        assert isinstance(indices, Ragged)
+        scores = cast(Floats2d, activations["scores"])
         offset = 0
         for i, doc in enumerate(docs):
-            indices_i = indices[i].dataXd
+            indices_i = cast(Ints2d, indices[i].dataXd)
             if self.save_activations:
                 doc.activations[self.name] = {}
                 doc.activations[self.name]["indices"] = indices_i
