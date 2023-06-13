@@ -2419,10 +2419,16 @@ def _get_instantiated_vocab(
 
 
 def _find_missing_components(
-    pipeline: Dict[str, Dict[str, Any]], pipe_instances: Dict[str, Any], exclude: Iterable[str]
+    pipeline: Dict[str, Dict[str, Any]],
+    pipe_instances: Dict[str, Any],
+    exclude: Iterable[str],
 ) -> List[str]:
     missing = []
     for name, config in pipeline.items():
-        if config.get("factory") == INSTANCE_FACTORY_NAME and name not in pipe_instances and name not in exclude:
+        if (
+            config.get("factory") == INSTANCE_FACTORY_NAME
+            and name not in pipe_instances
+            and name not in exclude
+        ):
             missing.append(name)
     return missing
