@@ -3,15 +3,19 @@ import re
 import numpy
 import pytest
 
-from spacy.lang.en import English
 from spacy.lang.de import German
+from spacy.lang.en import English
+from spacy.symbols import ORTH
 from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
 from spacy.training import Example
-from spacy.util import compile_prefix_regex, compile_suffix_regex, ensure_path
-from spacy.util import compile_infix_regex
+from spacy.util import (
+    compile_infix_regex,
+    compile_prefix_regex,
+    compile_suffix_regex,
+    ensure_path,
+)
 from spacy.vocab import Vocab
-from spacy.symbols import ORTH
 
 
 @pytest.mark.issue(743)

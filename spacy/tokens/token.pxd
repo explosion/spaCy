@@ -1,13 +1,15 @@
 from numpy cimport ndarray
-from ..vocab cimport Vocab
-from ..structs cimport TokenC
+
 from ..attrs cimport *
-from ..typedefs cimport attr_t, flags_t
-from ..parts_of_speech cimport univ_pos_t
-from .doc cimport Doc
 from ..lexeme cimport Lexeme
+from ..parts_of_speech cimport univ_pos_t
+from ..structs cimport TokenC
+from ..typedefs cimport attr_t, flags_t
+from ..vocab cimport Vocab
+from .doc cimport Doc
 
 from ..errors import Errors
+
 
 cdef int MISSING_DEP = 0
 

@@ -5,7 +5,7 @@ from spacy import displacy
 from spacy.displacy.render import DependencyRenderer, EntityRenderer
 from spacy.lang.en import English
 from spacy.lang.fa import Persian
-from spacy.tokens import Span, Doc
+from spacy.tokens import Doc, Span
 
 
 @pytest.mark.issue(2361)

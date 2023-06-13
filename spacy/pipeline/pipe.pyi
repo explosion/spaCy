@@ -1,11 +1,20 @@
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Iterator, List
-from typing import NoReturn, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    NoReturn,
+    Optional,
+    Tuple,
+    Union,
+)
 
-from ..tokens.doc import Doc
-
-from ..training import Example
 from ..language import Language
+from ..tokens.doc import Doc
+from ..training import Example
 
 class Pipe:
     def __call__(self, doc: Doc) -> Doc: ...

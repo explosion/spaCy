@@ -1,7 +1,8 @@
 from typing import Callable, Optional
+
 from ..errors import Errors
 from ..language import Language
-from ..util import load_model, registry, logger
+from ..util import load_model, logger, registry
 
 
 @registry.callbacks("spacy.copy_from_base_model.v1")

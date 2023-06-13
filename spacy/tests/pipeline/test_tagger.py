@@ -1,12 +1,12 @@
 import pytest
-from numpy.testing import assert_equal, assert_almost_equal
-from spacy.attrs import TAG
+from numpy.testing import assert_almost_equal, assert_equal
+from thinc.api import compounding, get_current_ops
 
 from spacy import util
-from spacy.training import Example
+from spacy.attrs import TAG
 from spacy.lang.en import English
 from spacy.language import Language
-from thinc.api import compounding, get_current_ops
+from spacy.training import Example
 
 from ..util import make_tempdir
 

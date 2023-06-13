@@ -1,5 +1,5 @@
-from typing import List
 from collections import OrderedDict
+from typing import List
 
 from ...pipeline import Lemmatizer
 from ...tokens import Token

@@ -1,4 +1,5 @@
 import pytest
+
 from spacy.lang.ta import Tamil
 
 # Wikipedia excerpt: https://en.wikipedia.org/wiki/Chennai (Tamil Language)

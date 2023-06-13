@@ -1,7 +1,7 @@
 import pytest
-from spacy.util import compile_prefix_regex
-from spacy.lang.punctuation import TOKENIZER_PREFIXES
 
+from spacy.lang.punctuation import TOKENIZER_PREFIXES
+from spacy.util import compile_prefix_regex
 
 PUNCT_OPEN = ["(", "[", "{", "*"]
 PUNCT_CLOSE = [")", "]", "}", "*"]

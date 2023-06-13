@@ -1,9 +1,18 @@
-from ..char_classes import LIST_ELLIPSES, LIST_ICONS, LIST_UNITS, merge_chars
-from ..char_classes import LIST_PUNCT, LIST_QUOTES, CURRENCY, PUNCT
-from ..char_classes import CONCAT_QUOTES, ALPHA, ALPHA_LOWER, ALPHA_UPPER
-
+from ..char_classes import (
+    ALPHA,
+    ALPHA_LOWER,
+    ALPHA_UPPER,
+    CONCAT_QUOTES,
+    CURRENCY,
+    LIST_ELLIPSES,
+    LIST_ICONS,
+    LIST_PUNCT,
+    LIST_QUOTES,
+    LIST_UNITS,
+    PUNCT,
+    merge_chars,
+)
 from ..punctuation import TOKENIZER_PREFIXES as BASE_TOKENIZER_PREFIXES
-
 
 _prefixes = [",,"] + BASE_TOKENIZER_PREFIXES
 

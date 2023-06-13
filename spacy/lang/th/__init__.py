@@ -1,10 +1,9 @@
-from .stop_words import STOP_WORDS
-from .lex_attrs import LEX_ATTRS
-from ...language import Language, BaseDefaults
+from ...language import BaseDefaults, Language
 from ...tokens import Doc
-from ...util import DummyTokenizer, registry, load_config_from_str
+from ...util import DummyTokenizer, load_config_from_str, registry
 from ...vocab import Vocab
-
+from .lex_attrs import LEX_ATTRS
+from .stop_words import STOP_WORDS
 
 DEFAULT_CONFIG = """
 [nlp]

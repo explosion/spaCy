@@ -1,9 +1,10 @@
 import pytest
-from spacy.language import Language
-from spacy.lang.en import English
-from spacy.training import Example
-from thinc.api import ConfigValidationError
 from pydantic import StrictBool
+from thinc.api import ConfigValidationError
+
+from spacy.lang.en import English
+from spacy.language import Language
+from spacy.training import Example
 
 
 def test_initialize_arguments():

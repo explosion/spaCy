@@ -1,4 +1,5 @@
 import warnings
+
 from .compat import Literal
 
 

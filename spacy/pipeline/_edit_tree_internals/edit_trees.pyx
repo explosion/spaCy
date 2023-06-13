@@ -1,7 +1,6 @@
 # cython: infer_types=True, binding=True
 from cython.operator cimport dereference as deref
-from libc.stdint cimport uint32_t
-from libc.stdint cimport UINT32_MAX
+from libc.stdint cimport UINT32_MAX, uint32_t
 from libc.string cimport memset
 from libcpp.pair cimport pair
 from libcpp.vector cimport vector
@@ -14,7 +13,6 @@ from ... import util
 from ...errors import Errors
 from ...strings import StringStore
 from .schemas import validate_edit_tree
-
 
 NULL_TREE_ID = UINT32_MAX
 

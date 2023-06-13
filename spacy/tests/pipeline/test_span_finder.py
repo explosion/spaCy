@@ -1,15 +1,13 @@
 import pytest
 from thinc.api import Config
 
-from spacy.language import Language
+from spacy import util
 from spacy.lang.en import English
+from spacy.language import Language
 from spacy.pipeline.span_finder import span_finder_default_config
 from spacy.tokens import Doc
 from spacy.training import Example
-from spacy import util
-from spacy.util import registry
-from spacy.util import fix_random_seed, make_tempdir
-
+from spacy.util import fix_random_seed, make_tempdir, registry
 
 SPANS_KEY = "pytest"
 TRAIN_DATA = [

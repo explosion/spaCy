@@ -1,18 +1,22 @@
-from typing import Callable, Iterable, Mapping, Optional, Any, Union
-from enum import Enum
-from pathlib import Path
-from wasabi import Printer
-import srsly
+import itertools
 import re
 import sys
-import itertools
+from enum import Enum
+from pathlib import Path
+from typing import Any, Callable, Iterable, Mapping, Optional, Union
 
-from ._util import app, Arg, Opt, walk_directory
-from ..training import docs_to_json
+import srsly
+from wasabi import Printer
+
 from ..tokens import Doc, DocBin
-from ..training.converters import iob_to_docs, conll_ner_to_docs, json_to_docs
-from ..training.converters import conllu_to_docs
-
+from ..training import docs_to_json
+from ..training.converters import (
+    conll_ner_to_docs,
+    conllu_to_docs,
+    iob_to_docs,
+    json_to_docs,
+)
+from ._util import Arg, Opt, app, walk_directory
 
 # Converters are matched by file extension except for ner/iob, which are
 # matched by file extension and content. To add a converter, add a new

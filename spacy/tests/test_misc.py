@@ -1,24 +1,39 @@
-import pytest
-import os
 import ctypes
+import os
 from pathlib import Path
-from spacy.about import __version__ as spacy_version
-from spacy import util
-from spacy import prefer_gpu, require_gpu, require_cpu
-from spacy.ml._precomputable_affine import PrecomputableAffine
-from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
-from spacy.util import dot_to_object, SimpleFrozenList, import_file
-from spacy.util import to_ternary_int, find_available_port
-from thinc.api import Config, Optimizer, ConfigValidationError
-from thinc.api import get_current_ops, set_current_ops, NumpyOps, CupyOps, MPSOps
+
+import pytest
+from pydantic import ValidationError
+from thinc.api import (
+    Config,
+    ConfigValidationError,
+    CupyOps,
+    MPSOps,
+    NumpyOps,
+    Optimizer,
+    get_current_ops,
+    set_current_ops,
+)
 from thinc.compat import has_cupy_gpu, has_torch_mps_gpu
-from spacy.training.batchers import minibatch_by_words
+
+from spacy import prefer_gpu, require_cpu, require_gpu, util
+from spacy.about import __version__ as spacy_version
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import DEFAULT_CONFIG_PATH
+from spacy.ml._precomputable_affine import (
+    PrecomputableAffine,
+    _backprop_precomputable_affine_padding,
+)
 from spacy.schemas import ConfigSchemaTraining, TokenPattern, TokenPatternSchema
-from pydantic import ValidationError
-
+from spacy.training.batchers import minibatch_by_words
+from spacy.util import (
+    SimpleFrozenList,
+    dot_to_object,
+    find_available_port,
+    import_file,
+    to_ternary_int,
+)
 
 from .util import get_random_doc, make_tempdir
 
@@ -441,7 +456,7 @@ def test_find_available_port():
     port = 5000
     assert find_available_port(port, host) == port, "Port 5000 isn't free"
 
-    from wsgiref.simple_server import make_server, demo_app
+    from wsgiref.simple_server import demo_app, make_server
 
     with make_server(host, port, demo_app) as httpd:
         with pytest.warns(UserWarning, match="already in use"):

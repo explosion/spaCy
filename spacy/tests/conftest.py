@@ -1,6 +1,7 @@
 import pytest
-from spacy.util import get_lang_class
 from hypothesis import settings
+
+from spacy.util import get_lang_class
 
 # Functionally disable deadline settings for tests
 # to prevent spurious test failures in CI builds.
