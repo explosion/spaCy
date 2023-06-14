@@ -1,19 +1,26 @@
-from typing import Optional, List, Tuple
+import re
 from enum import Enum
 from pathlib import Path
-from wasabi import Printer, diff_strings
-from thinc.api import Config
+from typing import List, Optional, Tuple
+
 import srsly
-import re
 from jinja2 import Template
+from thinc.api import Config
+from wasabi import Printer, diff_strings
 
 from .. import util
 from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
 from ..util import SimpleFrozenList
-from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
-from ._util import string_to_list, import_code
-
+from ._util import (
+    COMMAND,
+    Arg,
+    Opt,
+    import_code,
+    init_cli,
+    show_validation_error,
+    string_to_list,
+)
 
 ROOT = Path(__file__).parent / "templates"
 TEMPLATE_PATH = ROOT / "quickstart_training.jinja"

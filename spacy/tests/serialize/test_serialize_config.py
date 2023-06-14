@@ -5,13 +5,20 @@ from thinc.api import Config, ConfigValidationError
 import spacy
 from spacy.lang.de import German
 from spacy.lang.en import English
-from spacy.language import DEFAULT_CONFIG, DEFAULT_CONFIG_PRETRAIN_PATH
-from spacy.language import Language
-from spacy.ml.models import MaxoutWindowEncoder, MultiHashEmbed
-from spacy.ml.models import build_tb_parser_model, build_Tok2Vec_model
+from spacy.language import DEFAULT_CONFIG, DEFAULT_CONFIG_PRETRAIN_PATH, Language
+from spacy.ml.models import (
+    MaxoutWindowEncoder,
+    MultiHashEmbed,
+    build_tb_parser_model,
+    build_Tok2Vec_model,
+)
 from spacy.schemas import ConfigSchema, ConfigSchemaPretrain
-from spacy.util import load_config, load_config_from_str
-from spacy.util import load_model_from_config, registry
+from spacy.util import (
+    load_config,
+    load_config_from_str,
+    load_model_from_config,
+    registry,
+)
 
 from ..util import make_tempdir
 

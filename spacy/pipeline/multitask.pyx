@@ -1,19 +1,18 @@
 # cython: infer_types=True, profile=True, binding=True
 from typing import Optional
+
 import numpy
-from thinc.api import CosineDistance, to_categorical, Model, Config
-from thinc.api import set_dropout_rate
+from thinc.api import Config, CosineDistance, Model, set_dropout_rate, to_categorical
 
 from ..tokens.doc cimport Doc
 
-from .trainable_pipe import TrainablePipe
-from .tagger import Tagger
-from ..training import validate_examples
-from ..language import Language
-from ._parser_internals import nonproj
-from ..attrs import POS, ID
+from ..attrs import ID, POS
 from ..errors import Errors
-
+from ..language import Language
+from ..training import validate_examples
+from ._parser_internals import nonproj
+from .tagger import Tagger
+from .trainable_pipe import TrainablePipe
 
 default_model_config = """
 [model]

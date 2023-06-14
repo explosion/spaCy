@@ -1,10 +1,12 @@
-from typing import Iterable, Tuple, Union, Optional, TYPE_CHECKING
-import weakref
 import struct
+import weakref
 from copy import deepcopy
+from typing import TYPE_CHECKING, Iterable, Optional, Tuple, Union
+
 import srsly
 
 from spacy.errors import Errors
+
 from .span cimport Span
 
 

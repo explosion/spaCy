@@ -1,9 +1,8 @@
-from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .stop_words import STOP_WORDS
-from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
-from .punctuation import TOKENIZER_SUFFIXES
+from ...language import BaseDefaults, Language
 from .lex_attrs import LEX_ATTRS
-from ...language import Language, BaseDefaults
+from .punctuation import TOKENIZER_INFIXES, TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
+from .stop_words import STOP_WORDS
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 
 # Lemma data note:
 # Original pairs downloaded from http://www.lexiconista.com/datasets/lemmatization/

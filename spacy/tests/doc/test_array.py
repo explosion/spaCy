@@ -1,8 +1,8 @@
 import numpy
 import pytest
 
+from spacy.attrs import DEP, MORPH, ORTH, POS, SHAPE
 from spacy.tokens import Doc
-from spacy.attrs import ORTH, SHAPE, POS, DEP, MORPH
 
 
 @pytest.mark.issue(2203)

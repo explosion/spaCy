@@ -1,6 +1,5 @@
 import pytest
 
-
 ABBREV_TESTS = [
     ("Dr. Murat Bey ile görüştüm.", ["Dr.", "Murat", "Bey", "ile", "görüştüm", "."]),
     ("Dr.la görüştüm.", ["Dr.la", "görüştüm", "."]),

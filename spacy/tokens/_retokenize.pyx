@@ -1,24 +1,24 @@
 # cython: infer_types=True, bounds_check=False, profile=True
-from libc.string cimport memcpy, memset
-from libc.stdlib cimport malloc, free
 from cymem.cymem cimport Pool
+from libc.stdlib cimport free, malloc
+from libc.string cimport memcpy, memset
 
-from thinc.api import get_array_module
 import numpy
+from thinc.api import get_array_module
 
-from .doc cimport Doc, set_children_from_heads, token_by_start, token_by_end
+from ..attrs cimport MORPH, NORM
+from ..lexeme cimport EMPTY_LEXEME, Lexeme
+from ..structs cimport LexemeC, TokenC
+from ..vocab cimport Vocab
+from .doc cimport Doc, set_children_from_heads, token_by_end, token_by_start
 from .span cimport Span
 from .token cimport Token
-from ..lexeme cimport Lexeme, EMPTY_LEXEME
-from ..structs cimport LexemeC, TokenC
-from ..attrs cimport MORPH, NORM
-from ..vocab cimport Vocab
 
-from .underscore import is_writable_attr
 from ..attrs import intify_attrs
-from ..util import SimpleFrozenDict
 from ..errors import Errors
 from ..strings import get_string_id
+from ..util import SimpleFrozenDict
+from .underscore import is_writable_attr
 
 
 cdef class Retokenizer:

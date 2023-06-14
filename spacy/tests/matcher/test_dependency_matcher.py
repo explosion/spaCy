@@ -1,8 +1,10 @@
-import pytest
+import copy
 import pickle
 import re
-import copy
+
+import pytest
 from mock import Mock
+
 from spacy.matcher import DependencyMatcher
 from spacy.tokens import Doc, Token
 

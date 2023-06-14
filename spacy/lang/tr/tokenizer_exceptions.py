@@ -1,8 +1,7 @@
 import re
 
-from ..punctuation import ALPHA_LOWER, ALPHA
-from ...symbols import ORTH, NORM
-
+from ...symbols import NORM, ORTH
+from ..punctuation import ALPHA, ALPHA_LOWER
 
 _exc = {}
 
