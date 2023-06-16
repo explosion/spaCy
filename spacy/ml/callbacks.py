@@ -73,10 +73,7 @@ def pipes_with_nvtx_range(
     nlp, additional_pipe_functions: Optional[Dict[str, List[str]]]
 ):
     for _, pipe in nlp.components:
-        if additional_pipe_functions:
-            extra_funcs = additional_pipe_functions.get(pipe.name, [])
-        else:
-            extra_funcs = []
+        extra_funcs = additional_pipe_functions.get(pipe.name, []) if additional_pipe_functions else []
 
         for name in DEFAULT_NVTX_ANNOTATABLE_PIPE_METHODS + extra_funcs:
             func = getattr(pipe, name, None)
