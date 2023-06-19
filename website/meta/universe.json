@@ -2742,7 +2742,6 @@
             "thumb": "https://raw.githubusercontent.com/davidberenstein1957/classy-classification/master/logo.png",
             "code_example": [
                 "import spacy",
-                "import classy_classification",
                 "",
                 "data = {",
                 "    \"furniture\": [\"This text is about chairs.\",",
@@ -2794,7 +2793,6 @@
             "code_example": [
                 "import spacy",
                 "from spacy import displacy",
-                "import concise_concepts",
                 "",
                 "data = {",
                 "    \"fruit\": [\"apple\", \"pear\", \"orange\"],",
@@ -2840,7 +2838,6 @@
             "image": "https://raw.githubusercontent.com/davidberenstein1957/crosslingual-coreference/master/img/example_total.png",
             "code_example": [
                 "import spacy",
-                "import crosslingual_coreference",
                 "",
                 "text = \"\"\"",
                 "    Do not forget about Momofuku Ando!",
@@ -2943,7 +2940,6 @@
             "thumb": "https://raw.githubusercontent.com/davidberenstein1957/spacy-setfit/main/logo.png",
             "code_example": [
             "import spacy",
-            "import spacy_setfit",
             "",
             "# Create some example data",
             "train_dataset = {",
