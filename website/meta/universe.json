@@ -4326,7 +4326,6 @@
             "pip": "span_marker",
             "code_example": [
                 "import spacy",
-                "import span_marker",
                 "",
                 "nlp = spacy.load(\"en_core_web_sm\")",
                 "nlp.add_pipe(\"span_marker\", config={\"model\": \"tomaarsen/span-marker-roberta-large-ontonotes5\"})",
