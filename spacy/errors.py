@@ -739,8 +739,8 @@ class Errors(metaclass=ErrorsWithCodes):
             "model from a shortcut, which is obsolete as of spaCy v3.0. To "
             "load the model, use its full name instead:\n\n"
             "nlp = spacy.load(\"{full}\")\n\nFor more details on the available "
-            "models, see the models directory: https://spacy.io/models. If you "
-            "want to create a blank model, use spacy.blank: "
+            "models, see the models directory: https://spacy.io/models and if "
+            "you want to create a blank model, use spacy.blank: "
             "nlp = spacy.blank(\"{name}\")")
     E942 = ("Executing `after_{name}` callback failed. Expected the function to "
             "return an initialized nlp object but got: {value}. Maybe "
