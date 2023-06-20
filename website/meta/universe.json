@@ -4361,6 +4361,37 @@
             },
             "category": ["apis", "standalone"],
             "tags": ["apis", "deployment"]
+        },
+        {
+            "id": "span_marker",
+            "title": "SpanMarker",
+            "slogan": "Effortless state-of-the-art NER in spaCy",
+            "description": "The SpanMarker integration with spaCy allows you to seamlessly replace the default spaCy `\"ner\"` pipeline component with any [SpanMarker model available on the Hugging Face Hub](https://huggingface.co/models?library=span-marker). Through this, you can take advantage of the advanced Named Entity Recognition capabilities of SpanMarker within the familiar and powerful spaCy framework.\n\nBy default, the `span_marker` pipeline component uses a [SpanMarker model using RoBERTa-large trained on OntoNotes v5.0](https://huggingface.co/tomaarsen/span-marker-roberta-large-ontonotes5). This model reaches a competitive 91.54 F1, notably higher than the [85.5 and 89.8 F1](https://spacy.io/usage/facts-figures#section-benchmarks) from `en_core_web_lg` and `en_core_web_trf`, respectively. A short head-to-head between this SpanMarker model and the `trf` spaCy model has been posted [here](https://github.com/tomaarsen/SpanMarkerNER/pull/12).\n\nAdditionally, see [here](https://tomaarsen.github.io/SpanMarkerNER/notebooks/spacy_integration.html) for documentation on using SpanMarker with spaCy.",
+            "github": "tomaarsen/SpanMarkerNER",
+            "pip": "span_marker",
+            "code_example": [
+                "import spacy",
+                "",
+                "nlp = spacy.load(\"en_core_web_sm\", disable=[\"ner\"])",
+                "nlp.add_pipe(\"span_marker\", config={\"model\": \"tomaarsen/span-marker-roberta-large-ontonotes5\"})",
+                "",
+                "text = \"\"\"Cleopatra VII, also known as Cleopatra the Great, was the last active ruler of the \\",
+                "Ptolemaic Kingdom of Egypt. She was born in 69 BCE and ruled Egypt from 51 BCE until her \\",
+                "death in 30 BCE.\"\"\"",
+                "doc = nlp(text)",
+                "print([(entity, entity.label_) for entity in doc.ents])",
+                "# [(Cleopatra VII, \"PERSON\"), (Cleopatra the Great, \"PERSON\"), (the Ptolemaic Kingdom of Egypt, \"GPE\"),",
+                "# (69 BCE, \"DATE\"), (Egypt, \"GPE\"), (51 BCE, \"DATE\"), (30 BCE, \"DATE\")]"
+            ],
+            "code_language": "python",
+            "url": "https://tomaarsen.github.io/SpanMarkerNER",
+            "author": "Tom Aarsen",
+            "author_links": {
+                "github": "tomaarsen",
+                "website": "https://www.linkedin.com/in/tomaarsen"
+            },
+            "category": ["pipeline", "standalone", "scientific"],
+            "tags": ["ner"]
         }
     ],
 
