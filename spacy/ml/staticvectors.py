@@ -1,11 +1,12 @@
-from typing import List, Tuple, Callable, Optional, Sequence, cast
-from thinc.initializers import glorot_uniform_init
-from thinc.util import partial
-from thinc.types import Ragged, Floats2d, Floats1d, Ints1d
-from thinc.api import Model, Ops, registry
+from typing import Callable, List, Optional, Sequence, Tuple, cast
 
-from ..tokens import Doc
+from thinc.api import Model, Ops, registry
+from thinc.initializers import glorot_uniform_init
+from thinc.types import Floats1d, Floats2d, Ints1d, Ragged
+from thinc.util import partial
+
 from ..errors import Errors
+from ..tokens import Doc
 from ..vectors import Mode
 from ..vocab import Vocab
 

@@ -1,5 +1,4 @@
-from ...symbols import ORTH, NORM
-
+from ...symbols import NORM, ORTH
 
 _exc = {}
 

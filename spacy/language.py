@@ -1,47 +1,70 @@
-from typing import Iterator, Optional, Any, Dict, Callable, Iterable
-from typing import Union, Tuple, List, Set, Pattern, Sequence
-from typing import NoReturn, TypeVar, cast, overload
-
-from dataclasses import dataclass
-import random
-import itertools
 import functools
+import itertools
+import multiprocessing as mp
+import random
+import traceback
+import warnings
 from contextlib import contextmanager
 from copy import deepcopy
-from pathlib import Path
-import warnings
-
-from thinc.api import get_current_ops, Config, CupyOps, Optimizer
-import srsly
-import multiprocessing as mp
+from dataclasses import dataclass
 from itertools import chain, cycle
+from pathlib import Path
 from timeit import default_timer as timer
-import traceback
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    NoReturn,
+    Optional,
+    Pattern,
+    Sequence,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
 
-from . import ty
-from .tokens.underscore import Underscore
-from .vocab import Vocab, create_vocab
-from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
-from .training import Example, validate_examples
-from .training.initialize import init_vocab, init_tok2vec
-from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe, raise_error, _DEFAULT_EMPTY_PIPES
-from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
-from .util import warn_if_jupyter_cupy
-from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
-from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
-from .lang.punctuation import TOKENIZER_INFIXES
-from .tokens import Doc
-from .tokenizer import Tokenizer
-from .errors import Errors, Warnings
-from .schemas import ConfigSchema, ConfigSchemaNlp, ConfigSchemaInit
-from .schemas import ConfigSchemaPretrain, validate_init_settings
-from .git_info import GIT_VERSION
-from . import util
-from . import about
-from .lookups import load_lookups
+import srsly
+from thinc.api import Config, CupyOps, Optimizer, get_current_ops
+
+from . import about, ty, util
 from .compat import Literal
-
+from .errors import Errors, Warnings
+from .git_info import GIT_VERSION
+from .lang.punctuation import TOKENIZER_INFIXES, TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
+from .lang.tokenizer_exceptions import BASE_EXCEPTIONS, URL_MATCH
+from .lookups import load_lookups
+from .pipe_analysis import analyze_pipes, print_pipe_analysis, validate_attrs
+from .schemas import (
+    ConfigSchema,
+    ConfigSchemaInit,
+    ConfigSchemaNlp,
+    ConfigSchemaPretrain,
+    validate_init_settings,
+)
+from .scorer import Scorer
+from .tokenizer import Tokenizer
+from .tokens import Doc
+from .tokens.underscore import Underscore
+from .training import Example, validate_examples
+from .training.initialize import init_tok2vec, init_vocab
+from .util import (
+    _DEFAULT_EMPTY_PIPES,
+    CONFIG_SECTION_ORDER,
+    SimpleFrozenDict,
+    SimpleFrozenList,
+    _pipe,
+    combine_score_weights,
+    raise_error,
+    registry,
+    warn_if_jupyter_cupy,
+)
+from .vocab import Vocab, create_vocab
 
 PipeCallable = Callable[[Doc], Doc]
 

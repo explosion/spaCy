@@ -1,31 +1,49 @@
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
-from typing import cast, overload
-from pathlib import Path
-from collections import Counter
-import sys
-import srsly
-from wasabi import Printer, MESSAGES, msg
-import typer
 import math
-import numpy
+import sys
+from collections import Counter
+from pathlib import Path
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+    cast,
+    overload,
+)
 
-from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
-from ._util import import_code, debug_cli, _format_number
-from ..training import Example, remove_bilu_prefix
-from ..training.initialize import get_sourced_components
-from ..schemas import ConfigSchemaTraining
-from ..pipeline import TrainablePipe
+import numpy
+import srsly
+import typer
+from wasabi import MESSAGES, Printer, msg
+
+from .. import util
+from ..compat import Literal
+from ..language import Language
+from ..morphology import Morphology
+from ..pipeline import Morphologizer, SpanCategorizer, TrainablePipe
+from ..pipeline._edit_tree_internals.edit_trees import EditTrees
 from ..pipeline._parser_internals import nonproj
 from ..pipeline._parser_internals.nonproj import DELIMITER
-from ..pipeline import Morphologizer, SpanCategorizer
-from ..pipeline._edit_tree_internals.edit_trees import EditTrees
-from ..morphology import Morphology
-from ..language import Language
+from ..schemas import ConfigSchemaTraining
+from ..training import Example, remove_bilu_prefix
+from ..training.initialize import get_sourced_components
 from ..util import registry, resolve_dot_names
-from ..compat import Literal
 from ..vectors import Mode as VectorsMode
-from .. import util
-
+from ._util import (
+    Arg,
+    Opt,
+    _format_number,
+    app,
+    debug_cli,
+    import_code,
+    parse_config_overrides,
+    show_validation_error,
+)
 
 # Minimum number of expected occurrences of NER label in data to train new label
 NEW_LABEL_THRESHOLD = 50

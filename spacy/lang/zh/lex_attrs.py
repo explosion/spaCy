@@ -2,7 +2,6 @@ import re
 
 from ...attrs import LIKE_NUM
 
-
 _single_num_words = [
     "〇",
     "一",

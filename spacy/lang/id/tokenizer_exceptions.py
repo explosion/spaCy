@@ -1,8 +1,7 @@
+from ...symbols import NORM, ORTH
+from ...util import update_exc
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ._tokenizer_exceptions_list import ID_BASE_EXCEPTIONS
-from ...symbols import ORTH, NORM
-from ...util import update_exc
-
 
 # Daftar singkatan dan Akronim dari:
 # https://id.wiktionary.org/wiki/Wiktionary:Daftar_singkatan_dan_akronim_bahasa_Indonesia#A

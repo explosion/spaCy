@@ -1,16 +1,16 @@
-from typing import Optional, List, Dict, Any, Union
-from wasabi import Printer
-from pathlib import Path
 import re
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
 import srsly
 from thinc.api import fix_random_seed
+from wasabi import Printer
 
-from ..training import Corpus
-from ..tokens import Doc
-from ._util import app, Arg, Opt, setup_gpu, import_code, benchmark_cli
+from .. import displacy, util
 from ..scorer import Scorer
-from .. import util
-from .. import displacy
+from ..tokens import Doc
+from ..training import Corpus
+from ._util import Arg, Opt, app, benchmark_cli, import_code, setup_gpu
 
 
 @benchmark_cli.command(

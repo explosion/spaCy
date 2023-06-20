@@ -1,20 +1,26 @@
-from typing import Optional, Callable, Iterable, Union, List
-from thinc.api import Config, fix_random_seed, set_gpu_allocator, Model, Optimizer
-from thinc.api import set_dropout_rate
-from pathlib import Path
-from collections import Counter
-import srsly
-import time
 import re
+import time
+from collections import Counter
+from pathlib import Path
+from typing import Callable, Iterable, List, Optional, Union
 
+import srsly
+from thinc.api import (
+    Config,
+    Model,
+    Optimizer,
+    fix_random_seed,
+    set_dropout_rate,
+    set_gpu_allocator,
+)
 from thinc.config import ConfigValidationError
 from wasabi import Printer
 
-from .example import Example
 from ..errors import Errors
-from ..tokens import Doc
 from ..schemas import ConfigSchemaPretrain
-from ..util import registry, load_model_from_config, dot_to_object
+from ..tokens import Doc
+from ..util import dot_to_object, load_model_from_config, registry
+from .example import Example
 
 
 def pretrain(

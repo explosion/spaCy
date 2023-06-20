@@ -1,8 +1,9 @@
-from typing import List, Tuple, Union, Optional, Callable, Any, Dict, overload
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, overload
+
 from ..compat import Literal
-from .matcher import Matcher
-from ..vocab import Vocab
 from ..tokens import Doc, Span
+from ..vocab import Vocab
+from .matcher import Matcher
 
 class PhraseMatcher:
     def __init__(

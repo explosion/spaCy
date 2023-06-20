@@ -1,13 +1,21 @@
-from typing import Optional
-from pathlib import Path
-from wasabi import msg
-import typer
 import re
+from pathlib import Path
+from typing import Optional
 
-from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, setup_gpu
+import typer
+from wasabi import msg
+
 from ..training.pretrain import pretrain
 from ..util import load_config
+from ._util import (
+    Arg,
+    Opt,
+    app,
+    import_code,
+    parse_config_overrides,
+    setup_gpu,
+    show_validation_error,
+)
 
 
 @app.command(
