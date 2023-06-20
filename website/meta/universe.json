@@ -4176,20 +4176,17 @@
             "tags": ["pipeline", "nlp", "sentiment"]
         },
         {
-            "id": "nligraphspacy",
-            "title": "nligraphspacy",
-            "slogan": "Knowledge graph using NLP Spacy",
-            "description": "Knowledge graph pipeline for simple english sentences using pre-trained spaCy models",
-            "github": "vishnunkumar/nligraphspacy",
-            "pip": "nligraphspacy",
+            "id": "spacyspellcheck",
+            "title": "spacyspellcheck",
+            "slogan": "Simple spell check with spacy",
+            "description": "Simple spell check using spacy and in build Levenshtein distance",
+            "github": "vishnunkumar/spacyspellcheck",
+            "pip": "spacyspellcheck",
             "code_example": [
-                "# Please download the model from the repository and replace the directory with your own i.e where you have kept the model",
-                "import spacy",
-                "kgmodel = spacy.load('nligraphspacy')",
-                "text = She did well in her exams",
-                "doc = nlp(text)",
-                "for tok in doc: print(tok, tok.ent_type_)",
-                "# She SOURCE-NODE did EDGE well TARGET-NODE in her exams TARGET-NODE"
+                "from spacyspellcheck.spellcheck import SpellCorrector",
+                "spacyspell = SpellCorrector('we cannt move forwad with that approach')",
+                "spacyspell.get_possible_misspelt()",
+                "# results: ['cannot', 'forward']"
             ],
             "thumb": "",
             "image": "",
@@ -4199,8 +4196,8 @@
                 "github": "Vishnunkumar",
                 "twitter": "vishnunkumar_"
             },
-            "category": ["pipeline"],
-            "tags": ["pipeline", "nlp", "ner", "knowlegde graph"]
+            "category": ["pipelin"],
+            "tags": ["pipeline", "spellcheck"]
         },
         {
             "id": "textnets",
