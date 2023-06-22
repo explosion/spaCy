@@ -121,20 +121,30 @@ class Scorer:
                 nlp.add_pipe(pipe)
             self.nlp = nlp
 
-    def score(self, examples: Iterable[Example]) -> Dict[str, Any]:
+    def score(
+        self, examples: Iterable[Example], *, per_component: bool = False
+    ) -> Dict[str, Any]:
         """Evaluate a list of Examples.
 
         examples (Iterable[Example]): The predicted annotations + correct annotations.
+        per_component (bool): Whether to return the scores keyed by component
+            name. Defaults to False.
         RETURNS (Dict): A dictionary of scores.
 
         DOCS: https://spacy.io/api/scorer#score
         """
         scores = {}
         if hasattr(self.nlp.tokenizer, "score"):
-            scores.update(self.nlp.tokenizer.score(examples, **self.cfg))  # type: ignore
+            if per_component:
+                scores["tokenizer"] = self.nlp.tokenizer.score(examples, **self.cfg)
+            else:
+                scores.update(self.nlp.tokenizer.score(examples, **self.cfg))  # type: ignore
         for name, component in self.nlp.pipeline:
             if hasattr(component, "score"):
-                scores.update(component.score(examples, **self.cfg))
+                if per_component:
+                    scores[name] = component.score(examples, **self.cfg)
+                else:
+                    scores.update(component.score(examples, **self.cfg))
         return scores
 
     @staticmethod

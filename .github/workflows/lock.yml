@@ -13,6 +13,7 @@ concurrency:
 
 jobs:
   action:
+    if: github.repository_owner == 'explosion'
     runs-on: ubuntu-latest
     steps:
       - uses: dessant/lock-threads@v4

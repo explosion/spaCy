@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build && npm run sitemap && next export",
     "prebuild": "pip install -r setup/requirements.txt && sh setup/setup.sh",
+    "predev": "npm run prebuild",
     "sitemap": "next-sitemap --config next-sitemap.config.mjs",
     "start": "next start",
     "lint": "next lint",

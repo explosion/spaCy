@@ -544,10 +544,6 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#char_span
         """
-        if not isinstance(label, int):
-            label = self.vocab.strings.add(label)
-        if not isinstance(kb_id, int):
-            kb_id = self.vocab.strings.add(kb_id)
         alignment_modes = ("strict", "contract", "expand")
         if alignment_mode not in alignment_modes:
             raise ValueError(
@@ -1282,12 +1278,14 @@ cdef class Doc:
         other.user_span_hooks = dict(self.user_span_hooks)
         other.length = self.length
         other.max_length = self.max_length
-        other.spans = self.spans.copy(doc=other)
         buff_size = other.max_length + (PADDING*2)
         assert buff_size > 0
         tokens = <TokenC*>other.mem.alloc(buff_size, sizeof(TokenC))
         memcpy(tokens, self.c - PADDING, buff_size * sizeof(TokenC))
         other.c = &tokens[PADDING]
+        # copy spans after setting tokens so that SpanGroup.copy can verify
+        # that the start/end offsets are valid
+        other.spans = self.spans.copy(doc=other)
         return other
 
     def to_disk(self, path, *, exclude=tuple()):
@@ -1364,6 +1362,10 @@ cdef class Doc:
         for group in self.spans.values():
             for span in group:
                 strings.add(span.label_)
+                if span.kb_id in span.doc.vocab.strings:
+                    strings.add(span.kb_id_)
+                if span.id in span.doc.vocab.strings:
+                    strings.add(span.id_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
