@@ -4181,7 +4181,7 @@
             "slogan": "Knowledge graph using NLP Spacy",
             "description": "Knowledge graph using NLP Spacy",
             "github": "vishnunkumar/nligraphspacy",
-            "pip": "spacyspellcheck",
+            "pip": "nligraphspacy",
             "code_example": [,
                 "from nligraphspacy import NLIGRAPH",
                 "nligraph = NLIGRAPH.RelationEntityExtract('She worked in the city of London')",
