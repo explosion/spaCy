@@ -4188,13 +4188,7 @@
                 "nligraph.process_text()",
                 "# ('She', 'worked', 'London')",
                 "nligraph.get_seperate_entities()",
-                "# [{'text': 'A', 'label': ''}",
-                "# {'text': 'DAG', 'label': 'SOURCE-NODE'}",
-                "# {'text': 'is', 'label': ''}",
-                "# {'text': 'used', 'label': 'EDGE'}",
-                "# {'text': 'for', 'label': ''}",
-                "# {'text': 'organizing', 'label': ''}",
-                "# {'text': 'tasks', 'label': 'TARGET-NODE'}]"
+                "# gives entites and relations with labels"
             ],
             "thumb": "",
             "image": "",
