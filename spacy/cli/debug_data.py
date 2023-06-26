@@ -230,7 +230,7 @@ def debug_data(
     else:
         msg.info("No word vectors present in the package")
 
-    if "spancat" in factory_names:
+    if "spancat" in factory_names or "spancat_singlelabel" in factory_names:
         model_labels_spancat = _get_labels_from_spancat(nlp)
         has_low_data_warning = False
         has_no_neg_warning = False
@@ -848,7 +848,7 @@ def _compile_gold(
                     data["boundary_cross_ents"] += 1
                 elif label == "-":
                     data["ner"]["-"] += 1
-        if "spancat" in factory_names:
+        if "spancat" in factory_names or "spancat_singlelabel" in factory_names:
             for spans_key in list(eg.reference.spans.keys()):
                 # Obtain the span frequency
                 if spans_key not in data["spancat"]:
@@ -1046,7 +1046,7 @@ def _get_labels_from_spancat(nlp: Language) -> Dict[str, Set[str]]:
     pipe_names = [
         pipe_name
         for pipe_name in nlp.pipe_names
-        if nlp.get_pipe_meta(pipe_name).factory == "spancat"
+        if nlp.get_pipe_meta(pipe_name).factory in ("spancat", "spancat_singlelabel")
     ]
     labels: Dict[str, Set[str]] = {}
     for pipe_name in pipe_names:
