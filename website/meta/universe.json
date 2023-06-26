@@ -4205,7 +4205,7 @@
                 "twitter": "vishnunkumar_"
             },
             "category": ["pipeline"],
-            "tags": ["pipeline", "spellcheck"]
+            "tags": ["pipeline", "ner", "tagger", "knowledge graph"]
         },
         {
             "id": "textnets",
