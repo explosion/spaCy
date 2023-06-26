@@ -3,10 +3,10 @@ import functools
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from ..errors import Errors
-from .span import Span
 
 if TYPE_CHECKING:
     from .doc import Doc
+    from .span import Span
     from .token import Token
 
 
@@ -40,7 +40,10 @@ class Underscore:
         object.__setattr__(self, "_doc", obj.doc)
         object.__setattr__(self, "_start", start)
         object.__setattr__(self, "_end", end)
-        if type(obj) == Span:
+        # We used to check if obj is a span, however, this introduces an
+        # import cycle between the span and underscore modeles. So we
+        # do a structural type check instead.
+        if hasattr(obj, "id") and hasattr(obj, "label") and hasattr(obj, "kb_id"):
             object.__setattr__(self, "_label", label)
             object.__setattr__(self, "_kb_id", kb_id)
             object.__setattr__(self, "_span_id", span_id)
