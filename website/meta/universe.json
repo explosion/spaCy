@@ -4188,7 +4188,7 @@
                 "nligraph.process_text()",
                 "# ('She', 'worked', 'London')",
                 "nligraph.get_seperate_entities()",
-                "# gives entites and relations with labels"
+                "#gives entites and relations with labels"
             ],
             "thumb": "",
             "image": "",
