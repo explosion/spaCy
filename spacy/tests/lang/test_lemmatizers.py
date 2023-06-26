@@ -1,8 +1,8 @@
 import pytest
+
 from spacy import registry
 from spacy.lookups import Lookups
 from spacy.util import get_lang_class
-
 
 # fmt: off
 # Only include languages with no external dependencies

@@ -1,22 +1,33 @@
-from typing import Any, Optional, Iterable, Tuple, List, Callable, TYPE_CHECKING, cast
-from thinc.types import Floats2d, Ints1d
-from thinc.api import chain, Maxout, LayerNorm, Softmax, Linear, zero_init, Model
-from thinc.api import MultiSoftmax, list2array
-from thinc.api import to_categorical, CosineDistance, L2Distance
-from thinc.loss import Loss
-
-from ...util import registry, OOV_RANK
-from ...errors import Errors
-from ...attrs import ID, ORTH
-from ...vectors import Mode as VectorsMode
+from functools import partial
+from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Optional, Tuple, cast
 
 import numpy
-from functools import partial
+from thinc.api import (
+    CosineDistance,
+    L2Distance,
+    LayerNorm,
+    Linear,
+    Maxout,
+    Model,
+    MultiSoftmax,
+    Softmax,
+    chain,
+    list2array,
+    to_categorical,
+    zero_init,
+)
+from thinc.loss import Loss
+from thinc.types import Floats2d, Ints1d
+
+from ...attrs import ID, ORTH
+from ...errors import Errors
+from ...util import OOV_RANK, registry
+from ...vectors import Mode as VectorsMode
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
-    from ...vocab import Vocab  # noqa: F401
     from ...tokens.doc import Doc  # noqa: F401
+    from ...vocab import Vocab  # noqa: F401
 
 
 @registry.architectures("spacy.PretrainVectors.v1")

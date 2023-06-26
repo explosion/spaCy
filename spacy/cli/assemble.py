@@ -1,13 +1,20 @@
-from typing import Optional
-from pathlib import Path
-from wasabi import msg
-import typer
 import logging
+from pathlib import Path
+from typing import Optional
 
-from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code
+import typer
+from wasabi import msg
+
 from .. import util
 from ..util import get_sourced_components, load_model_from_config
+from ._util import (
+    Arg,
+    Opt,
+    app,
+    import_code,
+    parse_config_overrides,
+    show_validation_error,
+)
 
 
 @app.command(

@@ -1,9 +1,10 @@
+from random import Random
 from typing import List
 
 import pytest
-from random import Random
+
 from spacy.matcher import Matcher
-from spacy.tokens import Span, SpanGroup, Doc
+from spacy.tokens import Doc, Span, SpanGroup
 from spacy.util import filter_spans
 
 

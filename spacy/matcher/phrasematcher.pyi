@@ -1,12 +1,13 @@
-from typing import List, Tuple, Union, Optional, Callable, Any, Dict, overload
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, overload
+
 from ..compat import Literal
-from .matcher import Matcher
-from ..vocab import Vocab
 from ..tokens import Doc, Span
+from ..vocab import Vocab
+from .matcher import Matcher
 
 class PhraseMatcher:
     def __init__(
-        self, vocab: Vocab, attr: Optional[Union[int, str]], validate: bool = ...
+        self, vocab: Vocab, attr: Optional[Union[int, str]] = ..., validate: bool = ...
     ) -> None: ...
     def __reduce__(self) -> Any: ...
     def __len__(self) -> int: ...

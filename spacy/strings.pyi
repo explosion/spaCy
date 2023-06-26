@@ -1,5 +1,5 @@
-from typing import Optional, Iterable, Iterator, Union, Any, overload
 from pathlib import Path
+from typing import Any, Iterable, Iterator, Optional, Union, overload
 
 def get_string_id(key: Union[str, int]) -> int: ...
 

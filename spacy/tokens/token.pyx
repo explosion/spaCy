@@ -1,26 +1,43 @@
 # cython: infer_types=True
 # Compiler crashes on memory view coercion without this. Should report bug.
-from cython.view cimport array as cvarray
 cimport numpy as np
+from cython.view cimport array as cvarray
+
 np.import_array()
+
+import warnings
 
 import numpy
 from thinc.api import get_array_module
-import warnings
 
-from ..typedefs cimport hash_t
+from ..attrs cimport (
+    IS_ALPHA,
+    IS_ASCII,
+    IS_BRACKET,
+    IS_CURRENCY,
+    IS_DIGIT,
+    IS_LEFT_PUNCT,
+    IS_LOWER,
+    IS_PUNCT,
+    IS_QUOTE,
+    IS_RIGHT_PUNCT,
+    IS_SPACE,
+    IS_STOP,
+    IS_TITLE,
+    IS_UPPER,
+    LIKE_EMAIL,
+    LIKE_NUM,
+    LIKE_URL,
+)
 from ..lexeme cimport Lexeme
-from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
-from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from ..attrs cimport IS_TITLE, IS_UPPER, IS_CURRENCY, IS_STOP
-from ..attrs cimport LIKE_URL, LIKE_NUM, LIKE_EMAIL
 from ..symbols cimport conj
-from .morphanalysis cimport MorphAnalysis
+from ..typedefs cimport hash_t
 from .doc cimport set_children_from_heads
+from .morphanalysis cimport MorphAnalysis
 
 from .. import parts_of_speech
-from ..errors import Errors, Warnings
 from ..attrs import IOB_STRINGS
+from ..errors import Errors, Warnings
 from .underscore import Underscore, get_ext_args
 
 

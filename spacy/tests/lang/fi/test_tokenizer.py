@@ -1,6 +1,5 @@
 import pytest
 
-
 ABBREVIATION_TESTS = [
     (
         "Hyvää uutta vuotta t. siht. Niemelä!",

@@ -2,10 +2,9 @@
 Tokenizer Exceptions.
 Source: https://forkortelse.dk/ and various others.
 """
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...symbols import ORTH, NORM
+from ...symbols import NORM, ORTH
 from ...util import update_exc
-
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 
 _exc = {}
 

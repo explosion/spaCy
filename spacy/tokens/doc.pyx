@@ -3,44 +3,66 @@ from typing import Set
 
 cimport cython
 cimport numpy as np
-from libc.string cimport memcpy
 from libc.math cimport sqrt
 from libc.stdint cimport int32_t, uint64_t
+from libc.string cimport memcpy
 
 import copy
+import itertools
+import warnings
 from collections import Counter, defaultdict
 from enum import Enum
-import itertools
+
 import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
 from thinc.util import copy_array
-import warnings
 
 from .span cimport Span
 from .token cimport MISSING_DEP
-from ._dict_proxies import SpanGroups
-from .token cimport Token
-from ..lexeme cimport Lexeme, EMPTY_LEXEME
-from ..typedefs cimport attr_t, flags_t
-from ..attrs cimport attr_id_t
-from ..attrs cimport LENGTH, POS, LEMMA, TAG, MORPH, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, NORM
 
-from ..attrs import intify_attr, IDS
+from ._dict_proxies import SpanGroups
+
+from ..attrs cimport (
+    DEP,
+    ENT_ID,
+    ENT_IOB,
+    ENT_KB_ID,
+    ENT_TYPE,
+    HEAD,
+    IDX,
+    LEMMA,
+    LENGTH,
+    MORPH,
+    NORM,
+    POS,
+    SENT_START,
+    SPACY,
+    TAG,
+    attr_id_t,
+)
+from ..lexeme cimport EMPTY_LEXEME, Lexeme
+from ..typedefs cimport attr_t, flags_t
+from .token cimport Token
+
+from .. import parts_of_speech, schemas, util
+from ..attrs import IDS, intify_attr
 from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
 from ..morphology import Morphology
-from .. import util
-from .. import parts_of_speech
-from .. import schemas
-from .underscore import Underscore, get_ext_args
-from ._retokenize import Retokenizer
-from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
 from ..util import get_words_and_spaces
+from ._retokenize import Retokenizer
+from .underscore import Underscore, get_ext_args
 
 DEF PADDING = 5
 
+
+# We store the docbin attrs here rather than in _serialize to avoid
+# import cycles.
+
+# fmt: off
+DOCBIN_ALL_ATTRS = ("ORTH", "NORM", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "ENT_ID", "LEMMA", "MORPH", "POS", "SENT_START")
+# fmt: on
 
 cdef int bounds_check(int i, int length, int padding) except -1:
     if (i + padding) < 0:

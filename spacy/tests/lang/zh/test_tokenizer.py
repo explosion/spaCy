@@ -1,7 +1,7 @@
 import pytest
-from spacy.lang.zh import Chinese, _get_pkuseg_trie_data
 from thinc.api import ConfigValidationError
 
+from spacy.lang.zh import Chinese, _get_pkuseg_trie_data
 
 # fmt: off
 TEXTS = ("作为语言而言，为世界使用人数最多的语言，目前世界有五分之一人口做为母语。",)

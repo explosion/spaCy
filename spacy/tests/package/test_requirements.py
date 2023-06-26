@@ -13,6 +13,7 @@ def test_build_dependencies():
         "hypothesis",
         "pre-commit",
         "black",
+        "isort",
         "mypy",
         "types-dataclasses",
         "types-mock",
