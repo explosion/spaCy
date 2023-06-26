@@ -675,6 +675,7 @@ def load_model_from_init_py(
     enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
+    pipe_instances: Dict[str, Any] = SimpleFrozenDict(),
 ) -> "Language":
     """Helper function to use in the `load()` method of a model package's
     __init__.py.
@@ -690,6 +691,9 @@ def load_model_from_init_py(
         components won't be loaded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
+    pipe_instances (Dict[str, Any]): Dictionary of components
+        to be added to the pipeline directly (not created from
+        config)
     RETURNS (Language): The loaded nlp object.
     """
     model_path = Path(init_file).parent
