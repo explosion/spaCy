@@ -39,7 +39,11 @@ from .levenshtein import levenshtein_compare
 from ..strings cimport get_string_id
 
 from ..attrs import IDS
+from ..errors import Errors, MatchPatternError, Warnings
+from ..schemas import validate_token_pattern
+from ..strings import get_string_id
 from ..util import registry
+from .levenshtein import levenshtein_compare
 
 DEF PADDING = 5
 

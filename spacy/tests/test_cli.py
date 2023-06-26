@@ -697,6 +697,7 @@ def test_string_to_list_intify(value):
     assert string_to_list(value, intify=True) == [1, 2, 3]
 
 
+@pytest.mark.skip(reason="Temporarily skip before models are published")
 def test_download_compatibility():
     spec = SpecifierSet("==" + about.__version__)
     spec.prereleases = False
@@ -707,6 +708,7 @@ def test_download_compatibility():
         assert get_minor_version(about.__version__) == get_minor_version(version)
 
 
+@pytest.mark.skip(reason="Temporarily skip before models are published")
 def test_validate_compatibility_table():
     spec = SpecifierSet("==" + about.__version__)
     spec.prereleases = False
@@ -858,7 +860,8 @@ def test_debug_data_compile_gold():
     assert data["boundary_cross_ents"] == 1
 
 
-def test_debug_data_compile_gold_for_spans():
+@pytest.mark.parametrize("component_name", ["spancat", "spancat_singlelabel"])
+def test_debug_data_compile_gold_for_spans(component_name):
     nlp = English()
     spans_key = "sc"
 
@@ -868,7 +871,7 @@ def test_debug_data_compile_gold_for_spans():
     ref.spans[spans_key] = [Span(ref, 3, 6, "ORG"), Span(ref, 5, 6, "GPE")]
     eg = Example(pred, ref)
 
-    data = _compile_gold([eg], ["spancat"], nlp, True)
+    data = _compile_gold([eg], [component_name], nlp, True)
 
     assert data["spancat"][spans_key] == Counter({"ORG": 1, "GPE": 1})
     assert data["spans_length"][spans_key] == {"ORG": [3], "GPE": [1]}

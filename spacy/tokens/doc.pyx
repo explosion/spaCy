@@ -51,12 +51,18 @@ from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
 from ..morphology import Morphology
 from ..util import get_words_and_spaces
-from .doc_bin import ALL_ATTRS as DOCBIN_ALL_ATTRS
 from .retokenizer import Retokenizer
 from .underscore import Underscore, get_ext_args
 
 DEF PADDING = 5
 
+
+# We store the docbin attrs here rather than in _serialize to avoid
+# import cycles.
+
+# fmt: off
+DOCBIN_ALL_ATTRS = ("ORTH", "NORM", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "ENT_ID", "LEMMA", "MORPH", "POS", "SENT_START")
+# fmt: on
 
 cdef int bounds_check(int i, int length, int padding) except -1:
     if (i + padding) < 0:

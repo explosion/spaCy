@@ -9,7 +9,7 @@ from ..util import load_model, logger, registry
 def create_copy_from_base_model(
     tokenizer: Optional[str] = None,
     vocab: Optional[str] = None,
-) -> Callable[[Language], Language]:
+) -> Callable[["Language"], "Language"]:
     def copy_from_base_model(nlp):
         if tokenizer:
             logger.info("Copying tokenizer from: %s", tokenizer)

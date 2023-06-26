@@ -12,12 +12,9 @@ from ..compat import copy_reg
 from ..errors import Errors
 from ..util import SimpleFrozenList, ensure_path
 from ..vocab import Vocab
+from .doc import DOCBIN_ALL_ATTRS as ALL_ATTRS
 from .doc import Doc
 from .span_groups import SpanGroups
-
-# fmt: off
-ALL_ATTRS = ("ORTH", "NORM", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "ENT_ID", "LEMMA", "MORPH", "POS", "SENT_START")
-# fmt: on
 
 
 class DocBin:
