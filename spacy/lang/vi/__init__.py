@@ -1,17 +1,17 @@
-from typing import Any, Dict, Union
-from pathlib import Path
 import re
-import srsly
 import string
+from pathlib import Path
+from typing import Any, Dict, Union
 
-from .stop_words import STOP_WORDS
-from .lex_attrs import LEX_ATTRS
-from ...language import Language, BaseDefaults
-from ...tokens import Doc
-from ...util import DummyTokenizer, registry, load_config_from_str
-from ...vocab import Vocab
+import srsly
+
 from ... import util
-
+from ...language import BaseDefaults, Language
+from ...tokens import Doc
+from ...util import DummyTokenizer, load_config_from_str, registry
+from ...vocab import Vocab
+from .lex_attrs import LEX_ATTRS
+from .stop_words import STOP_WORDS
 
 DEFAULT_CONFIG = """
 [nlp]

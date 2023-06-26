@@ -1,7 +1,8 @@
-from typing import Union, Iterator, Tuple
-from ...tokens import Doc, Span
-from ...symbols import NOUN, PROPN, PRON, VERB, AUX
+from typing import Iterator, Tuple, Union
+
 from ...errors import Errors
+from ...symbols import AUX, NOUN, PRON, PROPN, VERB
+from ...tokens import Doc, Span
 
 # NB: Modified from da on suggestion from https://github.com/explosion/spaCy/issues/7457#issuecomment-800349751 [PJB]
 

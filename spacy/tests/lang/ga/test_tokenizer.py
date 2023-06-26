@@ -1,6 +1,5 @@
 import pytest
 
-
 # fmt: off
 GA_TOKEN_EXCEPTION_TESTS = [
     ("Niall Ó Domhnaill, Rialtas na hÉireann 1977 (lch. 600).", ["Niall", "Ó", "Domhnaill", ",", "Rialtas", "na", "hÉireann", "1977", "(", "lch.", "600", ")", "."]),

@@ -1,10 +1,10 @@
-from typing import Callable, Iterable, Dict, Any, cast
+from typing import Any, Callable, Dict, Iterable, cast
 
 import pytest
 from numpy.testing import assert_equal
 from thinc.types import Ragged
 
-from spacy import registry, util, Language
+from spacy import Language, registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
 from spacy.kb import Candidate, InMemoryLookupKB, KnowledgeBase
@@ -15,7 +15,7 @@ from spacy.pipeline import EntityLinker, TrainablePipe
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
 from spacy.tests.util import make_tempdir
-from spacy.tokens import Span, Doc
+from spacy.tokens import Doc, Span
 from spacy.training import Example
 from spacy.util import ensure_path
 from spacy.vocab import Vocab

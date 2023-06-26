@@ -1,14 +1,15 @@
-from typing import Sequence, Iterable, Optional, Dict, Callable, List, Any, Tuple
-from thinc.api import Model, set_dropout_rate, Optimizer, Config
-from thinc.types import Floats2d
 from itertools import islice
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
 
-from .trainable_pipe import TrainablePipe
-from ..training import Example, validate_examples, validate_get_examples
-from ..tokens import Doc
-from ..vocab import Vocab
-from ..language import Language
+from thinc.api import Config, Model, Optimizer, set_dropout_rate
+from thinc.types import Floats2d
+
 from ..errors import Errors
+from ..language import Language
+from ..tokens import Doc
+from ..training import Example, validate_examples, validate_get_examples
+from ..vocab import Vocab
+from .trainable_pipe import TrainablePipe
 
 default_model_config = """
 [model]

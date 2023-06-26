@@ -1,18 +1,12 @@
-from typing import (
-    Callable,
-    Protocol,
-    Iterator,
-    Optional,
-    Union,
-    Tuple,
-    Any,
-)
+from typing import Any, Callable, Iterator, Optional, Protocol, Tuple, Union
+
 from thinc.types import Floats1d, FloatsXd
-from .doc import Doc
-from .span import Span
-from .morphanalysis import MorphAnalysis
+
 from ..lexeme import Lexeme
 from ..vocab import Vocab
+from .doc import Doc
+from .morphanalysis import MorphAnalysis
+from .span import Span
 from .underscore import Underscore
 
 class TokenMethod(Protocol):

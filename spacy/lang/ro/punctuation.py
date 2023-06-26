@@ -1,9 +1,18 @@
 import itertools
 
-from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_CURRENCY
-from ..char_classes import LIST_ICONS, CURRENCY
-from ..char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA, PUNCT
-
+from ..char_classes import (
+    ALPHA,
+    ALPHA_LOWER,
+    ALPHA_UPPER,
+    CONCAT_QUOTES,
+    CURRENCY,
+    LIST_CURRENCY,
+    LIST_ELLIPSES,
+    LIST_ICONS,
+    LIST_PUNCT,
+    LIST_QUOTES,
+    PUNCT,
+)
 
 _list_icons = [x for x in LIST_ICONS if x != "°"]
 _list_icons = [x.replace("\\u00B0", "") for x in _list_icons]

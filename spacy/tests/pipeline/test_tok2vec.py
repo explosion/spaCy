@@ -1,17 +1,21 @@
 import pytest
-from spacy.ml.models.tok2vec import build_Tok2Vec_model
-from spacy.ml.models.tok2vec import MultiHashEmbed, MaxoutWindowEncoder
-from spacy.pipeline.tok2vec import Tok2Vec, Tok2VecListener
-from spacy.vocab import Vocab
-from spacy.tokens import Doc
-from spacy.training import Example
+from numpy.testing import assert_array_equal
+from thinc.api import Config, get_current_ops
+
 from spacy import util
 from spacy.lang.en import English
+from spacy.ml.models.tok2vec import (
+    MaxoutWindowEncoder,
+    MultiHashEmbed,
+    build_Tok2Vec_model,
+)
+from spacy.pipeline.tok2vec import Tok2Vec, Tok2VecListener
+from spacy.tokens import Doc
+from spacy.training import Example
 from spacy.util import registry
-from thinc.api import Config, get_current_ops
-from numpy.testing import assert_array_equal
+from spacy.vocab import Vocab
 
-from ..util import get_batch, make_tempdir, add_vecs_to_vocab
+from ..util import add_vecs_to_vocab, get_batch, make_tempdir
 
 
 def test_empty_doc():

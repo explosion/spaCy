@@ -1,18 +1,18 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Iterable, Iterator, Optional, Dict, Tuple, Callable
-import srsly
-from thinc.api import set_dropout_rate, Model, Optimizer
 import warnings
+from typing import Callable, Dict, Iterable, Iterator, Optional, Tuple
+
+import srsly
+from thinc.api import Model, Optimizer, set_dropout_rate
 
 from ..tokens.doc cimport Doc
 
-from ..training import validate_examples, validate_distillation_examples
-from ..errors import Errors, Warnings
-from .pipe import Pipe, deserialize_config
 from .. import util
-from ..vocab import Vocab
+from ..errors import Errors, Warnings
 from ..language import Language
-from ..training import Example
+from ..training import Example, validate_distillation_examples, validate_examples
+from ..vocab import Vocab
+from .pipe import Pipe, deserialize_config
 
 
 cdef class TrainablePipe(Pipe):

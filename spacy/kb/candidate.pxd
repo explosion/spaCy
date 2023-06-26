@@ -1,6 +1,8 @@
 from libcpp.vector cimport vector
-from .kb_in_memory cimport InMemoryLookupKB
+
 from ..typedefs cimport hash_t
+from .kb_in_memory cimport InMemoryLookupKB
+
 
 cdef class Candidate:
     pass

@@ -1,21 +1,23 @@
 # cython: infer_types=True
 from __future__ import print_function
+
 from cymem.cymem cimport Pool
 from libc.stdlib cimport calloc, free
 from libcpp.vector cimport vector
 
 from collections import Counter
+
 import srsly
 
-from . cimport _beam_utils
-from ...typedefs cimport weight_t, attr_t
-from ...tokens.doc cimport Doc
 from ...structs cimport TokenC
-from .stateclass cimport StateClass
+from ...tokens.doc cimport Doc
+from ...typedefs cimport attr_t, weight_t
+from . cimport _beam_utils
 from ._parser_utils cimport arg_max_if_valid
+from .stateclass cimport StateClass
 
-from ...errors import Errors
 from ... import util
+from ...errors import Errors
 
 
 cdef weight_t MIN_SCORE = -90000

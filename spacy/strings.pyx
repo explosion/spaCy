@@ -1,19 +1,20 @@
 # cython: infer_types=True
-from typing import Optional, Union, Iterable, Tuple, Callable, Any, List, Iterator
+from typing import Any, Callable, Iterable, Iterator, List, Optional, Tuple, Union
+
 cimport cython
+from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
 from libcpp.set cimport set
-from libc.stdint cimport uint32_t
 from murmurhash.mrmr cimport hash64
 
 import srsly
 
 from .typedefs cimport hash_t
 
+from . import util
+from .errors import Errors
 from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
-from .errors import Errors
-from . import util
 
 
 cdef class StringStore:
