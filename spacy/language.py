@@ -827,7 +827,6 @@ class Language:
     def add_pipe_instance(
         self,
         component: PipeCallable,
-        /,
         name: Optional[str] = None,
         *,
         before: Optional[Union[str, int]] = None,
