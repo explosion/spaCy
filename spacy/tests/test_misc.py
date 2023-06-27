@@ -252,12 +252,39 @@ def test_minor_version(a1, a2, b1, b2, is_match):
             {"training.batch_size": 128, "training.optimizer.learn_rate": 0.01},
             {"training": {"batch_size": 128, "optimizer": {"learn_rate": 0.01}}},
         ),
+        (
+            {"attribute_ruler.scorer.@scorers": "spacy.tagger_scorer.v1"},
+            {"attribute_ruler": {"scorer": {"@scorers": "spacy.tagger_scorer.v1"}}},
+        ),
     ],
 )
 def test_dot_to_dict(dot_notation, expected):
     result = util.dot_to_dict(dot_notation)
     assert result == expected
     assert util.dict_to_dot(result) == dot_notation
+
+
+@pytest.mark.parametrize(
+    "dot_notation,expected",
+    [
+        (
+            {"token.pos": True, "token._.xyz": True},
+            {"token": {"pos": True, "_": {"xyz": True}}},
+        ),
+        (
+            {"training.batch_size": 128, "training.optimizer.learn_rate": 0.01},
+            {"training": {"batch_size": 128, "optimizer": {"learn_rate": 0.01}}},
+        ),
+        (
+            {"attribute_ruler.scorer": {"@scorers": "spacy.tagger_scorer.v1"}},
+            {"attribute_ruler": {"scorer": {"@scorers": "spacy.tagger_scorer.v1"}}},
+        ),
+    ],
+)
+def test_dot_to_dict_overrides(dot_notation, expected):
+    result = util.dot_to_dict(dot_notation)
+    assert result == expected
+    assert util.dict_to_dot(result, for_overrides=True) == dot_notation
 
 
 def test_set_dot_to_object():
