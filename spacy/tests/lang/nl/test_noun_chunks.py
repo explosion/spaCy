@@ -1,4 +1,5 @@
 import pytest
+
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 

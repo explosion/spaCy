@@ -1,23 +1,24 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional, Union, Dict, Callable
-import srsly
-from thinc.api import SequenceCategoricalCrossentropy, Model, Config
 from itertools import islice
+from typing import Callable, Dict, Optional, Union
 
+import srsly
+from thinc.api import Config, Model, SequenceCategoricalCrossentropy
+
+from ..morphology cimport Morphology
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
-from ..morphology cimport Morphology
 
-from ..parts_of_speech import IDS as POS_IDS
-from ..symbols import POS
-from ..language import Language
-from ..errors import Errors
-from .pipe import deserialize_config
-from .tagger import Tagger
 from .. import util
+from ..errors import Errors
+from ..language import Language
+from ..parts_of_speech import IDS as POS_IDS
 from ..scorer import Scorer
+from ..symbols import POS
 from ..training import validate_examples, validate_get_examples
 from ..util import registry
+from .pipe import deserialize_config
+from .tagger import Tagger
 
 # See #9050
 BACKWARD_OVERWRITE = True

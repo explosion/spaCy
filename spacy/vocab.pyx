@@ -1,26 +1,27 @@
 # cython: profile=True
 from libc.string cimport memcpy
 
+import functools
+
 import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
-import functools
 
-from .lexeme cimport EMPTY_LEXEME, OOV_RANK
-from .lexeme cimport Lexeme
-from .typedefs cimport attr_t
-from .tokens.token cimport Token
 from .attrs cimport LANG, ORTH
+from .lexeme cimport EMPTY_LEXEME, OOV_RANK, Lexeme
+from .tokens.token cimport Token
+from .typedefs cimport attr_t
 
+from . import util
+from .attrs import IS_STOP, NORM, intify_attrs
 from .compat import copy_reg
 from .errors import Errors
-from .attrs import intify_attrs, NORM, IS_STOP
-from .vectors import Vectors, Mode as VectorsMode
-from .util import registry
-from .lookups import Lookups
-from . import util
+from .lang.lex_attrs import LEX_ATTRS, get_lang, is_stop
 from .lang.norm_exceptions import BASE_NORMS
-from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang
+from .lookups import Lookups
+from .util import registry
+from .vectors import Mode as VectorsMode
+from .vectors import Vectors
 
 
 def create_vocab(lang, defaults, vectors_name=None):

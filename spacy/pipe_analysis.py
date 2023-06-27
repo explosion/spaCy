@@ -1,8 +1,9 @@
-from typing import List, Set, Dict, Iterable, ItemsView, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, ItemsView, Iterable, List, Set, Union
+
 from wasabi import msg
 
-from .tokens import Doc, Token, Span
 from .errors import Errors
+from .tokens import Doc, Span, Token
 from .util import dot_to_dict
 
 if TYPE_CHECKING:

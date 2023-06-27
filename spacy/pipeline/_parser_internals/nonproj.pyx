@@ -4,18 +4,19 @@ for doing pseudo-projective parsing implementation uses the HEAD decoration
 scheme.
 """
 from copy import copy
-from cython.operator cimport preincrement as incr, dereference as deref
+
+from cython.operator cimport dereference as deref
+from cython.operator cimport preincrement as incr
 from libc.limits cimport INT_MAX
 from libc.stdlib cimport abs
 from libcpp cimport bool
 from libcpp.string cimport string, to_string
-from libcpp.vector cimport vector
 from libcpp.unordered_set cimport unordered_set
+from libcpp.vector cimport vector
 
 from ...tokens.doc cimport Doc, set_children_from_heads
 
 from ...errors import Errors
-
 
 DELIMITER = '||'
 

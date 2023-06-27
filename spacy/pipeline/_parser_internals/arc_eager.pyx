@@ -1,21 +1,26 @@
 # cython: profile=True, cdivision=True, infer_types=True
-from cymem.cymem cimport Pool, Address
+from cymem.cymem cimport Address, Pool
 from libc.stdint cimport int32_t
 from libcpp.vector cimport vector
 
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
 
-from ...typedefs cimport hash_t, attr_t
 from ...strings cimport hash_string
 from ...structs cimport TokenC
 from ...tokens.doc cimport Doc, set_children_from_heads
 from ...tokens.token cimport MISSING_DEP
+from ...typedefs cimport attr_t, hash_t
+
 from ...training import split_bilu_label
+
 from ...training.example cimport Example
+from ._state cimport ArcC, StateC
 from .stateclass cimport StateClass
-from ._state cimport StateC, ArcC
+
 from ...errors import Errors
+
 from thinc.extra.search cimport Beam
+
 
 cdef weight_t MIN_SCORE = -90000
 cdef attr_t SUBTOK_LABEL = hash_string('subtok')

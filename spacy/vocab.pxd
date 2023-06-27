@@ -1,12 +1,12 @@
-from libcpp.vector cimport vector
-from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
+from libcpp.vector cimport vector
 from murmurhash.mrmr cimport hash64
+from preshed.maps cimport PreshMap
 
+from .morphology cimport Morphology
+from .strings cimport StringStore
 from .structs cimport LexemeC, TokenC
 from .typedefs cimport attr_t, hash_t
-from .strings cimport StringStore
-from .morphology cimport Morphology
 
 
 cdef LexemeC EMPTY_LEXEME

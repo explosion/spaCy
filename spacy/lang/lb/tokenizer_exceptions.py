@@ -1,7 +1,6 @@
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...symbols import ORTH, NORM
+from ...symbols import NORM, ORTH
 from ...util import update_exc
-
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 
 # TODO
 # treat other apostrophes within words as part of the word: [op d'mannst], [fir d'éischt] (= exceptions)

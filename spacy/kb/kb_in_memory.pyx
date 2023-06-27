@@ -1,23 +1,28 @@
 # cython: infer_types=True, profile=True
-from typing import Iterable, Callable, Dict, Any, Union
+from typing import Any, Callable, Dict, Iterable, Union
 
 import srsly
-from preshed.maps cimport PreshMap
-from cpython.exc cimport PyErr_SetFromErrno
-from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
-from libc.stdint cimport int32_t, int64_t
-from libcpp.vector cimport vector
 
-from pathlib import Path
+from cpython.exc cimport PyErr_SetFromErrno
+from libc.stdint cimport int32_t, int64_t
+from libc.stdio cimport fclose, feof, fopen, fread, fseek, fwrite
+from libcpp.vector cimport vector
+from preshed.maps cimport PreshMap
+
 import warnings
+from pathlib import Path
 
 from ..tokens import Span
+
 from ..typedefs cimport hash_t
-from ..errors import Errors, Warnings
+
 from .. import util
+from ..errors import Errors, Warnings
 from ..util import SimpleFrozenList, ensure_path
+
 from ..vocab cimport Vocab
 from .kb cimport KnowledgeBase
+
 from .candidate import Candidate as Candidate
 
 

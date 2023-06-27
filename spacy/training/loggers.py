@@ -1,13 +1,14 @@
-from typing import TYPE_CHECKING, Dict, Any, Tuple, Callable, List, Optional, IO, Union
-from wasabi import Printer
-from pathlib import Path
-import tqdm
 import sys
-import srsly
+from pathlib import Path
+from typing import IO, TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
-from ..util import registry
-from ..errors import Errors
+import srsly
+import tqdm
+from wasabi import Printer
+
 from .. import util
+from ..errors import Errors
+from ..util import registry
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401

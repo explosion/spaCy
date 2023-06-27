@@ -1,8 +1,7 @@
-from typing import (
-    Union,
-    Any,
-)
+from typing import Any, Union
+
 from thinc.types import Floats1d
+
 from .tokens import Doc, Span, Token
 from .vocab import Vocab
 

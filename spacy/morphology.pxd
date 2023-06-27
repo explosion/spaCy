@@ -1,10 +1,10 @@
-from cymem.cymem cimport Pool
-from preshed.maps cimport PreshMap
 cimport numpy as np
+from cymem.cymem cimport Pool
 from libc.stdint cimport uint64_t
+from preshed.maps cimport PreshMap
 
-from .structs cimport MorphAnalysisC
 from .strings cimport StringStore
+from .structs cimport MorphAnalysisC
 from .typedefs cimport attr_t, hash_t
 
 

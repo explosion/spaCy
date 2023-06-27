@@ -1,11 +1,11 @@
 from wasabi import Printer
 
-from .conll_ner_to_docs import n_sents_info
-from ...vocab import Vocab
-from ...training import iob_to_biluo, tags_to_entities
-from ...tokens import Doc, Span
 from ...errors import Errors
+from ...tokens import Doc, Span
+from ...training import iob_to_biluo, tags_to_entities
 from ...util import minibatch
+from ...vocab import Vocab
+from .conll_ner_to_docs import n_sents_info
 
 
 def iob_to_docs(input_data, n_sents=10, no_print=False, *args, **kwargs):
