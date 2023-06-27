@@ -5,6 +5,7 @@ from thinc.api import Optimizer, Model
 
 if TYPE_CHECKING:
     from .training import Example
+    from .language import Language
 
 
 @runtime_checkable
@@ -50,7 +51,7 @@ class InitializableComponent(Protocol):
     def initialize(
         self,
         get_examples: Callable[[], Iterable["Example"]],
-        nlp: Iterable["Example"],
+        nlp: "Language",
         **kwargs: Any
     ):
         ...

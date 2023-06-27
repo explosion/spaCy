@@ -494,10 +494,13 @@ cdef class Span:
                     start = i
                     if start >= self.end:
                         break
-            if start < self.end:
-                spans.append(Span(self.doc, start, self.end))
-        return tuple(spans)
+                elif i == self.doc.length - 1:
+                    spans.append(Span(self.doc, start, self.doc.length))
 
+            # Ensure that trailing parts of the Span instance are included in last element of .sents.
+            if start == self.doc.length - 1:
+                spans.append(Span(self.doc, start, self.doc.length))
+        return tuple(spans)
 
     @property
     def ents(self):
@@ -772,36 +775,61 @@ cdef class Span:
             return self.span_c().start
 
         def __set__(self, int start):
-            if start < 0:
-                raise IndexError(Errors.E1032.format(var="start", forbidden="< 0", value=start))
-            self.span_c().start = start
+            if start < 0 or start > self.doc.length:
+                raise IndexError(Errors.E1032.format(var="start", obj="Doc", length=self.doc.length, value=start))
+            cdef SpanC* span_c = self.span_c()
+            if start > span_c.end:
+                raise ValueError(Errors.E4007.format(var="start", value=start, op="<=", existing_var="end", existing_value=span_c.end))
+            span_c.start = start
+            span_c.start_char = self.doc.c[start].idx
 
     property end:
         def __get__(self):
             return self.span_c().end
 
         def __set__(self, int end):
-            if end < 0:
-                raise IndexError(Errors.E1032.format(var="end", forbidden="< 0", value=end))
-            self.span_c().end = end
+            if end < 0 or end > self.doc.length:
+                raise IndexError(Errors.E1032.format(var="end", obj="Doc", length=self.doc.length, value=end))
+            cdef SpanC* span_c = self.span_c()
+            if span_c.start > end:
+                raise ValueError(Errors.E4007.format(var="end", value=end, op=">=", existing_var="start", existing_value=span_c.start))
+            span_c.end = end
+            if end > 0:
+                span_c.end_char = self.doc.c[end-1].idx + self.doc.c[end-1].lex.length
+            else:
+                span_c.end_char = 0
 
     property start_char:
         def __get__(self):
             return self.span_c().start_char
 
         def __set__(self, int start_char):
-            if start_char < 0:
-                raise IndexError(Errors.E1032.format(var="start_char", forbidden="< 0", value=start_char))
-            self.span_c().start_char = start_char
+            if start_char < 0 or start_char > len(self.doc.text):
+                raise IndexError(Errors.E1032.format(var="start_char", obj="Doc text", length=len(self.doc.text), value=start_char))
+            cdef int start = token_by_start(self.doc.c, self.doc.length, start_char)
+            if start < 0:
+                raise ValueError(Errors.E4008.format(value=start_char, pos="start"))
+            cdef SpanC* span_c = self.span_c()
+            if start_char > span_c.end_char:
+                raise ValueError(Errors.E4007.format(var="start_char", value=start_char, op="<=", existing_var="end_char", existing_value=span_c.end_char))
+            span_c.start_char = start_char
+            span_c.start = start
 
     property end_char:
         def __get__(self):
             return self.span_c().end_char
 
         def __set__(self, int end_char):
-            if end_char < 0:
-                raise IndexError(Errors.E1032.format(var="end_char", forbidden="< 0", value=end_char))
-            self.span_c().end_char = end_char
+            if end_char < 0 or end_char > len(self.doc.text):
+                raise IndexError(Errors.E1032.format(var="end_char", obj="Doc text", length=len(self.doc.text), value=end_char))
+            cdef int end = token_by_end(self.doc.c, self.doc.length, end_char)
+            if end < 0:
+                raise ValueError(Errors.E4008.format(value=end_char, pos="end"))
+            cdef SpanC* span_c = self.span_c()
+            if span_c.start_char > end_char:
+                raise ValueError(Errors.E4007.format(var="end_char", value=end_char, op=">=", existing_var="start_char", existing_value=span_c.start_char))
+            span_c.end_char = end_char
+            span_c.end = end
 
     property label:
         def __get__(self):

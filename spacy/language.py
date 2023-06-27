@@ -1,6 +1,6 @@
 from typing import Iterator, Optional, Any, Dict, Callable, Iterable, Literal
 from typing import Union, Tuple, List, Set, Pattern, Sequence
-from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
+from typing import NoReturn, TypeVar, cast, overload
 
 from dataclasses import dataclass
 import random
@@ -1024,7 +1024,7 @@ class Language:
         examples: Iterable[Example],
         *,
         drop: float = 0.0,
-        sgd: Optional[Optimizer] = None,
+        sgd: Union[Optimizer, None, Literal[False]] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         exclude: Iterable[str] = SimpleFrozenList(),
@@ -1037,7 +1037,9 @@ class Language:
             (teacher) and predicted (student) docs must have the same number of
             tokens and the same orthography.
         drop (float): The dropout rate.
-        sgd (Optional[Optimizer]): An optimizer.
+        sgd (Union[Optimizer, None, Literal[False]]): An optimizer. Will
+            be created via create_optimizer if 'None'. No optimizer will
+            be used when set to 'False'.
         losses (Optional(Dict[str, float])): Dictionary to update with the loss,
             keyed by component.
         component_cfg (Optional[Dict[str, Dict[str, Any]]]): Config parameters
@@ -1107,10 +1109,22 @@ class Language:
                 student_proc.distill(
                     teacher_pipe,
                     examples,
-                    sgd=sgd,
+                    sgd=None,
                     losses=losses,
                     **component_cfg[student_name],
                 )
+
+        # Only finish the update after all component updates are done. Some
+        # components may share weights (such as tok2vec) and we only want
+        # to apply weight updates after all gradients are accumulated.
+        for student_name, student_proc in self.pipeline:
+            if (
+                student_name not in exclude
+                and isinstance(student_proc, ty.DistillableComponent)
+                and student_proc.is_distillable
+                and sgd not in (None, False)
+            ):
+                student_proc.finish_update(sgd)
 
         return losses
 
@@ -1202,7 +1216,7 @@ class Language:
         _: Optional[Any] = None,
         *,
         drop: float = 0.0,
-        sgd: Optional[Optimizer] = None,
+        sgd: Union[Optimizer, None, Literal[False]] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         exclude: Iterable[str] = SimpleFrozenList(),
@@ -1213,7 +1227,9 @@ class Language:
         examples (Iterable[Example]): A batch of examples
         _: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
-        sgd (Optimizer): An optimizer.
+        sgd (Union[Optimizer, None, Literal[False]]): An optimizer. Will
+            be created via create_optimizer if 'None'. No optimizer will
+            be used when set to 'False'.
         losses (Dict[str, float]): Dictionary to update with the loss, keyed by
             component.
         component_cfg (Dict[str, Dict]): Config parameters for specific pipeline
@@ -1272,6 +1288,7 @@ class Language:
                 name not in exclude
                 and isinstance(proc, ty.TrainableComponent)
                 and proc.is_trainable
+                and sgd not in (None, False)
             ):
                 proc.finish_update(sgd)
 
@@ -1366,7 +1383,10 @@ class Language:
                 "No 'get_examples' callback provided to 'Language.initialize', creating dummy examples"
             )
             doc = Doc(self.vocab, words=["x", "y", "z"])
-            get_examples = lambda: [Example.from_dict(doc, {})]
+
+            def get_examples():
+                return [Example.from_dict(doc, {})]
+
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(
                 method="Language.initialize", obj=type(get_examples)
@@ -1471,6 +1491,7 @@ class Language:
         scorer: Optional[Scorer] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         scorer_cfg: Optional[Dict[str, Any]] = None,
+        per_component: bool = False,
     ) -> Dict[str, Any]:
         """Evaluate a model's pipeline components.
 
@@ -1482,6 +1503,8 @@ class Language:
             arguments for specific components.
         scorer_cfg (dict): An optional dictionary with extra keyword arguments
             for the scorer.
+        per_component (bool): Whether to return the scores keyed by component
+            name. Defaults to False.
 
         RETURNS (Scorer): The scorer containing the evaluation results.
 
@@ -1514,7 +1537,7 @@ class Language:
         for eg, doc in zip(examples, docs):
             eg.predicted = doc
         end_time = timer()
-        results = scorer.score(examples)
+        results = scorer.score(examples, per_component=per_component)
         n_words = sum(len(eg.predicted) for eg in examples)
         results["speed"] = n_words / (end_time - start_time)
         return results
@@ -1834,7 +1857,7 @@ class Language:
         # using the nlp.config with all defaults.
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
-        orig_distill = config.pop("distill", None)
+        orig_distill = config.pop("distillation", None)
         orig_pretraining = config.pop("pretraining", None)
         config["components"] = {}
         if auto_fill:
@@ -1844,8 +1867,8 @@ class Language:
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
         if orig_distill is not None:
-            filled["distill"] = orig_distill
-            config["distill"] = orig_distill
+            filled["distillation"] = orig_distill
+            config["distillation"] = orig_distill
         if orig_pretraining is not None:
             filled["pretraining"] = orig_pretraining
             config["pretraining"] = orig_pretraining

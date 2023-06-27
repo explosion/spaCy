@@ -157,6 +157,24 @@ def test_language_update_updates():
     )
 
 
+def test_language_update_does_not_update_with_sgd_false():
+    config = Config().from_str(TAGGER_CFG_STRING)
+    nlp = load_model_from_config(config, auto_fill=True, validate=True)
+
+    train_examples = []
+    for t in TAGGER_TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    docs_before_update = list(nlp.pipe([eg.predicted.copy() for eg in train_examples]))
+    nlp.update(train_examples, sgd=False)
+    docs_after_update = list(nlp.pipe([eg.predicted.copy() for eg in train_examples]))
+
+    xp = get_array_module(docs_after_update[0].tensor)
+    xp.testing.assert_equal(docs_before_update[0].tensor, docs_after_update[0].tensor)
+
+
 def test_language_evaluate(nlp):
     text = "hello world"
     annots = {"doc_annotation": {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}}

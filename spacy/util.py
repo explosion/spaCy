@@ -11,6 +11,7 @@ from pathlib import Path
 import thinc
 from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
 from thinc.api import ConfigValidationError, Model, constant as constant_schedule
+from thinc.api import fix_random_seed, set_gpu_allocator
 import functools
 import itertools
 import numpy
@@ -1790,3 +1791,22 @@ def find_available_port(start: int, host: str, auto_select: bool = False) -> int
     # if we get here, the port changed
     warnings.warn(Warnings.W124.format(host=host, port=start, serve_port=port))
     return port
+
+
+def set_gpu_allocator_from_config(config: Config, use_gpu: int):
+    """Change the global GPU allocator based to the value in
+    the configuration."""
+    if "gpu_allocator" not in config["training"]:
+        raise ValueError(Errors.E1015.format(value="[training] gpu_allocator"))
+    allocator = config["training"]["gpu_allocator"]
+    if use_gpu >= 0 and allocator:
+        set_gpu_allocator(allocator)
+
+
+def set_seed_from_config(config: Config):
+    """Set the random number generator seed to the value in
+    the configuration."""
+    if "seed" not in config["training"]:
+        raise ValueError(Errors.E1015.format(value="[training] seed"))
+    if config["training"]["seed"] is not None:
+        fix_random_seed(config["training"]["seed"])
