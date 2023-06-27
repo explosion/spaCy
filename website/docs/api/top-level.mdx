@@ -469,7 +469,7 @@ factories.
 | `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                             |
 | `readers`         | Registry for file and data readers, including training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                   |
 | `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                               |
-| `scorers`         | Registry for functions that create scoring methods for user with the [`Scorer`](/api/scorer). Scoring methods are called with `Iterable[Example]` and arbitrary `\*\*kwargs` and return scores as `Dict[str, Any]`.                                |
+| `scorers`         | Registry for functions that create scoring methods for user with the [`Scorer`](/api/scorer). Scoring methods are called with `Iterable[Example]` and arbitrary `**kwargs` and return scores as `Dict[str, Any]`.                                  |
 | `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                   |
 
 ### spacy-transformers registry {id="registry-transformers"}

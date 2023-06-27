@@ -1,5 +1,21 @@
-from ...symbols import POS, PUNCT, INTJ, X, SYM, ADJ, AUX, ADP, CONJ, NOUN, PRON
-from ...symbols import VERB, ADV, PROPN, NUM, DET
+from ...symbols import (
+    ADJ,
+    ADP,
+    ADV,
+    AUX,
+    CONJ,
+    DET,
+    INTJ,
+    NOUN,
+    NUM,
+    POS,
+    PRON,
+    PROPN,
+    PUNCT,
+    SYM,
+    VERB,
+    X,
+)
 
 # 은전한닢(mecab-ko-dic)의 품사 태그를 universal pos tag로 대응시킴
 # https://docs.google.com/spreadsheets/d/1-9blXKjtjeKZqsf4NzHeYJCrr49-nXeRF6D80udfcwY/edit#gid=589544265

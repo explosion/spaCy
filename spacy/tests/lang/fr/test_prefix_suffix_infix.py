@@ -1,7 +1,8 @@
 import pytest
-from spacy.language import Language, BaseDefaults
-from spacy.lang.punctuation import TOKENIZER_INFIXES
+
 from spacy.lang.char_classes import ALPHA
+from spacy.lang.punctuation import TOKENIZER_INFIXES
+from spacy.language import BaseDefaults, Language
 
 
 @pytest.mark.issue(768)

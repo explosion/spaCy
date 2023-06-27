@@ -1,6 +1,5 @@
 import pytest
 
-
 # TODO add test cases with valid punctuation signs.
 
 hy_tokenize_text_test = [

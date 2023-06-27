@@ -1,7 +1,8 @@
-from libc.string cimport memset, memcpy
+from libc.string cimport memcpy, memset
 from thinc.backends.cblas cimport CBlas
-from ..typedefs cimport weight_t, hash_t
+
 from ..pipeline._parser_internals._state cimport StateC
+from ..typedefs cimport hash_t, weight_t
 
 
 cdef struct SizesC:

@@ -5,12 +5,12 @@ from thinc.api import Adam
 from spacy import registry, util
 from spacy.attrs import DEP, NORM
 from spacy.lang.en import English
-from spacy.tokens import Doc
-from spacy.training import Example
-from spacy.vocab import Vocab
 from spacy.pipeline import DependencyParser
 from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
+from spacy.tokens import Doc
+from spacy.training import Example
+from spacy.vocab import Vocab
 
 from ..util import apply_transition_sequence, make_tempdir
 

@@ -1,6 +1,5 @@
 import pytest
 
-
 DEFAULT_TESTS = [
     ("N. kormányzósági\nszékhely.", ["N.", "kormányzósági", "székhely", "."]),
     pytest.param(

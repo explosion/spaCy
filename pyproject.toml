@@ -9,3 +9,6 @@ requires = [
     "numpy>=1.15.0",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.isort]
+profile = "black"

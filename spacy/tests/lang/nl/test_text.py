@@ -1,4 +1,5 @@
 import pytest
+
 from spacy.lang.nl.lex_attrs import like_num
 
 

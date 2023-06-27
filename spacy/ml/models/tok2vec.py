@@ -1,17 +1,32 @@
-from typing import Optional, List, Union, cast
-from thinc.types import Floats2d, Ints2d, Ragged, Ints1d
-from thinc.api import chain, clone, concatenate, with_array, with_padded
-from thinc.api import Model, noop, list2ragged, ragged2list, HashEmbed
-from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
+from typing import List, Optional, Union, cast
 
-from ...tokens import Doc
-from ...util import registry
+from thinc.api import (
+    HashEmbed,
+    Maxout,
+    Mish,
+    Model,
+    PyTorchLSTM,
+    chain,
+    clone,
+    concatenate,
+    expand_window,
+    list2ragged,
+    noop,
+    ragged2list,
+    residual,
+    with_array,
+    with_padded,
+)
+from thinc.types import Floats2d, Ints1d, Ints2d, Ragged
+
+from ...attrs import intify_attr
 from ...errors import Errors
 from ...ml import _character_embed
-from ..staticvectors import StaticVectors
-from ..featureextractor import FeatureExtractor
 from ...pipeline.tok2vec import Tok2VecListener
-from ...attrs import intify_attr
+from ...tokens import Doc
+from ...util import registry
+from ..featureextractor import FeatureExtractor
+from ..staticvectors import StaticVectors
 
 
 @registry.architectures("spacy.Tok2VecListener.v1")

@@ -1,6 +1,7 @@
 import pickle
 
 from spacy.lang.ja import Japanese
+
 from ...util import make_tempdir
 
 

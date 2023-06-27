@@ -1,6 +1,6 @@
-from typing import Union, Iterable, Dict, Any
-from pathlib import Path
 import sys
+from pathlib import Path
+from typing import Any, Dict, Iterable, Union
 
 # set library-specific custom warning handling before doing anything else
 from .errors import setup_default_warnings
@@ -8,20 +8,17 @@ from .errors import setup_default_warnings
 setup_default_warnings()  # noqa: E402
 
 # These are imported as part of the API
-from thinc.api import prefer_gpu, require_gpu, require_cpu  # noqa: F401
-from thinc.api import Config
+from thinc.api import Config, prefer_gpu, require_cpu, require_gpu  # noqa: F401
 
 from . import pipeline  # noqa: F401
-from .cli.info import info  # noqa: F401
-from .glossary import explain  # noqa: F401
-from .about import __version__  # noqa: F401
-from .util import registry, logger  # noqa: F401
-
-from .errors import Errors
-from .language import Language
-from .vocab import Vocab
 from . import util
-
+from .about import __version__  # noqa: F401
+from .cli.info import info  # noqa: F401
+from .errors import Errors
+from .glossary import explain  # noqa: F401
+from .language import Language
+from .util import logger, registry  # noqa: F401
+from .vocab import Vocab
 
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)

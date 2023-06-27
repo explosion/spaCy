@@ -1,4 +1,5 @@
 import warnings
+
 from .compat import Literal
 
 
@@ -738,8 +739,8 @@ class Errors(metaclass=ErrorsWithCodes):
             "model from a shortcut, which is obsolete as of spaCy v3.0. To "
             "load the model, use its full name instead:\n\n"
             "nlp = spacy.load(\"{full}\")\n\nFor more details on the available "
-            "models, see the models directory: https://spacy.io/models. If you "
-            "want to create a blank model, use spacy.blank: "
+            "models, see the models directory: https://spacy.io/models and if "
+            "you want to create a blank model, use spacy.blank: "
             "nlp = spacy.blank(\"{name}\")")
     E942 = ("Executing `after_{name}` callback failed. Expected the function to "
             "return an initialized nlp object but got: {value}. Maybe "
@@ -970,6 +971,13 @@ class Errors(metaclass=ErrorsWithCodes):
     E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
              "or use `auto_select_port=True` to pick an available port automatically.")
     E1051 = ("'allow_overlap' can only be False when max_positive is 1, but found 'max_positive': {max_positive}.")
+    E1052 = ("Unable to copy spans: the character offsets for the span at "
+             "index {i} in the span group do not align with the tokenization "
+             "in the target doc.")
+    E1053 = ("Both 'min_length' and 'max_length' should be larger than 0, but found"
+             " 'min_length': {min_length}, 'max_length': {max_length}")
+    E1054 = ("The text, including whitespace, must match between reference and "
+             "predicted docs when training {component}.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

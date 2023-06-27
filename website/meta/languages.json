@@ -265,6 +265,11 @@
             "name": "Marathi"
         },
         {
+            "code": "ms",
+            "name": "Malay",
+            "has_examples": true
+        },
+        {
             "code": "nb",
             "name": "Norwegian Bokmål",
             "example": "Dette er en setning.",

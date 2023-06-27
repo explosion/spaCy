@@ -1,6 +1,17 @@
-from ..char_classes import LIST_ELLIPSES, LIST_PUNCT, LIST_HYPHENS
-from ..char_classes import LIST_ICONS, LIST_QUOTES, CURRENCY, UNITS, PUNCT
-from ..char_classes import CONCAT_QUOTES, ALPHA, ALPHA_LOWER, ALPHA_UPPER
+from ..char_classes import (
+    ALPHA,
+    ALPHA_LOWER,
+    ALPHA_UPPER,
+    CONCAT_QUOTES,
+    CURRENCY,
+    LIST_ELLIPSES,
+    LIST_HYPHENS,
+    LIST_ICONS,
+    LIST_PUNCT,
+    LIST_QUOTES,
+    PUNCT,
+    UNITS,
+)
 from ..punctuation import TOKENIZER_PREFIXES as BASE_TOKENIZER_PREFIXES
 
 _quotes = CONCAT_QUOTES.replace("'", "")

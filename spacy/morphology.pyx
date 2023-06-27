@@ -1,12 +1,13 @@
 # cython: infer_types
-import numpy
 import warnings
+
+import numpy
 
 from .attrs cimport POS
 
-from .parts_of_speech import IDS as POS_IDS
-from .errors import Warnings
 from . import symbols
+from .errors import Warnings
+from .parts_of_speech import IDS as POS_IDS
 
 
 cdef class Morphology:
