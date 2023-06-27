@@ -29,13 +29,13 @@ def find_loc(
     find_loc(func_name, registry_name)
 
 
-def find_loc(registry_func, registry_name):
+def find_loc(func_name: str, registry_name: str):
     try:
-        registry_desc = registry.find(registry_name, registry_func)
+        registry_desc = registry.find(registry_name, func_name)
 
     except RegistryError as e:
         msg.fail(
-            f"Couldn't find registered function: {registry_func}\n\n{e}",
+            f"Couldn't find registered function: {func_name}\n\n{e}",
             exits=1,
         )
 
@@ -44,7 +44,7 @@ def find_loc(registry_func, registry_name):
         line_no = registry_desc["line_no"]
     else:
         msg.fail(
-            f"Couldn't find path to registered function: {registry_func}",
+            f"Couldn't find path to registered function: {func_name}",
             exits=1,
         )
 
