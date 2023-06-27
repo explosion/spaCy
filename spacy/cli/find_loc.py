@@ -6,7 +6,7 @@ from ._util import Arg, Opt, app
 
 
 @app.command("find-loc")
-def find_loc(
+def find_loc_cli(
     # fmt: off
     func_name: str = Arg(..., help="Name of the registered function."),
     registry_name: str = Opt(None, help="Name of the catalogue registry."),
@@ -28,7 +28,7 @@ def find_loc(
     find_loc(func_name, registry_name)
 
 
-def find_loc(func_name: str, registry_name: str):
+def find_loc(func_name: str, registry_name: str) -> None:
     try:
         registry_desc = registry.find(registry_name, func_name)
 
