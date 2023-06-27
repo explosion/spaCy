@@ -1,9 +1,8 @@
+from catalogue import RegistryError
 from wasabi import msg
 
-from ._util import Arg, Opt, app
-
 from ..util import registry
-from catalogue import RegistryError
+from ._util import Arg, Opt, app
 
 
 @app.command("find-loc")
