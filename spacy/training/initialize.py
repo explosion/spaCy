@@ -76,7 +76,8 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
         with nlp.select_pipes(enable=resume_components):
             logger.info("Resuming training for: %s", resume_components)
             nlp.resume_training(sgd=optimizer)
-    # Make sure that listeners are defined before initializing further
+    # Make sure that internal component names are synced and listeners are
+    # defined before initializing further
     nlp._link_components()
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         if T["max_epochs"] == -1:
