@@ -53,9 +53,9 @@ DEFAULT_SPAN_FINDER_MODEL = Config().from_str(span_finder_default_config)["model
         "scorer": {"@scorers": "spacy.span_finder_scorer.v1"},
     },
     default_score_weights={
-        f"span_finder_{DEFAULT_SPANS_KEY}_f": 1.0,
-        f"span_finder_{DEFAULT_SPANS_KEY}_p": 0.0,
-        f"span_finder_{DEFAULT_SPANS_KEY}_r": 0.0,
+        f"spans_{DEFAULT_SPANS_KEY}_f": 1.0,
+        f"spans_{DEFAULT_SPANS_KEY}_p": 0.0,
+        f"spans_{DEFAULT_SPANS_KEY}_r": 0.0,
     },
 )
 def make_span_finder(
@@ -104,7 +104,7 @@ def make_span_finder_scorer():
 
 def span_finder_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     kwargs = dict(kwargs)
-    attr_prefix = "span_finder_"
+    attr_prefix = "spans_"
     key = kwargs["spans_key"]
     kwargs.setdefault("attr", f"{attr_prefix}{key}")
     kwargs.setdefault(
