@@ -8,13 +8,14 @@ import numpy
 from thinc.api import get_array_module
 
 from ..attrs cimport *
-from ..attrs cimport attr_id_t
+from ..attrs cimport ORTH, attr_id_t
 from ..lexeme cimport Lexeme
 from ..parts_of_speech cimport univ_pos_t
 from ..structs cimport LexemeC, TokenC
 from ..symbols cimport dep
 from ..typedefs cimport attr_t, flags_t, hash_t
 from .doc cimport _get_lca_matrix, get_token_attr, token_by_end, token_by_start
+from .token cimport Token
 
 from ..errors import Errors, Warnings
 from ..util import normalize_slice
@@ -341,13 +342,26 @@ cdef class Span:
         """
         if "similarity" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["similarity"](self, other)
-        if len(self) == 1 and hasattr(other, "orth"):
-            if self[0].orth == other.orth:
+        attr = getattr(self.doc.vocab.vectors, "attr", ORTH)
+        cdef Token this_token
+        cdef Token other_token
+        cdef Lexeme other_lex
+        if len(self) == 1 and isinstance(other, Token):
+            this_token = self[0]
+            other_token = other
+            if Token.get_struct_attr(this_token.c, attr) == Token.get_struct_attr(other_token.c, attr):
+                return 1.0
+        elif len(self) == 1 and isinstance(other, Lexeme):
+            this_token = self[0]
+            other_lex = other
+            if Token.get_struct_attr(this_token.c, attr) == Lexeme.get_struct_attr(other_lex.c, attr):
                 return 1.0
         elif isinstance(other, (Doc, Span)) and len(self) == len(other):
             similar = True
             for i in range(len(self)):
-                if self[i].orth != getattr(other[i], "orth", None):
+                this_token = self[i]
+                other_token = other[i]
+                if Token.get_struct_attr(this_token.c, attr) != Token.get_struct_attr(other_token.c, attr):
                     similar = False
                     break
             if similar:

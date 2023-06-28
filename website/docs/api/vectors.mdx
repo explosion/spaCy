@@ -60,6 +60,7 @@ modified later.
 | `hash_seed` <Tag variant="new">3.2</Tag>  | The floret hash seed (default: `0`). ~~int~~                                                                                                                                           |
 | `bow` <Tag variant="new">3.2</Tag>        | The floret BOW string (default: `"<"`). ~~str~~                                                                                                                                        |
 | `eow` <Tag variant="new">3.2</Tag>        | The floret EOW string (default: `">"`). ~~str~~                                                                                                                                        |
+| `attr` <Tag variant="new">3.6</Tag>       | The token attribute for the vector keys (default: `"ORTH"`). ~~Union[int, str]~~                                                                                                       |
 
 ## Vectors.\_\_getitem\_\_ {id="getitem",tag="method"}
 
@@ -453,8 +454,9 @@ Load state from a binary string.
 
 ## Attributes {id="attributes"}
 
-| Name      | Description                                                                                                                                                          |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data`    | Stored vectors data. `numpy` is used for CPU vectors, `cupy` for GPU vectors. ~~Union[numpy.ndarray[ndim=1, dtype=float32], cupy.ndarray[ndim=1, dtype=float32]]~~   |
-| `key2row` | Dictionary mapping word hashes to rows in the `Vectors.data` table. ~~Dict[int, int]~~                                                                               |
-| `keys`    | Array keeping the keys in order, such that `keys[vectors.key2row[key]] == key`. ~~Union[numpy.ndarray[ndim=1, dtype=float32], cupy.ndarray[ndim=1, dtype=float32]]~~ |
+| Name                                | Description                                                                                                                                                          |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`                              | Stored vectors data. `numpy` is used for CPU vectors, `cupy` for GPU vectors. ~~Union[numpy.ndarray[ndim=1, dtype=float32], cupy.ndarray[ndim=1, dtype=float32]]~~   |
+| `key2row`                           | Dictionary mapping word hashes to rows in the `Vectors.data` table. ~~Dict[int, int]~~                                                                               |
+| `keys`                              | Array keeping the keys in order, such that `keys[vectors.key2row[key]] == key`. ~~Union[numpy.ndarray[ndim=1, dtype=float32], cupy.ndarray[ndim=1, dtype=float32]]~~ |
+| `attr` <Tag variant="new">3.6</Tag> | The token attribute for the vector keys. ~~int~~                                                                                                                     |

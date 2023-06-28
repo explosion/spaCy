@@ -365,8 +365,13 @@ cdef class Vocab:
             self[orth]
         # Make prob negative so it sorts by rank ascending
         # (key2row contains the rank)
-        priority = [(-lex.prob, self.vectors.key2row[lex.orth], lex.orth)
-                    for lex in self if lex.orth in self.vectors.key2row]
+        priority = []
+        cdef Lexeme lex
+        cdef attr_t value
+        for lex in self:
+            value = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
+            if value in self.vectors.key2row:
+                priority.append((-lex.prob, self.vectors.key2row[value], value))
         priority.sort()
         indices = xp.asarray([i for (prob, i, key) in priority], dtype="uint64")
         keys = xp.asarray([key for (prob, i, key) in priority], dtype="uint64")
@@ -399,8 +404,10 @@ cdef class Vocab:
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
-        if self.has_vector(orth):
-            return self.vectors[orth]
+        cdef Lexeme lex = self[orth]
+        key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
+        if self.has_vector(key):
+            return self.vectors[key]
         xp = get_array_module(self.vectors.data)
         vectors = xp.zeros((self.vectors_length,), dtype="f")
         return vectors
@@ -416,15 +423,16 @@ cdef class Vocab:
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
-        if self.vectors.is_full and orth not in self.vectors:
+        cdef Lexeme lex = self[orth]
+        key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
+        if self.vectors.is_full and key not in self.vectors:
             new_rows = max(100, int(self.vectors.shape[0]*1.3))
             if self.vectors.shape[1] == 0:
                 width = vector.size
             else:
                 width = self.vectors.shape[1]
             self.vectors.resize((new_rows, width))
-        lex = self[orth]  # Add word to vocab if necessary
-        row = self.vectors.add(orth, vector=vector)
+        row = self.vectors.add(key, vector=vector)
         if row >= 0:
             lex.rank = row
 
@@ -439,7 +447,9 @@ cdef class Vocab:
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
-        return orth in self.vectors
+        cdef Lexeme lex = self[orth]
+        key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
+        return key in self.vectors
 
     property lookups:
         def __get__(self):
