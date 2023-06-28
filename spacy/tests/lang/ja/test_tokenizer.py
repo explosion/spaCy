@@ -1,7 +1,8 @@
 import pytest
 
+from spacy.lang.ja import DetailedToken, Japanese
+
 from ...tokenizer.test_naughty_strings import NAUGHTY_STRINGS
-from spacy.lang.ja import Japanese, DetailedToken
 
 # fmt: off
 TOKENIZER_TESTS = [

@@ -1,10 +1,9 @@
-from typing import Set
-import unicodedata
 import re
+import unicodedata
+from typing import Set
 
 from .. import attrs
 from .tokenizer_exceptions import URL_MATCH
-
 
 _like_email = re.compile(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)").match
 _tlds = set(

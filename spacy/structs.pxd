@@ -1,11 +1,10 @@
-from libc.stdint cimport uint8_t, uint32_t, int32_t, uint64_t
-from libcpp.vector cimport vector
-from libcpp.unordered_set cimport unordered_set
+from libc.stdint cimport int32_t, int64_t, uint8_t, uint32_t, uint64_t
 from libcpp.unordered_map cimport unordered_map
-from libc.stdint cimport int32_t, int64_t
+from libcpp.unordered_set cimport unordered_set
+from libcpp.vector cimport vector
 
-from .typedefs cimport flags_t, attr_t, hash_t
 from .parts_of_speech cimport univ_pos_t
+from .typedefs cimport attr_t, flags_t, hash_t
 
 
 cdef struct LexemeC:

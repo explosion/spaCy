@@ -1,5 +1,5 @@
-from typing import Literal
 import warnings
+from typing import Literal
 
 
 class ErrorsWithCodes(type):

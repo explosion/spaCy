@@ -1,17 +1,18 @@
-from typing import Optional, Sequence, Union, Iterator
-import tqdm
-from pathlib import Path
-import srsly
 import cProfile
+import itertools
 import pstats
 import sys
-import itertools
-from wasabi import msg, Printer
-import typer
+from pathlib import Path
+from typing import Iterator, Optional, Sequence, Union
 
-from ._util import app, debug_cli, Arg, Opt, NAME
+import srsly
+import tqdm
+import typer
+from wasabi import Printer, msg
+
 from ..language import Language
 from ..util import load_model
+from ._util import NAME, Arg, Opt, app, debug_cli
 
 
 @debug_cli.command("profile")

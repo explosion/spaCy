@@ -1,8 +1,8 @@
-from typing import List, Dict, Tuple, Iterable, Union, Iterator, cast
 import warnings
+from typing import Dict, Iterable, Iterator, List, Tuple, Union, cast
 
 from ..errors import Errors, Warnings
-from ..tokens import Span, Doc
+from ..tokens import Doc, Span
 
 
 def iob_to_biluo(tags: Iterable[str]) -> List[str]:

@@ -1,6 +1,7 @@
 import pickle
 
 from spacy.lang.ko import Korean
+
 from ...util import make_tempdir
 
 

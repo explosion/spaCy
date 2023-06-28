@@ -1,7 +1,8 @@
 # cython: profile=True, experimental_cpp_class_def=True, cdivision=True, infer_types=True
 cimport cython
-from libc.string cimport memset, memcpy
-from libc.math cimport log, exp
+from libc.math cimport exp, log
+from libc.string cimport memcpy, memset
+
 import math
 
 from cymem.cymem cimport Pool

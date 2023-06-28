@@ -1,23 +1,39 @@
 # cython: embedsignature=True
 # Compiler crashes on memory view coercion without this. Should report bug.
+cimport numpy as np
 from cython.view cimport array as cvarray
 from libc.string cimport memset
-cimport numpy as np
+
 np.import_array()
+
+import warnings
 
 import numpy
 from thinc.api import get_array_module
-import warnings
 
+from .attrs cimport (
+    IS_ALPHA,
+    IS_ASCII,
+    IS_BRACKET,
+    IS_CURRENCY,
+    IS_DIGIT,
+    IS_LEFT_PUNCT,
+    IS_LOWER,
+    IS_PUNCT,
+    IS_QUOTE,
+    IS_RIGHT_PUNCT,
+    IS_SPACE,
+    IS_STOP,
+    IS_TITLE,
+    IS_UPPER,
+    LIKE_EMAIL,
+    LIKE_NUM,
+    LIKE_URL,
+)
 from .typedefs cimport attr_t, flags_t
-from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
-from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
-from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from .attrs cimport IS_CURRENCY
 
 from .attrs import intify_attrs
 from .errors import Errors, Warnings
-
 
 OOV_RANK = 0xffffffffffffffff # UINT64_MAX
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))

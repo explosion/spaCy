@@ -1,8 +1,8 @@
 cimport numpy as np
 from libc.stdint cimport uint32_t, uint64_t
+from libcpp.memory cimport shared_ptr
 from libcpp.unordered_map cimport unordered_map
 from libcpp.vector cimport vector
-from libcpp.memory cimport shared_ptr
 
 from .strings cimport StringStore
 from .typedefs cimport attr_t, hash_t

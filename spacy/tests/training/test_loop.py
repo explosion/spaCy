@@ -1,11 +1,13 @@
 from typing import Callable, Iterable, Iterator
+
 import pytest
+from thinc.api import Config
+
 from spacy import Language
 from spacy.training import Example
 from spacy.training.initialize import init_nlp_student
 from spacy.training.loop import distill, train
 from spacy.util import load_model_from_config, registry
-from thinc.api import Config
 
 
 @pytest.fixture

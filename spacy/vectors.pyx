@@ -1,14 +1,15 @@
 cimport numpy as np
-from libc.stdint cimport uint32_t, uint64_t
 from cython.operator cimport dereference as deref
+from libc.stdint cimport uint32_t, uint64_t
 from libcpp.set cimport set as cppset
 from murmurhash.mrmr cimport hash128_x64
 
 import functools
-import numpy
-from typing import cast
 import warnings
 from enum import Enum
+from typing import cast
+
+import numpy
 import srsly
 from thinc.api import Ops, get_array_module, get_current_ops
 from thinc.backends import get_array_ops
@@ -16,9 +17,9 @@ from thinc.types import Floats2d
 
 from .strings cimport StringStore
 
-from .strings import get_string_id
-from .errors import Errors, Warnings
 from . import util
+from .errors import Errors, Warnings
+from .strings import get_string_id
 
 
 def unpickle_vectors(bytes_data):

@@ -1,6 +1,6 @@
 import pytest
-from spacy.tokens import Doc
 
+from spacy.tokens import Doc
 
 pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 

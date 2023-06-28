@@ -1,20 +1,19 @@
 # cython: infer_types=True, profile=True, binding=True
 from collections import defaultdict
-from typing import Optional, Iterable, Callable
-from thinc.api import Model, Config
+from typing import Callable, Iterable, Optional
 
-from ._parser_internals.transition_system import TransitionSystem
-from .transition_parser import Parser
-from ._parser_internals.arc_eager import ArcEager
+from thinc.api import Config, Model
 
-from .functions import merge_subtokens
 from ..language import Language
-from ._parser_internals import nonproj
-from ._parser_internals.nonproj import DELIMITER
 from ..scorer import Scorer
 from ..training import remove_bilu_prefix
 from ..util import registry
-
+from ._parser_internals import nonproj
+from ._parser_internals.arc_eager import ArcEager
+from ._parser_internals.nonproj import DELIMITER
+from ._parser_internals.transition_system import TransitionSystem
+from .functions import merge_subtokens
+from .transition_parser import Parser
 
 default_model_config = """
 [model]

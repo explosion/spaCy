@@ -1,13 +1,17 @@
-import pytest
-from spacy.pipeline._parser_internals.nonproj import contains_cycle
-from spacy.training import Corpus, Example
-from spacy.training.augment import create_orth_variants_augmenter
-from spacy.training.augment import create_lower_casing_augmenter
-from spacy.training.augment import make_whitespace_variant
-from spacy.lang.en import English
-from spacy.tokens import DocBin, Doc, Span
-from contextlib import contextmanager
 import random
+from contextlib import contextmanager
+
+import pytest
+
+from spacy.lang.en import English
+from spacy.pipeline._parser_internals.nonproj import contains_cycle
+from spacy.tokens import Doc, DocBin, Span
+from spacy.training import Corpus, Example
+from spacy.training.augment import (
+    create_lower_casing_augmenter,
+    create_orth_variants_augmenter,
+    make_whitespace_variant,
+)
 
 from ..util import make_tempdir
 

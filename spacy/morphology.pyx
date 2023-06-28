@@ -1,12 +1,14 @@
 # cython: infer_types
-import numpy
 import warnings
-from typing import Union, Tuple, List, Dict, Optional
+from typing import Dict, List, Optional, Tuple, Union
+
+import numpy
+
 from cython.operator cimport dereference as deref
 from libcpp.memory cimport shared_ptr
 
-from .errors import Warnings
 from . import symbols
+from .errors import Warnings
 
 
 cdef class Morphology:

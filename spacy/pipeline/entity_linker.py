@@ -1,28 +1,26 @@
-import warnings
-from typing import Optional, Iterable, Callable, Dict, Sequence, Union, List, Any, cast
-from numpy import dtype
-from thinc.types import Floats1d, Floats2d, Ints1d, Ragged
-from pathlib import Path
-from itertools import islice
-import srsly
 import random
-from thinc.api import CosineDistance, Model, Optimizer, Config
-from thinc.api import set_dropout_rate
+import warnings
+from itertools import islice
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Union, cast
 
-from ..kb import KnowledgeBase, Candidate
-from ..tokens import Doc, Span
+import srsly
+from numpy import dtype
+from thinc.api import Config, CosineDistance, Model, Optimizer, set_dropout_rate
+from thinc.types import Floats1d, Floats2d, Ints1d, Ragged
+
+from .. import util
+from ..errors import Errors, Warnings
+from ..kb import Candidate, KnowledgeBase
+from ..language import Language
 from ..ml import empty_kb
+from ..scorer import Scorer
 from ..tokens import Doc, Span, SpanGroup
+from ..training import Example, validate_examples, validate_get_examples
+from ..util import SimpleFrozenList, registry
+from ..vocab import Vocab
 from .pipe import deserialize_config
 from .trainable_pipe import TrainablePipe
-from ..language import Language
-from ..vocab import Vocab
-from ..training import Example, validate_examples, validate_get_examples
-from ..errors import Errors, Warnings
-from ..util import SimpleFrozenList, registry
-from .. import util
-from ..scorer import Scorer
-
 
 ActivationsT = Dict[str, Union[List[Ragged], List[str]]]
 

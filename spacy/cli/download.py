@@ -1,14 +1,20 @@
-from typing import Optional, Sequence
-import requests
 import sys
-from wasabi import msg
-import typer
+from typing import Optional, Sequence
 
-from ._util import app, Arg, Opt, WHEEL_SUFFIX, SDIST_SUFFIX
+import requests
+import typer
+from wasabi import msg
+
 from .. import about
-from ..util import is_package, get_minor_version, run_command
-from ..util import is_prerelease_version, get_installed_models
-from ..util import get_package_version
+from ..util import (
+    get_installed_models,
+    get_minor_version,
+    get_package_version,
+    is_package,
+    is_prerelease_version,
+    run_command,
+)
+from ._util import SDIST_SUFFIX, WHEEL_SUFFIX, Arg, Opt, app
 
 
 @app.command(

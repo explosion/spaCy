@@ -1,13 +1,22 @@
-from typing import Optional
-from pathlib import Path
-from wasabi import msg
-import subprocess
 import re
+import subprocess
+from pathlib import Path
+from typing import Optional
+
+from wasabi import msg
 
 from ... import about
 from ...util import ensure_path
-from .._util import project_cli, Arg, Opt, COMMAND, PROJECT_FILE
-from .._util import git_checkout, get_git_version, git_repo_branch_exists
+from .._util import (
+    COMMAND,
+    PROJECT_FILE,
+    Arg,
+    Opt,
+    get_git_version,
+    git_checkout,
+    git_repo_branch_exists,
+    project_cli,
+)
 
 DEFAULT_REPO = about.__projects__
 DEFAULT_PROJECTS_BRANCH = about.__projects_branch__

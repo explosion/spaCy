@@ -1,7 +1,8 @@
-from ..vocab cimport Vocab
-from ..typedefs cimport hash_t
-from ..morphology cimport MorphAnalysisC
 from libcpp.memory cimport shared_ptr
+
+from ..morphology cimport MorphAnalysisC
+from ..typedefs cimport hash_t
+from ..vocab cimport Vocab
 
 
 cdef class MorphAnalysis:

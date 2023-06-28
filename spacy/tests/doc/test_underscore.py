@@ -1,7 +1,9 @@
 import pytest
 from mock import Mock
+
 from spacy.tokens import Doc, Span, Token
 from spacy.tokens.underscore import Underscore
+
 
 # Helper functions
 def _get_tuple(s: Span):

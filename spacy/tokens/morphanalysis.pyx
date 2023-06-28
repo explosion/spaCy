@@ -1,13 +1,15 @@
-from libc.string cimport memset
 cimport numpy as np
+from libc.string cimport memset
 
 from ..errors import Errors
 from ..morphology import Morphology
-from ..vocab cimport Vocab
-from ..typedefs cimport hash_t, attr_t
-from ..morphology cimport list_features, check_feature, get_by_field, MorphAnalysisC
-from libcpp.memory cimport shared_ptr
+
 from cython.operator cimport dereference as deref
+from libcpp.memory cimport shared_ptr
+
+from ..morphology cimport MorphAnalysisC, check_feature, get_by_field, list_features
+from ..typedefs cimport attr_t, hash_t
+from ..vocab cimport Vocab
 
 
 cdef shared_ptr[MorphAnalysisC] EMPTY_MORPH_TAG = shared_ptr[MorphAnalysisC](new MorphAnalysisC())

@@ -1,4 +1,5 @@
 from typing import Any, Dict, Iterator, List, Optional, Union
+
 from ..vocab import Vocab
 
 class MorphAnalysis:
