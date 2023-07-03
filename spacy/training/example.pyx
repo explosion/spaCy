@@ -589,6 +589,7 @@ def _fix_legacy_dict_data(example_dict):
         "doc_annotation": doc_dict
     }
 
+
 def _has_field(annot, field):
     if field not in annot:
         return False
@@ -624,6 +625,7 @@ def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces):
             else:
                 ent_types.append("")
     return ent_iobs, ent_types
+
 
 def _parse_links(vocab, words, spaces, links):
     reference = Doc(vocab, words=words, spaces=spaces)
