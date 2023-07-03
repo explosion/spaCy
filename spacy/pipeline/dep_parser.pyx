@@ -1,6 +1,6 @@
 # cython: infer_types=True, profile=True, binding=True
 from collections import defaultdict
-from typing import Callable, Iterable, Optional
+from typing import Callable, Optional
 
 from thinc.api import Config, Model
 
@@ -123,6 +123,7 @@ def make_parser(
         incorrect_spans_key=None,
         scorer=scorer,
     )
+
 
 @Language.factory(
     "beam_parser",
