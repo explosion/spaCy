@@ -174,7 +174,7 @@ const convertLine = ({ line, prompt, lang }) => {
         return handlePromot({ lineFlat, prompt })
     }
 
-    return lang === 'none' || !lineFlat ? (
+    return lang === 'none' || !lineFlat || !(lang in Prism.languages) ? (
         lineFlat
     ) : (
         <span
