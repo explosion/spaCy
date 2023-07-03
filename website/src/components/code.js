@@ -14,6 +14,7 @@ import 'prismjs/components/prism-markdown.min.js'
 import 'prismjs/components/prism-python.min.js'
 import 'prismjs/components/prism-yaml.min.js'
 import 'prismjs/components/prism-docker.min.js'
+import 'prismjs/components/prism-r.min.js'
 
 import { isString } from './util'
 import Link, { OptionalLink } from './link'
