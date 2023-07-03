@@ -1,6 +1,6 @@
 import pytest
-import spacy
 
+import spacy
 from spacy.training import loggers
 
 

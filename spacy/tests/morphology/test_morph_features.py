@@ -1,4 +1,5 @@
 import pytest
+
 from spacy.morphology import Morphology
 from spacy.strings import StringStore, get_string_id
 

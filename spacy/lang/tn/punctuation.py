@@ -1,5 +1,12 @@
-from ..char_classes import LIST_ELLIPSES, LIST_ICONS, HYPHENS
-from ..char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA
+from ..char_classes import (
+    ALPHA,
+    ALPHA_LOWER,
+    ALPHA_UPPER,
+    CONCAT_QUOTES,
+    HYPHENS,
+    LIST_ELLIPSES,
+    LIST_ICONS,
+)
 
 _infixes = (
     LIST_ELLIPSES

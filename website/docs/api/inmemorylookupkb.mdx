@@ -292,7 +292,7 @@ Restore the state of the knowledge base from a given directory. Note that the
 > ```python
 > from spacy.vocab import Vocab
 > vocab = Vocab().from_disk("/path/to/vocab")
-> kb = FullyImplementedKB(vocab=vocab, entity_vector_length=64)
+> kb = InMemoryLookupKB(vocab=vocab, entity_vector_length=64)
 > kb.from_disk("/path/to/kb")
 > ```
 

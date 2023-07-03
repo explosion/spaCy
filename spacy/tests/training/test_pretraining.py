@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import numpy as np
 import pytest
 import srsly
@@ -6,14 +7,15 @@ from thinc.api import Config, get_current_ops
 
 from spacy import util
 from spacy.lang.en import English
+from spacy.language import DEFAULT_CONFIG_PATH, DEFAULT_CONFIG_PRETRAIN_PATH
+from spacy.ml.models.multi_task import create_pretrain_vectors
+from spacy.tokens import Doc, DocBin
 from spacy.training.initialize import init_nlp
 from spacy.training.loop import train
 from spacy.training.pretrain import pretrain
-from spacy.tokens import Doc, DocBin
-from spacy.language import DEFAULT_CONFIG_PRETRAIN_PATH, DEFAULT_CONFIG_PATH
-from spacy.ml.models.multi_task import create_pretrain_vectors
 from spacy.vectors import Vectors
 from spacy.vocab import Vocab
+
 from ..util import make_tempdir
 
 pretrain_string_listener = """
@@ -165,7 +167,8 @@ def test_pretraining_default():
 
 
 @pytest.mark.parametrize("objective", CHAR_OBJECTIVES)
-def test_pretraining_tok2vec_characters(objective):
+@pytest.mark.parametrize("skip_last", (True, False))
+def test_pretraining_tok2vec_characters(objective, skip_last):
     """Test that pretraining works with the character objective"""
     config = Config().from_str(pretrain_string_listener)
     config["pretraining"]["objective"] = objective
@@ -178,10 +181,14 @@ def test_pretraining_tok2vec_characters(objective):
         filled["paths"]["raw_text"] = file_path
         filled = filled.interpolate()
         assert filled["pretraining"]["component"] == "tok2vec"
-        pretrain(filled, tmp_dir)
+        pretrain(filled, tmp_dir, skip_last=skip_last)
         assert Path(tmp_dir / "model0.bin").exists()
         assert Path(tmp_dir / "model4.bin").exists()
         assert not Path(tmp_dir / "model5.bin").exists()
+        if skip_last:
+            assert not Path(tmp_dir / "model-last.bin").exists()
+        else:
+            assert Path(tmp_dir / "model-last.bin").exists()
 
 
 @pytest.mark.parametrize("objective", VECTOR_OBJECTIVES)
@@ -237,6 +244,7 @@ def test_pretraining_tagger_tok2vec(config):
         pretrain(filled, tmp_dir)
         assert Path(tmp_dir / "model0.bin").exists()
         assert Path(tmp_dir / "model4.bin").exists()
+        assert Path(tmp_dir / "model-last.bin").exists()
         assert not Path(tmp_dir / "model5.bin").exists()
 
 
@@ -359,19 +367,15 @@ def test_pretrain_default_vectors():
     nlp.vocab.vectors = Vectors(shape=(10, 10))
     create_pretrain_vectors(1, 1, "cosine")(nlp.vocab, nlp.get_pipe("tok2vec").model)
 
+    # floret vectors are supported
+    nlp.vocab.vectors = Vectors(
+        data=get_current_ops().xp.zeros((10, 10)), mode="floret", hash_count=1
+    )
+    create_pretrain_vectors(1, 1, "cosine")(nlp.vocab, nlp.get_pipe("tok2vec").model)
+
     # error for no vectors
     with pytest.raises(ValueError, match="E875"):
         nlp.vocab.vectors = Vectors()
-        create_pretrain_vectors(1, 1, "cosine")(
-            nlp.vocab, nlp.get_pipe("tok2vec").model
-        )
-
-    # error for floret vectors
-    with pytest.raises(ValueError, match="E850"):
-        ops = get_current_ops()
-        nlp.vocab.vectors = Vectors(
-            data=ops.xp.zeros((10, 10)), mode="floret", hash_count=1
-        )
         create_pretrain_vectors(1, 1, "cosine")(
             nlp.vocab, nlp.get_pipe("tok2vec").model
         )

@@ -1,12 +1,13 @@
 import pytest
 from thinc.api import Adam
-from spacy.attrs import NORM
-from spacy.vocab import Vocab
+
 from spacy import registry
-from spacy.training import Example
+from spacy.attrs import NORM
+from spacy.pipeline import DependencyParser
 from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 from spacy.tokens import Doc
-from spacy.pipeline import DependencyParser
+from spacy.training import Example
+from spacy.vocab import Vocab
 
 
 @pytest.fixture

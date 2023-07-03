@@ -1,10 +1,11 @@
-import pytest
 import numpy
-from spacy.attrs import IS_ALPHA, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_TITLE, IS_STOP
+import pytest
+
+from spacy.attrs import IS_ALPHA, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_STOP, IS_TITLE
 from spacy.symbols import VERB
-from spacy.vocab import Vocab
 from spacy.tokens import Doc
 from spacy.training import Example
+from spacy.vocab import Vocab
 
 
 @pytest.fixture

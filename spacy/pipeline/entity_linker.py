@@ -1,25 +1,25 @@
-from typing import Optional, Iterable, Callable, Dict, Union, List, Any
-from thinc.types import Floats2d
-from pathlib import Path
-from itertools import islice
-import srsly
 import random
-from thinc.api import CosineDistance, Model, Optimizer, Config
-from thinc.api import set_dropout_rate
+from itertools import islice
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
-from ..kb import KnowledgeBase, Candidate
-from ..ml import empty_kb
-from ..tokens import Doc, Span
-from .pipe import deserialize_config
-from .legacy.entity_linker import EntityLinker_v1
-from .trainable_pipe import TrainablePipe
-from ..language import Language
-from ..vocab import Vocab
-from ..training import Example, validate_examples, validate_get_examples
-from ..errors import Errors
-from ..util import SimpleFrozenList, registry
+import srsly
+from thinc.api import Config, CosineDistance, Model, Optimizer, set_dropout_rate
+from thinc.types import Floats2d
+
 from .. import util
+from ..errors import Errors
+from ..kb import Candidate, KnowledgeBase
+from ..language import Language
+from ..ml import empty_kb
 from ..scorer import Scorer
+from ..tokens import Doc, Span
+from ..training import Example, validate_examples, validate_get_examples
+from ..util import SimpleFrozenList, registry
+from ..vocab import Vocab
+from .legacy.entity_linker import EntityLinker_v1
+from .pipe import deserialize_config
+from .trainable_pipe import TrainablePipe
 
 # See #9050
 BACKWARD_OVERWRITE = True

@@ -1,9 +1,9 @@
-from libc.stdint cimport int64_t
-from libcpp.vector cimport vector
-from libcpp.set cimport set
 from cymem.cymem cimport Pool
-from preshed.maps cimport PreshMap
+from libc.stdint cimport int64_t
+from libcpp.set cimport set
+from libcpp.vector cimport vector
 from murmurhash.mrmr cimport hash64
+from preshed.maps cimport PreshMap
 
 from .typedefs cimport attr_t, hash_t
 

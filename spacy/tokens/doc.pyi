@@ -1,16 +1,31 @@
-from typing import Callable, Protocol, Iterable, Iterator, Optional
-from typing import Union, Tuple, List, Dict, Any, overload
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Protocol,
+    Tuple,
+    Union,
+    overload,
+)
+
+import numpy as np
 from cymem.cymem import Pool
 from thinc.types import Floats1d, Floats2d, Ints2d
-from .span import Span
-from .token import Token
-from ._dict_proxies import SpanGroups
-from ._retokenize import Retokenizer
+
 from ..lexeme import Lexeme
 from ..vocab import Vocab
+from ._dict_proxies import SpanGroups
+from ._retokenize import Retokenizer
+from .span import Span
+from .token import Token
 from .underscore import Underscore
-from pathlib import Path
-import numpy as np
+
+DOCBIN_ALL_ATTRS: Tuple[str, ...]
 
 class DocMethod(Protocol):
     def __call__(self: Doc, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]

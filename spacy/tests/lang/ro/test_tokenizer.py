@@ -1,6 +1,5 @@
 import pytest
 
-
 TEST_CASES = [
     (
         "Adresa este str. Principală nr. 5.",

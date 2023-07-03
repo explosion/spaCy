@@ -1,5 +1,6 @@
 import pytest
-from spacy.lang.hi.lex_attrs import norm, like_num
+
+from spacy.lang.hi.lex_attrs import like_num, norm
 
 
 def test_hi_tokenizer_handles_long_text(hi_tokenizer):

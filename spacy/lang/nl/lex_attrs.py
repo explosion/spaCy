@@ -1,6 +1,5 @@
 from ...attrs import LIKE_NUM
 
-
 _num_words = set(
     """
 nul een één twee drie vier vijf zes zeven acht negen tien elf twaalf dertien

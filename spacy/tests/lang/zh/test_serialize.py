@@ -1,5 +1,7 @@
 import pytest
+
 from spacy.lang.zh import Chinese
+
 from ...util import make_tempdir
 
 
