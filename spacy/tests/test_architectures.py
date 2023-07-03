@@ -1,7 +1,8 @@
 import pytest
-from spacy import registry
-from thinc.api import Linear
 from catalogue import RegistryError
+from thinc.api import Linear
+
+from spacy import registry
 
 
 def test_get_architecture():

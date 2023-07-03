@@ -1,6 +1,7 @@
 import pytest
-from spacy.matcher import Matcher
+
 from spacy.errors import MatchPatternError
+from spacy.matcher import Matcher
 from spacy.schemas import validate_token_pattern
 
 # (pattern, num errors with validation, num errors identified with minimal

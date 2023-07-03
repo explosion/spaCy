@@ -1,5 +1,6 @@
-from spacy.tokens import Doc
 import pytest
+
+from spacy.tokens import Doc
 
 
 @pytest.fixture

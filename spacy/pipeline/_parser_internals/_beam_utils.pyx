@@ -1,15 +1,21 @@
 # cython: infer_types=True
 # cython: profile=True
 cimport numpy as np
+
 import numpy
-from cpython.ref cimport PyObject, Py_XDECREF
+
+from cpython.ref cimport Py_XDECREF, PyObject
 from thinc.extra.search cimport Beam
+
 from thinc.extra.search import MaxViolation
+
 from thinc.extra.search cimport MaxViolation
 
-from ...typedefs cimport hash_t, class_t
-from .transition_system cimport TransitionSystem, Transition
+from ...typedefs cimport class_t, hash_t
+from .transition_system cimport Transition, TransitionSystem
+
 from ...errors import Errors
+
 from .stateclass cimport StateC, StateClass
 
 

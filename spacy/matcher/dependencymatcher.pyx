@@ -1,17 +1,15 @@
 # cython: infer_types=True, profile=True
-from typing import List
+import warnings
 from collections import defaultdict
 from itertools import product
+from typing import List
 
-import warnings
-
-from .matcher cimport Matcher
-from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc
+from ..vocab cimport Vocab
+from .matcher cimport Matcher
 
 from ..errors import Errors, Warnings
 from ..tokens import Span
-
 
 DELIMITER = "||"
 INDEX_HEAD = 1

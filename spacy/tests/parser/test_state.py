@@ -1,8 +1,8 @@
 import pytest
 
+from spacy.pipeline._parser_internals.stateclass import StateClass
 from spacy.tokens.doc import Doc
 from spacy.vocab import Vocab
-from spacy.pipeline._parser_internals.stateclass import StateClass
 
 
 @pytest.fixture

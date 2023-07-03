@@ -2,12 +2,13 @@
 
 from pathlib import Path
 from typing import Iterable, Tuple, Union
+
 from cymem.cymem cimport Pool
 
-from .candidate import Candidate
+from ..errors import Errors
 from ..tokens import Span
 from ..util import SimpleFrozenList
-from ..errors import Errors
+from .candidate import Candidate
 
 
 cdef class KnowledgeBase:

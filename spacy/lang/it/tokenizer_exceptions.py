@@ -1,7 +1,6 @@
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH
 from ...util import update_exc
-
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 
 _exc = {
     "all'art.": [{ORTH: "all'"}, {ORTH: "art."}],

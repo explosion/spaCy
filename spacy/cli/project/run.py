@@ -1,20 +1,39 @@
-from typing import Optional, List, Dict, Sequence, Any, Iterable, Tuple
 import os.path
-from pathlib import Path
-
-from wasabi import msg
-from wasabi.util import locale_escape
 import sys
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+
 import srsly
 import typer
+from wasabi import msg
+from wasabi.util import locale_escape
 
 from ... import about
 from ...git_info import GIT_VERSION
-from ...util import working_dir, run_command, split_command, is_cwd, join_command
-from ...util import SimpleFrozenList, is_minor_version_match, ENV_VARS
-from ...util import check_bool_env_var, SimpleFrozenDict
-from .._util import PROJECT_FILE, PROJECT_LOCK, load_project_config, get_hash
-from .._util import get_checksum, project_cli, Arg, Opt, COMMAND, parse_config_overrides
+from ...util import (
+    ENV_VARS,
+    SimpleFrozenDict,
+    SimpleFrozenList,
+    check_bool_env_var,
+    is_cwd,
+    is_minor_version_match,
+    join_command,
+    run_command,
+    split_command,
+    working_dir,
+)
+from .._util import (
+    COMMAND,
+    PROJECT_FILE,
+    PROJECT_LOCK,
+    Arg,
+    Opt,
+    get_checksum,
+    get_hash,
+    load_project_config,
+    parse_config_overrides,
+    project_cli,
+)
 
 
 @project_cli.command(

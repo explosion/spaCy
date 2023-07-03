@@ -1,12 +1,13 @@
-from typing import Dict, Any
-import srsly
 import warnings
+from typing import Any, Dict
 
+import srsly
+
+from .. import util
 from ..errors import Warnings
 from ..language import Language
 from ..matcher import Matcher
 from ..tokens import Doc
-from .. import util
 
 
 @Language.component(

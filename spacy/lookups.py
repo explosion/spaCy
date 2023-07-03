@@ -1,13 +1,13 @@
-from typing import Any, List, Union, Optional, Dict
+from collections import OrderedDict
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
 import srsly
 from preshed.bloom import BloomFilter
-from collections import OrderedDict
 
 from .errors import Errors
-from .util import SimpleFrozenDict, ensure_path, registry, load_language_data
 from .strings import get_string_id
-
+from .util import SimpleFrozenDict, ensure_path, load_language_data, registry
 
 UNSET = object()
 

@@ -215,15 +215,17 @@ const Quickstart = ({
                     }
                 )}
                 <pre className={classes['code']}>
-                    <code
-                        className={classNames(classes['results'], {
-                            [classes['small']]: !!small,
-                            [`language-${codeLang}`]: !!codeLang,
-                        })}
-                        data-quickstart-results=""
-                        ref={contentRef}
-                    >
-                        {Children.toArray(children).flat().filter(isRelevant)}
+                    <code>
+                        <div
+                            className={classNames(classes['results'], {
+                                [classes['small']]: !!small,
+                                [`language-${codeLang}`]: !!codeLang,
+                            })}
+                            data-quickstart-results=""
+                            ref={contentRef}
+                        >
+                            {Children.toArray(children).flat().filter(isRelevant)}
+                        </div>
                     </code>
 
                     <menu className={classes['menu']}>
