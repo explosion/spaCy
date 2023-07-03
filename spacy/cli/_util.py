@@ -29,7 +29,7 @@ from weasel import app as project_cli
 
 from .. import about
 from ..compat import Literal
-from ..schemas import ProjectConfigSchema, validate
+from ..schemas import validate
 from ..util import (
     ENV_VARS,
     SimpleFrozenDict,
