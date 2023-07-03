@@ -1,8 +1,9 @@
 import pytest
+
 import spacy
+from spacy.lang.en import English
 from spacy.pipeline import Sentencizer
 from spacy.tokens import Doc
-from spacy.lang.en import English
 
 
 def test_sentencizer(en_vocab):

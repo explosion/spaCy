@@ -1,7 +1,8 @@
 import pytest
 from mock import Mock
+
 from spacy.matcher import Matcher
-from spacy.tokens import Doc, Token, Span
+from spacy.tokens import Doc, Span, Token
 
 from ..doc.test_underscore import clean_underscore  # noqa: F401
 

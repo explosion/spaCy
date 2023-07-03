@@ -1,7 +1,8 @@
-from libcpp.vector cimport vector
 from cymem.cymem cimport Pool
+from libcpp.vector cimport vector
 from preshed.maps cimport PreshMap
-from ..structs cimport GraphC, EdgeC
+
+from ..structs cimport EdgeC, GraphC
 
 
 cdef class Graph:

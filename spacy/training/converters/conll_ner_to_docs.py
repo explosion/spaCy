@@ -1,10 +1,10 @@
 from wasabi import Printer
 
-from .. import tags_to_entities
-from ...training import iob_to_biluo
-from ...tokens import Doc, Span
 from ...errors import Errors
-from ...util import load_model, get_lang_class
+from ...tokens import Doc, Span
+from ...training import iob_to_biluo
+from ...util import get_lang_class, load_model
+from .. import tags_to_entities
 
 
 def conll_ner_to_docs(

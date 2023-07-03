@@ -1,16 +1,16 @@
-import warnings
-from typing import Union, List, Iterable, Iterator, TYPE_CHECKING, Callable
-from typing import Optional
-from pathlib import Path
 import random
+import warnings
+from pathlib import Path
+from typing import TYPE_CHECKING, Callable, Iterable, Iterator, List, Optional, Union
+
 import srsly
 
 from .. import util
+from ..errors import Errors, Warnings
+from ..tokens import Doc, DocBin
+from ..vocab import Vocab
 from .augment import dont_augment
 from .example import Example
-from ..errors import Warnings, Errors
-from ..tokens import DocBin, Doc
-from ..vocab import Vocab
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports

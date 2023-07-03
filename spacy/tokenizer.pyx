@@ -1,29 +1,27 @@
 # cython: embedsignature=True, profile=True, binding=True
+cimport cython
+from cymem.cymem cimport Pool
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from libc.string cimport memcpy, memset
 from libcpp.set cimport set as stdset
-from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
-cimport cython
 
 import re
 import warnings
 
-from .tokens.doc cimport Doc
-from .strings cimport hash_string
 from .lexeme cimport EMPTY_LEXEME
+from .strings cimport hash_string
+from .tokens.doc cimport Doc
 
-from .attrs import intify_attrs
-from .symbols import ORTH, NORM
-from .errors import Errors, Warnings
 from . import util
-from .util import registry, get_words_and_spaces
 from .attrs import intify_attrs
-from .symbols import ORTH
+from .errors import Errors, Warnings
 from .scorer import Scorer
-from .training import validate_examples
+from .symbols import NORM, ORTH
 from .tokens import Span
+from .training import validate_examples
+from .util import get_words_and_spaces, registry
 
 
 cdef class Tokenizer:

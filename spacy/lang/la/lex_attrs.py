@@ -1,5 +1,6 @@
-from ...attrs import LIKE_NUM
 import re
+
+from ...attrs import LIKE_NUM
 
 # cf. Goyvaerts/Levithan 2009; case-insensitive, allow 4
 roman_numerals_compile = re.compile(

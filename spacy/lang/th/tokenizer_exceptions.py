@@ -1,6 +1,5 @@
 from ...symbols import ORTH
 
-
 _exc = {
     # หน่วยงานรัฐ / government agency
     "กกต.": [{ORTH: "กกต."}],

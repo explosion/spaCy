@@ -1,47 +1,70 @@
-from typing import Iterator, Optional, Any, Dict, Callable, Iterable
-from typing import Union, Tuple, List, Set, Pattern, Sequence
-from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
-
-from dataclasses import dataclass
-import random
-import itertools
 import functools
+import itertools
+import multiprocessing as mp
+import random
+import traceback
+import warnings
 from contextlib import contextmanager
 from copy import deepcopy
-from pathlib import Path
-import warnings
-
-from thinc.api import get_current_ops, Config, CupyOps, Optimizer
-import srsly
-import multiprocessing as mp
+from dataclasses import dataclass
 from itertools import chain, cycle
+from pathlib import Path
 from timeit import default_timer as timer
-import traceback
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    NoReturn,
+    Optional,
+    Pattern,
+    Sequence,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
 
-from . import ty
-from .tokens.underscore import Underscore
-from .vocab import Vocab, create_vocab
-from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
-from .training import Example, validate_examples
-from .training.initialize import init_vocab, init_tok2vec
-from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe, raise_error, _DEFAULT_EMPTY_PIPES
-from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
-from .util import warn_if_jupyter_cupy
-from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
-from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
-from .lang.punctuation import TOKENIZER_INFIXES
-from .tokens import Doc
-from .tokenizer import Tokenizer
-from .errors import Errors, Warnings
-from .schemas import ConfigSchema, ConfigSchemaNlp, ConfigSchemaInit
-from .schemas import ConfigSchemaPretrain, validate_init_settings
-from .git_info import GIT_VERSION
-from . import util
-from . import about
-from .lookups import load_lookups
+import srsly
+from thinc.api import Config, CupyOps, Optimizer, get_current_ops
+
+from . import about, ty, util
 from .compat import Literal
-
+from .errors import Errors, Warnings
+from .git_info import GIT_VERSION
+from .lang.punctuation import TOKENIZER_INFIXES, TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
+from .lang.tokenizer_exceptions import BASE_EXCEPTIONS, URL_MATCH
+from .lookups import load_lookups
+from .pipe_analysis import analyze_pipes, print_pipe_analysis, validate_attrs
+from .schemas import (
+    ConfigSchema,
+    ConfigSchemaInit,
+    ConfigSchemaNlp,
+    ConfigSchemaPretrain,
+    validate_init_settings,
+)
+from .scorer import Scorer
+from .tokenizer import Tokenizer
+from .tokens import Doc
+from .tokens.underscore import Underscore
+from .training import Example, validate_examples
+from .training.initialize import init_tok2vec, init_vocab
+from .util import (
+    _DEFAULT_EMPTY_PIPES,
+    CONFIG_SECTION_ORDER,
+    SimpleFrozenDict,
+    SimpleFrozenList,
+    _pipe,
+    combine_score_weights,
+    raise_error,
+    registry,
+    warn_if_jupyter_cupy,
+)
+from .vocab import Vocab, create_vocab
 
 PipeCallable = Callable[[Doc], Doc]
 
@@ -716,6 +739,11 @@ class Language:
                 )
             )
         pipe = source.get_pipe(source_name)
+        # There is no actual solution here. Either the component has the right
+        # name for the source pipeline or the component has the right name for
+        # the current pipeline. This prioritizes the current pipeline.
+        if hasattr(pipe, "name"):
+            pipe.name = name
         # Make sure the source config is interpolated so we don't end up with
         # orphaned variables in our final config
         source_config = source.config.interpolate()
@@ -793,6 +821,7 @@ class Language:
         pipe_index = self._get_pipe_index(before, after, first, last)
         self._pipe_meta[name] = self.get_factory_meta(factory_name)
         self._components.insert(pipe_index, (name, pipe_component))
+        self._link_components()
         return pipe_component
 
     def _get_pipe_index(
@@ -928,6 +957,7 @@ class Language:
         if old_name in self._config["initialize"]["components"]:
             init_cfg = self._config["initialize"]["components"].pop(old_name)
             self._config["initialize"]["components"][new_name] = init_cfg
+        self._link_components()
 
     def remove_pipe(self, name: str) -> Tuple[str, PipeCallable]:
         """Remove a component from the pipeline.
@@ -951,6 +981,7 @@ class Language:
         # Make sure the name is also removed from the set of disabled components
         if name in self.disabled:
             self._disabled.remove(name)
+        self._link_components()
         return removed
 
     def disable_pipe(self, name: str) -> None:
@@ -1269,7 +1300,10 @@ class Language:
                 "No 'get_examples' callback provided to 'Language.initialize', creating dummy examples"
             )
             doc = Doc(self.vocab, words=["x", "y", "z"])
-            get_examples = lambda: [Example.from_dict(doc, {})]
+
+            def get_examples():
+                return [Example.from_dict(doc, {})]
+
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(
                 method="Language.initialize", obj=type(get_examples)
@@ -1676,8 +1710,16 @@ class Language:
         # The problem is we need to do it during deserialization...And the
         # components don't receive the pipeline then. So this does have to be
         # here :(
+        # First, fix up all the internal component names in case they have
+        # gotten out of sync due to sourcing components from different
+        # pipelines, since find_listeners uses proc2.name for the listener
+        # map.
+        for name, proc in self.pipeline:
+            if hasattr(proc, "name"):
+                proc.name = name
         for i, (name1, proc1) in enumerate(self.pipeline):
             if isinstance(proc1, ty.ListenedToComponent):
+                proc1.listener_map = {}
                 for name2, proc2 in self.pipeline[i + 1 :]:
                     proc1.find_listeners(proc2)
 
@@ -1811,6 +1853,7 @@ class Language:
                         raw_config=raw_config,
                     )
                 else:
+                    assert "source" in pipe_cfg
                     # We need the sourced components to reference the same
                     # vocab without modifying the current vocab state **AND**
                     # we still want to load the source model vectors to perform
@@ -1830,6 +1873,10 @@ class Language:
                     source_name = pipe_cfg.get("component", pipe_name)
                     listeners_replaced = False
                     if "replace_listeners" in pipe_cfg:
+                        # Make sure that the listened-to component has the
+                        # state of the source pipeline listener map so that the
+                        # replace_listeners method below works as intended.
+                        source_nlps[model]._link_components()
                         for name, proc in source_nlps[model].pipeline:
                             if source_name in getattr(proc, "listening_components", []):
                                 source_nlps[model].replace_listeners(
@@ -1841,6 +1888,8 @@ class Language:
                         nlp.add_pipe(
                             source_name, source=source_nlps[model], name=pipe_name
                         )
+                        # At this point after nlp.add_pipe, the listener map
+                        # corresponds to the new pipeline.
                     if model not in source_nlp_vectors_hashes:
                         source_nlp_vectors_hashes[model] = hash(
                             source_nlps[model].vocab.vectors.to_bytes(
@@ -1895,27 +1944,6 @@ class Language:
                 raise ValueError(
                     Errors.E942.format(name="pipeline_creation", value=type(nlp))
                 )
-        # Detect components with listeners that are not frozen consistently
-        for name, proc in nlp.pipeline:
-            if isinstance(proc, ty.ListenedToComponent):
-                # Remove listeners not in the pipeline
-                listener_names = proc.listening_components
-                unused_listener_names = [
-                    ll for ll in listener_names if ll not in nlp.pipe_names
-                ]
-                for listener_name in unused_listener_names:
-                    for listener in proc.listener_map.get(listener_name, []):
-                        proc.remove_listener(listener, listener_name)
-
-                for listener_name in proc.listening_components:
-                    # e.g. tok2vec/transformer
-                    # If it's a component sourced from another pipeline, we check if
-                    # the tok2vec listeners should be replaced with standalone tok2vec
-                    # models (e.g. so component can be frozen without its performance
-                    # degrading when other components/tok2vec are updated)
-                    paths = sourced.get(listener_name, {}).get("replace_listeners", [])
-                    if paths:
-                        nlp.replace_listeners(name, listener_name, paths)
         return nlp
 
     def replace_listeners(

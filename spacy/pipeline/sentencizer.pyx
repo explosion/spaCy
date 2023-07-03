@@ -1,14 +1,15 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional, List, Callable
+from typing import Callable, List, Optional
+
 import srsly
 
 from ..tokens.doc cimport Doc
 
-from .pipe import Pipe
-from .senter import senter_score
+from .. import util
 from ..language import Language
 from ..scorer import Scorer
-from .. import util
+from .pipe import Pipe
+from .senter import senter_score
 
 # see #9050
 BACKWARD_OVERWRITE = False

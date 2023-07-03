@@ -1,9 +1,10 @@
-import pytest
 import numpy
+import pytest
+
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
 
-from ..util import get_cosine, add_vecs_to_vocab
+from ..util import add_vecs_to_vocab, get_cosine
 
 
 @pytest.fixture

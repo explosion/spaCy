@@ -1,10 +1,12 @@
-from typing import Optional, Callable
+from typing import Callable, Optional
+
 from thinc.api import Model
-from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
-from .stop_words import STOP_WORDS
-from ...language import Language, BaseDefaults
+
+from ...language import BaseDefaults, Language
 from ...pipeline import Lemmatizer
+from .punctuation import TOKENIZER_INFIXES, TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
+from .stop_words import STOP_WORDS
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 
 
 class BengaliDefaults(BaseDefaults):

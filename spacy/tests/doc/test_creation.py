@@ -1,7 +1,8 @@
 import pytest
-from spacy.vocab import Vocab
-from spacy.tokens import Doc
+
 from spacy import util
+from spacy.tokens import Doc
+from spacy.vocab import Vocab
 
 
 @pytest.fixture

@@ -1,19 +1,32 @@
-from typing import Dict, Any, Optional
-from pathlib import Path
 import itertools
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+import typer
+from thinc.api import (
+    Model,
+    data_validation,
+    fix_random_seed,
+    set_dropout_rate,
+    set_gpu_allocator,
+)
+from wasabi import msg
 
 from spacy.training import Example
 from spacy.util import resolve_dot_names
-from wasabi import msg
-from thinc.api import fix_random_seed, set_dropout_rate
-from thinc.api import Model, data_validation, set_gpu_allocator
-import typer
 
-from ._util import Arg, Opt, debug_cli, show_validation_error
-from ._util import parse_config_overrides, string_to_list, setup_gpu
+from .. import util
 from ..schemas import ConfigSchemaTraining
 from ..util import registry
-from .. import util
+from ._util import (
+    Arg,
+    Opt,
+    debug_cli,
+    parse_config_overrides,
+    setup_gpu,
+    show_validation_error,
+    string_to_list,
+)
 
 
 @debug_cli.command(
