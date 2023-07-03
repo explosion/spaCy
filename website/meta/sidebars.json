@@ -36,7 +36,8 @@
                     },
                     { "text": "spaCy Projects", "url": "/usage/projects", "tag": "new" },
                     { "text": "Saving & Loading", "url": "/usage/saving-loading" },
-                    { "text": "Visualizers", "url": "/usage/visualizers" }
+                    { "text": "Visualizers", "url": "/usage/visualizers" },
+                    { "text": "Large Language Models", "url": "/usage/large-language-models", "tag": "new"  }
                 ]
             },
             {
@@ -133,6 +134,7 @@
                     { "text": "Corpus", "url": "/api/corpus" },
                     { "text": "InMemoryLookupKB", "url": "/api/inmemorylookupkb" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },
+                    { "text": "Large Language Models", "url": "/api/large-language-models" },
                     { "text": "Lookups", "url": "/api/lookups" },
                     { "text": "MorphAnalysis", "url": "/api/morphology#morphanalysis" },
                     { "text": "Morphology", "url": "/api/morphology" },
