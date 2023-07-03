@@ -17,11 +17,7 @@ from weasel.cli.run import _check_requirements
 import spacy
 from spacy import about
 from spacy.cli import info
-from spacy.cli._util import (
-    parse_config_overrides,
-    string_to_list,
-    walk_directory,
-)
+from spacy.cli._util import parse_config_overrides, string_to_list, walk_directory
 from spacy.cli.apply import apply
 from spacy.cli.debug_data import (
     _compile_gold,
