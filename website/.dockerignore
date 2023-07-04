@@ -1,0 +1,9 @@
+.cache/
+.next/
+public/
+node_modules
+.npm
+logs
+*.log
+npm-debug.log*
+quickstart-training-generator.js

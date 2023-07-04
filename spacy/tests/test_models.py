@@ -1,16 +1,31 @@
 from typing import List
-import pytest
-from thinc.api import fix_random_seed, Adam, set_dropout_rate
-from thinc.api import Ragged, reduce_mean, Logistic, chain, Relu
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+
 import numpy
-from spacy.ml.models import build_Tok2Vec_model, MultiHashEmbed, MaxoutWindowEncoder
-from spacy.ml.models import build_bow_text_classifier, build_simple_cnn_text_classifier
-from spacy.ml.models import build_spancat_model
-from spacy.ml.staticvectors import StaticVectors
-from spacy.ml.extract_spans import extract_spans, _get_span_indices
+import pytest
+from numpy.testing import assert_array_almost_equal, assert_array_equal
+from thinc.api import (
+    Adam,
+    Logistic,
+    Ragged,
+    Relu,
+    chain,
+    fix_random_seed,
+    reduce_mean,
+    set_dropout_rate,
+)
+
 from spacy.lang.en import English
 from spacy.lang.en.examples import sentences as EN_SENTENCES
+from spacy.ml.extract_spans import _get_span_indices, extract_spans
+from spacy.ml.models import (
+    MaxoutWindowEncoder,
+    MultiHashEmbed,
+    build_bow_text_classifier,
+    build_simple_cnn_text_classifier,
+    build_spancat_model,
+    build_Tok2Vec_model,
+)
+from spacy.ml.staticvectors import StaticVectors
 
 
 def get_textcat_bow_kwargs():
@@ -23,7 +38,7 @@ def get_textcat_bow_kwargs():
 
 
 def get_textcat_cnn_kwargs():
-    return {"tok2vec": test_tok2vec(), "exclusive_classes": False, "nO": 13}
+    return {"tok2vec": make_test_tok2vec(), "exclusive_classes": False, "nO": 13}
 
 
 def get_all_params(model):
@@ -65,7 +80,7 @@ def get_tok2vec_kwargs():
     }
 
 
-def test_tok2vec():
+def make_test_tok2vec():
     return build_Tok2Vec_model(**get_tok2vec_kwargs())
 
 

@@ -5,7 +5,7 @@ from spacy import displacy
 from spacy.displacy.render import DependencyRenderer, EntityRenderer
 from spacy.lang.en import English
 from spacy.lang.fa import Persian
-from spacy.tokens import Span, Doc
+from spacy.tokens import Doc, Span
 
 
 @pytest.mark.issue(2361)
@@ -203,6 +203,16 @@ def test_displacy_parse_spans_different_spans_key(en_vocab):
     ]
 
 
+def test_displacy_parse_empty_spans_key(en_vocab):
+    """Test that having an unset spans key doesn't raise an error"""
+    doc = Doc(en_vocab, words=["Welcome", "to", "the", "Bank", "of", "China"])
+    doc.spans["custom"] = [Span(doc, 3, 6, "BANK")]
+    with pytest.warns(UserWarning, match="W117"):
+        spans = displacy.parse_spans(doc)
+
+    assert isinstance(spans, dict)
+
+
 def test_displacy_parse_ents(en_vocab):
     """Test that named entities on a Doc are converted into displaCy's format."""
     doc = Doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
@@ -253,6 +263,20 @@ def test_displacy_parse_deps(en_vocab):
     deps = ["nsubj", "ROOT", "det", "attr"]
     doc = Doc(en_vocab, words=words, heads=heads, pos=pos, tags=tags, deps=deps)
     deps = displacy.parse_deps(doc)
+    assert isinstance(deps, dict)
+    assert deps["words"] == [
+        {"lemma": None, "text": words[0], "tag": pos[0]},
+        {"lemma": None, "text": words[1], "tag": pos[1]},
+        {"lemma": None, "text": words[2], "tag": pos[2]},
+        {"lemma": None, "text": words[3], "tag": pos[3]},
+    ]
+    assert deps["arcs"] == [
+        {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
+        {"start": 2, "end": 3, "label": "det", "dir": "left"},
+        {"start": 1, "end": 3, "label": "attr", "dir": "right"},
+    ]
+    # Test that displacy.parse_deps converts Span to Doc
+    deps = displacy.parse_deps(doc[:])
     assert isinstance(deps, dict)
     assert deps["words"] == [
         {"lemma": None, "text": words[0], "tag": pos[0]},

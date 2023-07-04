@@ -2,22 +2,25 @@
 
 .header
     background: var(--color-theme)
-    padding-top: calc(var(--height-nav) * 1.5)
+    padding-top: var(--height-nav)
     width: 100%
     text-align: center
+    --header-top-margin: 27px
 
 .header-wrapper
     background: var(--color-theme)
-    background-position: top center
+    background-position: center var(--header-top-margin)
     background-repeat: repeat
     width: 100%
+    background-size: 799px 643px
 
 .header-content
-    background: transparent
-    background-position: center -138px
+    background-position: center calc(-138px + var(--header-top-margin))
     background-repeat: no-repeat
     width: 100%
-    min-height: 573px
+    min-height: calc(573px + var(--header-top-margin))
+    background-size: 1444px 573px
+    padding-top: var(--header-top-margin)
 
 .title
     font: normal 600 7rem/#{1} var(--font-secondary)

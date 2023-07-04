@@ -1,106 +1,77 @@
-import React, { Fragment } from 'react'
+import React, { Fragment, useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
-import 'prismjs-bibtex'
 import rangeParser from 'parse-numeric-range'
-import { StaticQuery, graphql } from 'gatsby'
-import { window } from 'browser-monads'
+import Prism from 'prismjs'
 
-import CUSTOM_TYPES from '../../meta/type-annotations.json'
-import { isString, htmlToReact } from './util'
+// We manually load all the languages that are needed, which are currently only those:
+import 'prismjs/components/prism-diff.min.js'
+import 'prismjs/components/prism-bash.min.js'
+import 'prismjs/components/prism-ini.min.js'
+import 'prismjs/components/prism-jsx.min.js'
+import 'prismjs/components/prism-json.min.js'
+import 'prismjs/components/prism-markdown.min.js'
+import 'prismjs/components/prism-python.min.js'
+import 'prismjs/components/prism-yaml.min.js'
+import 'prismjs/components/prism-docker.min.js'
+import 'prismjs/components/prism-r.min.js'
+
+import { isString } from './util'
 import Link, { OptionalLink } from './link'
 import GitHubCode from './github'
 import classes from '../styles/code.module.sass'
+import siteMetadata from '../../meta/site.json'
+import { binderBranch } from '../../meta/dynamicMeta.mjs'
+import dynamic from 'next/dynamic'
 
-const WRAP_THRESHOLD = 30
 const CLI_GROUPS = ['init', 'debug', 'project', 'ray', 'huggingface-hub']
 
-export default props => (
-    <Pre>
-        <Code {...props} />
-    </Pre>
-)
+const splitLines = (children) => {
+    const listChildrenPerLine = []
 
-export const Pre = props => {
-    return <pre className={classes.pre}>{props.children}</pre>
-}
+    if (typeof children === 'string') {
+        listChildrenPerLine.push(...children.split('\n'))
+    } else {
+        listChildrenPerLine.push([])
+        let indexLine = 0
+        if (Array.isArray(children)) {
+            children.forEach((child) => {
+                if (typeof child === 'string' && child.includes('\n')) {
+                    const listString = child.split('\n')
+                    listString.forEach((string, index) => {
+                        listChildrenPerLine[indexLine].push(string)
 
-export const InlineCode = ({ wrap = false, className, children, ...props }) => {
-    const codeClassNames = classNames(classes.inlineCode, className, {
-        [classes.wrap]: wrap || (isString(children) && children.length >= WRAP_THRESHOLD),
-    })
-    return (
-        <code className={codeClassNames} {...props}>
-            {children}
-        </code>
-    )
-}
-
-InlineCode.propTypes = {
-    wrap: PropTypes.bool,
-    className: PropTypes.string,
-    children: PropTypes.node,
-}
-
-function linkType(el, showLink = true) {
-    if (!isString(el) || !el.length) return el
-    const elStr = el.trim()
-    if (!elStr) return el
-    const typeUrl = CUSTOM_TYPES[elStr]
-    const url = typeUrl == true ? DEFAULT_TYPE_URL : typeUrl
-    const ws = el[0] == ' '
-    return url && showLink ? (
-        <Fragment>
-            {ws && ' '}
-            <Link to={url} hideIcon>
-                {elStr}
-            </Link>
-        </Fragment>
-    ) : (
-        el
-    )
-}
-
-export const TypeAnnotation = ({ lang = 'python', link = true, children }) => {
-    // Hacky, but we're temporarily replacing a dot to prevent it from being split during highlighting
-    const TMP_DOT = '۔'
-    const code = Array.isArray(children) ? children.join('') : children || ''
-    const [rawText, meta] = code.split(/(?= \(.+\)$)/)
-    const rawStr = rawText.replace(/\./g, TMP_DOT)
-    const rawHtml = lang === 'none' || !code ? code : highlightCode(lang, rawStr)
-    const html = rawHtml.replace(new RegExp(TMP_DOT, 'g'), '.').replace(/\n/g, ' ')
-    const result = htmlToReact(html)
-    const elements = Array.isArray(result) ? result : [result]
-    const annotClassNames = classNames(
-        'type-annotation',
-        `language-${lang}`,
-        classes.inlineCode,
-        classes.typeAnnotation,
-        {
-            [classes.wrap]: code.length >= WRAP_THRESHOLD,
+                        if (index !== listString.length - 1) {
+                            indexLine += 1
+                            listChildrenPerLine[indexLine] = []
+                        }
+                    })
+                } else {
+                    listChildrenPerLine[indexLine].push(child)
+                }
+            })
+        } else {
+            listChildrenPerLine[indexLine].push(children)
+            indexLine += 1
+            listChildrenPerLine[indexLine] = []
         }
-    )
-    return (
-        <code className={annotClassNames} aria-label="Type annotation">
-            {elements.map((el, i) => (
-                <Fragment key={i}>{linkType(el, !!link)}</Fragment>
-            ))}
-            {meta && <span className={classes.typeAnnotationMeta}>{meta}</span>}
-        </code>
-    )
-}
+    }
 
-function replacePrompt(line, prompt, isFirst = false) {
-    let result = line
-    const hasPrompt = result.startsWith(`${prompt} `)
-    const showPrompt = hasPrompt || isFirst
-    if (hasPrompt) result = result.slice(2)
-    return result && showPrompt ? `<span data-prompt="${prompt}">${result}</span>` : result
+    const listLine = listChildrenPerLine[listChildrenPerLine.length - 1]
+    if (listLine === '' || (listLine.length === 1 && listLine[0] === '')) {
+        listChildrenPerLine.pop()
+    }
+
+    return listChildrenPerLine.map((childrenPerLine, index) => (
+        <>
+            {childrenPerLine}
+            {index !== listChildrenPerLine.length - 1 && '\n'}
+        </>
+    ))
 }
 
 function parseArgs(raw) {
-    let args = raw.split(' ').filter(arg => arg)
+    let args = raw.split(' ').filter((arg) => arg)
     const result = {}
     while (args.length) {
         let opt = args.shift()
@@ -120,208 +91,221 @@ function parseArgs(raw) {
     return result
 }
 
-function convertLine(line, i) {
-    const cliRegex = /^(\$ )?python -m spacy/
-    if (cliRegex.test(line)) {
-        const text = line.replace(cliRegex, '')
-        const args = parseArgs(text)
-        const cmd = Object.keys(args).map((key, i) => {
-            const value = args[key]
-            return value === null || value === true || i === 0 ? key : `${key} ${value}`
-        })
+const flattenReact = (children) => {
+    if (children === null || children === undefined || children === false) {
+        return []
+    }
+
+    if (typeof children === 'string') {
+        return [children]
+    }
+
+    if (children.props) {
+        return flattenReact(children.props.children)
+    }
+
+    return children.flatMap(flattenReact)
+}
+
+const checkoutForComment = (line) => {
+    const lineParts = line.split(' # ')
+
+    if (lineParts.length !== 2) {
+        return line
+    }
+
+    return (
+        <>
+            {lineParts[0]}
+            {` `}
+            <span class="token comment">
+                {`# `}
+                {lineParts[1]}
+            </span>
+        </>
+    )
+}
+
+const handlePromot = ({ lineFlat, prompt }) => {
+    const lineWithoutPrompt = lineFlat.slice(prompt.length + 1)
+
+    const cliRegex = /^python -m spacy/
+
+    if (!cliRegex.test(lineWithoutPrompt)) {
+        return <span data-prompt={prompt}>{checkoutForComment(lineWithoutPrompt)}</span>
+    }
+
+    const text = lineWithoutPrompt.replace(cliRegex, '')
+    const args = parseArgs(text)
+    const cmd = Object.keys(args).map((key, i) => {
+        const value = args[key]
+        return value === null || value === true || i === 0 ? key : `${key} ${value}`
+    })
+    return (
+        <span data-prompt={prompt}>
+            <span className={classes['cli-arg-subtle']}>python -m</span> <span>spacy</span>{' '}
+            {cmd.map((item, j) => {
+                const isCmd = j === 0
+                const url = isCmd ? `/api/cli#${item.replace(' ', '-')}` : null
+                const isAbstract = isString(item) && /^\[(.+)\]$/.test(item)
+                const itemClassNames = classNames(classes['cli-arg'], {
+                    [classes['cli-arg-highlight']]: isCmd,
+                    [classes['cli-arg-emphasis']]: isAbstract,
+                })
+                const text = isAbstract ? item.slice(1, -1) : item
+                return (
+                    <Fragment key={j}>
+                        {j !== 0 && ' '}
+                        <span className={itemClassNames}>
+                            <OptionalLink noLinkLayout hideIcon to={url}>
+                                {text}
+                            </OptionalLink>
+                        </span>
+                    </Fragment>
+                )
+            })}
+        </span>
+    )
+}
+
+const convertLine = ({ line, prompt, lang }) => {
+    const lineFlat = flattenReact(line).join('')
+    if (lineFlat.startsWith(`${prompt} `)) {
+        return handlePromot({ lineFlat, prompt })
+    }
+
+    return lang === 'none' || !lineFlat || !(lang in Prism.languages) ? (
+        lineFlat
+    ) : (
+        <span
+            dangerouslySetInnerHTML={{
+                __html: Prism.highlight(lineFlat, Prism.languages[lang], lang),
+            }}
+        />
+    )
+}
+
+const addLineHighlight = (children, highlight) => {
+    if (!highlight) {
+        return children
+    }
+    const listHighlight = rangeParser(highlight)
+
+    if (listHighlight.length === 0) {
+        return children
+    }
+
+    return children.map((child, index) => {
+        const isHighlight = listHighlight.includes(index + 1)
         return (
-            <Fragment key={line}>
-                <span data-prompt={i === 0 ? '$' : null} className={classes.cliArgSubtle}>
-                    python -m
-                </span>{' '}
-                <span>spacy</span>{' '}
-                {cmd.map((item, j) => {
-                    const isCmd = j === 0
-                    const url = isCmd ? `/api/cli#${item.replace(' ', '-')}` : null
-                    const isAbstract = isString(item) && /^\[(.+)\]$/.test(item)
-                    const itemClassNames = classNames(classes.cliArg, {
-                        [classes.cliArgHighlight]: isCmd,
-                        [classes.cliArgEmphasis]: isAbstract,
-                    })
-                    const text = isAbstract ? item.slice(1, -1) : item
-                    return (
-                        <Fragment key={j}>
-                            {j !== 0 && ' '}
-                            <span className={itemClassNames}>
-                                <OptionalLink hidden hideIcon to={url}>
-                                    {text}
-                                </OptionalLink>
-                            </span>
-                        </Fragment>
-                    )
+            <span
+                className={classNames({
+                    'gatsby-highlight-code-line': isHighlight,
                 })}
-            </Fragment>
+                key={index}
+            >
+                {child}
+            </span>
         )
-    }
-    const htmlLine = replacePrompt(highlightCode('bash', line), '$')
-    return htmlToReact(htmlLine)
+    })
 }
 
-function formatCode(html, lang, prompt) {
-    if (lang === 'cli') {
-        const lines = html
-            .trim()
-            .split('\n')
-            .map(line =>
-                line
-                    .split(' | ')
-                    .map((l, i) => convertLine(l, i))
-                    .map((l, j) => (
-                        <Fragment>
-                            {j !== 0 && <span> | </span>}
-                            {l}
-                        </Fragment>
-                    ))
-            )
-        return lines.map((line, i) => (
-            <Fragment key={i}>
-                {i !== 0 && <br />}
-                {line}
-            </Fragment>
-        ))
-    }
-    const result = html
-        .split('\n')
-        .map((line, i) => {
-            let newLine = prompt ? replacePrompt(line, prompt, i === 0) : line
-            if (lang === 'diff' && !line.startsWith('<')) {
-                newLine = highlightCode('python', line)
-            }
-            return newLine
-        })
-        .join('\n')
-    return htmlToReact(result)
+const CodeHighlighted = ({ children, highlight, lang }) => {
+    const [html, setHtml] = useState()
+
+    useEffect(
+        () =>
+            setHtml(
+                addLineHighlight(
+                    splitLines(children).map((line) => convertLine({ line, prompt: '$', lang })),
+                    highlight
+                )
+            ),
+        [children, highlight, lang]
+    )
+
+    return <>{html}</>
 }
 
-export class Code extends React.Component {
-    state = { Juniper: null }
-
+export default class Code extends React.Component {
     static defaultProps = {
         lang: 'none',
         executable: null,
-        github: false,
     }
 
     static propTypes = {
         lang: PropTypes.string,
         title: PropTypes.string,
         executable: PropTypes.oneOf(['true', 'false', true, false, null]),
-        github: PropTypes.oneOf(['true', 'false', true, false, null]),
+        github: PropTypes.string,
         prompt: PropTypes.string,
         highlight: PropTypes.string,
         className: PropTypes.string,
         children: PropTypes.node,
     }
 
-    updateJuniper() {
-        if (this.state.Juniper == null && window.Juniper !== null) {
-            this.setState({ Juniper: window.Juniper })
-        }
-    }
-
-    componentDidMount() {
-        this.updateJuniper()
-    }
-
-    componentDidUpdate() {
-        this.updateJuniper()
-    }
-
     render() {
-        const {
-            lang,
-            title,
-            executable,
-            github,
-            prompt,
-            wrap,
-            highlight,
-            className,
-            children,
-        } = this.props
-        const codeClassNames = classNames(classes.code, className, `language-${lang}`, {
-            [classes.wrap]: !!highlight || !!wrap || lang === 'cli',
-            [classes.cli]: lang === 'cli',
+        const { lang, title, executable, github, wrap, highlight, className, children } = this.props
+        const codeClassNames = classNames(classes['code'], className, `language-${lang}`, {
+            [classes['wrap']]: !!highlight || !!wrap || lang === 'cli',
+            [classes['cli']]: lang === 'cli',
         })
-        const ghClassNames = classNames(codeClassNames, classes.maxHeight)
-        const { Juniper } = this.state
+        const ghClassNames = classNames(codeClassNames, classes['max-height'])
 
         if (github) {
-            return <GitHubCode url={children} className={ghClassNames} lang={lang} />
+            return <GitHubCode url={github} className={ghClassNames} lang={lang} />
         }
-        if (!!executable && Juniper) {
+        if (!!executable) {
             return (
-                <JuniperWrapper Juniper={Juniper} title={title} lang={lang}>
+                <JuniperWrapper title={title} lang={lang}>
                     {children}
                 </JuniperWrapper>
             )
         }
 
-        const codeText = Array.isArray(children) ? children.join('') : children || ''
-        const highlightRange = highlight ? rangeParser.parse(highlight).filter(n => n > 0) : []
-        const rawHtml = ['none', 'cli'].includes(lang)
-            ? codeText
-            : highlightCode(lang, codeText, highlightRange)
-        const html = formatCode(rawHtml, lang, prompt)
         return (
             <>
-                {title && <h4 className={classes.title}>{title}</h4>}
-                <code className={codeClassNames}>{html}</code>
+                {title && <h4 className={classes['title']}>{title}</h4>}
+                <code className={codeClassNames}>
+                    <CodeHighlighted highlight={highlight} lang={lang}>
+                        {children}
+                    </CodeHighlighted>
+                </code>
             </>
         )
     }
 }
 
-const JuniperWrapper = ({ Juniper, title, lang, children }) => (
-    <StaticQuery
-        query={query}
-        render={data => {
-            const { binderUrl, binderBranch, binderVersion } = data.site.siteMetadata
-            const juniperTitle = title || 'Editable Code'
-            return (
-                <div className={classes.juniperWrapper}>
-                    <h4 className={classes.juniperTitle}>
-                        {juniperTitle}
-                        <span className={classes.juniperMeta}>
-                            spaCy v{binderVersion} &middot; Python 3 &middot; via{' '}
-                            <Link to="https://mybinder.org/" hidden>
-                                Binder
-                            </Link>
-                        </span>
-                    </h4>
+const JuniperDynamic = dynamic(() => import('./juniper'))
 
-                    <Juniper
-                        repo={binderUrl}
-                        branch={binderBranch}
-                        lang={lang}
-                        classNames={{
-                            cell: classes.juniperCell,
-                            input: classes.juniperInput,
-                            button: classes.juniperButton,
-                            output: classes.juniperOutput,
-                        }}
-                    >
-                        {children}
-                    </Juniper>
-                </div>
-            )
-        }}
-    />
-)
+const JuniperWrapper = ({ title, lang, children }) => {
+    const { binderUrl, binderVersion } = siteMetadata
+    const juniperTitle = title || 'Editable Code'
+    return (
+        <div className={classes['juniper-wrapper']}>
+            <h4 className={classes['juniper-title']}>
+                {juniperTitle}
+                <span className={classes['juniper-meta']}>
+                    spaCy v{binderVersion} &middot; Python 3 &middot; via{' '}
+                    <Link to="https://mybinder.org/" noLinkLayout>
+                        Binder
+                    </Link>
+                </span>
+            </h4>
 
-const query = graphql`
-    query JuniperQuery {
-        site {
-            siteMetadata {
-                binderUrl
-                binderBranch
-                binderVersion
-            }
-        }
-    }
-`
+            <JuniperDynamic
+                repo={binderUrl}
+                branch={binderBranch}
+                lang={lang}
+                classNames={{
+                    cell: classes['juniper-cell'],
+                    input: classes['juniper-input'],
+                    button: classes['juniper-button'],
+                    output: classes['juniper-output'],
+                }}
+            >
+                {children}
+            </JuniperDynamic>
+        </div>
+    )
+}

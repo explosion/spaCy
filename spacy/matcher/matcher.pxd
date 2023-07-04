@@ -1,11 +1,11 @@
+from cymem.cymem cimport Pool
 from libc.stdint cimport int32_t
 from libcpp.vector cimport vector
-from cymem.cymem cimport Pool
 
-from ..vocab cimport Vocab
-from ..typedefs cimport attr_t, hash_t
-from ..structs cimport TokenC
 from ..lexeme cimport attr_id_t
+from ..structs cimport TokenC
+from ..typedefs cimport attr_t, hash_t
+from ..vocab cimport Vocab
 
 
 cdef enum action_t:
@@ -77,3 +77,4 @@ cdef class Matcher:
     cdef public object _extensions
     cdef public object _extra_predicates
     cdef public object _seen_attrs
+    cdef public object _fuzzy_compare

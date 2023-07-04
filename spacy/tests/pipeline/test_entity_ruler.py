@@ -1,16 +1,14 @@
 import pytest
+from thinc.api import NumpyOps, get_current_ops
 
 from spacy import registry
-from spacy.tokens import Doc, Span
-from spacy.language import Language
-from spacy.lang.en import English
-from spacy.pipeline import EntityRuler, EntityRecognizer, merge_entities
-from spacy.pipeline import SpanRuler
-from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.errors import MatchPatternError
+from spacy.lang.en import English
+from spacy.language import Language
+from spacy.pipeline import EntityRecognizer, EntityRuler, SpanRuler, merge_entities
+from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.tests.util import make_tempdir
-
-from thinc.api import NumpyOps, get_current_ops
+from spacy.tokens import Doc, Span
 
 ENTITY_RULERS = ["entity_ruler", "future_entity_ruler"]
 
@@ -380,6 +378,43 @@ def test_entity_ruler_overlapping_spans(nlp, entity_ruler_factory):
     doc = nlp("foo bar baz")
     assert len(doc.ents) == 1
     assert doc.ents[0].label_ == "FOOBAR"
+
+
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_fuzzy_pipe(nlp, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
+    patterns = [{"label": "HELLO", "pattern": [{"LOWER": {"FUZZY": "hello"}}]}]
+    ruler.add_patterns(patterns)
+    doc = nlp("helloo")
+    assert len(doc.ents) == 1
+    assert doc.ents[0].label_ == "HELLO"
+
+
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_fuzzy(nlp, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
+    patterns = [{"label": "HELLO", "pattern": [{"LOWER": {"FUZZY": "hello"}}]}]
+    ruler.add_patterns(patterns)
+    doc = nlp("helloo")
+    assert len(doc.ents) == 1
+    assert doc.ents[0].label_ == "HELLO"
+
+
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_fuzzy_disabled(nlp, entity_ruler_factory):
+    @registry.misc("test_fuzzy_compare_disabled")
+    def make_test_fuzzy_compare_disabled():
+        return lambda x, y, z: False
+
+    ruler = nlp.add_pipe(
+        entity_ruler_factory,
+        name="entity_ruler",
+        config={"matcher_fuzzy_compare": {"@misc": "test_fuzzy_compare_disabled"}},
+    )
+    patterns = [{"label": "HELLO", "pattern": [{"LOWER": {"FUZZY": "hello"}}]}]
+    ruler.add_patterns(patterns)
+    doc = nlp("helloo")
+    assert len(doc.ents) == 0
 
 
 @pytest.mark.parametrize("n_process", [1, 2])

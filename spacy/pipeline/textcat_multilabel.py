@@ -1,18 +1,17 @@
-from typing import Iterable, Optional, Dict, List, Callable, Any
-from thinc.types import Floats2d
-from thinc.api import Model, Config
-
 from itertools import islice
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
-from ..language import Language
-from ..training import Example, validate_get_examples
+from thinc.api import Config, Model
+from thinc.types import Floats2d
+
 from ..errors import Errors
+from ..language import Language
 from ..scorer import Scorer
 from ..tokens import Doc
+from ..training import Example, validate_get_examples
 from ..util import registry
 from ..vocab import Vocab
 from .textcat import TextCategorizer
-
 
 multi_label_default_config = """
 [model]
@@ -24,8 +23,8 @@ multi_label_default_config = """
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v2"
 width = 64
-rows = [2000, 2000, 1000, 1000, 1000, 1000]
-attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
+rows = [2000, 2000, 500, 1000, 500]
+attrs = ["NORM", "LOWER", "PREFIX", "SUFFIX", "SHAPE"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
@@ -74,7 +73,7 @@ subword_features = true
     default_config={
         "threshold": 0.5,
         "model": DEFAULT_MULTI_TEXTCAT_MODEL,
-        "scorer": {"@scorers": "spacy.textcat_multilabel_scorer.v1"},
+        "scorer": {"@scorers": "spacy.textcat_multilabel_scorer.v2"},
     },
     default_score_weights={
         "cats_score": 1.0,
@@ -87,7 +86,6 @@ subword_features = true
         "cats_macro_f": None,
         "cats_macro_auc": None,
         "cats_f_per_type": None,
-        "cats_macro_auc_per_type": None,
     },
 )
 def make_multilabel_textcat(
@@ -121,7 +119,7 @@ def textcat_multilabel_score(examples: Iterable[Example], **kwargs) -> Dict[str,
     )
 
 
-@registry.scorers("spacy.textcat_multilabel_scorer.v1")
+@registry.scorers("spacy.textcat_multilabel_scorer.v2")
 def make_textcat_multilabel_scorer():
     return textcat_multilabel_score
 
@@ -192,6 +190,8 @@ class MultiLabel_TextCategorizer(TextCategorizer):
             for label in labels:
                 self.add_label(label)
         subbatch = list(islice(get_examples(), 10))
+        self._validate_categories(subbatch)
+
         doc_sample = [eg.reference for eg in subbatch]
         label_sample, _ = self._examples_to_truth(subbatch)
         self._require_labels()
@@ -202,4 +202,8 @@ class MultiLabel_TextCategorizer(TextCategorizer):
     def _validate_categories(self, examples: Iterable[Example]):
         """This component allows any type of single- or multi-label annotations.
         This method overwrites the more strict one from 'textcat'."""
-        pass
+        # check that annotation values are valid
+        for ex in examples:
+            for val in ex.reference.cats.values():
+                if not (val == 1.0 or val == 0.0):
+                    raise ValueError(Errors.E851.format(val=val))

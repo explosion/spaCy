@@ -1,24 +1,39 @@
-import pytest
-import os
 import ctypes
+import os
 from pathlib import Path
-from spacy.about import __version__ as spacy_version
-from spacy import util
-from spacy import prefer_gpu, require_gpu, require_cpu
-from spacy.ml._precomputable_affine import PrecomputableAffine
-from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
-from spacy.util import dot_to_object, SimpleFrozenList, import_file
-from spacy.util import to_ternary_int
-from thinc.api import Config, Optimizer, ConfigValidationError
-from thinc.api import get_current_ops, set_current_ops, NumpyOps, CupyOps, MPSOps
+
+import pytest
+from pydantic import ValidationError
+from thinc.api import (
+    Config,
+    ConfigValidationError,
+    CupyOps,
+    MPSOps,
+    NumpyOps,
+    Optimizer,
+    get_current_ops,
+    set_current_ops,
+)
 from thinc.compat import has_cupy_gpu, has_torch_mps_gpu
-from spacy.training.batchers import minibatch_by_words
+
+from spacy import prefer_gpu, require_cpu, require_gpu, util
+from spacy.about import __version__ as spacy_version
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import DEFAULT_CONFIG_PATH
+from spacy.ml._precomputable_affine import (
+    PrecomputableAffine,
+    _backprop_precomputable_affine_padding,
+)
 from spacy.schemas import ConfigSchemaTraining, TokenPattern, TokenPatternSchema
-from pydantic import ValidationError
-
+from spacy.training.batchers import minibatch_by_words
+from spacy.util import (
+    SimpleFrozenList,
+    dot_to_object,
+    find_available_port,
+    import_file,
+    to_ternary_int,
+)
 
 from .util import get_random_doc, make_tempdir
 
@@ -237,12 +252,39 @@ def test_minor_version(a1, a2, b1, b2, is_match):
             {"training.batch_size": 128, "training.optimizer.learn_rate": 0.01},
             {"training": {"batch_size": 128, "optimizer": {"learn_rate": 0.01}}},
         ),
+        (
+            {"attribute_ruler.scorer.@scorers": "spacy.tagger_scorer.v1"},
+            {"attribute_ruler": {"scorer": {"@scorers": "spacy.tagger_scorer.v1"}}},
+        ),
     ],
 )
 def test_dot_to_dict(dot_notation, expected):
     result = util.dot_to_dict(dot_notation)
     assert result == expected
     assert util.dict_to_dot(result) == dot_notation
+
+
+@pytest.mark.parametrize(
+    "dot_notation,expected",
+    [
+        (
+            {"token.pos": True, "token._.xyz": True},
+            {"token": {"pos": True, "_": {"xyz": True}}},
+        ),
+        (
+            {"training.batch_size": 128, "training.optimizer.learn_rate": 0.01},
+            {"training": {"batch_size": 128, "optimizer": {"learn_rate": 0.01}}},
+        ),
+        (
+            {"attribute_ruler.scorer": {"@scorers": "spacy.tagger_scorer.v1"}},
+            {"attribute_ruler": {"scorer": {"@scorers": "spacy.tagger_scorer.v1"}}},
+        ),
+    ],
+)
+def test_dot_to_dict_overrides(dot_notation, expected):
+    result = util.dot_to_dict(dot_notation)
+    assert result == expected
+    assert util.dict_to_dot(result, for_overrides=True) == dot_notation
 
 
 def test_set_dot_to_object():
@@ -434,3 +476,16 @@ def test_to_ternary_int():
     assert to_ternary_int(-10) == -1
     assert to_ternary_int("string") == -1
     assert to_ternary_int([0, "string"]) == -1
+
+
+def test_find_available_port():
+    host = "0.0.0.0"
+    port = 5000
+    assert find_available_port(port, host) == port, "Port 5000 isn't free"
+
+    from wsgiref.simple_server import demo_app, make_server
+
+    with make_server(host, port, demo_app) as httpd:
+        with pytest.warns(UserWarning, match="already in use"):
+            found_port = find_available_port(port, host, auto_select=True)
+        assert found_port == port + 1, "Didn't find next port"

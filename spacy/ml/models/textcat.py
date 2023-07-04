@@ -1,21 +1,38 @@
-from typing import Optional, List, cast
 from functools import partial
+from typing import List, Optional, cast
 
-from thinc.types import Floats2d
-from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic
-from thinc.api import chain, concatenate, clone, Dropout, ParametricAttention
-from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout, reduce_sum
-from thinc.api import with_cpu, Relu, residual, LayerNorm, resizable
+from thinc.api import (
+    Dropout,
+    LayerNorm,
+    Linear,
+    Logistic,
+    Maxout,
+    Model,
+    ParametricAttention,
+    Relu,
+    Softmax,
+    SparseLinear,
+    chain,
+    clone,
+    concatenate,
+    list2ragged,
+    reduce_mean,
+    reduce_sum,
+    residual,
+    resizable,
+    softmax_activation,
+    with_cpu,
+)
 from thinc.layers.chain import init as init_chain
-from thinc.layers.resizable import resize_model, resize_linear_weighted
+from thinc.layers.resizable import resize_linear_weighted, resize_model
+from thinc.types import Floats2d
 
 from ...attrs import ORTH
+from ...tokens import Doc
 from ...util import registry
 from ..extract_ngrams import extract_ngrams
 from ..staticvectors import StaticVectors
-from ...tokens import Doc
 from .tok2vec import get_tok2vec_width
-
 
 NEG_VALUE = -5000
 

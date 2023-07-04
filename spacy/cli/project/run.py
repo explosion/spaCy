@@ -1,21 +1,39 @@
-from typing import Optional, List, Dict, Sequence, Any, Iterable, Tuple
 import os.path
-from pathlib import Path
-
-import pkg_resources
-from wasabi import msg
-from wasabi.util import locale_escape
 import sys
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+
 import srsly
 import typer
+from wasabi import msg
+from wasabi.util import locale_escape
 
 from ... import about
 from ...git_info import GIT_VERSION
-from ...util import working_dir, run_command, split_command, is_cwd, join_command
-from ...util import SimpleFrozenList, is_minor_version_match, ENV_VARS
-from ...util import check_bool_env_var, SimpleFrozenDict
-from .._util import PROJECT_FILE, PROJECT_LOCK, load_project_config, get_hash
-from .._util import get_checksum, project_cli, Arg, Opt, COMMAND, parse_config_overrides
+from ...util import (
+    ENV_VARS,
+    SimpleFrozenDict,
+    SimpleFrozenList,
+    check_bool_env_var,
+    is_cwd,
+    is_minor_version_match,
+    join_command,
+    run_command,
+    split_command,
+    working_dir,
+)
+from .._util import (
+    COMMAND,
+    PROJECT_FILE,
+    PROJECT_LOCK,
+    Arg,
+    Opt,
+    get_checksum,
+    get_hash,
+    load_project_config,
+    parse_config_overrides,
+    project_cli,
+)
 
 
 @project_cli.command(
@@ -53,6 +71,7 @@ def project_run(
     force: bool = False,
     dry: bool = False,
     capture: bool = False,
+    skip_requirements_check: bool = False,
 ) -> None:
     """Run a named script defined in the project.yml. If the script is part
     of the default pipeline (defined in the "run" section), DVC is used to
@@ -69,6 +88,7 @@ def project_run(
         sys.exit will be called with the return code. You should use capture=False
         when you want to turn over execution to the command, and capture=True
         when you want to run the command more like a function.
+    skip_requirements_check (bool): Whether to skip the requirements check.
     """
     config = load_project_config(project_dir, overrides=overrides)
     commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
@@ -76,9 +96,10 @@ def project_run(
     validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
 
     req_path = project_dir / "requirements.txt"
-    if config.get("check_requirements", True) and os.path.exists(req_path):
-        with req_path.open() as requirements_file:
-            _check_requirements([req.replace("\n", "") for req in requirements_file])
+    if not skip_requirements_check:
+        if config.get("check_requirements", True) and os.path.exists(req_path):
+            with req_path.open() as requirements_file:
+                _check_requirements([req.strip() for req in requirements_file])
 
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
@@ -90,6 +111,7 @@ def project_run(
                 force=force,
                 dry=dry,
                 capture=capture,
+                skip_requirements_check=True,
             )
     else:
         cmd = commands[subcommand]
@@ -97,8 +119,8 @@ def project_run(
             if not (project_dir / dep).exists():
                 err = f"Missing dependency specified by command '{subcommand}': {dep}"
                 err_help = "Maybe you forgot to run the 'project assets' command or a previous step?"
-                err_kwargs = {"exits": 1} if not dry else {}
-                msg.fail(err, err_help, **err_kwargs)
+                err_exits = 1 if not dry else None
+                msg.fail(err, err_help, exits=err_exits)
         check_spacy_commit = check_bool_env_var(ENV_VARS.PROJECT_USE_GIT_VERSION)
         with working_dir(project_dir) as current_dir:
             msg.divider(subcommand)
@@ -327,6 +349,7 @@ def _check_requirements(requirements: List[str]) -> Tuple[bool, bool]:
     RETURNS (Tuple[bool, bool]): Whether (1) any packages couldn't be imported, (2) any packages with version conflicts
         exist.
     """
+    import pkg_resources
 
     failed_pkgs_msgs: List[str] = []
     conflicting_pkgs_msgs: List[str] = []
@@ -338,6 +361,12 @@ def _check_requirements(requirements: List[str]) -> Tuple[bool, bool]:
             failed_pkgs_msgs.append(dnf.report())
         except pkg_resources.VersionConflict as vc:
             conflicting_pkgs_msgs.append(vc.report())
+        except Exception:
+            msg.warn(
+                f"Unable to check requirement: {req} "
+                "Checks are currently limited to requirement specifiers "
+                "(PEP 508)"
+            )
 
     if len(failed_pkgs_msgs) or len(conflicting_pkgs_msgs):
         msg.warn(

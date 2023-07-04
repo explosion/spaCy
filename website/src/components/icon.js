@@ -1,57 +1,58 @@
 import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
+import SVG from 'react-inlinesvg'
 
-import GitHubIcon from '-!svg-react-loader!../images/icons/github.svg'
-import TwitterIcon from '-!svg-react-loader!../images/icons/twitter.svg'
-import WebsiteIcon from '-!svg-react-loader!../images/icons/website.svg'
-import WarningIcon from '-!svg-react-loader!../images/icons/warning.svg'
-import InfoIcon from '-!svg-react-loader!../images/icons/info.svg'
-import AcceptIcon from '-!svg-react-loader!../images/icons/accept.svg'
-import RejectIcon from '-!svg-react-loader!../images/icons/reject.svg'
-import DocsIcon from '-!svg-react-loader!../images/icons/docs.svg'
-import CodeIcon from '-!svg-react-loader!../images/icons/code.svg'
-import HelpIcon from '-!svg-react-loader!../images/icons/help.svg'
-import HelpOutlineIcon from '-!svg-react-loader!../images/icons/help-outline.svg'
-import ArrowRightIcon from '-!svg-react-loader!../images/icons/arrow-right.svg'
-import YesIcon from '-!svg-react-loader!../images/icons/yes.svg'
-import NoIcon from '-!svg-react-loader!../images/icons/no.svg'
-import NeutralIcon from '-!svg-react-loader!../images/icons/neutral.svg'
-import OfflineIcon from '-!svg-react-loader!../images/icons/offline.svg'
-import SearchIcon from '-!svg-react-loader!../images/icons/search.svg'
-import MoonIcon from '-!svg-react-loader!../images/icons/moon.svg'
-import ClipboardIcon from '-!svg-react-loader!../images/icons/clipboard.svg'
-import NetworkIcon from '-!svg-react-loader!../images/icons/network.svg'
-import DownloadIcon from '-!svg-react-loader!../images/icons/download.svg'
-import PackageIcon from '-!svg-react-loader!../images/icons/package.svg'
+import gitHubIcon from '../images/icons/github.svg'
+import twitterIcon from '../images/icons/twitter.svg'
+import websiteIcon from '../images/icons/website.svg'
+import warningIcon from '../images/icons/warning.svg'
+import infoIcon from '../images/icons/info.svg'
+import acceptIcon from '../images/icons/accept.svg'
+import rejectIcon from '../images/icons/reject.svg'
+import docsIcon from '../images/icons/docs.svg'
+import codeIcon from '../images/icons/code.svg'
+import helpIcon from '../images/icons/help.svg'
+import helpOutlineIcon from '../images/icons/help-outline.svg'
+import arrowRightIcon from '../images/icons/arrow-right.svg'
+import yesIcon from '../images/icons/yes.svg'
+import noIcon from '../images/icons/no.svg'
+import neutralIcon from '../images/icons/neutral.svg'
+import offlineIcon from '../images/icons/offline.svg'
+import searchIcon from '../images/icons/search.svg'
+import moonIcon from '../images/icons/moon.svg'
+import clipboardIcon from '../images/icons/clipboard.svg'
+import networkIcon from '../images/icons/network.svg'
+import downloadIcon from '../images/icons/download.svg'
+import packageIcon from '../images/icons/package.svg'
 
 import { isString } from './util'
 import classes from '../styles/icon.module.sass'
 
 const icons = {
-    github: GitHubIcon,
-    twitter: TwitterIcon,
-    website: WebsiteIcon,
-    warning: WarningIcon,
-    danger: InfoIcon,
-    info: InfoIcon,
-    accept: AcceptIcon,
-    reject: RejectIcon,
-    docs: DocsIcon,
-    code: CodeIcon,
-    help: HelpIcon,
-    help2: HelpOutlineIcon,
-    arrowright: ArrowRightIcon,
-    yes: YesIcon,
-    no: NoIcon,
-    neutral: NeutralIcon,
-    offline: OfflineIcon,
-    search: SearchIcon,
-    moon: MoonIcon,
-    clipboard: ClipboardIcon,
-    network: NetworkIcon,
-    download: DownloadIcon,
-    package: PackageIcon,
+    github: gitHubIcon,
+    twitter: twitterIcon,
+    website: websiteIcon,
+    warning: warningIcon,
+    danger: infoIcon,
+    info: infoIcon,
+    accept: acceptIcon,
+    reject: rejectIcon,
+    docs: docsIcon,
+    code: codeIcon,
+    help: helpIcon,
+    help2: helpOutlineIcon,
+    arrowright: arrowRightIcon,
+    yes: yesIcon,
+    no: noIcon,
+    neutral: neutralIcon,
+    offline: offlineIcon,
+    search: searchIcon,
+    moon: moonIcon,
+    clipboard: clipboardIcon,
+    network: networkIcon,
+    download: downloadIcon,
+    package: packageIcon,
 }
 
 export default function Icon({
@@ -63,15 +64,16 @@ export default function Icon({
     className,
     ...props
 }) {
-    const IconComponent = icons[name]
+    const icon = icons[name]
     const iconClassNames = classNames(classes.root, className, {
         [classes.inline]: inline,
         [classes.success]: variant === 'success',
         [classes.error]: variant === 'error',
         [classes.subtle]: variant === 'subtle',
     })
-    return !IconComponent ? null : (
-        <IconComponent
+    return !icon ? null : (
+        <SVG
+            src={icon.src}
             className={iconClassNames}
             aria-hidden="true"
             width={width}

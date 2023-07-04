@@ -1,23 +1,25 @@
-from typing import cast, Any, Callable, Dict, Iterable, List, Optional
-from typing import Tuple
 from collections import Counter
 from itertools import islice
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
+
 import numpy as np
-
 import srsly
-from thinc.api import Config, Model, SequenceCategoricalCrossentropy
-from thinc.types import Floats2d, Ints1d, Ints2d
+from thinc.api import Config, Model, NumpyOps, SequenceCategoricalCrossentropy
+from thinc.types import Floats2d, Ints2d
 
-from ._edit_tree_internals.edit_trees import EditTrees
-from ._edit_tree_internals.schemas import validate_edit_tree
-from .lemmatizer import lemmatizer_score
-from .trainable_pipe import TrainablePipe
+from .. import util
 from ..errors import Errors
 from ..language import Language
 from ..tokens import Doc
 from ..training import Example, validate_examples, validate_get_examples
 from ..vocab import Vocab
-from .. import util
+from ._edit_tree_internals.edit_trees import EditTrees
+from ._edit_tree_internals.schemas import validate_edit_tree
+from .lemmatizer import lemmatizer_score
+from .trainable_pipe import TrainablePipe
+
+# The cutoff value of *top_k* above which an alternative method is used to process guesses.
+TOP_K_GUARDRAIL = 20
 
 
 default_model_config = """
@@ -115,6 +117,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
         self.cfg: Dict[str, Any] = {"labels": []}
         self.scorer = scorer
+        self.numpy_ops = NumpyOps()
 
     def get_loss(
         self, examples: Iterable[Example], scores: List[Floats2d]
@@ -128,7 +131,7 @@ class EditTreeLemmatizer(TrainablePipe):
             for (predicted, gold_lemma) in zip(
                 eg.predicted, eg.get_aligned("LEMMA", as_string=True)
             ):
-                if gold_lemma is None:
+                if gold_lemma is None or gold_lemma == "":
                     label = -1
                 else:
                     tree_id = self.trees.add(predicted.text, gold_lemma)
@@ -144,6 +147,18 @@ class EditTreeLemmatizer(TrainablePipe):
         return float(loss), d_scores
 
     def predict(self, docs: Iterable[Doc]) -> List[Ints2d]:
+        if self.top_k == 1:
+            scores2guesses = self._scores2guesses_top_k_equals_1
+        elif self.top_k <= TOP_K_GUARDRAIL:
+            scores2guesses = self._scores2guesses_top_k_greater_1
+        else:
+            scores2guesses = self._scores2guesses_top_k_guardrail
+        # The behaviour of *_scores2guesses_top_k_greater_1()* is efficient for values
+        # of *top_k>1* that are likely to be useful when the edit tree lemmatizer is used
+        # for its principal purpose of lemmatizing tokens. However, the code could also
+        # be used for other purposes, and with very large values of *top_k* the method
+        # becomes inefficient. In such cases, *_scores2guesses_top_k_guardrail()* is used
+        # instead.
         n_docs = len(list(docs))
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
@@ -153,20 +168,52 @@ class EditTreeLemmatizer(TrainablePipe):
             return guesses
         scores = self.model.predict(docs)
         assert len(scores) == n_docs
-        guesses = self._scores2guesses(docs, scores)
+        guesses = scores2guesses(docs, scores)
         assert len(guesses) == n_docs
         return guesses
 
-    def _scores2guesses(self, docs, scores):
+    def _scores2guesses_top_k_equals_1(self, docs, scores):
         guesses = []
         for doc, doc_scores in zip(docs, scores):
-            if self.top_k == 1:
-                doc_guesses = doc_scores.argmax(axis=1).reshape(-1, 1)
-            else:
-                doc_guesses = np.argsort(doc_scores)[..., : -self.top_k - 1 : -1]
+            doc_guesses = doc_scores.argmax(axis=1)
+            doc_guesses = self.numpy_ops.asarray(doc_guesses)
 
-            if not isinstance(doc_guesses, np.ndarray):
-                doc_guesses = doc_guesses.get()
+            doc_compat_guesses = []
+            for i, token in enumerate(doc):
+                tree_id = self.cfg["labels"][doc_guesses[i]]
+                if self.trees.apply(tree_id, token.text) is not None:
+                    doc_compat_guesses.append(tree_id)
+                else:
+                    doc_compat_guesses.append(-1)
+            guesses.append(np.array(doc_compat_guesses))
+
+        return guesses
+
+    def _scores2guesses_top_k_greater_1(self, docs, scores):
+        guesses = []
+        top_k = min(self.top_k, len(self.labels))
+        for doc, doc_scores in zip(docs, scores):
+            doc_scores = self.numpy_ops.asarray(doc_scores)
+            doc_compat_guesses = []
+            for i, token in enumerate(doc):
+                for _ in range(top_k):
+                    candidate = int(doc_scores[i].argmax())
+                    candidate_tree_id = self.cfg["labels"][candidate]
+                    if self.trees.apply(candidate_tree_id, token.text) is not None:
+                        doc_compat_guesses.append(candidate_tree_id)
+                        break
+                    doc_scores[i, candidate] = np.finfo(np.float32).min
+                else:
+                    doc_compat_guesses.append(-1)
+            guesses.append(np.array(doc_compat_guesses))
+
+        return guesses
+
+    def _scores2guesses_top_k_guardrail(self, docs, scores):
+        guesses = []
+        for doc, doc_scores in zip(docs, scores):
+            doc_guesses = np.argsort(doc_scores)[..., : -self.top_k - 1 : -1]
+            doc_guesses = self.numpy_ops.asarray(doc_guesses)
 
             doc_compat_guesses = []
             for token, candidates in zip(doc, doc_guesses):
@@ -328,9 +375,9 @@ class EditTreeLemmatizer(TrainablePipe):
 
             tree = dict(tree)
             if "orig" in tree:
-                tree["orig"] = self.vocab.strings[tree["orig"]]
+                tree["orig"] = self.vocab.strings.add(tree["orig"])
             if "orig" in tree:
-                tree["subst"] = self.vocab.strings[tree["subst"]]
+                tree["subst"] = self.vocab.strings.add(tree["subst"])
 
             trees.append(tree)
 

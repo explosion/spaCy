@@ -1,19 +1,29 @@
-from collections.abc import Iterable as IterableInstance
 import warnings
+from collections.abc import Iterable as IterableInstance
+
 import numpy
+
 from murmurhash.mrmr cimport hash64
 
 from ..tokens.doc cimport Doc
 from ..tokens.span cimport Span
-from ..tokens.span import Span
+
 from ..attrs import IDS
-from .alignment import Alignment
-from .iob_utils import biluo_to_iob, offsets_to_biluo_tags, doc_to_biluo_tags
-from .iob_utils import biluo_tags_to_spans, remove_bilu_prefix
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
+from ..tokens.span import Span
+from .alignment import Alignment
+from .iob_utils import (
+    biluo_tags_to_spans,
+    biluo_to_iob,
+    doc_to_biluo_tags,
+    offsets_to_biluo_tags,
+    remove_bilu_prefix,
+)
+
 from ..tokens.token cimport MISSING_DEP
-from ..util import logger, to_ternary_int, all_equal
+
+from ..util import all_equal, logger, to_ternary_int
 
 
 cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
@@ -443,26 +453,27 @@ def _annot2array(vocab, tok_annot, doc_annot):
         if key not in IDS:
             raise ValueError(Errors.E974.format(obj="token", key=key))
         elif key in ["ORTH", "SPACY"]:
-            pass
+            continue
         elif key == "HEAD":
             attrs.append(key)
-            values.append([h-i if h is not None else 0 for i, h in enumerate(value)])
+            row = [h-i if h is not None else 0 for i, h in enumerate(value)]
         elif key == "DEP":
             attrs.append(key)
-            values.append([vocab.strings.add(h) if h is not None else MISSING_DEP for h in value])
+            row = [vocab.strings.add(h) if h is not None else MISSING_DEP for h in value]
         elif key == "SENT_START":
             attrs.append(key)
-            values.append([to_ternary_int(v) for v in value])
+            row = [to_ternary_int(v) for v in value]
         elif key == "MORPH":
             attrs.append(key)
-            values.append([vocab.morphology.add(v) for v in value])
+            row = [vocab.morphology.add(v) for v in value]
         else:
             attrs.append(key)
             if not all(isinstance(v, str) for v in value):
                 types = set([type(v) for v in value])
                 raise TypeError(Errors.E969.format(field=key, types=types)) from None
-            values.append([vocab.strings.add(v) for v in value])
-    array = numpy.asarray(values, dtype="uint64")
+            row = [vocab.strings.add(v) for v in value]
+        values.append([numpy.array(v, dtype=numpy.int32).astype(numpy.uint64) if v < 0 else v for v in row])
+    array = numpy.array(values, dtype=numpy.uint64)
     return attrs, array.T
 
 

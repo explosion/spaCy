@@ -1,23 +1,23 @@
+import logging
 import random
 
 import pytest
 from numpy.testing import assert_equal
 
+from spacy import registry, util
 from spacy.attrs import ENT_IOB
-from spacy import util, registry
 from spacy.lang.en import English
 from spacy.lang.it import Italian
 from spacy.language import Language
 from spacy.lookups import Lookups
+from spacy.pipeline import EntityRecognizer
 from spacy.pipeline._parser_internals.ner import BiluoPushDown
-from spacy.training import Example, iob_to_biluo, split_bilu_label
+from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.tokens import Doc, Span
+from spacy.training import Example, iob_to_biluo, split_bilu_label
 from spacy.vocab import Vocab
-import logging
 
 from ..util import make_tempdir
-from ...pipeline import EntityRecognizer
-from ...pipeline.ner import DEFAULT_NER_MODEL
 
 TRAIN_DATA = [
     ("Who is Shaka Khan?", {"entities": [(7, 17, "PERSON")]}),
@@ -728,9 +728,9 @@ def test_neg_annotation(neg_key):
     ner.add_label("ORG")
     example = Example.from_dict(neg_doc, {"entities": [(7, 17, "PERSON")]})
     example.reference.spans[neg_key] = [
-        Span(neg_doc, 2, 4, "ORG"),
-        Span(neg_doc, 2, 3, "PERSON"),
-        Span(neg_doc, 1, 4, "PERSON"),
+        Span(example.reference, 2, 4, "ORG"),
+        Span(example.reference, 2, 3, "PERSON"),
+        Span(example.reference, 1, 4, "PERSON"),
     ]
 
     optimizer = nlp.initialize()
@@ -755,7 +755,7 @@ def test_neg_annotation_conflict(neg_key):
     ner.add_label("PERSON")
     ner.add_label("LOC")
     example = Example.from_dict(neg_doc, {"entities": [(7, 17, "PERSON")]})
-    example.reference.spans[neg_key] = [Span(neg_doc, 2, 4, "PERSON")]
+    example.reference.spans[neg_key] = [Span(example.reference, 2, 4, "PERSON")]
     assert len(example.reference.ents) == 1
     assert example.reference.ents[0].text == "Shaka Khan"
     assert example.reference.ents[0].label_ == "PERSON"
@@ -788,7 +788,7 @@ def test_beam_valid_parse(neg_key):
 
     doc = Doc(nlp.vocab, words=tokens)
     example = Example.from_dict(doc, {"ner": iob})
-    neg_span = Span(doc, 50, 53, "ORG")
+    neg_span = Span(example.reference, 50, 53, "ORG")
     example.reference.spans[neg_key] = [neg_span]
 
     optimizer = nlp.initialize()

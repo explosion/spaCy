@@ -1,25 +1,25 @@
-from typing import Optional, Iterable, Callable, Dict, Union, List, Any
-from thinc.types import Floats2d
-from pathlib import Path
-from itertools import islice
-import srsly
 import random
-from thinc.api import CosineDistance, Model, Optimizer, Config
-from thinc.api import set_dropout_rate
+from itertools import islice
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
-from ..kb import KnowledgeBase, Candidate
-from ..ml import empty_kb
-from ..tokens import Doc, Span
-from .pipe import deserialize_config
-from .legacy.entity_linker import EntityLinker_v1
-from .trainable_pipe import TrainablePipe
-from ..language import Language
-from ..vocab import Vocab
-from ..training import Example, validate_examples, validate_get_examples
-from ..errors import Errors
-from ..util import SimpleFrozenList, registry
+import srsly
+from thinc.api import Config, CosineDistance, Model, Optimizer, set_dropout_rate
+from thinc.types import Floats2d
+
 from .. import util
+from ..errors import Errors
+from ..kb import Candidate, KnowledgeBase
+from ..language import Language
+from ..ml import empty_kb
 from ..scorer import Scorer
+from ..tokens import Doc, Span
+from ..training import Example, validate_examples, validate_get_examples
+from ..util import SimpleFrozenList, registry
+from ..vocab import Vocab
+from .legacy.entity_linker import EntityLinker_v1
+from .pipe import deserialize_config
+from .trainable_pipe import TrainablePipe
 
 # See #9050
 BACKWARD_OVERWRITE = True
@@ -54,6 +54,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "entity_vector_length": 64,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
         "get_candidates_batch": {"@misc": "spacy.CandidateBatchGenerator.v1"},
+        "generate_empty_kb": {"@misc": "spacy.EmptyKB.v2"},
         "overwrite": True,
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
         "use_gold_ents": True,
@@ -80,6 +81,7 @@ def make_entity_linker(
     get_candidates_batch: Callable[
         [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
     ],
+    generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
     overwrite: bool,
     scorer: Optional[Callable],
     use_gold_ents: bool,
@@ -101,6 +103,7 @@ def make_entity_linker(
     get_candidates_batch (
         Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
         ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
+    generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
     scorer (Optional[Callable]): The scoring method.
     use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
         component must provide entity annotations.
@@ -135,6 +138,7 @@ def make_entity_linker(
         entity_vector_length=entity_vector_length,
         get_candidates=get_candidates,
         get_candidates_batch=get_candidates_batch,
+        generate_empty_kb=generate_empty_kb,
         overwrite=overwrite,
         scorer=scorer,
         use_gold_ents=use_gold_ents,
@@ -175,6 +179,7 @@ class EntityLinker(TrainablePipe):
         get_candidates_batch: Callable[
             [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
         ],
+        generate_empty_kb: Callable[[Vocab, int], KnowledgeBase],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
         use_gold_ents: bool,
@@ -198,6 +203,7 @@ class EntityLinker(TrainablePipe):
             Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]],
             Iterable[Candidate]]
             ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
+        generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
         scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
         use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
             component must provide entity annotations.
@@ -220,6 +226,7 @@ class EntityLinker(TrainablePipe):
         self.model = model
         self.name = name
         self.labels_discard = list(labels_discard)
+        # how many neighbour sentences to take into account
         self.n_sents = n_sents
         self.incl_prior = incl_prior
         self.incl_context = incl_context
@@ -227,9 +234,7 @@ class EntityLinker(TrainablePipe):
         self.get_candidates_batch = get_candidates_batch
         self.cfg: Dict[str, Any] = {"overwrite": overwrite}
         self.distance = CosineDistance(normalize=False)
-        # how many neighbour sentences to take into account
-        # create an empty KB by default
-        self.kb = empty_kb(entity_vector_length)(self.vocab)
+        self.kb = generate_empty_kb(self.vocab, entity_vector_length)
         self.scorer = scorer
         self.use_gold_ents = use_gold_ents
         self.candidates_batch_size = candidates_batch_size
@@ -250,7 +255,7 @@ class EntityLinker(TrainablePipe):
         # Raise an error if the knowledge base is not initialized.
         if self.kb is None:
             raise ValueError(Errors.E1018.format(name=self.name))
-        if len(self.kb) == 0:
+        if hasattr(self.kb, "is_empty") and self.kb.is_empty():
             raise ValueError(Errors.E139.format(name=self.name))
 
     def initialize(
@@ -469,18 +474,24 @@ class EntityLinker(TrainablePipe):
 
                 # Looping through each entity in batch (TODO: rewrite)
                 for j, ent in enumerate(ent_batch):
-                    sent_index = sentences.index(ent.sent)
-                    assert sent_index >= 0
+                    assert hasattr(ent, "sents")
+                    sents = list(ent.sents)
+                    sent_indices = (
+                        sentences.index(sents[0]),
+                        sentences.index(sents[-1]),
+                    )
+                    assert sent_indices[1] >= sent_indices[0] >= 0
 
                     if self.incl_context:
                         # get n_neighbour sentences, clipped to the length of the document
-                        start_sentence = max(0, sent_index - self.n_sents)
+                        start_sentence = max(0, sent_indices[0] - self.n_sents)
                         end_sentence = min(
-                            len(sentences) - 1, sent_index + self.n_sents
+                            len(sentences) - 1, sent_indices[1] + self.n_sents
                         )
                         start_token = sentences[start_sentence].start
                         end_token = sentences[end_sentence].end
                         sent_doc = doc[start_token:end_token].as_doc()
+
                         # currently, the context is the same for each entity in a sentence (should be refined)
                         sentence_encoding = self.model.predict([sent_doc])[0]
                         sentence_encoding_t = sentence_encoding.T

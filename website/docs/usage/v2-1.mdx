@@ -1,0 +1,309 @@
+---
+title: What's New in v2.1
+teaser: New features, backwards incompatibilities and migration guide
+menu:
+  - ['New Features', 'features']
+  - ['Backwards Incompatibilities', 'incompat']
+---
+
+## New Features {id="features",hidden="true"}
+
+spaCy v2.1 has focussed primarily on stability and performance, solidifying the
+design changes introduced in [v2.0](/usage/v2). As well as smaller models,
+faster runtime, and many bug fixes, v2.1 also introduces experimental support
+for some exciting new NLP innovations. For the full changelog, see the
+[release notes on GitHub](https://github.com/explosion/spaCy/releases/tag/v2.1.0).
+For more details and a behind-the-scenes look at the new release,
+[see our blog post](https://explosion.ai/blog/spacy-v2-1).
+
+### BERT/ULMFit/Elmo-style pre-training {id="pretraining",tag="experimental"}
+
+> #### Example
+>
+> ```bash
+> $ python -m spacy pretrain ./raw_text.jsonl
+> en_core_web_lg ./pretrained-model
+> ```
+
+spaCy v2.1 introduces a new CLI command, `spacy pretrain`, that can make your
+models much more accurate. It's especially useful when you have **limited
+training data**. The `spacy pretrain` command lets you use transfer learning to
+initialize your models with information from raw text, using a language model
+objective similar to the one used in Google's BERT system. We've taken
+particular care to ensure that pretraining works well even with spaCy's small
+default architecture sizes, so you don't have to compromise on efficiency to use
+it.
+
+<Infobox>
+
+**API:** [`spacy pretrain`](/api/cli#pretrain) **Usage: **
+[Improving accuracy with transfer learning](/usage/training#transfer-learning)
+
+</Infobox>
+
+### Extended match pattern API {id="matcher-api"}
+
+> #### Example
+>
+> ```python
+> # Matches "love cats" or "likes flowers"
+> pattern1 = [{"LEMMA": {"IN": ["like", "love"]}}, {"POS": "NOUN"}]
+> # Matches tokens of length >= 10
+> pattern2 = [{"LENGTH": {">=": 10}}]
+> # Matches custom attribute with regex
+> pattern3 = [{"_": {"country": {"REGEX": "^([Uu](\\.?|nited) ?[Ss](\\.?|tates)"}}}]
+> ```
+
+Instead of mapping to a single value, token patterns can now also map to a
+**dictionary of properties**. For example, to specify that the value of a lemma
+should be part of a list of values, or to set a minimum character length. It now
+also supports a `REGEX` property, as well as set membership via `IN` and
+`NOT_IN`, custom extension attributes via `_` and rich comparison for numeric
+values.
+
+<Infobox>
+
+**API:** [`Matcher`](/api/matcher) **Usage: **
+[Extended pattern syntax and attributes](/usage/rule-based-matching#adding-patterns-attributes-extended),
+[Regular expressions](/usage/rule-based-matching#regex)
+
+</Infobox>
+
+### Easy rule-based entity recognition {id="entity-ruler"}
+
+> #### Example
+>
+> ```python
+> from spacy.pipeline import EntityRuler
+> ruler = EntityRuler(nlp)
+> ruler.add_patterns([{"label": "ORG", "pattern": "Apple"}])
+> nlp.add_pipe(ruler, before="ner")
+> ```
+
+The `EntityRuler` is an exciting new component that lets you add named entities
+based on pattern dictionaries, and makes it easy to combine rule-based and
+statistical named entity recognition for even more powerful models. Entity rules
+can be phrase patterns for exact string matches, or token patterns for full
+flexibility.
+
+<Infobox>
+
+**API:** [`EntityRuler`](/api/entityruler) **Usage: **
+[Rule-based entity recognition](/usage/rule-based-matching#entityruler)
+
+</Infobox>
+
+### Phrase matching with other attributes {id="phrasematcher"}
+
+> #### Example
+>
+> ```python
+> matcher = PhraseMatcher(nlp.vocab, attr="POS")
+> matcher.add("PATTERN", None, nlp("I love cats"))
+> doc = nlp("You like dogs")
+> matches = matcher(doc)
+> ```
+
+By default, the `PhraseMatcher` will match on the verbatim token text, e.g.
+`Token.text`. By setting the `attr` argument on initialization, you can change
+**which token attribute the matcher should use** when comparing the phrase
+pattern to the matched `Doc`. For example, `LOWER` for case-insensitive matches
+or `POS` for finding sequences of the same part-of-speech tags.
+
+<Infobox>
+
+**API:** [`PhraseMatcher`](/api/phrasematcher) **Usage: **
+[Matching on other token attributes](/usage/rule-based-matching#phrasematcher-attrs)
+
+</Infobox>
+
+### Retokenizer for merging and splitting {id="retokenizer"}
+
+> #### Example
+>
+> ```python
+> doc = nlp("I like David Bowie")
+> with doc.retokenize() as retokenizer:
+>     attrs = {"LEMMA": "David Bowie"}
+>     retokenizer.merge(doc[2:4], attrs=attrs)
+> ```
+
+The new `Doc.retokenize` context manager allows merging spans of multiple tokens
+into one single token, and splitting single tokens into multiple tokens.
+Modifications to the `Doc`'s tokenization are stored, and then made all at once
+when the context manager exits. This is much more efficient, and less
+error-prone. `Doc.merge` and `Span.merge` still work, but they're considered
+deprecated.
+
+<Infobox>
+
+**API:** [`Doc.retokenize`](/api/doc#retokenize),
+[`Retokenizer.merge`](/api/doc#retokenizer.merge),
+[`Retokenizer.split`](/api/doc#retokenizer.split)<br />**Usage:
+**[Merging and splitting](/usage/linguistic-features#retokenization)
+
+</Infobox>
+
+### Components and languages via entry points {id="entry-points"}
+
+> #### Example
+>
+> ```python
+> from setuptools import setup
+> setup(
+>     name="custom_extension_package",
+>     entry_points={
+>         "spacy_factories": ["your_component = component:ComponentFactory"]
+>         "spacy_languages": ["xyz = language:XYZLanguage"]
+>    }
+> )
+> ```
+
+Using entry points, model packages and extension packages can now define their
+own `"spacy_factories"` and `"spacy_languages"`, which will be added to the
+built-in factories and languages. If a package in the same environment exposes
+spaCy entry points, all of this happens automatically and no further user action
+is required.
+
+<Infobox>
+
+**Usage:** [Using entry points](/usage/saving-loading#entry-points)
+
+</Infobox>
+
+### Improved documentation {id="docs"}
+
+Although it looks pretty much the same, we've rebuilt the entire documentation
+using [Gatsby](https://www.gatsbyjs.org/) and [MDX](https://mdxjs.com/). It's
+now an even faster progressive web app and allows us to write all content
+entirely **in Markdown**, without having to compromise on easy-to-use custom UI
+components. We're hoping that the Markdown source will make it even easier to
+contribute to the documentation. For more details, check out the
+[styleguide](/styleguide) and
+[source](https://github.com/explosion/spacy/tree/v2.x/website). While converting
+the pages to Markdown, we've also fixed a bunch of typos, improved the existing
+pages and added some new content:
+
+- **Usage Guide:** [Rule-based Matching](/usage/rule-based-matching)<br/>How to
+  use the `Matcher`, `PhraseMatcher` and the new `EntityRuler`, and write
+  powerful components to combine statistical models and rules.
+- **Usage Guide:** [Saving and Loading](/usage/saving-loading)<br/>Everything
+  you need to know about serialization, and how to save and load pipeline
+  components, package your spaCy models as Python modules and use entry points.
+- **Usage Guide: **
+  [Merging and Splitting](/usage/linguistic-features#retokenization)<br />How to
+  retokenize a `Doc` using the new `retokenize` context manager and merge spans
+  into single tokens and split single tokens into multiple.
+- **Universe:** [Videos](/universe/category/videos) and
+  [Podcasts](/universe/category/podcasts)
+- **API:** [`EntityRuler`](/api/entityruler)
+- **API:** [`Sentencizer`](/api/sentencizer)
+- **API:** [Pipeline functions](/api/pipeline-functions)
+
+## Backwards incompatibilities {id="incompat"}
+
+<Infobox title="Important note on models" variant="warning">
+
+If you've been training **your own models**, you'll need to **retrain** them
+with the new version. Also don't forget to upgrade all models to the latest
+versions. Models for v2.0.x aren't compatible with models for v2.1.x. To check
+if all of your models are up to date, you can run the
+[`spacy validate`](/api/cli#validate) command.
+
+</Infobox>
+
+- Due to difficulties linking our new
+  [`blis`](https://github.com/explosion/cython-blis) for faster
+  platform-independent matrix multiplication, this release currently **doesn't
+  work on Python 2.7 on Windows**. We expect this to be corrected in the future.
+
+- While the [`Matcher`](/api/matcher) API is fully backwards compatible, its
+  algorithm has changed to fix a number of bugs and performance issues. This
+  means that the `Matcher` in v2.1.x may produce different results compared to
+  the `Matcher` in v2.0.x.
+
+- The deprecated [`Doc.merge`](/api/doc#merge) and
+  [`Span.merge`](/api/span#merge) methods still work, but you may notice that
+  they now run slower when merging many objects in a row. That's because the
+  merging engine was rewritten to be more reliable and to support more efficient
+  merging **in bulk**. To take advantage of this, you should rewrite your logic
+  to use the [`Doc.retokenize`](/api/doc#retokenize) context manager and perform
+  as many merges as possible together in the `with` block.
+
+  ```diff
+  - doc[1:5].merge()
+  - doc[6:8].merge()
+  + with doc.retokenize() as retokenizer:
+  +     retokenizer.merge(doc[1:5])
+  +     retokenizer.merge(doc[6:8])
+  ```
+
+- The serialization methods `to_disk`, `from_disk`, `to_bytes` and `from_bytes`
+  now support a single `exclude` argument to provide a list of string names to
+  exclude. The docs have been updated to list the available serialization fields
+  for each class. The `disable` argument on the [`Language`](/api/language)
+  serialization methods has been renamed to `exclude` for consistency.
+
+  ```diff
+  - nlp.to_disk("/path", disable=["parser", "ner"])
+  + nlp.to_disk("/path", exclude=["parser", "ner"])
+  - data = nlp.tokenizer.to_bytes(vocab=False)
+  + data = nlp.tokenizer.to_bytes(exclude=["vocab"])
+  ```
+
+- The .pos value for several common English words has changed, due to
+  corrections to long-standing mistakes in the English tag map (see
+  [issue #593](https://github.com/explosion/spaCy/issues/593) and
+  [issue #3311](https://github.com/explosion/spaCy/issues/3311) for details).
+
+- For better compatibility with the Universal Dependencies data, the lemmatizer
+  now preserves capitalization, e.g. for proper nouns. See
+  [issue #3256](https://github.com/explosion/spaCy/issues/3256) for details.
+
+- The built-in rule-based sentence boundary detector is now only called
+  `"sentencizer"` – the name `"sbd"` is deprecated.
+
+  ```diff
+  - sentence_splitter = nlp.create_pipe("sbd")
+  + sentence_splitter = nlp.create_pipe("sentencizer")
+  ```
+
+- The `is_sent_start` attribute of the first token in a `Doc` now correctly
+  defaults to `True`. It previously defaulted to `None`.
+
+- The keyword argument `n_threads` on the `.pipe` methods is now deprecated, as
+  the v2.x models cannot release the global interpreter lock. (Future versions
+  may introduce a `n_process` argument for parallel inference via
+  multiprocessing.)
+
+- The `Doc.print_tree` method is now deprecated. If you need a custom nested
+  JSON representation of a `Doc` object, you might want to write your own helper
+  function. For a simple and consistent JSON representation of the `Doc` object
+  and its annotations, you can now use the [`Doc.to_json`](/api/doc#to_json)
+  method. Going forward, this method will output the same format as the JSON
+  training data expected by [`spacy train`](/api/cli#train).
+
+- The [`spacy train`](/api/cli#train) command now lets you specify a
+  comma-separated list of pipeline component names, instead of separate flags
+  like `--no-parser` to disable components. This is more flexible and also
+  handles custom components out-of-the-box.
+
+  ```diff
+  - $ spacy train en /output train_data.json dev_data.json --no-parser
+  + $ spacy train en /output train_data.json dev_data.json --pipeline tagger,ner
+  ```
+
+- The [`spacy init-model`](/api/cli#init-model) command now uses a `--jsonl-loc`
+  argument to pass in a a newline-delimited JSON (JSONL) file containing one
+  lexical entry per line instead of a separate `--freqs-loc` and
+  `--clusters-loc`.
+
+  ```diff
+  - $ spacy init-model en ./model --freqs-loc ./freqs.txt --clusters-loc ./clusters.txt
+  + $ spacy init-model en ./model --jsonl-loc ./vocab.jsonl
+  ```
+
+- Also note that some of the model licenses have changed:
+  [`it_core_news_sm`](/models/it#it_core_news_sm) is now correctly licensed
+  under CC BY-NC-SA 3.0, and all [English](/models/en) and [German](/models/de)
+  models are now published under the MIT license.

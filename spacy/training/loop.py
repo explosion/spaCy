@@ -1,17 +1,28 @@
-from typing import List, Callable, Tuple, Dict, Iterable, Union, Any, IO
-from typing import Optional, TYPE_CHECKING
+import random
+import shutil
+import sys
 from pathlib import Path
 from timeit import default_timer as timer
-from thinc.api import Optimizer, Config, constant, fix_random_seed, set_gpu_allocator
-from wasabi import Printer
-import random
-import sys
-import shutil
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
-from .example import Example
-from ..schemas import ConfigSchemaTraining
+from thinc.api import Config, Optimizer, constant, fix_random_seed, set_gpu_allocator
+from wasabi import Printer
+
 from ..errors import Errors
-from ..util import resolve_dot_names, registry, logger
+from ..schemas import ConfigSchemaTraining
+from ..util import logger, registry, resolve_dot_names
+from .example import Example
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
@@ -59,6 +70,7 @@ def train(
     batcher = T["batcher"]
     train_logger = T["logger"]
     before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
+    before_update = T["before_update"]
 
     # Helper function to save checkpoints. This is a closure for convenience,
     # to avoid passing in all the args all the time.
@@ -89,6 +101,7 @@ def train(
         eval_frequency=T["eval_frequency"],
         exclude=frozen_components,
         annotating_components=annotating_components,
+        before_update=before_update,
     )
     clean_output_dir(output_path)
     stdout.write(msg.info(f"Pipeline: {nlp.pipe_names}") + "\n")
@@ -150,6 +163,7 @@ def train_while_improving(
     max_steps: int,
     exclude: List[str],
     annotating_components: List[str],
+    before_update: Optional[Callable[["Language", Dict[str, Any]], None]],
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
@@ -198,6 +212,9 @@ def train_while_improving(
     words_seen = 0
     start_time = timer()
     for step, (epoch, batch) in enumerate(train_data):
+        if before_update:
+            before_update_args = {"step": step, "epoch": epoch}
+            before_update(nlp, before_update_args)
         dropout = next(dropouts)  # type: ignore
         for subbatch in subdivide_batch(batch, accumulate_gradient):
             nlp.update(
@@ -364,6 +381,6 @@ def clean_output_dir(path: Optional[Path]) -> None:
             if subdir.exists():
                 try:
                     shutil.rmtree(str(subdir))
-                    logger.debug(f"Removed existing output directory: {subdir}")
+                    logger.debug("Removed existing output directory: %s", subdir)
                 except Exception as e:
                     raise IOError(Errors.E901.format(path=path)) from e

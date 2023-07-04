@@ -1,18 +1,19 @@
 # cython: infer_types=True
 cimport cython
+from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
 from libcpp.set cimport set
-from libc.stdint cimport uint32_t
-from murmurhash.mrmr cimport hash64, hash32
+from murmurhash.mrmr cimport hash32, hash64
 
 import srsly
 
 from .typedefs cimport hash_t
 
+from . import util
+from .errors import Errors
 from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
-from .errors import Errors
-from . import util
+
 
 # Not particularly elegant, but this is faster than `isinstance(key, numbers.Integral)`
 cdef inline bint _try_coerce_to_hash(object key, hash_t* out_hash):

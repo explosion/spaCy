@@ -3,44 +3,67 @@ from typing import Set
 
 cimport cython
 cimport numpy as np
-from libc.string cimport memcpy
 from libc.math cimport sqrt
 from libc.stdint cimport int32_t, uint64_t
+from libc.string cimport memcpy
 
 import copy
+import itertools
+import warnings
 from collections import Counter, defaultdict
 from enum import Enum
-import itertools
+
 import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
 from thinc.util import copy_array
-import warnings
 
 from .span cimport Span
 from .token cimport MISSING_DEP
-from ._dict_proxies import SpanGroups
-from .token cimport Token
-from ..lexeme cimport Lexeme, EMPTY_LEXEME
-from ..typedefs cimport attr_t, flags_t
-from ..attrs cimport attr_id_t
-from ..attrs cimport LENGTH, POS, LEMMA, TAG, MORPH, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, NORM
 
-from ..attrs import intify_attr, IDS
+from ._dict_proxies import SpanGroups
+
+from ..attrs cimport (
+    DEP,
+    ENT_ID,
+    ENT_IOB,
+    ENT_KB_ID,
+    ENT_TYPE,
+    HEAD,
+    IDX,
+    LEMMA,
+    LENGTH,
+    MORPH,
+    NORM,
+    ORTH,
+    POS,
+    SENT_START,
+    SPACY,
+    TAG,
+    attr_id_t,
+)
+from ..lexeme cimport EMPTY_LEXEME, Lexeme
+from ..typedefs cimport attr_t, flags_t
+from .token cimport Token
+
+from .. import parts_of_speech, schemas, util
+from ..attrs import IDS, intify_attr
 from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
 from ..morphology import Morphology
-from .. import util
-from .. import parts_of_speech
-from .. import schemas
-from .underscore import Underscore, get_ext_args
-from ._retokenize import Retokenizer
-from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
 from ..util import get_words_and_spaces
+from ._retokenize import Retokenizer
+from .underscore import Underscore, get_ext_args
 
 DEF PADDING = 5
 
+
+# We store the docbin attrs here rather than in _serialize to avoid
+# import cycles.
+
+# fmt: off
+DOCBIN_ALL_ATTRS = ("ORTH", "NORM", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "ENT_ID", "LEMMA", "MORPH", "POS", "SENT_START")
+# fmt: on
 
 cdef int bounds_check(int i, int length, int padding) except -1:
     if (i + padding) < 0:
@@ -359,6 +382,7 @@ cdef class Doc:
             for annot in annotations:
                 if annot:
                     if annot is heads or annot is sent_starts or annot is ent_iobs:
+                        annot = numpy.array(annot, dtype=numpy.int32).astype(numpy.uint64)
                         for i in range(len(words)):
                             if attrs.ndim == 1:
                                 attrs[i] = annot[i]
@@ -527,9 +551,9 @@ cdef class Doc:
         doc (Doc): The parent document.
         start_idx (int): The index of the first character of the span.
         end_idx (int): The index of the first character after the span.
-        label (uint64 or string): A label to attach to the Span, e.g. for
+        label (Union[int, str]): A label to attach to the Span, e.g. for
             named entities.
-        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a
+        kb_id (Union[int, str]):  An ID from a KB to capture the meaning of a
             named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
             the span.
@@ -538,14 +562,11 @@ cdef class Doc:
             with token boundaries), "contract" (span of all tokens completely
             within the character span), "expand" (span of all tokens at least
             partially covered by the character span). Defaults to "strict".
+        span_id (Union[int, str]): An identifier to associate with the span.
         RETURNS (Span): The newly constructed object.
 
         DOCS: https://spacy.io/api/doc#char_span
         """
-        if not isinstance(label, int):
-            label = self.vocab.strings.add(label)
-        if not isinstance(kb_id, int):
-            kb_id = self.vocab.strings.add(kb_id)
         alignment_modes = ("strict", "contract", "expand")
         if alignment_mode not in alignment_modes:
             raise ValueError(
@@ -593,13 +614,26 @@ cdef class Doc:
         """
         if "similarity" in self.user_hooks:
             return self.user_hooks["similarity"](self, other)
-        if isinstance(other, (Lexeme, Token)) and self.length == 1:
-            if self.c[0].lex.orth == other.orth:
+        attr = getattr(self.vocab.vectors, "attr", ORTH)
+        cdef Token this_token
+        cdef Token other_token
+        cdef Lexeme other_lex
+        if len(self) == 1 and isinstance(other, Token):
+            this_token = self[0]
+            other_token = other
+            if Token.get_struct_attr(this_token.c, attr) == Token.get_struct_attr(other_token.c, attr):
                 return 1.0
-        elif isinstance(other, (Span, Doc)) and len(self) == len(other):
+        elif len(self) == 1 and isinstance(other, Lexeme):
+            this_token = self[0]
+            other_lex = other
+            if Token.get_struct_attr(this_token.c, attr) == Lexeme.get_struct_attr(other_lex.c, attr):
+                return 1.0
+        elif isinstance(other, (Doc, Span)) and len(self) == len(other):
             similar = True
-            for i in range(self.length):
-                if self[i].orth != other[i].orth:
+            for i in range(len(self)):
+                this_token = self[i]
+                other_token = other[i]
+                if Token.get_struct_attr(this_token.c, attr) != Token.get_struct_attr(other_token.c, attr):
                     similar = False
                     break
             if similar:
@@ -1266,12 +1300,14 @@ cdef class Doc:
         other.user_span_hooks = dict(self.user_span_hooks)
         other.length = self.length
         other.max_length = self.max_length
-        other.spans = self.spans.copy(doc=other)
         buff_size = other.max_length + (PADDING*2)
         assert buff_size > 0
         tokens = <TokenC*>other.mem.alloc(buff_size, sizeof(TokenC))
         memcpy(tokens, self.c - PADDING, buff_size * sizeof(TokenC))
         other.c = &tokens[PADDING]
+        # copy spans after setting tokens so that SpanGroup.copy can verify
+        # that the start/end offsets are valid
+        other.spans = self.spans.copy(doc=other)
         return other
 
     def to_disk(self, path, *, exclude=tuple()):
@@ -1348,6 +1384,10 @@ cdef class Doc:
         for group in self.spans.values():
             for span in group:
                 strings.add(span.label_)
+                if span.kb_id in span.doc.vocab.strings:
+                    strings.add(span.kb_id_)
+                if span.id in span.doc.vocab.strings:
+                    strings.add(span.id_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -1558,6 +1598,7 @@ cdef class Doc:
 
             for j, (attr, annot) in enumerate(token_annotations.items()):
                 if attr is HEAD:
+                    annot = numpy.array(annot, dtype=numpy.int32).astype(numpy.uint64)
                     for i in range(len(words)):
                         array[i, j] = annot[i]
                 elif attr is MORPH:
@@ -1668,6 +1709,20 @@ cdef class Doc:
 
         if underscore:
             user_keys = set()
+            # Handle doc attributes with .get to include values from getters
+            # and not only values stored in user_data, for backwards
+            # compatibility
+            for attr in underscore:
+                if self.has_extension(attr):
+                    if "_" not in data:
+                        data["_"] = {}
+                    value = self._.get(attr)
+                    if not srsly.is_json_serializable(value):
+                        raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
+                    data["_"][attr] = value
+                    user_keys.add(attr)
+            # Token and span attributes only include values stored in user_data
+            # and not values generated by getters
             if self.user_data:
                 for data_key, value in self.user_data.copy().items():
                     if type(data_key) == tuple and len(data_key) >= 4 and data_key[0] == "._.":
@@ -1678,20 +1733,15 @@ cdef class Doc:
                             user_keys.add(attr)
                             if not srsly.is_json_serializable(value):
                                 raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                            # Check if doc attribute
-                            if start is None:
-                                if "_" not in data:
-                                    data["_"] = {}
-                                data["_"][attr] = value
-                            # Check if token attribute
-                            elif end is None:
+                            # Token attribute
+                            if start is not None and end is None:
                                 if "underscore_token" not in data:
                                     data["underscore_token"] = {}
                                 if attr not in data["underscore_token"]:
                                     data["underscore_token"][attr] = []
                                 data["underscore_token"][attr].append({"start": start, "value": value})
-                            # Else span attribute
-                            else:
+                            # Span attribute
+                            elif start is not None and end is not None:
                                 if "underscore_span" not in data:
                                     data["underscore_span"] = {}
                                 if attr not in data["underscore_span"]:

@@ -1,23 +1,28 @@
 # cython: infer_types=True, profile=True
-from typing import Iterable, Callable, Dict, Any, Union
+from typing import Any, Callable, Dict, Iterable, Union
 
 import srsly
-from preshed.maps cimport PreshMap
-from cpython.exc cimport PyErr_SetFromErrno
-from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
-from libc.stdint cimport int32_t, int64_t
-from libcpp.vector cimport vector
 
-from pathlib import Path
+from cpython.exc cimport PyErr_SetFromErrno
+from libc.stdint cimport int32_t, int64_t
+from libc.stdio cimport fclose, feof, fopen, fread, fseek, fwrite
+from libcpp.vector cimport vector
+from preshed.maps cimport PreshMap
+
 import warnings
+from pathlib import Path
 
 from ..tokens import Span
+
 from ..typedefs cimport hash_t
-from ..errors import Errors, Warnings
+
 from .. import util
+from ..errors import Errors, Warnings
 from ..util import SimpleFrozenList, ensure_path
+
 from ..vocab cimport Vocab
 from .kb cimport KnowledgeBase
+
 from .candidate import Candidate as Candidate
 
 
@@ -25,7 +30,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
     """An `InMemoryLookupKB` instance stores unique identifiers for entities and their textual aliases,
     to support entity linking of named entities to real-world concepts.
 
-    DOCS: https://spacy.io/api/kb_in_memory
+    DOCS: https://spacy.io/api/inmemorylookupkb
     """
 
     def __init__(self, Vocab vocab, entity_vector_length):
@@ -45,6 +50,9 @@ cdef class InMemoryLookupKB(KnowledgeBase):
     def _initialize_aliases(self, int64_t nr_aliases):
         self._alias_index = PreshMap(nr_aliases + 1)
         self._aliases_table = alias_vec(nr_aliases + 1)
+
+    def is_empty(self):
+        return len(self) == 0
 
     def __len__(self):
         return self.get_size_entities()

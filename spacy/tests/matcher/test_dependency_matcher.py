@@ -1,8 +1,10 @@
-import pytest
+import copy
 import pickle
 import re
-import copy
+
+import pytest
 from mock import Mock
+
 from spacy.matcher import DependencyMatcher
 from spacy.tokens import Doc, Token
 
@@ -316,16 +318,32 @@ def test_dependency_matcher_precedence_ops(en_vocab, op, num_matches):
         ("the", "brown", "$--", 0),
         ("brown", "the", "$--", 1),
         ("brown", "brown", "$--", 0),
+        ("over", "jumped", "<+", 0),
+        ("quick", "fox", "<+", 0),
+        ("the", "quick", "<+", 0),
+        ("brown", "fox", "<+", 1),
         ("quick", "fox", "<++", 1),
         ("quick", "over", "<++", 0),
         ("over", "jumped", "<++", 0),
         ("the", "fox", "<++", 2),
+        ("brown", "fox", "<-", 0),
+        ("fox", "over", "<-", 0),
+        ("the", "over", "<-", 0),
+        ("over", "jumped", "<-", 1),
         ("brown", "fox", "<--", 0),
         ("fox", "jumped", "<--", 0),
         ("fox", "over", "<--", 1),
+        ("fox", "brown", ">+", 0),
+        ("over", "fox", ">+", 0),
+        ("over", "the", ">+", 0),
+        ("jumped", "over", ">+", 1),
         ("jumped", "over", ">++", 1),
         ("fox", "lazy", ">++", 0),
         ("over", "the", ">++", 0),
+        ("jumped", "over", ">-", 0),
+        ("fox", "quick", ">-", 0),
+        ("brown", "quick", ">-", 0),
+        ("fox", "brown", ">-", 1),
         ("brown", "fox", ">--", 0),
         ("fox", "brown", ">--", 1),
         ("jumped", "fox", ">--", 1),

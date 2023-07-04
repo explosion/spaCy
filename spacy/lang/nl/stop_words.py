@@ -15,7 +15,7 @@
 
 STOP_WORDS = set(
     """
-aan af al alle alles allebei alleen allen als altijd ander anders andere anderen aangaangde aangezien achter achterna
+aan af al alle alles allebei alleen allen als altijd ander anders andere anderen aangaande aangezien achter achterna
 afgelopen aldus alhoewel anderzijds
 
 ben bij bijna bijvoorbeeld behalve beide beiden beneden bent bepaald beter betere betreffende binnen binnenin boven

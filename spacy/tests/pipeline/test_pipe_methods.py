@@ -615,20 +615,18 @@ def test_enable_disable_conflict_with_config():
 
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
-        # Expected to fail, as config and arguments conflict.
-        with pytest.raises(ValueError):
-            spacy.load(
-                tmp_dir, enable=["tagger"], config={"nlp": {"disabled": ["senter"]}}
-            )
+        # Expected to succeed, as config and arguments do not conflict.
+        assert spacy.load(
+            tmp_dir, enable=["tagger"], config={"nlp": {"disabled": ["senter"]}}
+        ).disabled == ["senter", "sentencizer"]
         # Expected to succeed without warning due to the lack of a conflicting config option.
         spacy.load(tmp_dir, enable=["tagger"])
-        # Expected to succeed with a warning, as disable=[] should override the config setting.
-        with pytest.warns(UserWarning):
+        # Expected to fail due to conflict between enable and disabled.
+        with pytest.raises(ValueError):
             spacy.load(
                 tmp_dir,
-                enable=["tagger"],
-                disable=[],
-                config={"nlp": {"disabled": ["senter"]}},
+                enable=["senter"],
+                config={"nlp": {"disabled": ["senter", "tagger"]}},
             )
 
 

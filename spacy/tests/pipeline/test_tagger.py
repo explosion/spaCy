@@ -1,12 +1,12 @@
 import pytest
-from numpy.testing import assert_equal
-from spacy.attrs import TAG
+from numpy.testing import assert_almost_equal, assert_equal
+from thinc.api import compounding, get_current_ops
 
 from spacy import util
-from spacy.training import Example
+from spacy.attrs import TAG
 from spacy.lang.en import English
 from spacy.language import Language
-from thinc.api import compounding
+from spacy.training import Example
 
 from ..util import make_tempdir
 
@@ -65,6 +65,30 @@ PARTIAL_DATA = [
         },
     ),
 ]
+
+
+def test_label_smoothing():
+    nlp = Language()
+    tagger_no_ls = nlp.add_pipe("tagger", "no_label_smoothing")
+    tagger_ls = nlp.add_pipe(
+        "tagger", "label_smoothing", config=dict(label_smoothing=0.05)
+    )
+    train_examples = []
+    losses = {}
+    for tag in TAGS:
+        tagger_no_ls.add_label(tag)
+        tagger_ls.add_label(tag)
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    nlp.initialize(get_examples=lambda: train_examples)
+    tag_scores, bp_tag_scores = tagger_ls.model.begin_update(
+        [eg.predicted for eg in train_examples]
+    )
+    ops = get_current_ops()
+    no_ls_grads = ops.to_numpy(tagger_no_ls.get_loss(train_examples, tag_scores)[1][0])
+    ls_grads = ops.to_numpy(tagger_ls.get_loss(train_examples, tag_scores)[1][0])
+    assert_almost_equal(ls_grads / no_ls_grads, 0.925)
 
 
 def test_no_label():

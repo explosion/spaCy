@@ -8,15 +8,21 @@ import spacy
 from spacy import Vocab, load, registry
 from spacy.lang.en import English
 from spacy.language import Language
-from spacy.pipeline import DependencyParser, EntityRecognizer, EntityRuler
-from spacy.pipeline import SentenceRecognizer, Tagger, TextCategorizer
-from spacy.pipeline import TrainablePipe
+from spacy.pipeline import (
+    DependencyParser,
+    EntityRecognizer,
+    EntityRuler,
+    SentenceRecognizer,
+    Tagger,
+    TextCategorizer,
+    TrainablePipe,
+)
 from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 from spacy.pipeline.senter import DEFAULT_SENTER_MODEL
 from spacy.pipeline.tagger import DEFAULT_TAGGER_MODEL
 from spacy.pipeline.textcat import DEFAULT_SINGLE_TEXTCAT_MODEL
-from spacy.util import ensure_path, load_model
 from spacy.tokens import Span
+from spacy.util import ensure_path, load_model
 
 from ..util import make_tempdir
 
@@ -404,11 +410,10 @@ def test_serialize_pipeline_disable_enable():
     assert nlp3.component_names == ["ner", "tagger"]
     with make_tempdir() as d:
         nlp3.to_disk(d)
-        with pytest.warns(UserWarning):
-            nlp4 = spacy.load(d, disable=["ner"])
-    assert nlp4.pipe_names == ["tagger"]
+        nlp4 = spacy.load(d, disable=["ner"])
+    assert nlp4.pipe_names == []
     assert nlp4.component_names == ["ner", "tagger"]
-    assert nlp4.disabled == ["ner"]
+    assert nlp4.disabled == ["ner", "tagger"]
     with make_tempdir() as d:
         nlp.to_disk(d)
         nlp5 = spacy.load(d, exclude=["tagger"])

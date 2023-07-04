@@ -1,0 +1,143 @@
+---
+title: What's New in v3.4
+teaser: New features and how to upgrade
+menu:
+  - ['New Features', 'features']
+  - ['Upgrading Notes', 'upgrading']
+---
+
+## New features {id="features",hidden="true"}
+
+spaCy v3.4 brings typing and speed improvements along with new vectors for
+English CNN pipelines and new trained pipelines for Croatian. This release also
+includes prebuilt linux aarch64 wheels for all spaCy dependencies distributed by
+Explosion.
+
+### Typing improvements {id="typing"}
+
+spaCy v3.4 supports pydantic v1.9 and mypy 0.950+ through extensive updates to
+types in Thinc v8.1.
+
+### Speed improvements {id="speed"}
+
+- For the parser, use C `saxpy`/`sgemm` provided by the `Ops` implementation in
+  order to use Accelerate through `thinc-apple-ops`.
+- Improved speed of vector lookups.
+- Improved speed for `Example.get_aligned_parse` and `Example.get_aligned`.
+
+## Additional features and improvements
+
+- Min/max `{n,m}` operator for `Matcher` patterns.
+- Language updates:
+  - Improve tokenization for Cyrillic combining diacritics.
+  - Improve English tokenizer exceptions for contractions with
+    this/that/these/those.
+- Updated `spacy project clone` to try both `main` and `master` branches by
+  default.
+- Added confidence threshold for named entity linker.
+- Improved handling of Typer optional default values for `init_config_cli`.
+- Added cycle detection in parser projectivization methods.
+- Added counts for NER labels in `debug data`.
+- Support for adding NVTX ranges to `TrainablePipe` components.
+- Support env variable `SPACY_NUM_BUILD_JOBS` to specify the number of build
+  jobs to run in parallel with `pip`.
+
+## Trained pipelines {id="pipelines"}
+
+### New trained pipelines {id="new-pipelines"}
+
+v3.4 introduces new CPU/CNN pipelines for Croatian, which use the trainable
+lemmatizer and [floret vectors](https://github.com/explosion/floret). Due to the
+use of [Bloom embeddings](https://explosion.ai/blog/bloom-embeddings) and
+subwords, the pipelines have compact vectors with no out-of-vocabulary words.
+
+| Package                                         | UPOS | Parser LAS | NER F |
+| ----------------------------------------------- | ---: | ---------: | ----: |
+| [`hr_core_news_sm`](/models/hr#hr_core_news_sm) | 96.6 |       77.5 |  76.1 |
+| [`hr_core_news_md`](/models/hr#hr_core_news_md) | 97.3 |       80.1 |  81.8 |
+| [`hr_core_news_lg`](/models/hr#hr_core_news_lg) | 97.5 |       80.4 |  83.0 |
+
+### Pipeline updates {id="pipeline-updates"}
+
+All CNN pipelines have been extended with whitespace augmentation.
+
+The English CNN pipelines have new word vectors:
+
+| Package                                       | Model Version |  TAG | Parser LAS | NER F |
+| --------------------------------------------- | ------------- | ---: | ---------: | ----: |
+| [`en_core_web_md`](/models/en#en_core_web_md) | v3.3.0        | 97.3 |       90.1 |  84.6 |
+| [`en_core_web_md`](/models/en#en_core_web_md) | v3.4.0        | 97.2 |       90.3 |  85.5 |
+| [`en_core_web_lg`](/models/en#en_core_web_lg) | v3.3.0        | 97.4 |       90.1 |  85.3 |
+| [`en_core_web_lg`](/models/en#en_core_web_lg) | v3.4.0        | 97.3 |       90.2 |  85.6 |
+
+## Notes about upgrading from v3.3 {id="upgrading"}
+
+### Doc.has_vector
+
+`Doc.has_vector` now matches `Token.has_vector` and `Span.has_vector`: it
+returns `True` if at least one token in the doc has a vector rather than
+checking only whether the vocab contains vectors.
+
+### Using trained pipelines with floret vectors
+
+If you're using a trained pipeline for Croatian, Finnish, Korean or Swedish with
+new texts and working with `Doc` objects, you shouldn't notice any difference
+between floret vectors and default vectors.
+
+If you use vectors for similarity comparisons, there are a few differences,
+mainly because a floret pipeline doesn't include any kind of frequency-based
+word list similar to the list of in-vocabulary vector keys with default vectors.
+
+- If your workflow iterates over the vector keys, you should use an external
+  word list instead:
+
+  ```diff
+  - lexemes = [nlp.vocab[orth] for orth in nlp.vocab.vectors]
+  + lexemes = [nlp.vocab[word] for word in external_word_list]
+  ```
+
+- `Vectors.most_similar` is not supported because there's no fixed list of
+  vectors to compare your vectors to.
+
+### Pipeline package version compatibility {id="version-compat"}
+
+> #### Using legacy implementations
+>
+> In spaCy v3, you'll still be able to load and reference legacy implementations
+> via [`spacy-legacy`](https://github.com/explosion/spacy-legacy), even if the
+> components or architectures change and newer versions are available in the
+> core library.
+
+When you're loading a pipeline package trained with an earlier version of spaCy
+v3, you will see a warning telling you that the pipeline may be incompatible.
+This doesn't necessarily have to be true, but we recommend running your
+pipelines against your test suite or evaluation data to make sure there are no
+unexpected results.
+
+If you're using one of the [trained pipelines](/models) we provide, you should
+run [`spacy download`](/api/cli#download) to update to the latest version. To
+see an overview of all installed packages and their compatibility, you can run
+[`spacy validate`](/api/cli#validate).
+
+If you've trained your own custom pipeline and you've confirmed that it's still
+working as expected, you can update the spaCy version requirements in the
+[`meta.json`](/api/data-formats#meta):
+
+```diff
+- "spacy_version": ">=3.3.0,<3.4.0",
++ "spacy_version": ">=3.3.0,<3.5.0",
+```
+
+### Updating v3.3 configs
+
+To update a config from spaCy v3.3 with the new v3.4 settings, run
+[`init fill-config`](/api/cli#init-fill-config):
+
+```bash
+$ python -m spacy init fill-config config-v3.3.cfg config-v3.4.cfg
+```
+
+In many cases ([`spacy train`](/api/cli#train),
+[`spacy.load`](/api/top-level#spacy.load)), the new defaults will be filled in
+automatically, but you'll need to fill in the new settings to run
+[`debug config`](/api/cli#debug) and [`debug data`](/api/cli#debug-data).

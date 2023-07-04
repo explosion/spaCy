@@ -1,10 +1,10 @@
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 from thinc.api import Model
 
-from ..ru.lemmatizer import RussianLemmatizer
 from ...pipeline.lemmatizer import lemmatizer_score
 from ...vocab import Vocab
+from ..ru.lemmatizer import RussianLemmatizer
 
 
 class UkrainianLemmatizer(RussianLemmatizer):
@@ -29,7 +29,7 @@ class UkrainianLemmatizer(RussianLemmatizer):
                 ) from None
             if getattr(self, "_morph", None) is None:
                 self._morph = MorphAnalyzer(lang="uk")
-        elif mode == "pymorphy3":
+        elif mode in {"pymorphy3", "pymorphy3_lookup"}:
             try:
                 from pymorphy3 import MorphAnalyzer
             except ImportError:

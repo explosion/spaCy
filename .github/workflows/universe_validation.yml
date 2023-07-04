@@ -1,0 +1,33 @@
+name: universe validation
+
+on:
+  push:
+    branches-ignore:
+      - "spacy.io"
+      - "nightly.spacy.io"
+      - "v2.spacy.io"
+    paths:
+      - "website/meta/universe.json"
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    paths:
+      - "website/meta/universe.json"
+
+jobs:
+  validate:
+    name: Validate
+    if: github.repository_owner == 'explosion'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Configure Python version
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.7"
+          architecture: x64
+
+      - name: Validate website/meta/universe.json
+        run: |
+          python .github/validate_universe_json.py website/meta/universe.json

@@ -10,16 +10,6 @@ spacy/tests/package/setup.cfg
 spacy/tests/package/pyproject.toml
 spacy/tests/package/requirements.txt
 
-# Website
-website/.cache/
-website/public/
-website/node_modules
-website/.npm
-website/logs
-*.log
-npm-debug.log*
-quickstart-training-generator.js
-
 # Cython / C extensions
 cythonize.json
 spacy/*.html

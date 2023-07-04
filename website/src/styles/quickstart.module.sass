@@ -1,3 +1,4 @@
+@use 'sass:math'
 @import base
 
 .root
@@ -45,8 +46,8 @@
     &:hover
         background: var(--color-subtle-light)
 
-    .input:focus +
-        border: 1px solid var(--color-theme)
+    .input:focus
+        border: 1px solid var(--color-theme-dark)
         outline: none
 
     .radio + &
@@ -69,8 +70,8 @@
 
     .radio:checked + &
         color: var(--color-back)
-        border-color: var(--color-theme)
-        background: var(--color-theme)
+        border-color: var(--color-theme-dark)
+        background: var(--color-theme-dark)
 
     .checkbox + &:before
         $size: 18px
@@ -82,16 +83,16 @@
         vertical-align: middle
         margin-right: 0.5rem
         cursor: pointer
-        border-radius: $size / 4
+        border-radius: math.div($size, 4)
         background: var(--color-back)
         position: relative
         top: -1px
 
     .checkbox:checked + &:before
         // Embed "check" icon here for simplicity
-        background: var(--color-theme) url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4gICAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTkgMTYuMTcybDEwLjU5NC0xMC41OTQgMS40MDYgMS40MDYtMTIgMTItNS41NzgtNS41NzggMS40MDYtMS40MDZ6Ii8+PC9zdmc+);
+        background: var(--color-theme-dark) url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4gICAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTkgMTYuMTcybDEwLjU5NC0xMC41OTQgMS40MDYgMS40MDYtMTIgMTItNS41NzgtNS41NzggMS40MDYtMS40MDZ6Ii8+PC9zdmc+)
         background-size: contain
-        border-color: var(--color-theme)
+        border-color: var(--color-theme-dark)
 
 .field-extra:not(:empty):not(:first-child)
     margin-left: 1rem
@@ -149,6 +150,9 @@
     & > span
         display: block
 
+    a
+        text-decoration: underline
+
 .small
     font-size: var(--font-size-code)
     line-height: 1.65
@@ -163,7 +167,7 @@
     content: initial !important
 
 .prompt:before
-    color: var(--color-theme)
+    color: var(--color-theme-dark)
     margin-right: 1em
 
 .bash:before
@@ -191,7 +195,7 @@
     position: absolute
 
 .menu
-    color: var(--color-subtle)
+    color: var(--color-subtle-on-dark)
     padding-right: 1.5rem
     display: inline-block
     position: absolute

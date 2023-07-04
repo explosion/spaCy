@@ -1,22 +1,24 @@
 cimport numpy as np
 from libc.math cimport sqrt
 
+import copy
+import warnings
+
 import numpy
 from thinc.api import get_array_module
-import warnings
-import copy
 
-from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
-from ..structs cimport TokenC, LexemeC
-from ..typedefs cimport flags_t, attr_t, hash_t
-from ..attrs cimport attr_id_t
-from ..parts_of_speech cimport univ_pos_t
 from ..attrs cimport *
+from ..attrs cimport ORTH, attr_id_t
 from ..lexeme cimport Lexeme
+from ..parts_of_speech cimport univ_pos_t
+from ..structs cimport LexemeC, TokenC
 from ..symbols cimport dep
+from ..typedefs cimport attr_t, flags_t, hash_t
+from .doc cimport _get_lca_matrix, get_token_attr, token_by_end, token_by_start
+from .token cimport Token
 
-from ..util import normalize_slice
 from ..errors import Errors, Warnings
+from ..util import normalize_slice
 from .underscore import Underscore, get_ext_args
 
 
@@ -299,7 +301,7 @@ cdef class Span:
                     for ancestor in ancestors:
                         ancestor_i = ancestor.i - self.c.start
                         if ancestor_i in range(length):
-                            array[i, head_col] = ancestor_i - i
+                            array[i, head_col] = numpy.int32(ancestor_i - i).astype(numpy.uint64)
 
                 # if there is no appropriate ancestor, define a new artificial root
                 value = array[i, head_col]
@@ -307,7 +309,7 @@ cdef class Span:
                     new_root = old_to_new_root.get(ancestor_i, None)
                     if new_root is not None:
                         # take the same artificial root as a previous token from the same sentence
-                        array[i, head_col] = new_root - i
+                        array[i, head_col] = numpy.int32(new_root - i).astype(numpy.uint64)
                     else:
                         # set this token as the new artificial root
                         array[i, head_col] = 0
@@ -340,13 +342,26 @@ cdef class Span:
         """
         if "similarity" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["similarity"](self, other)
-        if len(self) == 1 and hasattr(other, "orth"):
-            if self[0].orth == other.orth:
+        attr = getattr(self.doc.vocab.vectors, "attr", ORTH)
+        cdef Token this_token
+        cdef Token other_token
+        cdef Lexeme other_lex
+        if len(self) == 1 and isinstance(other, Token):
+            this_token = self[0]
+            other_token = other
+            if Token.get_struct_attr(this_token.c, attr) == Token.get_struct_attr(other_token.c, attr):
+                return 1.0
+        elif len(self) == 1 and isinstance(other, Lexeme):
+            this_token = self[0]
+            other_lex = other
+            if Token.get_struct_attr(this_token.c, attr) == Lexeme.get_struct_attr(other_lex.c, attr):
                 return 1.0
         elif isinstance(other, (Doc, Span)) and len(self) == len(other):
             similar = True
             for i in range(len(self)):
-                if self[i].orth != getattr(other[i], "orth", None):
+                this_token = self[i]
+                other_token = other[i]
+                if Token.get_struct_attr(this_token.c, attr) != Token.get_struct_attr(other_token.c, attr):
                     similar = False
                     break
             if similar:
@@ -362,7 +377,7 @@ cdef class Span:
         result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
         # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
         return result.item()
-    
+
     cpdef np.ndarray to_array(self, object py_attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy
         `ndarray` of shape `(N, M)`, where `N` is the length of the document.
@@ -460,9 +475,12 @@ cdef class Span:
                     start = i
                     if start >= self.end:
                         break
-            if start < self.end:
-                yield Span(self.doc, start, self.end)
+                elif i == self.doc.length - 1:
+                    yield Span(self.doc, start, self.doc.length)
 
+            # Ensure that trailing parts of the Span instance are included in last element of .sents.
+            if start == self.doc.length - 1:
+                yield Span(self.doc, start, self.doc.length)
 
     @property
     def ents(self):
@@ -639,21 +657,28 @@ cdef class Span:
         else:
             return self.doc[root]
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, id=0):
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, id=0, alignment_mode="strict", span_id=0):
         """Create a `Span` object from the slice `span.text[start : end]`.
 
         start (int): The index of the first character of the span.
         end (int): The index of the first character after the span.
-        label (uint64 or string): A label to attach to the Span, e.g. for
+        label (Union[int, str]): A label to attach to the Span, e.g. for
             named entities.
-        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a named entity.
+        kb_id (Union[int, str]):  An ID from a KB to capture the meaning of a named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
             the span.
+        id (Union[int, str]): Unused.
+        alignment_mode (str): How character indices are aligned to token
+            boundaries. Options: "strict" (character indices must be aligned
+            with token boundaries), "contract" (span of all tokens completely
+            within the character span), "expand" (span of all tokens at least
+            partially covered by the character span). Defaults to "strict".
+        span_id (Union[int, str]): An identifier to associate with the span.
         RETURNS (Span): The newly constructed object.
         """
         start_idx += self.c.start_char
         end_idx += self.c.start_char
-        return self.doc.char_span(start_idx, end_idx, label=label, kb_id=kb_id, vector=vector)
+        return self.doc.char_span(start_idx, end_idx, label=label, kb_id=kb_id, vector=vector, alignment_mode=alignment_mode, span_id=span_id)
 
     @property
     def conjuncts(self):

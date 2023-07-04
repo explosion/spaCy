@@ -1,17 +1,39 @@
-from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple
-from typing import Iterable, TypeVar, TYPE_CHECKING
-from .compat import Literal
-from enum import Enum
-from pydantic import BaseModel, Field, ValidationError, validator, create_model
-from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, ConstrainedStr
-from pydantic.main import ModelMetaclass
-from thinc.api import Optimizer, ConfigValidationError, Model
-from thinc.config import Promise
-from collections import defaultdict
 import inspect
 import re
+from collections import defaultdict
+from enum import Enum
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
+
+from pydantic import (
+    BaseModel,
+    ConstrainedStr,
+    Field,
+    StrictBool,
+    StrictFloat,
+    StrictInt,
+    StrictStr,
+    ValidationError,
+    create_model,
+    validator,
+)
+from pydantic.main import ModelMetaclass
+from thinc.api import ConfigValidationError, Model, Optimizer
+from thinc.config import Promise
 
 from .attrs import NAMES
+from .compat import Literal
 from .lookups import Lookups
 from .util import is_cython_func
 
@@ -156,12 +178,40 @@ def validate_token_pattern(obj: list) -> List[str]:
 
 
 class TokenPatternString(BaseModel):
-    REGEX: Optional[StrictStr] = Field(None, alias="regex")
+    REGEX: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="regex")
     IN: Optional[List[StrictStr]] = Field(None, alias="in")
     NOT_IN: Optional[List[StrictStr]] = Field(None, alias="not_in")
     IS_SUBSET: Optional[List[StrictStr]] = Field(None, alias="is_subset")
     IS_SUPERSET: Optional[List[StrictStr]] = Field(None, alias="is_superset")
     INTERSECTS: Optional[List[StrictStr]] = Field(None, alias="intersects")
+    FUZZY: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy")
+    FUZZY1: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy1"
+    )
+    FUZZY2: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy2"
+    )
+    FUZZY3: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy3"
+    )
+    FUZZY4: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy4"
+    )
+    FUZZY5: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy5"
+    )
+    FUZZY6: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy6"
+    )
+    FUZZY7: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy7"
+    )
+    FUZZY8: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy8"
+    )
+    FUZZY9: Optional[Union[StrictStr, "TokenPatternString"]] = Field(
+        None, alias="fuzzy9"
+    )
 
     class Config:
         extra = "forbid"
@@ -329,6 +379,7 @@ class ConfigSchemaTraining(BaseModel):
     frozen_components: List[str] = Field(..., title="Pipeline components that shouldn't be updated during training")
     annotating_components: List[str] = Field(..., title="Pipeline components that should set annotations during training")
     before_to_disk: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after training, before it's saved to disk")
+    before_update: Optional[Callable[["Language", Dict[str, Any]], None]] = Field(..., title="Optional callback that is invoked at the start of each training step")
     # fmt: on
 
     class Config:

@@ -1,4 +1,5 @@
 import warnings
+
 from .compat import Literal
 
 
@@ -199,7 +200,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W117 = ("No spans to visualize found in Doc object with spans_key: '{spans_key}'. If this is "
             "surprising to you, make sure the Doc was processed using a model "
             "that supports span categorization, and check the `doc.spans[spans_key]` "
-            "property manually if necessary.")
+            "property manually if necessary.\n\nAvailable keys: {keys}")
     W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
             "for the corpora used to train the language. Please check "
             "`nlp.meta[\"sources\"]` for any relevant links.")
@@ -212,8 +213,12 @@ class Warnings(metaclass=ErrorsWithCodes):
     W121 = ("Attempting to trace non-existent method '{method}' in pipe '{pipe}'")
     W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
             "is a Cython extension type.")
-    W123 = ("Argument {arg} with value {arg_value} is used instead of {config_value} as specified in the config. Be "
-            "aware that this might affect other components in your pipeline.")
+    W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
+            "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
+    W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
+    W125 = ("The StaticVectors key_attr is no longer used. To set a custom "
+            "key attribute for vectors, configure it through Vectors(attr=) or "
+            "'spacy init vectors --attr'")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -345,6 +350,11 @@ class Errors(metaclass=ErrorsWithCodes):
             "clear the existing vectors and resize the table.")
     E074 = ("Error interpreting compiled match pattern: patterns are expected "
             "to end with the attribute {attr}. Got: {bad_attr}.")
+    E079 = ("Error computing states in beam: number of predicted beams "
+            "({pbeams}) does not equal number of gold beams ({gbeams}).")
+    E080 = ("Duplicate state found in beam: {key}.")
+    E081 = ("Error getting gradient in beam: number of histories ({n_hist}) "
+            "does not equal number of losses ({losses}).")
     E082 = ("Error deprojectivizing parse: number of heads ({n_heads}), "
             "projective heads ({n_proj_heads}) and labels ({n_labels}) do not "
             "match.")
@@ -438,8 +448,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E133 = ("The sum of prior probabilities for alias '{alias}' should not "
             "exceed 1, but found {sum}.")
     E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
-    E139 = ("Knowledge base for component '{name}' is empty. Use the methods "
-            "`kb.add_entity` and `kb.add_alias` to add entries.")
+    E139 = ("Knowledge base for component '{name}' is empty.")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
@@ -544,6 +553,12 @@ class Errors(metaclass=ErrorsWithCodes):
             "during training, make sure to include it in 'annotating components'")
 
     # New errors added in v3.x
+    E850 = ("The PretrainVectors objective currently only supports default or "
+            "floret vectors, not {mode} vectors.")
+    E851 = ("The 'textcat' component labels should only have values of 0 or 1, "
+            "but found value of '{val}'.")
+    E852 = ("The tar file pulled from the remote attempted an unsafe path "
+            "traversal.")
     E853 = ("Unsupported component factory name '{name}'. The character '.' is "
             "not permitted in factory names.")
     E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
@@ -727,8 +742,8 @@ class Errors(metaclass=ErrorsWithCodes):
             "model from a shortcut, which is obsolete as of spaCy v3.0. To "
             "load the model, use its full name instead:\n\n"
             "nlp = spacy.load(\"{full}\")\n\nFor more details on the available "
-            "models, see the models directory: https://spacy.io/models. If you "
-            "want to create a blank model, use spacy.blank: "
+            "models, see the models directory: https://spacy.io/models and if "
+            "you want to create a blank model, use spacy.blank: "
             "nlp = spacy.blank(\"{name}\")")
     E942 = ("Executing `after_{name}` callback failed. Expected the function to "
             "return an initialized nlp object but got: {value}. Maybe "
@@ -952,6 +967,20 @@ class Errors(metaclass=ErrorsWithCodes):
              "sure it's overwritten on the subclass.")
     E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
+    E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
+    E1048 = ("Got '{unexpected}' as console progress bar type, but expected one of the following: {expected}")
+    E1049 = ("No available port found for displaCy on host {host}. Please specify an available port "
+             "with `displacy.serve(doc, port=port)`")
+    E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
+             "or use `auto_select_port=True` to pick an available port automatically.")
+    E1051 = ("'allow_overlap' can only be False when max_positive is 1, but found 'max_positive': {max_positive}.")
+    E1052 = ("Unable to copy spans: the character offsets for the span at "
+             "index {i} in the span group do not align with the tokenization "
+             "in the target doc.")
+    E1053 = ("Both 'min_length' and 'max_length' should be larger than 0, but found"
+             " 'min_length': {min_length}, 'max_length': {max_length}")
+    E1054 = ("The text, including whitespace, must match between reference and "
+             "predicted docs when training {component}.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

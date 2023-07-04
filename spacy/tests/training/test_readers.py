@@ -1,10 +1,12 @@
-from typing import Dict, Iterable, Callable
+from typing import Callable, Dict, Iterable
+
 import pytest
 from thinc.api import Config, fix_random_seed
+
 from spacy import Language
-from spacy.util import load_model_from_config, registry, resolve_dot_names
 from spacy.schemas import ConfigSchemaTraining
 from spacy.training import Example
+from spacy.util import load_model_from_config, registry, resolve_dot_names
 
 
 def test_readers():

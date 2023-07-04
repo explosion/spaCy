@@ -1,6 +1,7 @@
-from typing import Dict, Any, List, Optional, Tuple, Union, TYPE_CHECKING
-import functools
 import copy
+import functools
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+
 from ..errors import Errors
 
 if TYPE_CHECKING:

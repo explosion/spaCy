@@ -1,26 +1,27 @@
 # cython: profile=True
 from libc.string cimport memcpy
 
+import functools
+
 import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
-import functools
 
-from .lexeme cimport EMPTY_LEXEME, OOV_RANK
-from .lexeme cimport Lexeme
-from .typedefs cimport attr_t
-from .tokens.token cimport Token
 from .attrs cimport LANG, ORTH
+from .lexeme cimport EMPTY_LEXEME, OOV_RANK, Lexeme
+from .tokens.token cimport Token
+from .typedefs cimport attr_t
 
+from . import util
+from .attrs import IS_STOP, NORM, intify_attrs
 from .compat import copy_reg
 from .errors import Errors
-from .attrs import intify_attrs, NORM, IS_STOP
-from .vectors import Vectors, Mode as VectorsMode
-from .util import registry
-from .lookups import Lookups
-from . import util
+from .lang.lex_attrs import LEX_ATTRS, get_lang, is_stop
 from .lang.norm_exceptions import BASE_NORMS
-from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang
+from .lookups import Lookups
+from .util import registry
+from .vectors import Mode as VectorsMode
+from .vectors import Vectors
 
 
 def create_vocab(lang, defaults, vectors_name=None):
@@ -364,8 +365,13 @@ cdef class Vocab:
             self[orth]
         # Make prob negative so it sorts by rank ascending
         # (key2row contains the rank)
-        priority = [(-lex.prob, self.vectors.key2row[lex.orth], lex.orth)
-                    for lex in self if lex.orth in self.vectors.key2row]
+        priority = []
+        cdef Lexeme lex
+        cdef attr_t value
+        for lex in self:
+            value = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
+            if value in self.vectors.key2row:
+                priority.append((-lex.prob, self.vectors.key2row[value], value))
         priority.sort()
         indices = xp.asarray([i for (prob, i, key) in priority], dtype="uint64")
         keys = xp.asarray([key for (prob, i, key) in priority], dtype="uint64")
@@ -398,8 +404,10 @@ cdef class Vocab:
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
-        if self.has_vector(orth):
-            return self.vectors[orth]
+        cdef Lexeme lex = self[orth]
+        key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
+        if self.has_vector(key):
+            return self.vectors[key]
         xp = get_array_module(self.vectors.data)
         vectors = xp.zeros((self.vectors_length,), dtype="f")
         return vectors
@@ -415,15 +423,16 @@ cdef class Vocab:
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
-        if self.vectors.is_full and orth not in self.vectors:
+        cdef Lexeme lex = self[orth]
+        key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
+        if self.vectors.is_full and key not in self.vectors:
             new_rows = max(100, int(self.vectors.shape[0]*1.3))
             if self.vectors.shape[1] == 0:
                 width = vector.size
             else:
                 width = self.vectors.shape[1]
             self.vectors.resize((new_rows, width))
-        lex = self[orth]  # Add word to vocab if necessary
-        row = self.vectors.add(orth, vector=vector)
+        row = self.vectors.add(key, vector=vector)
         if row >= 0:
             lex.rank = row
 
@@ -438,7 +447,9 @@ cdef class Vocab:
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
-        return orth in self.vectors
+        cdef Lexeme lex = self[orth]
+        key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
+        return key in self.vectors
 
     property lookups:
         def __get__(self):
@@ -468,9 +479,9 @@ cdef class Vocab:
         setters = ["strings", "vectors"]
         if "strings" not in exclude:
             self.strings.to_disk(path / "strings.json")
-        if "vectors" not in "exclude":
+        if "vectors" not in exclude:
             self.vectors.to_disk(path, exclude=["strings"])
-        if "lookups" not in "exclude":
+        if "lookups" not in exclude:
             self.lookups.to_disk(path)
 
     def from_disk(self, path, *, exclude=tuple()):

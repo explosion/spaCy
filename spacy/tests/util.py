@@ -1,12 +1,15 @@
-import numpy
-import tempfile
 import contextlib
+import re
+import tempfile
+
+import numpy
 import srsly
-from spacy.tokens import Doc
-from spacy.vocab import Vocab
-from spacy.util import make_tempdir  # noqa: F401
-from spacy.training import split_bilu_label
 from thinc.api import get_current_ops
+
+from spacy.tokens import Doc
+from spacy.training import split_bilu_label
+from spacy.util import make_tempdir  # noqa: F401
+from spacy.vocab import Vocab
 
 
 @contextlib.contextmanager
@@ -95,3 +98,7 @@ def assert_packed_msg_equal(b1, b2):
     for (k1, v1), (k2, v2) in zip(sorted(msg1.items()), sorted(msg2.items())):
         assert k1 == k2
         assert v1 == v2
+
+
+def normalize_whitespace(s):
+    return re.sub(r"\s+", " ", s)

@@ -1,15 +1,29 @@
-from typing import Any, Dict, List, Optional, Tuple, Union
-import uuid
 import itertools
+import uuid
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ..errors import Errors
 from ..util import escape_html, minify_html, registry
-from .templates import TPL_DEP_ARCS, TPL_DEP_SVG, TPL_DEP_WORDS
-from .templates import TPL_DEP_WORDS_LEMMA, TPL_ENT, TPL_ENT_RTL, TPL_ENTS
-from .templates import TPL_FIGURE, TPL_KB_LINK, TPL_PAGE, TPL_SPAN
-from .templates import TPL_SPAN_RTL, TPL_SPAN_SLICE, TPL_SPAN_SLICE_RTL
-from .templates import TPL_SPAN_START, TPL_SPAN_START_RTL, TPL_SPANS
-from .templates import TPL_TITLE
+from .templates import (
+    TPL_DEP_ARCS,
+    TPL_DEP_SVG,
+    TPL_DEP_WORDS,
+    TPL_DEP_WORDS_LEMMA,
+    TPL_ENT,
+    TPL_ENT_RTL,
+    TPL_ENTS,
+    TPL_FIGURE,
+    TPL_KB_LINK,
+    TPL_PAGE,
+    TPL_SPAN,
+    TPL_SPAN_RTL,
+    TPL_SPAN_SLICE,
+    TPL_SPAN_SLICE_RTL,
+    TPL_SPAN_START,
+    TPL_SPAN_START_RTL,
+    TPL_SPANS,
+    TPL_TITLE,
+)
 
 DEFAULT_LANG = "en"
 DEFAULT_DIR = "ltr"
@@ -94,7 +108,7 @@ class SpanRenderer:
         parsed (list): Dependency parses to render.
         page (bool): Render parses wrapped as full HTML page.
         minify (bool): Minify HTML markup.
-        RETURNS (str): Rendered HTML markup.
+        RETURNS (str): Rendered SVG or HTML markup.
         """
         rendered = []
         for i, p in enumerate(parsed):
@@ -510,7 +524,7 @@ class EntityRenderer:
         parsed (list): Dependency parses to render.
         page (bool): Render parses wrapped as full HTML page.
         minify (bool): Minify HTML markup.
-        RETURNS (str): Rendered HTML markup.
+        RETURNS (str): Rendered SVG or HTML markup.
         """
         rendered = []
         for i, p in enumerate(parsed):

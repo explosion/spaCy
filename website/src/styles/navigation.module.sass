@@ -16,12 +16,15 @@
     z-index: 30
     width: 100%
     box-shadow: var(--box-shadow)
+    --docsearch-muted-color: var(--color-subtle-dark)
+    --docsearch-text-color: var(--docsearch-muted-color)
+    --docsearch-searchbox-background: var(--color-subtle-light)
 
 .logo
     min-width: 95px
     width: 95px
     height: 30px
-    color: var(--color-theme) !important
+    color: var(--color-theme-dark) !important
     vertical-align: middle
 
 .title
@@ -42,7 +45,7 @@
     font-family: var(--font-secondary)
     font-size: 1.6rem
     font-weight: bold
-    color: var(--color-theme)
+    color: var(--color-theme-dark)
 
     &:not(:first-child)
         margin-left: 2em
@@ -77,11 +80,11 @@
         min-width: 100px
 
 .dropdown
-    --dropdown-text-color: var(--color-theme)
+    --dropdown-text-color: var(--color-theme-dark)
     font-family: var(--font-secondary)
     font-size: 1.6rem
     font-weight: bold
-    color: var(--color-theme)
+    color: var(--color-theme-dark)
     text-transform: uppercase
     margin-right: 0.5rem
     border: 2px solid var(--color-back)
@@ -108,11 +111,12 @@
     line-height: var(--line-height-xs)
     text-align: center
 
-@include breakpoint(max, xs)
-    .list
+@include breakpoint(max, md)
+    .alert
         display: none
 
-    .alert
+@include breakpoint(max, xs)
+    .list
         display: none
 
     .has-alert

@@ -1,13 +1,16 @@
-from typing import Callable
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable
 
-from spacy import util
-from spacy.util import ensure_path, registry, load_model_from_config
-from spacy.kb.kb_in_memory import InMemoryLookupKB
-from spacy.vocab import Vocab
+import srsly
+from numpy import zeros
 from thinc.api import Config
 
+from spacy import Errors, util
+from spacy.kb.kb_in_memory import InMemoryLookupKB
+from spacy.util import SimpleFrozenList, ensure_path, load_model_from_config, registry
+from spacy.vocab import Vocab
+
 from ..util import make_tempdir
-from numpy import zeros
 
 
 def test_serialize_kb_disk(en_vocab):
@@ -91,7 +94,10 @@ def test_serialize_subclassed_kb():
 
     [components.entity_linker]
     factory = "entity_linker"
-
+    
+    [components.entity_linker.generate_empty_kb]
+    @misc = "kb_test.CustomEmptyKB.v1"
+    
     [initialize]
 
     [initialize.components]
@@ -99,7 +105,7 @@ def test_serialize_subclassed_kb():
     [initialize.components.entity_linker]
 
     [initialize.components.entity_linker.kb_loader]
-    @misc = "spacy.CustomKB.v1"
+    @misc = "kb_test.CustomKB.v1"
     entity_vector_length = 342
     custom_field = 666
     """
@@ -109,10 +115,57 @@ def test_serialize_subclassed_kb():
             super().__init__(vocab, entity_vector_length)
             self.custom_field = custom_field
 
-    @registry.misc("spacy.CustomKB.v1")
+        def to_disk(self, path, exclude: Iterable[str] = SimpleFrozenList()):
+            """We overwrite InMemoryLookupKB.to_disk() to ensure that self.custom_field is stored as well."""
+            path = ensure_path(path)
+            if not path.exists():
+                path.mkdir(parents=True)
+            if not path.is_dir():
+                raise ValueError(Errors.E928.format(loc=path))
+
+            def serialize_custom_fields(file_path: Path) -> None:
+                srsly.write_json(file_path, {"custom_field": self.custom_field})
+
+            serialize = {
+                "contents": lambda p: self.write_contents(p),
+                "strings.json": lambda p: self.vocab.strings.to_disk(p),
+                "custom_fields": lambda p: serialize_custom_fields(p),
+            }
+            util.to_disk(path, serialize, exclude)
+
+        def from_disk(self, path, exclude: Iterable[str] = SimpleFrozenList()):
+            """We overwrite InMemoryLookupKB.from_disk() to ensure that self.custom_field is loaded as well."""
+            path = ensure_path(path)
+            if not path.exists():
+                raise ValueError(Errors.E929.format(loc=path))
+            if not path.is_dir():
+                raise ValueError(Errors.E928.format(loc=path))
+
+            def deserialize_custom_fields(file_path: Path) -> None:
+                self.custom_field = srsly.read_json(file_path)["custom_field"]
+
+            deserialize: Dict[str, Callable[[Any], Any]] = {
+                "contents": lambda p: self.read_contents(p),
+                "strings.json": lambda p: self.vocab.strings.from_disk(p),
+                "custom_fields": lambda p: deserialize_custom_fields(p),
+            }
+            util.from_disk(path, deserialize, exclude)
+
+    @registry.misc("kb_test.CustomEmptyKB.v1")
+    def empty_custom_kb() -> Callable[[Vocab, int], SubInMemoryLookupKB]:
+        def empty_kb_factory(vocab: Vocab, entity_vector_length: int):
+            return SubInMemoryLookupKB(
+                vocab=vocab,
+                entity_vector_length=entity_vector_length,
+                custom_field=0,
+            )
+
+        return empty_kb_factory
+
+    @registry.misc("kb_test.CustomKB.v1")
     def custom_kb(
         entity_vector_length: int, custom_field: int
-    ) -> Callable[[Vocab], InMemoryLookupKB]:
+    ) -> Callable[[Vocab], SubInMemoryLookupKB]:
         def custom_kb_factory(vocab):
             kb = SubInMemoryLookupKB(
                 vocab=vocab,
@@ -139,6 +192,6 @@ def test_serialize_subclassed_kb():
         nlp2 = util.load_model_from_path(tmp_dir)
         entity_linker2 = nlp2.get_pipe("entity_linker")
         # After IO, the KB is the standard one
-        assert type(entity_linker2.kb) == InMemoryLookupKB
+        assert type(entity_linker2.kb) == SubInMemoryLookupKB
         assert entity_linker2.kb.entity_vector_length == 342
-        assert not hasattr(entity_linker2.kb, "custom_field")
+        assert entity_linker2.kb.custom_field == 666

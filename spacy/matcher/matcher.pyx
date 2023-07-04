@@ -1,30 +1,43 @@
-# cython: infer_types=True, cython: profile=True
-from typing import List, Iterable
+# cython: binding=True, infer_types=True, profile=True
+from typing import Iterable, List
 
-from libcpp.vector cimport vector
-from libc.stdint cimport int32_t, int8_t
-from libc.string cimport memset, memcmp
 from cymem.cymem cimport Pool
+from libc.stdint cimport int8_t, int32_t
+from libc.string cimport memcmp, memset
+from libcpp.vector cimport vector
 from murmurhash.mrmr cimport hash64
 
 import re
-import srsly
 import warnings
 
-from ..typedefs cimport attr_t
+import srsly
+
+from ..attrs cimport (
+    DEP,
+    ENT_IOB,
+    ID,
+    LEMMA,
+    MORPH,
+    NULL_ATTR,
+    ORTH,
+    POS,
+    TAG,
+    attr_id_t,
+)
 from ..structs cimport TokenC
-from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc, get_token_attr_for_matcher
+from ..tokens.morphanalysis cimport MorphAnalysis
 from ..tokens.span cimport Span
 from ..tokens.token cimport Token
-from ..tokens.morphanalysis cimport MorphAnalysis
-from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH, ENT_IOB
+from ..typedefs cimport attr_t
+from ..vocab cimport Vocab
 
-from ..schemas import validate_token_pattern
-from ..errors import Errors, MatchPatternError, Warnings
-from ..strings import get_string_id
 from ..attrs import IDS
-
+from ..errors import Errors, MatchPatternError, Warnings
+from ..schemas import validate_token_pattern
+from ..strings import get_string_id
+from ..util import registry
+from .levenshtein import levenshtein_compare
 
 DEF PADDING = 5
 
@@ -36,11 +49,13 @@ cdef class Matcher:
     USAGE: https://spacy.io/usage/rule-based-matching
     """
 
-    def __init__(self, vocab, validate=True):
+    def __init__(self, vocab, validate=True, *, fuzzy_compare=levenshtein_compare):
         """Create the Matcher.
 
         vocab (Vocab): The vocabulary object, which must be shared with the
-            documents the matcher will operate on.
+        validate (bool): Validate all patterns added to this matcher.
+        fuzzy_compare (Callable[[str, str, int], bool]): The comparison method
+            for the FUZZY operators.
         """
         self._extra_predicates = []
         self._patterns = {}
@@ -51,9 +66,10 @@ cdef class Matcher:
         self.vocab = vocab
         self.mem = Pool()
         self.validate = validate
+        self._fuzzy_compare = fuzzy_compare
 
     def __reduce__(self):
-        data = (self.vocab, self._patterns, self._callbacks)
+        data = (self.vocab, self._patterns, self._callbacks, self.validate, self._fuzzy_compare)
         return (unpickle_matcher, data, None, None)
 
     def __len__(self):
@@ -128,7 +144,7 @@ cdef class Matcher:
         for pattern in patterns:
             try:
                 specs = _preprocess_pattern(pattern, self.vocab,
-                    self._extensions, self._extra_predicates)
+                    self._extensions, self._extra_predicates, self._fuzzy_compare)
                 self.patterns.push_back(init_pattern(self.mem, key, specs))
                 for spec in specs:
                     for attr, _ in spec[1]:
@@ -326,8 +342,8 @@ cdef class Matcher:
             return key
 
 
-def unpickle_matcher(vocab, patterns, callbacks):
-    matcher = Matcher(vocab)
+def unpickle_matcher(vocab, patterns, callbacks, validate, fuzzy_compare):
+    matcher = Matcher(vocab, validate=validate, fuzzy_compare=fuzzy_compare)
     for key, pattern in patterns.items():
         callback = callbacks.get(key, None)
         matcher.add(key, pattern, on_match=callback)
@@ -754,7 +770,7 @@ cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
     return id_attr.value
 
 
-def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
+def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates, fuzzy_compare):
     """This function interprets the pattern, converting the various bits of
     syntactic sugar before we compile it into a struct with init_pattern.
 
@@ -781,7 +797,7 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
         ops = _get_operators(spec)
         attr_values = _get_attr_values(spec, string_store)
         extensions = _get_extensions(spec, string_store, extensions_table)
-        predicates = _get_extra_predicates(spec, extra_predicates, vocab)
+        predicates = _get_extra_predicates(spec, extra_predicates, vocab, fuzzy_compare)
         for op in ops:
             tokens.append((op, list(attr_values), list(extensions), list(predicates), token_idx))
     return tokens
@@ -823,19 +839,53 @@ def _get_attr_values(spec, string_store):
     return attr_values
 
 
+def _predicate_cache_key(attr, predicate, value, *, regex=False, fuzzy=None):
+    # tuple order affects performance
+    return (attr, regex, fuzzy, predicate, srsly.json_dumps(value, sort_keys=True))
+
+
 # These predicate helper classes are used to match the REGEX, IN, >= etc
 # extensions to the matcher introduced in #3173.
+
+class _FuzzyPredicate:
+    operators = ("FUZZY", "FUZZY1", "FUZZY2", "FUZZY3", "FUZZY4", "FUZZY5",
+                 "FUZZY6", "FUZZY7", "FUZZY8", "FUZZY9")
+
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None,
+                 regex=False, fuzzy=None, fuzzy_compare=None):
+        self.i = i
+        self.attr = attr
+        self.value = value
+        self.predicate = predicate
+        self.is_extension = is_extension
+        if self.predicate not in self.operators:
+            raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
+        fuzz = self.predicate[len("FUZZY"):] # number after prefix
+        self.fuzzy = int(fuzz) if fuzz else -1
+        self.fuzzy_compare = fuzzy_compare
+        self.key = _predicate_cache_key(self.attr, self.predicate, value, fuzzy=self.fuzzy)
+
+    def __call__(self, Token token):
+        if self.is_extension:
+            value = token._.get(self.attr)
+        else:
+            value = token.vocab.strings[get_token_attr_for_matcher(token.c, self.attr)]
+        if self.value == value:
+            return True
+        return self.fuzzy_compare(value, self.value, self.fuzzy)
+
 
 class _RegexPredicate:
     operators = ("REGEX",)
 
-    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None,
+                 regex=False, fuzzy=None, fuzzy_compare=None):
         self.i = i
         self.attr = attr
         self.value = re.compile(value)
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = (attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = _predicate_cache_key(self.attr, self.predicate, value)
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
 
@@ -850,18 +900,28 @@ class _RegexPredicate:
 class _SetPredicate:
     operators = ("IN", "NOT_IN", "IS_SUBSET", "IS_SUPERSET", "INTERSECTS")
 
-    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None,
+                 regex=False, fuzzy=None, fuzzy_compare=None):
         self.i = i
         self.attr = attr
         self.vocab = vocab
+        self.regex = regex
+        self.fuzzy = fuzzy
+        self.fuzzy_compare = fuzzy_compare
         if self.attr == MORPH:
             # normalize morph strings
             self.value = set(self.vocab.morphology.add(v) for v in value)
         else:
-            self.value = set(get_string_id(v) for v in value)
+            if self.regex:
+                self.value = set(re.compile(v) for v in value)
+            elif self.fuzzy is not None:
+                # add to string store
+                self.value = set(self.vocab.strings.add(v) for v in value)
+            else:
+                self.value = set(get_string_id(v) for v in value)
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = (attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = _predicate_cache_key(self.attr, self.predicate, value, regex=self.regex, fuzzy=self.fuzzy)
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
 
@@ -889,9 +949,29 @@ class _SetPredicate:
                 return False
 
         if self.predicate == "IN":
-            return value in self.value
+            if self.regex:
+                value = self.vocab.strings[value]
+                return any(bool(v.search(value)) for v in self.value)
+            elif self.fuzzy is not None:
+                value = self.vocab.strings[value]
+                return any(self.fuzzy_compare(value, self.vocab.strings[v], self.fuzzy)
+                           for v in self.value)
+            elif value in self.value:
+                return True
+            else:
+                return False
         elif self.predicate == "NOT_IN":
-            return value not in self.value
+            if self.regex:
+                value = self.vocab.strings[value]
+                return not any(bool(v.search(value)) for v in self.value)
+            elif self.fuzzy is not None:
+                value = self.vocab.strings[value]
+                return not any(self.fuzzy_compare(value, self.vocab.strings[v], self.fuzzy)
+                               for v in self.value)
+            elif value in self.value:
+                return False
+            else:
+                return True
         elif self.predicate == "IS_SUBSET":
             return value <= self.value
         elif self.predicate == "IS_SUPERSET":
@@ -906,13 +986,14 @@ class _SetPredicate:
 class _ComparisonPredicate:
     operators = ("==", "!=", ">=", "<=", ">", "<")
 
-    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None,
+                 regex=False, fuzzy=None, fuzzy_compare=None):
         self.i = i
         self.attr = attr
         self.value = value
         self.predicate = predicate
         self.is_extension = is_extension
-        self.key = (attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        self.key = _predicate_cache_key(self.attr, self.predicate, value)
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
 
@@ -935,7 +1016,7 @@ class _ComparisonPredicate:
             return value < self.value
 
 
-def _get_extra_predicates(spec, extra_predicates, vocab):
+def _get_extra_predicates(spec, extra_predicates, vocab, fuzzy_compare):
     predicate_types = {
         "REGEX": _RegexPredicate,
         "IN": _SetPredicate,
@@ -949,6 +1030,16 @@ def _get_extra_predicates(spec, extra_predicates, vocab):
         "<=": _ComparisonPredicate,
         ">": _ComparisonPredicate,
         "<": _ComparisonPredicate,
+        "FUZZY": _FuzzyPredicate,
+        "FUZZY1": _FuzzyPredicate,
+        "FUZZY2": _FuzzyPredicate,
+        "FUZZY3": _FuzzyPredicate,
+        "FUZZY4": _FuzzyPredicate,
+        "FUZZY5": _FuzzyPredicate,
+        "FUZZY6": _FuzzyPredicate,
+        "FUZZY7": _FuzzyPredicate,
+        "FUZZY8": _FuzzyPredicate,
+        "FUZZY9": _FuzzyPredicate,
     }
     seen_predicates = {pred.key: pred.i for pred in extra_predicates}
     output = []
@@ -966,22 +1057,47 @@ def _get_extra_predicates(spec, extra_predicates, vocab):
                 attr = "ORTH"
             attr = IDS.get(attr.upper())
         if isinstance(value, dict):
-            processed = False
-            value_with_upper_keys = {k.upper(): v for k, v in value.items()}
-            for type_, cls in predicate_types.items():
-                if type_ in value_with_upper_keys:
-                    predicate = cls(len(extra_predicates), attr, value_with_upper_keys[type_], type_, vocab=vocab)
-                    # Don't create a redundant predicates.
-                    # This helps with efficiency, as we're caching the results.
-                    if predicate.key in seen_predicates:
-                        output.append(seen_predicates[predicate.key])
-                    else:
-                        extra_predicates.append(predicate)
-                        output.append(predicate.i)
-                        seen_predicates[predicate.key] = predicate.i
-                    processed = True
-            if not processed:
-                warnings.warn(Warnings.W035.format(pattern=value))
+            output.extend(_get_extra_predicates_dict(attr, value, vocab, predicate_types,
+                                                     extra_predicates, seen_predicates, fuzzy_compare=fuzzy_compare))
+    return output
+
+
+def _get_extra_predicates_dict(attr, value_dict, vocab, predicate_types,
+                               extra_predicates, seen_predicates, regex=False, fuzzy=None, fuzzy_compare=None):
+    output = []
+    for type_, value in value_dict.items():
+        type_ = type_.upper()
+        cls = predicate_types.get(type_)
+        if cls is None:
+            warnings.warn(Warnings.W035.format(pattern=value_dict))
+            # ignore unrecognized predicate type
+            continue
+        elif cls == _RegexPredicate:
+            if isinstance(value, dict):
+                # add predicates inside regex operator
+                output.extend(_get_extra_predicates_dict(attr, value, vocab, predicate_types,
+                                                         extra_predicates, seen_predicates,
+                                                         regex=True))
+                continue
+        elif cls == _FuzzyPredicate:
+            if isinstance(value, dict):
+                # add predicates inside fuzzy operator
+                fuzz = type_[len("FUZZY"):] # number after prefix
+                fuzzy_val = int(fuzz) if fuzz else -1
+                output.extend(_get_extra_predicates_dict(attr, value, vocab, predicate_types,
+                                                         extra_predicates, seen_predicates,
+                                                         fuzzy=fuzzy_val, fuzzy_compare=fuzzy_compare))
+                continue
+        predicate = cls(len(extra_predicates), attr, value, type_, vocab=vocab,
+                        regex=regex, fuzzy=fuzzy, fuzzy_compare=fuzzy_compare)
+        # Don't create redundant predicates.
+        # This helps with efficiency, as we're caching the results.
+        if predicate.key in seen_predicates:
+            output.append(seen_predicates[predicate.key])
+        else:
+            extra_predicates.append(predicate)
+            output.append(predicate.i)
+            seen_predicates[predicate.key] = predicate.i
     return output
 
 
@@ -992,7 +1108,7 @@ def _get_extension_extra_predicates(spec, extra_predicates, predicate_types,
         if isinstance(value, dict):
             for type_, cls in predicate_types.items():
                 if type_ in value:
-                    key = (attr, type_, srsly.json_dumps(value[type_], sort_keys=True))
+                    key = _predicate_cache_key(attr, type_, value[type_])
                     if key in seen_predicates:
                         output.append(seen_predicates[key])
                     else:

@@ -1,7 +1,11 @@
-import pytest
 from random import Random
+from typing import List
+
+import pytest
+
 from spacy.matcher import Matcher
-from spacy.tokens import Span, SpanGroup
+from spacy.tokens import Doc, Span, SpanGroup
+from spacy.util import filter_spans
 
 
 @pytest.fixture
@@ -89,6 +93,21 @@ def test_span_group_copy(doc):
     assert clone.attrs != span_group.attrs
     assert span_group.attrs["key"] == "value"
     assert list(span_group) != list(clone)
+
+    # can't copy if the character offsets don't align to tokens
+    doc2 = Doc(doc.vocab, words=[t.text + "x" for t in doc])
+    with pytest.raises(ValueError):
+        span_group.copy(doc=doc2)
+
+    # can copy with valid character offsets despite different tokenization
+    doc3 = doc.copy()
+    with doc3.retokenize() as retokenizer:
+        retokenizer.merge(doc3[0:2])
+        retokenizer.merge(doc3[3:6])
+    span_group = SpanGroup(doc, spans=[doc[0:6], doc[3:6]])
+    for span1, span2 in zip(span_group, span_group.copy(doc=doc3)):
+        assert span1.start_char == span2.start_char
+        assert span1.end_char == span2.end_char
 
 
 def test_span_group_set_item(doc, other_doc):
@@ -240,3 +259,22 @@ def test_span_group_extend(doc):
 def test_span_group_dealloc(span_group):
     with pytest.raises(AttributeError):
         print(span_group.doc)
+
+
+@pytest.mark.issue(11975)
+def test_span_group_typing(doc: Doc):
+    """Tests whether typing of `SpanGroup` as `Iterable[Span]`-like object is accepted by mypy."""
+    span_group: SpanGroup = doc.spans["SPANS"]
+    spans: List[Span] = list(span_group)
+    for i, span in enumerate(span_group):
+        assert span == span_group[i] == spans[i]
+    filter_spans(span_group)
+
+
+def test_span_group_init_doc(en_tokenizer):
+    """Test that all spans must come from the specified doc."""
+    doc1 = en_tokenizer("a b c")
+    doc2 = en_tokenizer("a b c")
+    span_group = SpanGroup(doc1, spans=[doc1[0:1], doc1[1:2]])
+    with pytest.raises(ValueError):
+        span_group = SpanGroup(doc1, spans=[doc1[0:1], doc2[1:2]])

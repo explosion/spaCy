@@ -1,36 +1,62 @@
-from typing import List, Mapping, NoReturn, Union, Dict, Any, Set, cast
-from typing import Optional, Iterable, Callable, Tuple, Type
-from typing import Iterator, Pattern, Generator, TYPE_CHECKING
-from types import ModuleType
-import os
+import functools
 import importlib
 import importlib.util
-import re
-from pathlib import Path
-import thinc
-from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
-from thinc.api import ConfigValidationError, Model
-import functools
+import inspect
 import itertools
+import logging
+import os
+import pkgutil
+import re
+import shlex
+import shutil
+import socket
+import stat
+import subprocess
+import sys
+import tempfile
+import warnings
+from collections import defaultdict
+from contextlib import contextmanager
+from pathlib import Path
+from types import ModuleType
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    NoReturn,
+    Optional,
+    Pattern,
+    Set,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
+
+import catalogue
+import langcodes
 import numpy
 import srsly
-import catalogue
-from catalogue import RegistryError, Registry
-import langcodes
-import sys
-import warnings
-from packaging.specifiers import SpecifierSet, InvalidSpecifier
-from packaging.version import Version, InvalidVersion
+import thinc
+from catalogue import Registry, RegistryError
 from packaging.requirements import Requirement
-import subprocess
-from contextlib import contextmanager
-from collections import defaultdict
-import tempfile
-import shutil
-import shlex
-import inspect
-import pkgutil
-import logging
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
+from packaging.version import InvalidVersion, Version
+from thinc.api import (
+    Adam,
+    Config,
+    ConfigValidationError,
+    Model,
+    NumpyOps,
+    Optimizer,
+    get_current_ops,
+)
 
 try:
     import cupy.random
@@ -41,18 +67,16 @@ except ImportError:
 # and have since moved to Thinc. We're importing them here so people's code
 # doesn't break, but they should always be imported from Thinc from now on,
 # not from spacy.util.
-from thinc.api import fix_random_seed, compounding, decaying  # noqa: F401
+from thinc.api import compounding, decaying, fix_random_seed  # noqa: F401
 
-
-from .symbols import ORTH
-from .compat import cupy, CudaStream, is_windows, importlib_metadata
-from .errors import Errors, Warnings, OLD_MODEL_SHORTCUTS
 from . import about
+from .compat import CudaStream, cupy, importlib_metadata, is_windows
+from .errors import OLD_MODEL_SHORTCUTS, Errors, Warnings
+from .symbols import ORTH
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
-    from .language import Language  # noqa: F401
-    from .pipeline import Pipe  # noqa: F401
+    from .language import Language, PipeCallable  # noqa: F401
     from .tokens import Doc, Span  # noqa: F401
     from .vocab import Vocab  # noqa: F401
 
@@ -60,7 +84,7 @@ if TYPE_CHECKING:
 # fmt: off
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 DEFAULT_OOV_PROB = -20
-LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
+LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "grc", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
 
 # Default order of sections in the config file. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
@@ -144,8 +168,17 @@ class registry(thinc.registry):
         return func
 
     @classmethod
-    def find(cls, registry_name: str, func_name: str) -> Callable:
-        """Get info about a registered function from the registry."""
+    def find(
+        cls, registry_name: str, func_name: str
+    ) -> Dict[str, Optional[Union[str, int]]]:
+        """Find information about a registered function, including the
+        module and path to the file it's defined in, the line number and the
+        docstring, if available.
+
+        registry_name (str): Name of the catalogue registry.
+        func_name (str): Name of the registered function.
+        RETURNS (Dict[str, Optional[Union[str, int]]]): The function info.
+        """
         # We're overwriting this classmethod so we're able to provide more
         # specific error messages and implement a fallback to spacy-legacy.
         if not hasattr(cls, registry_name):
@@ -443,9 +476,9 @@ def load_model_from_package(
     name: str,
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Union[str, Iterable[str]] = SimpleFrozenList(),
-    enable: Union[str, Iterable[str]] = SimpleFrozenList(),
-    exclude: Union[str, Iterable[str]] = SimpleFrozenList(),
+    disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from an installed package.
@@ -501,7 +534,7 @@ def load_model_from_path(
     if not meta:
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
-    overrides = dict_to_dot(config)
+    overrides = dict_to_dot(config, for_overrides=True)
     config = load_config(config_path, overrides=overrides)
     nlp = load_model_from_config(
         config,
@@ -619,9 +652,9 @@ def load_model_from_init_py(
     init_file: Union[Path, str],
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Union[str, Iterable[str]] = SimpleFrozenList(),
-    enable: Union[str, Iterable[str]] = SimpleFrozenList(),
-    exclude: Union[str, Iterable[str]] = SimpleFrozenList(),
+    disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Helper function to use in the `load()` method of a model package's
@@ -1041,8 +1074,15 @@ def make_tempdir() -> Generator[Path, None, None]:
     """
     d = Path(tempfile.mkdtemp())
     yield d
+
+    # On Windows, git clones use read-only files, which cause permission errors
+    # when being deleted. This forcibly fixes permissions.
+    def force_remove(rmfunc, path, ex):
+        os.chmod(path, stat.S_IWRITE)
+        rmfunc(path)
+
     try:
-        shutil.rmtree(str(d))
+        shutil.rmtree(str(d), onerror=force_remove)
     except PermissionError as e:
         warnings.warn(Warnings.W091.format(dir=d, msg=e))
 
@@ -1462,14 +1502,19 @@ def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:
     return result
 
 
-def dict_to_dot(obj: Dict[str, dict]) -> Dict[str, Any]:
+def dict_to_dot(obj: Dict[str, dict], *, for_overrides: bool = False) -> Dict[str, Any]:
     """Convert dot notation to a dict. For example: {"token": {"pos": True,
     "_": {"xyz": True }}} becomes {"token.pos": True, "token._.xyz": True}.
 
-    values (Dict[str, dict]): The dict to convert.
+    obj (Dict[str, dict]): The dict to convert.
+    for_overrides (bool): Whether to enable special handling for registered
+        functions in overrides.
     RETURNS (Dict[str, Any]): The key/value pairs.
     """
-    return {".".join(key): value for key, value in walk_dict(obj)}
+    return {
+        ".".join(key): value
+        for key, value in walk_dict(obj, for_overrides=for_overrides)
+    }
 
 
 def dot_to_object(config: Config, section: str):
@@ -1511,13 +1556,20 @@ def set_dot_to_object(config: Config, section: str, value: Any) -> None:
 
 
 def walk_dict(
-    node: Dict[str, Any], parent: List[str] = []
+    node: Dict[str, Any], parent: List[str] = [], *, for_overrides: bool = False
 ) -> Iterator[Tuple[List[str], Any]]:
-    """Walk a dict and yield the path and values of the leaves."""
+    """Walk a dict and yield the path and values of the leaves.
+
+    for_overrides (bool): Whether to treat registered functions that start with
+        @ as final values rather than dicts to traverse.
+    """
     for key, value in node.items():
         key_parent = [*parent, key]
-        if isinstance(value, dict):
-            yield from walk_dict(value, key_parent)
+        if isinstance(value, dict) and (
+            not for_overrides
+            or not any(value_key.startswith("@") for value_key in value)
+        ):
+            yield from walk_dict(value, key_parent, for_overrides=for_overrides)
         else:
             yield (key_parent, value)
 
@@ -1642,9 +1694,11 @@ def check_bool_env_var(env_var: str) -> bool:
 
 def _pipe(
     docs: Iterable["Doc"],
-    proc: "Pipe",
+    proc: "PipeCallable",
     name: str,
-    default_error_handler: Callable[[str, "Pipe", List["Doc"], Exception], NoReturn],
+    default_error_handler: Callable[
+        [str, "PipeCallable", List["Doc"], Exception], NoReturn
+    ],
     kwargs: Mapping[str, Any],
 ) -> Iterator["Doc"]:
     if hasattr(proc, "pipe"):
@@ -1735,3 +1789,50 @@ def all_equal(iterable):
     (or if the input is an empty sequence), False otherwise."""
     g = itertools.groupby(iterable)
     return next(g, True) and not next(g, False)
+
+
+def _is_port_in_use(port: int, host: str = "localhost") -> bool:
+    """Check if 'host:port' is in use. Return True if it is, False otherwise.
+
+    port (int): the port to check
+    host (str): the host to check (default "localhost")
+    RETURNS (bool): Whether 'host:port' is in use.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind((host, port))
+        return False
+    except socket.error:
+        return True
+    finally:
+        s.close()
+
+
+def find_available_port(start: int, host: str, auto_select: bool = False) -> int:
+    """Given a starting port and a host, handle finding a port.
+
+    If `auto_select` is False, a busy port will raise an error.
+
+    If `auto_select` is True, the next free higher port will be used.
+
+    start (int): the port to start looking from
+    host (str): the host to find a port on
+    auto_select (bool): whether to automatically select a new port if the given port is busy (default False)
+    RETURNS (int): The port to use.
+    """
+    if not _is_port_in_use(start, host):
+        return start
+
+    port = start
+    if not auto_select:
+        raise ValueError(Errors.E1050.format(port=port))
+
+    while _is_port_in_use(port, host) and port < 65535:
+        port += 1
+
+    if port == 65535 and _is_port_in_use(port, host):
+        raise ValueError(Errors.E1049.format(host=host))
+
+    # if we get here, the port changed
+    warnings.warn(Warnings.W124.format(host=host, port=start, serve_port=port))
+    return port

@@ -1,20 +1,21 @@
-from typing import Callable, Iterable, Dict, Any
+from typing import Any, Callable, Dict, Iterable, Tuple
 
 import pytest
 from numpy.testing import assert_equal
 
-from spacy import registry, util
+from spacy import Language, registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
-from spacy.kb import Candidate, InMemoryLookupKB, get_candidates, KnowledgeBase
+from spacy.kb import Candidate, InMemoryLookupKB, KnowledgeBase, get_candidates
 from spacy.lang.en import English
 from spacy.ml import load_kb
+from spacy.ml.models.entity_linker import build_span_maker
 from spacy.pipeline import EntityLinker
 from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
 from spacy.tests.util import make_tempdir
-from spacy.tokens import Span, Doc
+from spacy.tokens import Doc, Span
 from spacy.training import Example
 from spacy.util import ensure_path
 from spacy.vocab import Vocab
@@ -107,18 +108,23 @@ def test_issue7065():
 
 
 @pytest.mark.issue(7065)
-def test_issue7065_b():
+@pytest.mark.parametrize("entity_in_first_sentence", [True, False])
+def test_sentence_crossing_ents(entity_in_first_sentence: bool):
+    """Tests if NEL crashes if entities cross sentence boundaries and the first associated sentence doesn't have an
+    entity.
+    entity_in_prior_sentence (bool): Whether to include an entity in the first sentence associated with the
+    sentence-crossing entity.
+    """
     # Test that the NEL doesn't crash when an entity crosses a sentence boundary
     nlp = English()
     vector_length = 3
-    nlp.add_pipe("sentencizer")
     text = "Mahler 's Symphony No. 8 was beautiful."
-    entities = [(0, 6, "PERSON"), (10, 24, "WORK")]
-    links = {
-        (0, 6): {"Q7304": 1.0, "Q270853": 0.0},
-        (10, 24): {"Q7304": 0.0, "Q270853": 1.0},
-    }
-    sent_starts = [1, -1, 0, 0, 0, 0, 0, 0, 0]
+    entities = [(10, 24, "WORK")]
+    links = {(10, 24): {"Q7304": 0.0, "Q270853": 1.0}}
+    if entity_in_first_sentence:
+        entities.append((0, 6, "PERSON"))
+        links[(0, 6)] = {"Q7304": 1.0, "Q270853": 0.0}
+    sent_starts = [1, -1, 0, 0, 0, 1, 0, 0, 0]
     doc = nlp(text)
     example = Example.from_dict(
         doc, {"entities": entities, "links": links, "sent_starts": sent_starts}
@@ -144,31 +150,14 @@ def test_issue7065_b():
 
     # Create the Entity Linker component and add it to the pipeline
     entity_linker = nlp.add_pipe("entity_linker", last=True)
-    entity_linker.set_kb(create_kb)
+    entity_linker.set_kb(create_kb)  # type: ignore
     # train the NEL pipe
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
     for i in range(2):
-        losses = {}
-        nlp.update(train_examples, sgd=optimizer, losses=losses)
+        nlp.update(train_examples, sgd=optimizer)
 
-    # Add a custom rule-based component to mimick NER
-    patterns = [
-        {"label": "PERSON", "pattern": [{"LOWER": "mahler"}]},
-        {
-            "label": "WORK",
-            "pattern": [
-                {"LOWER": "symphony"},
-                {"LOWER": "no"},
-                {"LOWER": "."},
-                {"LOWER": "8"},
-            ],
-        },
-    ]
-    ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
-    ruler.add_patterns(patterns)
-    # test the trained model - this should not throw E148
-    doc = nlp(text)
-    assert doc
+    # This shouldn't crash.
+    entity_linker.predict([example.reference])  # type: ignore
 
 
 def test_no_entities():
@@ -352,6 +341,9 @@ def test_kb_default(nlp):
     """Test that the default (empty) KB is loaded upon construction"""
     entity_linker = nlp.add_pipe("entity_linker", config={})
     assert len(entity_linker.kb) == 0
+    with pytest.raises(ValueError, match="E139"):
+        # this raises an error because the KB is empty
+        entity_linker.validate_kb()
     assert entity_linker.kb.get_size_entities() == 0
     assert entity_linker.kb.get_size_aliases() == 0
     # 64 is the default value from pipeline.entity_linker
@@ -715,7 +707,11 @@ TRAIN_DATA = [
     ("Russ Cochran was a member of University of Kentucky's golf team.",
         {"links": {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}},
          "entities": [(0, 12, "PERSON"), (43, 51, "LOC")],
-         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]})
+         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}),
+    # having a blank instance shouldn't break things
+    ("The weather is nice today.",
+        {"links": {}, "entities": [],
+         "sent_starts": [1, -1, 0, 0, 0, 0]})
 ]
 GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 # fmt: on
@@ -1196,3 +1192,18 @@ def test_threshold(meet_threshold: bool, config: Dict[str, Any]):
 
     assert len(doc.ents) == 1
     assert doc.ents[0].kb_id_ == entity_id if meet_threshold else EntityLinker.NIL
+
+
+def test_span_maker_forward_with_empty():
+    """The forward pass of the span maker may have a doc with no entities."""
+    nlp = English()
+    doc1 = nlp("a b c")
+    ent = doc1[0:1]
+    ent.label_ = "X"
+    doc1.ents = [ent]
+    # no entities
+    doc2 = nlp("x y z")
+
+    # just to get a model
+    span_maker = build_span_maker()
+    span_maker([doc1, doc2], False)
