@@ -31,7 +31,6 @@ from typing import (
 )
 
 import srsly
-
 from thinc.api import Config, CupyOps, Optimizer, get_current_ops
 
 from . import about, ty, util
