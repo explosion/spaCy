@@ -48,6 +48,7 @@ jobs:
       - name: cython-lint
         run: |
           python -m pip install cython-lint -c requirements.txt
+          # E501: line too log, W291: trailing whitespace, E266: too many leading '#' for block comment
           cython-lint spacy --ignore E501,W291,E266
 
   tests:
