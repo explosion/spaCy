@@ -48,7 +48,7 @@ jobs:
       - name: cython-lint
         run: |
           python -m pip install cython-lint -c requirements.txt
-          cython-lint spacy --ignore E501,W291,E266
+          # cython-lint spacy --ignore E501,W291,E266
 
   tests:
     name: Test

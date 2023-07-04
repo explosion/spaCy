@@ -1,7 +1,6 @@
 # cython: embedsignature=True
 # Compiler crashes on memory view coercion without this. Should report bug.
 cimport numpy as np
-from cython.view cimport array as cvarray
 from libc.string cimport memset
 
 np.import_array()
