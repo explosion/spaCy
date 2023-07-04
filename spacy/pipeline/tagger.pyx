@@ -8,6 +8,7 @@ from thinc.api import Config, Model, SequenceCategoricalCrossentropy, set_dropou
 from ..tokens.doc cimport Doc
 
 from .. import util
+from ..errors import Errors
 from ..language import Language
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples

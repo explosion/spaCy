@@ -157,7 +157,7 @@ cdef void sum_state_features(
     const int* token_ids,
     int B,
     int F,
-    intO
+    int O
 ) nogil:
     cdef int idx, b, f
     cdef const float* feature
