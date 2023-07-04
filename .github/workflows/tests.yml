@@ -47,8 +47,8 @@ jobs:
           python -m flake8 spacy --count --select=E901,E999,F821,F822,F823,W605 --show-source --statistics
       - name: cython-lint
         run: |
-          python -m pip install cython-lint -c requirements.txt --ignore E501,W291,E266
-          cython-lint spacy
+          python -m pip install cython-lint -c requirements.txt
+          cython-lint spacy --ignore E501,W291,E266
 
   tests:
     name: Test
