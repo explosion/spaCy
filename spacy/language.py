@@ -2041,7 +2041,10 @@ class Language:
                     num_params = len(
                         inspect.signature(replace_listener_func).parameters
                     )
-                    assert num_params in (1, 3)
+                    assert num_params in (
+                        1,
+                        3,
+                    ), f"'replace_listener' callback expects {num_params} parameters, but we only support one or three"
                     if num_params == 1:
                         new_model = replace_listener_func(new_model)
                     else:
