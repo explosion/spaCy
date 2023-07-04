@@ -223,9 +223,15 @@ The new config and model are then properly stored on the `nlp` object.
 Note that this functionality (running the replacement for a transformer listener) was broken prior to
 `spacy-transformers` 1.0.5.
 
-As of spaCy 3.7, the `replace_listener` callback accepts three arguments instead of just one: the new (copied) model,
-the listener to be replaced, the `tok2vec`/`transformer` pipe from which the new model was copied.
+In spaCy 3.7, `Language.replace_listeners` was updated to pass the following additional arguments to the `replace_listener` callback:
+the listener to be replaced, the `tok2vec`/`transformer` pipe from which the new model was copied. To maintain backwards-compatiblity,
+the method only passes these extra arguments for callbacks that support them:
 
 ```
-new_model = tok2vec_model.attrs["replace_listener"](new_model, replaced_listener, tok2vec)
+def replace_listener_pre_37(copied_tok2vec_model):
+  ...
+
+def replace_listener_post_37(copied_tok2vec_model, replaced_listener, tok2vec_pipe):
+  ...
+
 ```
