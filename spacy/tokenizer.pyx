@@ -456,8 +456,8 @@ cdef class Tokenizer:
             if self._try_specials_and_cache(hash_string(string), tokens, has_special, with_special_cases):
                 pass
             elif (
-                self.token_match and self.token_match(string) or
-                self.url_match and self.url_match(string)
+                (self.token_match and self.token_match(string)) or
+                (self.url_match and self.url_match(string))
             ):
 
                 # We're always saying 'no' to spaces here -- the caller will
