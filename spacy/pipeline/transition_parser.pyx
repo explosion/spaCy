@@ -12,12 +12,10 @@ from libcpp.vector cimport vector
 
 import random
 
-import srsly
-from thinc.api import CupyOps, NumpyOps, set_dropout_rate
-
-
 import numpy
 import numpy.random
+import srsly
+from thinc.api import CupyOps, NumpyOps, set_dropout_rate
 
 from ..ml.parser_model cimport (
     ActivationsC,

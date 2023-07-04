@@ -12,16 +12,7 @@ import warnings
 
 import srsly
 
-from ..attrs cimport (
-    DEP,
-    ENT_IOB,
-    ID,
-    LEMMA,
-    MORPH,
-    NULL_ATTR,
-    POS,
-    TAG,
-)
+from ..attrs cimport DEP, ENT_IOB, ID, LEMMA, MORPH, NULL_ATTR, POS, TAG
 from ..structs cimport TokenC
 from ..tokens.doc cimport Doc, get_token_attr_for_matcher
 from ..tokens.morphanalysis cimport MorphAnalysis

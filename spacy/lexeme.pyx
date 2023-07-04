@@ -34,7 +34,6 @@ from .typedefs cimport attr_t, flags_t
 from .attrs import intify_attrs
 from .errors import Errors, Warnings
 
-
 OOV_RANK = 0xffffffffffffffff  # UINT64_MAX
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 EMPTY_LEXEME.id = OOV_RANK
