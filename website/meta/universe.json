@@ -4372,7 +4372,7 @@
             "code_example": [
                 "import spacy",
                 "",
-                "nlp = spacy.load(\"en_core_web_sm\", disable=[\"ner\"])",
+                "nlp = spacy.load(\"en_core_web_sm\", exclude=[\"ner\"])",
                 "nlp.add_pipe(\"span_marker\", config={\"model\": \"tomaarsen/span-marker-roberta-large-ontonotes5\"})",
                 "",
                 "text = \"\"\"Cleopatra VII, also known as Cleopatra the Great, was the last active ruler of the \\",
