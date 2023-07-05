@@ -28,6 +28,7 @@ from ..attrs cimport (
     LIKE_EMAIL,
     LIKE_NUM,
     LIKE_URL,
+    ORTH,
 )
 from ..lexeme cimport Lexeme
 from ..symbols cimport conj
@@ -214,11 +215,17 @@ cdef class Token:
         """
         if "similarity" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["similarity"](self, other)
-        if hasattr(other, "__len__") and len(other) == 1 and hasattr(other, "__getitem__"):
-            if self.c.lex.orth == getattr(other[0], "orth", None):
+        attr = getattr(self.doc.vocab.vectors, "attr", ORTH)
+        cdef Token this_token = self
+        cdef Token other_token
+        cdef Lexeme other_lex
+        if isinstance(other, Token):
+            other_token = other
+            if Token.get_struct_attr(this_token.c, attr) == Token.get_struct_attr(other_token.c, attr):
                 return 1.0
-        elif hasattr(other, "orth"):
-            if self.c.lex.orth == other.orth:
+        elif isinstance(other, Lexeme):
+            other_lex = other
+            if Token.get_struct_attr(this_token.c, attr) == Lexeme.get_struct_attr(other_lex.c, attr):
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
             warnings.warn(Warnings.W007.format(obj="Token"))
@@ -415,7 +422,7 @@ cdef class Token:
             return self.doc.user_token_hooks["has_vector"](self)
         if self.vocab.vectors.size == 0 and self.doc.tensor.size != 0:
             return True
-        return self.vocab.has_vector(self.c.lex.orth)
+        return self.vocab.has_vector(Token.get_struct_attr(self.c, self.vocab.vectors.attr))
 
     @property
     def vector(self):
@@ -431,7 +438,7 @@ cdef class Token:
         if self.vocab.vectors.size == 0 and self.doc.tensor.size != 0:
             return self.doc.tensor[self.i]
         else:
-            return self.vocab.get_vector(self.c.lex.orth)
+            return self.vocab.get_vector(Token.get_struct_attr(self.c, self.vocab.vectors.attr))
 
     @property
     def vector_norm(self):

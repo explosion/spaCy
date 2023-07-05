@@ -35,6 +35,7 @@ from ..attrs cimport (
     LENGTH,
     MORPH,
     NORM,
+    ORTH,
     POS,
     SENT_START,
     SPACY,
@@ -613,13 +614,26 @@ cdef class Doc:
         """
         if "similarity" in self.user_hooks:
             return self.user_hooks["similarity"](self, other)
-        if isinstance(other, (Lexeme, Token)) and self.length == 1:
-            if self.c[0].lex.orth == other.orth:
+        attr = getattr(self.vocab.vectors, "attr", ORTH)
+        cdef Token this_token
+        cdef Token other_token
+        cdef Lexeme other_lex
+        if len(self) == 1 and isinstance(other, Token):
+            this_token = self[0]
+            other_token = other
+            if Token.get_struct_attr(this_token.c, attr) == Token.get_struct_attr(other_token.c, attr):
                 return 1.0
-        elif isinstance(other, (Span, Doc)) and len(self) == len(other):
+        elif len(self) == 1 and isinstance(other, Lexeme):
+            this_token = self[0]
+            other_lex = other
+            if Token.get_struct_attr(this_token.c, attr) == Lexeme.get_struct_attr(other_lex.c, attr):
+                return 1.0
+        elif isinstance(other, (Doc, Span)) and len(self) == len(other):
             similar = True
-            for i in range(self.length):
-                if self[i].orth != other[i].orth:
+            for i in range(len(self)):
+                this_token = self[i]
+                other_token = other[i]
+                if Token.get_struct_attr(this_token.c, attr) != Token.get_struct_attr(other_token.c, attr):
                     similar = False
                     break
             if similar:

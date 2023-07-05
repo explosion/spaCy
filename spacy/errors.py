@@ -216,7 +216,10 @@ class Warnings(metaclass=ErrorsWithCodes):
     W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
             "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
     W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
-    W125 = (
+    W125 = ("The StaticVectors key_attr is no longer used. To set a custom "
+            "key attribute for vectors, configure it through Vectors(attr=) or "
+            "'spacy init vectors --attr'")
+    W126 = (
         "Pipe instance '{name}' is being added with a vocab "
         "instance that will not match other components. This is "
         "usually an error."
