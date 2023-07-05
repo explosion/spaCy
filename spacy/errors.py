@@ -981,6 +981,8 @@ class Errors(metaclass=ErrorsWithCodes):
              " 'min_length': {min_length}, 'max_length': {max_length}")
     E1054 = ("The text, including whitespace, must match between reference and "
              "predicted docs when training {component}.")
+    E1055 = ("The 'replace_listener' callback expects {num_params} parameters, "
+             "but only callbacks with one or three parameters are supported")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
