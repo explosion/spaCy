@@ -219,11 +219,9 @@ class Warnings(metaclass=ErrorsWithCodes):
     W125 = ("The StaticVectors key_attr is no longer used. To set a custom "
             "key attribute for vectors, configure it through Vectors(attr=) or "
             "'spacy init vectors --attr'")
-    W126 = (
-        "Pipe instance '{name}' is being added with a vocab "
-        "instance that will not match other components. This is "
-        "usually an error."
-    )
+    W126 = ("Pipe instance '{name}' is being added with a vocab "
+            "instance that will not match other components. This is "
+            "usually an error.")
 
 
 class Errors(metaclass=ErrorsWithCodes):

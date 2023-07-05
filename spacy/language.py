@@ -2427,7 +2427,7 @@ def _get_instantiated_vocab(
     elif isinstance(vocab, Vocab):
         for name, inst_voc in vocab_instances.items():
             if inst_voc is not vocab:
-                warnings.warn(Warnings.W125.format(name=name))
+                warnings.warn(Warnings.W126.format(name=name))
         return vocab
     else:
         resolved_vocab = None
@@ -2435,7 +2435,7 @@ def _get_instantiated_vocab(
             if resolved_vocab is None:
                 resolved_vocab = inst_voc
             elif inst_voc is not resolved_vocab:
-                warnings.warn(Warnings.W125.format(name=name))
+                warnings.warn(Warnings.W126.format(name=name))
         # This is supposed to only be for the type checker --
         # it should be unreachable
         assert resolved_vocab is not None
