@@ -2041,14 +2041,13 @@ class Language:
                     num_params = len(
                         inspect.signature(replace_listener_func).parameters
                     )
-                    assert num_params in (
-                        1,
-                        3,
-                    ), f"'replace_listener' callback expects {num_params} parameters, but we only support one or three"
                     if num_params == 1:
                         new_model = replace_listener_func(new_model)
-                    else:
+                    elif num_params == 3:
                         new_model = replace_listener_func(new_model, listener, tok2vec)
+                    else:
+                        raise ValueError(Errors.E1055.format(num_params=num_params))
+
                 util.replace_model_node(pipe.model, listener, new_model)  # type: ignore[attr-defined]
                 tok2vec.remove_listener(listener, pipe_name)
 
