@@ -1,18 +1,17 @@
 # Listeners
 
-- [Listeners](#listeners)
-  - [1. Overview](#1-overview)
-  - [2. Initialization](#2-initialization)
-    - [2A. Linking listeners to the embedding component](#2a-linking-listeners-to-the-embedding-component)
-    - [2B. Shape inference](#2b-shape-inference)
-  - [3. Internal communication](#3-internal-communication)
-    - [3A. During prediction](#3a-during-prediction)
-    - [3B. During training](#3b-during-training)
-      - [Training with multiple listeners](#training-with-multiple-listeners)
-    - [3C. Frozen components](#3c-frozen-components)
-      - [The Tok2Vec or Transformer is frozen](#the-tok2vec-or-transformer-is-frozen)
-      - [The upstream component is frozen](#the-upstream-component-is-frozen)
-  - [4. Replacing listener with standalone](#4-replacing-listener-with-standalone)
+- [1. Overview](#1-overview)
+- [2. Initialization](#2-initialization)
+  - [2A. Linking listeners to the embedding component](#2a-linking-listeners-to-the-embedding-component)
+  - [2B. Shape inference](#2b-shape-inference)
+- [3. Internal communication](#3-internal-communication)
+  - [3A. During prediction](#3a-during-prediction)
+  - [3B. During training](#3b-during-training)
+    - [Training with multiple listeners](#training-with-multiple-listeners)
+  - [3C. Frozen components](#3c-frozen-components)
+    - [The Tok2Vec or Transformer is frozen](#the-tok2vec-or-transformer-is-frozen)
+    - [The upstream component is frozen](#the-upstream-component-is-frozen)
+- [4. Replacing listener with standalone](#4-replacing-listener-with-standalone)
 
 ## 1. Overview
 
@@ -224,7 +223,7 @@ Note that this functionality (running the replacement for a transformer listener
 `spacy-transformers` 1.0.5.
 
 In spaCy 3.7, `Language.replace_listeners` was updated to pass the following additional arguments to the `replace_listener` callback:
-the listener to be replaced, the `tok2vec`/`transformer` pipe from which the new model was copied. To maintain backwards-compatiblity,
+the listener to be replaced and the `tok2vec`/`transformer` pipe from which the new model was copied. To maintain backwards-compatiblity,
 the method only passes these extra arguments for callbacks that support them:
 
 ```
@@ -233,5 +232,4 @@ def replace_listener_pre_37(copied_tok2vec_model):
 
 def replace_listener_post_37(copied_tok2vec_model, replaced_listener, tok2vec_pipe):
   ...
-
 ```
