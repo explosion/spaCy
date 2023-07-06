@@ -1,6 +1,7 @@
 import pytest
-from spacy.lang.es.lex_attrs import like_num
+
 from spacy.lang.es import Spanish
+from spacy.lang.es.lex_attrs import like_num
 
 
 @pytest.mark.issue(3803)

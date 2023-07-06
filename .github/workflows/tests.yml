@@ -37,6 +37,10 @@ jobs:
         run: |
           python -m pip install black -c requirements.txt
           python -m black spacy --check
+      - name: isort
+        run: |
+          python -m pip install isort -c requirements.txt
+          python -m isort spacy --check
       - name: flake8
         run: |
           python -m pip install flake8==5.0.4
@@ -165,6 +169,7 @@ jobs:
       - name: "Run CPU tests"
         run: |
           python -m pytest --pyargs spacy -W error
+        if: "!(startsWith(matrix.os, 'macos') && matrix.python_version == '3.11')"
 
       - name: "Run CPU tests with thinc-apple-ops"
         run: |

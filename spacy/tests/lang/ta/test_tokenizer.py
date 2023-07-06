@@ -1,6 +1,7 @@
 import pytest
-from spacy.symbols import ORTH
+
 from spacy.lang.ta import Tamil
+from spacy.symbols import ORTH
 
 TA_BASIC_TOKENIZATION_TESTS = [
     (

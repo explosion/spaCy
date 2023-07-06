@@ -1,19 +1,29 @@
-from collections.abc import Iterable as IterableInstance
 import warnings
+from collections.abc import Iterable as IterableInstance
+
 import numpy
+
 from murmurhash.mrmr cimport hash64
 
 from ..tokens.doc cimport Doc
 from ..tokens.span cimport Span
-from ..tokens.span import Span
+
 from ..attrs import IDS
-from .alignment import Alignment
-from .iob_utils import biluo_to_iob, offsets_to_biluo_tags, doc_to_biluo_tags
-from .iob_utils import biluo_tags_to_spans, remove_bilu_prefix
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
+from ..tokens.span import Span
+from .alignment import Alignment
+from .iob_utils import (
+    biluo_tags_to_spans,
+    biluo_to_iob,
+    doc_to_biluo_tags,
+    offsets_to_biluo_tags,
+    remove_bilu_prefix,
+)
+
 from ..tokens.token cimport MISSING_DEP
-from ..util import logger, to_ternary_int, all_equal
+
+from ..util import all_equal, logger, to_ternary_int
 
 
 cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):

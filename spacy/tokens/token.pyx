@@ -1,26 +1,44 @@
 # cython: infer_types=True
 # Compiler crashes on memory view coercion without this. Should report bug.
-from cython.view cimport array as cvarray
 cimport numpy as np
+from cython.view cimport array as cvarray
+
 np.import_array()
+
+import warnings
 
 import numpy
 from thinc.api import get_array_module
-import warnings
 
-from ..typedefs cimport hash_t
+from ..attrs cimport (
+    IS_ALPHA,
+    IS_ASCII,
+    IS_BRACKET,
+    IS_CURRENCY,
+    IS_DIGIT,
+    IS_LEFT_PUNCT,
+    IS_LOWER,
+    IS_PUNCT,
+    IS_QUOTE,
+    IS_RIGHT_PUNCT,
+    IS_SPACE,
+    IS_STOP,
+    IS_TITLE,
+    IS_UPPER,
+    LIKE_EMAIL,
+    LIKE_NUM,
+    LIKE_URL,
+    ORTH,
+)
 from ..lexeme cimport Lexeme
-from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
-from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from ..attrs cimport IS_TITLE, IS_UPPER, IS_CURRENCY, IS_STOP
-from ..attrs cimport LIKE_URL, LIKE_NUM, LIKE_EMAIL
 from ..symbols cimport conj
-from .morphanalysis cimport MorphAnalysis
+from ..typedefs cimport hash_t
 from .doc cimport set_children_from_heads
+from .morphanalysis cimport MorphAnalysis
 
 from .. import parts_of_speech
-from ..errors import Errors, Warnings
 from ..attrs import IOB_STRINGS
+from ..errors import Errors, Warnings
 from .underscore import Underscore, get_ext_args
 
 
@@ -197,11 +215,17 @@ cdef class Token:
         """
         if "similarity" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["similarity"](self, other)
-        if hasattr(other, "__len__") and len(other) == 1 and hasattr(other, "__getitem__"):
-            if self.c.lex.orth == getattr(other[0], "orth", None):
+        attr = getattr(self.doc.vocab.vectors, "attr", ORTH)
+        cdef Token this_token = self
+        cdef Token other_token
+        cdef Lexeme other_lex
+        if isinstance(other, Token):
+            other_token = other
+            if Token.get_struct_attr(this_token.c, attr) == Token.get_struct_attr(other_token.c, attr):
                 return 1.0
-        elif hasattr(other, "orth"):
-            if self.c.lex.orth == other.orth:
+        elif isinstance(other, Lexeme):
+            other_lex = other
+            if Token.get_struct_attr(this_token.c, attr) == Lexeme.get_struct_attr(other_lex.c, attr):
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
             warnings.warn(Warnings.W007.format(obj="Token"))
@@ -398,7 +422,7 @@ cdef class Token:
             return self.doc.user_token_hooks["has_vector"](self)
         if self.vocab.vectors.size == 0 and self.doc.tensor.size != 0:
             return True
-        return self.vocab.has_vector(self.c.lex.orth)
+        return self.vocab.has_vector(Token.get_struct_attr(self.c, self.vocab.vectors.attr))
 
     @property
     def vector(self):
@@ -414,7 +438,7 @@ cdef class Token:
         if self.vocab.vectors.size == 0 and self.doc.tensor.size != 0:
             return self.doc.tensor[self.i]
         else:
-            return self.vocab.get_vector(self.c.lex.orth)
+            return self.vocab.get_vector(Token.get_struct_attr(self.c, self.vocab.vectors.attr))
 
     @property
     def vector_norm(self):

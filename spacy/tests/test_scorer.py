@@ -1,13 +1,12 @@
-from numpy.testing import assert_almost_equal, assert_array_almost_equal
 import pytest
+from numpy.testing import assert_almost_equal, assert_array_almost_equal
 from pytest import approx
+
+from spacy.lang.en import English
+from spacy.scorer import PRFScore, ROCAUCScore, Scorer, _roc_auc_score, _roc_curve
+from spacy.tokens import Doc, Span
 from spacy.training import Example
 from spacy.training.iob_utils import offsets_to_biluo_tags
-from spacy.scorer import Scorer, ROCAUCScore, PRFScore
-from spacy.scorer import _roc_auc_score, _roc_curve
-from spacy.lang.en import English
-from spacy.tokens import Doc, Span
-
 
 test_las_apple = [
     [
@@ -114,6 +113,14 @@ def test_tokenization(sented_doc):
     assert scores["token_p"] == 0.5
     assert scores["token_r"] == approx(0.33333333)
     assert scores["token_f"] == 0.4
+
+    # per-component scoring
+    scorer = Scorer()
+    scores = scorer.score([example], per_component=True)
+    assert scores["tokenizer"]["token_acc"] == 0.5
+    assert scores["tokenizer"]["token_p"] == 0.5
+    assert scores["tokenizer"]["token_r"] == approx(0.33333333)
+    assert scores["tokenizer"]["token_f"] == 0.4
 
 
 def test_sents(sented_doc):
@@ -278,6 +285,13 @@ def test_tag_score(tagged_doc):
     assert results["morph_per_feat"]["Poss"]["f"] == 0.0
     assert results["morph_per_feat"]["Number"]["f"] == approx(0.72727272)
 
+    # per-component scoring
+    scorer = Scorer()
+    results = scorer.score([example], per_component=True)
+    assert results["tagger"]["tag_acc"] == 0.9
+    assert results["morphologizer"]["pos_acc"] == 0.9
+    assert results["morphologizer"]["morph_acc"] == approx(0.8)
+
 
 def test_partial_annotation(en_tokenizer):
     pred_doc = en_tokenizer("a b c d e")
@@ -423,14 +437,14 @@ def test_score_spans():
         return doc.spans[span_key]
 
     # Predict exactly the same, but overlapping spans will be discarded
-    pred.spans[key] = spans
+    pred.spans[key] = gold.spans[key].copy(doc=pred)
     eg = Example(pred, gold)
     scores = Scorer.score_spans([eg], attr=key, getter=span_getter)
     assert scores[f"{key}_p"] == 1.0
     assert scores[f"{key}_r"] < 1.0
 
     # Allow overlapping, now both precision and recall should be 100%
-    pred.spans[key] = spans
+    pred.spans[key] = gold.spans[key].copy(doc=pred)
     eg = Example(pred, gold)
     scores = Scorer.score_spans([eg], attr=key, getter=span_getter, allow_overlap=True)
     assert scores[f"{key}_p"] == 1.0

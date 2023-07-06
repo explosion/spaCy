@@ -1,11 +1,11 @@
 from cymem.cymem cimport Pool
 
-from ...typedefs cimport attr_t, weight_t
-from ...structs cimport TokenC
 from ...strings cimport StringStore
+from ...structs cimport TokenC
 from ...training.example cimport Example
-from .stateclass cimport StateClass
+from ...typedefs cimport attr_t, weight_t
 from ._state cimport StateC
+from .stateclass cimport StateClass
 
 
 cdef struct Transition:

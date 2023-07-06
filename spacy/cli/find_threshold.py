@@ -1,17 +1,17 @@
 import functools
+import logging
 import operator
 from pathlib import Path
-import logging
-from typing import Optional, Tuple, Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy
 import wasabi.tables
 
-from ..pipeline import TextCategorizer, MultiLabel_TextCategorizer
-from ..errors import Errors
-from ..training import Corpus
-from ._util import app, Arg, Opt, import_code, setup_gpu
 from .. import util
+from ..errors import Errors
+from ..pipeline import MultiLabel_TextCategorizer, TextCategorizer
+from ..training import Corpus
+from ._util import Arg, Opt, app, import_code, setup_gpu
 
 _DEFAULTS = {
     "n_trials": 11,

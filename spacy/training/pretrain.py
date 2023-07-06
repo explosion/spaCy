@@ -1,20 +1,26 @@
-from typing import Optional, Callable, Iterable, Union, List
-from thinc.api import Config, fix_random_seed, set_gpu_allocator, Model, Optimizer
-from thinc.api import set_dropout_rate
-from pathlib import Path
-from collections import Counter
-import srsly
-import time
 import re
+import time
+from collections import Counter
+from pathlib import Path
+from typing import Callable, Iterable, List, Optional, Union
 
+import srsly
+from thinc.api import (
+    Config,
+    Model,
+    Optimizer,
+    fix_random_seed,
+    set_dropout_rate,
+    set_gpu_allocator,
+)
 from thinc.config import ConfigValidationError
 from wasabi import Printer
 
-from .example import Example
 from ..errors import Errors
-from ..tokens import Doc
 from ..schemas import ConfigSchemaPretrain
-from ..util import registry, load_model_from_config, dot_to_object
+from ..tokens import Doc
+from ..util import dot_to_object, load_model_from_config, registry
+from .example import Example
 
 
 def pretrain(
@@ -24,6 +30,7 @@ def pretrain(
     epoch_resume: Optional[int] = None,
     use_gpu: int = -1,
     silent: bool = True,
+    skip_last: bool = False,
 ):
     msg = Printer(no_print=silent)
     if config["training"]["seed"] is not None:
@@ -60,10 +67,14 @@ def pretrain(
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
 
-    def _save_model(epoch, is_temp=False):
+    def _save_model(epoch, is_temp=False, is_last=False):
         is_temp_str = ".temp" if is_temp else ""
         with model.use_params(optimizer.averages):
-            with (output_dir / f"model{epoch}{is_temp_str}.bin").open("wb") as file_:
+            if is_last:
+                save_path = output_dir / f"model-last.bin"
+            else:
+                save_path = output_dir / f"model{epoch}{is_temp_str}.bin"
+            with (save_path).open("wb") as file_:
                 file_.write(model.get_ref("tok2vec").to_bytes())
             log = {
                 "nr_word": tracker.nr_word,
@@ -76,22 +87,26 @@ def pretrain(
 
     # TODO: I think we probably want this to look more like the
     # 'create_train_batches' function?
-    for epoch in range(epoch_resume, P["max_epochs"]):
-        for batch_id, batch in enumerate(batcher(corpus(nlp))):
-            docs = ensure_docs(batch)
-            loss = make_update(model, docs, optimizer, objective)
-            progress = tracker.update(epoch, loss, docs)
-            if progress:
-                msg.row(progress, **row_settings)
-            if P["n_save_every"] and (batch_id % P["n_save_every"] == 0):
-                _save_model(epoch, is_temp=True)
+    try:
+        for epoch in range(epoch_resume, P["max_epochs"]):
+            for batch_id, batch in enumerate(batcher(corpus(nlp))):
+                docs = ensure_docs(batch)
+                loss = make_update(model, docs, optimizer, objective)
+                progress = tracker.update(epoch, loss, docs)
+                if progress:
+                    msg.row(progress, **row_settings)
+                if P["n_save_every"] and (batch_id % P["n_save_every"] == 0):
+                    _save_model(epoch, is_temp=True)
 
-        if P["n_save_epoch"]:
-            if epoch % P["n_save_epoch"] == 0 or epoch == P["max_epochs"] - 1:
+            if P["n_save_epoch"]:
+                if epoch % P["n_save_epoch"] == 0 or epoch == P["max_epochs"] - 1:
+                    _save_model(epoch)
+            else:
                 _save_model(epoch)
-        else:
-            _save_model(epoch)
-        tracker.epoch_loss = 0.0
+            tracker.epoch_loss = 0.0
+    finally:
+        if not skip_last:
+            _save_model(P["max_epochs"], is_last=True)
 
 
 def ensure_docs(examples_or_docs: Iterable[Union[Doc, Example]]) -> List[Doc]:
