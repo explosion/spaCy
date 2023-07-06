@@ -1,4 +1,5 @@
 import functools
+import inspect
 import itertools
 import multiprocessing as mp
 import random
@@ -2033,8 +2034,20 @@ class Language:
             # Go over the listener layers and replace them
             for listener in pipe_listeners:
                 new_model = tok2vec_model.copy()
-                if "replace_listener" in tok2vec_model.attrs:
-                    new_model = tok2vec_model.attrs["replace_listener"](new_model)
+                replace_listener_func = tok2vec_model.attrs.get("replace_listener")
+                if replace_listener_func is not None:
+                    # Pass the extra args to the callback without breaking compatibility with
+                    # old library versions that only expect a single parameter.
+                    num_params = len(
+                        inspect.signature(replace_listener_func).parameters
+                    )
+                    if num_params == 1:
+                        new_model = replace_listener_func(new_model)
+                    elif num_params == 3:
+                        new_model = replace_listener_func(new_model, listener, tok2vec)
+                    else:
+                        raise ValueError(Errors.E1055.format(num_params=num_params))
+
                 util.replace_model_node(pipe.model, listener, new_model)  # type: ignore[attr-defined]
                 tok2vec.remove_listener(listener, pipe_name)
 
