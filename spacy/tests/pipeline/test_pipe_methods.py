@@ -193,9 +193,15 @@ def test_add_pipe_last(nlp, name1, name2):
 def test_add_pipe_false(nlp, name1, name2):
     Language.component("new_pipe2", func=lambda doc: doc)
     nlp.add_pipe("new_pipe2", name=name2)
-    with pytest.raises(ValueError, match="The 'last' parameter should be 'None' or 'True', but found 'False'"):
+    with pytest.raises(
+        ValueError,
+        match="The 'last' parameter should be 'None' or 'True', but found 'False'",
+    ):
         nlp.add_pipe("new_pipe", name=name1, last=False)
-    with pytest.raises(ValueError, match="The 'first' parameter should be 'None' or 'True', but found 'False'"):
+    with pytest.raises(
+        ValueError,
+        match="The 'first' parameter should be 'None' or 'True', but found 'False'",
+    ):
         nlp.add_pipe("new_pipe", name=name1, first=False)
 
 
