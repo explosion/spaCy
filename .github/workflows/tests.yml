@@ -111,22 +111,22 @@ jobs:
       - name: Test import
         run: python -W error -c "import spacy"
 
-#      - name: "Test download CLI"
-#        run: |
-#          python -m spacy download ca_core_news_sm
-#          python -m spacy download ca_core_news_md
-#          python -c "import spacy; nlp=spacy.load('ca_core_news_sm'); doc=nlp('test')"
-#        if: matrix.python_version == '3.9'
-#
-#      - name: "Test download_url in info CLI"
-#        run: |
-#          python -W error -m spacy info ca_core_news_sm | grep -q download_url
-#        if: matrix.python_version == '3.9'
-#
-#      - name: "Test no warnings on load (#11713)"
-#        run: |
-#          python -W error -c "import ca_core_news_sm; nlp = ca_core_news_sm.load(); doc=nlp('test')"
-#        if: matrix.python_version == '3.9'
+      - name: "Test download CLI"
+        run: |
+          python -m spacy download ca_core_news_sm
+          python -m spacy download ca_core_news_md
+          python -c "import spacy; nlp=spacy.load('ca_core_news_sm'); doc=nlp('test')"
+        if: matrix.python_version == '3.9'
+
+      - name: "Test download_url in info CLI"
+        run: |
+          python -W error -m spacy info ca_core_news_sm | grep -q download_url
+        if: matrix.python_version == '3.9'
+
+      - name: "Test no warnings on load (#11713)"
+        run: |
+          python -W error -c "import ca_core_news_sm; nlp = ca_core_news_sm.load(); doc=nlp('test')"
+        if: matrix.python_version == '3.9'
 
       - name: "Test convert CLI"
         run: |
@@ -150,17 +150,17 @@ jobs:
           python -m spacy train ner.cfg --paths.train ner-token-per-line-conll2003.spacy --paths.dev ner-token-per-line-conll2003.spacy --training.max_steps 10 --gpu-id -1
         if: matrix.python_version == '3.9'
 
-#      - name: "Test assemble CLI"
-#        run: |
-#          python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_sm'}; config.to_disk('ner_source_sm.cfg')"
-#          PYTHONWARNINGS="error,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
-#        if: matrix.python_version == '3.9'
-#
-#      - name: "Test assemble CLI vectors warning"
-#        run: |
-#          python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_md'}; config.to_disk('ner_source_md.cfg')"
-#          python -m spacy assemble ner_source_md.cfg output_dir 2>&1 | grep -q W113
-#        if: matrix.python_version == '3.9'
+      - name: "Test assemble CLI"
+        run: |
+          python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_sm'}; config.to_disk('ner_source_sm.cfg')"
+          PYTHONWARNINGS="error,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
+        if: matrix.python_version == '3.9'
+
+      - name: "Test assemble CLI vectors warning"
+        run: |
+          python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_md'}; config.to_disk('ner_source_md.cfg')"
+          python -m spacy assemble ner_source_md.cfg output_dir 2>&1 | grep -q W113
+        if: matrix.python_version == '3.9'
 
       - name: "Install test requirements"
         run: |
