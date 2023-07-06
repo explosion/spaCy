@@ -757,8 +757,8 @@ class Language:
         *,
         before: Optional[Union[str, int]] = None,
         after: Optional[Union[str, int]] = None,
-        first: Optional[bool] = None,
-        last: Optional[bool] = None,
+        first: Optional[Literal[True]] = None,
+        last: Optional[Literal[True]] = None,
         source: Optional["Language"] = None,
         config: Dict[str, Any] = SimpleFrozenDict(),
         raw_config: Optional[Config] = None,
@@ -777,8 +777,8 @@ class Language:
             component directly before.
         after (Union[str, int]): Name or index of the component to insert new
             component directly after.
-        first (bool): If True, insert component first in the pipeline.
-        last (bool): If True, insert component last in the pipeline.
+        first (Optional[Literal[True]]): If True, insert component first in the pipeline.
+        last (Optional[Literal[True]]): If True, insert component last in the pipeline.
         source (Language): Optional loaded nlp object to copy the pipeline
             component from.
         config (Dict[str, Any]): Config parameters to use for this component.
@@ -823,18 +823,22 @@ class Language:
         self,
         before: Optional[Union[str, int]] = None,
         after: Optional[Union[str, int]] = None,
-        first: Optional[bool] = None,
-        last: Optional[bool] = None,
+        first: Optional[Literal[True]] = None,
+        last: Optional[Literal[True]] = None,
     ) -> int:
         """Determine where to insert a pipeline component based on the before/
         after/first/last values.
 
         before (str): Name or index of the component to insert directly before.
         after (str): Name or index of component to insert directly after.
-        first (bool): If True, insert component first in the pipeline.
-        last (bool): If True, insert component last in the pipeline.
+        first (Optional[Literal[True]]): If True, insert component first in the pipeline.
+        last (Optional[Literal[True]]): If True, insert component last in the pipeline.
         RETURNS (int): The index of the new pipeline component.
         """
+        if first is not None and first is not True:
+            raise ValueError(Errors.E4009.format(attr="first", value=first))
+        if last is not None and last is not True:
+            raise ValueError(Errors.E4009.format(attr="last", value=last))
         all_args = {"before": before, "after": after, "first": first, "last": last}
         if sum(arg is not None for arg in [before, after, first, last]) >= 2:
             raise ValueError(

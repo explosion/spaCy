@@ -436,7 +436,8 @@ component factory registered using
 [`@Language.component`](/api/language#component) or
 [`@Language.factory`](/api/language#factory). Components should be callables
 that take a `Doc` object, modify it and return it. Only one of `before`,
-`after`, `first` or `last` can be set. Default behavior is `last=True`.
+`after`, `first` or `last` can be set. The arguments `first` and `last` can
+either be `None` or `True`. Default behavior is `last=True`.
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -471,8 +472,8 @@ component, adds it to the pipeline and returns it.
 | _keyword-only_                        |                                                                                                                                                                                                                                                                                          |
 | `before`                              | Component name or index to insert component directly before. ~~Optional[Union[str, int]]~~                                                                                                                                                                                               |
 | `after`                               | Component name or index to insert component directly after. ~~Optional[Union[str, int]]~~                                                                                                                                                                                                |
-| `first`                               | Insert component first / not first in the pipeline. ~~Optional[bool]~~                                                                                                                                                                                                                   |
-| `last`                                | Insert component last / not last in the pipeline. ~~Optional[bool]~~                                                                                                                                                                                                                     |
+| `first`                               | Insert component first in the pipeline if set to `True`. ~~Optional[Literal[True]]~~                                                                                                                                                                                                     |
+| `last`                                | Insert component last in the pipeline if set to `True`. ~~Optional[Literal[True]]~~                                                                                                                                                                                                      |
 | `config` <Tag variant="new">3</Tag>   | Optional config parameters to use for this component. Will be merged with the `default_config` specified by the component factory. ~~Dict[str, Any]~~                                                                                                                                    |
 | `source` <Tag variant="new">3</Tag>   | Optional source pipeline to copy component from. If a source is provided, the `factory_name` is interpreted as the name of the component in the source pipeline. Make sure that the vocab, vectors and settings of the source pipeline match the target pipeline. ~~Optional[Language]~~ |
 | `validate` <Tag variant="new">3</Tag> | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                                                           |
