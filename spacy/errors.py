@@ -979,6 +979,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E4007 = ("Span {var} {value} must be {op} Span {existing_var} "
              "{existing_value}.")
     E4008 = ("Span {pos}_char {value} does not correspond to a token {pos}.")
+    E4009 = ("The '{attr}' parameter should be 'None' or 'True', but found '{value}'.")
 
 
 RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}
