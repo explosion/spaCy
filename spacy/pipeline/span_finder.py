@@ -48,7 +48,7 @@ DEFAULT_SPAN_FINDER_MODEL = Config().from_str(span_finder_default_config)["model
         "threshold": 0.5,
         "model": DEFAULT_SPAN_FINDER_MODEL,
         "spans_key": DEFAULT_SPANS_KEY,
-        "max_length": None,
+        "max_length": 25,
         "min_length": None,
         "scorer": {"@scorers": "spacy.span_finder_scorer.v1"},
     },
