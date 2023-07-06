@@ -8,6 +8,7 @@ from typing import (
     List,
     Optional,
     Protocol,
+    Sequence,
     Tuple,
     Union,
     overload,
@@ -134,7 +135,12 @@ class Doc:
     def text(self) -> str: ...
     @property
     def text_with_ws(self) -> str: ...
-    ents: Tuple[Span]
+    # Ideally the getter would output Tuple[Span]
+    # see https://github.com/python/mypy/issues/3004
+    @property
+    def ents(self) -> Sequence[Span]: ...
+    @ents.setter
+    def ents(self, value: Sequence[Span]) -> None: ...
     def set_ents(
         self,
         entities: List[Span],
