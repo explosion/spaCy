@@ -777,8 +777,8 @@ class Language:
             component directly before.
         after (Union[str, int]): Name or index of the component to insert new
             component directly after.
-        first (True or None): If True, insert component first in the pipeline.
-        last (True or None): If True, insert component last in the pipeline.
+        first (Optional[Literal[True]]): If True, insert component first in the pipeline.
+        last (Optional[Literal[True]]): If True, insert component last in the pipeline.
         source (Language): Optional loaded nlp object to copy the pipeline
             component from.
         config (Dict[str, Any]): Config parameters to use for this component.
@@ -831,8 +831,8 @@ class Language:
 
         before (str): Name or index of the component to insert directly before.
         after (str): Name or index of component to insert directly after.
-        first (True or None): If True, insert component first in the pipeline.
-        last (True or None): If True, insert component last in the pipeline.
+        first (Optional[Literal[True]]): If True, insert component first in the pipeline.
+        last (Optional[Literal[True]]): If True, insert component last in the pipeline.
         RETURNS (int): The index of the new pipeline component.
         """
         if first is not None and first is not True:
