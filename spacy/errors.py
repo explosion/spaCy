@@ -557,8 +557,6 @@ class Errors(metaclass=ErrorsWithCodes):
             "floret vectors, not {mode} vectors.")
     E851 = ("The 'textcat' component labels should only have values of 0 or 1, "
             "but found value of '{val}'.")
-    E852 = ("The tar file pulled from the remote attempted an unsafe path "
-            "traversal.")
     E853 = ("Unsupported component factory name '{name}'. The character '.' is "
             "not permitted in factory names.")
     E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
