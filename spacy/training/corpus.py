@@ -26,7 +26,7 @@ def create_docbin_reader(
     max_length: int = 0,
     limit: int = 0,
     augmenter: Optional[Callable] = None,
-) -> Callable[["Language"], Iterable[Doc]]:
+) -> Callable[["Language"], Iterable[Example]]:
     if path is None:
         raise ValueError(Errors.E913)
     util.logger.debug("Loading corpus from path: %s", path)
@@ -63,7 +63,7 @@ def create_plain_text_reader(
     path: Optional[Path],
     min_length: int = 0,
     max_length: int = 0,
-) -> Callable[["Language"], Iterable[Example]]:
+) -> Callable[["Language"], Iterable[Doc]]:
     """Iterate Example objects from a file or directory of plain text
     UTF-8 files with one line per doc.
 
