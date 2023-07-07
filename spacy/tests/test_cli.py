@@ -697,7 +697,7 @@ def test_string_to_list_intify(value):
     assert string_to_list(value, intify=True) == [1, 2, 3]
 
 
-@pytest.mark.skip(reason="Temporarily skip before models are published")
+@pytest.mark.skip(reason="Temporarily skip before 3.7 models are published")
 def test_download_compatibility():
     spec = SpecifierSet("==" + about.__version__)
     spec.prereleases = False
@@ -708,7 +708,7 @@ def test_download_compatibility():
         assert get_minor_version(about.__version__) == get_minor_version(version)
 
 
-@pytest.mark.skip(reason="Temporarily skip before models are published")
+@pytest.mark.skip(reason="Temporarily skip before 3.7 models are published")
 def test_validate_compatibility_table():
     spec = SpecifierSet("==" + about.__version__)
     spec.prereleases = False
