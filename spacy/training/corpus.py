@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 FILE_TYPE = ".spacy"
 
 
-
 @util.registry.readers("spacy.Corpus.v1")
 def create_docbin_reader(
     path: Optional[Path],
@@ -27,7 +26,7 @@ def create_docbin_reader(
     max_length: int = 0,
     limit: int = 0,
     augmenter: Optional[Callable] = None,
-) -> Callable[["Language"], Iterable[Example]]:
+) -> Callable[["Language"], Iterable[Doc]]:
     if path is None:
         raise ValueError(Errors.E913)
     util.logger.debug("Loading corpus from path: %s", path)
@@ -211,7 +210,7 @@ class Corpus:
 
     def read_docbin(
         self, vocab: Vocab, locs: Iterable[Union[str, Path]]
-    ) -> Iterable[Doc]:
+    ) -> Iterator[Doc]:
         """Yield training examples as example dicts"""
         i = 0
         for loc in locs:
