@@ -170,7 +170,7 @@ nlp = spacy.blank("sv")
 nlp.add_pipe("lemmatizer", config={"mode": "lookup"})
 ```
 
-### Rule-based lemmatizer {id="lemmatizer-rule",model="morphologizer,tagger"}
+### Rule-based lemmatizer {id="lemmatizer-rule",model="morphologizer"}
 
 When training pipelines that include a component that assigns part-of-speech
 tags (a morphologizer or a tagger with a [POS mapping](#mappings-exceptions)), a
