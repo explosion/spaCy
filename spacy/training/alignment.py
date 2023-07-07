@@ -1,5 +1,5 @@
-from typing import List
 from dataclasses import dataclass
+from typing import List
 
 from .align import get_alignments
 from .alignment_array import AlignmentArray

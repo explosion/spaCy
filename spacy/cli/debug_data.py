@@ -1,30 +1,49 @@
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
-from typing import cast, overload
-from pathlib import Path
-from collections import Counter
-import sys
-import srsly
-from wasabi import Printer, MESSAGES, msg
-import typer
 import math
+import sys
+from collections import Counter
+from pathlib import Path
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+    cast,
+    overload,
+)
 
-from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
-from ._util import import_code, debug_cli, _format_number
-from ..training import Example, remove_bilu_prefix
-from ..training.initialize import get_sourced_components
-from ..schemas import ConfigSchemaTraining
-from ..pipeline import TrainablePipe
+import numpy
+import srsly
+import typer
+from wasabi import MESSAGES, Printer, msg
+
+from .. import util
+from ..compat import Literal
+from ..language import Language
+from ..morphology import Morphology
+from ..pipeline import Morphologizer, SpanCategorizer, TrainablePipe
+from ..pipeline._edit_tree_internals.edit_trees import EditTrees
 from ..pipeline._parser_internals import nonproj
 from ..pipeline._parser_internals.nonproj import DELIMITER
-from ..pipeline import Morphologizer, SpanCategorizer
-from ..pipeline._edit_tree_internals.edit_trees import EditTrees
-from ..morphology import Morphology
-from ..language import Language
+from ..schemas import ConfigSchemaTraining
+from ..training import Example, remove_bilu_prefix
+from ..training.initialize import get_sourced_components
 from ..util import registry, resolve_dot_names
-from ..compat import Literal
 from ..vectors import Mode as VectorsMode
-from .. import util
-
+from ._util import (
+    Arg,
+    Opt,
+    _format_number,
+    app,
+    debug_cli,
+    import_code,
+    parse_config_overrides,
+    show_validation_error,
+)
 
 # Minimum number of expected occurrences of NER label in data to train new label
 NEW_LABEL_THRESHOLD = 50
@@ -211,7 +230,7 @@ def debug_data(
     else:
         msg.info("No word vectors present in the package")
 
-    if "spancat" in factory_names:
+    if "spancat" in factory_names or "spancat_singlelabel" in factory_names:
         model_labels_spancat = _get_labels_from_spancat(nlp)
         has_low_data_warning = False
         has_no_neg_warning = False
@@ -336,7 +355,7 @@ def debug_data(
                 show=verbose,
             )
         else:
-            msg.good("Examples without ocurrences available for all labels")
+            msg.good("Examples without occurrences available for all labels")
 
     if "ner" in factory_names:
         # Get all unique NER labels present in the data
@@ -521,9 +540,13 @@ def debug_data(
 
     if "tagger" in factory_names:
         msg.divider("Part-of-speech Tagging")
-        label_list = [label for label in gold_train_data["tags"]]
-        model_labels = _get_labels_from_model(nlp, "tagger")
+        label_list, counts = zip(*gold_train_data["tags"].items())
         msg.info(f"{len(label_list)} label(s) in train data")
+        p = numpy.array(counts)
+        p = p / p.sum()
+        norm_entropy = (-p * numpy.log2(p)).sum() / numpy.log2(len(label_list))
+        msg.info(f"{norm_entropy} is the normalised label entropy")
+        model_labels = _get_labels_from_model(nlp, "tagger")
         labels = set(label_list)
         missing_labels = model_labels - labels
         if missing_labels:
@@ -825,7 +848,7 @@ def _compile_gold(
                     data["boundary_cross_ents"] += 1
                 elif label == "-":
                     data["ner"]["-"] += 1
-        if "spancat" in factory_names:
+        if "spancat" in factory_names or "spancat_singlelabel" in factory_names:
             for spans_key in list(eg.reference.spans.keys()):
                 # Obtain the span frequency
                 if spans_key not in data["spancat"]:
@@ -1023,7 +1046,7 @@ def _get_labels_from_spancat(nlp: Language) -> Dict[str, Set[str]]:
     pipe_names = [
         pipe_name
         for pipe_name in nlp.pipe_names
-        if nlp.get_pipe_meta(pipe_name).factory == "spancat"
+        if nlp.get_pipe_meta(pipe_name).factory in ("spancat", "spancat_singlelabel")
     ]
     labels: Dict[str, Set[str]] = {}
     for pipe_name in pipe_names:

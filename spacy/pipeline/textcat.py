@@ -1,18 +1,18 @@
-from typing import Iterable, Tuple, Optional, Dict, List, Callable, Any
-from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
-from thinc.types import Floats2d
-import numpy
 from itertools import islice
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
-from .trainable_pipe import TrainablePipe
-from ..language import Language
-from ..training import Example, validate_examples, validate_get_examples
+import numpy
+from thinc.api import Config, Model, Optimizer, get_array_module, set_dropout_rate
+from thinc.types import Floats2d
+
 from ..errors import Errors
+from ..language import Language
 from ..scorer import Scorer
 from ..tokens import Doc
+from ..training import Example, validate_examples, validate_get_examples
 from ..util import registry
 from ..vocab import Vocab
-
+from .trainable_pipe import TrainablePipe
 
 single_label_default_config = """
 [model]

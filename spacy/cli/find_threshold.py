@@ -1,17 +1,17 @@
 import functools
+import logging
 import operator
 from pathlib import Path
-import logging
-from typing import Optional, Tuple, Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy
 import wasabi.tables
 
-from ..pipeline import TextCategorizer, MultiLabel_TextCategorizer
-from ..errors import Errors
-from ..training import Corpus
-from ._util import app, Arg, Opt, import_code, setup_gpu
 from .. import util
+from ..errors import Errors
+from ..pipeline import MultiLabel_TextCategorizer, TextCategorizer
+from ..training import Corpus
+from ._util import Arg, Opt, app, import_code, setup_gpu
 
 _DEFAULTS = {
     "n_trials": 11,
@@ -35,7 +35,7 @@ def find_threshold_cli(
     code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     use_gpu: int = Opt(_DEFAULTS["use_gpu"], "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     gold_preproc: bool = Opt(_DEFAULTS["gold_preproc"], "--gold-preproc", "-G", help="Use gold preprocessing"),
-    verbose: bool = Opt(False, "--silent", "-V", "-VV", help="Display more information for debugging purposes"),
+    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     # fmt: on
 ):
     """

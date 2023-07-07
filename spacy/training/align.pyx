@@ -1,6 +1,6 @@
-from typing import List, Tuple
-from itertools import chain
 import re
+from itertools import chain
+from typing import List, Tuple
 
 from ..errors import Errors
 

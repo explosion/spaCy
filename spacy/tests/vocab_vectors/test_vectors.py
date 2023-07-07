@@ -402,6 +402,7 @@ def test_vectors_serialize():
         row_r = v_r.add("D", vector=OPS.asarray([10, 20, 30, 40], dtype="f"))
         assert row == row_r
         assert_equal(OPS.to_numpy(v.data), OPS.to_numpy(v_r.data))
+        assert v.attr == v_r.attr
 
 
 def test_vector_is_oov():
@@ -646,3 +647,32 @@ def test_equality():
     vectors1.resize((5, 9))
     vectors2.resize((5, 9))
     assert vectors1 == vectors2
+
+
+def test_vectors_attr():
+    data = numpy.asarray([[0, 0, 0], [1, 2, 3], [9, 8, 7]], dtype="f")
+    # default ORTH
+    nlp = English()
+    nlp.vocab.vectors = Vectors(data=data, keys=["A", "B", "C"])
+    assert nlp.vocab.strings["A"] in nlp.vocab.vectors.key2row
+    assert nlp.vocab.strings["a"] not in nlp.vocab.vectors.key2row
+    assert nlp.vocab["A"].has_vector is True
+    assert nlp.vocab["a"].has_vector is False
+    assert nlp("A")[0].has_vector is True
+    assert nlp("a")[0].has_vector is False
+
+    # custom LOWER
+    nlp = English()
+    nlp.vocab.vectors = Vectors(data=data, keys=["a", "b", "c"], attr="LOWER")
+    assert nlp.vocab.strings["A"] not in nlp.vocab.vectors.key2row
+    assert nlp.vocab.strings["a"] in nlp.vocab.vectors.key2row
+    assert nlp.vocab["A"].has_vector is True
+    assert nlp.vocab["a"].has_vector is True
+    assert nlp("A")[0].has_vector is True
+    assert nlp("a")[0].has_vector is True
+    # add a new vectors entry
+    assert nlp.vocab["D"].has_vector is False
+    assert nlp.vocab["d"].has_vector is False
+    nlp.vocab.set_vector("D", numpy.asarray([4, 5, 6]))
+    assert nlp.vocab["D"].has_vector is True
+    assert nlp.vocab["d"].has_vector is True

@@ -1,10 +1,9 @@
 import re
 
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ..punctuation import ALPHA_LOWER, CURRENCY
 from ...symbols import ORTH
 from ...util import update_exc
-
+from ..punctuation import ALPHA_LOWER, CURRENCY
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 
 _exc = {}
 

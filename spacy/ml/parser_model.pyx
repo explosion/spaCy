@@ -1,19 +1,20 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False
 cimport numpy as np
 from libc.math cimport exp
-from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free, realloc
-from thinc.backends.linalg cimport Vec, VecVec
+from libc.string cimport memcpy, memset
 from thinc.backends.cblas cimport saxpy, sgemm
+from thinc.backends.linalg cimport Vec, VecVec
 
 import numpy
 import numpy.random
-from thinc.api import Model, CupyOps, NumpyOps, get_ops
+from thinc.api import CupyOps, Model, NumpyOps, get_ops
 
 from .. import util
 from ..errors import Errors
-from ..typedefs cimport weight_t, class_t, hash_t
+
 from ..pipeline._parser_internals.stateclass cimport StateClass
+from ..typedefs cimport class_t, hash_t, weight_t
 
 
 cdef WeightsC get_c_weights(model) except *:

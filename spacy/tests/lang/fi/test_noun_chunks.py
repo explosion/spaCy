@@ -1,6 +1,6 @@
 import pytest
-from spacy.tokens import Doc
 
+from spacy.tokens import Doc
 
 FI_NP_TEST_EXAMPLES = [
     (

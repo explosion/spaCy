@@ -1,6 +1,7 @@
 import pickle
 
 from spacy.lang.th import Thai
+
 from ...util import make_tempdir
 
 

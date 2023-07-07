@@ -1,20 +1,32 @@
-from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable
-from typing import Sequence, Set, cast
 import warnings
 from functools import partial
 from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
+
 import srsly
 
-from .pipe import Pipe
-from ..training import Example
-from ..language import Language
+from .. import util
 from ..errors import Errors, Warnings
-from ..util import ensure_path, SimpleFrozenList, registry
-from ..tokens import Doc, Span
-from ..scorer import Scorer
+from ..language import Language
 from ..matcher import Matcher, PhraseMatcher
 from ..matcher.levenshtein import levenshtein_compare
-from .. import util
+from ..scorer import Scorer
+from ..tokens import Doc, Span
+from ..training import Example
+from ..util import SimpleFrozenList, ensure_path, registry
+from .pipe import Pipe
 
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 DEFAULT_SPANS_KEY = "ruler"

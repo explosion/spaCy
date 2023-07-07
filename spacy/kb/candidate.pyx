@@ -1,8 +1,11 @@
 # cython: infer_types=True, profile=True
 
 from typing import Iterable
+
 from .kb cimport KnowledgeBase
+
 from ..tokens import Span
+
 
 cdef class Candidate:
     """A `Candidate` object refers to a textual mention (`alias`) that may or may not be resolved

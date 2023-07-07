@@ -1,6 +1,23 @@
-from ...symbols import POS, PUNCT, INTJ, ADJ, AUX, ADP, PART, SCONJ, NOUN
-from ...symbols import SYM, PRON, VERB, ADV, PROPN, NUM, DET, SPACE, CCONJ
-
+from ...symbols import (
+    ADJ,
+    ADP,
+    ADV,
+    AUX,
+    CCONJ,
+    DET,
+    INTJ,
+    NOUN,
+    NUM,
+    PART,
+    POS,
+    PRON,
+    PROPN,
+    PUNCT,
+    SCONJ,
+    SPACE,
+    SYM,
+    VERB,
+)
 
 TAG_MAP = {
     # Explanation of Unidic tags:

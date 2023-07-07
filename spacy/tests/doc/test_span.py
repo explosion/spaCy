@@ -1,13 +1,13 @@
-import pytest
 import numpy
+import pytest
 from numpy.testing import assert_array_equal
+from thinc.api import get_current_ops
 
-from spacy.attrs import ORTH, LENGTH
+from spacy.attrs import LENGTH, ORTH
 from spacy.lang.en import English
 from spacy.tokens import Doc, Span, Token
-from spacy.vocab import Vocab
 from spacy.util import filter_spans
-from thinc.api import get_current_ops
+from spacy.vocab import Vocab
 
 from ..util import add_vecs_to_vocab
 from .test_underscore import clean_underscore  # noqa: F401
@@ -700,3 +700,34 @@ def test_span_group_copy(doc):
     assert len(doc.spans["test"]) == 3
     # check that the copy spans were not modified and this is an isolated doc
     assert len(doc_copy.spans["test"]) == 2
+
+
+def test_for_partial_ent_sents():
+    """Spans may be associated with multiple sentences. These .sents should always be complete, not partial, sentences,
+    which this tests for.
+    """
+    doc = Doc(
+        English().vocab,
+        words=["Mahler's", "Symphony", "No.", "8", "was", "beautiful."],
+        sent_starts=[1, 0, 0, 1, 0, 0],
+    )
+    doc.set_ents([Span(doc, 1, 4, "WORK")])
+    # The specified entity is associated with both sentences in this doc, so we expect all sentences in the doc to be
+    # equal to the sentences referenced in ent.sents.
+    for doc_sent, ent_sent in zip(doc.sents, doc.ents[0].sents):
+        assert doc_sent == ent_sent
+
+
+def test_for_no_ent_sents():
+    """Span.sents() should set .sents correctly, even if Span in question is trailing and doesn't form a full
+    sentence.
+    """
+    doc = Doc(
+        English().vocab,
+        words=["This", "is", "a", "test.", "ENTITY"],
+        sent_starts=[1, 0, 0, 0, 1],
+    )
+    doc.set_ents([Span(doc, 4, 5, "WORK")])
+    sents = list(doc.ents[0].sents)
+    assert len(sents) == 1
+    assert str(sents[0]) == str(doc.ents[0].sent) == "ENTITY"

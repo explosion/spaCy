@@ -1,7 +1,7 @@
-import pytest
 import numpy
-from numpy.testing import assert_array_equal, assert_almost_equal
-from thinc.api import get_current_ops, Ragged
+import pytest
+from numpy.testing import assert_almost_equal, assert_array_equal
+from thinc.api import NumpyOps, Ragged, get_current_ops
 
 from spacy import util
 from spacy.lang.en import English
@@ -9,7 +9,7 @@ from spacy.language import Language
 from spacy.tokens import SpanGroup
 from spacy.tokens._dict_proxies import SpanGroups
 from spacy.training import Example
-from spacy.util import fix_random_seed, registry, make_tempdir
+from spacy.util import fix_random_seed, make_tempdir, registry
 
 OPS = get_current_ops()
 
@@ -190,17 +190,19 @@ def test_make_spangroup_singlelabel(threshold, allow_overlap, nr_results):
     spangroup = spancat._make_span_group_singlelabel(
         doc, indices, scores, allow_overlap
     )
-    assert len(spangroup) == nr_results
     if threshold > 0.4:
         if allow_overlap:
             assert spangroup[0].text == "London"
             assert spangroup[0].label_ == "City"
+            assert_almost_equal(0.6, spangroup.attrs["scores"][0], 5)
             assert spangroup[1].text == "Greater London"
             assert spangroup[1].label_ == "GreatCity"
-
+            assert spangroup.attrs["scores"][1] == 0.9
+            assert_almost_equal(0.9, spangroup.attrs["scores"][1], 5)
         else:
             assert spangroup[0].text == "Greater London"
             assert spangroup[0].label_ == "GreatCity"
+            assert spangroup.attrs["scores"][0] == 0.9
     else:
         if allow_overlap:
             assert spangroup[0].text == "Greater"
@@ -256,22 +258,32 @@ def test_make_spangroup_negative_label():
     assert len(spangroup_single) == 2
     assert spangroup_single[0].text == "Greater"
     assert spangroup_single[0].label_ == "City"
+    assert_almost_equal(0.4, spangroup_single.attrs["scores"][0], 5)
     assert spangroup_single[1].text == "Greater London"
     assert spangroup_single[1].label_ == "GreatCity"
+    assert spangroup_single.attrs["scores"][1] == 0.9
+    assert_almost_equal(0.9, spangroup_single.attrs["scores"][1], 5)
 
     assert len(spangroup_multi) == 6
     assert spangroup_multi[0].text == "Greater"
     assert spangroup_multi[0].label_ == "City"
+    assert_almost_equal(0.4, spangroup_multi.attrs["scores"][0], 5)
     assert spangroup_multi[1].text == "Greater"
     assert spangroup_multi[1].label_ == "Person"
+    assert_almost_equal(0.3, spangroup_multi.attrs["scores"][1], 5)
     assert spangroup_multi[2].text == "London"
     assert spangroup_multi[2].label_ == "City"
+    assert_almost_equal(0.6, spangroup_multi.attrs["scores"][2], 5)
     assert spangroup_multi[3].text == "London"
     assert spangroup_multi[3].label_ == "GreatCity"
+    assert_almost_equal(0.4, spangroup_multi.attrs["scores"][3], 5)
     assert spangroup_multi[4].text == "Greater London"
     assert spangroup_multi[4].label_ == "Thing"
+    assert spangroup_multi[4].text == "Greater London"
+    assert_almost_equal(0.8, spangroup_multi.attrs["scores"][4], 5)
     assert spangroup_multi[5].text == "Greater London"
     assert spangroup_multi[5].label_ == "GreatCity"
+    assert_almost_equal(0.9, spangroup_multi.attrs["scores"][5], 5)
 
 
 def test_ngram_suggester(en_tokenizer):
@@ -394,6 +406,21 @@ def test_ngram_sizes(en_tokenizer):
     assert_array_equal(OPS.to_numpy(ngrams_3.lengths), [0, 1, 3, 6, 9])
 
 
+def test_preset_spans_suggester():
+    nlp = Language()
+    docs = [nlp("This is an example."), nlp("This is the second example.")]
+    docs[0].spans[SPAN_KEY] = [docs[0][3:4]]
+    docs[1].spans[SPAN_KEY] = [docs[1][0:4], docs[1][3:5]]
+    suggester = registry.misc.get("spacy.preset_spans_suggester.v1")(spans_key=SPAN_KEY)
+    candidates = suggester(docs)
+    assert type(candidates) == Ragged
+    assert len(candidates) == 2
+    assert list(candidates.dataXd[0]) == [3, 4]
+    assert list(candidates.dataXd[1]) == [0, 4]
+    assert list(candidates.dataXd[2]) == [3, 5]
+    assert list(candidates.lengths) == [1, 2]
+
+
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the spancat component - ensuring the ML models work correctly
     fix_random_seed(0)
@@ -416,7 +443,7 @@ def test_overfitting_IO():
     spans = doc.spans[SPAN_KEY]
     assert len(spans) == 2
     assert len(spans.attrs["scores"]) == 2
-    assert min(spans.attrs["scores"]) > 0.9
+    assert min(spans.attrs["scores"]) > 0.8
     assert set([span.text for span in spans]) == {"London", "Berlin"}
     assert set([span.label_ for span in spans]) == {"LOC"}
 
@@ -428,7 +455,7 @@ def test_overfitting_IO():
         spans2 = doc2.spans[SPAN_KEY]
         assert len(spans2) == 2
         assert len(spans2.attrs["scores"]) == 2
-        assert min(spans2.attrs["scores"]) > 0.9
+        assert min(spans2.attrs["scores"]) > 0.8
         assert set([span.text for span in spans2]) == {"London", "Berlin"}
         assert set([span.label_ for span in spans2]) == {"LOC"}
 
@@ -565,3 +592,21 @@ def test_set_candidates(name):
     assert len(docs[0].spans["candidates"]) == 9
     assert docs[0].spans["candidates"][0].text == "Just"
     assert docs[0].spans["candidates"][4].text == "Just a"
+
+
+@pytest.mark.parametrize("name", SPANCAT_COMPONENTS)
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_spancat_multiprocessing(name, n_process):
+    if isinstance(get_current_ops, NumpyOps) or n_process < 2:
+        nlp = Language()
+        spancat = nlp.add_pipe(name, config={"spans_key": SPAN_KEY})
+        train_examples = make_examples(nlp)
+        nlp.initialize(get_examples=lambda: train_examples)
+        texts = [
+            "Just a sentence.",
+            "I like London and Berlin",
+            "I like Berlin",
+            "I eat ham.",
+        ]
+        docs = list(nlp.pipe(texts, n_process=n_process))
+        assert len(docs) == len(texts)

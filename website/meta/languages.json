@@ -222,7 +222,9 @@
         },
         {
             "code": "la",
-            "name": "Latin"
+            "name": "Latin",
+	    "example": "In principio creavit Deus caelum et terram.",
+	    "has_examples": true
         },
         {
             "code": "lb",
@@ -263,6 +265,11 @@
         {
             "code": "mr",
             "name": "Marathi"
+        },
+        {
+            "code": "ms",
+            "name": "Malay",
+            "has_examples": true
         },
         {
             "code": "nb",
@@ -334,7 +341,10 @@
         },
         {
             "code": "sl",
-            "name": "Slovenian"
+            "name": "Slovenian",
+	    "example": "France Prešeren je umrl 8. februarja 1849 v Kranju",
+	    "has_examples": true,
+            "models": ["sl_core_news_sm", "sl_core_news_md", "sl_core_news_lg", "sl_core_news_trf"]
         },
         {
             "code": "sq",

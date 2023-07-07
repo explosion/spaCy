@@ -1,8 +1,8 @@
 import numpy
 import pytest
 
-from spacy.vocab import Vocab
 from spacy.tokens import Doc, Token
+from spacy.vocab import Vocab
 
 
 @pytest.mark.issue(3540)

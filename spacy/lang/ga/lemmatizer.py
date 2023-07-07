@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 from ...pipeline import Lemmatizer
 from ...tokens import Token

@@ -1,21 +1,20 @@
-from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast, Union
 from dataclasses import dataclass
-from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
-from thinc.api import Optimizer
-from thinc.types import Ragged, Ints2d, Floats2d
+from functools import partial
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy
+from thinc.api import Config, Model, Ops, Optimizer, get_current_ops, set_dropout_rate
+from thinc.types import Floats2d, Ints1d, Ints2d, Ragged
 
 from ..compat import Protocol, runtime_checkable
-from ..scorer import Scorer
-from ..language import Language
-from .trainable_pipe import TrainablePipe
-from ..tokens import Doc, SpanGroup, Span
-from ..vocab import Vocab
-from ..training import Example, validate_examples
 from ..errors import Errors
+from ..language import Language
+from ..scorer import Scorer
+from ..tokens import Doc, Span, SpanGroup
+from ..training import Example, validate_examples
 from ..util import registry
-
+from ..vocab import Vocab
+from .trainable_pipe import TrainablePipe
 
 spancat_default_config = """
 [model]
@@ -32,8 +31,8 @@ hidden_size = 128
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v2"
 width = 96
-rows = [5000, 2000, 1000, 1000]
-attrs = ["ORTH", "PREFIX", "SUFFIX", "SHAPE"]
+rows = [5000, 1000, 2500, 1000]
+attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
@@ -70,6 +69,7 @@ maxout_pieces = 3
 depth = 4
 """
 
+DEFAULT_SPANS_KEY = "sc"
 DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_default_config)["model"]
 DEFAULT_SPANCAT_SINGLELABEL_MODEL = Config().from_str(
     spancat_singlelabel_default_config
@@ -82,39 +82,65 @@ class Suggester(Protocol):
         ...
 
 
+def ngram_suggester(
+    docs: Iterable[Doc], sizes: List[int], *, ops: Optional[Ops] = None
+) -> Ragged:
+    if ops is None:
+        ops = get_current_ops()
+    spans = []
+    lengths = []
+    for doc in docs:
+        starts = ops.xp.arange(len(doc), dtype="i")
+        starts = starts.reshape((-1, 1))
+        length = 0
+        for size in sizes:
+            if size <= len(doc):
+                starts_size = starts[: len(doc) - (size - 1)]
+                spans.append(ops.xp.hstack((starts_size, starts_size + size)))
+                length += spans[-1].shape[0]
+            if spans:
+                assert spans[-1].ndim == 2, spans[-1].shape
+        lengths.append(length)
+    lengths_array = ops.asarray1i(lengths)
+    if len(spans) > 0:
+        output = Ragged(ops.xp.vstack(spans), lengths_array)
+    else:
+        output = Ragged(ops.xp.zeros((0, 0), dtype="i"), lengths_array)
+
+    assert output.dataXd.ndim == 2
+    return output
+
+
+def preset_spans_suggester(
+    docs: Iterable[Doc], spans_key: str, *, ops: Optional[Ops] = None
+) -> Ragged:
+    if ops is None:
+        ops = get_current_ops()
+    spans = []
+    lengths = []
+    for doc in docs:
+        length = 0
+        if doc.spans[spans_key]:
+            for span in doc.spans[spans_key]:
+                spans.append([span.start, span.end])
+                length += 1
+
+        lengths.append(length)
+    lengths_array = cast(Ints1d, ops.asarray(lengths, dtype="i"))
+    if len(spans) > 0:
+        output = Ragged(ops.asarray(spans, dtype="i"), lengths_array)
+    else:
+        output = Ragged(ops.xp.zeros((0, 0), dtype="i"), lengths_array)
+    return output
+
+
 @registry.misc("spacy.ngram_suggester.v1")
 def build_ngram_suggester(sizes: List[int]) -> Suggester:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
     array of integers. The array has two columns, indicating the start and end
     position."""
 
-    def ngram_suggester(docs: Iterable[Doc], *, ops: Optional[Ops] = None) -> Ragged:
-        if ops is None:
-            ops = get_current_ops()
-        spans = []
-        lengths = []
-        for doc in docs:
-            starts = ops.xp.arange(len(doc), dtype="i")
-            starts = starts.reshape((-1, 1))
-            length = 0
-            for size in sizes:
-                if size <= len(doc):
-                    starts_size = starts[: len(doc) - (size - 1)]
-                    spans.append(ops.xp.hstack((starts_size, starts_size + size)))
-                    length += spans[-1].shape[0]
-                if spans:
-                    assert spans[-1].ndim == 2, spans[-1].shape
-            lengths.append(length)
-        lengths_array = ops.asarray1i(lengths)
-        if len(spans) > 0:
-            output = Ragged(ops.xp.vstack(spans), lengths_array)
-        else:
-            output = Ragged(ops.xp.zeros((0, 0), dtype="i"), lengths_array)
-
-        assert output.dataXd.ndim == 2
-        return output
-
-    return ngram_suggester
+    return partial(ngram_suggester, sizes=sizes)
 
 
 @registry.misc("spacy.ngram_range_suggester.v1")
@@ -126,12 +152,20 @@ def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
     return build_ngram_suggester(sizes)
 
 
+@registry.misc("spacy.preset_spans_suggester.v1")
+def build_preset_spans_suggester(spans_key: str) -> Suggester:
+    """Suggest all spans that are already stored in doc.spans[spans_key].
+    This is useful when an upstream component is used to set the spans
+    on the Doc such as a SpanRuler or SpanFinder."""
+    return partial(preset_spans_suggester, spans_key=spans_key)
+
+
 @Language.factory(
     "spancat",
     assigns=["doc.spans"],
     default_config={
         "threshold": 0.5,
-        "spans_key": "sc",
+        "spans_key": DEFAULT_SPANS_KEY,
         "max_positive": None,
         "model": DEFAULT_SPANCAT_MODEL,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
@@ -195,7 +229,7 @@ def make_spancat(
     "spancat_singlelabel",
     assigns=["doc.spans"],
     default_config={
-        "spans_key": "sc",
+        "spans_key": DEFAULT_SPANS_KEY,
         "model": DEFAULT_SPANCAT_SINGLELABEL_MODEL,
         "negative_weight": 1.0,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
@@ -726,6 +760,7 @@ class SpanCategorizer(TrainablePipe):
         if not allow_overlap:
             # Get the probabilities
             sort_idx = (argmax_scores.squeeze() * -1).argsort()
+            argmax_scores = argmax_scores[sort_idx]
             predicted = predicted[sort_idx]
             indices = indices[sort_idx]
             keeps = keeps[sort_idx]
@@ -748,4 +783,5 @@ class SpanCategorizer(TrainablePipe):
             attrs_scores.append(argmax_scores[i])
             spans.append(Span(doc, start, end, label=self.labels[label]))
 
+        spans.attrs["scores"] = numpy.array(attrs_scores)
         return spans

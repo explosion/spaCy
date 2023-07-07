@@ -1,22 +1,28 @@
 import os
 import random
-from libc.stdint cimport int32_t
+
 from cymem.cymem cimport Pool
+from libc.stdint cimport int32_t
 
 from collections import Counter
+
 from thinc.extra.search cimport Beam
 
 from ...tokens.doc cimport Doc
+
 from ...tokens.span import Span
-from ...tokens.span cimport Span
-from ...typedefs cimport weight_t, attr_t
-from ...lexeme cimport Lexeme
+
 from ...attrs cimport IS_SPACE
-from ...structs cimport TokenC, SpanC
+from ...lexeme cimport Lexeme
+from ...structs cimport SpanC, TokenC
+from ...tokens.span cimport Span
+from ...typedefs cimport attr_t, weight_t
+
 from ...training import split_bilu_label
+
 from ...training.example cimport Example
-from .stateclass cimport StateClass
 from ._state cimport StateC
+from .stateclass cimport StateClass
 from .transition_system cimport Transition, do_func_t
 
 from ...errors import Errors

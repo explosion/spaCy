@@ -1,6 +1,5 @@
 from ...attrs import LIKE_NUM
 
-
 _num_words = [
     "zero",
     "un",

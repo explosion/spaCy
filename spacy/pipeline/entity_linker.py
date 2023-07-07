@@ -1,25 +1,25 @@
-from typing import Optional, Iterable, Callable, Dict, Union, List, Any
-from thinc.types import Floats2d
-from pathlib import Path
-from itertools import islice
-import srsly
 import random
-from thinc.api import CosineDistance, Model, Optimizer, Config
-from thinc.api import set_dropout_rate
+from itertools import islice
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
-from ..kb import KnowledgeBase, Candidate
-from ..ml import empty_kb
-from ..tokens import Doc, Span
-from .pipe import deserialize_config
-from .legacy.entity_linker import EntityLinker_v1
-from .trainable_pipe import TrainablePipe
-from ..language import Language
-from ..vocab import Vocab
-from ..training import Example, validate_examples, validate_get_examples
-from ..errors import Errors
-from ..util import SimpleFrozenList, registry
+import srsly
+from thinc.api import Config, CosineDistance, Model, Optimizer, set_dropout_rate
+from thinc.types import Floats2d
+
 from .. import util
+from ..errors import Errors
+from ..kb import Candidate, KnowledgeBase
+from ..language import Language
+from ..ml import empty_kb
 from ..scorer import Scorer
+from ..tokens import Doc, Span
+from ..training import Example, validate_examples, validate_get_examples
+from ..util import SimpleFrozenList, registry
+from ..vocab import Vocab
+from .legacy.entity_linker import EntityLinker_v1
+from .pipe import deserialize_config
+from .trainable_pipe import TrainablePipe
 
 # See #9050
 BACKWARD_OVERWRITE = True
@@ -474,18 +474,24 @@ class EntityLinker(TrainablePipe):
 
                 # Looping through each entity in batch (TODO: rewrite)
                 for j, ent in enumerate(ent_batch):
-                    sent_index = sentences.index(ent.sent)
-                    assert sent_index >= 0
+                    assert hasattr(ent, "sents")
+                    sents = list(ent.sents)
+                    sent_indices = (
+                        sentences.index(sents[0]),
+                        sentences.index(sents[-1]),
+                    )
+                    assert sent_indices[1] >= sent_indices[0] >= 0
 
                     if self.incl_context:
                         # get n_neighbour sentences, clipped to the length of the document
-                        start_sentence = max(0, sent_index - self.n_sents)
+                        start_sentence = max(0, sent_indices[0] - self.n_sents)
                         end_sentence = min(
-                            len(sentences) - 1, sent_index + self.n_sents
+                            len(sentences) - 1, sent_indices[1] + self.n_sents
                         )
                         start_token = sentences[start_sentence].start
                         end_token = sentences[end_sentence].end
                         sent_doc = doc[start_token:end_token].as_doc()
+
                         # currently, the context is the same for each entity in a sentence (should be refined)
                         sentence_encoding = self.model.predict([sent_doc])[0]
                         sentence_encoding_t = sentence_encoding.T

@@ -1,11 +1,12 @@
-import pytest
 import numpy
+import pytest
 import srsly
+
+from spacy.attrs import NORM
 from spacy.lang.en import English
 from spacy.strings import StringStore
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
-from spacy.attrs import NORM
 
 
 @pytest.mark.parametrize("text1,text2", [("hello", "bye")])

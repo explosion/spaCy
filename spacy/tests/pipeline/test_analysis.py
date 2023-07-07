@@ -1,7 +1,8 @@
+import pytest
+from mock import Mock
+
 from spacy.language import Language
 from spacy.pipe_analysis import get_attr_info, validate_attrs
-from mock import Mock
-import pytest
 
 
 def test_component_decorator_assigns():
