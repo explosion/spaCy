@@ -26,7 +26,7 @@ options:
 | `model`          | Callable querying a specific LLM API. See [docs](#models). ~~Callable[[Iterable[Any]], Iterable[Any]]~~ |
 | `cache`          | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). ~~Cache~~           |
 | `save_io`        | Whether to save prompts/responses within `Doc.user_data["llm_io"]`. ~~bool~~                            |
-| `validate_types` | Whether to check if signatures of configured model and task are consistent. ~~bool~~                  |
+| `validate_types` | Whether to check if signatures of configured model and task are consistent. ~~bool~~                    |
 
 An `llm` component is defined by two main settings:
 
@@ -148,12 +148,12 @@ prompting.
 > max_n_words = null
 > ```
 
-| Argument      | Description                                                                                                                                                                                                                          |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Argument      | Description                                                                                                                                                                                                                        |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `template`    | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [summarization.jinja](./spacy_llm/tasks/templates/summarization.jinja). ~~str~~ |
-| `examples`    | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                       |
-| `max_n_words` | Maximum number of words to be used in summary. Note that this should not expected to work exactly. Defaults to `None`. ~~Optional[int]~~                                                                                             |
-| `field`       | Name of extension attribute to store summary in (i. e. the summary will be available in `doc._.{field}`). Defaults to `summary`. ~~str~~                                                                                             |
+| `examples`    | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                     |
+| `max_n_words` | Maximum number of words to be used in summary. Note that this should not expected to work exactly. Defaults to `None`. ~~Optional[int]~~                                                                                           |
+| `field`       | Name of extension attribute to store summary in (i. e. the summary will be available in `doc._.{field}`). Defaults to `summary`. ~~str~~                                                                                           |
 
 The summarization task prompts the model for a concise summary of the provided
 text. It optionally allows to limit the response to a certain number of tokens -
@@ -170,11 +170,9 @@ reader `spacy.FewShotReader.v1` supports `.yml`, `.yaml`, `.json` and `.jsonl`.
     The United Nations, referred to informally as the UN, is an
     intergovernmental organization whose stated purposes are  to maintain
     international peace and security, develop friendly relations among nations,
-    achieve international
-
-    cooperation, and serve as a centre for harmonizing the actions of nations.
-    It is the world's largest international  organization. The UN is
-    headquartered on international territory in New York City, and the
+    achieve international cooperation, and serve as a centre for harmonizing the
+    actions of nations. It is the world's largest international organization.
+    The UN is headquartered on international territory in New York City, and the
     organization has other offices in Geneva, Nairobi, Vienna, and The Hague,
     where the International Court of Justice is headquartered.\n\n The UN was
     established after World War II with the aim of preventing future world wars,
@@ -433,16 +431,16 @@ definitions are included in the prompt.
 > examples = null
 > ```
 
-| Argument            | Description                                                                                                                                                                                                                                           |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `labels`            | List of labels or str of comma-separated list of labels. ~~Union[List[str], str]~~                                                                                                                                                                    |
-| `label_definitions` | Dictionary of label definitions. Included in the prompt, if set. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                                                                                                     |
+| Argument            | Description                                                                                                                                                                                                                                         |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`            | List of labels or str of comma-separated list of labels. ~~Union[List[str], str]~~                                                                                                                                                                  |
+| `label_definitions` | Dictionary of label definitions. Included in the prompt, if set. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                                                                                                   |
 | `template`          | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [`textcat.jinja`](https://github.com/spacy-llm/spacy_llm/tasks/templates/textcat.jinja). ~~str~~ |
-| `examples`          | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                        |
-| `normalizer`        | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. Defaults to `None`. ~~Optional[Callable[[str], str]]~~                                                                           |
-| `exclusive_classes` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. Defaults to `False`. ~~bool~~                                                                                                |
-| `allow_none`        | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Defaults to `True`. ~~bool~~                                                                         |
-| `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                                                                                                    |
+| `examples`          | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                      |
+| `normalizer`        | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. Defaults to `None`. ~~Optional[Callable[[str], str]]~~                                                                         |
+| `exclusive_classes` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. Defaults to `False`. ~~bool~~                                                                                              |
+| `allow_none`        | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Defaults to `True`. ~~bool~~                                                                       |
+| `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                                                                                                  |
 
 To perform few-shot learning, you can write down a few examples in a separate
 file, and provide these to be injected into the prompt to the LLM. The default
