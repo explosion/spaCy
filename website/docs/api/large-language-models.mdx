@@ -26,7 +26,7 @@ options:
 | `model`          | Callable querying a specific LLM API. See [docs](#models). ~~Callable[[Iterable[Any]], Iterable[Any]]~~ |
 | `cache`          | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). ~~Cache~~           |
 | `save_io`        | Whether to save prompts/responses within `Doc.user_data["llm_io"]`. ~~bool~~                            |
-| `validate_types` | Whether to check if signatures of configured backend and task are consistent. ~~bool~~                  |
+| `validate_types` | Whether to check if signatures of configured model and task are consistent. ~~bool~~                  |
 
 An `llm` component is defined by two main settings:
 
@@ -49,7 +49,7 @@ component within the spaCy pipeline. Each entry is itself a dictionary, with two
 keys: `prompt` and `response`.
 
 A note on `validate_types`: by default, `spacy-llm` checks whether the
-signatures of the `backend` and `task` callables are consistent with each other
+signatures of the `model` and `task` callables are consistent with each other
 and emits a warning if they don't. `validate_types` can be set to `False` if you
 want to disable this behavior.
 
@@ -150,7 +150,7 @@ prompting.
 
 | Argument      | Description                                                                                                                                                                                                                          |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `template`    | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [summarization.jinja](./spacy_llm/tasks/templates/summarization.jinja). ~~str~~ |
+| `template`    | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [summarization.jinja](./spacy_llm/tasks/templates/summarization.jinja). ~~str~~ |
 | `examples`    | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                       |
 | `max_n_words` | Maximum number of words to be used in summary. Note that this should not expected to work exactly. Defaults to `None`. ~~Optional[int]~~                                                                                             |
 | `field`       | Name of extension attribute to store summary in (i. e. the summary will be available in `doc._.{field}`). Defaults to `summary`. ~~str~~                                                                                             |
@@ -437,7 +437,7 @@ definitions are included in the prompt.
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `labels`            | List of labels or str of comma-separated list of labels. ~~Union[List[str], str]~~                                                                                                                                                                    |
 | `label_definitions` | Dictionary of label definitions. Included in the prompt, if set. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                                                                                                     |
-| `template`          | Custom prompt template to send to LLM backend. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [`textcat.jinja`](https://github.com/spacy-llm/spacy_llm/tasks/templates/textcat.jinja). ~~str~~ |
+| `template`          | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [`textcat.jinja`](https://github.com/spacy-llm/spacy_llm/tasks/templates/textcat.jinja). ~~str~~ |
 | `examples`          | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                        |
 | `normalizer`        | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. Defaults to `None`. ~~Optional[Callable[[str], str]]~~                                                                           |
 | `exclusive_classes` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. Defaults to `False`. ~~bool~~                                                                                                |
@@ -759,7 +759,7 @@ accesses the `"gpt-3.5-turbo"` model.
 
 Currently three different approaches to use LLMs are supported:
 
-1. `spacy-llm`s native REST backend. This is the default for all hosted models
+1. `spacy-llm`s native REST interface. This is the default for all hosted models
    (e. g. OpenAI, Cohere, Anthropic, ...).
 2. A HuggingFace integration that allows to run a limited set of HF models
    locally.
@@ -771,7 +771,7 @@ respectively. Alternatively you can use LangChain to access hosted or local
 models by specifying one of the models registered with the `langchain.` prefix.
 
 <Infobox>
-_Why LangChain if there are also are a native REST and a HuggingFace backend? When should I use what?_
+_Why LangChain if there are also are a native REST and a HuggingFace interface? When should I use what?_
 
 Third-party libraries like `langchain` focus on prompt management, integration
 of many different LLM APIs, and other related features such as conversational
@@ -1244,7 +1244,7 @@ by setting the environmental variable `HF_HOME`.
 
 #### spacy.Falcon.v1 {id="falcon"}
 
-To use this backend, ideally you have a GPU enabled and have installed
+To use this model, ideally you have a GPU enabled and have installed
 `transformers`, `torch` and CUDA in your virtual environment. This allows you to
 have the setting `device=cuda:0` in your config, which ensures that the model is
 loaded entirely on the GPU (and fails otherwise).

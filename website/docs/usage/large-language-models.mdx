@@ -8,7 +8,7 @@ menu:
   - ['Logging', 'logging']
   - ['API', 'api']
   - ['Tasks', 'tasks']
-  - ['Backends', 'backends']
+  - ['Models', 'models']
   - ['Ongoing work', 'ongoing-work']
   - ['Issues', 'issues']
 ---
@@ -328,7 +328,7 @@ An `llm` component is defined by two main settings:
 - A [**task**](#tasks), defining the prompt to send to the LLM as well as the
   functionality to parse the resulting response back into structured fields on
   spaCy's [Doc](https://spacy.io/api/doc) objects.
-- A [**backend**](#backends) defining the model to use and how to connect to it.
+- A [**model**](#models) defining the model to use and how to connect to it.
   Note that `spacy-llm` supports both access to external APIs (such as OpenAI)
   as well as access to self-hosted open-source LLMs (such as using Dolly through
   Hugging Face).
@@ -344,7 +344,7 @@ component within the spaCy pipeline. Each entry is itself a dictionary, with two
 keys: `prompt` and `response`.
 
 A note on `validate_types`: by default, `spacy-llm` checks whether the
-signatures of the `backend` and `task` callables are consistent with each other
+signatures of the `model` and `task` callables are consistent with each other
 and emits a warning if they don't. `validate_types` can be set to `False` if you
 want to disable this behavior.
 
@@ -397,7 +397,7 @@ accesses the `"gpt-3.5-turbo"` model.
 
 Currently three different approaches to use LLMs are supported:
 
-1. `spacy-llm`s native REST backend. This is the default for all hosted models
+1. `spacy-llm`s native REST interface. This is the default for all hosted models
    (e. g. OpenAI, Cohere, Anthropic, ...).
 2. A HuggingFace integration that allows to run a limited set of HF models
    locally.
@@ -409,7 +409,7 @@ respectively. Alternatively you can use LangChain to access hosted or local
 models by specifying one of the models registered with the `langchain.` prefix.
 
 <Infobox>
-_Why LangChain if there are also are a native REST and a HuggingFace backend? When should I use what?_
+_Why LangChain if there are also are a native REST and a HuggingFace interface? When should I use what?_
 
 Third-party libraries like `langchain` focus on prompt management, integration
 of many different LLM APIs, and other related features such as conversational
