@@ -1352,12 +1352,12 @@ python -m pip install "accelerate>=0.16.0,<1.0"
 > ```ini
 > [components.llm.model]
 > @llm_models = "spacy.OpenLLaMA.v1"
-> name = "open_llama_3b_350bt_preview"
+> name = "open_llama_3b"
 > ```
 
 | Argument      | Description                                                                                                                                                                                                                    |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`        | The name of a OpenLLaMA model that is supported (e. g. "open_llama_3b_350bt_preview"). ~~Literal["open_llama_3b_350bt_preview", "open_llama_3b_600bt_preview", "open_llama_7b_400bt_preview", "open_llama_7b_600bt_preview"]~~ |
+| `name`        | The name of a OpenLLaMA model that is supported. ~~Literal["open_llama_3b", "open_llama_7b", "open_llama_7b_v2", "open_llama_13b"]~~ |
 | `config_init` | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. Defaults to `{}`. ~~Dict[str, Any]~~                                                              |
 | `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                                                                                                                        |
 
