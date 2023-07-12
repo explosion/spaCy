@@ -3,7 +3,7 @@ the docs and the init config command. It encodes various best practices and
 can help generate the best possible configuration, given a user's requirements. #}
 {%- set use_transformer = hardware != "cpu" and transformer_data -%}
 {%- set transformer = transformer_data[optimize] if use_transformer else {} -%}
-{%- set listener_components = ["tagger", "morphologizer", "parser", "ner", "textcat", "textcat_multilabel", "entity_linker", "span_finder", "spancat", "spancat_singlelabel", "trainable_lemmatizer"] -%}
+{%- set listener_components = ["tagger", "morphologizer", "parser", "ner", "textcat", "textcat_multilabel", "entity_linker", "span_finder", "spancat", "spancat_singlelabel", "trainable_lemmatizer", "llm"] -%}
 [paths]
 train = null
 dev = null
@@ -328,6 +328,18 @@ grad_factor = 1.0
 {%- endif %}
 {%- endif %}
 
+{% if "llm" in components -%}
+[components.llm]
+factory = "llm"
+
+[components.llm.model]
+@llm_models = "{{ llm_spec['model'] }}"
+
+[components.llm.task]
+@llm_tasks = "{{ llm_spec['task'] }}"
+{% endif -%}
+
+
 {# NON-TRANSFORMER PIPELINE #}
 {% else -%}
 {% if "tok2vec" in full_pipeline -%}
@@ -584,6 +596,17 @@ no_output_layer = false
 {%- endif %}
 {%- endif %}
 {% endif %}
+
+{% if "llm" in components -%}
+[components.llm]
+factory = "llm"
+
+[components.llm.model]
+@llm_models = "{{ llm_spec['model'] }}"
+
+[components.llm.task]
+@llm_tasks = "{{ llm_spec['task'] }}"
+{% endif -%}
 
 {% for pipe in components %}
 {% if pipe not in listener_components %}

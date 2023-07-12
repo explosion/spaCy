@@ -1,7 +1,7 @@
 import re
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Any, Dict
 
 import srsly
 from jinja2 import Template
@@ -9,9 +9,10 @@ from thinc.api import Config
 from wasabi import Printer, diff_strings
 
 from .. import util
+from ..errors import Errors
 from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
-from ..util import SimpleFrozenList
+from ..util import SimpleFrozenList, registry
 from ._util import (
     COMMAND,
     Arg,
@@ -40,6 +41,8 @@ class InitValues:
 
     lang = "en"
     pipeline = SimpleFrozenList(["tagger", "parser", "ner"])
+    llm_task: Optional[str] = None
+    llm_model: Optional[str] = None
     optimize = Optimizations.efficiency
     gpu = False
     pretraining = False
@@ -52,6 +55,8 @@ def init_config_cli(
     output_file: Path = Arg(..., help="File to save the config to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
     lang: str = Opt(InitValues.lang, "--lang", "-l", help="Two-letter code of the language to use"),
     pipeline: str = Opt(",".join(InitValues.pipeline), "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
+    llm_task: str = Opt(InitValues.llm_task, "--llm.task", "-p", help="Name of task for LLM pipeline components"),
+    llm_model: str = Opt(InitValues.llm_model, "--llm.model", "-p", help="Name of model for LLM pipeline components"),
     optimize: Optimizations = Opt(InitValues.optimize, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     gpu: bool = Opt(InitValues.gpu, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     pretraining: bool = Opt(InitValues.pretraining, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
@@ -77,6 +82,8 @@ def init_config_cli(
     config = init_config(
         lang=lang,
         pipeline=pipeline,
+        llm_model=llm_model,
+        llm_task=llm_task,
         optimize=optimize.value,
         gpu=gpu,
         pretraining=pretraining,
@@ -157,6 +164,8 @@ def init_config(
     *,
     lang: str = InitValues.lang,
     pipeline: List[str] = InitValues.pipeline,
+    llm_model: str = InitValues.llm_model,
+    llm_task: str = InitValues.llm_task,
     optimize: str = InitValues.optimize,
     gpu: bool = InitValues.gpu,
     pretraining: bool = InitValues.pretraining,
@@ -165,8 +174,44 @@ def init_config(
     msg = Printer(no_print=silent)
     with TEMPLATE_PATH.open("r") as f:
         template = Template(f.read())
+
     # Filter out duplicates since tok2vec and transformer are added by template
     pipeline = [pipe for pipe in pipeline if pipe not in ("tok2vec", "transformer")]
+
+    # Verify LLM arguments are consistent, if at least one `llm` component has been specified.
+    llm_spec: Dict[str, Dict[str, Any]] = {}
+    if "llm" in pipeline:
+        try:
+            import spacy_llm
+        except ImportError as ex:
+            raise ValueError(Errors.E1055) from ex
+
+        if llm_model is None:
+            raise ValueError("Option `llm.model` must be set if `llm` component is in pipeline.")
+        if llm_task is None:
+            raise ValueError("Option `llm.task` must be set if `llm` component is in pipeline.")
+
+        # Select registry handles for model(s) and task(s). Raise if no match found.
+        llm_spec = {
+            spec_type: {
+                "arg": llm_model if spec_type == "model" else llm_task,
+                "matched_reg_handle": None,
+                "reg_handles": getattr(registry, f"llm_{spec_type}s").get_all()
+            }
+            for spec_type in ("model", "task")
+        }
+
+        for spec_type, spec in llm_spec.items():
+            for reg_handle in spec["reg_handles"]:
+                if reg_handle.split(".")[1].lower() == spec["arg"].lower().replace(".", "-"):
+                    spec["matched_reg_handle"] = reg_handle
+                    break
+
+            if not spec["matched_reg_handle"]:
+                arg = spec["arg"]
+                raise ValueError(f"Couldn't find a matching registration handle for {spec_type} '{spec}'. Double-check"
+                                 f" whether '{arg}' is spelled correctly.")
+
     defaults = RECOMMENDATIONS["__default__"]
     reco = RecommendationSchema(**RECOMMENDATIONS.get(lang, defaults)).dict()
     variables = {
@@ -175,6 +220,7 @@ def init_config(
         "optimize": optimize,
         "hardware": "gpu" if gpu else "cpu",
         "transformer_data": reco["transformer"],
+        "llm_spec": {key: llm_spec[key]["matched_reg_handle"] for key in llm_spec},
         "word_vectors": reco["word_vectors"],
         "has_letters": reco["has_letters"],
     }
