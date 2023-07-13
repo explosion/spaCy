@@ -1825,7 +1825,7 @@ class Language:
         # Later we replace the component config with the raw config again.
         interpolated = filled.interpolate() if not filled.is_interpolated else filled
         pipeline = interpolated.get("components", {})
-        sourced = util.get_sourced_components(interpolated)
+        sourced = util.get_sourced_components(interpolated)  # noqa: F841
         # If components are loaded from a source (existing models), we cache
         # them here so they're only loaded once
         source_nlps = {}
@@ -1958,7 +1958,7 @@ class Language:
         useful when training a pipeline with components sourced from an existing
         pipeline: if multiple components (e.g. tagger, parser, NER) listen to
         the same tok2vec component, but some of them are frozen and not updated,
-        their performance may degrade significally as the tok2vec component is
+        their performance may degrade significantly as the tok2vec component is
         updated with new data. To prevent this, listeners can be replaced with
         a standalone tok2vec layer that is owned by the component and doesn't
         change if the component isn't updated.
