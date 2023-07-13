@@ -1065,6 +1065,27 @@ Cohere's `command` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                                  |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                                   |
 
+#### spacy.Claude-2.v1 {id="claude-1"}
+
+Anthropic's `claude-2` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Claude-2.v1 "
+> name = "claude-2"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-2"`. ~~Literal["claude-2", "claude-2-100k"]~~             |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
 #### spacy.Claude-1.v1 {id="claude-1"}
 
 Anthropic's `claude-1` model family.
