@@ -187,30 +187,38 @@ def init_config(
             raise ValueError(Errors.E1055) from ex
 
         if llm_model is None:
-            raise ValueError("Option `llm.model` must be set if `llm` component is in pipeline.")
+            raise ValueError(
+                "Option `llm.model` must be set if `llm` component is in pipeline."
+            )
         if llm_task is None:
-            raise ValueError("Option `llm.task` must be set if `llm` component is in pipeline.")
+            raise ValueError(
+                "Option `llm.task` must be set if `llm` component is in pipeline."
+            )
 
         # Select registry handles for model(s) and task(s). Raise if no match found.
         llm_spec = {
             spec_type: {
                 "arg": llm_model if spec_type == "model" else llm_task,
                 "matched_reg_handle": None,
-                "reg_handles": getattr(registry, f"llm_{spec_type}s").get_all()
+                "reg_handles": getattr(registry, f"llm_{spec_type}s").get_all(),
             }
             for spec_type in ("model", "task")
         }
 
         for spec_type, spec in llm_spec.items():
             for reg_handle in spec["reg_handles"]:
-                if reg_handle.split(".")[1].lower() == spec["arg"].lower().replace(".", "-"):
+                if reg_handle.split(".")[1].lower() == spec["arg"].lower().replace(
+                    ".", "-"
+                ):
                     spec["matched_reg_handle"] = reg_handle
                     break
 
             if not spec["matched_reg_handle"]:
                 arg = spec["arg"]
-                raise ValueError(f"Couldn't find a matching registration handle for {spec_type} '{spec}'. Double-check"
-                                 f" whether '{arg}' is spelled correctly.")
+                raise ValueError(
+                    f"Couldn't find a matching registration handle for {spec_type} '{spec}'. Double-check"
+                    f" whether '{arg}' is spelled correctly."
+                )
 
     defaults = RECOMMENDATIONS["__default__"]
     reco = RecommendationSchema(**RECOMMENDATIONS.get(lang, defaults)).dict()

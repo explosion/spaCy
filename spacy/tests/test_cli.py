@@ -670,8 +670,6 @@ def test_init_config_llm(pipeline, llm_model, llm_task):
     load_model_from_config(config, auto_fill=True)
 
 
-
-
 def test_model_recommendations():
     for lang, data in RECOMMENDATIONS.items():
         assert RecommendationSchema(**data)
