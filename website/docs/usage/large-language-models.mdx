@@ -408,27 +408,6 @@ Approaches 1. and 2 are the default for hosted model and local models,
 respectively. Alternatively you can use LangChain to access hosted or local
 models by specifying one of the models registered with the `langchain.` prefix.
 
-<Infobox>
-_Why LangChain if there are also are a native REST and a HuggingFace interface? When should I use what?_
-
-Third-party libraries like `langchain` focus on prompt management, integration
-of many different LLM APIs, and other related features such as conversational
-memory or agents. `spacy-llm` on the other hand emphasizes features we consider
-useful in the context of NLP pipelines utilizing LLMs to process documents
-(mostly) independent from each other. It makes sense that the feature sets of
-such third-party libraries and `spacy-llm` aren't identical - and users might
-want to take advantage of features not available in `spacy-llm`.
-
-The advantage of implementing our own REST and HuggingFace integrations is that
-we can ensure a larger degree of stability and robustness, as we can guarantee
-backwards-compatibility and more smoothly integrated error handling.
-
-If however there are features or APIs not natively covered by `spacy-llm`, it's
-trivial to utilize LangChain to cover this - and easy to customize the prompting
-mechanism, if so required.
-
-</Infobox>
-
 Note that when using hosted services, you have to ensure that the proper API
 keys are set as environment variables as described by the corresponding
 provider's documentation.
