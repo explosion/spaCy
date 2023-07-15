@@ -1,12 +1,14 @@
-from typing import Optional, Callable
+from typing import Callable, Optional
+
 from thinc.api import Model
-from .stop_words import STOP_WORDS
-from .lex_attrs import LEX_ATTRS
-from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .punctuation import TOKENIZER_SUFFIXES
-from .syntax_iterators import SYNTAX_ITERATORS
-from ...language import Language, BaseDefaults
+
+from ...language import BaseDefaults, Language
 from ...pipeline import Lemmatizer
+from .lex_attrs import LEX_ATTRS
+from .punctuation import TOKENIZER_SUFFIXES
+from .stop_words import STOP_WORDS
+from .syntax_iterators import SYNTAX_ITERATORS
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 
 
 class PersianDefaults(BaseDefaults):

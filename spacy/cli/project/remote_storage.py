@@ -1,18 +1,25 @@
-from typing import Optional, List, Dict, TYPE_CHECKING
+import hashlib
 import os
 import site
-import hashlib
-import urllib.parse
 import tarfile
+import urllib.parse
 from pathlib import Path
+from typing import TYPE_CHECKING, Dict, List, Optional
+
 from wasabi import msg
 
-from .._util import get_hash, get_checksum, upload_file, download_file
-from .._util import ensure_pathy, make_tempdir
-from ...util import get_minor_version, ENV_VARS, check_bool_env_var
-from ...git_info import GIT_VERSION
 from ... import about
 from ...errors import Errors
+from ...git_info import GIT_VERSION
+from ...util import ENV_VARS, check_bool_env_var, get_minor_version
+from .._util import (
+    download_file,
+    ensure_pathy,
+    get_checksum,
+    get_hash,
+    make_tempdir,
+    upload_file,
+)
 
 if TYPE_CHECKING:
     from pathy import FluidPath  # noqa: F401

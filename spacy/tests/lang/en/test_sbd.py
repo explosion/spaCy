@@ -1,4 +1,5 @@
 import pytest
+
 from spacy.tokens import Doc
 
 from ...util import apply_transition_sequence

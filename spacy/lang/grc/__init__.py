@@ -1,8 +1,8 @@
-from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .stop_words import STOP_WORDS
+from ...language import BaseDefaults, Language
 from .lex_attrs import LEX_ATTRS
-from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
-from ...language import Language, BaseDefaults
+from .punctuation import TOKENIZER_INFIXES, TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
+from .stop_words import STOP_WORDS
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 
 
 class AncientGreekDefaults(BaseDefaults):

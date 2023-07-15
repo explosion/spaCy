@@ -1,4 +1,5 @@
 import pytest
+
 from spacy.strings import StringStore
 
 

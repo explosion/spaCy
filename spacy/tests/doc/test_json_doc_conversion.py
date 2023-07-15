@@ -1,8 +1,10 @@
 import pytest
+import srsly
+
 import spacy
 from spacy import schemas
 from spacy.tokens import Doc, Span, Token
-import srsly
+
 from .test_underscore import clean_underscore  # noqa: F401
 
 

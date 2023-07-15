@@ -1,14 +1,17 @@
-from typing import Callable, Optional
+from typing import TYPE_CHECKING, Callable, Optional
+
 from ..errors import Errors
-from ..language import Language
-from ..util import load_model, registry, logger
+from ..util import load_model, logger, registry
+
+if TYPE_CHECKING:
+    from ..language import Language
 
 
 @registry.callbacks("spacy.copy_from_base_model.v1")
 def create_copy_from_base_model(
     tokenizer: Optional[str] = None,
     vocab: Optional[str] = None,
-) -> Callable[[Language], Language]:
+) -> Callable[["Language"], "Language"]:
     def copy_from_base_model(nlp):
         if tokenizer:
             logger.info("Copying tokenizer from: %s", tokenizer)

@@ -130,7 +130,7 @@ grad_factor = 1.0
 {% if "span_finder" in components -%}
 [components.span_finder]
 factory = "span_finder"
-max_length = null
+max_length = 25
 min_length = null
 scorer = {"@scorers":"spacy.span_finder_scorer.v1"}
 spans_key = "sc"
@@ -419,7 +419,7 @@ width = ${components.tok2vec.model.encode.width}
 {% if "span_finder" in components %}
 [components.span_finder]
 factory = "span_finder"
-max_length = null
+max_length = 25
 min_length = null
 scorer = {"@scorers":"spacy.span_finder_scorer.v1"}
 spans_key = "sc"

@@ -1,4 +1,5 @@
 import pytest
+
 from spacy.lang.hi import Hindi
 
 

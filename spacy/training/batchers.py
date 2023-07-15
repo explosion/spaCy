@@ -1,10 +1,18 @@
-from typing import Union, Iterable, Sequence, TypeVar, List, Callable, Iterator
-from typing import Optional, Any
-from functools import partial
 import itertools
+from functools import partial
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    TypeVar,
+    Union,
+)
 
-from ..util import registry, minibatch
-
+from ..util import minibatch, registry
 
 Sizing = Union[Sequence[int], int]
 ItemT = TypeVar("ItemT")

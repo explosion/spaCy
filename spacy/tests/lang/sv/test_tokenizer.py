@@ -1,6 +1,5 @@
 import pytest
 
-
 SV_TOKEN_EXCEPTION_TESTS = [
     (
         "Smörsåsen används bl.a. till fisk",

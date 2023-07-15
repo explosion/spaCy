@@ -1,7 +1,6 @@
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...symbols import ORTH, NORM
+from ...symbols import NORM, ORTH
 from ...util import update_exc
-
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 
 _exc = {
     "'acha'n": [{ORTH: "'ach", NORM: "gach"}, {ORTH: "a'n", NORM: "aon"}],

@@ -1,7 +1,8 @@
 import pytest
+
 from spacy.attrs import LEMMA
-from spacy.vocab import Vocab
 from spacy.tokens import Doc, Token
+from spacy.vocab import Vocab
 
 
 def test_doc_retokenize_merge(en_tokenizer):

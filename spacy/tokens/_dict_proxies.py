@@ -1,12 +1,12 @@
-from typing import Dict, Iterable, List, Tuple, Union, Optional, TYPE_CHECKING
 import warnings
 import weakref
 from collections import UserDict
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union
+
 import srsly
 
-from .span_group import SpanGroup
 from ..errors import Errors, Warnings
-
+from .span_group import SpanGroup
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports

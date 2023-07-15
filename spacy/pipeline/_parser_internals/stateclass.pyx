@@ -1,9 +1,10 @@
 # cython: infer_types=True
 import numpy
+
 from libcpp.vector cimport vector
-from ._state cimport ArcC
 
 from ...tokens.doc cimport Doc
+from ._state cimport ArcC
 
 
 cdef class StateClass:
