@@ -17,6 +17,22 @@
             "category": ["extension"],
             "tags": []
         },
+                {
+            "id": "sayswho",
+            "title": "SaysWho",
+            "slogan": "Quote identification, attribution and resolution.",
+            "description": "A Python package for identifying and attributing quotes in text. It uses a combination of logic and grammer to find quotes and their speakers, then uses a coreferencing model to better clarify who is speaking.",
+            "github": "afriedman412/sayswho",
+            "pip": "sayswho",
+            "code_language": "python",
+            "author": "Andy Friedman",
+            "author_links": {
+                "twitter": "steadynappin",
+                "github": "afriedman412"
+            },
+            "category": ["standalone"],
+            "tags": ["attribution", "coref", "text-processing"]
+        },
         {
             "id": "parsigs",
             "title": "parsigs",
