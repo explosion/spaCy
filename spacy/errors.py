@@ -219,6 +219,9 @@ class Warnings(metaclass=ErrorsWithCodes):
     W125 = ("The StaticVectors key_attr is no longer used. To set a custom "
             "key attribute for vectors, configure it through Vectors(attr=) or "
             "'spacy init vectors --attr'")
+    W126 = ("Pipe instance '{name}' is being added with a vocab "
+            "instance that will not match other components. This is "
+            "usually an error.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -981,6 +984,7 @@ class Errors(metaclass=ErrorsWithCodes):
              " 'min_length': {min_length}, 'max_length': {max_length}")
     E1054 = ("The text, including whitespace, must match between reference and "
              "predicted docs when training {component}.")
+    E1055 = ("Cannot create Language instance from config: missing pipeline components. The following components were added by instance (rather than config) via the 'Language.add_pipe_instance()' method, but are not present in the 'pipe_instances' variable: {names}")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
