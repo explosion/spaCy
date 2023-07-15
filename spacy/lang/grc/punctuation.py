@@ -6,6 +6,7 @@ _prefixes = (
     [
         "†",
         "⸏",
+        "〈",
     ]
     + LIST_PUNCT
     + LIST_ELLIPSES
@@ -22,6 +23,7 @@ _suffixes = (
     + [
         "†",
         "⸎",
+        "〉",
         r"(?<=[\u1F00-\u1FFF\u0370-\u03FF])[\-\.⸏]",
     ]
 )
