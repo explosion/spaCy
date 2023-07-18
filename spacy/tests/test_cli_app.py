@@ -1,9 +1,9 @@
 import os
+import subprocess
 from pathlib import Path
 
 import pytest
 import srsly
-import subprocess
 from typer.testing import CliRunner
 
 from spacy.cli._util import app, get_git_version
