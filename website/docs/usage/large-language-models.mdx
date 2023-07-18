@@ -95,7 +95,7 @@ the [OpenAI](#openai) section.
 
 Create a config file `config.cfg` containing at least the following (or see the
 full example
-[here](https://github.com/spacy-llm/usage_examples/textcat_openai)):
+[here](https://github.com/explosion/spacy-llm/tree/main/usage_examples/textcat_openai)):
 
 ```ini
 [nlp]
@@ -133,7 +133,8 @@ To run this example, ensure that you have a GPU enabled, and `transformers`,
 [DollyHF](#dollyhf-v1) section.
 
 Create a config file `config.cfg` containing at least the following (or see the
-full example [here](https://github.com/spacy-llm/usage_examples/ner_dolly)):
+full example
+[here](https://github.com/explosion/spacy-llm/tree/main/usage_examples/ner_dolly)):
 
 ```ini
 [nlp]
@@ -214,7 +215,7 @@ To register your custom task with spaCy, decorate a factory function using the
 to in your config.
 
 > 📖 For more details, see the
-> [**usage example on writing your own task**](https://github.com/spacy-llm/usage_examples/README.md#writing-your-own-task)
+> [**usage example on writing your own task**](https://github.com/explosion/spacy-llm/tree/main/usage_examples#writing-your-own-task)
 
 ```python
 from typing import Iterable, List
@@ -354,8 +355,9 @@ structured information. All tasks are registered in spaCy's `llm_tasks`
 registry.
 
 Practically speaking, a task should adhere to the `Protocol` `LLMTask` defined
-in [`ty.py`](https://github.com/spacy-llm/spacy_llm/ty.py). It needs to define a
-`generate_prompts` function and a `parse_responses` function.
+in [`ty.py`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/ty.py).
+It needs to define a `generate_prompts` function and a `parse_responses`
+function.
 
 | Task                                                                        | Description                                                                                                                                                  |
 | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
