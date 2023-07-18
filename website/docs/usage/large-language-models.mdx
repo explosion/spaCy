@@ -9,8 +9,6 @@ menu:
   - ['API', 'api']
   - ['Tasks', 'tasks']
   - ['Models', 'models']
-  - ['Ongoing work', 'ongoing-work']
-  - ['Issues', 'issues']
 ---
 
 [The spacy-llm package](https://github.com/explosion/spacy-llm) integrates Large
@@ -359,27 +357,67 @@ Practically speaking, a task should adhere to the `Protocol` `LLMTask` defined
 in [`ty.py`](https://github.com/spacy-llm/spacy_llm/ty.py). It needs to define a
 `generate_prompts` function and a `parse_responses` function.
 
+| Task                                                                        | Description                                                                                                                                                  |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`task.generate_prompts`](/api/large-language-models#task-generate-prompts) | Takes a collection of documents, and returns a collection of "prompts", which can be of type `Any`.                                                          |
+| [`task.parse_responses`](/api/large-language-models#task-parse-responses)   | Takes a collection of LLM responses and the original documents, parses the responses into structured information, and sets the annotations on the documents. |
+
 Moreover, the task may define an optional
 [`scorer` method](https://spacy.io/api/scorer#score). It should accept an
 iterable of `Example`s as input and return a score dictionary. If the `scorer`
 method is defined, `spacy-llm` will call it to evaluate the component.
 
-| Component                                                                   | Description                                                                                                                                                           |
-| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`task.generate_prompts`](/api/large-language-models#task-generate-prompts) | Takes a collection of documents, and returns a collection of "prompts", which can be of type `Any`.                                                                   |
-| [`task.parse_responses`](/api/large-language-models#task-parse-responses)   | Takes a collection of LLM responses and the original documents, parses the responses into structured information, and sets the annotations on the documents.          |
-| [`spacy.Summarization.v1`](/api/large-language-models#summarization-v1)     | The summarization task prompts the model for a concise summary of the provided text.                                                                                  |
-| [`spacy.NER.v2`](/api/large-language-models#ner-v2)                         | The built-in NER task supports both zero-shot and few-shot prompting. This version also supports explicitly defining the provided labels with custom descriptions.    |
-| [`spacy.NER.v1`](/api/large-language-models#ner-v1)                         | The original version of the built-in NER task supports both zero-shot and few-shot prompting.                                                                         |
-| [`spacy.SpanCat.v2`](/api/large-language-models#spancat-v2)                 | The built-in SpanCat task is a simple adaptation of the NER task to support overlapping entities and store its annotations in `doc.spans`.                            |
-| [`spacy.SpanCat.v1`](/api/large-language-models#spancat-v1)                 | The original version of the built-in SpanCat task is a simple adaptation of the v1 NER task to support overlapping entities and store its annotations in `doc.spans`. |
-| [`spacy.TextCat.v3`](/api/large-language-models#textcat-v3)                 | Version 3 (the most recent) of the built-in TextCat task supports both zero-shot and few-shot prompting. It allows setting definitions of labels.                     |
-| [`spacy.TextCat.v2`](/api/large-language-models#textcat-v2)                 | Version 2 of the built-in TextCat task supports both zero-shot and few-shot prompting and includes an improved prompt template.                                       |
-| [`spacy.TextCat.v1`](/api/large-language-models#textcat-v1)                 | Version 1 of the built-in TextCat task supports both zero-shot and few-shot prompting.                                                                                |
-| [`spacy.REL.v1`](/api/large-language-models#rel-v1)                         | The built-in REL task supports both zero-shot and few-shot prompting. It relies on an upstream NER component for entities extraction.                                 |
-| [`spacy.Lemma.v1`](/api/large-language-models#lemma-v1)                     | The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.                                                  |
-| [`spacy.Sentiment.v1`](/api/large-language-models#sentiment-v1)             | Performs sentiment analysis on provided texts.                                                                                                                        |
-| [`spacy.NoOp.v1`](/api/large-language-models#noop-v1)                       | This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.                                                     |
+| Component                                                               | Description                                                                                                                                                           |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`spacy.Summarization.v1`](/api/large-language-models#summarization-v1) | The summarization task prompts the model for a concise summary of the provided text.                                                                                  |
+| [`spacy.NER.v2`](/api/large-language-models#ner-v2)                     | The built-in NER task supports both zero-shot and few-shot prompting. This version also supports explicitly defining the provided labels with custom descriptions.    |
+| [`spacy.NER.v1`](/api/large-language-models#ner-v1)                     | The original version of the built-in NER task supports both zero-shot and few-shot prompting.                                                                         |
+| [`spacy.SpanCat.v2`](/api/large-language-models#spancat-v2)             | The built-in SpanCat task is a simple adaptation of the NER task to support overlapping entities and store its annotations in `doc.spans`.                            |
+| [`spacy.SpanCat.v1`](/api/large-language-models#spancat-v1)             | The original version of the built-in SpanCat task is a simple adaptation of the v1 NER task to support overlapping entities and store its annotations in `doc.spans`. |
+| [`spacy.TextCat.v3`](/api/large-language-models#textcat-v3)             | Version 3 (the most recent) of the built-in TextCat task supports both zero-shot and few-shot prompting. It allows setting definitions of labels.                     |
+| [`spacy.TextCat.v2`](/api/large-language-models#textcat-v2)             | Version 2 of the built-in TextCat task supports both zero-shot and few-shot prompting and includes an improved prompt template.                                       |
+| [`spacy.TextCat.v1`](/api/large-language-models#textcat-v1)             | Version 1 of the built-in TextCat task supports both zero-shot and few-shot prompting.                                                                                |
+| [`spacy.REL.v1`](/api/large-language-models#rel-v1)                     | The built-in REL task supports both zero-shot and few-shot prompting. It relies on an upstream NER component for entities extraction.                                 |
+| [`spacy.Lemma.v1`](/api/large-language-models#lemma-v1)                 | The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.                                                  |
+| [`spacy.Sentiment.v1`](/api/large-language-models#sentiment-v1)         | Performs sentiment analysis on provided texts.                                                                                                                        |
+| [`spacy.NoOp.v1`](/api/large-language-models#noop-v1)                   | This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.                                                     |
+
+#### Providing examples for few-shot prompts {id="few-shot-prompts"}
+
+All built-in tasks support few-shot prompts, i. e. including examples in a
+prompt. Examples can be supplied in two ways: (1) as a separate file containing
+only examples or (2) by initializing `llm` with a `get_examples()` callback
+(like any other spaCy pipeline component).
+
+##### (1) Few-shot example file
+
+A file containing examples for few-shot prompting can be configured like this:
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v2"
+labels = PERSON,ORGANISATION,LOCATION
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "ner_examples.yml"
+```
+
+The supplied file has to conform to the format expected by the required task
+(see the task documentation further down).
+
+##### (2) Initializing the `llm` component with a `get_examples()` callback
+
+Alternatively, you can initialize your `nlp` pipeline by providing a
+`get_examples` callback for
+[`nlp.initialize`](https://spacy.io/api/language#initialize) and setting
+`n_prompt_examples` to a positive number to automatically fetch a few examples
+for few-shot learning. Set `n_prompt_examples` to `-1` to use all examples as
+part of the few-shot learning prompt.
+
+```ini
+[initialize.components.llm]
+n_prompt_examples = 3
+```
 
 ### Model {id="models"}
 
@@ -408,29 +446,33 @@ Approaches 1. and 2 are the default for hosted model and local models,
 respectively. Alternatively you can use LangChain to access hosted or local
 models by specifying one of the models registered with the `langchain.` prefix.
 
-Note that when using hosted services, you have to ensure that the proper API
-keys are set as environment variables as described by the corresponding
+<Infobox>
+_Why LangChain if there are also are a native REST and a HuggingFace interface? When should I use what?_
+
+Third-party libraries like `langchain` focus on prompt management, integration
+of many different LLM APIs, and other related features such as conversational
+memory or agents. `spacy-llm` on the other hand emphasizes features we consider
+useful in the context of NLP pipelines utilizing LLMs to process documents
+(mostly) independent from each other. It makes sense that the feature sets of
+such third-party libraries and `spacy-llm` aren't identical - and users might
+want to take advantage of features not available in `spacy-llm`.
+
+The advantage of implementing our own REST and HuggingFace integrations is that
+we can ensure a larger degree of stability and robustness, as we can guarantee
+backwards-compatibility and more smoothly integrated error handling.
+
+If however there are features or APIs not natively covered by `spacy-llm`, it's
+trivial to utilize LangChain to cover this - and easy to customize the prompting
+mechanism, if so required.
+
+</Infobox>
+
+<Infobox variant="warning">
+Note that when using hosted services, you have to ensure that the [proper API
+keys](/api/large-language-models#api-keys) are set as environment variables as described by the corresponding
 provider's documentation.
 
-E. g. when using OpenAI, you have to get an API key from openai.com, and ensure
-that the keys are set as environmental variables:
-
-```shell
-export OPENAI_API_KEY="sk-..."
-export OPENAI_API_ORG="org-..."
-```
-
-For Cohere it's
-
-```shell
-export CO_API_KEY="..."
-```
-
-and for Anthropic
-
-```shell
-export ANTHROPIC_API_KEY="..."
-```
+</Infobox>
 
 | Component                                                                      | Description                                                                          |
 | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
@@ -473,23 +515,3 @@ documents at each run that keeps batches of documents stored on disk.
 | [`spacy.FewShotReader.v1`](/api/large-language-models#fewshotreader-v1) | This function is registered in spaCy's `misc` registry, and reads in examples from a `.yml`, `.yaml`, `.json` or `.jsonl` file. It uses [`srsly`](https://github.com/explosion/srsly) to read in these files and parses them depending on the file extension.                        |
 | [`spacy.FileReader.v1`](/api/large-language-models#filereader-v1)       | This function is registered in spaCy's `misc` registry, and reads a file provided to the `path` to return a `str` representation of its contents. This function is typically used to read [Jinja](https://jinja.palletsprojects.com/en/3.1.x/) files containing the prompt template. |
 | [Normalizer functions](/api/large-language-models#normalizer-functions) | These functions provide simple normalizations for string comparisons, e.g. between a list of specified labels and a label given in the raw text of the LLM response.                                                                                                                 |
-
-## Ongoing work {id="ongoing-work"}
-
-In the near future, we will
-
-- Add more example tasks
-- Support a broader range of models
-- Provide more example use-cases and tutorials
-- Make the built-in tasks easier to customize via Jinja templates to define the
-  instructions & examples
-
-PRs are always welcome!
-
-## Reporting issues {id="issues"}
-
-If you have questions regarding the usage of `spacy-llm`, or want to give us
-feedback after giving it a spin, please use the
-[discussion board](https://github.com/explosion/spaCy/discussions). Bug reports
-can be filed on the
-[spaCy issue tracker](https://github.com/explosion/spaCy/issues). Thank you!
