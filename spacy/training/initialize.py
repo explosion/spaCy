@@ -1,24 +1,35 @@
-from typing import Union, Dict, Optional, Any, IO, TYPE_CHECKING
-from thinc.api import Config, fix_random_seed, set_gpu_allocator
-from thinc.api import ConfigValidationError
-from pathlib import Path
-import srsly
-import numpy
-import tarfile
 import gzip
-import zipfile
-import tqdm
-from itertools import islice
+import tarfile
 import warnings
+import zipfile
+from itertools import islice
+from pathlib import Path
+from typing import IO, TYPE_CHECKING, Any, Dict, Optional, Union
 
-from .pretrain import get_tok2vec_ref
-from ..lookups import Lookups
-from ..vectors import Vectors, Mode as VectorsMode
+import numpy
+import srsly
+import tqdm
+from thinc.api import Config, ConfigValidationError
+
 from ..errors import Errors, Warnings
-from ..schemas import ConfigSchemaTraining
-from ..util import registry, load_model_from_config, resolve_dot_names, logger
-from ..util import load_model, ensure_path, get_sourced_components
-from ..util import OOV_RANK, DEFAULT_OOV_PROB
+from ..lookups import Lookups
+from ..schemas import ConfigSchemaDistill, ConfigSchemaTraining
+from ..util import (
+    DEFAULT_OOV_PROB,
+    OOV_RANK,
+    ensure_path,
+    get_sourced_components,
+    load_model,
+    load_model_from_config,
+    logger,
+    registry,
+    resolve_dot_names,
+    set_gpu_allocator_from_config,
+    set_seed_from_config,
+)
+from ..vectors import Mode as VectorsMode
+from ..vectors import Vectors
+from .pretrain import get_tok2vec_ref
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
@@ -27,15 +38,8 @@ if TYPE_CHECKING:
 def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     raw_config = config
     config = raw_config.interpolate()
-    if "seed" not in config["training"]:
-        raise ValueError(Errors.E1015.format(value="[training] seed"))
-    if "gpu_allocator" not in config["training"]:
-        raise ValueError(Errors.E1015.format(value="[training] gpu_allocator"))
-    if config["training"]["seed"] is not None:
-        fix_random_seed(config["training"]["seed"])
-    allocator = config["training"]["gpu_allocator"]
-    if use_gpu >= 0 and allocator:
-        set_gpu_allocator(allocator)
+    set_seed_from_config(config)
+    set_gpu_allocator_from_config(config, use_gpu)
     # Use original config here before it's resolved to functions
     sourced = get_sourced_components(config)
     nlp = load_model_from_config(raw_config, auto_fill=True)
@@ -101,6 +105,102 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     return nlp
 
 
+def init_nlp_student(
+    config: Config, teacher: "Language", *, use_gpu: int = -1
+) -> "Language":
+    """Initialize student pipeline for distillation.
+
+    config (Config): Student model configuration.
+    teacher (Language): The teacher pipeline to distill from.
+    use_gpu (int): Whether to train on GPU. Make sure to call require_gpu
+        before calling this function.
+    """
+    raw_config = config
+    config = raw_config.interpolate()
+    set_seed_from_config(config)
+    set_gpu_allocator_from_config(config, use_gpu)
+
+    # Use original config here before it's resolved to functions
+    sourced = get_sourced_components(config)
+    nlp = load_model_from_config(raw_config, auto_fill=True)
+    logger.info("Set up nlp object from config")
+    config = nlp.config.interpolate()
+    # Resolve all training-relevant sections using the filled nlp config
+    T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
+    D = registry.resolve(config["distillation"], schema=ConfigSchemaDistill)
+    dot_names = [T["dev_corpus"]]
+    if not isinstance(D["corpus"], str):
+        raise ConfigValidationError(
+            desc=Errors.E897.format(field="distillation.corpus", type=type(D["corpus"]))
+        )
+    if not isinstance(T["dev_corpus"], str):
+        raise ConfigValidationError(
+            desc=Errors.E897.format(
+                field="training.dev_corpus", type=type(T["dev_corpus"])
+            )
+        )
+    (dev_corpus,) = resolve_dot_names(config, dot_names)
+    optimizer = T["optimizer"]
+    # Components that shouldn't be updated during training
+    frozen_components = T["frozen_components"]
+    # Sourced components that require resume_training
+    resume_components = [p for p in sourced if p not in frozen_components]
+    logger.info(f"Pipeline: {nlp.pipe_names}")
+    if resume_components:
+        with nlp.select_pipes(enable=resume_components):
+            logger.info(f"Resuming training for: {resume_components}")
+            nlp.resume_training(sgd=optimizer)
+    # Make sure that listeners are defined before initializing further
+    nlp._link_components()
+
+    # Get teacher labels to initialize student with.
+    student_to_teacher = D["student_to_teacher"]
+    teacher_pipes = dict(teacher.pipeline)
+    labels = {}
+    for name, pipe in nlp.pipeline:
+        # Copy teacher labels.
+        teacher_pipe_name = (
+            student_to_teacher[name] if name in student_to_teacher else name
+        )
+        teacher_pipe = teacher_pipes.get(teacher_pipe_name, None)
+        if (
+            teacher_pipe is not None
+            and getattr(teacher_pipe, "label_data", None) is not None
+        ):
+            labels[name] = teacher_pipe.label_data  # type: ignore[attr-defined]
+
+    with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
+        # Initialize on the dev corpus, since the distillation corpus does
+        # usually not have labels. Since we copy the labels from the teacher
+        # pipe, the dev data does not have to be exhaustive.
+        if T["max_epochs"] == -1:
+            sample_size = 100
+            logger.debug(
+                f"Due to streamed train corpus, using only first {sample_size} "
+                f"examples for initialization. If necessary, provide all labels "
+                f"in [initialize]. More info: https://spacy.io/api/cli#init_labels"
+            )
+            nlp.initialize(lambda: islice(dev_corpus(nlp), sample_size), sgd=optimizer)
+        else:
+            nlp.initialize(lambda: dev_corpus(nlp), sgd=optimizer, labels=labels)
+        logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
+    # Detect components with listeners that are not frozen consistently
+    for name, proc in nlp.pipeline:
+        for listener in getattr(
+            proc, "listening_components", []
+        ):  # e.g. tok2vec/transformer
+            # Don't warn about components not in the pipeline
+            if listener not in nlp.pipe_names:
+                continue
+            if listener in frozen_components and name not in frozen_components:
+                logger.warning(Warnings.W087.format(name=name, listener=listener))
+            # We always check this regardless, in case user freezes tok2vec
+            if listener not in frozen_components and name in frozen_components:
+                if name not in T["annotating_components"]:
+                    logger.warning(Warnings.W086.format(name=name, listener=listener))
+    return nlp
+
+
 def init_vocab(
     nlp: "Language",
     *,
@@ -133,10 +233,11 @@ def init_vocab(
         logger.info("Added vectors: %s", vectors)
     # warn if source model vectors are not identical
     sourced_vectors_hashes = nlp.meta.pop("_sourced_vectors_hashes", {})
-    vectors_hash = hash(nlp.vocab.vectors.to_bytes(exclude=["strings"]))
-    for sourced_component, sourced_vectors_hash in sourced_vectors_hashes.items():
-        if vectors_hash != sourced_vectors_hash:
-            warnings.warn(Warnings.W113.format(name=sourced_component))
+    if len(sourced_vectors_hashes) > 0:
+        vectors_hash = hash(nlp.vocab.vectors.to_bytes(exclude=["strings"]))
+        for sourced_component, sourced_vectors_hash in sourced_vectors_hashes.items():
+            if vectors_hash != sourced_vectors_hash:
+                warnings.warn(Warnings.W113.format(name=sourced_component))
     logger.info("Finished initializing nlp object")
 
 

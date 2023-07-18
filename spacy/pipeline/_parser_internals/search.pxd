@@ -1,12 +1,10 @@
 from cymem.cymem cimport Pool
-
-from libc.stdint cimport uint32_t
-from libc.stdint cimport uint64_t
+from libc.stdint cimport uint32_t, uint64_t
 from libcpp.pair cimport pair
 from libcpp.queue cimport priority_queue
 from libcpp.vector cimport vector
 
-from ...typedefs cimport class_t, weight_t, hash_t
+from ...typedefs cimport class_t, hash_t, weight_t
 
 ctypedef pair[weight_t, size_t] Entry
 ctypedef priority_queue[Entry] Queue

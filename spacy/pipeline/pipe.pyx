@@ -1,14 +1,16 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional, Tuple, Iterable, Iterator, Callable, Union, Dict
-import srsly
 import warnings
+from typing import Callable, Dict, Iterable, Iterator, Optional, Tuple, Union
+
+import srsly
 
 from ..tokens.doc cimport Doc
 
-from ..training import Example
 from ..errors import Errors, Warnings
 from ..language import Language
+from ..training import Example
 from ..util import raise_error
+
 
 cdef class Pipe:
     """This class is a base class and not instantiated directly. It provides

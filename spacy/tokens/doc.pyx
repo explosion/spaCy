@@ -3,44 +3,66 @@ from typing import Set
 
 cimport cython
 cimport numpy as np
-from libc.string cimport memcpy
 from libc.math cimport sqrt
 from libc.stdint cimport int32_t, uint64_t
+from libc.string cimport memcpy
 
 import copy
+import itertools
+import warnings
 from collections import Counter, defaultdict
 from enum import Enum
-import itertools
+
 import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
 from thinc.util import copy_array
-import warnings
 
 from .span cimport Span
 from .token cimport MISSING_DEP
-from .span_groups import SpanGroups
-from .token cimport Token
-from ..lexeme cimport Lexeme, EMPTY_LEXEME
-from ..typedefs cimport attr_t, flags_t
-from ..attrs cimport attr_id_t
-from ..attrs cimport LENGTH, POS, LEMMA, TAG, MORPH, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, NORM
 
-from ..attrs import intify_attr, IDS
+from .span_groups import SpanGroups
+
+from ..attrs cimport (
+    DEP,
+    ENT_ID,
+    ENT_IOB,
+    ENT_KB_ID,
+    ENT_TYPE,
+    HEAD,
+    IDX,
+    LEMMA,
+    LENGTH,
+    MORPH,
+    NORM,
+    POS,
+    SENT_START,
+    SPACY,
+    TAG,
+    attr_id_t,
+)
+from ..lexeme cimport EMPTY_LEXEME, Lexeme
+from ..typedefs cimport attr_t, flags_t
+from .token cimport Token
+
+from .. import parts_of_speech, schemas, util
+from ..attrs import IDS, intify_attr
 from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
 from ..morphology import Morphology
-from .. import util
-from .. import parts_of_speech
-from .. import schemas
-from .underscore import Underscore, get_ext_args
-from .retokenizer import Retokenizer
-from .doc_bin import ALL_ATTRS as DOCBIN_ALL_ATTRS
 from ..util import get_words_and_spaces
+from .retokenizer import Retokenizer
+from .underscore import Underscore, get_ext_args
 
 DEF PADDING = 5
 
+
+# We store the docbin attrs here rather than in _serialize to avoid
+# import cycles.
+
+# fmt: off
+DOCBIN_ALL_ATTRS = ("ORTH", "NORM", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "ENT_ID", "LEMMA", "MORPH", "POS", "SENT_START")
+# fmt: on
 
 cdef int bounds_check(int i, int length, int padding) except -1:
     if (i + padding) < 0:
@@ -544,10 +566,6 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#char_span
         """
-        if not isinstance(label, int):
-            label = self.vocab.strings.add(label)
-        if not isinstance(kb_id, int):
-            kb_id = self.vocab.strings.add(kb_id)
         alignment_modes = ("strict", "contract", "expand")
         if alignment_mode not in alignment_modes:
             raise ValueError(
@@ -1282,12 +1300,14 @@ cdef class Doc:
         other.user_span_hooks = dict(self.user_span_hooks)
         other.length = self.length
         other.max_length = self.max_length
-        other.spans = self.spans.copy(doc=other)
         buff_size = other.max_length + (PADDING*2)
         assert buff_size > 0
         tokens = <TokenC*>other.mem.alloc(buff_size, sizeof(TokenC))
         memcpy(tokens, self.c - PADDING, buff_size * sizeof(TokenC))
         other.c = &tokens[PADDING]
+        # copy spans after setting tokens so that SpanGroup.copy can verify
+        # that the start/end offsets are valid
+        other.spans = self.spans.copy(doc=other)
         return other
 
     def to_disk(self, path, *, exclude=tuple()):
@@ -1364,6 +1384,10 @@ cdef class Doc:
         for group in self.spans.values():
             for span in group:
                 strings.add(span.label_)
+                if span.kb_id in span.doc.vocab.strings:
+                    strings.add(span.kb_id_)
+                if span.id in span.doc.vocab.strings:
+                    strings.add(span.id_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope

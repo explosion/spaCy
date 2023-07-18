@@ -1,24 +1,29 @@
 # cython: infer_types=True, profile=True
-from typing import Iterable, Callable, Dict, Any, Union
+from typing import Any, Callable, Dict, Iterable, Union
 
 import srsly
-from preshed.maps cimport PreshMap
-from cpython.exc cimport PyErr_SetFromErrno
-from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
-from libc.stdint cimport int32_t, int64_t
-from libcpp.vector cimport vector
 
-from pathlib import Path
+from cpython.exc cimport PyErr_SetFromErrno
+from libc.stdint cimport int32_t, int64_t
+from libc.stdio cimport fclose, feof, fopen, fread, fseek, fwrite
+from libcpp.vector cimport vector
+from preshed.maps cimport PreshMap
+
 import warnings
+from pathlib import Path
 
 from ..tokens import Span
+
 from ..typedefs cimport hash_t
-from ..errors import Errors, Warnings
+
 from .. import util
+from ..errors import Errors, Warnings
 from ..util import SimpleFrozenList, ensure_path
+
 from ..vocab cimport Vocab
 from .kb cimport KnowledgeBase
-from .candidate import Candidate as Candidate
+
+from .candidate import InMemoryCandidate
 
 
 cdef class InMemoryLookupKB(KnowledgeBase):
@@ -226,10 +231,10 @@ cdef class InMemoryLookupKB(KnowledgeBase):
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
 
-    def get_candidates(self, mention: Span) -> Iterable[Candidate]:
-        return self.get_alias_candidates(mention.text)  # type: ignore
+    def get_candidates(self, mention: Span) -> Iterable[InMemoryCandidate]:
+        return self._get_alias_candidates(mention.text)  # type: ignore
 
-    def get_alias_candidates(self, str alias) -> Iterable[Candidate]:
+    def _get_alias_candidates(self, str alias) -> Iterable[InMemoryCandidate]:
         """
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
@@ -241,14 +246,18 @@ cdef class InMemoryLookupKB(KnowledgeBase):
         alias_index = <int64_t>self._alias_index.get(alias_hash)
         alias_entry = self._aliases_table[alias_index]
 
-        return [Candidate(kb=self,
-                          entity_hash=self._entries[entry_index].entity_hash,
-                          entity_freq=self._entries[entry_index].freq,
-                          entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
-                          alias_hash=alias_hash,
-                          prior_prob=prior_prob)
-                for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)
-                if entry_index != 0]
+        return [
+            InMemoryCandidate(
+                kb=self,
+                entity_hash=self._entries[entry_index].entity_hash,
+                alias_hash=alias_hash,
+                entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
+                prior_prob=prior_prob,
+                entity_freq=self._entries[entry_index].freq
+            )
+            for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)
+            if entry_index != 0
+        ]
 
     def get_vector(self, str entity):
         cdef hash_t entity_hash = self.vocab.strings[entity]
@@ -278,6 +287,9 @@ cdef class InMemoryLookupKB(KnowledgeBase):
                 return prior_prob
 
         return 0.0
+
+    def supports_prior_probs(self) -> bool:
+        return True
 
     def to_bytes(self, **kwargs):
         """Serialize the current state to a binary string.

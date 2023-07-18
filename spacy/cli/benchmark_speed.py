@@ -1,11 +1,12 @@
-from typing import Iterable, List, Optional
 import random
-from itertools import islice
-import numpy
-from pathlib import Path
 import time
-from tqdm import tqdm
+from itertools import islice
+from pathlib import Path
+from typing import Iterable, List, Optional
+
+import numpy
 import typer
+from tqdm import tqdm
 from wasabi import msg
 
 from .. import util

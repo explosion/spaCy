@@ -2,10 +2,10 @@ from typing import Optional
 
 from thinc.api import Model
 
-from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .stop_words import STOP_WORDS
-from ...language import Language, BaseDefaults
+from ...language import BaseDefaults, Language
 from .lemmatizer import IrishLemmatizer
+from .stop_words import STOP_WORDS
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 
 
 class IrishDefaults(BaseDefaults):

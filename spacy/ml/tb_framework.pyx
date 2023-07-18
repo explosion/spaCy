@@ -1,27 +1,44 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False
-from typing import List, Tuple, Any, Optional, TypeVar, cast
-from libc.string cimport memset, memcpy
+from typing import Any, List, Optional, Tuple, TypeVar, cast
+
 from libc.stdlib cimport calloc, free, realloc
+from libc.string cimport memcpy, memset
 from libcpp.vector cimport vector
+
 import numpy
+
 cimport numpy as np
-from thinc.api import Model, normal_init, chain, list2array, Linear
-from thinc.api import uniform_init, glorot_uniform_init, zero_init
-from thinc.api import NumpyOps
+
+from thinc.api import (
+    Linear,
+    Model,
+    NumpyOps,
+    chain,
+    glorot_uniform_init,
+    list2array,
+    normal_init,
+    uniform_init,
+    zero_init,
+)
+
 from thinc.backends.cblas cimport CBlas, saxpy, sgemm
-from thinc.types import Floats1d, Floats2d, Floats3d, Floats4d
-from thinc.types import Ints1d, Ints2d
+
+from thinc.types import Floats1d, Floats2d, Floats3d, Floats4d, Ints1d, Ints2d
 
 from ..errors import Errors
 from ..pipeline._parser_internals import _beam_utils
 from ..pipeline._parser_internals.batch import GreedyBatch
+
 from ..pipeline._parser_internals._parser_utils cimport arg_max
-from ..pipeline._parser_internals.transition_system cimport c_transition_batch, c_apply_actions
-from ..pipeline._parser_internals.transition_system cimport TransitionSystem
 from ..pipeline._parser_internals.stateclass cimport StateC, StateClass
+from ..pipeline._parser_internals.transition_system cimport (
+    TransitionSystem,
+    c_apply_actions,
+    c_transition_batch,
+)
+
 from ..tokens.doc import Doc
 from ..util import registry
-
 
 State = Any  # TODO
 

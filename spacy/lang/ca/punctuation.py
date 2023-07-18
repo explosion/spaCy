@@ -1,9 +1,18 @@
-from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_ICONS
-from ..char_classes import LIST_CURRENCY
-from ..char_classes import CURRENCY
-from ..char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA, PUNCT
-from ..char_classes import merge_chars, _units
-
+from ..char_classes import (
+    ALPHA,
+    ALPHA_LOWER,
+    ALPHA_UPPER,
+    CONCAT_QUOTES,
+    CURRENCY,
+    LIST_CURRENCY,
+    LIST_ELLIPSES,
+    LIST_ICONS,
+    LIST_PUNCT,
+    LIST_QUOTES,
+    PUNCT,
+    _units,
+    merge_chars,
+)
 
 ELISION = " ' ’ ".strip().replace(" ", "").replace("\n", "")
 

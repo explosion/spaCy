@@ -1,14 +1,15 @@
 from typing import cast
+
 import pytest
 from numpy.testing import assert_equal
-from spacy.attrs import SENT_START
 
 from spacy import util
-from spacy.training import Example
+from spacy.attrs import SENT_START
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.pipeline import TrainablePipe
 from spacy.tests.util import make_tempdir
+from spacy.training import Example
 
 
 def test_is_distillable():

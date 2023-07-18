@@ -1,14 +1,15 @@
-from typing import Callable, Iterator, Optional, Union, List, Dict
-from typing import Any, Iterable
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Union
+
 from thinc.types import Floats1d, FloatsXd
+
 from . import Language
-from .strings import StringStore
 from .lexeme import Lexeme
 from .lookups import Lookups
 from .morphology import Morphology
+from .strings import StringStore
 from .tokens import Doc, Span
 from .vectors import Vectors
-from pathlib import Path
 
 def create_vocab(
     lang: Optional[str],
@@ -26,7 +27,7 @@ class Vocab:
     def __init__(
         self,
         lex_attr_getters: Optional[Dict[str, Callable[[str], Any]]] = ...,
-        strings: Optional[Union[List[str], StringStore]] = ...,
+        strings: Optional[StringStore] = ...,
         lookups: Optional[Lookups] = ...,
         oov_prob: float = ...,
         writing_system: Dict[str, Any] = ...,

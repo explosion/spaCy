@@ -1,10 +1,13 @@
 # cython: infer_types=True, binding=True
-from spacy.pipeline._parser_internals.search cimport Beam, MaxViolation
-from spacy.typedefs cimport class_t, weight_t
 from cymem.cymem cimport Pool
 
-from ..conftest import cytest
+from spacy.pipeline._parser_internals.search cimport Beam, MaxViolation
+from spacy.typedefs cimport class_t, weight_t
+
 import pytest
+
+from ..conftest import cytest
+
 
 cdef struct TestState:
     int length

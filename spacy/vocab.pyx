@@ -1,26 +1,27 @@
 # cython: profile=True
 from libc.string cimport memcpy
 
+import functools
+
 import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
-import functools
 
-from .lexeme cimport EMPTY_LEXEME, OOV_RANK
-from .lexeme cimport Lexeme
-from .typedefs cimport attr_t
-from .tokens.token cimport Token
 from .attrs cimport LANG, ORTH
+from .lexeme cimport EMPTY_LEXEME, OOV_RANK, Lexeme
+from .tokens.token cimport Token
+from .typedefs cimport attr_t
 
+from . import util
+from .attrs import IS_STOP, NORM, intify_attrs
 from .compat import copy_reg
 from .errors import Errors
-from .attrs import intify_attrs, NORM, IS_STOP
-from .vectors import Vectors, Mode as VectorsMode
-from .util import registry
-from .lookups import Lookups
-from . import util
+from .lang.lex_attrs import LEX_ATTRS, get_lang, is_stop
 from .lang.norm_exceptions import BASE_NORMS
-from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang
+from .lookups import Lookups
+from .util import registry
+from .vectors import Mode as VectorsMode
+from .vectors import Vectors
 
 
 def create_vocab(lang, defaults):
@@ -49,9 +50,8 @@ cdef class Vocab:
 
     DOCS: https://spacy.io/api/vocab
     """
-    def __init__(self, lex_attr_getters=None, strings=tuple(), lookups=None,
-                 oov_prob=-20., writing_system={}, get_noun_chunks=None,
-                 **deprecated_kwargs):
+    def __init__(self, lex_attr_getters=None, strings=None, lookups=None,
+            oov_prob=-20., writing_system=None, get_noun_chunks=None):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -69,16 +69,19 @@ cdef class Vocab:
         self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_orth = PreshMap()
-        self.strings = StringStore()
         self.length = 0
-        if strings:
-            for string in strings:
-                _ = self[string]
+        if strings is None:
+            self.strings = StringStore()
+        else:
+            self.strings = strings
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings)
         self.vectors = Vectors(strings=self.strings)
         self.lookups = lookups
-        self.writing_system = writing_system
+        if writing_system is None:
+            self.writing_system = {}
+        else:
+            self.writing_system = writing_system
         self.get_noun_chunks = get_noun_chunks
 
     property vectors:

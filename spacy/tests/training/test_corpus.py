@@ -1,8 +1,9 @@
-from typing import IO, Generator, Iterable, List, TextIO, Tuple
+import tempfile
 from contextlib import contextmanager
 from pathlib import Path
+from typing import IO, Generator, Iterable, List, TextIO, Tuple
+
 import pytest
-import tempfile
 
 from spacy.lang.en import English
 from spacy.training import Example, PlainTextCorpus

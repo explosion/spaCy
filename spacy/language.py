@@ -1,46 +1,70 @@
-from typing import Iterator, Optional, Any, Dict, Callable, Iterable, Literal
-from typing import Union, Tuple, List, Set, Pattern, Sequence
-from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
-
-from dataclasses import dataclass
-import random
-import itertools
 import functools
+import itertools
+import multiprocessing as mp
+import random
+import traceback
+import warnings
 from contextlib import contextmanager
 from copy import deepcopy
-from pathlib import Path
-import warnings
-
-from thinc.api import get_current_ops, Config, CupyOps, Optimizer
-import srsly
-import multiprocessing as mp
+from dataclasses import dataclass
 from itertools import chain, cycle
+from pathlib import Path
 from timeit import default_timer as timer
-import traceback
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    NoReturn,
+    Optional,
+    Pattern,
+    Sequence,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
 
-from . import ty
-from .tokens.underscore import Underscore
-from .vocab import Vocab, create_vocab
-from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
-from .training import Example, validate_examples, validate_distillation_examples
-from .training.initialize import init_vocab, init_tok2vec
-from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe, raise_error, _DEFAULT_EMPTY_PIPES
-from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
-from .util import warn_if_jupyter_cupy
-from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
-from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
-from .lang.punctuation import TOKENIZER_INFIXES
-from .tokens import Doc
-from .tokenizer import Tokenizer
+import srsly
+from thinc.api import Config, CupyOps, Optimizer, get_current_ops
+
+from . import about, ty, util
 from .errors import Errors, Warnings
-from .schemas import ConfigSchema, ConfigSchemaNlp, ConfigSchemaInit
-from .schemas import ConfigSchemaPretrain, validate_init_settings
 from .git_info import GIT_VERSION
-from . import util
-from . import about
+from .lang.punctuation import TOKENIZER_INFIXES, TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
+from .lang.tokenizer_exceptions import BASE_EXCEPTIONS, URL_MATCH
 from .lookups import load_lookups
-
+from .pipe_analysis import analyze_pipes, print_pipe_analysis, validate_attrs
+from .schemas import (
+    ConfigSchema,
+    ConfigSchemaInit,
+    ConfigSchemaNlp,
+    ConfigSchemaPretrain,
+    validate_init_settings,
+)
+from .scorer import Scorer
+from .tokenizer import Tokenizer
+from .tokens import Doc
+from .tokens.underscore import Underscore
+from .training import Example, validate_distillation_examples, validate_examples
+from .training.initialize import init_tok2vec, init_vocab
+from .util import (
+    _DEFAULT_EMPTY_PIPES,
+    CONFIG_SECTION_ORDER,
+    SimpleFrozenDict,
+    SimpleFrozenList,
+    _pipe,
+    combine_score_weights,
+    raise_error,
+    registry,
+    warn_if_jupyter_cupy,
+)
+from .vocab import Vocab, create_vocab
 
 PipeCallable = Callable[[Doc], Doc]
 
@@ -733,8 +757,8 @@ class Language:
         *,
         before: Optional[Union[str, int]] = None,
         after: Optional[Union[str, int]] = None,
-        first: Optional[bool] = None,
-        last: Optional[bool] = None,
+        first: Optional[Literal[True]] = None,
+        last: Optional[Literal[True]] = None,
         source: Optional["Language"] = None,
         config: Dict[str, Any] = SimpleFrozenDict(),
         raw_config: Optional[Config] = None,
@@ -753,8 +777,8 @@ class Language:
             component directly before.
         after (Union[str, int]): Name or index of the component to insert new
             component directly after.
-        first (bool): If True, insert component first in the pipeline.
-        last (bool): If True, insert component last in the pipeline.
+        first (Optional[Literal[True]]): If True, insert component first in the pipeline.
+        last (Optional[Literal[True]]): If True, insert component last in the pipeline.
         source (Language): Optional loaded nlp object to copy the pipeline
             component from.
         config (Dict[str, Any]): Config parameters to use for this component.
@@ -799,18 +823,22 @@ class Language:
         self,
         before: Optional[Union[str, int]] = None,
         after: Optional[Union[str, int]] = None,
-        first: Optional[bool] = None,
-        last: Optional[bool] = None,
+        first: Optional[Literal[True]] = None,
+        last: Optional[Literal[True]] = None,
     ) -> int:
         """Determine where to insert a pipeline component based on the before/
         after/first/last values.
 
         before (str): Name or index of the component to insert directly before.
         after (str): Name or index of component to insert directly after.
-        first (bool): If True, insert component first in the pipeline.
-        last (bool): If True, insert component last in the pipeline.
+        first (Optional[Literal[True]]): If True, insert component first in the pipeline.
+        last (Optional[Literal[True]]): If True, insert component last in the pipeline.
         RETURNS (int): The index of the new pipeline component.
         """
+        if first is not None and first is not True:
+            raise ValueError(Errors.E4009.format(attr="first", value=first))
+        if last is not None and last is not True:
+            raise ValueError(Errors.E4009.format(attr="last", value=last))
         all_args = {"before": before, "after": after, "first": first, "last": last}
         if sum(arg is not None for arg in [before, after, first, last]) >= 2:
             raise ValueError(
@@ -1024,7 +1052,7 @@ class Language:
         examples: Iterable[Example],
         *,
         drop: float = 0.0,
-        sgd: Optional[Optimizer] = None,
+        sgd: Union[Optimizer, None, Literal[False]] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         exclude: Iterable[str] = SimpleFrozenList(),
@@ -1037,7 +1065,9 @@ class Language:
             (teacher) and predicted (student) docs must have the same number of
             tokens and the same orthography.
         drop (float): The dropout rate.
-        sgd (Optional[Optimizer]): An optimizer.
+        sgd (Union[Optimizer, None, Literal[False]]): An optimizer. Will
+            be created via create_optimizer if 'None'. No optimizer will
+            be used when set to 'False'.
         losses (Optional(Dict[str, float])): Dictionary to update with the loss,
             keyed by component.
         component_cfg (Optional[Dict[str, Dict[str, Any]]]): Config parameters
@@ -1107,10 +1137,22 @@ class Language:
                 student_proc.distill(
                     teacher_pipe,
                     examples,
-                    sgd=sgd,
+                    sgd=None,
                     losses=losses,
                     **component_cfg[student_name],
                 )
+
+        # Only finish the update after all component updates are done. Some
+        # components may share weights (such as tok2vec) and we only want
+        # to apply weight updates after all gradients are accumulated.
+        for student_name, student_proc in self.pipeline:
+            if (
+                student_name not in exclude
+                and isinstance(student_proc, ty.DistillableComponent)
+                and student_proc.is_distillable
+                and sgd not in (None, False)
+            ):
+                student_proc.finish_update(sgd)
 
         return losses
 
@@ -1202,7 +1244,7 @@ class Language:
         _: Optional[Any] = None,
         *,
         drop: float = 0.0,
-        sgd: Optional[Optimizer] = None,
+        sgd: Union[Optimizer, None, Literal[False]] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         exclude: Iterable[str] = SimpleFrozenList(),
@@ -1213,7 +1255,9 @@ class Language:
         examples (Iterable[Example]): A batch of examples
         _: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
-        sgd (Optimizer): An optimizer.
+        sgd (Union[Optimizer, None, Literal[False]]): An optimizer. Will
+            be created via create_optimizer if 'None'. No optimizer will
+            be used when set to 'False'.
         losses (Dict[str, float]): Dictionary to update with the loss, keyed by
             component.
         component_cfg (Dict[str, Dict]): Config parameters for specific pipeline
@@ -1272,6 +1316,7 @@ class Language:
                 name not in exclude
                 and isinstance(proc, ty.TrainableComponent)
                 and proc.is_trainable
+                and sgd not in (None, False)
             ):
                 proc.finish_update(sgd)
 
@@ -1366,7 +1411,10 @@ class Language:
                 "No 'get_examples' callback provided to 'Language.initialize', creating dummy examples"
             )
             doc = Doc(self.vocab, words=["x", "y", "z"])
-            get_examples = lambda: [Example.from_dict(doc, {})]
+
+            def get_examples():
+                return [Example.from_dict(doc, {})]
+
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(
                 method="Language.initialize", obj=type(get_examples)
@@ -1471,6 +1519,7 @@ class Language:
         scorer: Optional[Scorer] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         scorer_cfg: Optional[Dict[str, Any]] = None,
+        per_component: bool = False,
     ) -> Dict[str, Any]:
         """Evaluate a model's pipeline components.
 
@@ -1482,6 +1531,8 @@ class Language:
             arguments for specific components.
         scorer_cfg (dict): An optional dictionary with extra keyword arguments
             for the scorer.
+        per_component (bool): Whether to return the scores keyed by component
+            name. Defaults to False.
 
         RETURNS (Scorer): The scorer containing the evaluation results.
 
@@ -1514,7 +1565,7 @@ class Language:
         for eg, doc in zip(examples, docs):
             eg.predicted = doc
         end_time = timer()
-        results = scorer.score(examples)
+        results = scorer.score(examples, per_component=per_component)
         n_words = sum(len(eg.predicted) for eg in examples)
         results["speed"] = n_words / (end_time - start_time)
         return results
@@ -1834,7 +1885,7 @@ class Language:
         # using the nlp.config with all defaults.
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
-        orig_distill = config.pop("distill", None)
+        orig_distill = config.pop("distillation", None)
         orig_pretraining = config.pop("pretraining", None)
         config["components"] = {}
         if auto_fill:
@@ -1844,8 +1895,8 @@ class Language:
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
         if orig_distill is not None:
-            filled["distill"] = orig_distill
-            config["distill"] = orig_distill
+            filled["distillation"] = orig_distill
+            config["distillation"] = orig_distill
         if orig_pretraining is not None:
             filled["pretraining"] = orig_pretraining
             config["pretraining"] = orig_pretraining

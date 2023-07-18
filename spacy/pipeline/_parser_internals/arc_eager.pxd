@@ -1,5 +1,5 @@
+from ...typedefs cimport attr_t, weight_t
 from ._state cimport StateC
-from ...typedefs cimport weight_t, attr_t
 from .transition_system cimport Transition, TransitionSystem
 
 

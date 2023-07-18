@@ -1,29 +1,28 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Callable, Dict, Iterable, List, Optional, Union
-from typing import Tuple
-import numpy
-import srsly
-from thinc.api import Model, set_dropout_rate, Config
-from thinc.legacy import LegacySequenceCategoricalCrossentropy
-from thinc.types import Floats2d, Ints1d
 import warnings
 from itertools import islice
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
-from ..tokens.doc cimport Doc
+import numpy
+import srsly
+from thinc.api import Config, Model, set_dropout_rate
+from thinc.legacy import LegacySequenceCategoricalCrossentropy
+from thinc.types import Floats2d, Ints1d
+
 from ..morphology cimport Morphology
+from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 
-from .trainable_pipe import TrainablePipe
-from .pipe import deserialize_config
-from ..language import Language
-from ..attrs import POS, ID
-from ..parts_of_speech import X
+from .. import util
+from ..attrs import ID, POS
 from ..errors import Errors, Warnings
+from ..language import Language
+from ..parts_of_speech import X
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
 from ..util import registry
-from .. import util
-
+from .pipe import deserialize_config
+from .trainable_pipe import TrainablePipe
 
 ActivationsT = Dict[str, Union[List[Floats2d], List[Ints1d]]]
 
@@ -52,6 +51,7 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
         "overwrite": False,
         "scorer": {"@scorers": "spacy.tagger_scorer.v1"},
         "neg_prefix": "!",
+        "label_smoothing": 0.0,
         "save_activations": False,
     },
     default_score_weights={"tag_acc": 1.0},
@@ -63,6 +63,7 @@ def make_tagger(
     overwrite: bool,
     scorer: Optional[Callable],
     neg_prefix: str,
+    label_smoothing: float,
     save_activations: bool,
 ):
     """Construct a part-of-speech tagger component.
@@ -73,7 +74,7 @@ def make_tagger(
         with the rows summing to 1).
     """
     return Tagger(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, neg_prefix=neg_prefix,
-                  save_activations=save_activations)
+                  label_smoothing=label_smoothing, save_activations=save_activations)
 
 
 def tagger_score(examples, **kwargs):
@@ -99,6 +100,7 @@ class Tagger(TrainablePipe):
         overwrite=False,
         scorer=tagger_score,
         neg_prefix="!",
+        label_smoothing=0.0,
         save_activations: bool = False,
     ):
         """Initialize a part-of-speech tagger.
@@ -118,7 +120,12 @@ class Tagger(TrainablePipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg = {"labels": [], "overwrite": overwrite, "neg_prefix": neg_prefix}
+        cfg = {
+            "labels": [],
+            "overwrite": overwrite,
+            "neg_prefix": neg_prefix,
+            "label_smoothing": label_smoothing
+        }
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
         self.save_activations = save_activations
@@ -294,7 +301,12 @@ class Tagger(TrainablePipe):
         DOCS: https://spacy.io/api/tagger#get_loss
         """
         validate_examples(examples, "Tagger.get_loss")
-        loss_func = LegacySequenceCategoricalCrossentropy(names=self.labels, normalize=False, neg_prefix=self.cfg["neg_prefix"])
+        loss_func = LegacySequenceCategoricalCrossentropy(
+            names=self.labels,
+            normalize=False,
+            neg_prefix=self.cfg["neg_prefix"],
+            label_smoothing=self.cfg["label_smoothing"]
+        )
         # Convert empty tag "" to missing value None so that both misaligned
         # tokens and tokens with missing annotation have the default missing
         # value None.

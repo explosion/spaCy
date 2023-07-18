@@ -1,10 +1,15 @@
 import pytest
-from spacy.attrs import intify_attrs, ENT_IOB
 
-from spacy.attrs import IS_ALPHA, LEMMA, NORM, ORTH, intify_attrs
+from spacy.attrs import ENT_IOB, IS_ALPHA, LEMMA, NORM, ORTH, intify_attrs
 from spacy.lang.en.stop_words import STOP_WORDS
-from spacy.lang.lex_attrs import is_ascii, is_currency, is_punct, is_stop
-from spacy.lang.lex_attrs import like_url, word_shape
+from spacy.lang.lex_attrs import (
+    is_ascii,
+    is_currency,
+    is_punct,
+    is_stop,
+    like_url,
+    word_shape,
+)
 
 
 @pytest.mark.parametrize("word", ["the"])

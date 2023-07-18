@@ -1,8 +1,9 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-from .matcher import Matcher
-from ..vocab import Vocab
+
 from ..tokens.doc import Doc
 from ..tokens.span import Span
+from ..vocab import Vocab
+from .matcher import Matcher
 
 class DependencyMatcher:
     """Match dependency parse tree based on pattern rules."""

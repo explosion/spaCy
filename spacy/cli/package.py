@@ -1,18 +1,18 @@
-from typing import Optional, Union, Any, Dict, List, Tuple, cast
-import shutil
-from pathlib import Path
-from wasabi import Printer, MarkdownRenderer, get_raw_input
-from thinc.api import Config
-from collections import defaultdict
-from catalogue import RegistryError
-import srsly
-import sys
 import re
+import shutil
+import sys
+from collections import defaultdict
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
-from ._util import app, Arg, Opt, string_to_list, WHEEL_SUFFIX, SDIST_SUFFIX
-from ..schemas import validate, ModelMetaSchema
-from .. import util
-from .. import about
+import srsly
+from catalogue import RegistryError
+from thinc.api import Config
+from wasabi import MarkdownRenderer, Printer, get_raw_input
+
+from .. import about, util
+from ..schemas import ModelMetaSchema, validate
+from ._util import SDIST_SUFFIX, WHEEL_SUFFIX, Arg, Opt, app, string_to_list
 
 
 @app.command("package")

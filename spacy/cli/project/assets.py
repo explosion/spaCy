@@ -1,16 +1,27 @@
-from typing import Any, Dict, Optional
-from pathlib import Path
-from wasabi import msg
 import os
 import re
 import shutil
+from pathlib import Path
+from typing import Any, Dict, Optional
+
 import requests
 import typer
+from wasabi import msg
 
 from ...util import ensure_path, working_dir
-from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
-from .._util import get_checksum, download_file, git_checkout, get_git_version
-from .._util import SimpleFrozenDict, parse_config_overrides
+from .._util import (
+    PROJECT_FILE,
+    Arg,
+    Opt,
+    SimpleFrozenDict,
+    download_file,
+    get_checksum,
+    get_git_version,
+    git_checkout,
+    load_project_config,
+    parse_config_overrides,
+    project_cli,
+)
 
 # Whether assets are extra if `extra` is not set.
 EXTRA_DEFAULT = False

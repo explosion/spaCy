@@ -5,7 +5,6 @@ from pathlib import Path
 def test_build_dependencies():
     # Check that library requirements are pinned exactly the same across different setup files.
     libs_ignore_requirements = [
-        "cython",
         "pytest",
         "pytest-timeout",
         "mock",
@@ -13,6 +12,7 @@ def test_build_dependencies():
         "hypothesis",
         "pre-commit",
         "black",
+        "isort",
         "mypy",
         "types-dataclasses",
         "types-mock",

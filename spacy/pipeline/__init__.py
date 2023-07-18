@@ -2,20 +2,21 @@ from .attribute_ruler import AttributeRuler
 from .dep_parser import DependencyParser
 from .edit_tree_lemmatizer import EditTreeLemmatizer
 from .entity_linker import EntityLinker
-from .ner import EntityRecognizer
+from .functions import merge_entities, merge_noun_chunks, merge_subtokens
 from .lemmatizer import Lemmatizer
 from .morphologizer import Morphologizer
+from .ner import EntityRecognizer
 from .pipe import Pipe
-from .trainable_pipe import TrainablePipe
-from .senter import SentenceRecognizer
 from .sentencizer import Sentencizer
+from .senter import SentenceRecognizer
+from .span_finder import SpanFinder
+from .span_ruler import SpanRuler
+from .spancat import SpanCategorizer
 from .tagger import Tagger
 from .textcat import TextCategorizer
-from .spancat import SpanCategorizer
-from .span_ruler import SpanRuler
 from .textcat_multilabel import MultiLabel_TextCategorizer
 from .tok2vec import Tok2Vec
-from .functions import merge_entities, merge_noun_chunks, merge_subtokens
+from .trainable_pipe import TrainablePipe
 
 __all__ = [
     "AttributeRuler",
@@ -29,6 +30,7 @@ __all__ = [
     "SentenceRecognizer",
     "Sentencizer",
     "SpanCategorizer",
+    "SpanFinder",
     "SpanRuler",
     "Tagger",
     "TextCategorizer",

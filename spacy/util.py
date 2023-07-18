@@ -1,39 +1,57 @@
-from typing import List, Mapping, NoReturn, Union, Dict, Any, Set, cast
-from typing import Optional, Iterable, Callable, Tuple, Type
-from typing import Iterator, Pattern, Generator, TYPE_CHECKING
-from types import ModuleType
-import os
+import functools
 import importlib
 import importlib.metadata
 import importlib.util
-import re
-from pathlib import Path
-import thinc
-from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
-from thinc.api import ConfigValidationError, Model, constant as constant_schedule
-import functools
-import itertools
-import numpy
-import srsly
-import catalogue
-from catalogue import RegistryError, Registry
-import langcodes
-import sys
-import warnings
-from packaging.specifiers import SpecifierSet, InvalidSpecifier
-from packaging.version import Version, InvalidVersion
-from packaging.requirements import Requirement
-import subprocess
-from contextlib import contextmanager
-from collections import defaultdict
-import tempfile
-import shutil
-import shlex
 import inspect
-import pkgutil
+import itertools
 import logging
+import os
+import pkgutil
+import re
+import shlex
+import shutil
 import socket
 import stat
+import subprocess
+import sys
+import tempfile
+import warnings
+from collections import defaultdict
+from contextlib import contextmanager
+from pathlib import Path
+from types import ModuleType
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    NoReturn,
+    Optional,
+    Pattern,
+    Set,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
+
+import catalogue
+import langcodes
+import numpy
+import srsly
+import thinc
+from catalogue import Registry, RegistryError
+from packaging.requirements import Requirement
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
+from packaging.version import InvalidVersion, Version
+from thinc.api import Adam, Config, ConfigValidationError, Model, NumpyOps, Optimizer
+from thinc.api import constant as constant_schedule
+from thinc.api import fix_random_seed, get_current_ops, set_gpu_allocator
 
 try:
     import cupy.random
@@ -41,10 +59,10 @@ except ImportError:
     cupy = None
 
 
-from .symbols import ORTH
-from .compat import cupy, CudaStream, is_windows
-from .errors import Errors, Warnings
 from . import about
+from .compat import CudaStream, cupy, is_windows
+from .errors import Errors, Warnings
+from .symbols import ORTH
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
@@ -1790,3 +1808,22 @@ def find_available_port(start: int, host: str, auto_select: bool = False) -> int
     # if we get here, the port changed
     warnings.warn(Warnings.W124.format(host=host, port=start, serve_port=port))
     return port
+
+
+def set_gpu_allocator_from_config(config: Config, use_gpu: int):
+    """Change the global GPU allocator based to the value in
+    the configuration."""
+    if "gpu_allocator" not in config["training"]:
+        raise ValueError(Errors.E1015.format(value="[training] gpu_allocator"))
+    allocator = config["training"]["gpu_allocator"]
+    if use_gpu >= 0 and allocator:
+        set_gpu_allocator(allocator)
+
+
+def set_seed_from_config(config: Config):
+    """Set the random number generator seed to the value in
+    the configuration."""
+    if "seed" not in config["training"]:
+        raise ValueError(Errors.E1015.format(value="[training] seed"))
+    if config["training"]["seed"] is not None:
+        fix_random_seed(config["training"]["seed"])

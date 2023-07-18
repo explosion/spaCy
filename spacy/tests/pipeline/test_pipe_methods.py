@@ -9,6 +9,7 @@ from spacy.lang.en import English
 from spacy.lang.en.syntax_iterators import noun_chunks
 from spacy.language import Language
 from spacy.pipeline import TrainablePipe
+from spacy.strings import StringStore
 from spacy.tokens import Doc
 from spacy.training import Example
 from spacy.util import SimpleFrozenList, get_arg_names, make_tempdir
@@ -131,7 +132,7 @@ def test_issue5458():
     # Test that the noun chuncker does not generate overlapping spans
     # fmt: off
     words = ["In", "an", "era", "where", "markets", "have", "brought", "prosperity", "and", "empowerment", "."]
-    vocab = Vocab(strings=words)
+    vocab = Vocab(strings=StringStore(words))
     deps = ["ROOT", "det", "pobj", "advmod", "nsubj", "aux", "relcl", "dobj", "cc", "conj", "punct"]
     pos = ["ADP", "DET", "NOUN", "ADV", "NOUN", "AUX", "VERB", "NOUN", "CCONJ", "NOUN", "PUNCT"]
     heads = [0, 2, 0, 9, 6, 6, 2, 6, 7, 7, 0]
@@ -186,6 +187,22 @@ def test_add_pipe_last(nlp, name1, name2):
     nlp.add_pipe("new_pipe", name=name1, last=True)
     assert nlp.pipeline[0][0] != name1
     assert nlp.pipeline[-1][0] == name1
+
+
+@pytest.mark.parametrize("name1,name2", [("parser", "lambda_pipe")])
+def test_add_pipe_false(nlp, name1, name2):
+    Language.component("new_pipe2", func=lambda doc: doc)
+    nlp.add_pipe("new_pipe2", name=name2)
+    with pytest.raises(
+        ValueError,
+        match="The 'last' parameter should be 'None' or 'True', but found 'False'",
+    ):
+        nlp.add_pipe("new_pipe", name=name1, last=False)
+    with pytest.raises(
+        ValueError,
+        match="The 'first' parameter should be 'None' or 'True', but found 'False'",
+    ):
+        nlp.add_pipe("new_pipe", name=name1, first=False)
 
 
 def test_cant_add_pipe_first_and_last(nlp):
@@ -410,8 +427,6 @@ def test_add_pipe_before_after():
         nlp.add_pipe("entity_ruler", before="ner", after=2)
     with pytest.raises(ValueError):
         nlp.add_pipe("entity_ruler", before=True)
-    with pytest.raises(ValueError):
-        nlp.add_pipe("entity_ruler", first=False)
 
 
 def test_disable_enable_pipes():
