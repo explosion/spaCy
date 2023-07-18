@@ -3,10 +3,10 @@ import subprocess
 from pathlib import Path
 
 import pytest
-import spacy
 import srsly
 from typer.testing import CliRunner
 
+import spacy
 from spacy.cli._util import app, get_git_version
 from spacy.tokens import Doc, DocBin
 
