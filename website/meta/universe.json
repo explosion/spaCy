@@ -92,7 +92,7 @@
                 "website": "https://chc.au.dk/"
             },
             "category": ["pipeline", "standalone", "research"],
-            "tags": ["some-tag", "etc"]
+            "tags": ["ancient Greek"]
         },
         {
             "id": "spacy-wasm",
