@@ -65,7 +65,7 @@ cdef class Vectors:
     cdef readonly unicode eow
     cdef readonly attr_id_t attr
 
-    def __init__(self, *, strings=None, shape=None, data=None, keys=None, mode=Mode.default, minn=0, maxn=0, hash_count=1, hash_seed=0, bow="<", eow=">"):
+    def __init__(self, *, strings=None, shape=None, data=None, keys=None, mode=Mode.default, minn=0, maxn=0, hash_count=1, hash_seed=0, bow="<", eow=">", attr="ORTH"):
         """Create a new vector store.
 
         strings (StringStore): The string store.

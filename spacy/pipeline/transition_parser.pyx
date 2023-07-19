@@ -6,28 +6,32 @@ from typing import Dict, Iterable, List, Optional, Tuple
 cimport numpy as np
 from cymem.cymem cimport Pool
 
-from itertools import islice
-
 import contextlib
 import random
+from itertools import islice
 
 import numpy
 import numpy.random
 import srsly
-
-from thinc.api import CupyOps, NumpyOps, set_dropout_rate
+from thinc.api import (
+    CupyOps,
+    NumpyOps,
+    Optimizer,
+    get_array_module,
+    get_ops,
+    set_dropout_rate,
+)
 from thinc.types import Floats2d, Ints1d
 
 from ..ml.tb_framework import TransitionModelInputs
 
 from ..tokens.doc cimport Doc
-from ._parser_internals cimport _beam_utils
-from ._parser_internals.stateclass cimport StateC, StateClass
-from .trainable_pipe cimport TrainablePipe
-
 from ..typedefs cimport weight_t
 from ..vocab cimport Vocab
+from ._parser_internals cimport _beam_utils
+from ._parser_internals.stateclass cimport StateC, StateClass
 from ._parser_internals.transition_system cimport Transition, TransitionSystem
+from .trainable_pipe cimport TrainablePipe
 
 from .. import util
 from ..errors import Errors
@@ -37,6 +41,11 @@ from ..training import (
     validate_get_examples,
 )
 from ._parser_internals import _beam_utils
+
+
+# TODO: Remove when we switch to Cython 3.
+cdef extern from "<algorithm>" namespace "std" nogil:
+    bint equal[InputIt1, InputIt2](InputIt1 first1, InputIt1 last1, InputIt2 first2) except +
 
 NUMPY_OPS = NumpyOps()
 

@@ -26,7 +26,6 @@ from ..attrs cimport (
     LIKE_EMAIL,
     LIKE_NUM,
     LIKE_URL,
-    ORTH,
 )
 from ..lexeme cimport Lexeme
 from ..symbols cimport conj
@@ -426,7 +425,7 @@ cdef class Token:
         if "vector" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["vector"](self)
         else:
-            return self.vocab.get_vector(Token.get_struct_attr(self.c, self.vocab.vectors.attr))
+            return self.vocab.get_vector(self.c.lex.orth)
 
     @property
     def vector_norm(self):

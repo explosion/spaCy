@@ -2,12 +2,6 @@
 # cython: profile=True
 import numpy
 
-from thinc.extra.search cimport Beam
-
-from thinc.extra.search import MaxViolation
-
-from thinc.extra.search cimport MaxViolation
-
 from ...typedefs cimport class_t
 from .transition_system cimport Transition, TransitionSystem
 

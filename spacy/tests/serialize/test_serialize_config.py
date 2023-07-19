@@ -18,6 +18,7 @@ from spacy.ml.models import (
     build_Tok2Vec_model,
 )
 from spacy.schemas import ConfigSchema, ConfigSchemaDistill, ConfigSchemaPretrain
+from spacy.training import Example
 from spacy.util import (
     load_config,
     load_config_from_str,

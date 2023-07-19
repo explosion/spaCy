@@ -11,7 +11,6 @@ from .pipe import Pipe
 from .senter import senter_score
 
 
-
 @Language.factory(
     "sentencizer",
     assigns=["token.is_sent_start", "doc.sents"],

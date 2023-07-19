@@ -13,7 +13,7 @@ from ..lexeme cimport Lexeme
 from ..structs cimport TokenC
 from ..symbols cimport dep
 from ..typedefs cimport attr_t
-from .doc cimport _get_lca_matrix, get_token_attr
+from .doc cimport _get_lca_matrix, get_token_attr, token_by_end, token_by_start
 from .token cimport Token
 
 from ..errors import Errors, Warnings

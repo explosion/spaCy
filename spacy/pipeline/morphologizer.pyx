@@ -17,7 +17,7 @@ from ..parts_of_speech import IDS as POS_IDS
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
 from ..util import registry
-from .tagger import Tagger
+from .tagger import ActivationsT, Tagger
 
 # See #9050
 BACKWARD_OVERWRITE = True
