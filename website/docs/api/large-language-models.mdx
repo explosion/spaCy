@@ -10,7 +10,7 @@ menu:
 ---
 
 [The spacy-llm package](https://github.com/explosion/spacy-llm) integrates Large
-Language Models (LLMs) into [spaCy](https://spacy.io), featuring a modular
+Language Models (LLMs) into spaCy, featuring a modular
 system for **fast prototyping** and **prompting**, and turning unstructured
 responses into **robust outputs** for various NLP tasks, **no training data**
 required.
@@ -32,7 +32,7 @@ An `llm` component is defined by two main settings:
 
 - A [**task**](#tasks), defining the prompt to send to the LLM as well as the
   functionality to parse the resulting response back into structured fields on
-  spaCy's [Doc](https://spacy.io/api/doc) objects.
+  the [Doc](https://spacy.io/api/doc) objects.
 - A [**model**](#models) defining the model and how to connect to it. Note that
   `spacy-llm` supports both access to external APIs (such as OpenAI) as well as
   access to self-hosted open-source LLMs (such as using Dolly through Hugging
@@ -45,7 +45,7 @@ through a REST API) more than once.
 Finally, you can choose to save a stringified version of LLM prompts/responses
 within the `Doc.user_data["llm_io"]` attribute by setting `save_io` to `True`.
 `Doc.user_data["llm_io"]` is a dictionary containing one entry for every LLM
-component within the spaCy pipeline. Each entry is itself a dictionary, with two
+component within the `nlp` pipeline. Each entry is itself a dictionary, with two
 keys: `prompt` and `response`.
 
 A note on `validate_types`: by default, `spacy-llm` checks whether the
@@ -57,7 +57,7 @@ want to disable this behavior.
 
 A _task_ defines an NLP problem or question, that will be sent to the LLM via a
 prompt. Further, the task defines how to parse the LLM's responses back into
-structured information. All tasks are registered in spaCy's `llm_tasks`
+structured information. All tasks are registered in the `llm_tasks`
 registry.
 
 #### task.generate_prompts {id="task-generate-prompts"}
@@ -611,7 +611,7 @@ friends: friend
 ```
 
 If for any given text/doc instance the number of lemmas returned by the LLM
-doesn't match the number of tokens recognized by spaCy, no lemmas are stored in
+doesn't match the number of tokens from the pipeline's tokenizer, no lemmas are stored in
 the corresponding doc's tokens. Otherwise the tokens `.lemma_` property is
 updated with the lemma suggested by the LLM.
 
