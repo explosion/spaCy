@@ -12,10 +12,9 @@ menu:
 ---
 
 [The spacy-llm package](https://github.com/explosion/spacy-llm) integrates Large
-Language Models (LLMs) into spaCy pipelines, featuring a modular
-system for **fast prototyping** and **prompting**, and turning unstructured
-responses into **robust outputs** for various NLP tasks, **no training data**
-required.
+Language Models (LLMs) into spaCy pipelines, featuring a modular system for
+**fast prototyping** and **prompting**, and turning unstructured responses into
+**robust outputs** for various NLP tasks, **no training data** required.
 
 - Serializable `llm` **component** to integrate prompts into your pipeline
 - **Modular functions** to define the [**task**](#tasks) (prompting and parsing)
@@ -25,11 +24,13 @@ required.
 - Access to
   **[OpenAI API](https://platform.openai.com/docs/api-reference/introduction)**,
   including GPT-4 and various GPT-3 models
-- Built-in support for various **open-source** models hosted on [Hugging Face](https://huggingface.co/)
-- Usage examples for standard NLP tasks such as **Named Entity Recognition** and **Text Classification**
-- Easy implementation of **your own functions** via
-  the [registry](https://spacy.io/api/top-level#registry) for custom
-  prompting, parsing and model integrations
+- Built-in support for various **open-source** models hosted on
+  [Hugging Face](https://huggingface.co/)
+- Usage examples for standard NLP tasks such as **Named Entity Recognition** and
+  **Text Classification**
+- Easy implementation of **your own functions** via the
+  [registry](/api/top-level#registry) for custom prompting, parsing and model
+  integrations
 
 ## Motivation {id="motivation"}
 
@@ -37,10 +38,6 @@ Large Language Models (LLMs) feature powerful natural language understanding
 capabilities. With only a few (and sometimes no) examples, an LLM can be
 prompted to perform custom NLP tasks such as text categorization, named entity
 recognition, coreference resolution, information extraction and more.
-
-[spaCy](https://spacy.io) is a well-established library for building systems
-that need to work with language in various ways. spaCy's built-in components are
-generally powered by supervised learning or rule-based approaches.
 
 Supervised learning is much worse than LLM prompting for prototyping, but for
 many tasks it's much better for production. A transformer model that runs
@@ -70,7 +67,7 @@ well-thought-out library, which is exactly what spaCy provides.
 
 `spacy-llm` will be installed automatically in future spaCy versions. For now,
 you can run the following in the same virtual environment where you already have
-`spacy` [installed](https://spacy.io/usage).
+`spacy` [installed](/usage).
 
 > ⚠️ This package is still experimental and it is possible that changes made to
 > the interface will be breaking in minor version updates.
@@ -82,9 +79,8 @@ python -m pip install spacy-llm
 ## Usage {id="usage"}
 
 The task and the model have to be supplied to the `llm` pipeline component using
-the [config system](https://spacy.io/api/data-formats#config). This package
-provides various built-in functionality, as detailed in the [API](#-api)
-documentation.
+the [config system](/api/data-formats#config). This package provides various
+built-in functionality, as detailed in the [API](#-api) documentation.
 
 ### Example 1: Add a text classifier using a GPT-3 model from OpenAI {id="example-1"}
 
@@ -173,8 +169,8 @@ to be `"databricks/dolly-v2-12b"` for better performance.
 
 ### Example 3: Create the component directly in Python {id="example-3"}
 
-The `llm` component behaves as any other component does, so adding it to
-an existing pipeline follows the same pattern:
+The `llm` component behaves as any other component does, so adding it to an
+existing pipeline follows the same pattern:
 
 ```python
 import spacy
@@ -198,16 +194,16 @@ print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
 Note that for efficient usage of resources, typically you would use
-[`nlp.pipe(docs)`](https://spacy.io/api/language#pipe) with a batch, instead of
-calling `nlp(doc)` with a single document.
+[`nlp.pipe(docs)`](/api/language#pipe) with a batch, instead of calling
+`nlp(doc)` with a single document.
 
 ### Example 4: Implement your own custom task {id="example-4"}
 
 To write a [`task`](#tasks), you need to implement two functions:
-`generate_prompts` that takes a list of [`Doc`](https://spacy.io/api/doc)
-objects and transforms them into a list of prompts, and `parse_responses` that
-transforms the LLM outputs into annotations on the
-[`Doc`](https://spacy.io/api/doc), e.g. entity spans, text categories and more.
+`generate_prompts` that takes a list of [`Doc`](/api/doc) objects and transforms
+them into a list of prompts, and `parse_responses` that transforms the LLM
+outputs into annotations on the [`Doc`](/api/doc), e.g. entity spans, text
+categories and more.
 
 To register your custom task, decorate a factory function using the
 `spacy_llm.registry.llm_tasks` decorator with a custom name that you can refer
@@ -325,7 +321,7 @@ An `llm` component is defined by two main settings:
 
 - A [**task**](#tasks), defining the prompt to send to the LLM as well as the
   functionality to parse the resulting response back into structured fields on
-  the [Doc](https://spacy.io/api/doc) objects.
+  the [Doc](/api/doc) objects.
 - A [**model**](#models) defining the model to use and how to connect to it.
   Note that `spacy-llm` supports both access to external APIs (such as OpenAI)
   as well as access to self-hosted open-source LLMs (such as using Dolly through
@@ -350,8 +346,7 @@ want to disable this behavior.
 
 A _task_ defines an NLP problem or question, that will be sent to the LLM via a
 prompt. Further, the task defines how to parse the LLM's responses back into
-structured information. All tasks are registered in the `llm_tasks`
-registry.
+structured information. All tasks are registered in the `llm_tasks` registry.
 
 Practically speaking, a task should adhere to the `Protocol` `LLMTask` defined
 in [`ty.py`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/ty.py).
@@ -363,10 +358,10 @@ function.
 | [`task.generate_prompts`](/api/large-language-models#task-generate-prompts) | Takes a collection of documents, and returns a collection of "prompts", which can be of type `Any`.                                                          |
 | [`task.parse_responses`](/api/large-language-models#task-parse-responses)   | Takes a collection of LLM responses and the original documents, parses the responses into structured information, and sets the annotations on the documents. |
 
-Moreover, the task may define an optional
-[`scorer` method](https://spacy.io/api/scorer#score). It should accept an
-iterable of `Example`s as input and return a score dictionary. If the `scorer`
-method is defined, `spacy-llm` will call it to evaluate the component.
+Moreover, the task may define an optional [`scorer` method](/api/scorer#score).
+It should accept an iterable of `Example`s as input and return a score
+dictionary. If the `scorer` method is defined, `spacy-llm` will call it to
+evaluate the component.
 
 | Component                                                               | Description                                                                                                                                                           |
 | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -409,11 +404,10 @@ The supplied file has to conform to the format expected by the required task
 ##### (2) Initializing the `llm` component with a `get_examples()` callback
 
 Alternatively, you can initialize your `nlp` pipeline by providing a
-`get_examples` callback for
-[`nlp.initialize`](https://spacy.io/api/language#initialize) and setting
-`n_prompt_examples` to a positive number to automatically fetch a few examples
-for few-shot learning. Set `n_prompt_examples` to `-1` to use all examples as
-part of the few-shot learning prompt.
+`get_examples` callback for [`nlp.initialize`](/api/language#initialize) and
+setting `n_prompt_examples` to a positive number to automatically fetch a few
+examples for few-shot learning. Set `n_prompt_examples` to `-1` to use all
+examples as part of the few-shot learning prompt.
 
 ```ini
 [initialize.components.llm]

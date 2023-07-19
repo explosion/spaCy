@@ -32,7 +32,7 @@ An `llm` component is defined by two main settings:
 
 - A [**task**](#tasks), defining the prompt to send to the LLM as well as the
   functionality to parse the resulting response back into structured fields on
-  the [Doc](https://spacy.io/api/doc) objects.
+  the [Doc](/api/doc) objects.
 - A [**model**](#models) defining the model and how to connect to it. Note that
   `spacy-llm` supports both access to external APIs (such as OpenAI) as well as
   access to self-hosted open-source LLMs (such as using Dolly through Hugging
@@ -187,7 +187,7 @@ the following parameters:
   case variances in the LLM's output.
 - The `alignment_mode` argument is used to match entities as returned by the LLM
   to the tokens from the original `Doc` - specifically it's used as argument in
-  the call to [`doc.char_span()`](https://spacy.io/api/doc#char_span). The
+  the call to [`doc.char_span()`](/api/doc#char_span). The
   `"strict"` mode will only keep spans that strictly adhere to the given token
   boundaries. `"contract"` will only keep those tokens that are fully within the
   given range, e.g. reducing `"New Y"` to `"New"`. Finally, `"expand"` will
@@ -277,7 +277,7 @@ the following parameters:
   case variances in the LLM's output.
 - The `alignment_mode` argument is used to match entities as returned by the LLM
   to the tokens from the original `Doc` - specifically it's used as argument in
-  the call to [`doc.char_span()`](https://spacy.io/api/doc#char_span). The
+  the call to [`doc.char_span()`](/api/doc#char_span). The
   `"strict"` mode will only keep spans that strictly adhere to the given token
   boundaries. `"contract"` will only keep those tokens that are fully within the
   given range, e.g. reducing `"New Y"` to `"New"`. Finally, `"expand"` will
