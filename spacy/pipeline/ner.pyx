@@ -1,6 +1,6 @@
 # cython: infer_types=True, profile=True, binding=True
 from collections import defaultdict
-from typing import Callable, Iterable, Optional
+from typing import Callable, Optional
 
 from thinc.api import Config, Model
 
@@ -10,7 +10,7 @@ from ._parser_internals.ner cimport BiluoPushDown
 from .transition_parser cimport Parser
 
 from ..language import Language
-from ..scorer import PRFScore, get_ner_prf
+from ..scorer import get_ner_prf
 from ..training import remove_bilu_prefix
 from ..util import registry
 
@@ -99,6 +99,7 @@ def make_ner(
         beam_update_prob=0.0,
         scorer=scorer,
     )
+
 
 @Language.factory(
     "beam_ner",

@@ -46,11 +46,18 @@ cdef struct EditTreeC:
     bint is_match_node
     NodeC inner
 
-cdef inline EditTreeC edittree_new_match(len_t prefix_len, len_t suffix_len,
-        uint32_t prefix_tree, uint32_t suffix_tree):
-    cdef MatchNodeC match_node = MatchNodeC(prefix_len=prefix_len,
-            suffix_len=suffix_len, prefix_tree=prefix_tree,
-            suffix_tree=suffix_tree)
+cdef inline EditTreeC edittree_new_match(
+    len_t prefix_len,
+    len_t suffix_len,
+    uint32_t prefix_tree,
+    uint32_t suffix_tree
+):
+    cdef MatchNodeC match_node = MatchNodeC(
+        prefix_len=prefix_len,
+        suffix_len=suffix_len,
+        prefix_tree=prefix_tree,
+        suffix_tree=suffix_tree
+    )
     cdef NodeC inner = NodeC(match_node=match_node)
     return EditTreeC(is_match_node=True, inner=inner)
 

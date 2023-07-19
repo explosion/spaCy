@@ -277,7 +277,6 @@ cdef cppclass StateC:
 
         return n
 
-
     int n_L(int head) nogil const:
         return n_arcs(this._left_arcs, head)
 

@@ -1,10 +1,8 @@
-cimport numpy as np
 from cython.operator cimport dereference as deref
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp.set cimport set as cppset
 from murmurhash.mrmr cimport hash128_x64
 
-import functools
 import warnings
 from enum import Enum
 from typing import cast
@@ -119,7 +117,7 @@ cdef class Vectors:
         if self.mode == Mode.default:
             if data is None:
                 if shape is None:
-                    shape = (0,0)
+                    shape = (0, 0)
                 ops = get_current_ops()
                 data = ops.xp.zeros(shape, dtype="f")
                 self._unset = cppset[int]({i for i in range(data.shape[0])})
@@ -260,11 +258,10 @@ cdef class Vectors:
     def __eq__(self, other):
         # Check for equality, with faster checks first
         return (
-                self.shape == other.shape
-                and self.key2row == other.key2row
-                and self.to_bytes(exclude=["strings"])
-                  == other.to_bytes(exclude=["strings"])
-               )
+            self.shape == other.shape
+            and self.key2row == other.key2row
+            and self.to_bytes(exclude=["strings"]) == other.to_bytes(exclude=["strings"])
+        )
 
     def resize(self, shape, inplace=False):
         """Resize the underlying vectors array. If inplace=True, the memory
@@ -520,11 +517,12 @@ cdef class Vectors:
             # vectors e.g. (10000, 300)
             # sims    e.g. (1024, 10000)
             sims = xp.dot(batch, vectors.T)
-            best_rows[i:i+batch_size] = xp.argpartition(sims, -n, axis=1)[:,-n:]
-            scores[i:i+batch_size] = xp.partition(sims, -n, axis=1)[:,-n:]
+            best_rows[i:i+batch_size] = xp.argpartition(sims, -n, axis=1)[:, -n:]
+            scores[i:i+batch_size] = xp.partition(sims, -n, axis=1)[:, -n:]
 
             if sort and n >= 2:
-                sorted_index = xp.arange(scores.shape[0])[:,None][i:i+batch_size],xp.argsort(scores[i:i+batch_size], axis=1)[:,::-1]
+                sorted_index = xp.arange(scores.shape[0])[:, None][i:i+batch_size], \
+                    xp.argsort(scores[i:i+batch_size], axis=1)[:, ::-1]
                 scores[i:i+batch_size] = scores[sorted_index]
                 best_rows[i:i+batch_size] = best_rows[sorted_index]
 
@@ -538,8 +536,12 @@ cdef class Vectors:
 
         numpy_rows = get_current_ops().to_numpy(best_rows)
         keys = xp.asarray(
-            [[row2key[row] for row in numpy_rows[i] if row in row2key]
-                    for i in range(len(queries)) ], dtype="uint64")
+            [
+                [row2key[row] for row in numpy_rows[i] if row in row2key]
+                for i in range(len(queries))
+            ],
+            dtype="uint64"
+        )
         return (keys, best_rows, scores)
 
     def to_ops(self, ops: Ops):
@@ -582,9 +584,9 @@ cdef class Vectors:
         """
         xp = get_array_module(self.data)
         if xp is numpy:
-            save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)
+            save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)  # no-cython-lint
         else:
-            save_array = lambda arr, file_: xp.save(file_, arr)
+            save_array = lambda arr, file_: xp.save(file_, arr)  # no-cython-lint
 
         def save_vectors(path):
             # the source of numpy.save indicates that the file object is closed after use.
