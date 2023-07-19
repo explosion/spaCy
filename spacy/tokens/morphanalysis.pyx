@@ -1,5 +1,4 @@
 cimport numpy as np
-from libc.string cimport memset
 
 from ..errors import Errors
 from ..morphology import Morphology

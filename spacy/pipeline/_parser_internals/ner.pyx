@@ -1,5 +1,4 @@
 from cymem.cymem cimport Pool
-from libc.stdint cimport int32_t
 from libcpp.memory cimport shared_ptr
 from libcpp.vector cimport vector
 

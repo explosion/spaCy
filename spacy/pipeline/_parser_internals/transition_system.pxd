@@ -60,7 +60,7 @@ cdef class TransitionSystem:
 
 
 cdef void c_apply_actions(TransitionSystem moves, StateC** states, const int* actions,
-    int batch_size) nogil
+                          int batch_size) nogil
 
 cdef void c_transition_batch(TransitionSystem moves, StateC** states, const float* scores,
-        int nr_class, int batch_size) nogil
+                             int nr_class, int batch_size) nogil

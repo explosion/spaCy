@@ -291,19 +291,19 @@ cdef class TransitionSystem:
 
 
 cdef void c_apply_actions(TransitionSystem moves, StateC** states, const int* actions,
-    int batch_size) nogil:
-        cdef int i
-        cdef Transition action
-        cdef StateC* state
-        for i in range(batch_size):
-            state = states[i]
-            action = moves.c[actions[i]]
-            action.do(state, action.label)
-            state.history.push_back(action.clas)
+                          int batch_size) nogil:
+    cdef int i
+    cdef Transition action
+    cdef StateC* state
+    for i in range(batch_size):
+        state = states[i]
+        action = moves.c[actions[i]]
+        action.do(state, action.label)
+        state.history.push_back(action.clas)
 
 
 cdef void c_transition_batch(TransitionSystem moves, StateC** states, const float* scores,
-    int nr_class, int batch_size) nogil:
+                             int nr_class, int batch_size) nogil:
     is_valid = <int*>calloc(moves.n_moves, sizeof(int))
     cdef int i, guess
     cdef Transition action
@@ -319,4 +319,3 @@ cdef void c_transition_batch(TransitionSystem moves, StateC** states, const floa
             action.do(states[i], action.label)
             states[i].history.push_back(guess)
     free(is_valid)
-

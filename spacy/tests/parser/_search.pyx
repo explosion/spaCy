@@ -2,7 +2,7 @@
 from cymem.cymem cimport Pool
 
 from spacy.pipeline._parser_internals.search cimport Beam, MaxViolation
-from spacy.typedefs cimport class_t, weight_t
+from spacy.typedefs cimport class_t
 
 import pytest
 
@@ -42,32 +42,35 @@ cdef int destroy(Pool mem, void* state, void* extra_args) except -1:
     state = <TestState*>state
     mem.free(state)
 
+
 @cytest
 @pytest.mark.parametrize("nr_class,beam_width",
-    [
-        (2, 3),
-        (3, 6),
-        (4, 20),
-    ]
-)
+                         [
+                             (2, 3),
+                             (3, 6),
+                             (4, 20),
+                         ]
+                         )
 def test_init(nr_class, beam_width):
     b = Beam(nr_class, beam_width)
     assert b.size == 1
     assert b.width == beam_width
     assert b.nr_class == nr_class
 
+
 @cytest
 def test_init_violn():
     MaxViolation()
 
+
 @cytest
 @pytest.mark.parametrize("nr_class,beam_width,length",
-    [
-        (2, 3, 3),
-        (3, 6, 15),
-        (4, 20, 32),
-    ]
-)
+                         [
+                             (2, 3, 3),
+                             (3, 6, 15),
+                             (4, 20, 32),
+                         ]
+                         )
 def test_initialize(nr_class, beam_width, length):
     b = Beam(nr_class, beam_width)
     b.initialize(initialize, destroy, length, NULL)
@@ -79,11 +82,11 @@ def test_initialize(nr_class, beam_width, length):
 
 @cytest
 @pytest.mark.parametrize("nr_class,beam_width,length,extra",
-    [
-        (2, 3, 4, None),
-        (3, 6, 15, u"test beam 1"),
-    ]
-)
+                         [
+                             (2, 3, 4, None),
+                             (3, 6, 15, u"test beam 1"),
+                         ]
+                         )
 def test_initialize_extra(nr_class, beam_width, length, extra):
     b = Beam(nr_class, beam_width)
     if extra is None:
@@ -97,11 +100,11 @@ def test_initialize_extra(nr_class, beam_width, length, extra):
 
 @cytest
 @pytest.mark.parametrize("nr_class,beam_width,length",
-    [
-        (3, 6, 15),
-        (4, 20, 32),
-    ]
-)
+                         [
+                             (3, 6, 15),
+                             (4, 20, 32),
+                         ]
+                         )
 def test_transition(nr_class, beam_width, length):
     b = Beam(nr_class, beam_width)
     b.initialize(initialize, destroy, length, NULL)

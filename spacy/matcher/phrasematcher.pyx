@@ -158,7 +158,6 @@ cdef class PhraseMatcher:
         del self._callbacks[key]
         del self._docs[key]
 
-
     def _add_from_arrays(self, key, specs, *, on_match=None):
         """Add a preprocessed list of specs, with an optional callback.
 
@@ -193,7 +192,6 @@ cdef class PhraseMatcher:
                 map_set(self.mem, current_node, self._terminal_hash, internal_node)
                 result = internal_node
             map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
-
 
     def add(self, key, docs, *, on_match=None):
         """Add a match-rule to the phrase-matcher. A match-rule consists of: an ID

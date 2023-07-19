@@ -80,14 +80,12 @@ cdef class Morphology:
         out.sort(key=lambda x: x[0])
         return dict(out)
 
-
     def _normalized_feat_dict_to_str(self, feats: Dict[str, str]) -> str:
         norm_feats_string = self.FEATURE_SEP.join([
-                self.FIELD_SEP.join([field, self.VALUE_SEP.join(values) if isinstance(values, list) else values])
+            self.FIELD_SEP.join([field, self.VALUE_SEP.join(values) if isinstance(values, list) else values])
             for field, values in feats.items()
-        ])
+            ])
         return norm_feats_string or self.EMPTY_MORPH
-
 
     cdef hash_t _add(self, features):
         """Insert a morphological analysis in the morphology table, if not

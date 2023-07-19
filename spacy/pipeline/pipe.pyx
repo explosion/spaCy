@@ -1,12 +1,11 @@
 # cython: infer_types=True, profile=True, binding=True
-import warnings
 from typing import Callable, Dict, Iterable, Iterator, Tuple, Union
 
 import srsly
 
 from ..tokens.doc cimport Doc
 
-from ..errors import Errors, Warnings
+from ..errors import Errors
 from ..language import Language
 from ..training import Example
 from ..util import raise_error

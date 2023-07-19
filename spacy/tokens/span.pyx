@@ -225,8 +225,8 @@ cdef class Span:
 
     @property
     def _(self):
-        cdef SpanC* span_c = self.span_c()
         """Custom extension attributes registered via `set_extension`."""
+        cdef SpanC* span_c = self.span_c()
         return Underscore(Underscore.span_extensions, self,
                           start=span_c.start_char, end=span_c.end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
 
@@ -931,7 +931,6 @@ cdef class Span:
 
         def __set__(self, str ent_id_):
             self.id_ = ent_id_
-
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:

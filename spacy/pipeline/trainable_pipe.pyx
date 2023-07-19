@@ -1,5 +1,4 @@
 # cython: infer_types=True, profile=True, binding=True
-import warnings
 from typing import Callable, Dict, Iterable, Iterator, Optional, Tuple
 
 import srsly
@@ -8,7 +7,7 @@ from thinc.api import Model, Optimizer, set_dropout_rate
 from ..tokens.doc cimport Doc
 
 from .. import util
-from ..errors import Errors, Warnings
+from ..errors import Errors
 from ..language import Language
 from ..training import Example, validate_distillation_examples, validate_examples
 from ..vocab import Vocab
@@ -56,14 +55,14 @@ cdef class TrainablePipe(Pipe):
         except Exception as e:
             error_handler(self.name, self, [doc], e)
 
-
     def distill(self,
-               teacher_pipe: Optional["TrainablePipe"],
-               examples: Iterable["Example"],
-               *,
-               drop: float=0.0,
-               sgd: Optional[Optimizer]=None,
-               losses: Optional[Dict[str, float]]=None) -> Dict[str, float]:
+                teacher_pipe: Optional["TrainablePipe"],
+                examples: Iterable["Example"],
+                *,
+                drop: float = 0.0,
+                sgd: Optional[Optimizer] = None,
+                losses: Optional[Dict[str, float]] = None
+                ) -> Dict[str, float]:
         """Train a pipe (the student) on the predictions of another pipe
         (the teacher). The student is typically trained on the probability
         distribution of the teacher, but details may differ per pipe.
