@@ -377,3 +377,22 @@ def test_displacy_manual_sorted_entities():
 
     html = displacy.render(doc, style="ent", manual=True)
     assert html.find("FIRST") < html.find("SECOND")
+
+
+@pytest.mark.issue(12816)
+def test_issue12816(en_vocab) -> None:
+    """Test that displaCy's span visualizer escapes annotated HTML tags correctly."""
+    # Create a doc containing an annotated word and an unannotated HTML tag
+    doc = Doc(en_vocab, words=["test", "<TEST>"])
+    doc.spans["sc"] = [Span(doc, 0, 1, label="test")]
+
+    # Verify that the HTML tag is escaped when unannotated
+    html = displacy.render(doc, style="span")
+    assert "&lt;TEST&gt;" in html
+
+    # Annotate the HTML tag
+    doc.spans["sc"].append(Span(doc, 1, 2, label="test"))
+
+    # Verify that the HTML tag is still escaped
+    html = displacy.render(doc, style="span")
+    assert "&lt;TEST&gt;" in html

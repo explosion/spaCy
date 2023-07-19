@@ -108,7 +108,7 @@ cdef class DependencyMatcher:
         key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
         """
-        return self.has_key(key)
+        return self.has_key(key)  # no-cython-lint: W601
 
     def _validate_input(self, pattern, key):
         idx = 0
@@ -264,7 +264,7 @@ cdef class DependencyMatcher:
 
     def remove(self, key):
         key = self._normalize_key(key)
-        if not key in self._patterns:
+        if key not in self._patterns:
             raise ValueError(Errors.E175.format(key=key))
         self._patterns.pop(key)
         self._raw_patterns.pop(key)
@@ -382,7 +382,7 @@ cdef class DependencyMatcher:
             return []
         return [doc[node].head]
 
-    def _gov(self,doc,node):
+    def _gov(self, doc, node):
         return list(doc[node].children)
 
     def _dep_chain(self, doc, node):
@@ -443,7 +443,7 @@ cdef class DependencyMatcher:
 
     def _right_child(self, doc, node):
         return [child for child in doc[node].rights]
-    
+
     def _left_child(self, doc, node):
         return [child for child in doc[node].lefts]
 
@@ -461,7 +461,7 @@ cdef class DependencyMatcher:
         if doc[node].head.i > node:
             return [doc[node].head]
         return []
-    
+
     def _left_parent(self, doc, node):
         if doc[node].head.i < node:
             return [doc[node].head]
