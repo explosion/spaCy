@@ -47,4 +47,5 @@ cdef enum attr_id_t:
     MORPH = symbols.MORPH
     ENT_ID = symbols.ENT_ID
 
-    IDX = symbols.IDX
+    IDX
+    SENT_END

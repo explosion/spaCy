@@ -79,7 +79,7 @@ cdef class TrainablePipe(Pipe):
         losses (Optional[Dict[str, float]]): Optional record of loss during
             distillation.
         RETURNS: The updated losses dictionary.
-        
+
         DOCS: https://spacy.io/api/pipe#distill
         """
         # By default we require a teacher pipe, but there are downstream
@@ -103,7 +103,7 @@ cdef class TrainablePipe(Pipe):
         losses[self.name] += loss
         return losses
 
-    def pipe(self, stream: Iterable[Doc], *, batch_size: int=128) -> Iterator[Doc]:
+    def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
         applied to the Doc.
@@ -150,9 +150,9 @@ cdef class TrainablePipe(Pipe):
     def update(self,
                examples: Iterable["Example"],
                *,
-               drop: float=0.0,
-               sgd: Optimizer=None,
-               losses: Optional[Dict[str, float]]=None) -> Dict[str, float]:
+               drop: float = 0.0,
+               sgd: Optimizer = None,
+               losses: Optional[Dict[str, float]] = None) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model. Delegates to predict and get_loss.
 
@@ -186,8 +186,8 @@ cdef class TrainablePipe(Pipe):
     def rehearse(self,
                  examples: Iterable[Example],
                  *,
-                 sgd: Optimizer=None,
-                 losses: Dict[str, float]=None,
+                 sgd: Optimizer = None,
+                 losses: Dict[str, float] = None,
                  **config) -> Dict[str, float]:
         """Perform a "rehearsal" update from a batch of data. Rehearsal updates
         teach the current model to make predictions similar to an initial model,
@@ -224,7 +224,7 @@ cdef class TrainablePipe(Pipe):
         student_scores: Scores representing the student model's predictions.
 
         RETURNS (Tuple[float, float]): The loss and the gradient.
-        
+
         DOCS: https://spacy.io/api/pipe#get_teacher_student_loss
         """
         raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="get_teacher_student_loss", name=self.name))
@@ -238,7 +238,7 @@ cdef class TrainablePipe(Pipe):
         """
         return util.create_default_optimizer()
 
-    def initialize(self, get_examples: Callable[[], Iterable[Example]], *, nlp: Language=None):
+    def initialize(self, get_examples: Callable[[], Iterable[Example]], *, nlp: Language = None):
         """Initialize the pipe for training, using data examples if available.
         This method needs to be implemented by each TrainablePipe component,
         ensuring the internal model (if available) is initialized properly

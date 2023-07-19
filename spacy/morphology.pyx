@@ -140,7 +140,7 @@ cdef class Morphology:
                     field_feature_pairs.append((field_key, value_key))
             else:
                 # We could box scalar values into a list and use a common
-                # code path to generate features but that incurs a small 
+                # code path to generate features but that incurs a small
                 # but measurable allocation/iteration overhead (as this
                 # branch is taken often enough).
                 value_key = self.strings.add(field + self.FIELD_SEP + values)
@@ -245,6 +245,7 @@ cdef int get_n_by_field(attr_t* results, const shared_ptr[MorphAnalysisC] morph,
             results[n_results] = deref(morph).features[i].value
             n_results += 1
     return n_results
+
 
 def unpickle_morphology(strings, tags):
     cdef Morphology morphology = Morphology(strings)

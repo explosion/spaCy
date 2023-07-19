@@ -10,9 +10,7 @@ from collections import Counter
 import srsly
 
 from ...structs cimport TokenC
-from ...tokens.doc cimport Doc
 from ...typedefs cimport attr_t, weight_t
-from . cimport _beam_utils
 from ._parser_utils cimport arg_max_if_valid
 from .stateclass cimport StateClass
 
@@ -270,7 +268,6 @@ cdef class TransitionSystem:
         return self
 
     def to_bytes(self, exclude=tuple()):
-        transitions = []
         serializers = {
             'moves': lambda: srsly.json_dumps(self.labels),
             'strings': lambda: self.strings.to_bytes(),

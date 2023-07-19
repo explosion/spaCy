@@ -1,13 +1,11 @@
 # cython: infer_types=True
 # Compiler crashes on memory view coercion without this. Should report bug.
 cimport numpy as np
-from cython.view cimport array as cvarray
 
 np.import_array()
 
 import warnings
 
-import numpy
 from thinc.api import get_array_module
 
 from ..attrs cimport (
@@ -28,6 +26,7 @@ from ..attrs cimport (
     LIKE_EMAIL,
     LIKE_NUM,
     LIKE_URL,
+    ORTH,
 )
 from ..lexeme cimport Lexeme
 from ..symbols cimport conj
@@ -216,11 +215,17 @@ cdef class Token:
         """
         if "similarity" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["similarity"](self, other)
-        if hasattr(other, "__len__") and len(other) == 1 and hasattr(other, "__getitem__"):
-            if self.c.lex.orth == getattr(other[0], "orth", None):
+        attr = getattr(self.doc.vocab.vectors, "attr", ORTH)
+        cdef Token this_token = self
+        cdef Token other_token
+        cdef Lexeme other_lex
+        if isinstance(other, Token):
+            other_token = other
+            if Token.get_struct_attr(this_token.c, attr) == Token.get_struct_attr(other_token.c, attr):
                 return 1.0
-        elif hasattr(other, "orth"):
-            if self.c.lex.orth == other.orth:
+        elif isinstance(other, Lexeme):
+            other_lex = other
+            if Token.get_struct_attr(this_token.c, attr) == Lexeme.get_struct_attr(other_lex.c, attr):
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
             warnings.warn(Warnings.W007.format(obj="Token"))
@@ -233,7 +238,7 @@ cdef class Token:
         result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
         # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
         return result.item()
-    
+
     def has_morph(self):
         """Check whether the token has annotated morph information.
         Return False when the morph annotation is unset/missing.
@@ -421,7 +426,7 @@ cdef class Token:
         if "vector" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["vector"](self)
         else:
-            return self.vocab.get_vector(self.c.lex.orth)
+            return self.vocab.get_vector(Token.get_struct_attr(self.c, self.vocab.vectors.attr))
 
     @property
     def vector_norm(self):
@@ -528,9 +533,9 @@ cdef class Token:
         def __get__(self):
             if self.i + 1 == len(self.doc):
                 return True
-            elif self.doc[self.i+1].is_sent_start == None:
+            elif self.doc[self.i+1].is_sent_start is None:
                 return None
-            elif self.doc[self.i+1].is_sent_start == True:
+            elif self.doc[self.i+1].is_sent_start is True:
                 return True
             else:
                 return False

@@ -4,7 +4,6 @@ from typing import Any, Callable, Iterable, Iterator, List, Optional, Tuple, Uni
 cimport cython
 from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
-from libcpp.set cimport set
 from murmurhash.mrmr cimport hash64
 
 import srsly

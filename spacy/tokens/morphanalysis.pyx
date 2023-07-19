@@ -94,4 +94,3 @@ cdef class MorphAnalysis:
 
     def __repr__(self):
         return self.to_json()
-

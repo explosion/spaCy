@@ -8,58 +8,35 @@ from cymem.cymem cimport Pool
 
 from itertools import islice
 
-from libc.stdlib cimport calloc, free
-from libc.string cimport memcpy, memset
-from libcpp.vector cimport vector
-
 import contextlib
 import random
-import warnings
 
 import numpy
 import numpy.random
 import srsly
-from thinc.api import (
-    CupyOps,
-    NumpyOps,
-    Optimizer,
-    chain,
-    get_array_module,
-    get_ops,
-    set_dropout_rate,
-    softmax_activation,
-    use_ops,
-)
-from thinc.legacy import LegacySequenceCategoricalCrossentropy
+
+from thinc.api import CupyOps, NumpyOps, set_dropout_rate
 from thinc.types import Floats2d, Ints1d
 
 from ..ml.tb_framework import TransitionModelInputs
 
 from ..tokens.doc cimport Doc
 from ._parser_internals cimport _beam_utils
-from ._parser_internals.search cimport Beam
 from ._parser_internals.stateclass cimport StateC, StateClass
 from .trainable_pipe cimport TrainablePipe
-
-from ._parser_internals import _beam_utils
 
 from ..typedefs cimport weight_t
 from ..vocab cimport Vocab
 from ._parser_internals.transition_system cimport Transition, TransitionSystem
 
 from .. import util
-from ..errors import Errors, Warnings
+from ..errors import Errors
 from ..training import (
     validate_distillation_examples,
     validate_examples,
     validate_get_examples,
 )
-
-
-# TODO: Remove when we switch to Cython 3.
-cdef extern from "<algorithm>" namespace "std" nogil:
-    bint equal[InputIt1, InputIt2](InputIt1 first1, InputIt1 last1, InputIt2 first2) except +
-
+from ._parser_internals import _beam_utils
 
 NUMPY_OPS = NumpyOps()
 
@@ -257,7 +234,7 @@ class Parser(TrainablePipe):
         losses (Optional[Dict[str, float]]): Optional record of loss during
             distillation.
         RETURNS: The updated losses dictionary.
-        
+
         DOCS: https://spacy.io/api/dependencyparser#distill
         """
         if teacher_pipe is None:
@@ -320,7 +297,7 @@ class Parser(TrainablePipe):
         student_scores: Scores representing the student model's predictions.
 
         RETURNS (Tuple[float, float]): The loss and the gradient.
-        
+
         DOCS: https://spacy.io/api/dependencyparser#get_teacher_student_loss
         """
 
@@ -384,7 +361,6 @@ class Parser(TrainablePipe):
             except Exception as e:
                 error_handler(self.name, self, batch_in_order, e)
 
-
     def predict(self, docs):
         if isinstance(docs, Doc):
             docs = [docs]
@@ -414,7 +390,6 @@ class Parser(TrainablePipe):
 
     def set_annotations(self, docs, states_or_beams):
         cdef StateClass state
-        cdef Beam beam
         cdef Doc doc
         states = _beam_utils.collect_states(states_or_beams, docs)
         for i, (state, doc) in enumerate(zip(states, docs)):
@@ -423,7 +398,6 @@ class Parser(TrainablePipe):
                 hook(doc)
 
     def update(self, examples, *, drop=0., sgd=None, losses=None):
-        cdef StateClass state
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.)

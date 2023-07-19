@@ -1,6 +1,3 @@
-import os
-import random
-
 from cymem.cymem cimport Pool
 from libc.stdint cimport int32_t
 from libcpp.memory cimport shared_ptr
@@ -14,7 +11,7 @@ from ...tokens.span import Span
 
 from ...attrs cimport IS_SPACE
 from ...lexeme cimport Lexeme
-from ...structs cimport SpanC, TokenC
+from ...structs cimport SpanC
 from ...tokens.span cimport Span
 from ...typedefs cimport attr_t, weight_t
 
@@ -138,11 +135,10 @@ cdef class BiluoPushDown(TransitionSystem):
             OUT: Counter()
         }
         actions[OUT][''] = 1  # Represents a token predicted to be outside of any entity
-        actions[UNIT][''] = 1 # Represents a token prohibited to be in an entity
+        actions[UNIT][''] = 1  # Represents a token prohibited to be in an entity
         for entity_type in kwargs.get('entity_types', []):
             for action in (BEGIN, IN, LAST, UNIT):
                 actions[action][entity_type] = 1
-        moves = ('M', 'B', 'I', 'L', 'U')
         for example in kwargs.get('examples', []):
             for token in example.y:
                 ent_type = token.ent_type_
@@ -324,7 +320,6 @@ cdef class BiluoPushDown(TransitionSystem):
             raise TypeError(Errors.E909.format(name="BiluoGold"))
         cdef BiluoGold gold_ = gold
         gold_state = gold_.c
-        n_gold = 0
         if self.c[i].is_valid(stcls.c, self.c[i].label):
             cost = self.c[i].get_cost(stcls.c, &gold_state, self.c[i].label)
         else:
@@ -487,10 +482,8 @@ cdef class In:
     @staticmethod
     cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
-        move = IN
         cdef int next_act = gold.ner[s.B(1)].move if s.B(1) >= 0 else OUT
         cdef int g_act = gold.ner[s.B(0)].move
-        cdef attr_t g_tag = gold.ner[s.B(0)].label
         cdef bint is_sunk = _entity_is_sunk(s, gold.ner)
 
         if g_act == MISSING:
@@ -550,12 +543,10 @@ cdef class Last:
     @staticmethod
     cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
-        move = LAST
         b0 = s.B(0)
         ent_start = s.E(0)
 
         cdef int g_act = gold.ner[b0].move
-        cdef attr_t g_tag = gold.ner[b0].label
 
         cdef int cost = 0
 
@@ -655,7 +646,6 @@ cdef class Unit:
         return cost
 
 
-
 cdef class Out:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
@@ -678,7 +668,6 @@ cdef class Out:
     cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
-        cdef attr_t g_tag = gold.ner[s.B(0)].label
         cdef weight_t cost = 0
         if g_act == MISSING:
             pass
