@@ -12,7 +12,7 @@ menu:
 ---
 
 [The spacy-llm package](https://github.com/explosion/spacy-llm) integrates Large
-Language Models (LLMs) into [spaCy](https://spacy.io), featuring a modular
+Language Models (LLMs) into spaCy pipelines, featuring a modular
 system for **fast prototyping** and **prompting**, and turning unstructured
 responses into **robust outputs** for various NLP tasks, **no training data**
 required.
@@ -25,11 +25,10 @@ required.
 - Access to
   **[OpenAI API](https://platform.openai.com/docs/api-reference/introduction)**,
   including GPT-4 and various GPT-3 models
-- Built-in support for **open-source
-  [Dolly](https://huggingface.co/databricks)** models hosted on Hugging Face
-- Usage examples for **Named Entity Recognition** and **Text Classification**
+- Built-in support for various **open-source** models hosted on [Hugging Face](https://huggingface.co/)
+- Usage examples for standard NLP tasks such as **Named Entity Recognition** and **Text Classification**
 - Easy implementation of **your own functions** via
-  [spaCy's registry](https://spacy.io/api/top-level#registry) for custom
+  the [registry](https://spacy.io/api/top-level#registry) for custom
   prompting, parsing and model integrations
 
 ## Motivation {id="motivation"}
@@ -83,7 +82,7 @@ python -m pip install spacy-llm
 ## Usage {id="usage"}
 
 The task and the model have to be supplied to the `llm` pipeline component using
-[spaCy's config system](https://spacy.io/api/data-formats#config). This package
+the [config system](https://spacy.io/api/data-formats#config). This package
 provides various built-in functionality, as detailed in the [API](#-api)
 documentation.
 
@@ -174,7 +173,7 @@ to be `"databricks/dolly-v2-12b"` for better performance.
 
 ### Example 3: Create the component directly in Python {id="example-3"}
 
-The `llm` component behaves as any other spaCy component does, so adding it to
+The `llm` component behaves as any other component does, so adding it to
 an existing pipeline follows the same pattern:
 
 ```python
@@ -205,12 +204,12 @@ calling `nlp(doc)` with a single document.
 ### Example 4: Implement your own custom task {id="example-4"}
 
 To write a [`task`](#tasks), you need to implement two functions:
-`generate_prompts` that takes a list of spaCy [`Doc`](https://spacy.io/api/doc)
+`generate_prompts` that takes a list of [`Doc`](https://spacy.io/api/doc)
 objects and transforms them into a list of prompts, and `parse_responses` that
 transforms the LLM outputs into annotations on the
 [`Doc`](https://spacy.io/api/doc), e.g. entity spans, text categories and more.
 
-To register your custom task with spaCy, decorate a factory function using the
+To register your custom task, decorate a factory function using the
 `spacy_llm.registry.llm_tasks` decorator with a custom name that you can refer
 to in your config.
 
@@ -326,7 +325,7 @@ An `llm` component is defined by two main settings:
 
 - A [**task**](#tasks), defining the prompt to send to the LLM as well as the
   functionality to parse the resulting response back into structured fields on
-  spaCy's [Doc](https://spacy.io/api/doc) objects.
+  the [Doc](https://spacy.io/api/doc) objects.
 - A [**model**](#models) defining the model to use and how to connect to it.
   Note that `spacy-llm` supports both access to external APIs (such as OpenAI)
   as well as access to self-hosted open-source LLMs (such as using Dolly through
@@ -339,7 +338,7 @@ through a REST API) more than once.
 Finally, you can choose to save a stringified version of LLM prompts/responses
 within the `Doc.user_data["llm_io"]` attribute by setting `save_io` to `True`.
 `Doc.user_data["llm_io"]` is a dictionary containing one entry for every LLM
-component within the spaCy pipeline. Each entry is itself a dictionary, with two
+component within the `nlp` pipeline. Each entry is itself a dictionary, with two
 keys: `prompt` and `response`.
 
 A note on `validate_types`: by default, `spacy-llm` checks whether the
@@ -351,7 +350,7 @@ want to disable this behavior.
 
 A _task_ defines an NLP problem or question, that will be sent to the LLM via a
 prompt. Further, the task defines how to parse the LLM's responses back into
-structured information. All tasks are registered in spaCy's `llm_tasks`
+structured information. All tasks are registered in the `llm_tasks`
 registry.
 
 Practically speaking, a task should adhere to the `Protocol` `LLMTask` defined
@@ -389,7 +388,7 @@ method is defined, `spacy-llm` will call it to evaluate the component.
 All built-in tasks support few-shot prompts, i. e. including examples in a
 prompt. Examples can be supplied in two ways: (1) as a separate file containing
 only examples or (2) by initializing `llm` with a `get_examples()` callback
-(like any other spaCy pipeline component).
+(like any other pipeline component).
 
 ##### (1) Few-shot example file
 
