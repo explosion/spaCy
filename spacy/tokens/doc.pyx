@@ -43,14 +43,13 @@ from ..attrs cimport (
     attr_id_t,
 )
 from ..lexeme cimport EMPTY_LEXEME, Lexeme
-from ..typedefs cimport attr_t, flags_t
+from ..typedefs cimport attr_t
 from .token cimport Token
 
 from .. import parts_of_speech, schemas, util
 from ..attrs import IDS, intify_attr
-from ..compat import copy_reg, pickle
+from ..compat import copy_reg
 from ..errors import Errors, Warnings
-from ..morphology import Morphology
 from ..util import get_words_and_spaces
 from ._retokenize import Retokenizer
 from .underscore import Underscore, get_ext_args
@@ -784,7 +783,7 @@ cdef class Doc:
             # TODO:
             # 1. Test basic data-driven ORTH gazetteer
             # 2. Test more nuanced date and currency regex
-            cdef attr_t entity_type, kb_id, ent_id
+            cdef attr_t kb_id, ent_id
             cdef int ent_start, ent_end
             ent_spans = []
             for ent_info in ents:
@@ -987,7 +986,6 @@ cdef class Doc:
             >>> np_array = doc.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
         """
         cdef int i, j
-        cdef attr_id_t feature
         cdef np.ndarray[attr_t, ndim=2] output
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
@@ -999,8 +997,10 @@ cdef class Doc:
             py_attr_ids = [py_attr_ids]
         # Allow strings, e.g. 'lemma' or 'LEMMA'
         try:
-            py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
-                       for id_ in py_attr_ids]
+            py_attr_ids = [
+                (IDS[id_.upper()] if hasattr(id_, "upper") else id_)
+                for id_ in py_attr_ids
+            ]
         except KeyError as msg:
             keys = [k for k in IDS.keys() if not k.startswith("FLAG")]
             raise KeyError(Errors.E983.format(dict="IDS", key=msg, keys=keys)) from None
@@ -1030,8 +1030,6 @@ cdef class Doc:
         DOCS: https://spacy.io/api/doc#count_by
         """
         cdef int i
-        cdef attr_t attr
-        cdef size_t count
 
         if counts is None:
             counts = Counter()
@@ -1093,7 +1091,6 @@ cdef class Doc:
         cdef int i, col
         cdef int32_t abs_head_index
         cdef attr_id_t attr_id
-        cdef TokenC* tokens = self.c
         cdef int length = len(array)
         if length != len(self):
             raise ValueError(Errors.E971.format(array_length=length, doc_length=len(self)))
@@ -1225,7 +1222,7 @@ cdef class Doc:
                             span.label,
                             span.kb_id,
                             span.id,
-                            span.text, # included as a check
+                            span.text,  # included as a check
                         ))
             char_offset += len(doc.text)
             if len(doc) > 0 and ensure_whitespace and not doc[-1].is_space and not bool(doc[-1].whitespace_):
@@ -1508,7 +1505,6 @@ cdef class Doc:
             attributes are inherited from the syntactic root of the span.
         RETURNS (Token): The first newly merged token.
         """
-        cdef str tag, lemma, ent_type
         attr_len = len(attributes)
         span_len = len(spans)
         if not attr_len == span_len:
@@ -1624,7 +1620,6 @@ cdef class Doc:
                 for token in char_span[1:]:
                     token.is_sent_start = False
 
-
         for span_group in doc_json.get("spans", {}):
             spans = []
             for span in doc_json["spans"][span_group]:
@@ -1656,7 +1651,7 @@ cdef class Doc:
                 start = token_by_char(self.c, self.length, token_data["start"])
                 value = token_data["value"]
                 self[start]._.set(token_attr, value)
-                
+
         for span_attr in doc_json.get("underscore_span", {}):
             if not Span.has_extension(span_attr):
                 Span.set_extension(span_attr)
@@ -1698,7 +1693,7 @@ cdef class Doc:
                 token_data["dep"] = token.dep_
                 token_data["head"] = token.head.i
             data["tokens"].append(token_data)
-        
+
         if self.spans:
             data["spans"] = {}
             for span_group in self.spans:
@@ -1769,7 +1764,6 @@ cdef class Doc:
         output.fill(255)
         cdef int i, j, start_idx, end_idx
         cdef bytes byte_string
-        cdef unsigned char utf8_char
         for i, byte_string in enumerate(byte_strings):
             j = 0
             start_idx = 0
@@ -1822,8 +1816,6 @@ cdef int token_by_char(const TokenC* tokens, int length, int char_idx) except -2
 
 cdef int set_children_from_heads(TokenC* tokens, int start, int end) except -1:
     # note: end is exclusive
-    cdef TokenC* head
-    cdef TokenC* child
     cdef int i
     # Set number of left/right children to 0. We'll increment it in the loops.
     for i in range(start, end):
@@ -1923,7 +1915,7 @@ cdef int _get_tokens_lca(Token token_j, Token token_k):
     return -1
 
 
-cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
+cdef int [:, :] _get_lca_matrix(Doc doc, int start, int end):
     """Given a doc and a start and end position defining a set of contiguous
     tokens within it, returns a matrix of Lowest Common Ancestors (LCA), where
     LCA[i, j] is the index of the lowest common ancestor among token i and j.
@@ -1936,7 +1928,7 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
     RETURNS (int [:, :]): memoryview of numpy.array[ndim=2, dtype=numpy.int32],
         with shape (n, n), where n = len(doc).
     """
-    cdef int [:,:] lca_matrix
+    cdef int [:, :] lca_matrix
     cdef int j, k
     n_tokens= end - start
     lca_mat = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)

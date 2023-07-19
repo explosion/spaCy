@@ -26,7 +26,7 @@ cdef class Token:
         cdef Token self = Token.__new__(Token, vocab, doc, offset)
         return self
 
-    #cdef inline TokenC struct_from_attrs(Vocab vocab, attrs):
+    # cdef inline TokenC struct_from_attrs(Vocab vocab, attrs):
     #    cdef TokenC token
     #    attrs = normalize_attrs(attrs)
 
@@ -98,11 +98,9 @@ cdef class Token:
         elif feat_name == SENT_START:
             token.sent_start = value
 
-
     @staticmethod
     cdef inline int missing_dep(const TokenC* token) nogil:
         return token.dep == MISSING_DEP
-
 
     @staticmethod
     cdef inline int missing_head(const TokenC* token) nogil:

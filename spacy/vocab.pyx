@@ -1,6 +1,4 @@
 # cython: profile=True
-from libc.string cimport memcpy
-
 import functools
 
 import numpy
@@ -19,7 +17,6 @@ from .errors import Errors
 from .lang.lex_attrs import LEX_ATTRS, get_lang, is_stop
 from .lang.norm_exceptions import BASE_NORMS
 from .lookups import Lookups
-from .util import registry
 from .vectors import Mode as VectorsMode
 from .vectors import Vectors
 
@@ -51,9 +48,17 @@ cdef class Vocab:
 
     DOCS: https://spacy.io/api/vocab
     """
-    def __init__(self, lex_attr_getters=None, strings=tuple(), lookups=None,
-                 oov_prob=-20., vectors_name=None, writing_system={},
-                 get_noun_chunks=None, **deprecated_kwargs):
+    def __init__(
+        self,
+        lex_attr_getters=None,
+        strings=tuple(),
+        lookups=None,
+        oov_prob=-20.,
+        vectors_name=None,
+        writing_system={},  # no-cython-lint
+        get_noun_chunks=None,
+        **deprecated_kwargs
+    ):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -150,7 +155,6 @@ cdef class Vocab:
         cdef LexemeC* lex
         cdef hash_t key = self.strings[string]
         lex = <LexemeC*>self._by_orth.get(key)
-        cdef size_t addr
         if lex != NULL:
             assert lex.orth in self.strings
             if lex.orth != key:
@@ -183,7 +187,7 @@ cdef class Vocab:
         # of the doc ownership).
         # TODO: Change the C API so that the mem isn't passed in here.
         mem = self.mem
-        #if len(string) < 3 or self.length < 10000:
+        # if len(string) < 3 or self.length < 10000:
         #    mem = self.mem
         cdef bint is_oov = mem is not self.mem
         lex = <LexemeC*>mem.alloc(1, sizeof(LexemeC))
@@ -463,7 +467,6 @@ cdef class Vocab:
                     self.lookups.get_table("lexeme_norm"),
                 )
 
-
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
 
@@ -476,7 +479,6 @@ cdef class Vocab:
         path = util.ensure_path(path)
         if not path.exists():
             path.mkdir()
-        setters = ["strings", "vectors"]
         if "strings" not in exclude:
             self.strings.to_disk(path / "strings.json")
         if "vectors" not in exclude:
@@ -495,7 +497,6 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#to_disk
         """
         path = util.ensure_path(path)
-        getters = ["strings", "vectors"]
         if "strings" not in exclude:
             self.strings.from_disk(path / "strings.json")  # TODO: add exclude?
         if "vectors" not in exclude:

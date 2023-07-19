@@ -8,20 +8,18 @@ from libcpp.set cimport set as stdset
 from preshed.maps cimport PreshMap
 
 import re
-import warnings
-
 from .lexeme cimport EMPTY_LEXEME
 from .strings cimport hash_string
 from .tokens.doc cimport Doc
 
 from . import util
 from .attrs import intify_attrs
-from .errors import Errors, Warnings
+from .errors import Errors
 from .scorer import Scorer
 from .symbols import NORM, ORTH
 from .tokens import Span
 from .training import validate_examples
-from .util import get_words_and_spaces, registry
+from .util import get_words_and_spaces
 
 
 cdef class Tokenizer:
@@ -324,7 +322,7 @@ cdef class Tokenizer:
         cdef int span_start
         cdef int span_end
         while i < doc.length:
-            if not i in span_data:
+            if i not in span_data:
                 tokens[i + offset] = doc.c[i]
                 i += 1
             else:
@@ -395,12 +393,15 @@ cdef class Tokenizer:
         self._save_cached(&tokens.c[orig_size], orig_key, has_special,
                           tokens.length - orig_size)
 
-    cdef str _split_affixes(self, Pool mem, str string,
-                                vector[const LexemeC*] *prefixes,
-                                vector[const LexemeC*] *suffixes,
-                                int* has_special,
-                                bint with_special_cases):
-        cdef size_t i
+    cdef str _split_affixes(
+        self,
+        Pool mem,
+        str string,
+        vector[const LexemeC*] *prefixes,
+        vector[const LexemeC*] *suffixes,
+        int* has_special,
+        bint with_special_cases
+    ):
         cdef str prefix
         cdef str suffix
         cdef str minus_pre
@@ -445,10 +446,6 @@ cdef class Tokenizer:
                             vector[const LexemeC*] *suffixes,
                             int* has_special,
                             bint with_special_cases) except -1:
-        cdef bint specials_hit = 0
-        cdef bint cache_hit = 0
-        cdef int split, end
-        cdef const LexemeC* const* lexemes
         cdef const LexemeC* lexeme
         cdef str span
         cdef int i
@@ -458,9 +455,11 @@ cdef class Tokenizer:
         if string:
             if self._try_specials_and_cache(hash_string(string), tokens, has_special, with_special_cases):
                 pass
-            elif (self.token_match and self.token_match(string)) or \
-                    (self.url_match and \
-                    self.url_match(string)):
+            elif (
+                (self.token_match and self.token_match(string)) or
+                (self.url_match and self.url_match(string))
+            ):
+
                 # We're always saying 'no' to spaces here -- the caller will
                 # fix up the outermost one, with reference to the original.
                 # See Issue #859
@@ -821,7 +820,7 @@ cdef class Tokenizer:
         self.infix_finditer = None
         self.token_match = None
         self.url_match = None
-        msg = util.from_bytes(bytes_data, deserializers, exclude)
+        util.from_bytes(bytes_data, deserializers, exclude)
         if "prefix_search" in data and isinstance(data["prefix_search"], str):
             self.prefix_search = re.compile(data["prefix_search"]).search
         if "suffix_search" in data and isinstance(data["suffix_search"], str):

@@ -52,7 +52,7 @@ cdef struct TokenC:
 
     int sent_start
     int ent_iob
-    attr_t ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
+    attr_t ent_type  # TODO: Is there a better way to do this? Multiple sources of truth..
     attr_t ent_kb_id
     hash_t ent_id
 

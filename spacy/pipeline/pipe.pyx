@@ -1,6 +1,6 @@
 # cython: infer_types=True, profile=True, binding=True
 import warnings
-from typing import Callable, Dict, Iterable, Iterator, Optional, Tuple, Union
+from typing import Callable, Dict, Iterable, Iterator, Tuple, Union
 
 import srsly
 
@@ -40,7 +40,7 @@ cdef class Pipe:
         """
         raise NotImplementedError(Errors.E931.format(parent="Pipe", method="__call__", name=self.name))
 
-    def pipe(self, stream: Iterable[Doc], *, batch_size: int=128) -> Iterator[Doc]:
+    def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
         applied to the Doc.
@@ -59,7 +59,7 @@ cdef class Pipe:
             except Exception as e:
                 error_handler(self.name, self, [doc], e)
 
-    def initialize(self, get_examples: Callable[[], Iterable[Example]], *, nlp: Language=None):
+    def initialize(self, get_examples: Callable[[], Iterable[Example]], *, nlp: Language = None):
         """Initialize the pipe. For non-trainable components, this method
         is optional. For trainable components, which should inherit
         from the subclass TrainablePipe, the provided data examples

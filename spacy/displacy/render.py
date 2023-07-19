@@ -1,4 +1,3 @@
-import itertools
 import uuid
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -218,7 +217,7 @@ class SpanRenderer:
                     + (self.offset_step * (len(entities) - 1))
                 )
                 markup += self.span_template.format(
-                    text=token["text"],
+                    text=escape_html(token["text"]),
                     span_slices=slices,
                     span_starts=starts,
                     total_height=total_height,

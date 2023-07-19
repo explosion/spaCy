@@ -1,4 +1,3 @@
-import warnings
 from collections.abc import Iterable as IterableInstance
 
 import numpy
@@ -31,9 +30,9 @@ cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
     attrs, array = _annot2array(vocab, tok_annot, doc_annot)
     output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
     if "entities" in doc_annot:
-       _add_entities_to_doc(output, doc_annot["entities"])
+        _add_entities_to_doc(output, doc_annot["entities"])
     if "spans" in doc_annot:
-       _add_spans_to_doc(output, doc_annot["spans"])
+        _add_spans_to_doc(output, doc_annot["spans"])
     if array.size:
         output = output.from_array(attrs, array)
     # links are currently added with ENT_KB_ID on the token level
@@ -161,7 +160,6 @@ cdef class Example:
                 self._y_sig = y_sig
                 return self._cached_alignment
 
-
     def _get_aligned_vectorized(self, align, gold_values):
         # Fast path for Doc attributes/fields that are predominantly a single value,
         # i.e., TAG, POS, MORPH.
@@ -204,7 +202,6 @@ cdef class Example:
 
         return output.tolist()
 
-
     def _get_aligned_non_vectorized(self, align, gold_values):
         # Slower path for fields that return multiple values (resulting
         # in ragged arrays that cannot be vectorized trivially).
@@ -220,7 +217,6 @@ cdef class Example:
                 output[token.i] = values[0].item()
 
         return output
-
 
     def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""
@@ -330,7 +326,7 @@ cdef class Example:
             missing=None
         )
         # Now fill the tokens we can align to O.
-        O = 2 # I=1, O=2, B=3
+        O = 2 # I=1, O=2, B=3  # no-cython-lint: E741
         for i, ent_iob in enumerate(self.get_aligned("ENT_IOB")):
             if x_tags[i] is None:
                 if ent_iob == O:
@@ -340,7 +336,7 @@ cdef class Example:
         return x_ents, x_tags
 
     def get_aligned_ner(self):
-        x_ents, x_tags = self.get_aligned_ents_and_ner()
+        _x_ents, x_tags = self.get_aligned_ents_and_ner()
         return x_tags
 
     def get_matching_ents(self, check_label=True):
@@ -397,7 +393,6 @@ cdef class Example:
             span_dict[key] = span_tuples
 
         return span_dict
-
 
     def _links_to_dict(self):
         links = {}
@@ -589,6 +584,7 @@ def _fix_legacy_dict_data(example_dict):
         "doc_annotation": doc_dict
     }
 
+
 def _has_field(annot, field):
     if field not in annot:
         return False
@@ -624,6 +620,7 @@ def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces):
             else:
                 ent_types.append("")
     return ent_iobs, ent_types
+
 
 def _parse_links(vocab, words, spaces, links):
     reference = Doc(vocab, words=words, spaces=spaces)

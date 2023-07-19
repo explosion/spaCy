@@ -1,13 +1,11 @@
 # cython: infer_types=True
 # Compiler crashes on memory view coercion without this. Should report bug.
 cimport numpy as np
-from cython.view cimport array as cvarray
 
 np.import_array()
 
 import warnings
 
-import numpy
 from thinc.api import get_array_module
 
 from ..attrs cimport (
@@ -238,7 +236,7 @@ cdef class Token:
         result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
         # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
         return result.item()
-    
+
     def has_morph(self):
         """Check whether the token has annotated morph information.
         Return False when the morph annotation is unset/missing.
@@ -545,9 +543,9 @@ cdef class Token:
         def __get__(self):
             if self.i + 1 == len(self.doc):
                 return True
-            elif self.doc[self.i+1].is_sent_start == None:
+            elif self.doc[self.i+1].is_sent_start is None:
                 return None
-            elif self.doc[self.i+1].is_sent_start == True:
+            elif self.doc[self.i+1].is_sent_start is True:
                 return True
             else:
                 return False
