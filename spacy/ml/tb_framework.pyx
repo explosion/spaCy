@@ -305,7 +305,8 @@ def _forward_fallback(
     seen_mask,
     is_train: bool,
     actions: Optional[List[Ints1d]] = None,
-        max_moves: int = 0):
+    max_moves: int = 0,
+):
     nF = model.get_dim("nF")
     output = model.get_ref("output")
     hidden_b = model.get_param("hidden_b")
