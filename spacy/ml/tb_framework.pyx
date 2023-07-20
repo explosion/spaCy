@@ -145,7 +145,6 @@ def init(
         current_nO = model.maybe_get_dim("nO")
         if current_nO is None or current_nO != inferred_nO:
             model.attrs["resize_output"](model, inferred_nO)
-    # nO = model.get_dim("nO")
     nP = model.get_dim("nP")
     nH = model.get_dim("nH")
     nI = model.get_dim("nI")
