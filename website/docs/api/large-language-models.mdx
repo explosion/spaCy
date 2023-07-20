@@ -10,10 +10,9 @@ menu:
 ---
 
 [The spacy-llm package](https://github.com/explosion/spacy-llm) integrates Large
-Language Models (LLMs) into spaCy, featuring a modular
-system for **fast prototyping** and **prompting**, and turning unstructured
-responses into **robust outputs** for various NLP tasks, **no training data**
-required.
+Language Models (LLMs) into spaCy, featuring a modular system for **fast
+prototyping** and **prompting**, and turning unstructured responses into
+**robust outputs** for various NLP tasks, **no training data** required.
 
 ## Config {id="config"}
 
@@ -57,8 +56,7 @@ want to disable this behavior.
 
 A _task_ defines an NLP problem or question, that will be sent to the LLM via a
 prompt. Further, the task defines how to parse the LLM's responses back into
-structured information. All tasks are registered in the `llm_tasks`
-registry.
+structured information. All tasks are registered in the `llm_tasks` registry.
 
 #### task.generate_prompts {id="task-generate-prompts"}
 
@@ -187,11 +185,11 @@ the following parameters:
   case variances in the LLM's output.
 - The `alignment_mode` argument is used to match entities as returned by the LLM
   to the tokens from the original `Doc` - specifically it's used as argument in
-  the call to [`doc.char_span()`](/api/doc#char_span). The
-  `"strict"` mode will only keep spans that strictly adhere to the given token
-  boundaries. `"contract"` will only keep those tokens that are fully within the
-  given range, e.g. reducing `"New Y"` to `"New"`. Finally, `"expand"` will
-  expand the span to the next token boundaries, e.g. expanding `"New Y"` out to
+  the call to [`doc.char_span()`](/api/doc#char_span). The `"strict"` mode will
+  only keep spans that strictly adhere to the given token boundaries.
+  `"contract"` will only keep those tokens that are fully within the given
+  range, e.g. reducing `"New Y"` to `"New"`. Finally, `"expand"` will expand the
+  span to the next token boundaries, e.g. expanding `"New Y"` out to
   `"New York"`.
 
 To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
@@ -277,11 +275,11 @@ the following parameters:
   case variances in the LLM's output.
 - The `alignment_mode` argument is used to match entities as returned by the LLM
   to the tokens from the original `Doc` - specifically it's used as argument in
-  the call to [`doc.char_span()`](/api/doc#char_span). The
-  `"strict"` mode will only keep spans that strictly adhere to the given token
-  boundaries. `"contract"` will only keep those tokens that are fully within the
-  given range, e.g. reducing `"New Y"` to `"New"`. Finally, `"expand"` will
-  expand the span to the next token boundaries, e.g. expanding `"New Y"` out to
+  the call to [`doc.char_span()`](/api/doc#char_span). The `"strict"` mode will
+  only keep spans that strictly adhere to the given token boundaries.
+  `"contract"` will only keep those tokens that are fully within the given
+  range, e.g. reducing `"New Y"` to `"New"`. Finally, `"expand"` will expand the
+  span to the next token boundaries, e.g. expanding `"New Y"` out to
   `"New York"`.
 
 To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
@@ -611,9 +609,9 @@ friends: friend
 ```
 
 If for any given text/doc instance the number of lemmas returned by the LLM
-doesn't match the number of tokens from the pipeline's tokenizer, no lemmas are stored in
-the corresponding doc's tokens. Otherwise the tokens `.lemma_` property is
-updated with the lemma suggested by the LLM.
+doesn't match the number of tokens from the pipeline's tokenizer, no lemmas are
+stored in the corresponding doc's tokens. Otherwise the tokens `.lemma_`
+property is updated with the lemma suggested by the LLM.
 
 To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
 you can write down a few examples in a separate file, and provide these to be
@@ -1186,6 +1184,52 @@ details):
 Note that Hugging Face will download this model the first time you use it - you
 can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+
+#### spacy.Llama2.v1 {id="llama2"}
+
+To use this model, ideally you have a GPU enabled and have installed
+`transformers`, `torch` and CUDA in your virtual environment. This allows you to
+have the setting `device=cuda:0` in your config, which ensures that the model is
+loaded entirely on the GPU (and fails otherwise).
+
+You can do so with
+
+```shell
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
+```
+
+If you don't have access to a GPU, you can install `accelerate` and
+set`device_map=auto` instead, but be aware that this may result in some layers
+getting distributed to the CPU or even the hard drive, which may ultimately
+result in extremely slow queries.
+
+```shell
+python -m pip install "accelerate>=0.16.0,<1.0"
+```
+
+Note that the chat models variants of Llama 2 are currently not supported. This
+is because they need a particular prompting setup and don't add any discernible
+benefits in the use case of `spacy-llm` (i. e. no interactive chat) compared the
+completion model variants.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Llama2.v1"
+> name = "llama2-7b-hf"
+> ```
+
+| Argument      | Description                                                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`        | The name of a Llama 2 model variant that is supported. Defaults to `"Llama-2-7b-hf"`. ~~Literal["Llama-2-7b-hf", "Llama-2-13b-hf", "Llama-2-70b-hf"]~~ |
+| `config_init` | Further configuration passed on to the construction of the model with `transformers.pipeline()`. Defaults to `{}`. ~~Dict[str, Any]~~                  |
+| `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                                                |
+
+Note that Hugging Face will download this model the first time you use it - you
+can
+[define the cache directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
 #### spacy.Falcon.v1 {id="falcon"}
