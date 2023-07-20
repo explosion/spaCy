@@ -492,138 +492,128 @@ how to integrate the architectures into your training config.
 
 Construct an ALBERT transformer model.
 
-| Name                           | Description                                                                 |
-| ------------------------------ | --------------------------------------------------------------------------- |
-| `vocab_size`                   | Vocabulary size. ~~int~~                                                    |
-| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~               |
-| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                        |
-| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                  |
-| `embedding_width`              | Width of the embedding representations. ~~int~~                             |
-| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~              |
-| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and ~~float~~             |
-| `hidden_dropout_prob`          | embedding layers. ~~float~~                                                 |
-| `hidden_width`                 | Width of the final representations. ~~int~~                                 |
-| `intermediate_width`           | Width of the intermediate projection layer in the ~~int~~                   |
-| `intermediate_width`           | point-wise feed-forward layer. ~~int~~                                      |
-| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                  |
-| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                              |
-| `model_max_length`             | Maximum length of model inputs. ~~int~~                                     |
-| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                     |
-| `num_hidden_groups`            | Number of layer groups whose constituents share parameters. ~~int~~         |
-| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                            |
-| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                    |
-| `type_vocab_size`              | Type vocabulary size. ~~int~~                                               |
-| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                      |
-| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~               |
-| **CREATES**                    | The model using the architecture ~~Model[TransformerInT, TransformerOutT]~~ |
+| Name                           | Description                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
+| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
+| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
+| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                               |
+| `embedding_width`              | Width of the embedding representations. ~~int~~                                          |
+| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
+| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and embedding layers. ~~float~~        |
+| `hidden_width`                 | Width of the final representations. ~~int~~                                              |
+| `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
+| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
+| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                                           |
+| `model_max_length`             | Maximum length of model inputs. ~~int~~                                                  |
+| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                                  |
+| `num_hidden_groups`            | Number of layer groups whose constituents share parameters. ~~int~~                      |
+| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                                         |
+| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                                 |
+| `type_vocab_size`              | Type vocabulary size. ~~int~~                                                            |
+| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                                   |
+| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
+| **CREATES**                    | The model using the architecture ~~Model[TransformerInT, TransformerOutT]~~              |
 
 ### spacy-curated-transformers.BertTransformer.v1
 
 Construct a BERT transformer model.
 
-| Name                           | Description                                                                 |
-| ------------------------------ | --------------------------------------------------------------------------- |
-| `vocab_size`                   | Vocabulary size. ~~int~~                                                    |
-| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~               |
-| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                        |
-| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                  |
-| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~              |
-| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and ~~float~~             |
-| `hidden_dropout_prob`          | embedding layers. ~~float~~                                                 |
-| `hidden_width`                 | Width of the final representations. ~~int~~                                 |
-| `intermediate_width`           | Width of the intermediate projection layer in the ~~int~~                   |
-| `intermediate_width`           | point-wise feed-forward layer. ~~int~~                                      |
-| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                  |
-| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                              |
-| `model_max_length`             | Maximum length of model inputs. ~~int~~                                     |
-| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                     |
-| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                            |
-| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                    |
-| `type_vocab_size`              | Type vocabulary size. ~~int~~                                               |
-| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                      |
-| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~               |
-| **CREATES**                    | The model using the architecture ~~Model[TransformerInT, TransformerOutT]~~ |
+| Name                           | Description                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
+| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
+| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
+| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                               |
+| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
+| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and embedding layers. ~~float~~        |
+| `hidden_width`                 | Width of the final representations. ~~int~~                                              |
+| `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
+| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
+| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                                           |
+| `model_max_length`             | Maximum length of model inputs. ~~int~~                                                  |
+| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                                  |
+| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                                         |
+| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                                 |
+| `type_vocab_size`              | Type vocabulary size. ~~int~~                                                            |
+| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                                   |
+| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
+| **CREATES**                    | The model using the architecture ~~Model[TransformerInT, TransformerOutT]~~              |
 
 ### spacy-curated-transformers.CamembertTransformer.v1
 
 Construct a CamemBERT transformer model.
 
-| Name                           | Description                                                                 |
-| ------------------------------ | --------------------------------------------------------------------------- |
-| `vocab_size`                   | Vocabulary size. ~~int~~                                                    |
-| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~               |
-| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                        |
-| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                  |
-| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~              |
-| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and ~~float~~             |
-| `hidden_dropout_prob`          | embedding layers. ~~float~~                                                 |
-| `hidden_width`                 | Width of the final representations. ~~int~~                                 |
-| `intermediate_width`           | Width of the intermediate projection layer in the ~~int~~                   |
-| `intermediate_width`           | point-wise feed-forward layer. ~~int~~                                      |
-| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                  |
-| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                              |
-| `model_max_length`             | Maximum length of model inputs. ~~int~~                                     |
-| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                     |
-| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                            |
-| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                    |
-| `type_vocab_size`              | Type vocabulary size. ~~int~~                                               |
-| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                      |
-| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~               |
-| **CREATES**                    | The model using the architecture ~~Model[TransformerInT, TransformerOutT]~~ |
+| Name                           | Description                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
+| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
+| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
+| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                               |
+| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
+| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and embedding layers. ~~float~~        |
+| `hidden_width`                 | Width of the final representations. ~~int~~                                              |
+| `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
+| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
+| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                                           |
+| `model_max_length`             | Maximum length of model inputs. ~~int~~                                                  |
+| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                                  |
+| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                                         |
+| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                                 |
+| `type_vocab_size`              | Type vocabulary size. ~~int~~                                                            |
+| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                                   |
+| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
+| **CREATES**                    | The model using the architecture ~~Model[TransformerInT, TransformerOutT]~~              |
 
 ### spacy-curated-transformers.RobertaTransformer.v1
 
 Construct a RoBERTa transformer model.
 
-| Name                           | Description                                                                 |
-| ------------------------------ | --------------------------------------------------------------------------- |
-| `vocab_size`                   | Vocabulary size. ~~int~~                                                    |
-| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~               |
-| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                        |
-| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                  |
-| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~              |
-| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and ~~float~~             |
-| `hidden_dropout_prob`          | embedding layers. ~~float~~                                                 |
-| `hidden_width`                 | Width of the final representations. ~~int~~                                 |
-| `intermediate_width`           | Width of the intermediate projection layer in the ~~int~~                   |
-| `intermediate_width`           | point-wise feed-forward layer. ~~int~~                                      |
-| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                  |
-| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                              |
-| `model_max_length`             | Maximum length of model inputs. ~~int~~                                     |
-| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                     |
-| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                            |
-| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                    |
-| `type_vocab_size`              | Type vocabulary size. ~~int~~                                               |
-| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                      |
-| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~               |
-| **CREATES**                    | The model using the architecture ~~Model[TransformerInT, TransformerOutT]~~ |
+| Name                           | Description                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
+| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
+| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
+| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                               |
+| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
+| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and embedding layers. ~~float~~        |
+| `hidden_width`                 | Width of the final representations. ~~int~~                                              |
+| `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
+| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
+| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                                           |
+| `model_max_length`             | Maximum length of model inputs. ~~int~~                                                  |
+| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                                  |
+| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                                         |
+| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                                 |
+| `type_vocab_size`              | Type vocabulary size. ~~int~~                                                            |
+| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                                   |
+| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
+| **CREATES**                    | The model using the architecture ~~Model[TransformerInT, TransformerOutT]~~              |
 
 ### spacy-curated-transformers.XlmrTransformer.v1
 
 Construct a XLM-RoBERTa transformer model.
 
-| Name                           | Description                                                                 |
-| ------------------------------ | --------------------------------------------------------------------------- |
-| `vocab_size`                   | Vocabulary size. ~~int~~                                                    |
-| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~               |
-| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                        |
-| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                  |
-| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~              |
-| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and ~~float~~             |
-| `hidden_dropout_prob`          | embedding layers. ~~float~~                                                 |
-| `hidden_width`                 | Width of the final representations. ~~int~~                                 |
-| `intermediate_width`           | Width of the intermediate projection layer in the ~~int~~                   |
-| `intermediate_width`           | point-wise feed-forward layer. ~~int~~                                      |
-| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                  |
-| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                              |
-| `model_max_length`             | Maximum length of model inputs. ~~int~~                                     |
-| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                     |
-| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                            |
-| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                    |
-| `type_vocab_size`              | Type vocabulary size. ~~int~~                                               |
-| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                      |
-| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~               |
-| **CREATES**                    | The model using the architecture ~~Model[TransformerInT, TransformerOutT]~~ |
+| Name                           | Description                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
+| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
+| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
+| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                               |
+| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
+| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and embedding layers. ~~float~~        |
+| `hidden_width`                 | Width of the final representations. ~~int~~                                              |
+| `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
+| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
+| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                                           |
+| `model_max_length`             | Maximum length of model inputs. ~~int~~                                                  |
+| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                                  |
+| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                                         |
+| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                                 |
+| `type_vocab_size`              | Type vocabulary size. ~~int~~                                                            |
+| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                                   |
+| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
+| **CREATES**                    | The model using the architecture ~~Model[TransformerInT, TransformerOutT]~~              |
 
 ### spacy-curated-transformers.ScalarWeight.v1
 
