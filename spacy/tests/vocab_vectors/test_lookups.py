@@ -1,4 +1,5 @@
 import pytest
+
 from spacy.lookups import Lookups, Table
 from spacy.strings import get_string_id
 from spacy.vocab import Vocab

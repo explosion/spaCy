@@ -1,6 +1,5 @@
 from ...attrs import LIKE_NUM
 
-
 # Source http://fjern-uv.dk/tal.php
 _num_words = """nul
 en et to tre fire fem seks syv otte ni ti

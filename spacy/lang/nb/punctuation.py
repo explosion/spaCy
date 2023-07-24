@@ -1,7 +1,17 @@
-from ..char_classes import LIST_ELLIPSES, LIST_ICONS, LIST_PUNCT, LIST_QUOTES
-from ..char_classes import CONCAT_QUOTES, ALPHA, ALPHA_LOWER, ALPHA_UPPER
-from ..char_classes import CURRENCY, PUNCT, UNITS, LIST_CURRENCY
-
+from ..char_classes import (
+    ALPHA,
+    ALPHA_LOWER,
+    ALPHA_UPPER,
+    CONCAT_QUOTES,
+    CURRENCY,
+    LIST_CURRENCY,
+    LIST_ELLIPSES,
+    LIST_ICONS,
+    LIST_PUNCT,
+    LIST_QUOTES,
+    PUNCT,
+    UNITS,
+)
 
 # Punctuation adapted from Danish
 _quotes = CONCAT_QUOTES.replace("'", "")

@@ -1,19 +1,20 @@
-from cython.operator cimport dereference as deref, preincrement as incr
-from libc.string cimport memcpy, memset
-from libc.stdlib cimport calloc, free
-from libc.stdint cimport uint32_t, uint64_t
 cimport libcpp
+from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
+from cython.operator cimport dereference as deref
+from cython.operator cimport preincrement as incr
+from libc.stdint cimport uint32_t, uint64_t
+from libc.stdlib cimport calloc, free
+from libc.string cimport memcpy, memset
+from libcpp.set cimport set
 from libcpp.unordered_map cimport unordered_map
 from libcpp.vector cimport vector
-from libcpp.set cimport set
-from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from murmurhash.mrmr cimport hash64
 
-from ...vocab cimport EMPTY_LEXEME
-from ...structs cimport TokenC, SpanC
-from ...lexeme cimport Lexeme
 from ...attrs cimport IS_SPACE
+from ...lexeme cimport Lexeme
+from ...structs cimport SpanC, TokenC
 from ...typedefs cimport attr_t
+from ...vocab cimport EMPTY_LEXEME
 
 
 cdef inline bint is_space_token(const TokenC* token) nogil:
@@ -275,7 +276,6 @@ cdef cppclass StateC:
             incr(arcs_it)
 
         return n
-
 
     int n_L(int head) nogil const:
         return n_arcs(this._left_arcs, head)

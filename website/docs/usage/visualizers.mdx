@@ -56,14 +56,19 @@ wrap. So if you come across this problem, especially when using custom labels,
 you'll have to increase the `distance` setting in the `options` to allow longer
 arcs.
 
+Moreover, you might need to modify the `offset_x` argument depending on the shape
+of your document. Otherwise, the left part of the document may overflow beyond the
+container's border.
+
 </Infobox>
 
-| Argument  | Description                                                                                                                                                                                                                                   |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `compact` | "Compact mode" with square arrows that takes up less space. Defaults to `False`. ~~bool~~                                                                                                                                                     |
-| `color`   | Text color. Can be provided in any CSS legal format as a string e.g.: `"#00ff00"`, `"rgb(0, 255, 0)"`, `"hsl(120, 100%, 50%)"` and `"green"` all correspond to the color green (without transparency). Defaults to `"#000000"`. ~~str~~       |
-| `bg`      | Background color. Can be provided in any CSS legal format as a string e.g.: `"#00ff00"`, `"rgb(0, 255, 0)"`, `"hsl(120, 100%, 50%)"` and `"green"` all correspond to the color green (without transparency). Defaults to `"#ffffff"`. ~~str~~ |
-| `font`    | Font name or font family for all text. Defaults to `"Arial"`. ~~str~~                                                                                                                                                                         |
+| Argument   | Description                                                                                                                                                                                                                                   |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `compact`  | "Compact mode" with square arrows that takes up less space. Defaults to `False`. ~~bool~~                                                                                                                                                     |
+| `color`    | Text color. Can be provided in any CSS legal format as a string e.g.: `"#00ff00"`, `"rgb(0, 255, 0)"`, `"hsl(120, 100%, 50%)"` and `"green"` all correspond to the color green (without transparency). Defaults to `"#000000"`. ~~str~~       |
+| `bg`       | Background color. Can be provided in any CSS legal format as a string e.g.: `"#00ff00"`, `"rgb(0, 255, 0)"`, `"hsl(120, 100%, 50%)"` and `"green"` all correspond to the color green (without transparency). Defaults to `"#ffffff"`. ~~str~~ |
+| `font`     | Font name or font family for all text. Defaults to `"Arial"`. ~~str~~                                                                                                                                                                         |
+| `offset_x` | Spacing on left side of the SVG in px. You might need to tweak this setting for long texts. Defaults to `50`. ~~int~~                                                                                                                         |
 
 For a list of all available options, see the
 [`displacy` API documentation](/api/top-level#displacy_options).

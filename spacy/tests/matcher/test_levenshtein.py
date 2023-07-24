@@ -1,4 +1,5 @@
 import pytest
+
 from spacy.matcher import levenshtein
 from spacy.matcher.levenshtein import levenshtein_compare
 

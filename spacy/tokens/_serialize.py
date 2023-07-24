@@ -1,22 +1,20 @@
-from typing import List, Dict, Set, Iterable, Iterator, Union, Optional
-from pathlib import Path
-import numpy
-from numpy import ndarray
 import zlib
+from pathlib import Path
+from typing import Dict, Iterable, Iterator, List, Optional, Set, Union
+
+import numpy
 import srsly
+from numpy import ndarray
 from thinc.api import NumpyOps
 
-from .doc import Doc
-from ..vocab import Vocab
+from ..attrs import IDS, ORTH, SPACY, intify_attr
 from ..compat import copy_reg
-from ..attrs import SPACY, ORTH, intify_attr, IDS
 from ..errors import Errors
-from ..util import ensure_path, SimpleFrozenList
+from ..util import SimpleFrozenList, ensure_path
+from ..vocab import Vocab
 from ._dict_proxies import SpanGroups
-
-# fmt: off
-ALL_ATTRS = ("ORTH", "NORM", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "ENT_ID", "LEMMA", "MORPH", "POS", "SENT_START")
-# fmt: on
+from .doc import DOCBIN_ALL_ATTRS as ALL_ATTRS
+from .doc import Doc
 
 
 class DocBin:
@@ -124,6 +122,10 @@ class DocBin:
         for key, group in doc.spans.items():
             for span in group:
                 self.strings.add(span.label_)
+                if span.kb_id in span.doc.vocab.strings:
+                    self.strings.add(span.kb_id_)
+                if span.id in span.doc.vocab.strings:
+                    self.strings.add(span.id_)
 
     def get_docs(self, vocab: Vocab) -> Iterator[Doc]:
         """Recover Doc objects from the annotations, using the given vocab.

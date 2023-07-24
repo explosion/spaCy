@@ -1,12 +1,9 @@
 # cython: infer_types=True, binding=True
 from cython.operator cimport dereference as deref
-from libc.stdint cimport uint32_t
-from libc.stdint cimport UINT32_MAX
+from libc.stdint cimport UINT32_MAX, uint32_t
 from libc.string cimport memset
 from libcpp.pair cimport pair
 from libcpp.vector cimport vector
-
-from pathlib import Path
 
 from ...typedefs cimport hash_t
 
@@ -14,7 +11,6 @@ from ... import util
 from ...errors import Errors
 from ...strings import StringStore
 from .schemas import validate_edit_tree
-
 
 NULL_TREE_ID = UINT32_MAX
 
@@ -27,17 +23,16 @@ cdef LCS find_lcs(str source, str target):
     target (str): The second string.
     RETURNS (LCS): The spans of the longest common subsequences.
     """
-    cdef Py_ssize_t source_len = len(source)
     cdef Py_ssize_t target_len = len(target)
-    cdef size_t longest_align = 0;
+    cdef size_t longest_align = 0
     cdef int source_idx, target_idx
     cdef LCS lcs
     cdef Py_UCS4 source_cp, target_cp
 
     memset(&lcs, 0, sizeof(lcs))
 
-    cdef vector[size_t] prev_aligns = vector[size_t](target_len);
-    cdef vector[size_t] cur_aligns = vector[size_t](target_len);
+    cdef vector[size_t] prev_aligns = vector[size_t](target_len)
+    cdef vector[size_t] cur_aligns = vector[size_t](target_len)
 
     for (source_idx, source_cp) in enumerate(source):
         for (target_idx, target_cp) in enumerate(target):
@@ -91,7 +86,7 @@ cdef class EditTrees:
         cdef LCS lcs = find_lcs(form, lemma)
 
         cdef EditTreeC tree
-        cdef uint32_t tree_id, prefix_tree, suffix_tree
+        cdef uint32_t prefix_tree, suffix_tree
         if lcs_is_empty(lcs):
             tree = edittree_new_subst(self.strings.add(form), self.strings.add(lemma))
         else:
@@ -110,7 +105,7 @@ cdef class EditTrees:
         return self._tree_id(tree)
 
     cdef uint32_t _tree_id(self, EditTreeC tree):
-         # If this tree has been constructed before, return its identifier.
+        # If this tree has been constructed before, return its identifier.
         cdef hash_t hash = edittree_hash(tree)
         cdef unordered_map[hash_t, uint32_t].iterator iter = self.map.find(hash)
         if iter != self.map.end():
@@ -290,6 +285,7 @@ def _tree2dict(tree):
     else:
         tree = tree["inner"]["subst_node"]
     return(dict(tree))
+
 
 def _dict2tree(tree):
     errors = validate_edit_tree(tree)

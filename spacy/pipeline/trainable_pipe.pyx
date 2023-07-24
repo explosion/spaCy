@@ -1,17 +1,17 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Iterable, Iterator, Optional, Dict, Tuple, Callable
+from typing import Callable, Dict, Iterable, Iterator, Optional, Tuple
+
 import srsly
-from thinc.api import set_dropout_rate, Model, Optimizer
+from thinc.api import Model, Optimizer, set_dropout_rate
 
 from ..tokens.doc cimport Doc
 
-from ..training import validate_examples
-from ..errors import Errors
-from .pipe import Pipe, deserialize_config
 from .. import util
-from ..vocab import Vocab
+from ..errors import Errors
 from ..language import Language
-from ..training import Example
+from ..training import Example, validate_examples
+from ..vocab import Vocab
+from .pipe import Pipe, deserialize_config
 
 
 cdef class TrainablePipe(Pipe):
@@ -55,7 +55,7 @@ cdef class TrainablePipe(Pipe):
         except Exception as e:
             error_handler(self.name, self, [doc], e)
 
-    def pipe(self, stream: Iterable[Doc], *, batch_size: int=128) -> Iterator[Doc]:
+    def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
         applied to the Doc.
@@ -102,9 +102,9 @@ cdef class TrainablePipe(Pipe):
     def update(self,
                examples: Iterable["Example"],
                *,
-               drop: float=0.0,
-               sgd: Optimizer=None,
-               losses: Optional[Dict[str, float]]=None) -> Dict[str, float]:
+               drop: float = 0.0,
+               sgd: Optimizer = None,
+               losses: Optional[Dict[str, float]] = None) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model. Delegates to predict and get_loss.
 
@@ -138,8 +138,8 @@ cdef class TrainablePipe(Pipe):
     def rehearse(self,
                  examples: Iterable[Example],
                  *,
-                 sgd: Optimizer=None,
-                 losses: Dict[str, float]=None,
+                 sgd: Optimizer = None,
+                 losses: Dict[str, float] = None,
                  **config) -> Dict[str, float]:
         """Perform a "rehearsal" update from a batch of data. Rehearsal updates
         teach the current model to make predictions similar to an initial model,
@@ -177,7 +177,7 @@ cdef class TrainablePipe(Pipe):
         """
         return util.create_default_optimizer()
 
-    def initialize(self, get_examples: Callable[[], Iterable[Example]], *, nlp: Language=None):
+    def initialize(self, get_examples: Callable[[], Iterable[Example]], *, nlp: Language = None):
         """Initialize the pipe for training, using data examples if available.
         This method needs to be implemented by each TrainablePipe component,
         ensuring the internal model (if available) is initialized properly

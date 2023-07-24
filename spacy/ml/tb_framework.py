@@ -1,6 +1,7 @@
 from thinc.api import Model, noop
-from .parser_model import ParserStepModel
+
 from ..util import registry
+from .parser_model import ParserStepModel
 
 
 @registry.layers("spacy.TransitionModel.v1")

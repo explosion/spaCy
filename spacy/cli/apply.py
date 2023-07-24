@@ -1,18 +1,15 @@
-import tqdm
-import srsly
-
 from itertools import chain
 from pathlib import Path
-from typing import Optional, List, Iterable, cast, Union
+from typing import Iterable, List, Optional, Union, cast
 
+import srsly
+import tqdm
 from wasabi import msg
 
-from ._util import app, Arg, Opt, setup_gpu, import_code, walk_directory
-
 from ..tokens import Doc, DocBin
-from ..vocab import Vocab
 from ..util import ensure_path, load_model
-
+from ..vocab import Vocab
+from ._util import Arg, Opt, app, import_code, setup_gpu, walk_directory
 
 path_help = """Location of the documents to predict on.
 Can be a single file in .spacy format or a .jsonl file.

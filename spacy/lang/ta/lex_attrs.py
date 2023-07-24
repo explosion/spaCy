@@ -1,6 +1,5 @@
 from ...attrs import LIKE_NUM
 
-
 _numeral_suffixes = {"பத்து": "பது", "ற்று": "று", "ரத்து": "ரம்", "சத்து": "சம்"}
 _num_words = [
     "பூச்சியம்",

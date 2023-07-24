@@ -1,19 +1,20 @@
 from ..char_classes import (
+    ALPHA,
+    ALPHA_LOWER,
+    ALPHA_UPPER,
+    CONCAT_QUOTES,
+    CURRENCY,
+    HYPHENS,
+    LIST_CURRENCY,
     LIST_ELLIPSES,
     LIST_ICONS,
-    HYPHENS,
     LIST_PUNCT,
     LIST_QUOTES,
-    CURRENCY,
-    UNITS,
     PUNCT,
-    LIST_CURRENCY,
-    CONCAT_QUOTES,
+    UNITS,
+    merge_chars,
 )
-from ..char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA
-from ..char_classes import merge_chars
 from ..punctuation import TOKENIZER_PREFIXES as BASE_TOKENIZER_PREFIXES
-
 
 INCLUDE_SPECIAL = ["\\+", "\\/", "\\•", "\\¯", "\\=", "\\×"] + HYPHENS.split("|")
 

@@ -3,44 +3,66 @@ from typing import Set
 
 cimport cython
 cimport numpy as np
-from libc.string cimport memcpy
 from libc.math cimport sqrt
 from libc.stdint cimport int32_t, uint64_t
+from libc.string cimport memcpy
 
 import copy
+import itertools
+import warnings
 from collections import Counter, defaultdict
 from enum import Enum
-import itertools
+
 import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
 from thinc.util import copy_array
-import warnings
 
 from .span cimport Span
 from .token cimport MISSING_DEP
-from ._dict_proxies import SpanGroups
-from .token cimport Token
-from ..lexeme cimport Lexeme, EMPTY_LEXEME
-from ..typedefs cimport attr_t, flags_t
-from ..attrs cimport attr_id_t
-from ..attrs cimport LENGTH, POS, LEMMA, TAG, MORPH, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, NORM
 
-from ..attrs import intify_attr, IDS
-from ..compat import copy_reg, pickle
+from ._dict_proxies import SpanGroups
+
+from ..attrs cimport (
+    DEP,
+    ENT_ID,
+    ENT_IOB,
+    ENT_KB_ID,
+    ENT_TYPE,
+    HEAD,
+    IDX,
+    LEMMA,
+    LENGTH,
+    MORPH,
+    NORM,
+    ORTH,
+    POS,
+    SENT_START,
+    SPACY,
+    TAG,
+    attr_id_t,
+)
+from ..lexeme cimport EMPTY_LEXEME, Lexeme
+from ..typedefs cimport attr_t
+from .token cimport Token
+
+from .. import parts_of_speech, schemas, util
+from ..attrs import IDS, intify_attr
+from ..compat import copy_reg
 from ..errors import Errors, Warnings
-from ..morphology import Morphology
-from .. import util
-from .. import parts_of_speech
-from .. import schemas
-from .underscore import Underscore, get_ext_args
-from ._retokenize import Retokenizer
-from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
 from ..util import get_words_and_spaces
+from ._retokenize import Retokenizer
+from .underscore import Underscore, get_ext_args
 
 DEF PADDING = 5
 
+
+# We store the docbin attrs here rather than in _serialize to avoid
+# import cycles.
+
+# fmt: off
+DOCBIN_ALL_ATTRS = ("ORTH", "NORM", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "ENT_ID", "LEMMA", "MORPH", "POS", "SENT_START")
+# fmt: on
 
 cdef int bounds_check(int i, int length, int padding) except -1:
     if (i + padding) < 0:
@@ -544,10 +566,6 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#char_span
         """
-        if not isinstance(label, int):
-            label = self.vocab.strings.add(label)
-        if not isinstance(kb_id, int):
-            kb_id = self.vocab.strings.add(kb_id)
         alignment_modes = ("strict", "contract", "expand")
         if alignment_mode not in alignment_modes:
             raise ValueError(
@@ -595,13 +613,26 @@ cdef class Doc:
         """
         if "similarity" in self.user_hooks:
             return self.user_hooks["similarity"](self, other)
-        if isinstance(other, (Lexeme, Token)) and self.length == 1:
-            if self.c[0].lex.orth == other.orth:
+        attr = getattr(self.vocab.vectors, "attr", ORTH)
+        cdef Token this_token
+        cdef Token other_token
+        cdef Lexeme other_lex
+        if len(self) == 1 and isinstance(other, Token):
+            this_token = self[0]
+            other_token = other
+            if Token.get_struct_attr(this_token.c, attr) == Token.get_struct_attr(other_token.c, attr):
                 return 1.0
-        elif isinstance(other, (Span, Doc)) and len(self) == len(other):
+        elif len(self) == 1 and isinstance(other, Lexeme):
+            this_token = self[0]
+            other_lex = other
+            if Token.get_struct_attr(this_token.c, attr) == Lexeme.get_struct_attr(other_lex.c, attr):
+                return 1.0
+        elif isinstance(other, (Doc, Span)) and len(self) == len(other):
             similar = True
-            for i in range(self.length):
-                if self[i].orth != other[i].orth:
+            for i in range(len(self)):
+                this_token = self[i]
+                other_token = other[i]
+                if Token.get_struct_attr(this_token.c, attr) != Token.get_struct_attr(other_token.c, attr):
                     similar = False
                     break
             if similar:
@@ -752,7 +783,7 @@ cdef class Doc:
             # TODO:
             # 1. Test basic data-driven ORTH gazetteer
             # 2. Test more nuanced date and currency regex
-            cdef attr_t entity_type, kb_id, ent_id
+            cdef attr_t kb_id, ent_id
             cdef int ent_start, ent_end
             ent_spans = []
             for ent_info in ents:
@@ -955,7 +986,6 @@ cdef class Doc:
             >>> np_array = doc.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
         """
         cdef int i, j
-        cdef attr_id_t feature
         cdef np.ndarray[attr_t, ndim=2] output
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
@@ -967,8 +997,10 @@ cdef class Doc:
             py_attr_ids = [py_attr_ids]
         # Allow strings, e.g. 'lemma' or 'LEMMA'
         try:
-            py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
-                       for id_ in py_attr_ids]
+            py_attr_ids = [
+                (IDS[id_.upper()] if hasattr(id_, "upper") else id_)
+                for id_ in py_attr_ids
+            ]
         except KeyError as msg:
             keys = [k for k in IDS.keys() if not k.startswith("FLAG")]
             raise KeyError(Errors.E983.format(dict="IDS", key=msg, keys=keys)) from None
@@ -998,8 +1030,6 @@ cdef class Doc:
         DOCS: https://spacy.io/api/doc#count_by
         """
         cdef int i
-        cdef attr_t attr
-        cdef size_t count
 
         if counts is None:
             counts = Counter()
@@ -1061,7 +1091,6 @@ cdef class Doc:
         cdef int i, col
         cdef int32_t abs_head_index
         cdef attr_id_t attr_id
-        cdef TokenC* tokens = self.c
         cdef int length = len(array)
         if length != len(self):
             raise ValueError(Errors.E971.format(array_length=length, doc_length=len(self)))
@@ -1193,7 +1222,7 @@ cdef class Doc:
                             span.label,
                             span.kb_id,
                             span.id,
-                            span.text, # included as a check
+                            span.text,  # included as a check
                         ))
             char_offset += len(doc.text)
             if len(doc) > 0 and ensure_whitespace and not doc[-1].is_space and not bool(doc[-1].whitespace_):
@@ -1268,12 +1297,14 @@ cdef class Doc:
         other.user_span_hooks = dict(self.user_span_hooks)
         other.length = self.length
         other.max_length = self.max_length
-        other.spans = self.spans.copy(doc=other)
         buff_size = other.max_length + (PADDING*2)
         assert buff_size > 0
         tokens = <TokenC*>other.mem.alloc(buff_size, sizeof(TokenC))
         memcpy(tokens, self.c - PADDING, buff_size * sizeof(TokenC))
         other.c = &tokens[PADDING]
+        # copy spans after setting tokens so that SpanGroup.copy can verify
+        # that the start/end offsets are valid
+        other.spans = self.spans.copy(doc=other)
         return other
 
     def to_disk(self, path, *, exclude=tuple()):
@@ -1350,6 +1381,10 @@ cdef class Doc:
         for group in self.spans.values():
             for span in group:
                 strings.add(span.label_)
+                if span.kb_id in span.doc.vocab.strings:
+                    strings.add(span.kb_id_)
+                if span.id in span.doc.vocab.strings:
+                    strings.add(span.id_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -1470,7 +1505,6 @@ cdef class Doc:
             attributes are inherited from the syntactic root of the span.
         RETURNS (Token): The first newly merged token.
         """
-        cdef str tag, lemma, ent_type
         attr_len = len(attributes)
         span_len = len(spans)
         if not attr_len == span_len:
@@ -1586,7 +1620,6 @@ cdef class Doc:
                 for token in char_span[1:]:
                     token.is_sent_start = False
 
-
         for span_group in doc_json.get("spans", {}):
             spans = []
             for span in doc_json["spans"][span_group]:
@@ -1618,7 +1651,7 @@ cdef class Doc:
                 start = token_by_char(self.c, self.length, token_data["start"])
                 value = token_data["value"]
                 self[start]._.set(token_attr, value)
-                
+
         for span_attr in doc_json.get("underscore_span", {}):
             if not Span.has_extension(span_attr):
                 Span.set_extension(span_attr)
@@ -1660,7 +1693,7 @@ cdef class Doc:
                 token_data["dep"] = token.dep_
                 token_data["head"] = token.head.i
             data["tokens"].append(token_data)
-        
+
         if self.spans:
             data["spans"] = {}
             for span_group in self.spans:
@@ -1731,7 +1764,6 @@ cdef class Doc:
         output.fill(255)
         cdef int i, j, start_idx, end_idx
         cdef bytes byte_string
-        cdef unsigned char utf8_char
         for i, byte_string in enumerate(byte_strings):
             j = 0
             start_idx = 0
@@ -1784,8 +1816,6 @@ cdef int token_by_char(const TokenC* tokens, int length, int char_idx) except -2
 
 cdef int set_children_from_heads(TokenC* tokens, int start, int end) except -1:
     # note: end is exclusive
-    cdef TokenC* head
-    cdef TokenC* child
     cdef int i
     # Set number of left/right children to 0. We'll increment it in the loops.
     for i in range(start, end):
@@ -1885,7 +1915,7 @@ cdef int _get_tokens_lca(Token token_j, Token token_k):
     return -1
 
 
-cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
+cdef int [:, :] _get_lca_matrix(Doc doc, int start, int end):
     """Given a doc and a start and end position defining a set of contiguous
     tokens within it, returns a matrix of Lowest Common Ancestors (LCA), where
     LCA[i, j] is the index of the lowest common ancestor among token i and j.
@@ -1898,7 +1928,7 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
     RETURNS (int [:, :]): memoryview of numpy.array[ndim=2, dtype=numpy.int32],
         with shape (n, n), where n = len(doc).
     """
-    cdef int [:,:] lca_matrix
+    cdef int [:, :] lca_matrix
     cdef int j, k
     n_tokens= end - start
     lca_mat = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)

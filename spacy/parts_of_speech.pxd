@@ -1,5 +1,6 @@
 from . cimport symbols
 
+
 cpdef enum univ_pos_t:
     NO_TAG = 0
     ADJ = symbols.ADJ
@@ -7,7 +8,7 @@ cpdef enum univ_pos_t:
     ADV
     AUX
     CONJ
-    CCONJ # U20
+    CCONJ  # U20
     DET
     INTJ
     NOUN

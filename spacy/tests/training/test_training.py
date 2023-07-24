@@ -2,20 +2,32 @@ import random
 
 import numpy
 import pytest
-import spacy
 import srsly
+from thinc.api import Adam, compounding
+
+import spacy
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
-from spacy.training import Alignment, Corpus, Example, biluo_tags_to_offsets
-from spacy.training import biluo_tags_to_spans, docs_to_json, iob_to_biluo
-from spacy.training import offsets_to_biluo_tags
-from spacy.training.alignment_array import AlignmentArray
+from spacy.training import (
+    Alignment,
+    Corpus,
+    Example,
+    biluo_tags_to_offsets,
+    biluo_tags_to_spans,
+    docs_to_json,
+    iob_to_biluo,
+    offsets_to_biluo_tags,
+)
 from spacy.training.align import get_alignments
+from spacy.training.alignment_array import AlignmentArray
 from spacy.training.converters import json_to_docs
 from spacy.training.loop import train_while_improving
-from spacy.util import get_words_and_spaces, load_model_from_path, minibatch
-from spacy.util import load_config_from_str
-from thinc.api import compounding, Adam
+from spacy.util import (
+    get_words_and_spaces,
+    load_config_from_str,
+    load_model_from_path,
+    minibatch,
+)
 
 from ..util import make_tempdir
 

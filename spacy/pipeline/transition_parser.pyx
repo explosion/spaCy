@@ -1,34 +1,45 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
 from __future__ import print_function
-from cymem.cymem cimport Pool
+
 cimport numpy as np
+from cymem.cymem cimport Pool
+
 from itertools import islice
-from libcpp.vector cimport vector
-from libc.string cimport memset, memcpy
+
 from libc.stdlib cimport calloc, free
+from libc.string cimport memset
+from libcpp.vector cimport vector
+
 import random
 
-import srsly
-from thinc.api import get_ops, set_dropout_rate, CupyOps, NumpyOps
-from thinc.extra.search cimport Beam
-import numpy.random
 import numpy
-import warnings
+import numpy.random
+import srsly
+from thinc.api import CupyOps, NumpyOps, set_dropout_rate
 
-from ._parser_internals.stateclass cimport StateClass
-from ..ml.parser_model cimport alloc_activations, free_activations
-from ..ml.parser_model cimport predict_states, arg_max_if_valid
-from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
-from ..ml.parser_model cimport get_c_weights, get_c_sizes
+from ..ml.parser_model cimport (
+    ActivationsC,
+    SizesC,
+    WeightsC,
+    alloc_activations,
+    arg_max_if_valid,
+    cpu_log_loss,
+    free_activations,
+    get_c_sizes,
+    get_c_weights,
+    predict_states,
+)
 from ..tokens.doc cimport Doc
+from ._parser_internals.stateclass cimport StateClass
+
 from .trainable_pipe import TrainablePipe
+
 from ._parser_internals cimport _beam_utils
-from ._parser_internals import _beam_utils
 
-from ..training import validate_examples, validate_get_examples
-from ..errors import Errors, Warnings
 from .. import util
-
+from ..errors import Errors
+from ..training import validate_examples, validate_get_examples
+from ._parser_internals import _beam_utils
 
 NUMPY_OPS = NumpyOps()
 
@@ -242,7 +253,6 @@ cdef class Parser(TrainablePipe):
             except Exception as e:
                 error_handler(self.name, self, batch_in_order, e)
 
-
     def predict(self, docs):
         if isinstance(docs, Doc):
             docs = [docs]
@@ -284,8 +294,6 @@ cdef class Parser(TrainablePipe):
         return batch
 
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
-        cdef Beam beam
-        cdef Doc doc
         self._ensure_labels_are_added(docs)
         batch = _beam_utils.BeamBatch(
             self.moves,
@@ -305,16 +313,18 @@ cdef class Parser(TrainablePipe):
         del model
         return list(batch)
 
-    cdef void _parseC(self, CBlas cblas, StateC** states,
-            WeightsC weights, SizesC sizes) nogil:
-        cdef int i, j
+    cdef void _parseC(
+        self, CBlas cblas, StateC** states, WeightsC weights, SizesC sizes
+    ) nogil:
+        cdef int i
         cdef vector[StateC*] unfinished
         cdef ActivationsC activations = alloc_activations(sizes)
         while sizes.states >= 1:
             predict_states(cblas, &activations, states, &weights, sizes)
             # Validate actions, argmax, take action.
-            self.c_transition_batch(states,
-                activations.scores, sizes.classes, sizes.states)
+            self.c_transition_batch(
+                states, activations.scores, sizes.classes, sizes.states
+            )
             for i in range(sizes.states):
                 if not states[i].is_final():
                     unfinished.push_back(states[i])
@@ -326,7 +336,6 @@ cdef class Parser(TrainablePipe):
 
     def set_annotations(self, docs, states_or_beams):
         cdef StateClass state
-        cdef Beam beam
         cdef Doc doc
         states = _beam_utils.collect_states(states_or_beams, docs)
         for i, (state, doc) in enumerate(zip(states, docs)):
@@ -343,8 +352,13 @@ cdef class Parser(TrainablePipe):
         self.c_transition_batch(&c_states[0], c_scores, scores.shape[1], scores.shape[0])
         return [state for state in states if not state.c.is_final()]
 
-    cdef void c_transition_batch(self, StateC** states, const float* scores,
-            int nr_class, int batch_size) nogil:
+    cdef void c_transition_batch(
+        self,
+        StateC** states,
+        const float* scores,
+        int nr_class,
+        int batch_size
+    ) nogil:
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         with gil:
             assert self.moves.n_moves > 0, Errors.E924.format(name=self.name)
@@ -364,7 +378,6 @@ cdef class Parser(TrainablePipe):
         free(is_valid)
 
     def update(self, examples, *, drop=0., sgd=None, losses=None):
-        cdef StateClass state
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.)
@@ -403,8 +416,7 @@ cdef class Parser(TrainablePipe):
         if not states:
             return losses
         model, backprop_tok2vec = self.model.begin_update([eg.x for eg in examples])
- 
-        all_states = list(states)
+
         states_golds = list(zip(states, golds))
         n_moves = 0
         while states_golds:
@@ -484,8 +496,16 @@ cdef class Parser(TrainablePipe):
         del tutor
         return losses
 
-    def update_beam(self, examples, *, beam_width,
-            drop=0., sgd=None, losses=None, beam_density=0.0):
+    def update_beam(
+        self,
+        examples,
+        *,
+        beam_width,
+        drop=0.,
+        sgd=None,
+        losses=None,
+        beam_density=0.0
+    ):
         states, golds, _ = self.moves.init_gold_batch(examples)
         if not states:
             return losses
@@ -515,8 +535,9 @@ cdef class Parser(TrainablePipe):
 
         is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
         costs = <float*>mem.alloc(self.moves.n_moves, sizeof(float))
-        cdef np.ndarray d_scores = numpy.zeros((len(states), self.moves.n_moves),
-                                        dtype='f', order='C')
+        cdef np.ndarray d_scores = numpy.zeros(
+            (len(states), self.moves.n_moves), dtype='f', order='C'
+        )
         c_d_scores = <float*>d_scores.data
         unseen_classes = self.model.attrs["unseen_classes"]
         for i, (state, gold) in enumerate(zip(states, golds)):
@@ -526,8 +547,9 @@ cdef class Parser(TrainablePipe):
             for j in range(self.moves.n_moves):
                 if costs[j] <= 0.0 and j in unseen_classes:
                     unseen_classes.remove(j)
-            cpu_log_loss(c_d_scores,
-                costs, is_valid, &scores[i, 0], d_scores.shape[1])
+            cpu_log_loss(
+                c_d_scores, costs, is_valid, &scores[i, 0], d_scores.shape[1]
+            )
             c_d_scores += d_scores.shape[1]
         # Note that we don't normalize this. See comment in update() for why.
         if losses is not None:

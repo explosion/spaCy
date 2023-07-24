@@ -1,19 +1,31 @@
 # cython: infer_types=True, profile=True
 
 from typing import Iterable
+
 from .kb cimport KnowledgeBase
+
 from ..tokens import Span
 
+
 cdef class Candidate:
-    """A `Candidate` object refers to a textual mention (`alias`) that may or may not be resolved
-    to a specific `entity` from a Knowledge Base. This will be used as input for the entity linking
-    algorithm which will disambiguate the various candidates to the correct one.
+    """A `Candidate` object refers to a textual mention (`alias`) that may or
+    may not be resolved to a specific `entity` from a Knowledge Base. This
+    will be used as input for the entity linking algorithm which will
+    disambiguate the various candidates to the correct one.
     Each candidate (alias, entity) pair is assigned a certain prior probability.
 
     DOCS: https://spacy.io/api/kb/#candidate-init
     """
 
-    def __init__(self, KnowledgeBase kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob):
+    def __init__(
+        self,
+        KnowledgeBase kb,
+        entity_hash,
+        entity_freq,
+        entity_vector,
+        alias_hash,
+        prior_prob
+    ):
         self.kb = kb
         self.entity_hash = entity_hash
         self.entity_freq = entity_freq
@@ -56,7 +68,8 @@ cdef class Candidate:
 
 def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
     """
-    Return candidate entities for a given mention and fetching appropriate entries from the index.
+    Return candidate entities for a given mention and fetching appropriate
+    entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
     mention (Span): Entity mention for which to identify candidates.
     RETURNS (Iterable[Candidate]): Identified candidates.
@@ -64,9 +77,12 @@ def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
     return kb.get_candidates(mention)
 
 
-def get_candidates_batch(kb: KnowledgeBase, mentions: Iterable[Span]) -> Iterable[Iterable[Candidate]]:
+def get_candidates_batch(
+        kb: KnowledgeBase, mentions: Iterable[Span]
+) -> Iterable[Iterable[Candidate]]:
     """
-    Return candidate entities for the given mentions and fetching appropriate entries from the index.
+    Return candidate entities for the given mentions and fetching appropriate entries
+    from the index.
     kb (KnowledgeBase): Knowledge base to query.
     mention (Iterable[Span]): Entity mentions for which to identify candidates.
     RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.

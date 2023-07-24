@@ -1,7 +1,6 @@
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH
 from ...util import update_exc
-
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 
 # Extensive list of both common and uncommon dutch abbreviations copied from
 # github.com/diasks2/pragmatic_segmenter, a Ruby library for rule-based

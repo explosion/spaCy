@@ -25,7 +25,10 @@ and call the package's own `load()` method. If a pipeline is loaded from a path,
 spaCy will assume it's a data directory, load its
 [`config.cfg`](/api/data-formats#config) and use the language and pipeline
 information to construct the `Language` class. The data will be loaded in via
-[`Language.from_disk`](/api/language#from_disk).
+[`Language.from_disk`](/api/language#from_disk). Loading a pipeline from a
+package will also import any custom code, if present, whereas loading from a
+directory does not. For these cases, you need to manually import your custom
+code.
 
 <Infobox variant="warning" title="Changed in v3.0">
 
@@ -466,7 +469,7 @@ factories.
 | `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                             |
 | `readers`         | Registry for file and data readers, including training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                   |
 | `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                               |
-| `scorers`         | Registry for functions that create scoring methods for user with the [`Scorer`](/api/scorer). Scoring methods are called with `Iterable[Example]` and arbitrary `\*\*kwargs` and return scores as `Dict[str, Any]`.                                |
+| `scorers`         | Registry for functions that create scoring methods for user with the [`Scorer`](/api/scorer). Scoring methods are called with `Iterable[Example]` and arbitrary `**kwargs` and return scores as `Dict[str, Any]`.                                  |
 | `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                   |
 
 ### spacy-transformers registry {id="registry-transformers"}
@@ -577,7 +580,7 @@ start decreasing across epochs.
 > ```ini
 > [training.logger]
 > @loggers = "spacy.ConsoleLogger.v3"
-> progress_bar = "all_steps"
+> progress_bar = "eval"
 > console_output = true
 > output_file = "training_log.jsonl"
 > ```

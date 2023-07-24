@@ -1,6 +1,5 @@
 from ...attrs import LIKE_NUM
 
-
 MIM = "م"
 ZWNJ_O_MIM = "‌ام"
 YE_NUN = "ین"

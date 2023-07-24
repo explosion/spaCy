@@ -1,20 +1,21 @@
 # cython: infer_types=True, profile=True, binding=True
 from collections import defaultdict
-from typing import Optional, Iterable, Callable
-from thinc.api import Model, Config
+from typing import Callable, Optional
+
+from thinc.api import Config, Model
 
 from ._parser_internals.transition_system import TransitionSystem
-from .transition_parser cimport Parser
-from ._parser_internals.arc_eager cimport ArcEager
 
-from .functions import merge_subtokens
+from ._parser_internals.arc_eager cimport ArcEager
+from .transition_parser cimport Parser
+
 from ..language import Language
-from ._parser_internals import nonproj
-from ._parser_internals.nonproj import DELIMITER
 from ..scorer import Scorer
 from ..training import remove_bilu_prefix
 from ..util import registry
-
+from ._parser_internals import nonproj
+from ._parser_internals.nonproj import DELIMITER
+from .functions import merge_subtokens
 
 default_model_config = """
 [model]
@@ -122,6 +123,7 @@ def make_parser(
         incorrect_spans_key=None,
         scorer=scorer,
     )
+
 
 @Language.factory(
     "beam_parser",

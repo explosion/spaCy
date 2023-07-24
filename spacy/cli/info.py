@@ -1,15 +1,15 @@
-from typing import Optional, Dict, Any, Union, List
-import platform
 import json
+import platform
 from pathlib import Path
-from wasabi import Printer, MarkdownRenderer
-import srsly
+from typing import Any, Dict, List, Optional, Union
 
-from ._util import app, Arg, Opt, string_to_list
-from .download import get_model_filename, get_latest_version
-from .. import util
-from .. import about
+import srsly
+from wasabi import MarkdownRenderer, Printer
+
+from .. import about, util
 from ..compat import importlib_metadata
+from ._util import Arg, Opt, app, string_to_list
+from .download import get_latest_version, get_model_filename
 
 
 @app.command("info")

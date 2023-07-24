@@ -1,5 +1,5 @@
-from typing import List, Optional, Tuple
 import re
+from typing import List, Optional, Tuple
 
 from ...pipeline import Lemmatizer
 from ...tokens import Token
