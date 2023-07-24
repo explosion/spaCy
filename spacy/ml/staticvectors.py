@@ -9,7 +9,7 @@ from thinc.util import partial
 from ..attrs import ORTH
 from ..errors import Errors, Warnings
 from ..tokens import Doc
-from ..vectors import Vectors, Mode
+from ..vectors import Mode, Vectors
 from ..vocab import Vocab
 
 
