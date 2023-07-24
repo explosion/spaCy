@@ -1,0 +1,1488 @@
+---
+title: Large Language Models
+teaser: Integrating LLMs into structured NLP pipelines
+menu:
+  - ['Config', 'config']
+  - ['Tasks', 'tasks']
+  - ['Models', 'models']
+  - ['Cache', 'cache']
+  - ['Various Functions', 'various-functions']
+---
+
+[The spacy-llm package](https://github.com/explosion/spacy-llm) integrates Large
+Language Models (LLMs) into spaCy, featuring a modular system for **fast
+prototyping** and **prompting**, and turning unstructured responses into
+**robust outputs** for various NLP tasks, **no training data** required.
+
+## Config {id="config"}
+
+`spacy-llm` exposes a `llm` factory that accepts the following configuration
+options:
+
+| Argument         | Description                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------- |
+| `task`           | An LLMTask can generate prompts and parse LLM responses. See [docs](#tasks). ~~Optional[LLMTask]~~      |
+| `model`          | Callable querying a specific LLM API. See [docs](#models). ~~Callable[[Iterable[Any]], Iterable[Any]]~~ |
+| `cache`          | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). ~~Cache~~           |
+| `save_io`        | Whether to save prompts/responses within `Doc.user_data["llm_io"]`. ~~bool~~                            |
+| `validate_types` | Whether to check if signatures of configured model and task are consistent. ~~bool~~                    |
+
+An `llm` component is defined by two main settings:
+
+- A [**task**](#tasks), defining the prompt to send to the LLM as well as the
+  functionality to parse the resulting response back into structured fields on
+  the [Doc](/api/doc) objects.
+- A [**model**](#models) defining the model and how to connect to it. Note that
+  `spacy-llm` supports both access to external APIs (such as OpenAI) as well as
+  access to self-hosted open-source LLMs (such as using Dolly through Hugging
+  Face).
+
+Moreover, `spacy-llm` exposes a customizable [**caching**](#cache) functionality
+to avoid running the same document through an LLM service (be it local or
+through a REST API) more than once.
+
+Finally, you can choose to save a stringified version of LLM prompts/responses
+within the `Doc.user_data["llm_io"]` attribute by setting `save_io` to `True`.
+`Doc.user_data["llm_io"]` is a dictionary containing one entry for every LLM
+component within the `nlp` pipeline. Each entry is itself a dictionary, with two
+keys: `prompt` and `response`.
+
+A note on `validate_types`: by default, `spacy-llm` checks whether the
+signatures of the `model` and `task` callables are consistent with each other
+and emits a warning if they don't. `validate_types` can be set to `False` if you
+want to disable this behavior.
+
+### Tasks {id="tasks"}
+
+A _task_ defines an NLP problem or question, that will be sent to the LLM via a
+prompt. Further, the task defines how to parse the LLM's responses back into
+structured information. All tasks are registered in the `llm_tasks` registry.
+
+#### task.generate_prompts {id="task-generate-prompts"}
+
+Takes a collection of documents, and returns a collection of "prompts", which
+can be of type `Any`. Often, prompts are of type `str` - but this is not
+enforced to allow for maximum flexibility in the framework.
+
+| Argument    | Description                              |
+| ----------- | ---------------------------------------- |
+| `docs`      | The input documents. ~~Iterable[Doc]~~   |
+| **RETURNS** | The generated prompts. ~~Iterable[Any]~~ |
+
+#### task.parse_responses {id="task-parse-responses"}
+
+Takes a collection of LLM responses and the original documents, parses the
+responses into structured information, and sets the annotations on the
+documents. The `parse_responses` function is free to set the annotations in any
+way, including `Doc` fields like `ents`, `spans` or `cats`, or using custom
+defined fields.
+
+The `responses` are of type `Iterable[Any]`, though they will often be `str`
+objects. This depends on the return type of the [model](#models).
+
+| Argument    | Description                                |
+| ----------- | ------------------------------------------ |
+| `docs`      | The input documents. ~~Iterable[Doc]~~     |
+| `responses` | The generated prompts. ~~Iterable[Any]~~   |
+| **RETURNS** | The annotated documents. ~~Iterable[Doc]~~ |
+
+#### spacy.Summarization.v1 {id="summarization-v1"}
+
+The `spacy.Summarization.v1` task supports both zero-shot and few-shot
+prompting.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.Summarization.v1"
+> examples = null
+> max_n_words = null
+> ```
+
+| Argument      | Description                                                                                                                                                                                                                        |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`    | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [summarization.jinja](./spacy_llm/tasks/templates/summarization.jinja). ~~str~~ |
+| `examples`    | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                     |
+| `max_n_words` | Maximum number of words to be used in summary. Note that this should not expected to work exactly. Defaults to `None`. ~~Optional[int]~~                                                                                           |
+| `field`       | Name of extension attribute to store summary in (i. e. the summary will be available in `doc._.{field}`). Defaults to `summary`. ~~str~~                                                                                           |
+
+The summarization task prompts the model for a concise summary of the provided
+text. It optionally allows to limit the response to a certain number of tokens -
+note that this requirement will be included in the prompt, but the task doesn't
+perform a hard cut-off. It's hence possible that your summary exceeds
+`max_n_words`.
+
+To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+you can write down a few examples in a separate file, and provide these to be
+injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
+supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: >
+    The United Nations, referred to informally as the UN, is an
+    intergovernmental organization whose stated purposes are  to maintain
+    international peace and security, develop friendly relations among nations,
+    achieve international cooperation, and serve as a centre for harmonizing the
+    actions of nations. It is the world's largest international organization.
+    The UN is headquartered on international territory in New York City, and the
+    organization has other offices in Geneva, Nairobi, Vienna, and The Hague,
+    where the International Court of Justice is headquartered.\n\n The UN was
+    established after World War II with the aim of preventing future world wars,
+    and succeeded the League of  Nations, which was characterized as
+    ineffective.
+  summary:
+    'The UN is an international organization that promotes global peace,
+    cooperation, and harmony. Established after WWII, its purpose is to prevent
+    future world wars.'
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Summarization.v1"
+max_n_words = 20
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "summarization_examples.yml"
+```
+
+#### spacy.NER.v2 {id="ner-v2"}
+
+The built-in NER task supports both zero-shot and few-shot prompting. This
+version also supports explicitly defining the provided labels with custom
+descriptions.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.NER.v2"
+> labels = ["PERSON", "ORGANISATION", "LOCATION"]
+> examples = null
+> ```
+
+| Argument                  | Description                                                                                                                                                                                                                                                         |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`                  | List of labels or str of comma-separated list of labels. ~~Union[List[str], str]~~                                                                                                                                                                                  |
+| `template`                | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [ner.v2.jinja](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/ner.v2.jinja). ~~str~~ |
+| `label_definitions`       | Optional dict mapping a label to a description of that label. These descriptions are added to the prompt to help instruct the LLM on what to extract. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                              |
+| `examples`                | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                                      |
+| `normalizer`              | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`. Defaults to `None`. ~~Optional[Callable[[str], str]]~~                                                                                           |
+| `alignment_mode`          | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. Defaults to `"contract"`. ~~str~~                                                                                      |
+| `case_sensitive_matching` | Whether to search without case sensitivity. Defaults to `False`. ~~bool~~                                                                                                                                                                                           |
+| `single_match`            | Whether to match an entity in the LLM's response only once (the first hit) or multiple times. Defaults to `False`. ~~bool~~                                                                                                                                         |
+
+The NER task implementation doesn't currently ask the LLM for specific offsets,
+but simply expects a list of strings that represent the enties in the document.
+This means that a form of string matching is required. This can be configured by
+the following parameters:
+
+- The `single_match` parameter is typically set to `False` to allow for multiple
+  matches. For instance, the response from the LLM might only mention the entity
+  "Paris" once, but you'd still want to mark it every time it occurs in the
+  document.
+- The case-sensitive matching is typically set to `False` to be robust against
+  case variances in the LLM's output.
+- The `alignment_mode` argument is used to match entities as returned by the LLM
+  to the tokens from the original `Doc` - specifically it's used as argument in
+  the call to [`doc.char_span()`](/api/doc#char_span). The `"strict"` mode will
+  only keep spans that strictly adhere to the given token boundaries.
+  `"contract"` will only keep those tokens that are fully within the given
+  range, e.g. reducing `"New Y"` to `"New"`. Finally, `"expand"` will expand the
+  span to the next token boundaries, e.g. expanding `"New Y"` out to
+  `"New York"`.
+
+To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+you can write down a few examples in a separate file, and provide these to be
+injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
+supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: Jack and Jill went up the hill.
+  entities:
+    PERSON:
+      - Jack
+      - Jill
+    LOCATION:
+      - hill
+- text: Jack fell down and broke his crown.
+  entities:
+    PERSON:
+      - Jack
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v2"
+labels = PERSON,ORGANISATION,LOCATION
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "ner_examples.yml"
+```
+
+> Label descriptions can also be used with explicit examples to give as much
+> info to the LLM model as possible.
+
+You can also write definitions for each label and provide them via the
+`label_definitions` argument. This lets you tell the LLM exactly what you're
+looking for rather than relying on the LLM to interpret its task given just the
+label name. Label descriptions are freeform so you can write whatever you want
+here, but through some experiments a brief description along with some examples
+and counter examples seems to work quite well.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v2"
+labels = PERSON,SPORTS_TEAM
+[components.llm.task.label_definitions]
+PERSON = "Extract any named individual in the text."
+SPORTS_TEAM = "Extract the names of any professional sports team. e.g. Golden State Warriors, LA Lakers, Man City, Real Madrid"
+```
+
+#### spacy.NER.v1 {id="ner-v1"}
+
+The original version of the built-in NER task supports both zero-shot and
+few-shot prompting.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.NER.v1"
+> labels = PERSON,ORGANISATION,LOCATION
+> examples = null
+> ```
+
+| Argument                  | Description                                                                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `labels`                  | Comma-separated list of labels. ~~str~~                                                                                                                                        |
+| `examples`                | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                 |
+| `normalizer`              | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`. ~~Optional[Callable[[str], str]]~~                          |
+| `alignment_mode`          | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. Defaults to `"contract"`. ~~str~~ |
+| `case_sensitive_matching` | Whether to search without case sensitivity. Defaults to `False`. ~~bool~~                                                                                                      |
+| `single_match`            | Whether to match an entity in the LLM's response only once (the first hit) or multiple times. Defaults to `False`. ~~bool~~                                                    |
+
+The NER task implementation doesn't currently ask the LLM for specific offsets,
+but simply expects a list of strings that represent the enties in the document.
+This means that a form of string matching is required. This can be configured by
+the following parameters:
+
+- The `single_match` parameter is typically set to `False` to allow for multiple
+  matches. For instance, the response from the LLM might only mention the entity
+  "Paris" once, but you'd still want to mark it every time it occurs in the
+  document.
+- The case-sensitive matching is typically set to `False` to be robust against
+  case variances in the LLM's output.
+- The `alignment_mode` argument is used to match entities as returned by the LLM
+  to the tokens from the original `Doc` - specifically it's used as argument in
+  the call to [`doc.char_span()`](/api/doc#char_span). The `"strict"` mode will
+  only keep spans that strictly adhere to the given token boundaries.
+  `"contract"` will only keep those tokens that are fully within the given
+  range, e.g. reducing `"New Y"` to `"New"`. Finally, `"expand"` will expand the
+  span to the next token boundaries, e.g. expanding `"New Y"` out to
+  `"New York"`.
+
+To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+you can write down a few examples in a separate file, and provide these to be
+injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
+supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: Jack and Jill went up the hill.
+  entities:
+    PERSON:
+      - Jack
+      - Jill
+    LOCATION:
+      - hill
+- text: Jack fell down and broke his crown.
+  entities:
+    PERSON:
+      - Jack
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v1"
+labels = PERSON,ORGANISATION,LOCATION
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "ner_examples.yml"
+```
+
+#### spacy.SpanCat.v2 {id="spancat-v2"}
+
+The built-in SpanCat task is a simple adaptation of the NER task to support
+overlapping entities and store its annotations in `doc.spans`.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.SpanCat.v2"
+> labels = ["PERSON", "ORGANISATION", "LOCATION"]
+> examples = null
+> ```
+
+| Argument                  | Description                                                                                                                                                                                                                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`                  | List of labels or str of comma-separated list of labels. ~~Union[List[str], str]~~                                                                                                                                                                                            |
+| `template`                | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [`spancat.v2.jinja`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/spancat.v2.jinja). ~~str~~ |
+| `label_definitions`       | Optional dict mapping a label to a description of that label. These descriptions are added to the prompt to help instruct the LLM on what to extract. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                                        |
+| `spans_key`               | Key of the `Doc.spans` dict to save the spans under. Defaults to `"sc"`. ~~str~~                                                                                                                                                                                              |
+| `examples`                | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                                                |
+| `normalizer`              | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`. ~~Optional[Callable[[str], str]]~~                                                                                                                         |
+| `alignment_mode`          | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. Defaults to `"contract"`. ~~str~~                                                                                                |
+| `case_sensitive_matching` | Whether to search without case sensitivity. Defaults to `False`. ~~bool~~                                                                                                                                                                                                     |
+| `single_match`            | Whether to match an entity in the LLM's response only once (the first hit) or multiple times. Defaults to `False`. ~~bool~~                                                                                                                                                   |
+
+Except for the `spans_key` parameter, the SpanCat task reuses the configuration
+from the NER task. Refer to [its documentation](#ner-v2) for more insight.
+
+#### spacy.SpanCat.v1 {id="spancat-v1"}
+
+The original version of the built-in SpanCat task is a simple adaptation of the
+v1 NER task to support overlapping entities and store its annotations in
+`doc.spans`.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.SpanCat.v1"
+> labels = PERSON,ORGANISATION,LOCATION
+> examples = null
+> ```
+
+| Argument                  | Description                                                                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `labels`                  | Comma-separated list of labels. ~~str~~                                                                                                                                        |
+| `spans_key`               | Key of the `Doc.spans` dict to save the spans under. Defaults to `"sc"`. ~~str~~                                                                                               |
+| `examples`                | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                 |
+| `normalizer`              | Function that normalizes the labels as returned by the LLM. If `None`, defaults to `spacy.LowercaseNormalizer.v1`. ~~Optional[Callable[[str], str]]~~                          |
+| `alignment_mode`          | Alignment mode in case the LLM returns entities that do not align with token boundaries. Options are `"strict"`, `"contract"` or `"expand"`. Defaults to `"contract"`. ~~str~~ |
+| `case_sensitive_matching` | Whether to search without case sensitivity. Defaults to `False`. ~~bool~~                                                                                                      |
+| `single_match`            | Whether to match an entity in the LLM's response only once (the first hit) or multiple times. Defaults to `False`. ~~bool~~                                                    |
+
+Except for the `spans_key` parameter, the SpanCat task reuses the configuration
+from the NER task. Refer to [its documentation](#ner-v1) for more insight.
+
+#### spacy.TextCat.v3 {id="textcat-v3"}
+
+Version 3 (the most recent) of the built-in TextCat task supports both zero-shot
+and few-shot prompting. It allows setting definitions of labels. Those
+definitions are included in the prompt.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.TextCat.v3"
+> labels = ["COMPLIMENT", "INSULT"]
+> label_definitions = {
+>   "COMPLIMENT": "a polite expression of praise or admiration.",
+>   "INSULT": "a disrespectful or scornfully abusive remark or act."
+> }
+> examples = null
+> ```
+
+| Argument            | Description                                                                                                                                                                                                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`            | List of labels or str of comma-separated list of labels. ~~Union[List[str], str]~~                                                                                                                                                                                      |
+| `label_definitions` | Dictionary of label definitions. Included in the prompt, if set. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                                                                                                                       |
+| `template`          | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [`textcat.jinja`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/textcat.jinja). ~~str~~ |
+| `examples`          | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                                          |
+| `normalizer`        | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. Defaults to `None`. ~~Optional[Callable[[str], str]]~~                                                                                             |
+| `exclusive_classes` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. Defaults to `False`. ~~bool~~                                                                                                                  |
+| `allow_none`        | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Defaults to `True`. ~~bool~~                                                                                           |
+| `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                                                                                                                      |
+
+To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+you can write down a few examples in a separate file, and provide these to be
+injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
+supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```json
+[
+  {
+    "text": "You look great!",
+    "answer": "Compliment"
+  },
+  {
+    "text": "You are not very clever at all.",
+    "answer": "Insult"
+  }
+]
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v3"
+labels = ["COMPLIMENT", "INSULT"]
+label_definitions = {
+  "COMPLIMENT": "a polite expression of praise or admiration.",
+  "INSULT": "a disrespectful or scornfully abusive remark or act."
+}
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "textcat_examples.json"
+```
+
+#### spacy.TextCat.v2 {id="textcat-v2"}
+
+Version 2 of the built-in TextCat task supports both zero-shot and few-shot
+prompting and includes an improved prompt template.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.TextCat.v2"
+> labels = ["COMPLIMENT", "INSULT"]
+> examples = null
+> ```
+
+| Argument            | Description                                                                                                                                                                                                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`            | List of labels or str of comma-separated list of labels. ~~Union[List[str], str]~~                                                                                                                                                                                      |
+| `template`          | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [`textcat.jinja`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/textcat.jinja). ~~str~~ |
+| `examples`          | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                                          |
+| `normalizer`        | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. ~~Optional[Callable[[str], str]]~~                                                                                                                 |
+| `exclusive_classes` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. Defaults to `False`. ~~bool~~                                                                                                                  |
+| `allow_none`        | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Defaults to `True`. ~~bool~~                                                                                           |
+| `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                                                                                                                      |
+
+To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+you can write down a few examples in a separate file, and provide these to be
+injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
+supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```json
+[
+  {
+    "text": "You look great!",
+    "answer": "Compliment"
+  },
+  {
+    "text": "You are not very clever at all.",
+    "answer": "Insult"
+  }
+]
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v2"
+labels = ["COMPLIMENT", "INSULT"]
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "textcat_examples.json"
+```
+
+#### spacy.TextCat.v1 {id="textcat-v1"}
+
+Version 1 of the built-in TextCat task supports both zero-shot and few-shot
+prompting.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.TextCat.v1"
+> labels = COMPLIMENT,INSULT
+> examples = null
+> ```
+
+| Argument            | Description                                                                                                                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`            | Comma-separated list of labels. ~~str~~                                                                                                                                       |
+| `examples`          | Optional function that generates examples for few-shot learning. Deafults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                |
+| `normalizer`        | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. ~~Optional[Callable[[str], str]]~~                       |
+| `exclusive_classes` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. Deafults to `False`. ~~bool~~                        |
+| `allow_none`        | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Deafults to `True`. ~~bool~~ |
+| `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Deafults to `False`. ~~bool~~                                                            |
+
+To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+you can write down a few examples in a separate file, and provide these to be
+injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
+supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```json
+[
+  {
+    "text": "You look great!",
+    "answer": "Compliment"
+  },
+  {
+    "text": "You are not very clever at all.",
+    "answer": "Insult"
+  }
+]
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v2"
+labels = COMPLIMENT,INSULT
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "textcat_examples.json"
+```
+
+#### spacy.REL.v1 {id="rel-v1"}
+
+The built-in REL task supports both zero-shot and few-shot prompting. It relies
+on an upstream NER component for entities extraction.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.REL.v1"
+> labels = ["LivesIn", "Visits"]
+> ```
+
+| Argument            | Description                                                                                                                                                                                                                                                     |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`            | List of labels or str of comma-separated list of labels. ~~Union[List[str], str]~~                                                                                                                                                                              |
+| `template`          | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [`rel.jinja`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/rel.jinja). ~~str~~ |
+| `label_description` | Dictionary providing a description for each relation label. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                                                                                                                    |
+| `examples`          | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                                  |
+| `normalizer`        | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. Defaults to `None`. ~~Optional[Callable[[str], str]]~~                                                                                     |
+| `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                                                                                                              |
+
+To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+you can write down a few examples in a separate file, and provide these to be
+injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
+supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```json
+{"text": "Laura bought a house in Boston with her husband Mark.", "ents": [{"start_char": 0, "end_char": 5, "label": "PERSON"}, {"start_char": 24, "end_char": 30, "label": "GPE"}, {"start_char": 48, "end_char": 52, "label": "PERSON"}], "relations": [{"dep": 0, "dest": 1, "relation": "LivesIn"}, {"dep": 2, "dest": 1, "relation": "LivesIn"}]}
+{"text": "Michael travelled through South America by bike.", "ents": [{"start_char": 0, "end_char": 7, "label": "PERSON"}, {"start_char": 26, "end_char": 39, "label": "LOC"}], "relations": [{"dep": 0, "dest": 1, "relation": "Visits"}]}
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.REL.v1"
+labels = ["LivesIn", "Visits"]
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "rel_examples.jsonl"
+```
+
+Note: the REL task relies on pre-extracted entities to make its prediction.
+Hence, you'll need to add a component that populates `doc.ents` with recognized
+spans to your spaCy pipeline and put it _before_ the REL component.
+
+#### spacy.Lemma.v1 {id="lemma-v1"}
+
+The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_`
+attribute in the doc's tokens accordingly.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.Lemma.v1"
+> examples = null
+> ```
+
+| Argument   | Description                                                                                                                                                                                                                                                       |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template` | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [lemma.jinja](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/lemma.jinja). ~~str~~ |
+| `examples` | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                                    |
+
+`Lemma.v1` prompts the LLM to lemmatize the passed text and return the
+lemmatized version as a list of tokens and their corresponding lemma. E. g. the
+text `I'm buying ice cream for my friends` should invoke the response
+
+```
+I: I
+'m: be
+buying: buy
+ice: ice
+cream: cream
+for: for
+my: my
+friends: friend
+.: .
+```
+
+If for any given text/doc instance the number of lemmas returned by the LLM
+doesn't match the number of tokens from the pipeline's tokenizer, no lemmas are
+stored in the corresponding doc's tokens. Otherwise the tokens `.lemma_`
+property is updated with the lemma suggested by the LLM.
+
+To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+you can write down a few examples in a separate file, and provide these to be
+injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
+supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: I'm buying ice cream.
+  lemmas:
+    - 'I': 'I'
+    - "'m": 'be'
+    - 'buying': 'buy'
+    - 'ice': 'ice'
+    - 'cream': 'cream'
+    - '.': '.'
+
+- text: I've watered the plants.
+  lemmas:
+    - 'I': 'I'
+    - "'ve": 'have'
+    - 'watered': 'water'
+    - 'the': 'the'
+    - 'plants': 'plant'
+    - '.': '.'
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Lemma.v1"
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "lemma_examples.yml"
+```
+
+#### spacy.Sentiment.v1 {id="sentiment-v1"}
+
+Performs sentiment analysis on provided texts. Scores between 0 and 1 are stored
+in `Doc._.sentiment` - the higher, the more positive. Note in cases of parsing
+issues (e. g. in case of unexpected LLM responses) the value might be `None`.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.Sentiment.v1"
+> examples = null
+> ```
+
+| Argument   | Description                                                                                                                                                                                                                |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template` | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [sentiment.jinja](./spacy_llm/tasks/templates/sentiment.jinja). ~~str~~ |
+| `examples` | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                             |
+| `field`    | Name of extension attribute to store summary in (i. e. the summary will be available in `doc._.{field}`). Defaults to `sentiment`. ~~str~~                                                                                 |
+
+To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+you can write down a few examples in a separate file, and provide these to be
+injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
+supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: 'This is horrifying.'
+  score: 0
+- text: 'This is underwhelming.'
+  score: 0.25
+- text: 'This is ok.'
+  score: 0.5
+- text: "I'm looking forward to this!"
+  score: 1.0
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Sentiment.v1"
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "sentiment_examples.yml"
+```
+
+#### spacy.NoOp.v1 {id="noop-v1"}
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.NoOp.v1"
+> ```
+
+This task is only useful for testing - it tells the LLM to do nothing, and does
+not set any fields on the `docs`.
+
+### Models {id="models"}
+
+A _model_ defines which LLM model to query, and how to query it. It can be a
+simple function taking a collection of prompts (consistent with the output type
+of `task.generate_prompts()`) and returning a collection of responses
+(consistent with the expected input of `parse_responses`). Generally speaking,
+it's a function of type `Callable[[Iterable[Any]], Iterable[Any]]`, but specific
+implementations can have other signatures, like
+`Callable[[Iterable[str]], Iterable[str]]`.
+
+#### API Keys {id="api-keys"}
+
+Note that when using hosted services, you have to ensure that the proper API
+keys are set as environment variables as described by the corresponding
+provider's documentation.
+
+E. g. when using OpenAI, you have to get an API key from openai.com, and ensure
+that the keys are set as environmental variables:
+
+```shell
+export OPENAI_API_KEY="sk-..."
+export OPENAI_API_ORG="org-..."
+```
+
+For Cohere it's
+
+```shell
+export CO_API_KEY="..."
+```
+
+and for Anthropic
+
+```shell
+export ANTHROPIC_API_KEY="..."
+```
+
+#### spacy.GPT-4.v1 {id="gpt-4"}
+
+OpenAI's `gpt-4` model family.
+
+> #### Example config:
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.GPT-4.v1"
+> name = "gpt-4"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                                 |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"gpt-4"`. ~~Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]~~ |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                          |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~           |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                              |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                               |
+
+#### spacy.GPT-3-5.v1 {id="gpt-3-5"}
+
+OpenAI's `gpt-3-5` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.GPT-3-5.v1"
+> name = "gpt-3.5-turbo"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                                                                         |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"gpt-3.5-turbo"`. ~~Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k"]~~ |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                                                                  |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~                                                   |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                                                      |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                                                       |
+
+#### spacy.Text-Davinci.v1 {id="text-davinci"}
+
+OpenAI's `text-davinci` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Text-Davinci.v1"
+> name = "text-davinci-003"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                              |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"text-davinci-003"`. ~~Literal["text-davinci-002", "text-davinci-003"]~~ |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                       |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~        |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                           |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                            |
+
+#### spacy.Code-Davinci.v1 {id="code-davinci"}
+
+OpenAI's `code-davinci` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Code-Davinci.v1"
+> name = "code-davinci-002"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"code-davinci-002"`. ~~Literal["code-davinci-002"]~~              |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Text-Curie.v1 {id="text-curie"}
+
+OpenAI's `text-curie` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Text-Curie.v1"
+> name = "text-curie-001"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"text-curie-001"`. ~~Literal["text-curie-001"]~~                  |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Text-Babbage.v1 {id="text-babbage"}
+
+OpenAI's `text-babbage` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Text-Babbage.v1"
+> name = "text-babbage-001"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"text-babbage-001"`. ~~Literal["text-babbage-001"]~~              |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Text-Ada.v1 {id="text-ada"}
+
+OpenAI's `text-ada` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Text-Ada.v1"
+> name = "text-ada-001"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"text-ada-001"`. ~~Literal["text-ada-001"]~~                      |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Davinci.v1 {id="davinci"}
+
+OpenAI's `davinci` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Davinci.v1 "
+> name = "davinci"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"davinci"`. ~~Literal["davinci"]~~                                |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Curie.v1 {id="curie"}
+
+OpenAI's `curie` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Curie.v1 "
+> name = "curie"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"curie"`. ~~Literal["curie"]~~                                    |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Babbage.v1 {id="babbage"}
+
+OpenAI's `babbage` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Babbage.v1 "
+> name = "babbage"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"babbage"`. ~~Literal["babbage"]~~                                |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Ada.v1 {id="ada"}
+
+OpenAI's `ada` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Ada.v1 "
+> name = "ada"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"ada"`. ~~Literal["ada"]~~                                        |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Command.v1 {id="command"}
+
+Cohere's `command` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Command.v1 "
+> name = "command"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"command"`. ~~Literal["command", "command-light", "command-light-nightly", "command-nightly"]~~ |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                                              |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~                               |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                                  |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                                   |
+
+#### spacy.Claude-2.v1 {id="claude-2"}
+
+Anthropic's `claude-2` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Claude-2.v1 "
+> name = "claude-2"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-2"`. ~~Literal["claude-2", "claude-2-100k"]~~             |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Claude-1.v1 {id="claude-1"}
+
+Anthropic's `claude-1` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Claude-1.v1 "
+> name = "claude-1"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-1"`. ~~Literal["claude-1", "claude-1-100k"]~~             |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Claude-instant-1.v1 {id="claude-instant-1"}
+
+Anthropic's `claude-instant-1` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Claude-instant-1.v1 "
+> name = "claude-instant-1"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-instant-1"`. ~~Literal["claude-instant-1", "claude-instant-1-100k"]~~ |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                            |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~             |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                 |
+
+#### spacy.Claude-instant-1-1.v1 {id="claude-instant-1-1"}
+
+Anthropic's `claude-instant-1.1` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Claude-instant-1-1.v1 "
+> name = "claude-instant-1.1"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                                         |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-instant-1.1"`. ~~Literal["claude-instant-1.1", "claude-instant-1.1-100k"]~~ |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                                  |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~                   |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                      |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                       |
+
+#### spacy.Claude-1-0.v1 {id="claude-1-0"}
+
+Anthropic's `claude-1.0` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Claude-1-0.v1 "
+> name = "claude-1.0"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-1.0"`. ~~Literal["claude-1.0"]~~                          |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Claude-1-2.v1 {id="claude-1-2"}
+
+Anthropic's `claude-1.2` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Claude-1-2.v1 "
+> name = "claude-1.2"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-1.2"`. ~~Literal["claude-1.2"]~~                          |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Claude-1-3.v1 {id="claude-1-3"}
+
+Anthropic's `claude-1.3` model family.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Claude-1-3.v1 "
+> name = "claude-1.3"
+> config = {"temperature": 0.3}
+> ```
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-1.3"`. ~~Literal["claude-1.3", "claude-1.3-100k"]~~       |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+#### spacy.Dolly.v1 {id="dolly"}
+
+To use this model, ideally you have a GPU enabled and have installed
+`transformers`, `torch` and CUDA in your virtual environment. This allows you to
+have the setting `device=cuda:0` in your config, which ensures that the model is
+loaded entirely on the GPU (and fails otherwise).
+
+You can do so with
+
+```shell
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
+```
+
+If you don't have access to a GPU, you can install `accelerate` and
+set`device_map=auto` instead, but be aware that this may result in some layers
+getting distributed to the CPU or even the hard drive, which may ultimately
+result in extremely slow queries.
+
+```shell
+python -m pip install "accelerate>=0.16.0,<1.0"
+```
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Dolly.v1"
+> name = "dolly-v2-3b"
+> ```
+
+| Argument      | Description                                                                                                                                    |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`        | The name of a Dolly model that is supported (e. g. "dolly-v2-3b" or "dolly-v2-12b"). ~~Literal["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"]~~ |
+| `config_init` | Further configuration passed on to the construction of the model with `transformers.pipeline()`. Defaults to `{}`. ~~Dict[str, Any]~~          |
+| `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                                        |
+
+Supported models (see the
+[Databricks models page](https://huggingface.co/databricks) on Hugging Face for
+details):
+
+- `"databricks/dolly-v2-3b"`
+- `"databricks/dolly-v2-7b"`
+- `"databricks/dolly-v2-12b"`
+
+Note that Hugging Face will download this model the first time you use it - you
+can
+[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+
+#### spacy.Llama2.v1 {id="llama2"}
+
+To use this model, ideally you have a GPU enabled and have installed
+`transformers`, `torch` and CUDA in your virtual environment. This allows you to
+have the setting `device=cuda:0` in your config, which ensures that the model is
+loaded entirely on the GPU (and fails otherwise).
+
+You can do so with
+
+```shell
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
+```
+
+If you don't have access to a GPU, you can install `accelerate` and
+set`device_map=auto` instead, but be aware that this may result in some layers
+getting distributed to the CPU or even the hard drive, which may ultimately
+result in extremely slow queries.
+
+```shell
+python -m pip install "accelerate>=0.16.0,<1.0"
+```
+
+Note that the chat models variants of Llama 2 are currently not supported. This
+is because they need a particular prompting setup and don't add any discernible
+benefits in the use case of `spacy-llm` (i. e. no interactive chat) compared the
+completion model variants.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Llama2.v1"
+> name = "llama2-7b-hf"
+> ```
+
+| Argument      | Description                                                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`        | The name of a Llama 2 model variant that is supported. Defaults to `"Llama-2-7b-hf"`. ~~Literal["Llama-2-7b-hf", "Llama-2-13b-hf", "Llama-2-70b-hf"]~~ |
+| `config_init` | Further configuration passed on to the construction of the model with `transformers.pipeline()`. Defaults to `{}`. ~~Dict[str, Any]~~                  |
+| `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                                                |
+
+Note that Hugging Face will download this model the first time you use it - you
+can
+[define the cache directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+
+#### spacy.Falcon.v1 {id="falcon"}
+
+To use this model, ideally you have a GPU enabled and have installed
+`transformers`, `torch` and CUDA in your virtual environment. This allows you to
+have the setting `device=cuda:0` in your config, which ensures that the model is
+loaded entirely on the GPU (and fails otherwise).
+
+You can do so with
+
+```shell
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
+```
+
+If you don't have access to a GPU, you can install `accelerate` and
+set`device_map=auto` instead, but be aware that this may result in some layers
+getting distributed to the CPU or even the hard drive, which may ultimately
+result in extremely slow queries.
+
+```shell
+python -m pip install "accelerate>=0.16.0,<1.0"
+```
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Falcon.v1"
+> name = "falcon-7b"
+> ```
+
+| Argument      | Description                                                                                                                                                              |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`        | The name of a Falcon model variant that is supported. Defaults to `"7b-instruct"`. ~~Literal["falcon-rw-1b", "falcon-7b", "falcon-7b-instruct", "falcon-40b-instruct"]~~ |
+| `config_init` | Further configuration passed on to the construction of the model with `transformers.pipeline()`. Defaults to `{}`. ~~Dict[str, Any]~~                                    |
+| `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                                                                  |
+
+Note that Hugging Face will download this model the first time you use it - you
+can
+[define the cache directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+
+#### spacy.StableLM.v1 {id="stablelm"}
+
+To use this model, ideally you have a GPU enabled and have installed
+`transformers`, `torch` and CUDA in your virtual environment.
+
+You can do so with
+
+```shell
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
+```
+
+If you don't have access to a GPU, you can install `accelerate` and
+set`device_map=auto` instead, but be aware that this may result in some layers
+getting distributed to the CPU or even the hard drive, which may ultimately
+result in extremely slow queries.
+
+```shell
+python -m pip install "accelerate>=0.16.0,<1.0"
+```
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.StableLM.v1"
+> name = "stablelm-tuned-alpha-7b"
+> ```
+
+| Argument      | Description                                                                                                                                                                                             |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`        | The name of a StableLM model that is supported (e. g. "stablelm-tuned-alpha-7b"). ~~Literal["stablelm-base-alpha-3b", "stablelm-base-alpha-7b", "stablelm-tuned-alpha-3b", "stablelm-tuned-alpha-7b"]~~ |
+| `config_init` | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. Defaults to `{}`. ~~Dict[str, Any]~~                                       |
+| `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                                                                                                 |
+
+See the
+[Stability AI StableLM GitHub repo](https://github.com/Stability-AI/StableLM/#stablelm-alpha)
+for details.
+
+Note that Hugging Face will download this model the first time you use it - you
+can
+[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+
+#### spacy.OpenLLaMA.v1 {id="openllama"}
+
+To use this model, ideally you have a GPU enabled and have installed
+
+- `transformers[sentencepiece]`
+- `torch`
+- CUDA in your virtual environment.
+
+You can do so with
+
+```shell
+python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
+```
+
+If you don't have access to a GPU, you can install `accelerate` and
+set`device_map=auto` instead, but be aware that this may result in some layers
+getting distributed to the CPU or even the hard drive, which may ultimately
+result in extremely slow queries.
+
+```shell
+python -m pip install "accelerate>=0.16.0,<1.0"
+```
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.OpenLLaMA.v1"
+> name = "open_llama_3b"
+> ```
+
+| Argument      | Description                                                                                                                                                       |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`        | The name of a OpenLLaMA model that is supported. ~~Literal["open_llama_3b", "open_llama_7b", "open_llama_7b_v2", "open_llama_13b"]~~                              |
+| `config_init` | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. Defaults to `{}`. ~~Dict[str, Any]~~ |
+| `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                                                           |
+
+See the
+[OpenLM Research OpenLLaMA GitHub repo](https://github.com/openlm-research/open_llama)
+for details.
+
+Note that Hugging Face will download this model the first time you use it - you
+can
+[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`.
+
+#### LangChain models {id="langchain-models"}
+
+To use [LangChain](https://github.com/hwchase17/langchain) for the API retrieval
+part, make sure you have installed it first:
+
+```shell
+python -m pip install "langchain==0.0.191"
+# Or install with spacy-llm directly
+python -m pip install "spacy-llm[extras]"
+```
+
+Note that LangChain currently only supports Python 3.9 and beyond.
+
+LangChain models in `spacy-llm` work slightly differently. `langchain`'s models
+are parsed automatically, each LLM class in `langchain` has one entry in
+`spacy-llm`'s registry. As `langchain`'s design has one class per API and not
+per model, this results in registry entries like `langchain.OpenAI.v1` - i. e.
+there is one registry entry per API and not per model (family), as for the REST-
+and HuggingFace-based entries.
+
+The name of the model to be used has to be passed in via the `name` attribute.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "langchain.OpenAI.v1"
+> name = "gpt-3.5-turbo"
+> query = {"@llm_queries": "spacy.CallLangChain.v1"}
+> config = {"temperature": 0.3}
+> ```
+
+| Argument | Description                                                                                                                                                           |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`   | The name of a mdodel supported by LangChain for this API. ~~str~~                                                                                                     |
+| `config` | Configuration passed on to the LangChain model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                                  |
+| `query`  | Function that executes the prompts. If `None`, defaults to `spacy.CallLangChain.v1`. ~~Optional[Callable[["langchain.llms.BaseLLM", Iterable[Any]], Iterable[Any]]]~~ |
+
+The default `query` (`spacy.CallLangChain.v1`) executes the prompts by running
+`model(text)` for each given textual prompt.
+
+### Cache {id="cache"}
+
+Interacting with LLMs, either through an external API or a local instance, is
+costly. Since developing an NLP pipeline generally means a lot of exploration
+and prototyping, `spacy-llm` implements a built-in cache to avoid reprocessing
+the same documents at each run that keeps batches of documents stored on disk.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.cache]
+> @llm_misc = "spacy.BatchCache.v1"
+> path = "path/to/cache"
+> batch_size = 64
+> max_batches_in_mem = 4
+> ```
+
+| Argument             | Description                                                                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`               | Cache directory. If `None`, no caching is performed, and this component will act as a NoOp. Defaults to `None`. ~~Optional[Union[str, Path]]~~   |
+| `batch_size`         | Number of docs in one batch (file). Once a batch is full, it will be peristed to disk. Defaults to 64. ~~int~~                                   |
+| `max_batches_in_mem` | Max. number of batches to hold in memory. Allows you to limit the effect on your memory if you're handling a lot of docs. Defaults to 4. ~~int~~ |
+
+When retrieving a document, the `BatchCache` will first figure out what batch
+the document belongs to. If the batch isn't in memory it will try to load the
+batch from disk and then move it into memory.
+
+Note that since the cache is generated by a registered function, you can also
+provide your own registered function returning your own cache implementation. If
+you wish to do so, ensure that your cache object adheres to the `Protocol`
+defined in `spacy_llm.ty.Cache`.
+
+### Various functions {id="various-functions"}
+
+#### spacy.FewShotReader.v1 {id="fewshotreader-v1"}
+
+This function is registered in spaCy's `misc` registry, and reads in examples
+from a `.yml`, `.yaml`, `.json` or `.jsonl` file. It uses
+[`srsly`](https://github.com/explosion/srsly) to read in these files and parses
+them depending on the file extension.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task.examples]
+> @misc = "spacy.FewShotReader.v1"
+> path = "ner_examples.yml"
+> ```
+
+| Argument | Description                                                                                     |
+| -------- | ----------------------------------------------------------------------------------------------- |
+| `path`   | Path to an examples file with suffix `.yml`, `.yaml`, `.json` or `.jsonl`. ~~Union[str, Path]~~ |
+
+#### spacy.FileReader.v1 {id="filereader-v1"}
+
+This function is registered in spaCy's `misc` registry, and reads a file
+provided to the `path` to return a `str` representation of its contents. This
+function is typically used to read
+[Jinja](https://jinja.palletsprojects.com/en/3.1.x/) files containing the prompt
+template.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task.template]
+> @misc = "spacy.FileReader.v1"
+> path = "ner_template.jinja2"
+> ```
+
+| Argument | Description                                       |
+| -------- | ------------------------------------------------- |
+| `path`   | Path to the file to be read. ~~Union[str, Path]~~ |
+
+#### Normalizer functions {id="normalizer-functions"}
+
+These functions provide simple normalizations for string comparisons, e.g.
+between a list of specified labels and a label given in the raw text of the LLM
+response. They are registered in spaCy's `misc` registry and have the signature
+`Callable[[str], str]`.
+
+- `spacy.StripNormalizer.v1`: only apply `text.strip()`
+- `spacy.LowercaseNormalizer.v1`: applies `text.strip().lower()` to compare
+  strings in a case-insensitive way.
