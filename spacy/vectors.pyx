@@ -26,7 +26,7 @@ from .errors import Errors, Warnings
 from .strings import get_string_id
 
 if TYPE_CHECKING:
-    from .vocab import Vocab  # noqa: F401
+    from .vocab import Vocab  # noqa: F401  # no-cython-lint
 
 
 def unpickle_vectors(bytes_data):
