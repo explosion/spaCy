@@ -45,6 +45,12 @@ jobs:
         run: |
           python -m pip install flake8==5.0.4
           python -m flake8 spacy --count --select=E901,E999,F821,F822,F823,W605 --show-source --statistics
+      - name: cython-lint
+        run: |
+          python -m pip install cython-lint -c requirements.txt
+          # E501: line too log, W291: trailing whitespace, E266: too many leading '#' for block comment
+          cython-lint spacy --ignore E501,W291,E266
+
   tests:
     name: Test
     needs: Validate

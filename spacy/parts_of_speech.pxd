@@ -8,7 +8,7 @@ cpdef enum univ_pos_t:
     ADV = symbols.ADV
     AUX = symbols.AUX
     CONJ = symbols.CONJ
-    CCONJ  = symbols.CCONJ  # U20
+    CCONJ = symbols.CCONJ  # U20
     DET = symbols.DET
     INTJ = symbols.INTJ
     NOUN = symbols.NOUN

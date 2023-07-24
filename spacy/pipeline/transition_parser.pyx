@@ -6,15 +6,9 @@ from typing import Dict, Iterable, List, Optional, Tuple
 cimport numpy as np
 from cymem.cymem cimport Pool
 
-from itertools import islice
-
-from libc.stdlib cimport calloc, free
-from libc.string cimport memcpy, memset
-from libcpp.vector cimport vector
-
 import contextlib
 import random
-import warnings
+from itertools import islice
 
 import numpy
 import numpy.random
@@ -23,43 +17,35 @@ from thinc.api import (
     CupyOps,
     NumpyOps,
     Optimizer,
-    chain,
     get_array_module,
     get_ops,
     set_dropout_rate,
-    softmax_activation,
-    use_ops,
 )
-from thinc.legacy import LegacySequenceCategoricalCrossentropy
 from thinc.types import Floats2d, Ints1d
 
 from ..ml.tb_framework import TransitionModelInputs
 
 from ..tokens.doc cimport Doc
-from ._parser_internals cimport _beam_utils
-from ._parser_internals.search cimport Beam
-from ._parser_internals.stateclass cimport StateC, StateClass
-from .trainable_pipe cimport TrainablePipe
-
-from ._parser_internals import _beam_utils
-
 from ..typedefs cimport weight_t
 from ..vocab cimport Vocab
+from ._parser_internals cimport _beam_utils
+from ._parser_internals.stateclass cimport StateC, StateClass
 from ._parser_internals.transition_system cimport Transition, TransitionSystem
+from .trainable_pipe cimport TrainablePipe
 
 from .. import util
-from ..errors import Errors, Warnings
+from ..errors import Errors
 from ..training import (
     validate_distillation_examples,
     validate_examples,
     validate_get_examples,
 )
+from ._parser_internals import _beam_utils
 
 
 # TODO: Remove when we switch to Cython 3.
 cdef extern from "<algorithm>" namespace "std" nogil:
     bint equal[InputIt1, InputIt2](InputIt1 first1, InputIt1 last1, InputIt2 first2) except +
-
 
 NUMPY_OPS = NumpyOps()
 
@@ -236,12 +222,13 @@ class Parser(TrainablePipe):
         raise NotImplementedError
 
     def distill(self,
-               teacher_pipe: Optional[TrainablePipe],
-               examples: Iterable["Example"],
-               *,
-               drop: float=0.0,
-               sgd: Optional[Optimizer]=None,
-               losses: Optional[Dict[str, float]]=None):
+                teacher_pipe: Optional[TrainablePipe],
+                examples: Iterable["Example"],
+                *,
+                drop: float = 0.0,
+                sgd: Optional[Optimizer] = None,
+                losses: Optional[Dict[str, float]] = None
+                ):
         """Train a pipe (the student) on the predictions of another pipe
         (the teacher). The student is trained on the transition probabilities
         of the teacher.
@@ -257,7 +244,7 @@ class Parser(TrainablePipe):
         losses (Optional[Dict[str, float]]): Optional record of loss during
             distillation.
         RETURNS: The updated losses dictionary.
-        
+
         DOCS: https://spacy.io/api/dependencyparser#distill
         """
         if teacher_pipe is None:
@@ -291,11 +278,13 @@ class Parser(TrainablePipe):
         # teacher's distributions.
 
         student_inputs = TransitionModelInputs(docs=student_docs,
-            states=[state.copy() for state in states], moves=self.moves, max_moves=max_moves)
+                                               states=[state.copy() for state in states],
+                                               moves=self.moves,
+                                               max_moves=max_moves)
         (student_states, student_scores), backprop_scores = self.model.begin_update(student_inputs)
         actions = _states_diff_to_actions(states, student_states)
         teacher_inputs = TransitionModelInputs(docs=[eg.reference for eg in examples],
-            states=states, moves=teacher_pipe.moves, actions=actions)
+                                               states=states, moves=teacher_pipe.moves, actions=actions)
         (_, teacher_scores) = teacher_pipe.model.predict(teacher_inputs)
 
         loss, d_scores = self.get_teacher_student_loss(teacher_scores, student_scores)
@@ -308,10 +297,9 @@ class Parser(TrainablePipe):
 
         return losses
 
-
     def get_teacher_student_loss(
-        self, teacher_scores: List[Floats2d], student_scores: List[Floats2d],
-        normalize: bool=False,
+            self, teacher_scores: List[Floats2d], student_scores: List[Floats2d],
+            normalize: bool = False,
     ) -> Tuple[float, List[Floats2d]]:
         """Calculate the loss and its gradient for a batch of student
         scores, relative to teacher scores.
@@ -320,7 +308,7 @@ class Parser(TrainablePipe):
         student_scores: Scores representing the student model's predictions.
 
         RETURNS (Tuple[float, float]): The loss and the gradient.
-        
+
         DOCS: https://spacy.io/api/dependencyparser#get_teacher_student_loss
         """
 
@@ -334,9 +322,9 @@ class Parser(TrainablePipe):
         # ourselves.
 
         teacher_scores = self.model.ops.softmax(self.model.ops.xp.vstack(teacher_scores),
-            axis=-1, inplace=True)
+                                                axis=-1, inplace=True)
         student_scores = self.model.ops.softmax(self.model.ops.xp.vstack(student_scores),
-            axis=-1, inplace=True)
+                                                axis=-1, inplace=True)
 
         assert teacher_scores.shape == student_scores.shape
 
@@ -384,7 +372,6 @@ class Parser(TrainablePipe):
             except Exception as e:
                 error_handler(self.name, self, batch_in_order, e)
 
-
     def predict(self, docs):
         if isinstance(docs, Doc):
             docs = [docs]
@@ -414,7 +401,6 @@ class Parser(TrainablePipe):
 
     def set_annotations(self, docs, states_or_beams):
         cdef StateClass state
-        cdef Beam beam
         cdef Doc doc
         states = _beam_utils.collect_states(states_or_beams, docs)
         for i, (state, doc) in enumerate(zip(states, docs)):
@@ -423,7 +409,6 @@ class Parser(TrainablePipe):
                 hook(doc)
 
     def update(self, examples, *, drop=0., sgd=None, losses=None):
-        cdef StateClass state
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.)
@@ -453,13 +438,15 @@ class Parser(TrainablePipe):
         else:
             init_states, gold_states, _ = self.moves.init_gold_batch(examples)
 
-        inputs = TransitionModelInputs(docs=docs, moves=self.moves,
-            max_moves=max_moves, states=[state.copy() for state in init_states])
+        inputs = TransitionModelInputs(docs=docs,
+                                       moves=self.moves,
+                                       max_moves=max_moves,
+                                       states=[state.copy() for state in init_states])
         (pred_states, scores), backprop_scores = self.model.begin_update(inputs)
         if sum(s.shape[0] for s in scores) == 0:
             return losses
         d_scores = self.get_loss((gold_states, init_states, pred_states, scores),
-            examples, max_moves)
+                                 examples, max_moves)
         backprop_scores((pred_states, d_scores))
         if sgd not in (None, False):
             self.finish_update(sgd)
@@ -500,9 +487,7 @@ class Parser(TrainablePipe):
         cdef TransitionSystem moves = self.moves
         cdef StateClass state
         cdef int clas
-        cdef int nF = self.model.get_dim("nF")
         cdef int nO = moves.n_moves
-        cdef int nS = sum([len(history) for history in histories])
         cdef Pool mem = Pool()
         cdef np.ndarray costs_i
         is_valid = <int*>mem.alloc(nO, sizeof(int))
@@ -569,8 +554,8 @@ class Parser(TrainablePipe):
 
         return losses
 
-    def update_beam(self, examples, *, beam_width,
-            drop=0., sgd=None, losses=None, beam_density=0.0):
+    def update_beam(self, examples, *, beam_width, drop=0.,
+                    sgd=None, losses=None, beam_density=0.0):
         raise NotImplementedError
 
     def set_output(self, nO):
@@ -695,9 +680,10 @@ class Parser(TrainablePipe):
             return states
 
         # Parse the states that are too long with the teacher's parsing model.
-        teacher_inputs = TransitionModelInputs(docs=docs, moves=moves,
-            states=[state.copy() for state in to_cut])
-        (teacher_states, _ ) = teacher_pipe.model.predict(teacher_inputs)
+        teacher_inputs = TransitionModelInputs(docs=docs,
+                                               moves=moves,
+                                               states=[state.copy() for state in to_cut])
+        (teacher_states, _) = teacher_pipe.model.predict(teacher_inputs)
 
         # Step through the teacher's actions and store every state after
         # each multiple of max_length.
@@ -795,6 +781,7 @@ def _states_to_actions(states: List[StateClass]) -> List[Ints1d]:
 
     return actions
 
+
 def _states_diff_to_actions(
     before_states: List[StateClass],
     after_states: List[StateClass]
@@ -815,8 +802,9 @@ def _states_diff_to_actions(
         c_state_before = before_state.c
         c_state_after = after_state.c
 
-        assert equal(c_state_before.history.begin(), c_state_before.history.end(),
-            c_state_after.history.begin())
+        assert equal(c_state_before.history.begin(),
+                     c_state_before.history.end(),
+                     c_state_after.history.begin())
 
     actions = []
     while True:

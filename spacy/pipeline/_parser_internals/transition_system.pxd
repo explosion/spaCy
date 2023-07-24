@@ -20,11 +20,15 @@ cdef struct Transition:
     int (*do)(StateC* state, attr_t label) nogil
 
 
-ctypedef weight_t (*get_cost_func_t)(const StateC* state, const void* gold,
-        attr_tlabel) nogil
-ctypedef weight_t (*move_cost_func_t)(const StateC* state, const void* gold) nogil
-ctypedef weight_t (*label_cost_func_t)(const StateC* state, const void*
-        gold, attr_t label) nogil
+ctypedef weight_t (*get_cost_func_t)(
+    const StateC* state, const void* gold, attr_tlabel
+) nogil
+ctypedef weight_t (*move_cost_func_t)(
+        const StateC* state, const void* gold
+) nogil
+ctypedef weight_t (*label_cost_func_t)(
+    const StateC* state, const void* gold, attr_t label
+) nogil
 
 ctypedef int (*do_func_t)(StateC* state, attr_t label) nogil
 
@@ -56,7 +60,7 @@ cdef class TransitionSystem:
 
 
 cdef void c_apply_actions(TransitionSystem moves, StateC** states, const int* actions,
-    int batch_size) nogil
+                          int batch_size) nogil
 
 cdef void c_transition_batch(TransitionSystem moves, StateC** states, const float* scores,
-        int nr_class, int batch_size) nogil
+                             int nr_class, int batch_size) nogil

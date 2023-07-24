@@ -57,7 +57,6 @@ cdef class Beam:
     cdef int advance(self, trans_func_t transition_func, hash_func_t hash_func,
                      void* extra_args) except -1
     cdef int check_done(self, finish_func_t finish_func, void* extra_args) except -1
- 
 
     cdef inline void set_cell(self, int i, int j, weight_t score, int is_valid, weight_t cost) nogil:
         self.scores[i][j] = score

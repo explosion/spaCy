@@ -11,6 +11,7 @@ def test_build_dependencies():
         "flake8",
         "hypothesis",
         "pre-commit",
+        "cython-lint",
         "black",
         "isort",
         "mypy",

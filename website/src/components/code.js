@@ -13,6 +13,8 @@ import 'prismjs/components/prism-json.min.js'
 import 'prismjs/components/prism-markdown.min.js'
 import 'prismjs/components/prism-python.min.js'
 import 'prismjs/components/prism-yaml.min.js'
+import 'prismjs/components/prism-docker.min.js'
+import 'prismjs/components/prism-r.min.js'
 
 import { isString } from './util'
 import Link, { OptionalLink } from './link'
@@ -172,7 +174,7 @@ const convertLine = ({ line, prompt, lang }) => {
         return handlePromot({ lineFlat, prompt })
     }
 
-    return lang === 'none' || !lineFlat ? (
+    return lang === 'none' || !lineFlat || !(lang in Prism.languages) ? (
         lineFlat
     ) : (
         <span

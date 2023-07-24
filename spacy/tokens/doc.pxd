@@ -31,7 +31,7 @@ cdef int token_by_start(const TokenC* tokens, int length, int start_char) except
 cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 
 
-cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
+cdef int [:, :] _get_lca_matrix(Doc, int start, int end)
 
 
 cdef class Doc:
@@ -60,7 +60,6 @@ cdef class Doc:
 
     cdef int length
     cdef int max_length
-
 
     cdef public object noun_chunks_iterator
 

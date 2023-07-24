@@ -1,5 +1,4 @@
 cimport numpy as np
-from libc.string cimport memset
 
 from ..errors import Errors
 from ..morphology import Morphology
@@ -94,4 +93,3 @@ cdef class MorphAnalysis:
 
     def __repr__(self):
         return self.to_json()
-

@@ -1,11 +1,8 @@
 # cython: profile=True, experimental_cpp_class_def=True, cdivision=True, infer_types=True
 cimport cython
-from libc.math cimport exp, log
-from libc.string cimport memcpy, memset
-
-import math
-
 from cymem.cymem cimport Pool
+from libc.math cimport exp
+from libc.string cimport memcpy, memset
 from preshed.maps cimport PreshMap
 
 
@@ -70,7 +67,7 @@ cdef class Beam:
             self.costs[i][j] = costs[j]
 
     cdef int set_table(self, weight_t** scores, int** is_valid, weight_t** costs) except -1:
-        cdef int i, j
+        cdef int i
         for i in range(self.width):
             memcpy(self.scores[i], scores[i], sizeof(weight_t) * self.nr_class)
             memcpy(self.is_valid[i], is_valid[i], sizeof(bint) * self.nr_class)
@@ -176,7 +173,6 @@ cdef class Beam:
         beam-width, and n is the number of classes.
         """
         cdef Entry entry
-        cdef weight_t score
         cdef _State* s
         cdef int i, j, move_id
         assert self.size >= 1
@@ -269,7 +265,7 @@ cdef class MaxViolation:
                 # This can happen from non-monotonic actions
                 # If we find a better gold analysis this way, be sure to keep it.
                 elif pred._states[i].loss <= 0 \
-                and tuple(pred.histories[i]) not in seen_golds:
+                        and tuple(pred.histories[i]) not in seen_golds:
                     g_scores.append(pred._states[i].score)
                     g_hist.append(list(pred.histories[i]))
             for i in range(gold.size):

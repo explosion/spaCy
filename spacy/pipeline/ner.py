@@ -1,12 +1,12 @@
 # cython: infer_types=True, profile=True, binding=True
 from collections import defaultdict
-from typing import Callable, Iterable, Optional
+from typing import Callable, Optional
 
 from thinc.api import Config, Model
 
 from ..language import Language
-from ..scorer import PRFScore, get_ner_prf
-from ..training import remove_bilu_prefix, validate_examples
+from ..scorer import get_ner_prf
+from ..training import remove_bilu_prefix
 from ..util import registry
 from ._parser_internals.ner import BiluoPushDown
 from ._parser_internals.transition_system import TransitionSystem

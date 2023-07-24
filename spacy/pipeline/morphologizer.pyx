@@ -1,11 +1,9 @@
 # cython: infer_types=True, profile=True, binding=True
 from itertools import islice
-from typing import Callable, Dict, Iterable, List, Optional, Union
+from typing import Callable, Dict, Iterable, Optional, Union
 
-import srsly
 from thinc.api import Config, Model
 from thinc.legacy import LegacySequenceCategoricalCrossentropy
-from thinc.types import Floats2d, Ints1d
 
 from ..morphology cimport Morphology
 from ..tokens.doc cimport Doc
@@ -16,10 +14,8 @@ from ..errors import Errors
 from ..language import Language
 from ..parts_of_speech import IDS as POS_IDS
 from ..scorer import Scorer
-from ..symbols import POS
 from ..training import validate_examples, validate_get_examples
 from ..util import registry
-from .pipe import deserialize_config
 from .tagger import ActivationsT, Tagger
 
 # See #9050
@@ -86,8 +82,11 @@ def morphologizer_score(examples, **kwargs):
     results = {}
     results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
     results.update(Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs))
-    results.update(Scorer.score_token_attr_per_feat(examples,
-        "morph", getter=morph_key_getter, **kwargs))
+    results.update(
+        Scorer.score_token_attr_per_feat(
+            examples, "morph", getter=morph_key_getter, **kwargs
+        )
+    )
     return results
 
 
@@ -249,7 +248,6 @@ class Morphologizer(Tagger):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
-        cdef Vocab vocab = self.vocab
         cdef bint overwrite = self.cfg["overwrite"]
         cdef bint extend = self.cfg["extend"]
 

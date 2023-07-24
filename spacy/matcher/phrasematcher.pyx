@@ -2,16 +2,14 @@
 from collections import defaultdict
 from typing import List
 
-from libc.stdint cimport uintptr_t
 from preshed.maps cimport map_clear, map_get, map_init, map_iter, map_set
 
 import warnings
 
-from ..attrs cimport DEP, LEMMA, MORPH, ORTH, POS, TAG
+from ..attrs cimport DEP, LEMMA, MORPH, POS, TAG
 
 from ..attrs import IDS
 
-from ..structs cimport TokenC
 from ..tokens.span cimport Span
 from ..tokens.token cimport Token
 from ..typedefs cimport attr_t
@@ -160,7 +158,6 @@ cdef class PhraseMatcher:
         del self._callbacks[key]
         del self._docs[key]
 
-
     def _add_from_arrays(self, key, specs, *, on_match=None):
         """Add a preprocessed list of specs, with an optional callback.
 
@@ -195,7 +192,6 @@ cdef class PhraseMatcher:
                 map_set(self.mem, current_node, self._terminal_hash, internal_node)
                 result = internal_node
             map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
-
 
     def add(self, key, docs, *, on_match=None):
         """Add a match-rule to the phrase-matcher. A match-rule consists of: an ID

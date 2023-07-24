@@ -1,0 +1,143 @@
+---
+title: What's New in v3.6
+teaser: New features and how to upgrade
+menu:
+  - ['New Features', 'features']
+  - ['Upgrading Notes', 'upgrading']
+---
+
+## New features {id="features",hidden="true"}
+
+spaCy v3.6 adds the new [`SpanFinder`](/api/spanfinder) component to the core
+spaCy library and new trained pipelines for Slovenian.
+
+### SpanFinder {id="spanfinder"}
+
+The [`SpanFinder`](/api/spanfinder) component identifies potentially
+overlapping, unlabeled spans by identifying span start and end tokens. It is
+intended for use in combination with a component like
+[`SpanCategorizer`](/api/spancategorizer) that may further filter or label the
+spans. See our
+[Spancat blog post](https://explosion.ai/blog/spancat#span-finder) for a more
+detailed introduction to the span finder.
+
+To train a pipeline with `span_finder` + `spancat`, remember to add
+`span_finder` (and its `tok2vec` or `transformer` if required) to
+`[training.annotating_components]` so that the `spancat` component can be
+trained directly from its predictions:
+
+```ini
+[nlp]
+pipeline = ["tok2vec","span_finder","spancat"]
+
+[training]
+annotating_components = ["tok2vec","span_finder"]
+```
+
+In practice it can be helpful to initially train the `span_finder` separately
+before [sourcing](/usage/processing-pipelines#sourced-components) it (along with
+its `tok2vec`) into the `spancat` pipeline for further training. Otherwise the
+memory usage can spike for `spancat` in the first few training steps if the
+`span_finder` makes a large number of predictions.
+
+### Additional features and improvements {id="additional-features-and-improvements"}
+
+- Language updates:
+  - Add initial support for Malay.
+  - Update Latin defaults to support noun chunks, update lexical/tokenizer
+    settings and add example sentences.
+- Support `spancat_singlelabel` in `spacy debug data` CLI.
+- Add `doc.spans` rendering to `spacy evaluate` CLI displaCy output.
+- Support custom token/lexeme attribute for vectors.
+- Add option to return scores separately keyed by component name with
+  `spacy evaluate --per-component`, `Language.evaluate(per_component=True)` and
+  `Scorer.score(per_component=True)`. This is useful when the pipeline contains
+  more than one of the same component like `textcat` that may have overlapping
+  scores keys.
+- Typing updates for `PhraseMatcher` and `SpanGroup`.
+
+## Trained pipelines {id="pipelines"}
+
+### New trained pipelines {id="new-pipelines"}
+
+v3.6 introduces new pipelines for Slovenian, which use the trainable lemmatizer
+and [floret vectors](https://github.com/explosion/floret).
+
+| Package                                           | UPOS | Parser LAS | NER F |
+| ------------------------------------------------- | ---: | ---------: | ----: |
+| [`sl_core_news_sm`](/models/sl#sl_core_news_sm)   | 96.9 |       82.1 |  62.9 |
+| [`sl_core_news_md`](/models/sl#sl_core_news_md)   | 97.6 |       84.3 |  73.5 |
+| [`sl_core_news_lg`](/models/sl#sl_core_news_lg)   | 97.7 |       84.3 |  79.0 |
+| [`sl_core_news_trf`](/models/sl#sl_core_news_trf) | 99.0 |       91.7 |  90.0 |
+
+### Pipeline updates {id="pipeline-updates"}
+
+The English pipelines have been updated to improve handling of contractions with
+various apostrophes and to lemmatize "get" as a passive auxiliary.
+
+The Danish pipeline `da_core_news_trf` has been updated to use
+[`vesteinn/DanskBERT`](https://huggingface.co/vesteinn/DanskBERT) with
+performance improvements across the board.
+
+## Notes about upgrading from v3.5 {id="upgrading"}
+
+### SpanGroup spans are now required to be from the same doc {id="spangroup-spans"}
+
+When initializing a `SpanGroup`, there is a new check to verify that all added
+spans refer to the current doc. Without this check, it was possible to run into
+string store or other errors.
+
+One place this may crop up is when creating `Example` objects for training with
+custom spans:
+
+```diff
+     doc = Doc(nlp.vocab, words=tokens)  # predicted doc
+     example = Example.from_dict(doc, {"ner": iob_tags})
+     # use the reference doc when creating reference spans
+-    span = Span(doc, 0, 5, "ORG")
++    span = Span(example.reference, 0, 5, "ORG")
+     example.reference.spans[spans_key] = [span]
+```
+
+### Pipeline package version compatibility {id="version-compat"}
+
+> #### Using legacy implementations
+>
+> In spaCy v3, you'll still be able to load and reference legacy implementations
+> via [`spacy-legacy`](https://github.com/explosion/spacy-legacy), even if the
+> components or architectures change and newer versions are available in the
+> core library.
+
+When you're loading a pipeline package trained with an earlier version of spaCy
+v3, you will see a warning telling you that the pipeline may be incompatible.
+This doesn't necessarily have to be true, but we recommend running your
+pipelines against your test suite or evaluation data to make sure there are no
+unexpected results.
+
+If you're using one of the [trained pipelines](/models) we provide, you should
+run [`spacy download`](/api/cli#download) to update to the latest version. To
+see an overview of all installed packages and their compatibility, you can run
+[`spacy validate`](/api/cli#validate).
+
+If you've trained your own custom pipeline and you've confirmed that it's still
+working as expected, you can update the spaCy version requirements in the
+[`meta.json`](/api/data-formats#meta):
+
+```diff
+- "spacy_version": ">=3.5.0,<3.6.0",
++ "spacy_version": ">=3.5.0,<3.7.0",
+```
+
+### Updating v3.5 configs
+
+To update a config from spaCy v3.5 with the new v3.6 settings, run
+[`init fill-config`](/api/cli#init-fill-config):
+
+```cli
+$ python -m spacy init fill-config config-v3.5.cfg config-v3.6.cfg
+```
+
+In many cases ([`spacy train`](/api/cli#train),
+[`spacy.load`](/api/top-level#spacy.load)), the new defaults will be filled in
+automatically, but you'll need to fill in the new settings to run
+[`debug config`](/api/cli#debug) and [`debug data`](/api/cli#debug-data).

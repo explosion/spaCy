@@ -1,11 +1,9 @@
 # cython: infer_types=True, profile=True, binding=True
 from itertools import islice
-from typing import Callable, Dict, Iterable, List, Optional, Union
+from typing import Callable, Iterable, Optional
 
-import srsly
 from thinc.api import Config, Model
 from thinc.legacy import LegacySequenceCategoricalCrossentropy
-from thinc.types import Floats2d, Ints1d
 
 from ..tokens.doc cimport Doc
 
