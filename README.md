@@ -6,23 +6,20 @@ spaCy is a library for **advanced Natural Language Processing** in Python and
 Cython. It's built on the very latest research, and was designed from day one to
 be used in real products.
 
-spaCy comes with
-[pretrained pipelines](https://spacy.io/models) and
-currently supports tokenization and training for **70+ languages**. It features
-state-of-the-art speed and **neural network models** for tagging,
-parsing, **named entity recognition**, **text classification** and more,
-multi-task learning with pretrained **transformers** like BERT, as well as a
+spaCy comes with [pretrained pipelines](https://spacy.io/models) and currently
+supports tokenization and training for **70+ languages**. It features
+state-of-the-art speed and **neural network models** for tagging, parsing,
+**named entity recognition**, **text classification** and more, multi-task
+learning with pretrained **transformers** like BERT, as well as a
 production-ready [**training system**](https://spacy.io/usage/training) and easy
 model packaging, deployment and workflow management. spaCy is commercial
-open-source software, released under the [MIT license](https://github.com/explosion/spaCy/blob/master/LICENSE).
+open-source software, released under the
+[MIT license](https://github.com/explosion/spaCy/blob/master/LICENSE).
 
-💥 **We'd love to hear more about your experience with spaCy!**
-[Fill out our survey here.](https://form.typeform.com/to/aMel9q9f)
-
-💫 **Version 3.5 out now!**
+💫 **Version 3.6 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
-[![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
+[![tests](https://github.com/explosion/spaCy/actions/workflows/tests.yml/badge.svg)](https://github.com/explosion/spaCy/actions/workflows/tests.yml)
 [![Current Release Version](https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square&logo=github)](https://github.com/explosion/spaCy/releases)
 [![pypi Version](https://img.shields.io/pypi/v/spacy.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy/)
 [![conda Version](https://img.shields.io/conda/vn/conda-forge/spacy.svg?style=flat-square&logo=conda-forge&logoColor=white)](https://anaconda.org/conda-forge/spacy)
@@ -35,22 +32,22 @@ open-source software, released under the [MIT license](https://github.com/explos
 
 ## 📖 Documentation
 
-| Documentation                 |                                                                        |
-| ----------------------------- | ---------------------------------------------------------------------- |
-| ⭐️ **[spaCy 101]**           | New to spaCy? Here's everything you need to know!                      |
-| 📚 **[Usage Guides]**         | How to use spaCy and its features.                                     |
-| 🚀 **[New in v3.0]**          | New features, backwards incompatibilities and migration guide.         |
-| 🪐 **[Project Templates]**    | End-to-end workflows you can clone, modify and run.                    |
-| 🎛 **[API Reference]**         | The detailed reference for spaCy's API.                                |
-| 📦 **[Models]**               | Download trained pipelines for spaCy.                                  |
-| 🌌 **[Universe]**             | Plugins, extensions, demos and books from the spaCy ecosystem.         |
-| ⚙️ **[spaCy VS Code Extension]** | Additional tooling and features for working with spaCy's config files. |
-| 👩‍🏫 **[Online Course]** | Learn spaCy in this free and interactive online course. |
-| 📺 **[Videos]** | Our YouTube channel with video tutorials, talks and more. |
-| 🛠 **[Changelog]** | Changes and version history. |
-| 💝 **[Contribute]** | How to contribute to the spaCy project and code base. |
-| <a href="https://explosion.ai/spacy-tailored-pipelines"><img src="https://user-images.githubusercontent.com/13643239/152853098-1c761611-ccb0-4ec6-9066-b234552831fe.png" width="125" alt="spaCy Tailored Pipelines"/></a> | Get a custom spaCy pipeline, tailor-made for your NLP problem by spaCy's core developers. Streamlined, production-ready, predictable and maintainable. Start by completing our 5-minute questionnaire to tell us what you need and we'll be in touch! **[Learn more &rarr;](https://explosion.ai/spacy-tailored-pipelines)** |
-| <a href="https://explosion.ai/spacy-tailored-analysis"><img src="https://user-images.githubusercontent.com/1019791/206151300-b00cd189-e503-4797-aa1e-1bb6344062c5.png" width="125" alt="spaCy Tailored Pipelines"/></a> | Bespoke advice for problem solving, strategy and analysis for applied NLP projects. Services include data strategy, code reviews, pipeline design and annotation coaching. Curious? Fill in our 5-minute questionnaire to tell us what you need and we'll be in touch! **[Learn more &rarr;](https://explosion.ai/spacy-tailored-analysis)** |
+| Documentation                                                                                                                                                                                                             |                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ⭐️ **[spaCy 101]**                                                                                                                                                                                                       | New to spaCy? Here's everything you need to know!                                                                                                                                                                                                                                                                                            |
+| 📚 **[Usage Guides]**                                                                                                                                                                                                     | How to use spaCy and its features.                                                                                                                                                                                                                                                                                                           |
+| 🚀 **[New in v3.0]**                                                                                                                                                                                                      | New features, backwards incompatibilities and migration guide.                                                                                                                                                                                                                                                                               |
+| 🪐 **[Project Templates]**                                                                                                                                                                                                | End-to-end workflows you can clone, modify and run.                                                                                                                                                                                                                                                                                          |
+| 🎛 **[API Reference]**                                                                                                                                                                                                     | The detailed reference for spaCy's API.                                                                                                                                                                                                                                                                                                      |
+| 📦 **[Models]**                                                                                                                                                                                                           | Download trained pipelines for spaCy.                                                                                                                                                                                                                                                                                                        |
+| 🌌 **[Universe]**                                                                                                                                                                                                         | Plugins, extensions, demos and books from the spaCy ecosystem.                                                                                                                                                                                                                                                                               |
+| ⚙️ **[spaCy VS Code Extension]**                                                                                                                                                                                          | Additional tooling and features for working with spaCy's config files.                                                                                                                                                                                                                                                                       |
+| 👩‍🏫 **[Online Course]**                                                                                                                                                                                                    | Learn spaCy in this free and interactive online course.                                                                                                                                                                                                                                                                                      |
+| 📺 **[Videos]**                                                                                                                                                                                                           | Our YouTube channel with video tutorials, talks and more.                                                                                                                                                                                                                                                                                    |
+| 🛠 **[Changelog]**                                                                                                                                                                                                         | Changes and version history.                                                                                                                                                                                                                                                                                                                 |
+| 💝 **[Contribute]**                                                                                                                                                                                                       | How to contribute to the spaCy project and code base.                                                                                                                                                                                                                                                                                        |
+| <a href="https://explosion.ai/spacy-tailored-pipelines"><img src="https://user-images.githubusercontent.com/13643239/152853098-1c761611-ccb0-4ec6-9066-b234552831fe.png" width="125" alt="spaCy Tailored Pipelines"/></a> | Get a custom spaCy pipeline, tailor-made for your NLP problem by spaCy's core developers. Streamlined, production-ready, predictable and maintainable. Start by completing our 5-minute questionnaire to tell us what you need and we'll be in touch! **[Learn more &rarr;](https://explosion.ai/spacy-tailored-pipelines)**                 |
+| <a href="https://explosion.ai/spacy-tailored-analysis"><img src="https://user-images.githubusercontent.com/1019791/206151300-b00cd189-e503-4797-aa1e-1bb6344062c5.png" width="125" alt="spaCy Tailored Pipelines"/></a>   | Bespoke advice for problem solving, strategy and analysis for applied NLP projects. Services include data strategy, code reviews, pipeline design and annotation coaching. Curious? Fill in our 5-minute questionnaire to tell us what you need and we'll be in touch! **[Learn more &rarr;](https://explosion.ai/spacy-tailored-analysis)** |
 
 [spacy 101]: https://spacy.io/usage/spacy-101
 [new in v3.0]: https://spacy.io/usage/v3
@@ -58,7 +55,7 @@ open-source software, released under the [MIT license](https://github.com/explos
 [api reference]: https://spacy.io/api/
 [models]: https://spacy.io/models
 [universe]: https://spacy.io/universe
-[spaCy VS Code Extension]: https://github.com/explosion/spacy-vscode
+[spacy vs code extension]: https://github.com/explosion/spacy-vscode
 [videos]: https://www.youtube.com/c/ExplosionAI
 [online course]: https://course.spacy.io
 [project templates]: https://github.com/explosion/projects
@@ -92,7 +89,9 @@ more people can benefit from it.
 - State-of-the-art speed
 - Production-ready **training system**
 - Linguistically-motivated **tokenization**
-- Components for named **entity recognition**, part-of-speech-tagging, dependency parsing, sentence segmentation, **text classification**, lemmatization, morphological analysis, entity linking and more
+- Components for named **entity recognition**, part-of-speech-tagging,
+  dependency parsing, sentence segmentation, **text classification**,
+  lemmatization, morphological analysis, entity linking and more
 - Easily extensible with **custom components** and attributes
 - Support for custom models in **PyTorch**, **TensorFlow** and other frameworks
 - Built in **visualizers** for syntax and NER
@@ -118,8 +117,8 @@ For detailed installation instructions, see the
 ### pip
 
 Using pip, spaCy releases are available as source packages and binary wheels.
-Before you install spaCy and its dependencies, make sure that
-your `pip`, `setuptools` and `wheel` are up to date.
+Before you install spaCy and its dependencies, make sure that your `pip`,
+`setuptools` and `wheel` are up to date.
 
 ```bash
 pip install -U pip setuptools wheel
@@ -174,9 +173,9 @@ with the new version.
 
 ## 📦 Download model packages
 
-Trained pipelines for spaCy can be installed as **Python packages**. This
-means that they're a component of your application, just like any other module.
-Models can be installed using spaCy's [`download`](https://spacy.io/api/cli#download)
+Trained pipelines for spaCy can be installed as **Python packages**. This means
+that they're a component of your application, just like any other module. Models
+can be installed using spaCy's [`download`](https://spacy.io/api/cli#download)
 command, or manually by pointing pip to a path or URL.
 
 | Documentation              |                                                                  |
@@ -242,8 +241,7 @@ do that depends on your system.
 | **Mac**     | Install a recent version of [XCode](https://developer.apple.com/xcode/), including the so-called "Command Line Tools". macOS and OS X ship with Python and git preinstalled.                                                                                        |
 | **Windows** | Install a version of the [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) or [Visual Studio Express](https://visualstudio.microsoft.com/vs/express/) that matches the version that was used to compile your Python interpreter. |
 
-For more details
-and instructions, see the documentation on
+For more details and instructions, see the documentation on
 [compiling spaCy from source](https://spacy.io/usage#source) and the
 [quickstart widget](https://spacy.io/usage#section-quickstart) to get the right
 commands for your platform and Python version.
