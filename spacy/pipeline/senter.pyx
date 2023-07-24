@@ -2,7 +2,6 @@
 from itertools import islice
 from typing import Callable, Optional
 
-import srsly
 from thinc.api import Config, Model, SequenceCategoricalCrossentropy
 
 from ..tokens.doc cimport Doc
