@@ -221,7 +221,7 @@ def init_config(
                 arg = spec["arg"]
                 msg.fail(
                     f"Couldn't find a matching registration handle for {spec_type} '{arg}'. "
-                    f"Available functions: {valid_values}",
+                    f"Valid options are: {valid_values}",
                     exits=1,
                 )
 
