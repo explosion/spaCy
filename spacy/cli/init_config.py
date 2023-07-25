@@ -208,19 +208,20 @@ def init_config(
         }
 
         for spec_type, spec in llm_spec.items():
+            valid_values = set()
+            user_value = spec["arg"].lower().replace(".", "-")
             for reg_handle in spec["reg_handles"]:
-                if reg_handle.split(".")[1].lower() == spec["arg"].lower().replace(
-                    ".", "-"
-                ):
+                reg_name = reg_handle.split(".")[1]
+                valid_values.add(reg_name)
+                if reg_name.lower() == user_value:
                     spec["matched_reg_handle"] = reg_handle
                     break
 
             if not spec["matched_reg_handle"]:
                 arg = spec["arg"]
-                valid_args = sorted(spec["reg_handles"].keys())
                 msg.fail(
                     f"Couldn't find a matching registration handle for {spec_type} '{arg}'. "
-                    f"Available functions: {valid_args}",
+                    f"Available functions: {valid_values}",
                     exits=1,
                 )
 
