@@ -187,12 +187,14 @@ def init_config(
             raise ValueError(Errors.E1055) from ex
 
         if llm_model is None:
-            raise ValueError(
-                "Option `llm.model` must be set if `llm` component is in pipeline."
+            msg.fail(
+                "Option `--llm.model` must be set if `llm` component is in pipeline.",
+                exits=1,
             )
         if llm_task is None:
-            raise ValueError(
-                "Option `llm.task` must be set if `llm` component is in pipeline."
+            msg.fail(
+                "Option `--llm.task` must be set if `llm` component is in pipeline.",
+                exits=1,
             )
 
         # Select registry handles for model(s) and task(s). Raise if no match found.
@@ -215,9 +217,11 @@ def init_config(
 
             if not spec["matched_reg_handle"]:
                 arg = spec["arg"]
-                raise ValueError(
-                    f"Couldn't find a matching registration handle for {spec_type} '{spec}'. Double-check"
-                    f" whether '{arg}' is spelled correctly."
+                valid_args = sorted(spec["reg_handles"].keys())
+                msg.fail(
+                    f"Couldn't find a matching registration handle for {spec_type} '{arg}'. "
+                    f"Available functions: {valid_args}",
+                    exits=1,
                 )
 
     defaults = RECOMMENDATIONS["__default__"]
