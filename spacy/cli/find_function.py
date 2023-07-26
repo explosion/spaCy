@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 from catalogue import RegistryError
 from wasabi import msg
@@ -40,7 +40,7 @@ def find_function_cli(
     find_function(func_name, registry_name)
 
 
-def find_function(func_name: str, registry_name: str) -> None:
+def find_function(func_name: str, registry_name: str) -> Tuple[str, int]:
     registry_desc = None
     try:
         registry_desc = registry.find(registry_name, func_name)
@@ -62,3 +62,4 @@ def find_function(func_name: str, registry_name: str) -> None:
         )
 
     msg.good(f"Found registered function at {registry_path}:{line_no}")
+    return registry_path, line_no
