@@ -36,10 +36,12 @@ def find_function_cli(
             exits=1,
         )
 
+    assert registry_name is not None
     find_function(func_name, registry_name)
 
 
 def find_function(func_name: str, registry_name: str) -> None:
+    registry_desc = None
     try:
         registry_desc = registry.find(registry_name, func_name)
 
@@ -49,12 +51,13 @@ def find_function(func_name: str, registry_name: str) -> None:
         )
         msg.fail(f"{e}", exits=1)
 
+    assert registry_desc is not None
     if registry_desc["file"]:
         registry_path = registry_desc["file"]
         line_no = registry_desc["line_no"]
     else:
         msg.fail(
-            f"Couldn't find path to registered function: {func_name}",
+            f"Couldn't find path to registered function: '{func_name}' in registry '{registry_name}'",
             exits=1,
         )
 
