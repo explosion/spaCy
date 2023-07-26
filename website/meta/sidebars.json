@@ -14,7 +14,8 @@
                     { "text": "New in v3.2", "url": "/usage/v3-2" },
                     { "text": "New in v3.3", "url": "/usage/v3-3" },
                     { "text": "New in v3.4", "url": "/usage/v3-4" },
-                    { "text": "New in v3.5", "url": "/usage/v3-5" }
+                    { "text": "New in v3.5", "url": "/usage/v3-5" },
+                    { "text": "New in v3.6", "url": "/usage/v3-6" }
                 ]
             },
             {
@@ -25,16 +26,19 @@
                     { "text": "Processing Pipelines", "url": "/usage/processing-pipelines" },
                     {
                         "text": "Embeddings & Transformers",
-                        "url": "/usage/embeddings-transformers",
+                        "url": "/usage/embeddings-transformers"
+                    },
+                    {
+                        "text": "Large Language Models",
+                        "url": "/usage/large-language-models",
                         "tag": "new"
                     },
-                    { "text": "Training Models", "url": "/usage/training", "tag": "new" },
+                    { "text": "Training Models", "url": "/usage/training" },
                     {
                         "text": "Layers & Model Architectures",
-                        "url": "/usage/layers-architectures",
-                        "tag": "new"
+                        "url": "/usage/layers-architectures"
                     },
-                    { "text": "spaCy Projects", "url": "/usage/projects", "tag": "new" },
+                    { "text": "spaCy Projects", "url": "/usage/projects" },
                     { "text": "Saving & Loading", "url": "/usage/saving-loading" },
                     { "text": "Visualizers", "url": "/usage/visualizers" }
                 ]
@@ -101,11 +105,13 @@
                     { "text": "EntityLinker", "url": "/api/entitylinker" },
                     { "text": "EntityRecognizer", "url": "/api/entityrecognizer" },
                     { "text": "EntityRuler", "url": "/api/entityruler" },
+                    { "text": "Large Language Models", "url": "/api/large-language-models" },
                     { "text": "Lemmatizer", "url": "/api/lemmatizer" },
                     { "text": "Morphologizer", "url": "/api/morphologizer" },
                     { "text": "SentenceRecognizer", "url": "/api/sentencerecognizer" },
                     { "text": "Sentencizer", "url": "/api/sentencizer" },
                     { "text": "SpanCategorizer", "url": "/api/spancategorizer" },
+                    { "text": "SpanFinder", "url": "/api/spanfinder" },
                     { "text": "SpanResolver", "url": "/api/span-resolver" },
                     { "text": "SpanRuler", "url": "/api/spanruler" },
                     { "text": "Tagger", "url": "/api/tagger" },

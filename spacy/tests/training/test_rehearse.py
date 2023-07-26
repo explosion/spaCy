@@ -1,9 +1,9 @@
-import pytest
-import spacy
-
 from typing import List
-from spacy.training import Example
 
+import pytest
+
+import spacy
+from spacy.training import Example
 
 TRAIN_DATA = [
     (

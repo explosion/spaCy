@@ -1,26 +1,44 @@
-from typing import Dict, Any, Union, List, Optional, Tuple, Iterable
-from typing import TYPE_CHECKING, overload
-import sys
-import shutil
-from pathlib import Path
-from wasabi import msg, Printer
-import srsly
 import hashlib
+import os
+import shutil
+import sys
+from configparser import InterpolationError
+from contextlib import contextmanager
+from pathlib import Path
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    overload,
+)
+
+import srsly
 import typer
 from click import NoSuchOption
 from click.parser import split_arg_string
-from typer.main import get_command
-from contextlib import contextmanager
 from thinc.api import Config, ConfigValidationError, require_gpu
 from thinc.util import gpu_is_available
-from configparser import InterpolationError
-import os
+from typer.main import get_command
+from wasabi import Printer, msg
 
+from .. import about
 from ..compat import Literal
 from ..schemas import ProjectConfigSchema, validate
-from ..util import import_file, run_command, make_tempdir, registry, logger
-from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
-from .. import about
+from ..util import (
+    ENV_VARS,
+    SimpleFrozenDict,
+    import_file,
+    is_compatible_version,
+    logger,
+    make_tempdir,
+    registry,
+    run_command,
+)
 
 if TYPE_CHECKING:
     from pathy import FluidPath  # noqa: F401

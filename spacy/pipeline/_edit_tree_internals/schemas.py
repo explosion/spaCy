@@ -1,5 +1,6 @@
-from typing import Any, Dict, List, Union
 from collections import defaultdict
+from typing import Any, Dict, List, Union
+
 from pydantic import BaseModel, Field, ValidationError
 from pydantic.types import StrictBool, StrictInt, StrictStr
 

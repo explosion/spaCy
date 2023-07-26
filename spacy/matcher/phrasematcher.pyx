@@ -1,18 +1,18 @@
 # cython: infer_types=True, profile=True
-from libc.stdint cimport uintptr_t
-from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
+from preshed.maps cimport map_clear, map_get, map_init, map_iter, map_set
 
 import warnings
 
-from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA, MORPH
+from ..attrs cimport DEP, LEMMA, MORPH, POS, TAG
+
 from ..attrs import IDS
-from ..structs cimport TokenC
-from ..tokens.token cimport Token
+
 from ..tokens.span cimport Span
+from ..tokens.token cimport Token
 from ..typedefs cimport attr_t
 
-from ..schemas import TokenPattern
 from ..errors import Errors, Warnings
+from ..schemas import TokenPattern
 
 
 cdef class PhraseMatcher:

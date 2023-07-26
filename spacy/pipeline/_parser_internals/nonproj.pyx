@@ -4,18 +4,19 @@ for doing pseudo-projective parsing implementation uses the HEAD decoration
 scheme.
 """
 from copy import copy
-from cython.operator cimport preincrement as incr, dereference as deref
+
+from cython.operator cimport dereference as deref
+from cython.operator cimport preincrement as incr
 from libc.limits cimport INT_MAX
 from libc.stdlib cimport abs
 from libcpp cimport bool
 from libcpp.string cimport string, to_string
-from libcpp.vector cimport vector
 from libcpp.unordered_set cimport unordered_set
+from libcpp.vector cimport vector
 
 from ...tokens.doc cimport Doc, set_children_from_heads
 
 from ...errors import Errors
-
 
 DELIMITER = '||'
 
@@ -124,14 +125,17 @@ def decompose(label):
 def is_decorated(label):
     return DELIMITER in label
 
+
 def count_decorated_labels(gold_data):
     freqs = {}
     for example in gold_data:
         proj_heads, deco_deps = projectivize(example.get_aligned("HEAD"),
                                              example.get_aligned("DEP"))
         # set the label to ROOT for each root dependent
-        deco_deps = ['ROOT' if head == i else deco_deps[i]
-                       for i, head in enumerate(proj_heads)]
+        deco_deps = [
+            'ROOT' if head == i else deco_deps[i]
+            for i, head in enumerate(proj_heads)
+        ]
         # count label frequencies
         for label in deco_deps:
             if is_decorated(label):
@@ -159,9 +163,9 @@ def projectivize(heads, labels):
 
 
 cdef vector[int] _heads_to_c(heads):
-    cdef vector[int] c_heads;
+    cdef vector[int] c_heads
     for head in heads:
-        if head == None:
+        if head is None:
             c_heads.push_back(-1)
         else:
             assert head < len(heads)
@@ -197,6 +201,7 @@ def _decorate(heads, proj_heads, labels):
         else:
             deco_labels.append(labels[tokenid])
     return deco_labels
+
 
 def get_smallest_nonproj_arc_slow(heads):
     cdef vector[int] c_heads = _heads_to_c(heads)

@@ -1,13 +1,13 @@
+from cymem.cymem cimport Pool
 from libcpp.vector cimport vector
 from preshed.maps cimport PreshMap
-from cymem.cymem cimport Pool
 
-from .typedefs cimport hash_t
-from .structs cimport LexemeC, SpanC, TokenC
-from .strings cimport StringStore
-from .tokens.doc cimport Doc
-from .vocab cimport Vocab, LexemesOrTokens, _Cached
 from .matcher.phrasematcher cimport PhraseMatcher
+from .strings cimport StringStore
+from .structs cimport LexemeC, SpanC, TokenC
+from .tokens.doc cimport Doc
+from .typedefs cimport hash_t
+from .vocab cimport LexemesOrTokens, Vocab, _Cached
 
 
 cdef class Tokenizer:
@@ -31,24 +31,58 @@ cdef class Tokenizer:
 
     cdef Doc _tokenize_affixes(self, str string, bint with_special_cases)
     cdef int _apply_special_cases(self, Doc doc) except -1
-    cdef void _filter_special_spans(self, vector[SpanC] &original,
-                            vector[SpanC] &filtered, int doc_len) nogil
-    cdef object _prepare_special_spans(self, Doc doc,
-                                       vector[SpanC] &filtered)
-    cdef int _retokenize_special_spans(self, Doc doc, TokenC* tokens,
-                                       object span_data)
-    cdef int _try_specials_and_cache(self, hash_t key, Doc tokens,
-                                     int* has_special,
-                                     bint with_special_cases) except -1
-    cdef int _tokenize(self, Doc tokens, str span, hash_t key,
-                       int* has_special, bint with_special_cases) except -1
-    cdef str _split_affixes(self, Pool mem, str string,
-                                vector[LexemeC*] *prefixes,
-                                vector[LexemeC*] *suffixes, int* has_special,
-                                bint with_special_cases)
-    cdef int _attach_tokens(self, Doc tokens, str string,
-                            vector[LexemeC*] *prefixes,
-                            vector[LexemeC*] *suffixes, int* has_special,
-                            bint with_special_cases) except -1
-    cdef int _save_cached(self, const TokenC* tokens, hash_t key,
-                          int* has_special, int n) except -1
+    cdef void _filter_special_spans(
+        self,
+        vector[SpanC] &original,
+        vector[SpanC] &filtered,
+        int doc_len,
+    ) nogil
+    cdef object _prepare_special_spans(
+        self,
+        Doc doc,
+        vector[SpanC] &filtered,
+    )
+    cdef int _retokenize_special_spans(
+        self,
+        Doc doc,
+        TokenC* tokens,
+        object span_data,
+    )
+    cdef int _try_specials_and_cache(
+        self,
+        hash_t key,
+        Doc tokens,
+        int* has_special,
+        bint with_special_cases,
+    ) except -1
+    cdef int _tokenize(
+        self,
+        Doc tokens,
+        str span,
+        hash_t key,
+        int* has_special,
+        bint with_special_cases,
+    ) except -1
+    cdef str _split_affixes(
+        self,
+        Pool mem,
+        str string,
+        vector[LexemeC*] *prefixes,
+        vector[LexemeC*] *suffixes, int* has_special,
+        bint with_special_cases,
+    )
+    cdef int _attach_tokens(
+        self,
+        Doc tokens,
+        str string,
+        vector[LexemeC*] *prefixes,
+        vector[LexemeC*] *suffixes, int* has_special,
+        bint with_special_cases,
+    ) except -1
+    cdef int _save_cached(
+        self,
+        const TokenC* tokens,
+        hash_t key,
+        int* has_special,
+        int n,
+    ) except -1

@@ -1,7 +1,6 @@
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH
 from ...util import update_exc
-
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 
 ## TODO: Look into systematically handling u/v
 _exc = {

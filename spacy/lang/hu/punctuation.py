@@ -1,6 +1,14 @@
-from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, CONCAT_QUOTES
-from ..char_classes import CONCAT_ICONS, UNITS, ALPHA, ALPHA_LOWER, ALPHA_UPPER
-
+from ..char_classes import (
+    ALPHA,
+    ALPHA_LOWER,
+    ALPHA_UPPER,
+    CONCAT_ICONS,
+    CONCAT_QUOTES,
+    LIST_ELLIPSES,
+    LIST_PUNCT,
+    LIST_QUOTES,
+    UNITS,
+)
 
 # removing ° from the special icons to keep e.g. 99° as one token
 _concat_icons = CONCAT_ICONS.replace("\u00B0", "")

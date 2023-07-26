@@ -7,8 +7,13 @@ from spacy.attrs import ENT_IOB, ENT_TYPE
 from spacy.lang.en import English
 from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
-from spacy.util import compile_infix_regex, compile_prefix_regex
-from spacy.util import compile_suffix_regex, get_lang_class, load_model
+from spacy.util import (
+    compile_infix_regex,
+    compile_prefix_regex,
+    compile_suffix_regex,
+    get_lang_class,
+    load_model,
+)
 
 from ..util import assert_packed_msg_equal, make_tempdir
 

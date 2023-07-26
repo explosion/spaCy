@@ -1,19 +1,25 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
-from typing import List, Tuple, Generator
-from libc.stdint cimport int32_t, int64_t
+from typing import Generator, List, Tuple
+
+cimport cython
+from cython.operator cimport dereference
+from libc.stdint cimport int32_t
 from libcpp.pair cimport pair
 from libcpp.unordered_map cimport unordered_map
 from libcpp.unordered_set cimport unordered_set
-from cython.operator cimport dereference
-cimport cython
+
 import weakref
-from preshed.maps cimport map_get_unless_missing
+
 from murmurhash.mrmr cimport hash64
 
 from .. import Errors
+
 from ..typedefs cimport hash_t
+
 from ..strings import get_string_id
+
 from ..structs cimport EdgeC, GraphC
+
 from .token import Token
 
 
@@ -21,7 +27,7 @@ from .token import Token
 cdef class Edge:
     cdef readonly Graph graph
     cdef readonly int i
-    
+
     def __init__(self, Graph graph, int i):
         self.graph = graph
         self.i = i
@@ -37,7 +43,7 @@ cdef class Edge:
     @property
     def head(self) -> "Node":
         return Node(self.graph, self.graph.c.edges[self.i].head)
-    
+
     @property
     def tail(self) -> "Tail":
         return Node(self.graph, self.graph.c.edges[self.i].tail)
@@ -63,7 +69,7 @@ cdef class Node:
     def __init__(self, Graph graph, int i):
         """A reference to a node of an annotation graph. Each node is made up of
         an ordered set of zero or more token indices.
-        
+
         Node references are usually created by the Graph object itself, or from
         the Node or Edge objects. You usually won't need to instantiate this
         class yourself.
@@ -102,13 +108,13 @@ cdef class Node:
     @property
     def is_none(self) -> bool:
         """Whether the node is a special value, indicating 'none'.
-        
+
         The NoneNode type is returned by the Graph, Edge and Node objects when
         there is no match to a query. It has the same API as Node, but it always
         returns NoneNode, NoneEdge or empty lists for its queries.
         """
         return False
- 
+
     @property
     def doc(self) -> "Doc":
         """The Doc object that the graph refers to."""
@@ -123,19 +129,19 @@ cdef class Node:
     def head(self, i=None, label=None) -> "Node":
         """Get the head of the first matching edge, searching by index, label,
         both or neither.
-        
+
         For instance, `node.head(i=1)` will get the head of the second edge that
         this node is a tail of. `node.head(i=1, label="ARG0")` will further
         check that the second edge has the label `"ARG0"`. 
-        
+
         If no matching node can be found, the graph's NoneNode is returned. 
         """
         return self.headed(i=i, label=label)
-    
+
     def tail(self, i=None, label=None) -> "Node":
         """Get the tail of the first matching edge, searching by index, label,
         both or neither.
- 
+
         If no matching node can be found, the graph's NoneNode is returned. 
         """
         return self.tailed(i=i, label=label).tail
@@ -164,7 +170,7 @@ cdef class Node:
         cdef vector[int] edge_indices
         self._find_edges(edge_indices, "head", label)
         return [Node(self.graph, self.graph.c.edges[i].head) for i in edge_indices]
-     
+
     def tails(self, label=None) -> List["Node"]:
         """Find all matching tails of this node."""
         cdef vector[int] edge_indices
@@ -193,7 +199,7 @@ cdef class Node:
             return NoneEdge(self.graph)
         else:
             return Edge(self.graph, idx)
-    
+
     def tailed(self, i=None, label=None) -> Edge:
         """Find the first matching edge tailed by this node.
         If no matching edge can be found, the graph's NoneEdge is returned.
@@ -276,7 +282,7 @@ cdef class NoneEdge(Edge):
     def __init__(self, graph):
         self.graph = graph
         self.i = -1
-   
+
     @property
     def doc(self) -> "Doc":
         return self.graph.doc
@@ -284,7 +290,7 @@ cdef class NoneEdge(Edge):
     @property
     def head(self) -> "NoneNode":
         return NoneNode(self.graph)
-    
+
     @property
     def tail(self) -> "NoneNode":
         return NoneNode(self.graph)
@@ -312,7 +318,7 @@ cdef class NoneNode(Node):
 
     def __len__(self):
         return 0
- 
+
     @property
     def is_none(self):
         return -1
@@ -333,14 +339,14 @@ cdef class NoneNode(Node):
 
     def walk_heads(self):
         yield from [] 
-    
+
     def walk_tails(self):
         yield from [] 
- 
+
 
 cdef class Graph:
     """A set of directed labelled relationships between sets of tokens.
-    
+
     EXAMPLE:
         Construction 1
         >>> graph = Graph(doc, name="srl")
@@ -365,7 +371,9 @@ cdef class Graph:
         >>> assert graph.has_node((0,))
         >>> assert graph.has_edge((0,), (1,3), label="agent")
     """
-    def __init__(self, doc, *, name="", nodes=[], edges=[], labels=None, weights=None):
+    def __init__(
+        self, doc, *, name="", nodes=[], edges=[], labels=None, weights=None  # no-cython-lint
+    ):
         """Create a Graph object.
 
         doc (Doc): The Doc object the graph will refer to.
@@ -431,13 +439,11 @@ cdef class Graph:
 
     def add_edge(self, head, tail, *, label="", weight=None) -> Edge:
         """Add an edge to the graph, connecting two groups of tokens.
-       
+
         If there is already an edge for the (head, tail, label) triple, it will
         be returned, and no new edge will be created. The weight of the edge
         will be updated if a weight is specified.
         """
-        label_hash = self.doc.vocab.strings.as_int(label)
-        weight_float = weight if weight is not None else 0.0
         edge_index = add_edge(
             &self.c,
             EdgeC(
@@ -471,11 +477,11 @@ cdef class Graph:
     def has_edge(self, head, tail, label) -> bool:
         """Check whether a (head, tail, label) triple is an edge in the graph."""
         return not self.get_edge(head, tail, label=label).is_none
-    
+
     def add_node(self, indices) -> Node:
         """Add a node to the graph and return it. Nodes refer to ordered sets
         of token indices.
-        
+
         This method is idempotent: if there is already a node for the given
         indices, it is returned without a new node being created.
         """
@@ -503,7 +509,7 @@ cdef class Graph:
             return NoneNode(self)
         else:
             return Node(self, node_index)
- 
+
     def has_node(self, tuple indices) -> bool:
         """Check whether the graph has a node for the given indices."""
         return not self.get_node(indices).is_none
@@ -563,7 +569,7 @@ cdef int add_node(GraphC* graph, vector[int32_t]& node) nogil:
         graph.roots.insert(index)
         graph.node_map.insert(pair[hash_t, int](key, index))
         return index
- 
+
 
 cdef int get_node(const GraphC* graph, vector[int32_t] node) nogil:
     key = hash64(&node[0], node.size() * sizeof(node[0]), 0)

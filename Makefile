@@ -1,11 +1,11 @@
 SHELL := /bin/bash
 
 ifndef SPACY_EXTRAS
-override SPACY_EXTRAS = spacy-lookups-data==1.0.2 jieba spacy-pkuseg==0.0.28 sudachipy sudachidict_core pymorphy2
+override SPACY_EXTRAS = spacy-lookups-data==1.0.3
 endif
 
 ifndef PYVER
-override PYVER = 3.6
+override PYVER = 3.8
 endif
 
 VENV := ./env$(PYVER)

@@ -1,19 +1,19 @@
-from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable, Sequence
 import warnings
 from collections import defaultdict
 from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+
 import srsly
 
-from .pipe import Pipe
-from ..training import Example
-from ..language import Language
 from ..errors import Errors, Warnings
-from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList, registry
-from ..tokens import Doc, Span
+from ..language import Language
 from ..matcher import Matcher, PhraseMatcher
 from ..matcher.levenshtein import levenshtein_compare
 from ..scorer import get_ner_prf
-
+from ..tokens import Doc, Span
+from ..training import Example
+from ..util import SimpleFrozenList, ensure_path, from_disk, registry, to_disk
+from .pipe import Pipe
 
 DEFAULT_ENT_ID_SEP = "||"
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]

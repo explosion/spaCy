@@ -1,6 +1,6 @@
 from string import punctuation
-import pytest
 
+import pytest
 
 PUNCT_OPEN = ["(", "[", "{", "*"]
 PUNCT_CLOSE = [")", "]", "}", "*"]

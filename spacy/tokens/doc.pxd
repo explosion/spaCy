@@ -1,10 +1,10 @@
-from cymem.cymem cimport Pool
 cimport numpy as np
+from cymem.cymem cimport Pool
 
-from ..vocab cimport Vocab
-from ..structs cimport TokenC, LexemeC, SpanC
-from ..typedefs cimport attr_t
 from ..attrs cimport attr_id_t
+from ..structs cimport LexemeC, SpanC, TokenC
+from ..typedefs cimport attr_t
+from ..vocab cimport Vocab
 
 
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil
@@ -31,7 +31,7 @@ cdef int token_by_start(const TokenC* tokens, int length, int start_char) except
 cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 
 
-cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
+cdef int [:, :] _get_lca_matrix(Doc, int start, int end)
 
 
 cdef class Doc:
@@ -60,7 +60,6 @@ cdef class Doc:
 
     cdef int length
     cdef int max_length
-
 
     cdef public object noun_chunks_iterator
 

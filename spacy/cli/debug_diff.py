@@ -1,13 +1,13 @@
+from pathlib import Path
 from typing import Optional
 
 import typer
-from wasabi import Printer, diff_strings, MarkdownRenderer
-from pathlib import Path
 from thinc.api import Config
+from wasabi import MarkdownRenderer, Printer, diff_strings
 
-from ._util import debug_cli, Arg, Opt, show_validation_error, parse_config_overrides
 from ..util import load_config
-from .init_config import init_config, Optimizations
+from ._util import Arg, Opt, debug_cli, parse_config_overrides, show_validation_error
+from .init_config import Optimizations, init_config
 
 
 @debug_cli.command(

@@ -1,6 +1,14 @@
-from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_ICONS
-from ..char_classes import ALPHA_LOWER, ALPHA, HYPHENS, CONCAT_QUOTES, UNITS
-
+from ..char_classes import (
+    ALPHA,
+    ALPHA_LOWER,
+    CONCAT_QUOTES,
+    HYPHENS,
+    LIST_ELLIPSES,
+    LIST_ICONS,
+    LIST_PUNCT,
+    LIST_QUOTES,
+    UNITS,
+)
 
 _currency = r"\$¢£€¥฿৳"
 _quotes = CONCAT_QUOTES.replace("'", "")

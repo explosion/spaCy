@@ -1,9 +1,9 @@
 from pathlib import Path
-from wasabi import msg, MarkdownRenderer
+
+from wasabi import MarkdownRenderer, msg
 
 from ...util import working_dir
-from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
-
+from .._util import PROJECT_FILE, Arg, Opt, load_project_config, project_cli
 
 DOCS_URL = "https://spacy.io"
 INTRO_PROJECT = f"""The [`{PROJECT_FILE}`]({PROJECT_FILE}) defines the data assets required by the

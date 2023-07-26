@@ -1,24 +1,25 @@
-cimport numpy as np
-from libc.stdint cimport uint32_t, uint64_t
 from cython.operator cimport dereference as deref
+from libc.stdint cimport uint32_t, uint64_t
 from libcpp.set cimport set as cppset
 from murmurhash.mrmr cimport hash128_x64
 
-import functools
-import numpy
-from typing import cast
 import warnings
 from enum import Enum
+from typing import cast
+
+import numpy
 import srsly
 from thinc.api import Ops, get_array_module, get_current_ops
 from thinc.backends import get_array_ops
 from thinc.types import Floats2d
 
+from .attrs cimport ORTH, attr_id_t
 from .strings cimport StringStore
 
-from .strings import get_string_id
-from .errors import Errors, Warnings
 from . import util
+from .attrs import IDS
+from .errors import Errors, Warnings
+from .strings import get_string_id
 
 
 def unpickle_vectors(bytes_data):
@@ -63,8 +64,9 @@ cdef class Vectors:
     cdef readonly uint32_t hash_seed
     cdef readonly unicode bow
     cdef readonly unicode eow
+    cdef readonly attr_id_t attr
 
-    def __init__(self, *, strings=None, shape=None, data=None, keys=None, name=None, mode=Mode.default, minn=0, maxn=0, hash_count=1, hash_seed=0, bow="<", eow=">"):
+    def __init__(self, *, strings=None, shape=None, data=None, keys=None, name=None, mode=Mode.default, minn=0, maxn=0, hash_count=1, hash_seed=0, bow="<", eow=">", attr="ORTH"):
         """Create a new vector store.
 
         strings (StringStore): The string store.
@@ -79,6 +81,8 @@ cdef class Vectors:
         hash_seed (int): The floret hash seed (default: 0).
         bow (str): The floret BOW string (default: "<").
         eow (str): The floret EOW string (default: ">").
+        attr (Union[int, str]): The token attribute for the vector keys
+            (default: "ORTH").
 
         DOCS: https://spacy.io/api/vectors#init
         """
@@ -102,10 +106,18 @@ cdef class Vectors:
         self.hash_seed = hash_seed
         self.bow = bow
         self.eow = eow
+        if isinstance(attr, (int, long)):
+            self.attr = attr
+        else:
+            attr = attr.upper()
+            if attr == "TEXT":
+                attr = "ORTH"
+            self.attr = IDS.get(attr, ORTH)
+
         if self.mode == Mode.default:
             if data is None:
                 if shape is None:
-                    shape = (0,0)
+                    shape = (0, 0)
                 ops = get_current_ops()
                 data = ops.xp.zeros(shape, dtype="f")
                 self._unset = cppset[int]({i for i in range(data.shape[0])})
@@ -246,11 +258,10 @@ cdef class Vectors:
     def __eq__(self, other):
         # Check for equality, with faster checks first
         return (
-                self.shape == other.shape
-                and self.key2row == other.key2row
-                and self.to_bytes(exclude=["strings"])
-                  == other.to_bytes(exclude=["strings"])
-               )
+            self.shape == other.shape
+            and self.key2row == other.key2row
+            and self.to_bytes(exclude=["strings"]) == other.to_bytes(exclude=["strings"])
+        )
 
     def resize(self, shape, inplace=False):
         """Resize the underlying vectors array. If inplace=True, the memory
@@ -506,11 +517,12 @@ cdef class Vectors:
             # vectors e.g. (10000, 300)
             # sims    e.g. (1024, 10000)
             sims = xp.dot(batch, vectors.T)
-            best_rows[i:i+batch_size] = xp.argpartition(sims, -n, axis=1)[:,-n:]
-            scores[i:i+batch_size] = xp.partition(sims, -n, axis=1)[:,-n:]
+            best_rows[i:i+batch_size] = xp.argpartition(sims, -n, axis=1)[:, -n:]
+            scores[i:i+batch_size] = xp.partition(sims, -n, axis=1)[:, -n:]
 
             if sort and n >= 2:
-                sorted_index = xp.arange(scores.shape[0])[:,None][i:i+batch_size],xp.argsort(scores[i:i+batch_size], axis=1)[:,::-1]
+                sorted_index = xp.arange(scores.shape[0])[:, None][i:i+batch_size], \
+                    xp.argsort(scores[i:i+batch_size], axis=1)[:, ::-1]
                 scores[i:i+batch_size] = scores[sorted_index]
                 best_rows[i:i+batch_size] = best_rows[sorted_index]
 
@@ -524,8 +536,12 @@ cdef class Vectors:
 
         numpy_rows = get_current_ops().to_numpy(best_rows)
         keys = xp.asarray(
-            [[row2key[row] for row in numpy_rows[i] if row in row2key]
-                    for i in range(len(queries)) ], dtype="uint64")
+            [
+                [row2key[row] for row in numpy_rows[i] if row in row2key]
+                for i in range(len(queries))
+            ],
+            dtype="uint64"
+        )
         return (keys, best_rows, scores)
 
     def to_ops(self, ops: Ops):
@@ -545,6 +561,7 @@ cdef class Vectors:
                 "hash_seed": self.hash_seed,
                 "bow": self.bow,
                 "eow": self.eow,
+                "attr": self.attr,
             }
 
     def _set_cfg(self, cfg):
@@ -555,6 +572,7 @@ cdef class Vectors:
         self.hash_seed = cfg.get("hash_seed", 0)
         self.bow = cfg.get("bow", "<")
         self.eow = cfg.get("eow", ">")
+        self.attr = cfg.get("attr", ORTH)
 
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
@@ -566,9 +584,9 @@ cdef class Vectors:
         """
         xp = get_array_module(self.data)
         if xp is numpy:
-            save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)
+            save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)  # no-cython-lint
         else:
-            save_array = lambda arr, file_: xp.save(file_, arr)
+            save_array = lambda arr, file_: xp.save(file_, arr)  # no-cython-lint
 
         def save_vectors(path):
             # the source of numpy.save indicates that the file object is closed after use.

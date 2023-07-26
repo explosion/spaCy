@@ -1,6 +1,5 @@
 import pytest
 
-
 PUNCT_OPEN = ["(", "[", "{", "*"]
 PUNCT_CLOSE = [")", "]", "}", "*"]
 PUNCT_PAIRED = [("(", ")"), ("[", "]"), ("{", "}"), ("*", "*")]
