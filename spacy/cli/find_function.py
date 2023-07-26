@@ -44,22 +44,26 @@ def find_function(func_name: str, registry_name: str) -> Tuple[str, int]:
     registry_desc = None
     try:
         registry_desc = registry.find(registry_name, func_name)
-
     except RegistryError as e:
         msg.fail(
             f"Couldn't find registered function: '{func_name}' in registry '{registry_name}'",
         )
         msg.fail(f"{e}", exits=1)
-
     assert registry_desc is not None
+
+    registry_path = None
+    line_no = None
     if registry_desc["file"]:
         registry_path = registry_desc["file"]
         line_no = registry_desc["line_no"]
-    else:
+
+    if not registry_path or not line_no:
         msg.fail(
             f"Couldn't find path to registered function: '{func_name}' in registry '{registry_name}'",
             exits=1,
         )
+    assert registry_path is not None
+    assert line_no is not None
 
     msg.good(f"Found registered function at {registry_path}:{line_no}")
-    return registry_path, line_no
+    return str(registry_path), int(line_no)
