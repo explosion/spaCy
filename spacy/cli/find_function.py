@@ -32,7 +32,7 @@ def find_function_cli(
 
     if not registry_name:
         msg.fail(
-            f"Couldn't find registered function: {func_name}",
+            f"Couldn't find registered function: '{func_name}'",
             exits=1,
         )
 
@@ -65,5 +65,5 @@ def find_function(func_name: str, registry_name: str) -> Tuple[str, int]:
     assert registry_path is not None
     assert line_no is not None
 
-    msg.good(f"Found registered function at {registry_path}:{line_no}")
+    msg.good(f"Found registered function '{func_name}' at {registry_path}:{line_no}")
     return str(registry_path), int(line_no)
