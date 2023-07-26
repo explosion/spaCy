@@ -279,7 +279,6 @@ TRAIN_EXAMPLE_2 = dict(
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "component,examples",
-    # fmt: off
     [
         ("tagger", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2]),
         ("morphologizer", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2]),
@@ -288,8 +287,7 @@ TRAIN_EXAMPLE_2 = dict(
         ("ner", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2]),
         ("spancat", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2]),
         ("textcat", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2]),
-    ]
-    # fmt: on
+    ],
 )
 def test_init_config_trainable(component, examples, en_vocab):
     if component == "textcat":
@@ -352,9 +350,7 @@ def test_init_config_trainable(component, examples, en_vocab):
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "component,examples",
-    # fmt: off
-    [("tagger,parser,morphologizer", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2] * 15)]
-    # fmt: on
+    [("tagger,parser,morphologizer", [TRAIN_EXAMPLE_1, TRAIN_EXAMPLE_2] * 15)],
 )
 def test_init_config_trainable_multiple(component, examples, en_vocab):
     train_docs = []
