@@ -41,9 +41,9 @@ def find_function(func_name: str, registry_name: str) -> None:
 
     except RegistryError as e:
         msg.fail(
-            f"Couldn't find registered function: {func_name}\n\n{e}",
-            exits=1,
+            f"Couldn't find registered function: '{func_name}' in registry '{registry_name}'",
         )
+        msg.fail(f"{e}", exits=1)
 
     if registry_desc["file"]:
         registry_path = registry_desc["file"]
