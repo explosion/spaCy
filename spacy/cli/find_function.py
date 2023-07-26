@@ -1,3 +1,5 @@
+from typing import Optional
+
 from catalogue import RegistryError
 from wasabi import msg
 
@@ -9,7 +11,7 @@ from ._util import Arg, Opt, app
 def find_function_cli(
     # fmt: off
     func_name: str = Arg(..., help="Name of the registered function."),
-    registry_name: str = Opt(None, help="Name of the catalogue registry."),
+    registry_name: Optional[str] = Opt(None, "--registry", "-r", help="Name of the catalogue registry."),
     # fmt: on
 ):
     """
@@ -17,7 +19,9 @@ def find_function_cli(
     function is defined in, if available.
 
     func_name (str): Name of the registered function.
-    registry_name (str): Name of the catalogue registry.
+    registry_name (Optional[str]): Name of the catalogue registry.
+
+    DOCS: https://spacy.io/api/cli#find-function
     """
     if not registry_name:
         registry_names = registry.get_registry_names()
