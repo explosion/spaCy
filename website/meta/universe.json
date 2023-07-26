@@ -68,6 +68,33 @@
             "tags": ["latin"]
         },
         {
+            "id": "odycy",
+            "title": "OdyCy",
+            "slogan": "General-purpose language pipelines for premodern Greek.",
+            "description": "Academically validated modular NLP pipelines for premodern Greek. odyCy achieves state of the art performance on multiple tasks on unseen test data from the Universal Dependencies Perseus treebank, and performs second best on the PROIEL treebank’s test set on even more tasks. In addition performance also seems relatively stable across the two evaluation datasets in comparison with other NLP pipelines. OdyCy is being used at the Center for Humanities Computing for preprocessing and analyzing Ancient Greek corpora for New Testament research, meaning that you can expect consistent maintenance and improvements.",
+            "github": "centre-for-humanities-computing/odyCy",
+            "code_example": [
+                "# To install the high-accuracy transformer-based pipeline",
+                "# pip install https://huggingface.co/chcaa/grc_odycy_joint_trf/resolve/main/grc_odycy_joint_trf-any-py3-none-any.whl",
+                "import spacy",
+                "",
+                "nlp = spacy.load('grc_odycy_joint_trf')",
+                "",
+                "doc = nlp('τὴν γοῦν Ἀττικὴν ἐκ τοῦ ἐπὶ πλεῖστον διὰ τὸ λεπτόγεων ἀστασίαστον οὖσαν ἄνθρωποι ᾤκουν οἱ αὐτοὶ αἰεί.')"
+            ],
+            "code_language": "python",
+            "url": "https://centre-for-humanities-computing.github.io/odyCy/",
+            "thumb": "https://raw.githubusercontent.com/centre-for-humanities-computing/odyCy/7b94fec60679d06272dca88a4dcfe0f329779aea/docs/_static/logo.svg",
+            "image": "https://github.com/centre-for-humanities-computing/odyCy/raw/main/docs/_static/logo_with_text_below.svg",
+            "author": "Jan Kostkan, Márton Kardos (Center for Humanities Computing, Aarhus University)",
+            "author_links": {
+                "github": "centre-for-humanities-computing",
+                "website": "https://chc.au.dk/"
+            },
+            "category": ["pipeline", "standalone", "research"],
+            "tags": ["ancient Greek"]
+        },
+        {
             "id": "spacy-wasm",
             "title": "spacy-wasm",
             "slogan": "spaCy in the browser using WebAssembly",
