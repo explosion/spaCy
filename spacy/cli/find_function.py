@@ -47,4 +47,4 @@ def find_function(func_name: str, registry_name: str) -> None:
             exits=1,
         )
 
-    msg.good(f"Found registered function at file://{registry_path}:{line_no}")
+    msg.good(f"Found registered function at {registry_path}:{line_no}")
