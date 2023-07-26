@@ -19,11 +19,18 @@ def find_function_cli(
     func_name (str): Name of the registered function.
     registry_name (str): Name of the catalogue registry.
     """
-    registry_names = registry.get_registry_names()
-    for name in registry_names:
-        if registry.has(name, func_name):
-            registry_name = name
-            break
+    if not registry_name:
+        registry_names = registry.get_registry_names()
+        for name in registry_names:
+            if registry.has(name, func_name):
+                registry_name = name
+                break
+
+    if not registry_name:
+        msg.fail(
+            f"Couldn't find registered function: {func_name}",
+            exits=1,
+        )
 
     find_function(func_name, registry_name)
 
