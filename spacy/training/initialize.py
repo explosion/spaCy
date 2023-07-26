@@ -76,7 +76,8 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
         with nlp.select_pipes(enable=resume_components):
             logger.info("Resuming training for: %s", resume_components)
             nlp.resume_training(sgd=optimizer)
-    # Make sure that listeners are defined before initializing further
+    # Make sure that internal component names are synced and listeners are
+    # defined before initializing further
     nlp._link_components()
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         if T["max_epochs"] == -1:
@@ -215,9 +216,14 @@ def convert_vectors(
     prune: int,
     name: Optional[str] = None,
     mode: str = VectorsMode.default,
+    attr: str = "ORTH",
 ) -> None:
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
+        if attr != "ORTH":
+            raise ValueError(
+                "ORTH is the only attribute supported for vectors in .npz format."
+            )
         nlp.vocab.vectors = Vectors(
             strings=nlp.vocab.strings, data=numpy.load(vectors_loc.open("rb"))
         )
@@ -245,11 +251,15 @@ def convert_vectors(
                 nlp.vocab.vectors = Vectors(
                     strings=nlp.vocab.strings,
                     data=vectors_data,
+                    attr=attr,
                     **floret_settings,
                 )
             else:
                 nlp.vocab.vectors = Vectors(
-                    strings=nlp.vocab.strings, data=vectors_data, keys=vector_keys
+                    strings=nlp.vocab.strings,
+                    data=vectors_data,
+                    keys=vector_keys,
+                    attr=attr,
                 )
                 nlp.vocab.deduplicate_vectors()
     if name is None:

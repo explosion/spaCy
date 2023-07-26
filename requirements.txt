@@ -38,4 +38,5 @@ types-setuptools>=57.0.0
 types-requests
 types-setuptools>=57.0.0
 black==22.3.0
+cython-lint>=0.15.0; python_version >= "3.7"
 isort>=5.0,<6.0

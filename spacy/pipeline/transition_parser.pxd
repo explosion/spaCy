@@ -13,8 +13,18 @@ cdef class Parser(TrainablePipe):
     cdef readonly TransitionSystem moves
     cdef public object _multitasks
 
-    cdef void _parseC(self, CBlas cblas, StateC** states,
-            WeightsC weights, SizesC sizes) nogil
+    cdef void _parseC(
+        self,
+        CBlas cblas,
+        StateC** states,
+        WeightsC weights,
+        SizesC sizes
+    ) nogil
 
-    cdef void c_transition_batch(self, StateC** states, const float* scores,
-            int nr_class, int batch_size) nogil
+    cdef void c_transition_batch(
+        self,
+        StateC** states,
+        const float* scores,
+        int nr_class,
+        int batch_size
+    ) nogil

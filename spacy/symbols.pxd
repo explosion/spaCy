@@ -92,7 +92,7 @@ cdef enum symbol_t:
     ADV
     AUX
     CONJ
-    CCONJ # U20
+    CCONJ  # U20
     DET
     INTJ
     NOUN
@@ -418,7 +418,7 @@ cdef enum symbol_t:
     ccomp
     complm
     conj
-    cop # U20
+    cop  # U20
     csubj
     csubjpass
     dep
@@ -441,8 +441,8 @@ cdef enum symbol_t:
     num
     number
     oprd
-    obj # U20
-    obl # U20
+    obj  # U20
+    obl  # U20
     parataxis
     partmod
     pcomp

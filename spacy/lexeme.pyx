@@ -1,7 +1,6 @@
 # cython: embedsignature=True
 # Compiler crashes on memory view coercion without this. Should report bug.
 cimport numpy as np
-from cython.view cimport array as cvarray
 from libc.string cimport memset
 
 np.import_array()
@@ -35,7 +34,7 @@ from .typedefs cimport attr_t, flags_t
 from .attrs import intify_attrs
 from .errors import Errors, Warnings
 
-OOV_RANK = 0xffffffffffffffff # UINT64_MAX
+OOV_RANK = 0xffffffffffffffff  # UINT64_MAX
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 EMPTY_LEXEME.id = OOV_RANK
 
@@ -105,7 +104,7 @@ cdef class Lexeme:
             if isinstance(value, float):
                 continue
             elif isinstance(value, (int, long)):
-                 Lexeme.set_struct_attr(self.c, attr, value)
+                Lexeme.set_struct_attr(self.c, attr, value)
             else:
                 Lexeme.set_struct_attr(self.c, attr, self.vocab.strings.add(value))
 
@@ -137,10 +136,12 @@ cdef class Lexeme:
         if hasattr(other, "orth"):
             if self.c.orth == other.orth:
                 return 1.0
-        elif hasattr(other, "__len__") and len(other) == 1 \
-        and hasattr(other[0], "orth"):
-            if self.c.orth == other[0].orth:
-                return 1.0
+        elif (
+            hasattr(other, "__len__") and len(other) == 1
+            and hasattr(other[0], "orth")
+            and self.c.orth == other[0].orth
+        ):
+            return 1.0
         if self.vector_norm == 0 or other.vector_norm == 0:
             warnings.warn(Warnings.W008.format(obj="Lexeme"))
             return 0.0
@@ -149,7 +150,7 @@ cdef class Lexeme:
         result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
         # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
         return result.item()
-    
+
     @property
     def has_vector(self):
         """RETURNS (bool): Whether a word vector is associated with the object.

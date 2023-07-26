@@ -1,17 +1,14 @@
 # cython: infer_types=True
 # cython: profile=True
-cimport numpy as np
-
 import numpy
 
-from cpython.ref cimport Py_XDECREF, PyObject
 from thinc.extra.search cimport Beam
 
 from thinc.extra.search import MaxViolation
 
 from thinc.extra.search cimport MaxViolation
 
-from ...typedefs cimport class_t, hash_t
+from ...typedefs cimport class_t
 from .transition_system cimport Transition, TransitionSystem
 
 from ...errors import Errors
@@ -146,7 +143,6 @@ def update_beam(TransitionSystem moves, states, golds, model, int width, beam_de
     cdef MaxViolation violn
     pbeam = BeamBatch(moves, states, golds, width=width, density=beam_density)
     gbeam = BeamBatch(moves, states, golds, width=width, density=0.0)
-    cdef StateClass state
     beam_maps = []
     backprops = []
     violns = [MaxViolation() for _ in range(len(states))]

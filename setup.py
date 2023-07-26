@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 from setuptools import Extension, setup, find_packages
 import sys
-import platform
 import numpy
-from distutils.command.build_ext import build_ext
-from distutils.sysconfig import get_python_inc
+from setuptools.command.build_ext import build_ext
+from sysconfig import get_path
 from pathlib import Path
 import shutil
 from Cython.Build import cythonize
@@ -86,30 +85,6 @@ COPY_FILES = {
     ROOT / "pyproject.toml": PACKAGE_ROOT / "tests" / "package",
     ROOT / "requirements.txt": PACKAGE_ROOT / "tests" / "package",
 }
-
-
-def is_new_osx():
-    """Check whether we're on OSX >= 10.7"""
-    if sys.platform != "darwin":
-        return False
-    mac_ver = platform.mac_ver()[0]
-    if mac_ver.startswith("10"):
-        minor_version = int(mac_ver.split(".")[1])
-        if minor_version >= 7:
-            return True
-        else:
-            return False
-    return False
-
-
-if is_new_osx():
-    # On Mac, use libc++ because Apple deprecated use of
-    # libstdc
-    COMPILE_OPTIONS["other"].append("-stdlib=libc++")
-    LINK_OPTIONS["other"].append("-lc++")
-    # g++ (used by unix compiler on mac) links to libstdc++ as a default lib.
-    # See: https://stackoverflow.com/questions/1653047/avoid-linking-to-libstdc
-    LINK_OPTIONS["other"].append("-nodefaultlibs")
 
 
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
@@ -204,7 +179,7 @@ def setup_package():
 
     include_dirs = [
         numpy.get_include(),
-        get_python_inc(plat_specific=True),
+        get_path("include"),
     ]
     ext_modules = []
     ext_modules.append(
