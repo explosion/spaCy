@@ -1,6 +1,6 @@
 import pytest
-from spacy.util import get_lang_class
 
+from spacy.util import get_lang_class
 
 # fmt: off
 # Only include languages with no external dependencies

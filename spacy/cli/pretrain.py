@@ -1,13 +1,21 @@
-from typing import Optional
-from pathlib import Path
-from wasabi import msg
-import typer
 import re
+from pathlib import Path
+from typing import Optional
 
-from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, setup_gpu
+import typer
+from wasabi import msg
+
 from ..training.pretrain import pretrain
 from ..util import load_config
+from ._util import (
+    Arg,
+    Opt,
+    app,
+    import_code,
+    parse_config_overrides,
+    setup_gpu,
+    show_validation_error,
+)
 
 
 @app.command(
@@ -23,6 +31,7 @@ def pretrain_cli(
     resume_path: Optional[Path] = Opt(None, "--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
     epoch_resume: Optional[int] = Opt(None, "--epoch-resume", "-er", help="The epoch to resume counting from when using --resume-path. Prevents unintended overwriting of existing weight files."),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    skip_last: bool = Opt(False, "--skip-last", "-L", help="Skip saving model-last.bin"),
     # fmt: on
 ):
     """
@@ -74,6 +83,7 @@ def pretrain_cli(
         epoch_resume=epoch_resume,
         use_gpu=use_gpu,
         silent=False,
+        skip_last=skip_last,
     )
     msg.good("Successfully finished pretrain")
 

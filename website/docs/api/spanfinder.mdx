@@ -1,0 +1,372 @@
+---
+title: SpanFinder
+tag: class,experimental
+source: spacy/pipeline/span_finder.py
+version: 3.6
+teaser:
+  'Pipeline component for identifying potentially overlapping spans of text'
+api_base_class: /api/pipe
+api_string_name: span_finder
+api_trainable: true
+---
+
+The span finder identifies potentially overlapping, unlabeled spans. It
+identifies tokens that start or end spans and annotates unlabeled spans between
+starts and ends, with optional filters for min and max span length. It is
+intended for use in combination with a component like
+[`SpanCategorizer`](/api/spancategorizer) that may further filter or label the
+spans. Predicted spans will be saved in a [`SpanGroup`](/api/spangroup) on the
+doc under `doc.spans[spans_key]`, where `spans_key` is a component config
+setting.
+
+## Assigned Attributes {id="assigned-attributes"}
+
+Predictions will be saved to `Doc.spans[spans_key]` as a
+[`SpanGroup`](/api/spangroup).
+
+`spans_key` defaults to `"sc"`, but can be passed as a parameter. The
+`span_finder` component will overwrite any existing spans under the spans key
+`doc.spans[spans_key]`.
+
+| Location               | Value                              |
+| ---------------------- | ---------------------------------- |
+| `Doc.spans[spans_key]` | The unlabeled spans. ~~SpanGroup~~ |
+
+## Config and implementation {id="config"}
+
+The default config is defined by the pipeline component factory and describes
+how the component should be configured. You can override its settings via the
+`config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
+[`config.cfg` for training](/usage/training#config). See the
+[model architectures](/api/architectures) documentation for details on the
+architectures and their arguments and hyperparameters.
+
+> #### Example
+>
+> ```python
+> from spacy.pipeline.span_finder import DEFAULT_SPAN_FINDER_MODEL
+> config = {
+>     "threshold": 0.5,
+>     "spans_key": "my_spans",
+>     "max_length": None,
+>     "min_length": None,
+>     "model": DEFAULT_SPAN_FINDER_MODEL,
+> }
+> nlp.add_pipe("span_finder", config=config)
+> ```
+
+| Setting      | Description                                                                                                                                                                                                            |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`      | A model instance that is given a list of documents and predicts a probability for each token. ~~Model[List[Doc], Floats2d]~~                                                                                           |
+| `spans_key`  | Key of the [`Doc.spans`](/api/doc#spans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"sc"`. ~~str~~ |
+| `threshold`  | Minimum probability to consider a prediction positive. Defaults to `0.5`. ~~float~~                                                                                                                                    |
+| `max_length` | Maximum length of the produced spans, defaults to `25`. ~~Optional[int]~~                                                                                                                                              |
+| `min_length` | Minimum length of the produced spans, defaults to `None` meaning shortest span length is 1. ~~Optional[int]~~                                                                                                          |
+| `scorer`     | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                      |
+
+```python
+%%GITHUB_SPACY/spacy/pipeline/span_finder.py
+```
+
+## SpanFinder.\_\_init\_\_ {id="init",tag="method"}
+
+> #### Example
+>
+> ```python
+> # Construction via add_pipe with default model
+> span_finder = nlp.add_pipe("span_finder")
+>
+> # Construction via add_pipe with custom model
+> config = {"model": {"@architectures": "my_span_finder"}}
+> span_finder = nlp.add_pipe("span_finder", config=config)
+>
+> # Construction from class
+> from spacy.pipeline import SpanFinder
+> span_finder = SpanFinder(nlp.vocab, model)
+> ```
+
+Create a new pipeline instance. In your application, you would normally use a
+shortcut for this and instantiate the component using its string name and
+[`nlp.add_pipe`](/api/language#create_pipe).
+
+| Name           | Description                                                                                                                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                       |
+| `model`        | A model instance that is given a list of documents and predicts a probability for each token. ~~Model[List[Doc], Floats2d]~~                                                                                           |
+| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                    |
+| _keyword-only_ |                                                                                                                                                                                                                        |
+| `spans_key`    | Key of the [`Doc.spans`](/api/doc#spans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"sc"`. ~~str~~ |
+| `threshold`    | Minimum probability to consider a prediction positive. Defaults to `0.5`. ~~float~~                                                                                                                                    |
+| `max_length`   | Maximum length of the produced spans, defaults to `None` meaning unlimited length. ~~Optional[int]~~                                                                                                                   |
+| `min_length`   | Minimum length of the produced spans, defaults to `None` meaning shortest span length is 1. ~~Optional[int]~~                                                                                                          |
+| `scorer`       | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                      |
+
+## SpanFinder.\_\_call\_\_ {id="call",tag="method"}
+
+Apply the pipe to one document. The document is modified in place, and returned.
+This usually happens under the hood when the `nlp` object is called on a text
+and all pipeline components are applied to the `Doc` in order. Both
+[`__call__`](/api/spanfinder#call) and [`pipe`](/api/spanfinder#pipe) delegate
+to the [`predict`](/api/spanfinder#predict) and
+[`set_annotations`](/api/spanfinder#set_annotations) methods.
+
+> #### Example
+>
+> ```python
+> doc = nlp("This is a sentence.")
+> span_finder = nlp.add_pipe("span_finder")
+> # This usually happens under the hood
+> processed = span_finder(doc)
+> ```
+
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `doc`       | The document to process. ~~Doc~~ |
+| **RETURNS** | The processed document. ~~Doc~~  |
+
+## SpanFinder.pipe {id="pipe",tag="method"}
+
+Apply the pipe to a stream of documents. This usually happens under the hood
+when the `nlp` object is called on a text and all pipeline components are
+applied to the `Doc` in order. Both [`__call__`](/api/spanfinder#call) and
+[`pipe`](/api/spanfinder#pipe) delegate to the
+[`predict`](/api/spanfinder#predict) and
+[`set_annotations`](/api/spanfinder#set_annotations) methods.
+
+> #### Example
+>
+> ```python
+> span_finder = nlp.add_pipe("span_finder")
+> for doc in span_finder.pipe(docs, batch_size=50):
+>     pass
+> ```
+
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `stream`       | A stream of documents. ~~Iterable[Doc]~~                      |
+| _keyword-only_ |                                                               |
+| `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
+| **YIELDS**     | The processed documents in order. ~~Doc~~                     |
+
+## SpanFinder.initialize {id="initialize",tag="method"}
+
+Initialize the component for training. `get_examples` should be a function that
+returns an iterable of [`Example`](/api/example) objects. **At least one example
+should be supplied.** The data examples are used to **initialize the model** of
+the component and can either be the full training data or a representative
+sample. Initialization includes validating the network and
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) This
+method is typically called by [`Language.initialize`](/api/language#initialize)
+and lets you customize arguments it receives via the
+[`[initialize.components]`](/api/data-formats#config-initialize) block in the
+config.
+
+> #### Example
+>
+> ```python
+> span_finder = nlp.add_pipe("span_finder")
+> span_finder.initialize(lambda: examples, nlp=nlp)
+> ```
+
+| Name           | Description                                                                                                                                                                |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. Must contain at least one `Example`. ~~Callable[[], Iterable[Example]]~~ |
+| _keyword-only_ |                                                                                                                                                                            |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                       |
+
+## SpanFinder.predict {id="predict",tag="method"}
+
+Apply the component's model to a batch of [`Doc`](/api/doc) objects without
+modifying them.
+
+> #### Example
+>
+> ```python
+> span_finder = nlp.add_pipe("span_finder")
+> scores = span_finder.predict([doc1, doc2])
+> ```
+
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
+| **RETURNS** | The model's prediction for each document.   |
+
+## SpanFinder.set_annotations {id="set_annotations",tag="method"}
+
+Modify a batch of [`Doc`](/api/doc) objects using pre-computed scores.
+
+> #### Example
+>
+> ```python
+> span_finder = nlp.add_pipe("span_finder")
+> scores = span_finder.predict(docs)
+> span_finder.set_annotations(docs, scores)
+> ```
+
+| Name     | Description                                          |
+| -------- | ---------------------------------------------------- |
+| `docs`   | The documents to modify. ~~Iterable[Doc]~~           |
+| `scores` | The scores to set, produced by `SpanFinder.predict`. |
+
+## SpanFinder.update {id="update",tag="method"}
+
+Learn from a batch of [`Example`](/api/example) objects containing the
+predictions and gold-standard annotations, and update the component's model.
+Delegates to [`predict`](/api/spanfinder#predict) and
+[`get_loss`](/api/spanfinder#get_loss).
+
+> #### Example
+>
+> ```python
+> span_finder = nlp.add_pipe("span_finder")
+> optimizer = nlp.initialize()
+> losses = span_finder.update(examples, sgd=optimizer)
+> ```
+
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
+
+## SpanFinder.get_loss {id="get_loss",tag="method"}
+
+Find the loss and gradient of loss for the batch of documents and their
+predicted scores.
+
+> #### Example
+>
+> ```python
+> span_finder = nlp.add_pipe("span_finder")
+> scores = span_finder.predict([eg.predicted for eg in examples])
+> loss, d_loss = span_finder.get_loss(examples, scores)
+> ```
+
+| Name           | Description                                                                    |
+| -------------- | ------------------------------------------------------------------------------ |
+| `examples`     | The batch of examples. ~~Iterable[Example]~~                                   |
+| `spans_scores` | Scores representing the model's predictions. ~~Tuple[Ragged, Floats2d]~~       |
+| **RETURNS**    | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, Floats2d]~~ |
+
+## SpanFinder.create_optimizer {id="create_optimizer",tag="method"}
+
+Create an optimizer for the pipeline component.
+
+> #### Example
+>
+> ```python
+> span_finder = nlp.add_pipe("span_finder")
+> optimizer = span_finder.create_optimizer()
+> ```
+
+| Name        | Description                  |
+| ----------- | ---------------------------- |
+| **RETURNS** | The optimizer. ~~Optimizer~~ |
+
+## SpanFinder.use_params {id="use_params",tag="method, contextmanager"}
+
+Modify the pipe's model to use the given parameter values.
+
+> #### Example
+>
+> ```python
+> span_finder = nlp.add_pipe("span_finder")
+> with span_finder.use_params(optimizer.averages):
+>     span_finder.to_disk("/best_model")
+> ```
+
+| Name     | Description                                        |
+| -------- | -------------------------------------------------- |
+| `params` | The parameter values to use in the model. ~~dict~~ |
+
+## SpanFinder.to_disk {id="to_disk",tag="method"}
+
+Serialize the pipe to disk.
+
+> #### Example
+>
+> ```python
+> span_finder = nlp.add_pipe("span_finder")
+> span_finder.to_disk("/path/to/span_finder")
+> ```
+
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
+
+## SpanFinder.from_disk {id="from_disk",tag="method"}
+
+Load the pipe from disk. Modifies the object in place and returns it.
+
+> #### Example
+>
+> ```python
+> span_finder = nlp.add_pipe("span_finder")
+> span_finder.from_disk("/path/to/span_finder")
+> ```
+
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified `SpanFinder` object. ~~SpanFinder~~                                                |
+
+## SpanFinder.to_bytes {id="to_bytes",tag="method"}
+
+> #### Example
+>
+> ```python
+> span_finder = nlp.add_pipe("span_finder")
+> span_finder_bytes = span_finder.to_bytes()
+> ```
+
+Serialize the pipe to a bytestring.
+
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the `SpanFinder` object. ~~bytes~~                                   |
+
+## SpanFinder.from_bytes {id="from_bytes",tag="method"}
+
+Load the pipe from a bytestring. Modifies the object in place and returns it.
+
+> #### Example
+>
+> ```python
+> span_finder_bytes = span_finder.to_bytes()
+> span_finder = nlp.add_pipe("span_finder")
+> span_finder.from_bytes(span_finder_bytes)
+> ```
+
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `SpanFinder` object. ~~SpanFinder~~                                                     |
+
+## Serialization fields {id="serialization-fields"}
+
+During serialization, spaCy will export several data fields used to restore
+different aspects of the object. If needed, you can exclude them from
+serialization by passing in the string names via the `exclude` argument.
+
+> #### Example
+>
+> ```python
+> data = span_finder.to_disk("/path", exclude=["vocab"])
+> ```
+
+| Name    | Description                                                    |
+| ------- | -------------------------------------------------------------- |
+| `vocab` | The shared [`Vocab`](/api/vocab).                              |
+| `cfg`   | The config file. You usually don't want to exclude this.       |
+| `model` | The binary model data. You usually don't want to exclude this. |

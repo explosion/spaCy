@@ -1,6 +1,5 @@
 import pytest
 
-
 # fmt: off
 TESTCASES = [
     # Punctuation tests

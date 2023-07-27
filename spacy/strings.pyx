@@ -1,19 +1,18 @@
 # cython: infer_types=True
-from typing import Optional, Union, Iterable, Tuple, Callable, Any, List, Iterator
-cimport cython
-from libc.string cimport memcpy
-from libcpp.set cimport set
+from typing import Iterable, Iterator, List, Optional, Tuple, Union
+
 from libc.stdint cimport uint32_t
+from libc.string cimport memcpy
 from murmurhash.mrmr cimport hash64
 
 import srsly
 
 from .typedefs cimport hash_t
 
+from . import util
+from .errors import Errors
 from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
-from .errors import Errors
-from . import util
 
 
 cdef class StringStore:
@@ -243,7 +242,6 @@ cdef class StringStore:
         cdef int n_length_bytes
         cdef int i
         cdef Utf8Str* string = <Utf8Str*>self.mem.alloc(1, sizeof(Utf8Str))
-        cdef uint32_t ulength = length
         if length < sizeof(string.s):
             string.s[0] = <unsigned char>length
             memcpy(&string.s[1], chars, length)
@@ -301,7 +299,7 @@ cpdef hash_t get_string_id(object string_or_hash) except -1:
 
     try:
         return hash_string(string_or_hash)
-    except:
+    except:   # no-cython-lint
         if _try_coerce_to_hash(string_or_hash, &str_hash):
             # Coerce the integral key to the expected primitive hash type.
             # This ensures that custom/overloaded "primitive" data types
@@ -318,6 +316,5 @@ cdef inline bint _try_coerce_to_hash(object key, hash_t* out_hash):
     try:
         out_hash[0] = key
         return True
-    except:
+    except:  # no-cython-lint
         return False
-

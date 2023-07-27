@@ -1,5 +1,5 @@
-from typing import Literal
 import warnings
+from typing import Literal
 
 
 class ErrorsWithCodes(type):
@@ -208,6 +208,9 @@ class Warnings(metaclass=ErrorsWithCodes):
     W123 = ("Argument `enable` with value {enable} does not contain all values specified in the config option "
             "`enabled` ({enabled}). Be aware that this might affect other components in your pipeline.")
     W124 = ("{host}:{port} is already in use, using the nearest available port {serve_port} as an alternative.")
+    W125 = ("The StaticVectors key_attr is no longer used. To set a custom "
+            "key attribute for vectors, configure it through Vectors(attr=) or "
+            "'spacy init vectors --attr'")
 
     # v4 warning strings
     W400 = ("`use_upper=False` is ignored, the upper layer is always enabled")
@@ -546,6 +549,8 @@ class Errors(metaclass=ErrorsWithCodes):
             "during training, make sure to include it in 'annotating components'")
 
     # New errors added in v3.x
+    E850 = ("The PretrainVectors objective currently only supports default or "
+            "floret vectors, not {mode} vectors.")
     E851 = ("The 'textcat' component labels should only have values of 0 or 1, "
             "but found value of '{val}'.")
     E852 = ("The tar file pulled from the remote attempted an unsafe path "
@@ -954,6 +959,14 @@ class Errors(metaclass=ErrorsWithCodes):
              "with `displacy.serve(doc, port=port)`")
     E1050 = ("Port {port} is already in use. Please specify an available port with `displacy.serve(doc, port=port)` "
              "or use `auto_select_port=True` to pick an available port automatically.")
+    E1051 = ("'allow_overlap' can only be False when max_positive is 1, but found 'max_positive': {max_positive}.")
+    E1052 = ("Unable to copy spans: the character offsets for the span at "
+             "index {i} in the span group do not align with the tokenization "
+             "in the target doc.")
+    E1053 = ("Both 'min_length' and 'max_length' should be larger than 0, but found"
+             " 'min_length': {min_length}, 'max_length': {max_length}")
+    E1054 = ("The text, including whitespace, must match between reference and "
+             "predicted docs when training {component}.")
 
     # v4 error strings
     E4000 = ("Expected a Doc as input, but got: '{type}'")
@@ -968,6 +981,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E4007 = ("Span {var} {value} must be {op} Span {existing_var} "
              "{existing_value}.")
     E4008 = ("Span {pos}_char {value} does not correspond to a token {pos}.")
+    E4009 = ("The '{attr}' parameter should be 'None' or 'True', but found '{value}'.")
 
 
 RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}

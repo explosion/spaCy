@@ -1,25 +1,26 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Callable, Dict, Iterable, List, Optional, Union
-import srsly
-from thinc.api import Model, Config
-from thinc.legacy import LegacySequenceCategoricalCrossentropy
-from thinc.types import Floats2d, Ints1d
 from itertools import islice
+from typing import Callable, Dict, Iterable, Optional, Union
 
+from thinc.api import Config, Model
+from thinc.legacy import LegacySequenceCategoricalCrossentropy
+
+from ..morphology cimport Morphology
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
-from ..morphology cimport Morphology
 
-from ..parts_of_speech import IDS as POS_IDS
-from ..symbols import POS
-from ..language import Language
-from ..errors import Errors
-from .pipe import deserialize_config
-from .tagger import ActivationsT, Tagger
 from .. import util
+from ..errors import Errors
+from ..language import Language
+from ..parts_of_speech import IDS as POS_IDS
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
 from ..util import registry
+from .tagger import ActivationsT, Tagger
+
+# See #9050
+BACKWARD_OVERWRITE = True
+BACKWARD_EXTEND = False
 
 default_model_config = """
 [model]
@@ -55,6 +56,7 @@ DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
         "overwrite": True,
         "extend": False,
         "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"},
+        "label_smoothing": 0.0,
         "save_activations": False,
     },
     default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
@@ -65,10 +67,11 @@ def make_morphologizer(
     name: str,
     overwrite: bool,
     extend: bool,
+    label_smoothing: float,
     scorer: Optional[Callable],
     save_activations: bool,
 ):
-    return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, scorer=scorer,
+    return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, label_smoothing=label_smoothing, scorer=scorer,
                          save_activations=save_activations)
 
 
@@ -79,8 +82,11 @@ def morphologizer_score(examples, **kwargs):
     results = {}
     results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
     results.update(Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs))
-    results.update(Scorer.score_token_attr_per_feat(examples,
-        "morph", getter=morph_key_getter, **kwargs))
+    results.update(
+        Scorer.score_token_attr_per_feat(
+            examples, "morph", getter=morph_key_getter, **kwargs
+        )
+    )
     return results
 
 
@@ -98,8 +104,9 @@ class Morphologizer(Tagger):
         model: Model,
         name: str = "morphologizer",
         *,
-        overwrite: bool = False,
-        extend: bool = False,
+        overwrite: bool = BACKWARD_OVERWRITE,
+        extend: bool = BACKWARD_EXTEND,
+        label_smoothing: float = 0.0,
         scorer: Optional[Callable] = morphologizer_score,
         save_activations: bool = False,
     ):
@@ -131,6 +138,7 @@ class Morphologizer(Tagger):
             "labels_pos": {},
             "overwrite": overwrite,
             "extend": extend,
+            "label_smoothing": label_smoothing,
         }
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
@@ -139,7 +147,7 @@ class Morphologizer(Tagger):
     @property
     def labels(self):
         """RETURNS (Iterable[str]): The labels currently added to the component."""
-        return self.cfg["labels_morph"].keys()
+        return tuple(self.cfg["labels_morph"].keys())
 
     @property
     def label_data(self) -> Dict[str, Dict[str, Union[str, float, int, None]]]:
@@ -240,7 +248,6 @@ class Morphologizer(Tagger):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
-        cdef Vocab vocab = self.vocab
         cdef bint overwrite = self.cfg["overwrite"]
         cdef bint extend = self.cfg["extend"]
 
@@ -289,7 +296,8 @@ class Morphologizer(Tagger):
         DOCS: https://spacy.io/api/morphologizer#get_loss
         """
         validate_examples(examples, "Morphologizer.get_loss")
-        loss_func = LegacySequenceCategoricalCrossentropy(names=tuple(self.labels), normalize=False)
+        loss_func = LegacySequenceCategoricalCrossentropy(names=self.labels, normalize=False,
+                                                          label_smoothing=self.cfg["label_smoothing"])
         truths = []
         for eg in examples:
             eg_truths = []

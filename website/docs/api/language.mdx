@@ -401,15 +401,16 @@ objects instead of tuples of `Doc` and `GoldParse` objects.
 > print(scores)
 > ```
 
-| Name            | Description                                                                                                                                    |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`      | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                              |
-| _keyword-only_  |                                                                                                                                                |
-| `batch_size`    | The batch size to use. ~~Optional[int]~~                                                                                                       |
-| `scorer`        | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. ~~Optional[Scorer]~~                                     |
-| `component_cfg` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
-| `scorer_cfg`    | Optional dictionary of keyword arguments for the `Scorer`. Defaults to `None`. ~~Optional[Dict[str, Any]]~~                                    |
-| **RETURNS**     | A dictionary of evaluation scores. ~~Dict[str, Union[float, Dict[str, float]]]~~                                                               |
+| Name                                         | Description                                                                                                                                    |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`                                   | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                              |
+| _keyword-only_                               |                                                                                                                                                |
+| `batch_size`                                 | The batch size to use. ~~Optional[int]~~                                                                                                       |
+| `scorer`                                     | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. ~~Optional[Scorer]~~                                     |
+| `component_cfg`                              | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
+| `scorer_cfg`                                 | Optional dictionary of keyword arguments for the `Scorer`. Defaults to `None`. ~~Optional[Dict[str, Any]]~~                                    |
+| `per_component` <Tag variant="new">3.6</Tag> | Whether to return the scores keyed by component name. Defaults to `False`. ~~bool~~                                                            |
+| **RETURNS**                                  | A dictionary of evaluation scores. ~~Dict[str, Union[float, Dict[str, float]]]~~                                                               |
 
 ## Language.use_params {id="use_params",tag="contextmanager, method"}
 
@@ -435,7 +436,8 @@ component factory registered using
 [`@Language.component`](/api/language#component) or
 [`@Language.factory`](/api/language#factory). Components should be callables
 that take a `Doc` object, modify it and return it. Only one of `before`,
-`after`, `first` or `last` can be set. Default behavior is `last=True`.
+`after`, `first` or `last` can be set. The arguments `first` and `last` can
+either be `None` or `True`. Default behavior is `last=True`.
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -470,8 +472,8 @@ component, adds it to the pipeline and returns it.
 | _keyword-only_                        |                                                                                                                                                                                                                                                                                          |
 | `before`                              | Component name or index to insert component directly before. ~~Optional[Union[str, int]]~~                                                                                                                                                                                               |
 | `after`                               | Component name or index to insert component directly after. ~~Optional[Union[str, int]]~~                                                                                                                                                                                                |
-| `first`                               | Insert component first / not first in the pipeline. ~~Optional[bool]~~                                                                                                                                                                                                                   |
-| `last`                                | Insert component last / not last in the pipeline. ~~Optional[bool]~~                                                                                                                                                                                                                     |
+| `first`                               | Insert component first in the pipeline if set to `True`. ~~Optional[Literal[True]]~~                                                                                                                                                                                                     |
+| `last`                                | Insert component last in the pipeline if set to `True`. ~~Optional[Literal[True]]~~                                                                                                                                                                                                      |
 | `config` <Tag variant="new">3</Tag>   | Optional config parameters to use for this component. Will be merged with the `default_config` specified by the component factory. ~~Dict[str, Any]~~                                                                                                                                    |
 | `source` <Tag variant="new">3</Tag>   | Optional source pipeline to copy component from. If a source is provided, the `factory_name` is interpreted as the name of the component in the source pipeline. Make sure that the vocab, vectors and settings of the source pipeline match the target pipeline. ~~Optional[Language]~~ |
 | `validate` <Tag variant="new">3</Tag> | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                                                           |
@@ -874,7 +876,7 @@ token-to-vector embedding component like [`Tok2Vec`](/api/tok2vec) or
 training a pipeline with components sourced from an existing pipeline: if
 multiple components (e.g. tagger, parser, NER) listen to the same
 token-to-vector component, but some of them are frozen and not updated, their
-performance may degrade significally as the token-to-vector component is updated
+performance may degrade significantly as the token-to-vector component is updated
 with new data. To prevent this, listeners can be replaced with a standalone
 token-to-vector layer that is owned by the component and doesn't change if the
 component isn't updated.

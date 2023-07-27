@@ -1,5 +1,6 @@
 from . cimport symbols
 
+
 cdef enum attr_id_t:
     NULL_ATTR = 0
     IS_ALPHA = symbols.IS_ALPHA

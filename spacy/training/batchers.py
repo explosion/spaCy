@@ -1,11 +1,20 @@
-from typing import Union, Iterable, Sequence, TypeVar, List, Callable, Iterator
-from typing import Optional, Any
-from functools import partial
 import itertools
+from functools import partial
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    TypeVar,
+    Union,
+)
+
 from thinc.schedules import Schedule
 
-from ..util import registry, minibatch
-
+from ..util import minibatch, registry
 
 SizingSchedule = Union[Iterable[int], int, Schedule]
 Sizing = Union[Iterable[int], int]

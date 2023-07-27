@@ -1,21 +1,36 @@
-from typing import List, Callable, Tuple, Dict, Iterable, Union, Any, IO
-from typing import Optional, TYPE_CHECKING
+import random
+import shutil
+import sys
 from pathlib import Path
 from timeit import default_timer as timer
-from thinc.api import Optimizer, Config, constant
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
+
+from thinc.api import Config, Optimizer, constant
 from wasabi import Printer
-import random
-import sys
-import shutil
 
-
-from .example import Example
-from ..schemas import ConfigSchemaDistill, ConfigSchemaTraining
-from ..errors import Errors
-from ..tokens.doc import Doc
 from .. import ty
-from ..util import resolve_dot_names, registry, logger
-from ..util import set_gpu_allocator_from_config, set_seed_from_config
+from ..errors import Errors
+from ..schemas import ConfigSchemaDistill, ConfigSchemaTraining
+from ..tokens.doc import Doc
+from ..util import (
+    logger,
+    registry,
+    resolve_dot_names,
+    set_gpu_allocator_from_config,
+    set_seed_from_config,
+)
+from .example import Example
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401

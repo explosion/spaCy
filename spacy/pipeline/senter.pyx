@@ -1,23 +1,19 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Dict, Iterable, Optional, Callable, List, Union
 from itertools import islice
+from typing import Callable, Iterable, Optional
 
-import srsly
-from thinc.api import Model, Config
+from thinc.api import Config, Model
 from thinc.legacy import LegacySequenceCategoricalCrossentropy
-
-from thinc.types import Floats2d, Ints1d
 
 from ..tokens.doc cimport Doc
 
-from .tagger import ActivationsT, Tagger
-from ..language import Language
+from .. import util
 from ..errors import Errors
+from ..language import Language
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
 from ..util import registry
-from .. import util
-
+from .tagger import ActivationsT, Tagger
 
 default_model_config = """
 [model]

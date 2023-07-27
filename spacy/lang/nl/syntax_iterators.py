@@ -1,7 +1,7 @@
-from typing import Union, Iterator, Tuple
+from typing import Iterator, Tuple, Union
 
-from ...symbols import NOUN, PRON
 from ...errors import Errors
+from ...symbols import NOUN, PRON
 from ...tokens import Doc, Span
 
 

@@ -1,18 +1,20 @@
 # cython: infer_types=True, profile=True
 
 from pathlib import Path
-from typing import Iterable, Tuple, Union, Iterator
+from typing import Iterable, Iterator, Tuple, Union
+
 from cymem.cymem cimport Pool
 
-from .candidate import Candidate
+from ..errors import Errors
 from ..tokens import Span, SpanGroup
 from ..util import SimpleFrozenList
-from ..errors import Errors
+from .candidate import Candidate
 
 
 cdef class KnowledgeBase:
-    """A `KnowledgeBase` instance stores unique identifiers for entities and their textual aliases,
-    to support entity linking of named entities to real-world concepts.
+    """A `KnowledgeBase` instance stores unique identifiers for entities and
+    their textual aliases, to support entity linking of named entities to
+    real-world concepts.
     This is an abstract class and requires its operations to be implemented.
 
     DOCS: https://spacy.io/api/kb
@@ -40,7 +42,9 @@ cdef class KnowledgeBase:
         RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)
+            Errors.E1045.format(
+                parent="KnowledgeBase", method="get_candidates", name=self.__name__
+            )
         )
 
     def get_vectors(self, entities: Iterable[str]) -> Iterable[Iterable[float]]:
@@ -58,7 +62,9 @@ cdef class KnowledgeBase:
         RETURNS (Iterable[float]): Vector for specified entity.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="get_vector", name=self.__name__)
+            Errors.E1045.format(
+                parent="KnowledgeBase", method="get_vector", name=self.__name__
+            )
         )
 
     def to_bytes(self, **kwargs) -> bytes:
@@ -66,7 +72,9 @@ cdef class KnowledgeBase:
         RETURNS (bytes): Current state as binary string.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="to_bytes", name=self.__name__)
+            Errors.E1045.format(
+                parent="KnowledgeBase", method="to_bytes", name=self.__name__
+            )
         )
 
     def from_bytes(self, bytes_data: bytes, *, exclude: Tuple[str] = tuple()):
@@ -75,27 +83,37 @@ cdef class KnowledgeBase:
         exclude (Tuple[str]): Properties to exclude when restoring KB.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="from_bytes", name=self.__name__)
+            Errors.E1045.format(
+                parent="KnowledgeBase", method="from_bytes", name=self.__name__
+            )
         )
 
-    def to_disk(self, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()) -> None:
+    def to_disk(
+            self, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()
+    ) -> None:
         """
         Write KnowledgeBase content to disk.
         path (Union[str, Path]): Target file path.
         exclude (Iterable[str]): List of components to exclude.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="to_disk", name=self.__name__)
+            Errors.E1045.format(
+                parent="KnowledgeBase", method="to_disk", name=self.__name__
+            )
         )
 
-    def from_disk(self, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()) -> None:
+    def from_disk(
+            self, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()
+    ) -> None:
         """
         Load KnowledgeBase content from disk.
         path (Union[str, Path]): Target file path.
         exclude (Iterable[str]): List of components to exclude.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="from_disk", name=self.__name__)
+            Errors.E1045.format(
+                parent="KnowledgeBase", method="from_disk", name=self.__name__
+            )
         )
 
     @property

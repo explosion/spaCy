@@ -1,6 +1,7 @@
 import os
 
 import pytest
+
 from spacy.attrs import IS_ALPHA, LEMMA, ORTH
 from spacy.lang.en import English
 from spacy.parts_of_speech import NOUN, VERB

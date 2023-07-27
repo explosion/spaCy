@@ -1,12 +1,14 @@
 # cython: infer_types
-import numpy
 import warnings
-from typing import Union, Tuple, List, Dict, Optional
+from typing import Dict, List, Optional, Tuple, Union
+
+import numpy
+
 from cython.operator cimport dereference as deref
 from libcpp.memory cimport shared_ptr
 
-from .errors import Warnings
 from . import symbols
+from .errors import Warnings
 
 
 cdef class Morphology:
@@ -78,14 +80,12 @@ cdef class Morphology:
         out.sort(key=lambda x: x[0])
         return dict(out)
 
-
     def _normalized_feat_dict_to_str(self, feats: Dict[str, str]) -> str:
         norm_feats_string = self.FEATURE_SEP.join([
-                self.FIELD_SEP.join([field, self.VALUE_SEP.join(values) if isinstance(values, list) else values])
+            self.FIELD_SEP.join([field, self.VALUE_SEP.join(values) if isinstance(values, list) else values])
             for field, values in feats.items()
-        ])
+            ])
         return norm_feats_string or self.EMPTY_MORPH
-
 
     cdef hash_t _add(self, features):
         """Insert a morphological analysis in the morphology table, if not
@@ -138,7 +138,7 @@ cdef class Morphology:
                     field_feature_pairs.append((field_key, value_key))
             else:
                 # We could box scalar values into a list and use a common
-                # code path to generate features but that incurs a small 
+                # code path to generate features but that incurs a small
                 # but measurable allocation/iteration overhead (as this
                 # branch is taken often enough).
                 value_key = self.strings.add(field + self.FIELD_SEP + values)
@@ -243,6 +243,7 @@ cdef int get_n_by_field(attr_t* results, const shared_ptr[MorphAnalysisC] morph,
             results[n_results] = deref(morph).features[i].value
             n_results += 1
     return n_results
+
 
 def unpickle_morphology(strings, tags):
     cdef Morphology morphology = Morphology(strings)
