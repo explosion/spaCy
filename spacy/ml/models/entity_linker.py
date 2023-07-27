@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional, Tuple, Iterator
+from typing import Callable, Iterable, Iterator, List, Optional, Tuple
 
 from thinc.api import (
     Linear,
