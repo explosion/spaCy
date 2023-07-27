@@ -2,7 +2,7 @@ import random
 import warnings
 from itertools import islice
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Union, cast
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Sequence, Union, cast
 
 import srsly
 from numpy import dtype

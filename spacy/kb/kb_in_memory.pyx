@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True
-from typing import Any, Callable, Dict, Iterable, Union
+from typing import Any, Callable, Dict, Iterable, Iterator
 
 import srsly
 
