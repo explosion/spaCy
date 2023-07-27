@@ -6,7 +6,7 @@ from typing import Iterable, Iterator, Tuple, Union
 from cymem.cymem cimport Pool
 
 from ..errors import Errors
-from ..tokens import Span, SpanGroup
+from ..tokens import SpanGroup
 from ..util import SimpleFrozenList
 from .candidate import Candidate
 

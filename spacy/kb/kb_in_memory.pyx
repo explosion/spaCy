@@ -12,7 +12,7 @@ from preshed.maps cimport PreshMap
 import warnings
 from pathlib import Path
 
-from ..tokens import Span, SpanGroup
+from ..tokens import SpanGroup
 
 from ..typedefs cimport hash_t
 
