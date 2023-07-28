@@ -485,7 +485,9 @@ class EntityLinker(TrainablePipe):
                 if self.incl_context:
                     # get n_neighbour sentences, clipped to the length of the document
                     start_sentence = max(0, sent_indices[0] - self.n_sents)
-                    end_sentence = min(len(sentences) - 1, sent_indices[1] + self.n_sents)
+                    end_sentence = min(
+                        len(sentences) - 1, sent_indices[1] + self.n_sents
+                    )
                     start_token = sentences[start_sentence].start
                     end_token = sentences[end_sentence].end
                     sent_doc = doc[start_token:end_token].as_doc()
