@@ -474,13 +474,18 @@ class EntityLinker(TrainablePipe):
 
             # Looping over candidate entities for this doc. (TODO: rewrite)
             for ent_cand_idx, ent in enumerate(doc.ents):
-                sent_index = sentences.index(ent.sent)
-                assert sent_index >= 0
+                assert hasattr(ent, "sents")
+                sents = list(ent.sents)
+                sent_indices = (
+                    sentences.index(sents[0]),
+                    sentences.index(sents[-1]),
+                )
+                assert sent_indices[1] >= sent_indices[0] >= 0
 
                 if self.incl_context:
                     # get n_neighbour sentences, clipped to the length of the document
-                    start_sentence = max(0, sent_index - self.n_sents)
-                    end_sentence = min(len(sentences) - 1, sent_index + self.n_sents)
+                    start_sentence = max(0, sent_indices[0] - self.n_sents)
+                    end_sentence = min(len(sentences) - 1, sent_indices[1] + self.n_sents)
                     start_token = sentences[start_sentence].start
                     end_token = sentences[end_sentence].end
                     sent_doc = doc[start_token:end_token].as_doc()
