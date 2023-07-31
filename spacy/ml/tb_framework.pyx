@@ -1,27 +1,44 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False
-from typing import List, Tuple, Any, Optional, TypeVar, cast
-from libc.string cimport memset, memcpy
+from typing import Any, List, Optional, Tuple, cast
+
 from libc.stdlib cimport calloc, free, realloc
+from libc.string cimport memcpy, memset
 from libcpp.vector cimport vector
+
 import numpy
+
 cimport numpy as np
-from thinc.api import Model, normal_init, chain, list2array, Linear
-from thinc.api import uniform_init, glorot_uniform_init, zero_init
-from thinc.api import NumpyOps
+
+from thinc.api import (
+    Linear,
+    Model,
+    NumpyOps,
+    chain,
+    glorot_uniform_init,
+    list2array,
+    normal_init,
+    uniform_init,
+    zero_init,
+)
+
 from thinc.backends.cblas cimport CBlas, saxpy, sgemm
-from thinc.types import Floats1d, Floats2d, Floats3d, Floats4d
-from thinc.types import Ints1d, Ints2d
+
+from thinc.types import Floats2d, Floats3d, Floats4d, Ints1d, Ints2d
 
 from ..errors import Errors
 from ..pipeline._parser_internals import _beam_utils
 from ..pipeline._parser_internals.batch import GreedyBatch
+
 from ..pipeline._parser_internals._parser_utils cimport arg_max
-from ..pipeline._parser_internals.transition_system cimport c_transition_batch, c_apply_actions
-from ..pipeline._parser_internals.transition_system cimport TransitionSystem
 from ..pipeline._parser_internals.stateclass cimport StateC, StateClass
+from ..pipeline._parser_internals.transition_system cimport (
+    TransitionSystem,
+    c_apply_actions,
+    c_transition_batch,
+)
+
 from ..tokens.doc import Doc
 from ..util import registry
-
 
 State = Any  # TODO
 
@@ -119,7 +136,7 @@ def init(
     Y: Optional[Tuple[List[State], List[Floats2d]]] = None,
 ):
     if X is not None:
-        docs, moves = X
+        docs, _ = X
         model.get_ref("tok2vec").initialize(X=docs)
     else:
         model.get_ref("tok2vec").initialize()
@@ -128,7 +145,6 @@ def init(
         current_nO = model.maybe_get_dim("nO")
         if current_nO is None or current_nO != inferred_nO:
             model.attrs["resize_output"](model, inferred_nO)
-    nO = model.get_dim("nO")
     nP = model.get_dim("nP")
     nH = model.get_dim("nH")
     nI = model.get_dim("nI")
@@ -175,9 +191,10 @@ class TransitionModelInputs:
         self,
         docs: List[Doc],
         moves: TransitionSystem,
-        actions: Optional[List[Ints1d]]=None,
-        max_moves: int=0,
-        states: Optional[List[State]]=None):
+        actions: Optional[List[Ints1d]] = None,
+        max_moves: int = 0,
+        states: Optional[List[State]] = None,
+    ):
         """
         actions (Optional[List[Ints1d]]): actions to apply for each Doc.
         docs (List[Doc]): Docs to predict transition sequences for.
@@ -217,12 +234,12 @@ def forward(model, inputs: TransitionModelInputs, is_train: bool):
         return _forward_greedy_cpu(model, moves, states, feats, seen_mask, actions=actions)
     else:
         return _forward_fallback(model, moves, states, tokvecs, backprop_tok2vec,
-            feats, backprop_feats, seen_mask, is_train, actions=actions,
-            max_moves=inputs.max_moves)
+                                 feats, backprop_feats, seen_mask, is_train, actions=actions,
+                                 max_moves=inputs.max_moves)
 
 
 def _forward_greedy_cpu(model: Model, TransitionSystem moves, states: List[StateClass], np.ndarray feats,
-                np.ndarray[np.npy_bool, ndim=1] seen_mask, actions: Optional[List[Ints1d]]=None):
+                        np.ndarray[np.npy_bool, ndim = 1] seen_mask, actions: Optional[List[Ints1d]] = None):
     cdef vector[StateC*] c_states
     cdef StateClass state
     for state in states:
@@ -240,9 +257,10 @@ def _forward_greedy_cpu(model: Model, TransitionSystem moves, states: List[State
 
     return (states, scores), backprop
 
+
 cdef list _parse_batch(CBlas cblas, TransitionSystem moves, StateC** states,
                        WeightsC weights, SizesC sizes, actions: Optional[List[Ints1d]]=None):
-    cdef int i, j
+    cdef int i
     cdef vector[StateC *] unfinished
     cdef ActivationsC activations = _alloc_activations(sizes)
     cdef np.ndarray step_scores
@@ -259,7 +277,7 @@ cdef list _parse_batch(CBlas cblas, TransitionSystem moves, StateC** states,
             if actions is None:
                 # Validate actions, argmax, take action.
                 c_transition_batch(moves, states, <const float*>step_scores.data, sizes.classes,
-                    sizes.states)
+                                   sizes.states)
             else:
                 c_apply_actions(moves, states, <const int*>step_actions.data, sizes.states)
             for i in range(sizes.states):
@@ -285,8 +303,9 @@ def _forward_fallback(
     backprop_feats,
     seen_mask,
     is_train: bool,
-    actions: Optional[List[Ints1d]]=None,
-    max_moves: int=0):
+    actions: Optional[List[Ints1d]] = None,
+    max_moves: int = 0,
+):
     nF = model.get_dim("nF")
     output = model.get_ref("output")
     hidden_b = model.get_param("hidden_b")
@@ -354,7 +373,7 @@ def _forward_fallback(
             for clas in set(model.attrs["unseen_classes"]):
                 if (d_scores[:, clas] < 0).any():
                     model.attrs["unseen_classes"].remove(clas)
-        d_scores *= seen_mask == False
+        d_scores *= seen_mask == False  # no-cython-lint
         # Calculate the gradients for the parameters of the output layer.
         # The weight gemm is (nS, nO) @ (nS, nH).T
         output.inc_grad("b", d_scores.sum(axis=0))
@@ -554,13 +573,13 @@ cdef void _resize_activations(ActivationsC* A, SizesC n) nogil:
         A._max_size = n.states
     else:
         A.token_ids = <int*>realloc(A.token_ids,
-            n.states * n.feats * sizeof(A.token_ids[0]))
+                                    n.states * n.feats * sizeof(A.token_ids[0]))
         A.unmaxed = <float*>realloc(A.unmaxed,
-            n.states * n.hiddens * n.pieces * sizeof(A.unmaxed[0]))
+                                    n.states * n.hiddens * n.pieces * sizeof(A.unmaxed[0]))
         A.hiddens = <float*>realloc(A.hiddens,
-            n.states * n.hiddens * sizeof(A.hiddens[0]))
+                                    n.states * n.hiddens * sizeof(A.hiddens[0]))
         A.is_valid = <int*>realloc(A.is_valid,
-            n.states * n.classes * sizeof(A.is_valid[0]))
+                                   n.states * n.classes * sizeof(A.is_valid[0]))
         A._max_size = n.states
     A._curr_size = n.states
 
@@ -582,9 +601,9 @@ cdef void _predict_states(CBlas cblas, ActivationsC* A, float* scores, StateC** 
     else:
         # Compute hidden-to-output
         sgemm(cblas)(False, True, n.states, n.classes, n.hiddens,
-                      1.0, <const float *>A.hiddens, n.hiddens,
-                      <const float *>W.hidden_weights, n.hiddens,
-                      0.0, scores, n.classes)
+                     1.0, <const float *>A.hiddens, n.hiddens,
+                     <const float *>W.hidden_weights, n.hiddens,
+                     0.0, scores, n.classes)
         # Add bias
         for i in range(n.states):
             saxpy(cblas)(n.classes, 1., W.hidden_bias, 1, &scores[i*n.classes], 1)
@@ -600,12 +619,12 @@ cdef void _predict_states(CBlas cblas, ActivationsC* A, float* scores, StateC** 
                 scores[i*n.classes+j] = min_
 
 
-cdef void _sum_state_features(CBlas cblas, float* output,
-        const float* cached, const int* token_ids, SizesC n) nogil:
-    cdef int idx, b, f, i
+cdef void _sum_state_features(CBlas cblas, float* output, const float* cached,
+                              const int* token_ids, SizesC n) nogil:
+    cdef int idx, b, f
     cdef const float* feature
     cdef int B = n.states
-    cdef int O = n.hiddens * n.pieces
+    cdef int O = n.hiddens * n.pieces  # no-cython-lint
     cdef int F = n.feats
     cdef int T = n.tokens
     padding = cached + (T * F * O)
@@ -620,4 +639,3 @@ cdef void _sum_state_features(CBlas cblas, float* output,
                 feature = &cached[idx]
             saxpy(cblas)(O, one, <const float*>feature, 1, &output[b*O], 1)
         token_ids += F
-

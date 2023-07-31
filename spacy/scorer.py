@@ -1,13 +1,23 @@
-from typing import Optional, Iterable, Dict, Set, List, Any, Callable, Tuple
-from typing import TYPE_CHECKING
-import numpy as np
 from collections import defaultdict
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+)
 
-from .training import Example
-from .tokens import Token, Doc, Span
+import numpy as np
+
 from .errors import Errors
-from .util import get_lang_class, SimpleFrozenList
 from .morphology import Morphology
+from .tokens import Doc, Span, Token
+from .training import Example
+from .util import SimpleFrozenList, get_lang_class
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
@@ -121,20 +131,30 @@ class Scorer:
                 nlp.add_pipe(pipe)
             self.nlp = nlp
 
-    def score(self, examples: Iterable[Example]) -> Dict[str, Any]:
+    def score(
+        self, examples: Iterable[Example], *, per_component: bool = False
+    ) -> Dict[str, Any]:
         """Evaluate a list of Examples.
 
         examples (Iterable[Example]): The predicted annotations + correct annotations.
+        per_component (bool): Whether to return the scores keyed by component
+            name. Defaults to False.
         RETURNS (Dict): A dictionary of scores.
 
         DOCS: https://spacy.io/api/scorer#score
         """
         scores = {}
         if hasattr(self.nlp.tokenizer, "score"):
-            scores.update(self.nlp.tokenizer.score(examples, **self.cfg))  # type: ignore
+            if per_component:
+                scores["tokenizer"] = self.nlp.tokenizer.score(examples, **self.cfg)
+            else:
+                scores.update(self.nlp.tokenizer.score(examples, **self.cfg))  # type: ignore
         for name, component in self.nlp.pipeline:
             if hasattr(component, "score"):
-                scores.update(component.score(examples, **self.cfg))
+                if per_component:
+                    scores[name] = component.score(examples, **self.cfg)
+                else:
+                    scores.update(component.score(examples, **self.cfg))
         return scores
 
     @staticmethod

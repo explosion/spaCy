@@ -1,22 +1,21 @@
 import itertools
-import pytest
+
 import numpy
+import pytest
 from numpy.testing import assert_equal
-from thinc.api import Adam
+from thinc.api import Adam, fix_random_seed
 
 from spacy import registry, util
 from spacy.attrs import DEP, NORM
 from spacy.lang.en import English
-from spacy.training import Example
+from spacy.pipeline import DependencyParser
+from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
+from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.tokens import Doc
+from spacy.training import Example
 from spacy.vocab import Vocab
-from spacy import util, registry
-from thinc.api import fix_random_seed
 
-from ...pipeline import DependencyParser
-from ...pipeline.dep_parser import DEFAULT_PARSER_MODEL
 from ..util import apply_transition_sequence, make_tempdir
-from ...pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 
 TRAIN_DATA = [
     (
@@ -210,7 +209,7 @@ def test_parser_apply_actions(en_vocab, en_parser):
 
     assert len(active_states) == 0
 
-    for (state, doc) in zip(states, docs):
+    for state, doc in zip(states, docs):
         moves.set_annotations(state, doc)
 
     assert docs[0][0].head.i == 1

@@ -1,5 +1,5 @@
-from typing import cast
 import random
+from typing import cast
 
 import numpy.random
 import pytest
@@ -13,12 +13,16 @@ from spacy.cli.evaluate import print_prf_per_type, print_textcats_auc_per_cat
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.pipeline import TextCategorizer, TrainablePipe
-from spacy.pipeline.textcat import single_label_bow_config
-from spacy.pipeline.textcat import single_label_cnn_config
-from spacy.pipeline.textcat import single_label_default_config
-from spacy.pipeline.textcat_multilabel import multi_label_bow_config
-from spacy.pipeline.textcat_multilabel import multi_label_cnn_config
-from spacy.pipeline.textcat_multilabel import multi_label_default_config
+from spacy.pipeline.textcat import (
+    single_label_bow_config,
+    single_label_cnn_config,
+    single_label_default_config,
+)
+from spacy.pipeline.textcat_multilabel import (
+    multi_label_bow_config,
+    multi_label_cnn_config,
+    multi_label_default_config,
+)
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
 from spacy.tokens import Doc, DocBin

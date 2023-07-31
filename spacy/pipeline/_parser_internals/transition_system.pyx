@@ -1,21 +1,21 @@
 # cython: infer_types=True
 from __future__ import print_function
+
 from cymem.cymem cimport Pool
 from libc.stdlib cimport calloc, free
 from libcpp.vector cimport vector
 
 from collections import Counter
+
 import srsly
 
-from . cimport _beam_utils
-from ...typedefs cimport weight_t, attr_t
-from ...tokens.doc cimport Doc
 from ...structs cimport TokenC
-from .stateclass cimport StateClass
+from ...typedefs cimport attr_t, weight_t
 from ._parser_utils cimport arg_max_if_valid
+from .stateclass cimport StateClass
 
-from ...errors import Errors
 from ... import util
+from ...errors import Errors
 
 
 cdef weight_t MIN_SCORE = -90000
@@ -268,7 +268,6 @@ cdef class TransitionSystem:
         return self
 
     def to_bytes(self, exclude=tuple()):
-        transitions = []
         serializers = {
             'moves': lambda: srsly.json_dumps(self.labels),
             'strings': lambda: self.strings.to_bytes(),
@@ -292,19 +291,19 @@ cdef class TransitionSystem:
 
 
 cdef void c_apply_actions(TransitionSystem moves, StateC** states, const int* actions,
-    int batch_size) nogil:
-        cdef int i
-        cdef Transition action
-        cdef StateC* state
-        for i in range(batch_size):
-            state = states[i]
-            action = moves.c[actions[i]]
-            action.do(state, action.label)
-            state.history.push_back(action.clas)
+                          int batch_size) nogil:
+    cdef int i
+    cdef Transition action
+    cdef StateC* state
+    for i in range(batch_size):
+        state = states[i]
+        action = moves.c[actions[i]]
+        action.do(state, action.label)
+        state.history.push_back(action.clas)
 
 
 cdef void c_transition_batch(TransitionSystem moves, StateC** states, const float* scores,
-    int nr_class, int batch_size) nogil:
+                             int nr_class, int batch_size) nogil:
     is_valid = <int*>calloc(moves.n_moves, sizeof(int))
     cdef int i, guess
     cdef Transition action
@@ -320,4 +319,3 @@ cdef void c_transition_batch(TransitionSystem moves, StateC** states, const floa
             action.do(states[i], action.label)
             states[i].history.push_back(guess)
     free(is_valid)
-

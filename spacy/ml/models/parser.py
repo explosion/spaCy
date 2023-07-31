@@ -1,12 +1,13 @@
-from typing import Optional, List, Tuple, Any, Literal
-from thinc.types import Floats2d
-from thinc.api import Model
 import warnings
+from typing import Any, List, Literal, Optional, Tuple
+
+from thinc.api import Model
+from thinc.types import Floats2d
 
 from ...errors import Errors, Warnings
+from ...tokens.doc import Doc
 from ...util import registry
 from ..tb_framework import TransitionModel
-from ...tokens.doc import Doc
 
 TransitionSystem = Any  # TODO
 State = Any  # TODO

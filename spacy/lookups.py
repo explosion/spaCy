@@ -1,15 +1,14 @@
-from typing import Any, List, Union, Optional, Dict
+from collections import OrderedDict
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
 import requests
 import srsly
 from preshed.bloom import BloomFilter
-from collections import OrderedDict
 
 from .errors import Errors
-from .util import SimpleFrozenDict, ensure_path, registry, load_language_data
-from .util import logger
 from .strings import get_string_id
-
+from .util import SimpleFrozenDict, ensure_path, load_language_data, logger, registry
 
 UNSET = object()
 
@@ -30,7 +29,7 @@ def load_lookups_data_from_url(lang, tables, url):
         r = requests.get(table_url)
         if r.status_code != 200:
             raise ValueError(
-                Errors.E4008.format(status_code=r.status_code, url=table_url)
+                Errors.E4011.format(status_code=r.status_code, url=table_url)
             )
         table_data = r.json()
         lookups.add_table(table, table_data)

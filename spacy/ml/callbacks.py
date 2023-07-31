@@ -1,8 +1,8 @@
-from typing import Type, Callable, Dict, TYPE_CHECKING, List, Optional, Set
 import functools
 import inspect
 import types
 import warnings
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Type
 
 from thinc.layers import with_nvtx_range
 from thinc.model import Model, wrap_model_recursive

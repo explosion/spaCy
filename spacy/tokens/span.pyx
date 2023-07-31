@@ -1,23 +1,23 @@
 cimport numpy as np
-from libc.math cimport sqrt
 from libcpp.memory cimport make_shared
+
+import copy
+import warnings
 
 import numpy
 from thinc.api import get_array_module
-import warnings
-import copy
 
-from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
-from ..structs cimport TokenC, LexemeC
-from ..typedefs cimport flags_t, attr_t, hash_t
-from ..attrs cimport attr_id_t
-from ..parts_of_speech cimport univ_pos_t
 from ..attrs cimport *
+from ..attrs cimport ORTH, attr_id_t
 from ..lexeme cimport Lexeme
+from ..structs cimport TokenC
 from ..symbols cimport dep
+from ..typedefs cimport attr_t
+from .doc cimport _get_lca_matrix, get_token_attr, token_by_end, token_by_start
+from .token cimport Token
 
-from ..util import normalize_slice
 from ..errors import Errors, Warnings
+from ..util import normalize_slice
 from .underscore import Underscore, get_ext_args
 
 
@@ -225,8 +225,8 @@ cdef class Span:
 
     @property
     def _(self):
-        cdef SpanC* span_c = self.span_c()
         """Custom extension attributes registered via `set_extension`."""
+        cdef SpanC* span_c = self.span_c()
         return Underscore(Underscore.span_extensions, self,
                           start=span_c.start_char, end=span_c.end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
 
@@ -370,13 +370,26 @@ cdef class Span:
         """
         if "similarity" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["similarity"](self, other)
-        if len(self) == 1 and hasattr(other, "orth"):
-            if self[0].orth == other.orth:
+        attr = getattr(self.doc.vocab.vectors, "attr", ORTH)
+        cdef Token this_token
+        cdef Token other_token
+        cdef Lexeme other_lex
+        if len(self) == 1 and isinstance(other, Token):
+            this_token = self[0]
+            other_token = other
+            if Token.get_struct_attr(this_token.c, attr) == Token.get_struct_attr(other_token.c, attr):
+                return 1.0
+        elif len(self) == 1 and isinstance(other, Lexeme):
+            this_token = self[0]
+            other_lex = other
+            if Token.get_struct_attr(this_token.c, attr) == Lexeme.get_struct_attr(other_lex.c, attr):
                 return 1.0
         elif isinstance(other, (Doc, Span)) and len(self) == len(other):
             similar = True
             for i in range(len(self)):
-                if self[i].orth != getattr(other[i], "orth", None):
+                this_token = self[i]
+                other_token = other[i]
+                if Token.get_struct_attr(this_token.c, attr) != Token.get_struct_attr(other_token.c, attr):
                     similar = False
                     break
             if similar:
@@ -494,10 +507,13 @@ cdef class Span:
                     start = i
                     if start >= self.end:
                         break
-            if start < self.end:
-                spans.append(Span(self.doc, start, self.end))
-        return tuple(spans)
+                elif i == self.doc.length - 1:
+                    spans.append(Span(self.doc, start, self.doc.length))
 
+            # Ensure that trailing parts of the Span instance are included in last element of .sents.
+            if start == self.doc.length - 1:
+                spans.append(Span(self.doc, start, self.doc.length))
+        return tuple(spans)
 
     @property
     def ents(self):
@@ -602,7 +618,6 @@ cdef class Span:
             whitespace).
         """
         return "".join([t.text_with_ws for t in self])
-
 
     @property
     def noun_chunks(self):
@@ -772,36 +787,61 @@ cdef class Span:
             return self.span_c().start
 
         def __set__(self, int start):
-            if start < 0:
-                raise IndexError(Errors.E1032.format(var="start", forbidden="< 0", value=start))
-            self.span_c().start = start
+            if start < 0 or start > self.doc.length:
+                raise IndexError(Errors.E1032.format(var="start", obj="Doc", length=self.doc.length, value=start))
+            cdef SpanC* span_c = self.span_c()
+            if start > span_c.end:
+                raise ValueError(Errors.E4007.format(var="start", value=start, op="<=", existing_var="end", existing_value=span_c.end))
+            span_c.start = start
+            span_c.start_char = self.doc.c[start].idx
 
     property end:
         def __get__(self):
             return self.span_c().end
 
         def __set__(self, int end):
-            if end < 0:
-                raise IndexError(Errors.E1032.format(var="end", forbidden="< 0", value=end))
-            self.span_c().end = end
+            if end < 0 or end > self.doc.length:
+                raise IndexError(Errors.E1032.format(var="end", obj="Doc", length=self.doc.length, value=end))
+            cdef SpanC* span_c = self.span_c()
+            if span_c.start > end:
+                raise ValueError(Errors.E4007.format(var="end", value=end, op=">=", existing_var="start", existing_value=span_c.start))
+            span_c.end = end
+            if end > 0:
+                span_c.end_char = self.doc.c[end-1].idx + self.doc.c[end-1].lex.length
+            else:
+                span_c.end_char = 0
 
     property start_char:
         def __get__(self):
             return self.span_c().start_char
 
         def __set__(self, int start_char):
-            if start_char < 0:
-                raise IndexError(Errors.E1032.format(var="start_char", forbidden="< 0", value=start_char))
-            self.span_c().start_char = start_char
+            if start_char < 0 or start_char > len(self.doc.text):
+                raise IndexError(Errors.E1032.format(var="start_char", obj="Doc text", length=len(self.doc.text), value=start_char))
+            cdef int start = token_by_start(self.doc.c, self.doc.length, start_char)
+            if start < 0:
+                raise ValueError(Errors.E4008.format(value=start_char, pos="start"))
+            cdef SpanC* span_c = self.span_c()
+            if start_char > span_c.end_char:
+                raise ValueError(Errors.E4007.format(var="start_char", value=start_char, op="<=", existing_var="end_char", existing_value=span_c.end_char))
+            span_c.start_char = start_char
+            span_c.start = start
 
     property end_char:
         def __get__(self):
             return self.span_c().end_char
 
         def __set__(self, int end_char):
-            if end_char < 0:
-                raise IndexError(Errors.E1032.format(var="end_char", forbidden="< 0", value=end_char))
-            self.span_c().end_char = end_char
+            if end_char < 0 or end_char > len(self.doc.text):
+                raise IndexError(Errors.E1032.format(var="end_char", obj="Doc text", length=len(self.doc.text), value=end_char))
+            cdef int end = token_by_end(self.doc.c, self.doc.length, end_char)
+            if end < 0:
+                raise ValueError(Errors.E4008.format(value=end_char, pos="end"))
+            cdef SpanC* span_c = self.span_c()
+            if span_c.start_char > end_char:
+                raise ValueError(Errors.E4007.format(var="end_char", value=end_char, op=">=", existing_var="start_char", existing_value=span_c.start_char))
+            span_c.end_char = end_char
+            span_c.end = end
 
     property label:
         def __get__(self):
@@ -891,7 +931,6 @@ cdef class Span:
 
         def __set__(self, str ent_id_):
             self.id_ = ent_id_
-
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:

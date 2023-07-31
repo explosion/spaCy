@@ -189,6 +189,22 @@ def test_add_pipe_last(nlp, name1, name2):
     assert nlp.pipeline[-1][0] == name1
 
 
+@pytest.mark.parametrize("name1,name2", [("parser", "lambda_pipe")])
+def test_add_pipe_false(nlp, name1, name2):
+    Language.component("new_pipe2", func=lambda doc: doc)
+    nlp.add_pipe("new_pipe2", name=name2)
+    with pytest.raises(
+        ValueError,
+        match="The 'last' parameter should be 'None' or 'True', but found 'False'",
+    ):
+        nlp.add_pipe("new_pipe", name=name1, last=False)
+    with pytest.raises(
+        ValueError,
+        match="The 'first' parameter should be 'None' or 'True', but found 'False'",
+    ):
+        nlp.add_pipe("new_pipe", name=name1, first=False)
+
+
 def test_cant_add_pipe_first_and_last(nlp):
     with pytest.raises(ValueError):
         nlp.add_pipe("new_pipe", first=True, last=True)
@@ -411,8 +427,6 @@ def test_add_pipe_before_after():
         nlp.add_pipe("entity_ruler", before="ner", after=2)
     with pytest.raises(ValueError):
         nlp.add_pipe("entity_ruler", before=True)
-    with pytest.raises(ValueError):
-        nlp.add_pipe("entity_ruler", first=False)
 
 
 def test_disable_enable_pipes():

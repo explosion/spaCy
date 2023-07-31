@@ -1,5 +1,5 @@
-from typing import List, Optional, Iterable, Iterator, Union, Any, Tuple, overload
 from pathlib import Path
+from typing import Any, Iterable, Iterator, List, Optional, Tuple, Union, overload
 
 class StringStore:
     def __init__(self, strings: Optional[Iterable[str]] = None) -> None: ...

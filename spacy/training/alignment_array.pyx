@@ -1,6 +1,9 @@
 from typing import List
-from ..errors import Errors
+
 import numpy
+
+from ..errors import Errors
+
 from libc.stdint cimport int32_t
 
 

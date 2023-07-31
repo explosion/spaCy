@@ -113,7 +113,7 @@ print(doc[2].morph)  # 'Case=Nom|Person=2|PronType=Prs'
 print(doc[2].pos_)  # 'PRON'
 ```
 
-## Lemmatization {id="lemmatization",model="lemmatizer",version="3"}
+## Lemmatization {id="lemmatization",version="3"}
 
 spaCy provides two pipeline components for lemmatization:
 
@@ -170,7 +170,7 @@ nlp = spacy.blank("sv")
 nlp.add_pipe("lemmatizer", config={"mode": "lookup"})
 ```
 
-### Rule-based lemmatizer {id="lemmatizer-rule"}
+### Rule-based lemmatizer {id="lemmatizer-rule",model="morphologizer"}
 
 When training pipelines that include a component that assigns part-of-speech
 tags (a morphologizer or a tagger with a [POS mapping](#mappings-exceptions)), a
@@ -194,7 +194,7 @@ information, without consulting the context of the token. The rule-based
 lemmatizer also accepts list-based exception files. For English, these are
 acquired from [WordNet](https://wordnet.princeton.edu/).
 
-### Trainable lemmatizer
+### Trainable lemmatizer {id="lemmatizer-train",model="trainable_lemmatizer"}
 
 The [`EditTreeLemmatizer`](/api/edittreelemmatizer) can learn form-to-lemma
 transformations from a training corpus that includes lemma annotations. This

@@ -1,7 +1,9 @@
 # cython: infer_types=True, profile=True
 
 from .kb_in_memory cimport InMemoryLookupKB
+
 from ..errors import Errors
+
 
 cdef class Candidate:
     """A `Candidate` object refers to a textual mention that may or may not be resolved

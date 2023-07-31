@@ -4,15 +4,13 @@ spaCy's built in visualization suite for dependencies and named entities.
 DOCS: https://spacy.io/api/top-level#displacy
 USAGE: https://spacy.io/usage/visualizers
 """
-from typing import Union, Iterable, Optional, Dict, Any, Callable
 import warnings
+from typing import Any, Callable, Dict, Iterable, Optional, Union
 
-from .render import DependencyRenderer, EntityRenderer, SpanRenderer
-from ..tokens import Doc, Span
 from ..errors import Errors, Warnings
-from ..util import is_in_jupyter
-from ..util import find_available_port
-
+from ..tokens import Doc, Span
+from ..util import find_available_port, is_in_jupyter
+from .render import DependencyRenderer, EntityRenderer, SpanRenderer
 
 _html = {}
 RENDER_WRAPPER = None
@@ -68,7 +66,7 @@ def render(
     if jupyter or (jupyter is None and is_in_jupyter()):
         # return HTML rendered by IPython display()
         # See #4840 for details on span wrapper to disable mathjax
-        from IPython.core.display import display, HTML
+        from IPython.core.display import HTML, display
 
         return display(HTML('<span class="tex2jax_ignore">{}</span>'.format(html)))
     return html
@@ -125,13 +123,17 @@ def app(environ, start_response):
     return [res]
 
 
-def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
+def parse_deps(
+    orig_doc: Union[Doc, Span], options: Dict[str, Any] = {}
+) -> Dict[str, Any]:
     """Generate dependency parse in {'words': [], 'arcs': []} format.
 
-    orig_doc (Doc): Document to parse.
+    orig_doc (Union[Doc, Span]): Document to parse.
     options (Dict[str, Any]): Dependency parse specific visualisation options.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
+    if isinstance(orig_doc, Span):
+        orig_doc = orig_doc.as_doc()
     doc = Doc(orig_doc.vocab).from_bytes(
         orig_doc.to_bytes(exclude=["user_data", "user_hooks"])
     )

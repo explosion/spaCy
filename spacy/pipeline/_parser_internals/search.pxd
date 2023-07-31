@@ -1,12 +1,10 @@
 from cymem.cymem cimport Pool
-
-from libc.stdint cimport uint32_t
-from libc.stdint cimport uint64_t
+from libc.stdint cimport uint32_t, uint64_t
 from libcpp.pair cimport pair
 from libcpp.queue cimport priority_queue
 from libcpp.vector cimport vector
 
-from ...typedefs cimport class_t, weight_t, hash_t
+from ...typedefs cimport class_t, hash_t, weight_t
 
 ctypedef pair[weight_t, size_t] Entry
 ctypedef priority_queue[Entry] Queue
@@ -59,7 +57,6 @@ cdef class Beam:
     cdef int advance(self, trans_func_t transition_func, hash_func_t hash_func,
                      void* extra_args) except -1
     cdef int check_done(self, finish_func_t finish_func, void* extra_args) except -1
- 
 
     cdef inline void set_cell(self, int i, int j, weight_t score, int is_valid, weight_t cost) nogil:
         self.scores[i][j] = score

@@ -1,16 +1,16 @@
 from pathlib import Path
-from typing import Callable, Iterable, Any, Dict
+from typing import Any, Callable, Dict, Iterable
 
 import srsly
-
-from spacy import util, Errors
-from spacy.util import ensure_path, registry, load_model_from_config, SimpleFrozenList
-from spacy.kb.kb_in_memory import InMemoryLookupKB
-from spacy.vocab import Vocab
+from numpy import zeros
 from thinc.api import Config
 
+from spacy import Errors, util
+from spacy.kb.kb_in_memory import InMemoryLookupKB
+from spacy.util import SimpleFrozenList, ensure_path, load_model_from_config, registry
+from spacy.vocab import Vocab
+
 from ..util import make_tempdir
-from numpy import zeros
 
 
 def test_serialize_kb_disk(en_vocab):

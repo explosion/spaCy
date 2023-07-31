@@ -1,20 +1,20 @@
-from typing import Optional, List, Dict, Any, Callable, Iterable, Union, Tuple
-from thinc.api import Model
-import srsly
-from pathlib import Path
-
 import warnings
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
-from .pipe import Pipe
+import srsly
+from thinc.api import Model
+
+from .. import util
 from ..errors import Errors, Warnings
 from ..language import Language
-from ..training import Example
 from ..lookups import Lookups, load_lookups
 from ..scorer import Scorer
 from ..tokens import Doc, Token
+from ..training import Example
+from ..util import SimpleFrozenList, logger, registry
 from ..vocab import Vocab
-from ..util import logger, SimpleFrozenList, registry
-from .. import util
+from .pipe import Pipe
 
 
 @Language.factory(
@@ -167,7 +167,7 @@ class Lemmatizer(Pipe):
             missing_tables = set(required_tables) - set(lookups.tables)
             if len(missing_tables) > 0:
                 raise ValueError(
-                    Errors.E4007.format(
+                    Errors.E4010.format(
                         missing_tables=list(missing_tables),
                         pipe_name=self.name,
                         required_tables=srsly.json_dumps(required_tables),

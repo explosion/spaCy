@@ -1,21 +1,27 @@
 import itertools
 import logging
 from unittest import mock
+
 import pytest
+from thinc.api import Config, CupyOps, NumpyOps, get_array_module, get_current_ops
+
+import spacy
+from spacy.lang.de import German
+from spacy.lang.en import English
 from spacy.language import Language
 from spacy.scorer import Scorer
 from spacy.tokens import Doc, Span
-from spacy.vocab import Vocab
 from spacy.training import Example
-from spacy.lang.en import English
-from spacy.lang.de import German
-from spacy.util import registry, ignore_error, raise_error, find_matching_language
-from spacy.util import load_model_from_config
-import spacy
-from thinc.api import Config, CupyOps, NumpyOps, get_array_module, get_current_ops
+from spacy.util import (
+    find_matching_language,
+    ignore_error,
+    load_model_from_config,
+    raise_error,
+    registry,
+)
+from spacy.vocab import Vocab
 
 from .util import add_vecs_to_vocab, assert_docs_equal
-
 
 try:
     import torch
@@ -155,6 +161,24 @@ def test_language_update_updates():
     assert xp.any(
         xp.not_equal(docs_before_update[0].tensor, docs_after_update[0].tensor)
     )
+
+
+def test_language_update_does_not_update_with_sgd_false():
+    config = Config().from_str(TAGGER_CFG_STRING)
+    nlp = load_model_from_config(config, auto_fill=True, validate=True)
+
+    train_examples = []
+    for t in TAGGER_TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    docs_before_update = list(nlp.pipe([eg.predicted.copy() for eg in train_examples]))
+    nlp.update(train_examples, sgd=False)
+    docs_after_update = list(nlp.pipe([eg.predicted.copy() for eg in train_examples]))
+
+    xp = get_array_module(docs_after_update[0].tensor)
+    xp.testing.assert_equal(docs_before_update[0].tensor, docs_after_update[0].tensor)
 
 
 def test_language_evaluate(nlp):
