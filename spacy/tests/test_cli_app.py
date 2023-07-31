@@ -233,3 +233,37 @@ def test_project_push_pull(project_dir):
         result = CliRunner().invoke(app, ["project", "pull", remote, str(project_dir)])
         assert result.exit_code == 0
         assert test_file.is_file()
+
+
+def test_find_function_valid():
+    # example of architecture in main code base
+    function = "spacy.TextCatBOW.v2"
+    result = CliRunner().invoke(app, ["find-function", function, "-r", "architectures"])
+    assert f"Found registered function '{function}'" in result.stdout
+    assert "textcat.py" in result.stdout
+
+    result = CliRunner().invoke(app, ["find-function", function])
+    assert f"Found registered function '{function}'" in result.stdout
+    assert "textcat.py" in result.stdout
+
+    # example of architecture in spacy-legacy
+    function = "spacy.TextCatBOW.v1"
+    result = CliRunner().invoke(app, ["find-function", function])
+    assert f"Found registered function '{function}'" in result.stdout
+    assert "spacy_legacy" in result.stdout
+    assert "textcat.py" in result.stdout
+
+
+def test_find_function_invalid():
+    # invalid registry
+    function = "spacy.TextCatBOW.v2"
+    registry = "foobar"
+    result = CliRunner().invoke(
+        app, ["find-function", function, "--registry", registry]
+    )
+    assert f"Unknown function registry: '{registry}'" in result.stdout
+
+    # invalid function
+    function = "spacy.TextCatBOW.v666"
+    result = CliRunner().invoke(app, ["find-function", function])
+    assert f"Couldn't find registered function: '{function}'" in result.stdout
