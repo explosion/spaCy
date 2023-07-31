@@ -1,6 +1,8 @@
 import warnings
 from typing import Literal
 
+from . import about
+
 
 class ErrorsWithCodes(type):
     def __getattribute__(self, code):
@@ -103,13 +105,14 @@ class Warnings(metaclass=ErrorsWithCodes):
             "table. This may degrade the performance of the model to some "
             "degree. If this is intentional or the language you're using "
             "doesn't have a normalization table, please ignore this warning. "
-            "If this is surprising, make sure you have the spacy-lookups-data "
-            "package installed and load the table in your config. The "
-            "languages with lexeme normalization tables are currently: "
-            "{langs}\n\nLoad the table in your config with:\n\n"
+            "If this is surprising, make sure you are loading the table in "
+            "your config. The languages with lexeme normalization tables are "
+            "currently: {langs}\n\nAn example of how to load a table in "
+            "your config :\n\n"
             "[initialize.lookups]\n"
-            "@misc = \"spacy.LookupsDataLoader.v1\"\n"
+            "@misc = \"spacy.LookupsDataLoaderFromURL.v1\"\n"
             "lang = ${{nlp.lang}}\n"
+             f'url = "{about.__lookups_url__}"\n'
             "tables = [\"lexeme_norm\"]\n")
     W035 = ("Discarding subpattern '{pattern}' due to an unrecognized "
             "attribute or operator.")
@@ -983,6 +986,18 @@ class Errors(metaclass=ErrorsWithCodes):
              "{existing_value}.")
     E4008 = ("Span {pos}_char {value} does not correspond to a token {pos}.")
     E4009 = ("The '{attr}' parameter should be 'None' or 'True', but found '{value}'.")
+    E4010 = ("Required lemmatizer table(s) {missing_tables} not found in "
+             "[initialize] or in registered lookups (spacy-lookups-data). An "
+             "example for how to load lemmatizer tables in [initialize]:\n\n"
+             "[initialize.components]\n\n"
+             "[initialize.components.{pipe_name}]\n\n"
+             "[initialize.components.{pipe_name}.lookups]\n"
+             '@misc = "spacy.LookupsDataLoaderFromURL.v1"\n'
+             "lang = ${{nlp.lang}}\n"
+             f'url = "{about.__lookups_url__}"\n'
+             "tables = {tables}\n"
+             "# or required tables only: tables = {required_tables}\n")
+    E4011 = ("Server error ({status_code}), couldn't fetch {url}")
 
 
 RENAMED_LANGUAGE_CODES = {"xx": "mul", "is": "isl"}

@@ -9,6 +9,7 @@ menu:
   - ['Batchers', 'batchers']
   - ['Augmenters', 'augmenters']
   - ['Callbacks', 'callbacks']
+  - ['Miscellaneous', 'misc']
   - ['Training & Alignment', 'gold']
   - ['Utility Functions', 'util']
 ---
@@ -933,6 +934,54 @@ methods are wrapped: `pipe`, `predict`, `set_annotations`, `update`, `rehearse`,
 | `backprop_color`            | Color identifier for model backpropagation passes. Defaults to `-1`. ~~int~~                                                                                    |
 | `additional_pipe_functions` | Additional pipeline methods to wrap. Keys are pipeline names and values are lists of method identifiers. Defaults to `None`. ~~Optional[Dict[str, List[str]]]~~ |
 | **CREATES**                 | A function that takes the current `nlp` and wraps pipe models and methods in NVTX ranges. ~~Callable[[Language], Language]~~                                    |
+
+## Miscellaneous {id="misc"}
+
+### spacy.LookupsDataLoader.v1 {id="lookups_data_reader",tag="registered function",version="3"}
+
+> #### Example config
+>
+> ```ini
+> [initialize.lookups]
+> @misc = "spacy.LookupsDataLoader.v1"
+> lang = ${nlp.lang}
+> tables = ["lexeme_prob"]
+> ```
+
+Load the specified tables from the [`lookups` registry](#registry), which are
+provided by a package such as
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data).
+
+| Name        | Description                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| `lang`      | The language. ~~str~~                                                                           |
+| `tables`    | The tables to load. ~~List[str]~~                                                               |
+| **CREATES** | A function that loads the specified tables from the lookups registry. ~~Callable[[], Lookups]~~ |
+
+### spacy.LookupsDataLoaderFromURL.v1 {id="lookups_data_reader_from_url",tag="registered function",version="4"}
+
+> #### Example config
+>
+> ```ini
+> [initialize.components.lemmatizer.lookups]
+> @misc = "spacy.LookupsDataLoaderFromURL.v1"
+> lang = ${nlp.lang}
+> url = "https://raw.githubusercontent.com/explosion/spacy-lookups-data/v1.0.3/spacy_lookups_data/data/"
+> tables = ["lemma_rules","lemma_exc","lemma_index"]
+> ```
+
+Load the specified tables from the provided URL. The individual tables are
+expected to have filenames in the format `{lang}_{table}.json` under the
+specified URL directory as in the
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data/spacy_lookups_data/data/)
+repository.
+
+| Name        | Description                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------- |
+| `lang`      | The language. ~~str~~                                                                       |
+| `url`       | The URL for the directory where the tables can be downloaded. ~~str~~                       |
+| `tables`    | The tables to load. ~~List[str]~~                                                           |
+| **CREATES** | A function that loads the specified tables from the provided URL. ~~Callable[[], Lookups]~~ |
 
 ## Training data and alignment {id="gold",source="spacy/training"}
 

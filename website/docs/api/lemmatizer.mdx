@@ -14,7 +14,7 @@ implement their own lemmatizer components via
 [language-specific factories](/usage/processing-pipelines#factories-language).
 The default data used is provided by the
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
-extension package.
+repository.
 
 For a trainable lemmatizer, see [`EditTreeLemmatizer`](/api/edittreelemmatizer).
 
@@ -174,6 +174,8 @@ training. At runtime, all data is loaded from disk.
 >
 > ```python
 > lemmatizer = nlp.add_pipe("lemmatizer")
+> req_tables, opt_tables = lemmatizer.get_lookups_config(mode=lemmatizer.mode)
+> lookups = load_lookups(nlp.lang, req_tables + opt_tables)
 > lemmatizer.initialize(lookups=lookups)
 > ```
 >

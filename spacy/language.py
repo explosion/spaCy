@@ -128,13 +128,6 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
     return tokenizer_factory
 
 
-@registry.misc("spacy.LookupsDataLoader.v1")
-def load_lookups_data(lang, tables):
-    util.logger.debug("Loading lookups from spacy-lookups-data: %s", tables)
-    lookups = load_lookups(lang=lang, tables=tables)
-    return lookups
-
-
 class Language:
     """A text-processing pipeline. Usually you'll load this once per process,
     and pass the instance around your application.
