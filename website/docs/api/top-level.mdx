@@ -343,6 +343,130 @@ use with the `manual=True` argument in `displacy.render`.
 | `options`   | Span-specific visualisation options. ~~Dict[str, Any]~~             |
 | **RETURNS** | Generated entities keyed by text (original text) and ents. ~~dict~~ |
 
+### Visualizer data structures {id="displacy_structures"}
+
+You can use displaCy's data format to manually render data. This can be useful
+if you want to visualize output from other libraries. You can find examples of
+displaCy's different data formats below.
+
+> #### DEP example data structure
+>
+> ```json
+> {
+>   "words": [
+>     { "text": "This", "tag": "DT" },
+>     { "text": "is", "tag": "VBZ" },
+>     { "text": "a", "tag": "DT" },
+>     { "text": "sentence", "tag": "NN" }
+>   ],
+>   "arcs": [
+>     { "start": 0, "end": 1, "label": "nsubj", "dir": "left" },
+>     { "start": 2, "end": 3, "label": "det", "dir": "left" },
+>     { "start": 1, "end": 3, "label": "attr", "dir": "right" }
+>   ]
+> }
+> ```
+
+#### Dependency Visualizer data structure {id="structure-dep"}
+
+| Dictionary Key | Description                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------------- |
+| `words`        | List of dictionaries describing a word token (see structure below). ~~List[Dict[str, Any]]~~                |
+| `arcs`         | List of dictionaries describing the relations between words (see structure below). ~~List[Dict[str, Any]]~~ |
+| _Optional_     |                                                                                                             |
+| `title`        | Title of the visualization. ~~Optional[str]~~                                                               |
+| `settings`     | Dependency Visualizer options (see [here](/api/top-level#displacy_options)). ~~Dict[str, Any]~~             |
+
+<Accordion title="Words data structure">
+
+| Dictionary Key | Description                              |
+| -------------- | ---------------------------------------- |
+| `text`         | Text content of the word. ~~str~~        |
+| `tag`          | Fine-grained part-of-speech. ~~str~~     |
+| `lemma`        | Base form of the word. ~~Optional[str]~~ |
+
+</Accordion>
+
+<Accordion title="Arcs data structure">
+
+| Dictionary Key | Description                                          |
+| -------------- | ---------------------------------------------------- |
+| `start`        | The index of the starting token. ~~int~~             |
+| `end`          | The index of the ending token. ~~int~~               |
+| `label`        | The type of dependency relation. ~~str~~             |
+| `dir`          | Direction of the relation (`left`, `right`). ~~str~~ |
+
+</Accordion>
+
+> #### ENT example data structure
+>
+> ```json
+> {
+>   "text": "But Google is starting from behind.",
+>   "ents": [{ "start": 4, "end": 10, "label": "ORG" }]
+> }
+> ```
+
+#### Named Entity Recognition data structure {id="structure-ent"}
+
+| Dictionary Key | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `text`         | String representation of the document text. ~~str~~                                         |
+| `ents`         | List of dictionaries describing entities (see structure below). ~~List[Dict[str, Any]]~~    |
+| _Optional_     |                                                                                             |
+| `title`        | Title of the visualization. ~~Optional[str]~~                                               |
+| `settings`     | Entity Visualizer options (see [here](/api/top-level#displacy_options)). ~~Dict[str, Any]~~ |
+
+<Accordion title="Ents data structure">
+
+| Dictionary Key | Description                                                            |
+| -------------- | ---------------------------------------------------------------------- |
+| `start`        | The index of the first character of the entity. ~~int~~                |
+| `end`          | The index of the last character of the entity. (not inclusive) ~~int~~ |
+| `label`        | Label attached to the entity. ~~str~~                                  |
+| _Optional_     |                                                                        |
+| `kb_id`        | `KnowledgeBase` ID. ~~str~~                                            |
+| `kb_url`       | `KnowledgeBase` URL. ~~str~~                                           |
+
+</Accordion>
+
+> #### SPAN example data structure
+>
+> ```json
+> {
+>   "text": "Welcome to the Bank of China.",
+>   "spans": [
+>     { "start_token": 3, "end_token": 6, "label": "ORG" },
+>     { "start_token": 5, "end_token": 6, "label": "GPE" }
+>   ],
+>   "tokens": ["Welcome", "to", "the", "Bank", "of", "China", "."]
+> }
+> ```
+
+#### Span Classification data structure {id="structure-span"}
+
+| Dictionary Key | Description                                                                               |
+| -------------- | ----------------------------------------------------------------------------------------- |
+| `text`         | String representation of the document text. ~~str~~                                       |
+| `spans`        | List of dictionaries describing spans (see structure below). ~~List[Dict[str, Any]]~~     |
+| `tokens`       | List of word tokens. ~~List[str]~~                                                        |
+| _Optional_     |                                                                                           |
+| `title`        | Title of the visualization. ~~Optional[str]~~                                             |
+| `settings`     | Span Visualizer options (see [here](/api/top-level#displacy_options)). ~~Dict[str, Any]~~ |
+
+<Accordion title="Spans data structure">
+
+| Dictionary Key | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `start_token`  | The index of the first token of the span in `tokens`. ~~int~~ |
+| `end_token`    | The index of the last token of the span in `tokens`. ~~int~~  |
+| `label`        | Label attached to the span. ~~str~~                           |
+| _Optional_     |                                                               |
+| `kb_id`        | `KnowledgeBase` ID. ~~str~~                                   |
+| `kb_url`       | `KnowledgeBase` URL. ~~str~~                                  |
+
+</Accordion>
+
 ### Visualizer options {id="displacy_options"}
 
 The `options` argument lets you specify additional settings for each visualizer.
