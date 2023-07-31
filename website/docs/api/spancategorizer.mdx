@@ -67,7 +67,6 @@ architectures and their arguments and hyperparameters.
 > ```python
 > from spacy.pipeline.spancat import DEFAULT_SPANCAT_SINGLELABEL_MODEL
 > config = {
->     "threshold": 0.5,
 >     "spans_key": "labeled_spans",
 >     "model": DEFAULT_SPANCAT_SINGLELABEL_MODEL,
 >     "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
