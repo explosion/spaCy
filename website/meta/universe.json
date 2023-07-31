@@ -18,6 +18,31 @@
             "tags": []
         },
         {
+            "id": "sayswho",
+            "title": "SaysWho",
+            "slogan": "Quote identification, attribution and resolution",
+            "description": "A Python package for identifying and attributing quotes in text. It uses a combination of spaCy functionality, logic and grammar to find quotes and their speakers, then uses the spaCy coreferencing model to better clarify who is speaking. Currently English only.",
+            "github": "afriedman412/sayswho",
+            "pip": "sayswho",
+            "code_language": "python",
+            "author": "Andy Friedman",
+            "author_links": {
+                "twitter": "@steadynappin",
+                "github": "afriedman412"
+            },
+            "code_example": [
+                "from sayswho import SaysWho",
+                "text = open(\"path/to/your/text_file.txt\").read()",
+                "sw = SaysWho()",
+                "sw.attribute(text)",
+
+                "sw.expand_match() # see quote/cluster matches",
+                "sw.render_to_html() # output your text, quotes and cluster matches to an html file called \"temp.html\""
+            ],
+            "category": ["standalone"],
+            "tags": ["attribution", "coref", "text-processing"]
+        },
+        {
             "id": "parsigs",
             "title": "parsigs",
             "slogan": "Structuring prescriptions text made simple using spaCy",
