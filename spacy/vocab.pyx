@@ -300,7 +300,7 @@ cdef class Vocab:
         width, you have to call this to change the size of the vectors.
         """
         if not isinstance(self.vectors, Vectors):
-            raise ValueError(Errors.E849.format("reset", vectors_type=type(self.vectors)))
+            raise ValueError(Errors.E849.format(action="reset", vectors_type=type(self.vectors)))
         if width is not None and shape is not None:
             raise ValueError(Errors.E065.format(width=width, shape=shape))
         elif shape is not None:
