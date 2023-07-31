@@ -47,7 +47,8 @@ def train_cli(
 
     DOCS: https://spacy.io/api/cli#train
     """
-    util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    if verbose:
+        util.logger.setLevel(logging.DEBUG)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     train(config_path, output_path, use_gpu=use_gpu, overrides=overrides)
