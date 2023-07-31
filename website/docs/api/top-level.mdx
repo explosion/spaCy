@@ -935,9 +935,9 @@ methods are wrapped: `pipe`, `predict`, `set_annotations`, `update`, `rehearse`,
 | `additional_pipe_functions` | Additional pipeline methods to wrap. Keys are pipeline names and values are lists of method identifiers. Defaults to `None`. ~~Optional[Dict[str, List[str]]]~~ |
 | **CREATES**                 | A function that takes the current `nlp` and wraps pipe models and methods in NVTX ranges. ~~Callable[[Language], Language]~~                                    |
 
-## Miscellaneous {id="misc",version="3"}
+## Miscellaneous {id="misc"}
 
-### spacy.LookupsDataLoaderFromURL.v1 {id="lookups_data_reader",tag="registered function"}
+### spacy.LookupsDataLoader.v1 {id="lookups_data_reader",tag="registered function",version="3"}
 
 > #### Example config
 >
@@ -958,7 +958,7 @@ provided by a package such as
 | `tables`    | The tables to load. ~~List[str]~~                                                               |
 | **CREATES** | A function that loads the specified tables from the lookups registry. ~~Callable[[], Lookups]~~ |
 
-### spacy.LookupsDataLoaderFromURLFromUrl.v1 {id="lookups_data_reader_from_url",tag="registered function",version="4"}
+### spacy.LookupsDataLoaderFromURL.v1 {id="lookups_data_reader_from_url",tag="registered function",version="4"}
 
 > #### Example config
 >
