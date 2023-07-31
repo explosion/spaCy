@@ -17,11 +17,11 @@
             "category": ["extension"],
             "tags": []
         },
-                {
+       {
             "id": "sayswho",
             "title": "SaysWho",
             "slogan": "Quote identification, attribution and resolution",
-            "description": "A Python package for identifying and attributing quotes in text. It uses a combination of SpaCy functionality, logic and grammar to find quotes and their speakers, then uses the SpaCy coreferencing model to better clarify who is speaking. Currently English only.",
+            "description": "A Python package for identifying and attributing quotes in text. It uses a combination of spaCy functionality, logic and grammar to find quotes and their speakers, then uses the spaCy coreferencing model to better clarify who is speaking. Currently English only.",
             "github": "afriedman412/sayswho",
             "pip": "sayswho",
             "code_language": "python",
