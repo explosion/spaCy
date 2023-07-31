@@ -1774,7 +1774,7 @@ class Language:
         # fill in [nlp.vectors] if not present (as a narrower alternative to
         # auto-filling [nlp] from the default config)
         if "vectors" not in config["nlp"]:
-            config["nlp"]["vectors"] = {"@misc": "spacy.Vectors.v1"}
+            config["nlp"]["vectors"] = {"@vectors": "spacy.Vectors.v1"}
         config_lang = config["nlp"].get("lang")
         if config_lang is not None and config_lang != cls.lang:
             raise ValueError(

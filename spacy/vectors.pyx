@@ -98,7 +98,7 @@ cdef class BaseVectors:
         return self
 
 
-@util.registry.misc("spacy.Vectors.v1")
+@util.registry.vectors("spacy.Vectors.v1")
 def create_mode_vectors() -> Callable[["Vocab"], BaseVectors]:
     def vectors_factory(vocab: "Vocab") -> BaseVectors:
         return Vectors(strings=vocab.strings)
