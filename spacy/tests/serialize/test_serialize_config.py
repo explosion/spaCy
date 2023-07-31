@@ -213,7 +213,8 @@ def test_issue8190():
 
 def test_create_nlp_from_config():
     config = Config().from_str(nlp_config_string)
-    assert "initialize" not in config
+    with pytest.raises(ConfigValidationError):
+        load_model_from_config(config, auto_fill=False)
     nlp = load_model_from_config(config, auto_fill=True)
     assert nlp.config["training"]["batcher"]["size"] == 666
     assert len(nlp.config["training"]) > 1
