@@ -350,6 +350,13 @@ def show_validation_error(
         msg.fail("Config validation error", e, exits=1)
 
 
+def import_code_paths(code_paths: str) -> None:
+    """Helper to import comma-separated list of code paths."""
+    code_paths = [Path(p.strip()) for p in string_to_list(code_paths)]
+    for code_path in code_paths:
+        import_code(code_path)
+
+
 def import_code(code_path: Optional[Union[Path, str]]) -> None:
     """Helper to import Python file provided in training commands / commands
     using the config. This makes custom registered functions available.
