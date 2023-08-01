@@ -300,7 +300,7 @@ cdef class Vocab:
         width, you have to call this to change the size of the vectors.
         """
         if not isinstance(self.vectors, Vectors):
-            raise ValueError(Errors.E849.format(method="reset_vectors", vectors_type=type(Vectors)))
+            raise ValueError(Errors.E849.format(method="reset_vectors", vectors_type=type(self.vectors)))
         if width is not None and shape is not None:
             raise ValueError(Errors.E065.format(width=width, shape=shape))
         elif shape is not None:
@@ -366,7 +366,7 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#prune_vectors
         """
         if not isinstance(self.vectors, Vectors):
-            raise ValueError(Errors.E849.format(method="prune_vectors", vectors_type=type(Vectors)))
+            raise ValueError(Errors.E849.format(method="prune_vectors", vectors_type=type(self.vectors)))
         if self.vectors.mode != VectorsMode.default:
             raise ValueError(Errors.E858.format(
                 mode=self.vectors.mode,
