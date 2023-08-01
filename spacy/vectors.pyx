@@ -81,7 +81,7 @@ cdef class BaseVectors:
         raise NotImplementedError
 
     def to_ops(self, ops: Ops):
-        raise NotImplementedError
+        pass
 
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
     # allow serialization
