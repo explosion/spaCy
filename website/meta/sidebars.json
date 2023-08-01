@@ -131,6 +131,7 @@
                 "label": "Other",
                 "items": [
                     { "text": "Attributes", "url": "/api/attributes" },
+                    { "text": "BaseVectors", "url": "/api/basevectors" },
                     { "text": "Corpus", "url": "/api/corpus" },
                     { "text": "InMemoryLookupKB", "url": "/api/inmemorylookupkb" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },
