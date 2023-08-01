@@ -60,6 +60,7 @@ modified later.
 | `hash_seed` <Tag variant="new">3.2</Tag>  | The floret hash seed (default: `0`). ~~int~~                                                                                                                                           |
 | `bow` <Tag variant="new">3.2</Tag>        | The floret BOW string (default: `"<"`). ~~str~~                                                                                                                                        |
 | `eow` <Tag variant="new">3.2</Tag>        | The floret EOW string (default: `">"`). ~~str~~                                                                                                                                        |
+| `attr` <Tag variant="new">3.6</Tag>       | The token attribute for the vector keys (default: `"ORTH"`). ~~Union[int, str]~~                                                                                                       |
 
 ## Vectors.\_\_getitem\_\_ {id="getitem",tag="method"}
 
@@ -296,10 +297,9 @@ The vector size, i.e. `rows * dims`.
 
 ## Vectors.is_full {id="is_full",tag="property"}
 
-Whether the vectors table is full and has no slots are available for new keys.
-If a table is full, it can be resized using
-[`Vectors.resize`](/api/vectors#resize). In `floret` mode, the table is always
-full and cannot be resized.
+Whether the vectors table is full and no slots are available for new keys. If a
+table is full, it can be resized using [`Vectors.resize`](/api/vectors#resize).
+In `floret` mode, the table is always full and cannot be resized.
 
 > #### Example
 >
@@ -440,7 +440,7 @@ Load state from a binary string.
 > #### Example
 >
 > ```python
-> fron spacy.vectors import Vectors
+> from spacy.vectors import Vectors
 > vectors_bytes = vectors.to_bytes()
 > new_vectors = Vectors(StringStore())
 > new_vectors.from_bytes(vectors_bytes)
@@ -453,8 +453,9 @@ Load state from a binary string.
 
 ## Attributes {id="attributes"}
 
-| Name      | Description                                                                                                                                                          |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data`    | Stored vectors data. `numpy` is used for CPU vectors, `cupy` for GPU vectors. ~~Union[numpy.ndarray[ndim=1, dtype=float32], cupy.ndarray[ndim=1, dtype=float32]]~~   |
-| `key2row` | Dictionary mapping word hashes to rows in the `Vectors.data` table. ~~Dict[int, int]~~                                                                               |
-| `keys`    | Array keeping the keys in order, such that `keys[vectors.key2row[key]] == key`. ~~Union[numpy.ndarray[ndim=1, dtype=float32], cupy.ndarray[ndim=1, dtype=float32]]~~ |
+| Name                                | Description                                                                                                                                                          |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`                              | Stored vectors data. `numpy` is used for CPU vectors, `cupy` for GPU vectors. ~~Union[numpy.ndarray[ndim=1, dtype=float32], cupy.ndarray[ndim=1, dtype=float32]]~~   |
+| `key2row`                           | Dictionary mapping word hashes to rows in the `Vectors.data` table. ~~Dict[int, int]~~                                                                               |
+| `keys`                              | Array keeping the keys in order, such that `keys[vectors.key2row[key]] == key`. ~~Union[numpy.ndarray[ndim=1, dtype=float32], cupy.ndarray[ndim=1, dtype=float32]]~~ |
+| `attr` <Tag variant="new">3.6</Tag> | The token attribute for the vector keys. ~~int~~                                                                                                                     |

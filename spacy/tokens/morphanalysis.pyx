@@ -1,11 +1,12 @@
-from libc.string cimport memset
 cimport numpy as np
+from libc.string cimport memset
 
 from ..errors import Errors
 from ..morphology import Morphology
+
+from ..morphology cimport check_feature, get_by_field, list_features
+from ..typedefs cimport attr_t, hash_t
 from ..vocab cimport Vocab
-from ..typedefs cimport hash_t, attr_t
-from ..morphology cimport list_features, check_feature, get_by_field
 
 
 cdef class MorphAnalysis:
@@ -58,10 +59,14 @@ cdef class MorphAnalysis:
     def __ne__(self, other):
         return self.key != other.key
 
-    def get(self, field):
+    def get(self, field, default=None):
         """Retrieve feature values by field."""
         cdef attr_t field_id = self.vocab.strings.as_int(field)
         cdef np.ndarray results = get_by_field(&self.c, field_id)
+        if len(results) == 0:
+            if default is None:
+                default = []
+            return default
         features = [self.vocab.strings[result] for result in results]
         return [f.split(Morphology.FIELD_SEP)[1] for f in features]
 
@@ -84,4 +89,3 @@ cdef class MorphAnalysis:
 
     def __repr__(self):
         return self.to_json()
-

@@ -1,7 +1,7 @@
 from thinc.api import Model
 
-from ..util import registry
 from ..attrs import LOWER
+from ..util import registry
 
 
 @registry.layers("spacy.extract_ngrams.v1")

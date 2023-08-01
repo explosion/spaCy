@@ -1,6 +1,6 @@
-from ..vocab cimport Vocab
-from ..typedefs cimport hash_t
 from ..structs cimport MorphAnalysisC
+from ..typedefs cimport hash_t
+from ..vocab cimport Vocab
 
 
 cdef class MorphAnalysis:

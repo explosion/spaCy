@@ -1,6 +1,7 @@
 import pickle
 
 from spacy.lang.vi import Vietnamese
+
 from ...util import make_tempdir
 
 

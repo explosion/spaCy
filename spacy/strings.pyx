@@ -1,26 +1,27 @@
 # cython: infer_types=True
 cimport cython
-from libc.string cimport memcpy
-from libcpp.set cimport set
 from libc.stdint cimport uint32_t
-from murmurhash.mrmr cimport hash64, hash32
+from libc.string cimport memcpy
+from murmurhash.mrmr cimport hash32, hash64
 
 import srsly
 
 from .typedefs cimport hash_t
 
+from . import util
+from .errors import Errors
 from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
-from .errors import Errors
-from . import util
+
 
 # Not particularly elegant, but this is faster than `isinstance(key, numbers.Integral)`
 cdef inline bint _try_coerce_to_hash(object key, hash_t* out_hash):
     try:
         out_hash[0] = key
         return True
-    except:
+    except:  # no-cython-lint
         return False
+
 
 def get_string_id(key):
     """Get a string ID, handling the reserved symbols correctly. If the key is
@@ -86,7 +87,6 @@ cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) e
     cdef int n_length_bytes
     cdef int i
     cdef Utf8Str* string = <Utf8Str*>mem.alloc(1, sizeof(Utf8Str))
-    cdef uint32_t ulength = length
     if length < sizeof(string.s):
         string.s[0] = <unsigned char>length
         memcpy(&string.s[1], chars, length)

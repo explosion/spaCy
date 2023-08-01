@@ -1,10 +1,20 @@
-from typing import TYPE_CHECKING
-from typing import Optional, Any, Iterable, Dict, Callable, Sequence, List
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+)
+
+from thinc.api import Model, Optimizer
+
 from .compat import Protocol, runtime_checkable
 
-from thinc.api import Optimizer, Model
-
 if TYPE_CHECKING:
+    from .language import Language
     from .training import Example
 
 
@@ -32,7 +42,7 @@ class InitializableComponent(Protocol):
     def initialize(
         self,
         get_examples: Callable[[], Iterable["Example"]],
-        nlp: Iterable["Example"],
+        nlp: "Language",
         **kwargs: Any
     ):
         ...

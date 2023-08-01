@@ -1,22 +1,22 @@
 cimport numpy as np
-from libc.math cimport sqrt
+
+import copy
+import warnings
 
 import numpy
 from thinc.api import get_array_module
-import warnings
-import copy
 
-from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
-from ..structs cimport TokenC, LexemeC
-from ..typedefs cimport flags_t, attr_t, hash_t
-from ..attrs cimport attr_id_t
-from ..parts_of_speech cimport univ_pos_t
 from ..attrs cimport *
+from ..attrs cimport ORTH, attr_id_t
 from ..lexeme cimport Lexeme
+from ..structs cimport TokenC
 from ..symbols cimport dep
+from ..typedefs cimport attr_t, hash_t
+from .doc cimport _get_lca_matrix, get_token_attr
+from .token cimport Token
 
-from ..util import normalize_slice
 from ..errors import Errors, Warnings
+from ..util import normalize_slice
 from .underscore import Underscore, get_ext_args
 
 
@@ -340,13 +340,26 @@ cdef class Span:
         """
         if "similarity" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["similarity"](self, other)
-        if len(self) == 1 and hasattr(other, "orth"):
-            if self[0].orth == other.orth:
+        attr = getattr(self.doc.vocab.vectors, "attr", ORTH)
+        cdef Token this_token
+        cdef Token other_token
+        cdef Lexeme other_lex
+        if len(self) == 1 and isinstance(other, Token):
+            this_token = self[0]
+            other_token = other
+            if Token.get_struct_attr(this_token.c, attr) == Token.get_struct_attr(other_token.c, attr):
+                return 1.0
+        elif len(self) == 1 and isinstance(other, Lexeme):
+            this_token = self[0]
+            other_lex = other
+            if Token.get_struct_attr(this_token.c, attr) == Lexeme.get_struct_attr(other_lex.c, attr):
                 return 1.0
         elif isinstance(other, (Doc, Span)) and len(self) == len(other):
             similar = True
             for i in range(len(self)):
-                if self[i].orth != getattr(other[i], "orth", None):
+                this_token = self[i]
+                other_token = other[i]
+                if Token.get_struct_attr(this_token.c, attr) != Token.get_struct_attr(other_token.c, attr):
                     similar = False
                     break
             if similar:
@@ -579,7 +592,6 @@ cdef class Span:
             whitespace).
         """
         return "".join([t.text_with_ws for t in self])
-
 
     @property
     def noun_chunks(self):

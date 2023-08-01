@@ -1,11 +1,21 @@
-from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_CURRENCY
-from ..char_classes import LIST_ICONS, ALPHA_LOWER, ALPHA_UPPER, ALPHA, HYPHENS
-from ..char_classes import CONCAT_QUOTES
+from ..char_classes import (
+    ALPHA,
+    ALPHA_LOWER,
+    ALPHA_UPPER,
+    CONCAT_QUOTES,
+    HYPHENS,
+    LIST_CURRENCY,
+    LIST_ELLIPSES,
+    LIST_ICONS,
+    LIST_PUNCT,
+    LIST_QUOTES,
+)
 
 _prefixes = (
     [
         "†",
         "⸏",
+        "〈",
     ]
     + LIST_PUNCT
     + LIST_ELLIPSES
@@ -22,6 +32,7 @@ _suffixes = (
     + [
         "†",
         "⸎",
+        "〉",
         r"(?<=[\u1F00-\u1FFF\u0370-\u03FF])[\-\.⸏]",
     ]
 )

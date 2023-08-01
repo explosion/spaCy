@@ -382,15 +382,16 @@ objects instead of tuples of `Doc` and `GoldParse` objects.
 > print(scores)
 > ```
 
-| Name            | Description                                                                                                                                    |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`      | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                              |
-| _keyword-only_  |                                                                                                                                                |
-| `batch_size`    | The batch size to use. ~~Optional[int]~~                                                                                                       |
-| `scorer`        | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. ~~Optional[Scorer]~~                                     |
-| `component_cfg` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
-| `scorer_cfg`    | Optional dictionary of keyword arguments for the `Scorer`. Defaults to `None`. ~~Optional[Dict[str, Any]]~~                                    |
-| **RETURNS**     | A dictionary of evaluation scores. ~~Dict[str, Union[float, Dict[str, float]]]~~                                                               |
+| Name                                         | Description                                                                                                                                    |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`                                   | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                              |
+| _keyword-only_                               |                                                                                                                                                |
+| `batch_size`                                 | The batch size to use. ~~Optional[int]~~                                                                                                       |
+| `scorer`                                     | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. ~~Optional[Scorer]~~                                     |
+| `component_cfg`                              | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
+| `scorer_cfg`                                 | Optional dictionary of keyword arguments for the `Scorer`. Defaults to `None`. ~~Optional[Dict[str, Any]]~~                                    |
+| `per_component` <Tag variant="new">3.6</Tag> | Whether to return the scores keyed by component name. Defaults to `False`. ~~bool~~                                                            |
+| **RETURNS**                                  | A dictionary of evaluation scores. ~~Dict[str, Union[float, Dict[str, float]]]~~                                                               |
 
 ## Language.use_params {id="use_params",tag="contextmanager, method"}
 
@@ -855,7 +856,7 @@ token-to-vector embedding component like [`Tok2Vec`](/api/tok2vec) or
 training a pipeline with components sourced from an existing pipeline: if
 multiple components (e.g. tagger, parser, NER) listen to the same
 token-to-vector component, but some of them are frozen and not updated, their
-performance may degrade significally as the token-to-vector component is updated
+performance may degrade significantly as the token-to-vector component is updated
 with new data. To prevent this, listeners can be replaced with a standalone
 token-to-vector layer that is owned by the component and doesn't change if the
 component isn't updated.

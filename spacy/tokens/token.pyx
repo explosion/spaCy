@@ -1,26 +1,42 @@
 # cython: infer_types=True
 # Compiler crashes on memory view coercion without this. Should report bug.
-from cython.view cimport array as cvarray
 cimport numpy as np
+
 np.import_array()
 
-import numpy
-from thinc.api import get_array_module
 import warnings
 
-from ..typedefs cimport hash_t
+from thinc.api import get_array_module
+
+from ..attrs cimport (
+    IS_ALPHA,
+    IS_ASCII,
+    IS_BRACKET,
+    IS_CURRENCY,
+    IS_DIGIT,
+    IS_LEFT_PUNCT,
+    IS_LOWER,
+    IS_PUNCT,
+    IS_QUOTE,
+    IS_RIGHT_PUNCT,
+    IS_SPACE,
+    IS_STOP,
+    IS_TITLE,
+    IS_UPPER,
+    LIKE_EMAIL,
+    LIKE_NUM,
+    LIKE_URL,
+    ORTH,
+)
 from ..lexeme cimport Lexeme
-from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
-from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from ..attrs cimport IS_TITLE, IS_UPPER, IS_CURRENCY, IS_STOP
-from ..attrs cimport LIKE_URL, LIKE_NUM, LIKE_EMAIL
 from ..symbols cimport conj
-from .morphanalysis cimport MorphAnalysis
+from ..typedefs cimport hash_t
 from .doc cimport set_children_from_heads
+from .morphanalysis cimport MorphAnalysis
 
 from .. import parts_of_speech
-from ..errors import Errors, Warnings
 from ..attrs import IOB_STRINGS
+from ..errors import Errors, Warnings
 from .underscore import Underscore, get_ext_args
 
 
@@ -197,11 +213,17 @@ cdef class Token:
         """
         if "similarity" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["similarity"](self, other)
-        if hasattr(other, "__len__") and len(other) == 1 and hasattr(other, "__getitem__"):
-            if self.c.lex.orth == getattr(other[0], "orth", None):
+        attr = getattr(self.doc.vocab.vectors, "attr", ORTH)
+        cdef Token this_token = self
+        cdef Token other_token
+        cdef Lexeme other_lex
+        if isinstance(other, Token):
+            other_token = other
+            if Token.get_struct_attr(this_token.c, attr) == Token.get_struct_attr(other_token.c, attr):
                 return 1.0
-        elif hasattr(other, "orth"):
-            if self.c.lex.orth == other.orth:
+        elif isinstance(other, Lexeme):
+            other_lex = other
+            if Token.get_struct_attr(this_token.c, attr) == Lexeme.get_struct_attr(other_lex.c, attr):
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
             warnings.warn(Warnings.W007.format(obj="Token"))
@@ -214,7 +236,7 @@ cdef class Token:
         result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
         # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
         return result.item()
-    
+
     def has_morph(self):
         """Check whether the token has annotated morph information.
         Return False when the morph annotation is unset/missing.
@@ -398,7 +420,7 @@ cdef class Token:
             return self.doc.user_token_hooks["has_vector"](self)
         if self.vocab.vectors.size == 0 and self.doc.tensor.size != 0:
             return True
-        return self.vocab.has_vector(self.c.lex.orth)
+        return self.vocab.has_vector(Token.get_struct_attr(self.c, self.vocab.vectors.attr))
 
     @property
     def vector(self):
@@ -414,7 +436,7 @@ cdef class Token:
         if self.vocab.vectors.size == 0 and self.doc.tensor.size != 0:
             return self.doc.tensor[self.i]
         else:
-            return self.vocab.get_vector(self.c.lex.orth)
+            return self.vocab.get_vector(Token.get_struct_attr(self.c, self.vocab.vectors.attr))
 
     @property
     def vector_norm(self):
@@ -521,9 +543,9 @@ cdef class Token:
         def __get__(self):
             if self.i + 1 == len(self.doc):
                 return True
-            elif self.doc[self.i+1].is_sent_start == None:
+            elif self.doc[self.i+1].is_sent_start is None:
                 return None
-            elif self.doc[self.i+1].is_sent_start == True:
+            elif self.doc[self.i+1].is_sent_start is True:
                 return True
             else:
                 return False

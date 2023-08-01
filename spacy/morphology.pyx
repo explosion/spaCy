@@ -1,12 +1,13 @@
 # cython: infer_types
-import numpy
 import warnings
+
+import numpy
 
 from .attrs cimport POS
 
-from .parts_of_speech import IDS as POS_IDS
-from .errors import Warnings
 from . import symbols
+from .errors import Warnings
+from .parts_of_speech import IDS as POS_IDS
 
 
 cdef class Morphology:
@@ -82,10 +83,11 @@ cdef class Morphology:
         features = self.normalize_attrs(features)
         string_features = {self.strings.as_string(field): self.strings.as_string(values) for field, values in features.items()}
         # normalized UFEATS string with sorted fields and values
-        norm_feats_string = self.FEATURE_SEP.join(sorted([
-                self.FIELD_SEP.join([field, values])
-            for field, values in string_features.items()
-        ]))
+        norm_feats_string = self.FEATURE_SEP.join(
+            sorted(
+                [self.FIELD_SEP.join([field, values]) for field, values in string_features.items()]
+            )
+        )
         return norm_feats_string or self.EMPTY_MORPH
 
     def normalize_attrs(self, attrs):
@@ -190,6 +192,7 @@ cdef int get_n_by_field(attr_t* results, const MorphAnalysisC* morph, attr_t fie
             results[n_results] = morph.features[i]
             n_results += 1
     return n_results
+
 
 def unpickle_morphology(strings, tags):
     cdef Morphology morphology = Morphology(strings)

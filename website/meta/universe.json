@@ -1,29 +1,143 @@
 {
     "resources": [
         {
+            "id": "spacy-vscode",
+            "title": "spaCy Visual Studio Code Extension",
+            "thumb": "https://raw.githubusercontent.com/explosion/spacy-vscode/main/icon.png",
+            "slogan": "Work with spaCy's config files in VS Code",
+            "description": "The spaCy VS Code Extension provides additional tooling and features for working with spaCy's config files. Version 1.0.0 includes hover descriptions for registry functions, variables, and section names within the config as an installable extension.",
+            "url": "https://marketplace.visualstudio.com/items?itemName=Explosion.spacy-extension",
+            "github": "explosion/spacy-vscode",
+            "code_language": "python",
+            "author": "Explosion",
+            "author_links": {
+                "twitter": "@explosion_ai",
+                "github": "explosion"
+            },
+            "category": ["extension"],
+            "tags": []
+        },
+        {
+            "id": "parsigs",
+            "title": "parsigs",
+            "slogan": "Structuring prescriptions text made simple using spaCy",
+            "description": "Parsigs is an open-source project that aims to extract the relevant dosage information from prescriptions text without compromising the patient's privacy.\n\nNotice you also need to install the model in order to use the package: `pip install https://huggingface.co/royashcenazi/en_parsigs/resolve/main/en_parsigs-any-py3-none-any.whl`",
+            "github": "royashcenazi/parsigs",
+            "pip": "parsigs",
+            "code_language": "python",
+            "author": "Roy Ashcenazi",
+            "code_example": [
+                "# You'll need to install the trained model, see instructions in the description section",
+                "from parsigs.parse_sig_api import StructuredSig, SigParser",
+                "sig_parser = SigParser()",
+                "",
+                "sig = 'Take 1 tablet of ibuprofen 200mg 3 times every day for 3 weeks'",
+                "parsed_sig = sig_parser.parse(sig)"
+            ],
+            "author_links": {
+                "github": "royashcenazi"
+            },
+            "category": ["model", "research", "biomedical"],
+            "tags": ["sigs", "prescription","pharma"]
+        },
+        {
+            "id": "latincy",
+            "title": "LatinCy",
+            "thumb": "https://raw.githubusercontent.com/diyclassics/la_core_web_lg/main/latincy-logo.png",
+            "slogan": "Synthetic trained spaCy pipelines for Latin NLP",
+            "description": "Set of trained general purpose Latin-language 'core' pipelines for use with spaCy. The models are trained on a large amount of available Latin data, including all five of the Latin Universal Dependency treebanks, which have been preprocessed to be compatible with each other.",
+            "url": "https://huggingface.co/latincy",
+            "code_example": [
+                "# pip install https://huggingface.co/latincy/la_core_web_lg/resolve/main/la_core_web_lg-any-py3-none-any.whl",
+                "import spacy",
+                "nlp = spacy.load('la_core_web_lg')",
+                "doc = nlp('Haec narrantur a poetis de Perseo')",
+                "",
+                "print(f'{doc[0].text}, {doc[0].norm_}, {doc[0].lemma_}, {doc[0].pos_}')",
+                "",
+                "# > Haec, haec, hic, DET"
+            ],
+            "code_language": "python",
+            "author": "Patrick J. Burns",
+            "author_links": {
+                "twitter": "@diyclassics",
+                "github": "diyclassics",
+                "website": "https://diyclassics.github.io/"
+            },
+            "category": ["pipeline", "research"],
+            "tags": ["latin"]
+        },
+        {
+            "id": "spacy-wasm",
+            "title": "spacy-wasm",
+            "slogan": "spaCy in the browser using WebAssembly",
+            "description": "Run spaCy directly in the browser with WebAssembly. Using Pyodide, the application loads the spaCy model and renders the text prompt with displaCy.",
+            "url": "https://spacy-wasm.vercel.app/",
+            "github": "SyedAhkam/spacy-wasm",
+            "code_language": "python",
+            "author": "Syed Ahkam",
+            "author_links": {
+                "twitter": "@SyedAhkam1",
+                "github": "SyedAhkam"
+            },
+            "category": ["visualizers"],
+            "tags": ["visualization", "deployment"]
+        },
+        {
+            "id": "spacysee",
+            "title": "spaCysee",
+            "slogan": "Visualize spaCy's Dependency Parsing, POS tagging, and morphological analysis",
+            "description": "A project that helps you visualize your spaCy docs in Jupyter notebooks. Each of the dependency tags, POS tags and morphological features are clickable. Clicking on a tag will bring up the relevant documentation for that tag.",
+            "github": "moxley01/spacysee",
+            "pip": "spacysee",
+            "code_example": [
+                "import spacy",
+                "from spacysee import render",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "doc = nlp('This is a neat way to visualize your spaCy docs')",
+                "render(doc, width='500', height='500')"
+            ],
+            "code_language": "python",
+            "thumb": "https://www.mattoxley.com/static/images/spacysee_logo.svg",
+            "image": "https://www.mattoxley.com/static/images/spacysee_logo.svg",
+            "author": "Matt Oxley",
+            "author_links": {
+                "twitter": "matt0xley",
+                "github": "moxley01",
+                "website": "https://mattoxley.com"
+            },
+            "category": ["visualizers"],
+            "tags": ["visualization"]
+        },
+        {
             "id": "grecy",
             "title": "greCy",
             "slogan": "Ancient Greek pipelines for spaCy",
-            "description": "greCy offers state-of-the-art pipelines for ancient Greek NLP. The repository makes language models available in various sizes, some of them containing floret word vectors and a BERT transformer layer.",
+            "description": "greCy offers state-of-the-art pipelines for ancient Greek NLP. It installs language models available in various sizes, some of them containing either word vectors or the aristoBERTo transformer.",
             "github": "jmyerston/greCy",
+            "pip": "grecy",
             "code_example": [
-                "import spacy",
-                "#After installing the grc_ud_proiel_trf wheel package from the greCy repository",
+                "python -m grecy install grc_proiel_trf",
                 "",
-                "nlp = spacy.load('grc_ud_proiel_trf')",
-                "doc = nlp('δοκῶ μοι περὶ ὧν πυνθάνεσθε οὐκ ἀμελέτητος εἶναι.')",
+                "#After installing grc_proiel_trf or any other model",
+                "import spacy",
+                "",
+                "nlp = spacy.load('grc_proiel_trf')",
+                "doc = nlp('δοκῶ μοι περὶ ὧν πυνθάνεσθε οὐκ ἀμελέτητος εἶναι')",
                 "",
                 "for token in doc:",
-                "   print(token.text, token.norm_, token.lemma_, token.pos_, token.tag_)"
+                "   print(f'{token.text}, lemma: {token.lemma_}, pos: {token.pos_}, dep: {token.dep_}')"
             ],
             "code_language": "python",
+            "thumb": "https://jacobo-syntax.hf.space/media/03a5317fa660c142e41dd2870b4273ce4e668e6fcdee0a276891f563.png",
             "author": "Jacobo Myerston",
             "author_links": {
                 "twitter": "@jcbmyrstn",
                 "github": "jmyerston",
                 "website": "https://huggingface.co/spaces/Jacobo/syntax"
             },
-            "category": ["pipeline", "research"],
+            "category": ["pipeline", "research","models"],
             "tags": ["ancient Greek"]
         },
         {
@@ -291,7 +405,7 @@
         },
         {
             "id": "spacypdfreader",
-            "title": "spadypdfreader",
+            "title": "spacypdfreader",
             "category": ["pipeline"],
             "tags": ["PDF"],
             "slogan": "Easy PDF to text to spaCy text extraction in Python.",
@@ -308,7 +422,7 @@
             },
             "code_example": [
                 "import spacy",
-                "from spacypdfreader import pdf_reader",
+                "from spacypdfreader.spacypdfreader import pdf_reader",
                 "",
                 "nlp = spacy.load('en_core_web_sm')",
                 "doc = pdf_reader('tests/data/test_pdf_01.pdf', nlp)",
@@ -2625,10 +2739,9 @@
             "description": "Have you ever struggled with needing a [spaCy TextCategorizer](https://spacy.io/api/textcategorizer) but didn't have the time to train one from scratch? Classy Classification is the way to go! For few-shot classification using [sentence-transformers](https://github.com/UKPLab/sentence-transformers) or [spaCy models](https://spacy.io/usage/models), provide a dictionary with labels and examples, or just provide a list of labels for zero shot-classification with [Huggingface zero-shot classifiers](https://huggingface.co/models?pipeline_tag=zero-shot-classification).",
             "github": "davidberenstein1957/classy-classification",
             "pip": "classy-classification",
-            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/classy-classification/master/logo.png",
+            "thumb": "https://raw.githubusercontent.com/davidberenstein1957/classy-classification/master/logo.png",
             "code_example": [
                 "import spacy",
-                "import classy_classification",
                 "",
                 "data = {",
                 "    \"furniture\": [\"This text is about chairs.\",",
@@ -2673,14 +2786,13 @@
             "title": "Concise Concepts",
             "slogan": "Concise Concepts uses few-shot NER based on word embedding similarity to get you going with easy!",
             "description": "When wanting to apply NER to concise concepts, it is really easy to come up with examples, but it takes some effort to train an entire pipeline. Concise Concepts uses few-shot NER based on word embedding similarity to get you going with easy!",
-            "github": "pandora-intelligence/concise-concepts",
+            "github": "davidberenstein1957/concise-concepts",
             "pip": "concise-concepts",
-            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/concise-concepts/master/img/logo.png",
-            "image": "https://raw.githubusercontent.com/Pandora-Intelligence/concise-concepts/master/img/example.png",
+            "thumb": "https://raw.githubusercontent.com/davidberenstein1957/concise-concepts/master/img/logo.png",
+            "image": "https://raw.githubusercontent.com/davidberenstein1957/concise-concepts/master/img/example.png",
             "code_example": [
                 "import spacy",
                 "from spacy import displacy",
-                "import concise_concepts",
                 "",
                 "data = {",
                 "    \"fruit\": [\"apple\", \"pear\", \"orange\"],",
@@ -2720,13 +2832,12 @@
             "title": "Crosslingual Coreference",
             "slogan": "One multi-lingual coreference model to rule them all!",
             "description": "Coreference is amazing but the data required for training a model is very scarce. In our case, the available training for non-English languages also data proved to be poorly annotated. Crosslingual Coreference therefore uses the assumption a trained model with English data and cross-lingual embeddings should work for other languages with similar sentence structure. Verified to work quite well for at least (EN, NL, DK, FR, DE).",
-            "github": "pandora-intelligence/crosslingual-coreference",
+            "github": "davidberenstein1957/crosslingual-coreference",
             "pip": "crosslingual-coreference",
-            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/crosslingual-coreference/master/img/logo.png",
-            "image": "https://raw.githubusercontent.com/Pandora-Intelligence/crosslingual-coreference/master/img/example_total.png",
+            "thumb": "https://raw.githubusercontent.com/davidberenstein1957/crosslingual-coreference/master/img/logo.png",
+            "image": "https://raw.githubusercontent.com/davidberenstein1957/crosslingual-coreference/master/img/example_total.png",
             "code_example": [
                 "import spacy",
-                "import crosslingual_coreference",
                 "",
                 "text = \"\"\"",
                 "    Do not forget about Momofuku Ando!",
@@ -2765,6 +2876,106 @@
             },
             "category": ["pipeline", "standalone"],
             "tags": ["coreference", "multi-lingual", "cross-lingual", "allennlp"],
+            "spacy_version": 3
+        },
+        {
+            "id": "adeptaugmentations",
+            "title": "Adept Augmentations",
+            "slogan": " A Python library aimed at dissecting and augmenting NER training data for a few-shot scenario.",
+            "description": "EntitySwapAugmenter takes either a `datasets.Dataset` or a `spacy.tokens.DocBin`. Additionally, it is optional to provide a set of labels. It initially creates a knowledge base of entities belonging to a certain label. When running `augmenter.augment()` for N runs, it then creates N new sentences with random swaps of the original entities with an entity of the same corresponding label from the knowledge base.\n\nFor example, assuming that we have knowledge base for `PERSONS`, `LOCATIONS` and `PRODUCTS`. We can then create additional data for the sentence \"Momofuko Ando created instant noodles in Osaka.\" using `augmenter.augment(N=2)`, resulting in \"David created instant noodles in Madrid.\" or \"Tom created Adept Augmentations in the Netherlands\".",
+            "github": "argilla-io/adept-augmentations",
+            "pip": "adept-augmentations",
+            "thumb": "https://raw.githubusercontent.com/argilla-io/adept-augmentations/main/logo.png",
+            "code_example": [
+                "from adept_augmentations import EntitySwapAugmenter",
+                "import spacy",
+                "from spacy.tokens import Doc, DocBin",
+                "nlp = spacy.blank(\"en\")",
+                "",
+                "# Create some example golden data",
+                "example_data = [",
+                "    (\"Apple is looking at buying U.K. startup for $1 billion\", [(0, 5, \"ORG\"), (27, 31, \"LOC\"), (44, 54, \"MONEY\")]),",
+                "    (\"Microsoft acquires GitHub for $7.5 billion\", [(0, 9, \"ORG\"), (19, 25, \"ORG\"), (30, 42, \"MONEY\")]),",
+                "]",
+                "",
+                "# Create a new DocBin",
+                "nlp = spacy.blank(\"en\")",
+                "docs = []",
+                "for entry in example_data:",
+                "    doc = Doc(nlp.vocab, words=entry[0].split())",
+                "    doc.ents = [doc.char_span(ent[0], ent[1], label=ent[2]) for ent in entry[1]]",
+                "    docs.append(doc)",
+                "golden_dataset = DocBin(docs=docs)",
+                "",
+                "# Augment Data",
+                "augmented_dataset = EntitySwapAugmenter(golden_dataset).augment(4)",
+                "for doc in augmented_dataset.get_docs(nlp.vocab):",
+                "    print(doc.text)",
+                "",
+                "# GitHub is looking at buying U.K. startup for $ 7.5 billion",
+                "# Microsoft is looking at buying U.K. startup for $ 1 billion",
+                "# Microsoft is looking at buying U.K. startup for $ 7.5 billion",
+                "# GitHub is looking at buying U.K. startup for $ 1 billion",
+                "# Microsoft acquires Apple for $ 7.5 billion",
+                "# Apple acquires Microsoft for $ 1 billion",
+                "# Microsoft acquires Microsoft for $ 7.5 billion",
+                "# GitHub acquires GitHub for $ 1 billion"
+            ],
+            "author": "David Berenstein",
+            "author_links": {
+                "github": "davidberenstein1957",
+                "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
+            },
+            "category": ["standalone"],
+            "tags": ["ner", "few-shot", "augmentation", "datasets", "training"],
+            "spacy_version": 3
+        },
+        {
+            "id": "spacysetfit",
+            "title": "spaCy-SetFit",
+            "slogan": "An an easy and intuitive approach to use SetFit in combination with spaCy.",
+            "description": "spaCy-SetFit is a Python library that extends spaCy's text categorization capabilities by incorporating SetFit for few-shot classification. It allows you to train a text categorizer using a intuitive dictionary. \n\nThe library integrates with spaCy's pipeline architecture, enabling easy integration and configuration of the text categorizer component. You can provide a training dataset containing inlier and outlier examples, and spaCy-SetFit will use the paraphrase-MiniLM-L3-v2 model for training the text categorizer with SetFit. Once trained, you can use the categorizer to classify new text and obtain category probabilities.",
+            "github": "davidberenstein1957/spacy-setfit",
+            "pip": "spacy-setfit",
+            "thumb": "https://raw.githubusercontent.com/davidberenstein1957/spacy-setfit/main/logo.png",
+            "code_example": [
+            "import spacy",
+            "",
+            "# Create some example data",
+            "train_dataset = {",
+            "    \"inlier\": [",
+            "        \"Text about furniture\",",
+            "        \"Couches, benches and televisions.\",",
+            "        \"I really need to get a new sofa.\"",
+            "    ],",
+            "    \"outlier\": [",
+            "        \"Text about kitchen equipment\",",
+            "        \"This text is about politics\",",
+            "        \"Comments about AI and stuff.\"",
+            "    ]",
+            "}",
+            "",
+            "# Load the spaCy language model:",
+            "nlp = spacy.load(\"en_core_web_sm\")",
+            "",
+            "# Add the \"text_categorizer\" pipeline component to the spaCy model, and configure it with SetFit parameters:",
+            "nlp.add_pipe(\"text_categorizer\", config={",
+            "    \"pretrained_model_name_or_path\": \"paraphrase-MiniLM-L3-v2\",",
+            "    \"setfit_trainer_args\": {",
+            "        \"train_dataset\": train_dataset",
+            "    }",
+            "})",
+            "doc = nlp(\"I really need to get a new sofa.\")",
+            "doc.cats",
+            "# {'inlier': 0.902350975129, 'outlier': 0.097649024871}"
+            ],
+            "author": "David Berenstein",
+            "author_links": {
+                "github": "davidberenstein1957",
+                "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
+            },
+            "category": ["pipeline"],
+            "tags": ["few-shot", "SetFit", "training"],
             "spacy_version": 3
         },
         {
@@ -4119,6 +4330,68 @@
             },
             "category": ["pipeline", "research"],
             "tags": ["Thai"]
+        },
+        {
+            "id": "vetiver",
+            "title": "Vetiver",
+            "slogan": "Version, share, deploy, and monitor models.",
+            "description": "The goal of vetiver is to provide fluent tooling to version, deploy, and monitor a trained model. Functions handle creating model objects, versioning models, predicting from a remote API endpoint, deploying Dockerfiles, and more.",
+            "github": "rstudio/vetiver-python",
+            "pip": "vetiver",
+            "code_example": [
+                "import spacy",
+                "from vetiver import VetiverModel, VetiverAPI",
+                "",
+                "# If you use this model, you'll need to download it first:",
+                "# python -m spacy download en_core_web_md",
+                "nlp = spacy.load('en_core_web_md')",
+                "# Create deployable model object with your nlp Language object",
+                "v = VetiverModel(nlp, model_name = 'my_model')",
+                "# Try out your API endpoint locally",
+                "VetiverAPI(v).run()"
+            ],
+            "code_language": "python",
+            "url": "https://vetiver.rstudio.com/",
+            "thumb": "https://raw.githubusercontent.com/rstudio/vetiver-python/main/docs/figures/square-logo.svg",
+            "author": "Posit, PBC",
+            "author_links": {
+                "twitter": "posit_pbc",
+                "github": "rstudio",
+                "website": "https://posit.co/"
+            },
+            "category": ["apis", "standalone"],
+            "tags": ["apis", "deployment"]
+        },
+        {
+            "id": "span_marker",
+            "title": "SpanMarker",
+            "slogan": "Effortless state-of-the-art NER in spaCy",
+            "description": "The SpanMarker integration with spaCy allows you to seamlessly replace the default spaCy `\"ner\"` pipeline component with any [SpanMarker model available on the Hugging Face Hub](https://huggingface.co/models?library=span-marker). Through this, you can take advantage of the advanced Named Entity Recognition capabilities of SpanMarker within the familiar and powerful spaCy framework.\n\nBy default, the `span_marker` pipeline component uses a [SpanMarker model using RoBERTa-large trained on OntoNotes v5.0](https://huggingface.co/tomaarsen/span-marker-roberta-large-ontonotes5). This model reaches a competitive 91.54 F1, notably higher than the [85.5 and 89.8 F1](https://spacy.io/usage/facts-figures#section-benchmarks) from `en_core_web_lg` and `en_core_web_trf`, respectively. A short head-to-head between this SpanMarker model and the `trf` spaCy model has been posted [here](https://github.com/tomaarsen/SpanMarkerNER/pull/12).\n\nAdditionally, see [here](https://tomaarsen.github.io/SpanMarkerNER/notebooks/spacy_integration.html) for documentation on using SpanMarker with spaCy.",
+            "github": "tomaarsen/SpanMarkerNER",
+            "pip": "span_marker",
+            "code_example": [
+                "import spacy",
+                "",
+                "nlp = spacy.load(\"en_core_web_sm\", exclude=[\"ner\"])",
+                "nlp.add_pipe(\"span_marker\", config={\"model\": \"tomaarsen/span-marker-roberta-large-ontonotes5\"})",
+                "",
+                "text = \"\"\"Cleopatra VII, also known as Cleopatra the Great, was the last active ruler of the \\",
+                "Ptolemaic Kingdom of Egypt. She was born in 69 BCE and ruled Egypt from 51 BCE until her \\",
+                "death in 30 BCE.\"\"\"",
+                "doc = nlp(text)",
+                "print([(entity, entity.label_) for entity in doc.ents])",
+                "# [(Cleopatra VII, \"PERSON\"), (Cleopatra the Great, \"PERSON\"), (the Ptolemaic Kingdom of Egypt, \"GPE\"),",
+                "# (69 BCE, \"DATE\"), (Egypt, \"GPE\"), (51 BCE, \"DATE\"), (30 BCE, \"DATE\")]"
+            ],
+            "code_language": "python",
+            "url": "https://tomaarsen.github.io/SpanMarkerNER",
+            "author": "Tom Aarsen",
+            "author_links": {
+                "github": "tomaarsen",
+                "website": "https://www.linkedin.com/in/tomaarsen"
+            },
+            "category": ["pipeline", "standalone", "scientific"],
+            "tags": ["ner"]
         }
     ],
 

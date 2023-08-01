@@ -259,6 +259,26 @@ source code and recompiling frequently.
   $ python setup.py develop
   ```
 
+#### Visual Studio Code extension
+
+![spaCy extension demo](/images/spacy-extension-demo.gif)
+
+The [spaCy VSCode Extension](https://github.com/explosion/spacy-vscode) provides
+additional tooling and features for working with spaCy's config files. Version
+1.0.0 includes hover descriptions for registry functions, variables, and section
+names within the config as an installable extension.
+
+1. Install a supported version of Python on your system (`>=3.7`)
+2. Install the
+   [Python Extension for Visual Studio Code](https://code.visualstudio.com/docs/python/python-tutorial)
+3. Create a
+   [virtual python environment](https://docs.python.org/3/library/venv.html)
+4. Install all python requirements (`spaCy >= 3.4.0` & `pygls >= 1.0.0`)
+5. Install
+   [spaCy extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=Explosion.spacy-extension)
+6. Select your python environment
+7. You are ready to work with `.cfg` files in spaCy!
+
 ### Building an executable {id="executable"}
 
 The spaCy repository includes a [`Makefile`](%%GITHUB_SPACY/Makefile) that
@@ -290,7 +310,7 @@ You can configure the build process with the following environment variables:
 | Variable       | Description                                                                                                                                                                                                 |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `SPACY_EXTRAS` | Additional Python packages to install alongside spaCy with optional version specifications. Should be a string that can be passed to `pip install`. See [`Makefile`](%%GITHUB_SPACY/Makefile) for defaults. |
-| `PYVER`        | The Python version to build against. This version needs to be available on your build and runtime machines. Defaults to `3.6`.                                                                              |
+| `PYVER`        | The Python version to build against. This version needs to be available on your build and runtime machines. Defaults to `3.8`.                                                                              |
 | `WHEELHOUSE`   | Directory to store the wheel files during compilation. Defaults to `./wheelhouse`.                                                                                                                          |
 
 ### Run tests {id="run-tests"}

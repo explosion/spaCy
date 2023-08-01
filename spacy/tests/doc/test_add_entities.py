@@ -1,9 +1,10 @@
-from spacy.pipeline.ner import DEFAULT_NER_MODEL
-from spacy.training import Example
-from spacy.pipeline import EntityRecognizer
-from spacy.tokens import Span, Doc
-from spacy import registry
 import pytest
+
+from spacy import registry
+from spacy.pipeline import EntityRecognizer
+from spacy.pipeline.ner import DEFAULT_NER_MODEL
+from spacy.tokens import Doc, Span
+from spacy.training import Example
 
 
 def _ner_example(ner):

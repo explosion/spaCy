@@ -1,5 +1,5 @@
-from spacy.language import Language
 from spacy.compat import pickle
+from spacy.language import Language
 
 
 def test_pickle_single_doc():

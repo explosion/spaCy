@@ -1,6 +1,5 @@
 import pytest
 
-
 NB_TOKEN_EXCEPTION_TESTS = [
     (
         "Smørsausen brukes bl.a. til fisk",

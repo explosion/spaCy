@@ -1,29 +1,25 @@
 # cython: embedsignature=True, profile=True, binding=True
+cimport cython
+from cymem.cymem cimport Pool
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from libc.string cimport memcpy, memset
 from libcpp.set cimport set as stdset
-from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
-cimport cython
 
 import re
-import warnings
-
-from .tokens.doc cimport Doc
-from .strings cimport hash_string
 from .lexeme cimport EMPTY_LEXEME
+from .strings cimport hash_string
+from .tokens.doc cimport Doc
 
-from .attrs import intify_attrs
-from .symbols import ORTH, NORM
-from .errors import Errors, Warnings
 from . import util
-from .util import registry, get_words_and_spaces
 from .attrs import intify_attrs
-from .symbols import ORTH
+from .errors import Errors
 from .scorer import Scorer
-from .training import validate_examples
+from .symbols import NORM, ORTH
 from .tokens import Span
+from .training import validate_examples
+from .util import get_words_and_spaces
 
 
 cdef class Tokenizer:
@@ -326,7 +322,7 @@ cdef class Tokenizer:
         cdef int span_start
         cdef int span_end
         while i < doc.length:
-            if not i in span_data:
+            if i not in span_data:
                 tokens[i + offset] = doc.c[i]
                 i += 1
             else:
@@ -397,12 +393,15 @@ cdef class Tokenizer:
         self._save_cached(&tokens.c[orig_size], orig_key, has_special,
                           tokens.length - orig_size)
 
-    cdef str _split_affixes(self, Pool mem, str string,
-                                vector[const LexemeC*] *prefixes,
-                                vector[const LexemeC*] *suffixes,
-                                int* has_special,
-                                bint with_special_cases):
-        cdef size_t i
+    cdef str _split_affixes(
+        self,
+        Pool mem,
+        str string,
+        vector[const LexemeC*] *prefixes,
+        vector[const LexemeC*] *suffixes,
+        int* has_special,
+        bint with_special_cases
+    ):
         cdef str prefix
         cdef str suffix
         cdef str minus_pre
@@ -447,10 +446,6 @@ cdef class Tokenizer:
                             vector[const LexemeC*] *suffixes,
                             int* has_special,
                             bint with_special_cases) except -1:
-        cdef bint specials_hit = 0
-        cdef bint cache_hit = 0
-        cdef int split, end
-        cdef const LexemeC* const* lexemes
         cdef const LexemeC* lexeme
         cdef str span
         cdef int i
@@ -460,9 +455,11 @@ cdef class Tokenizer:
         if string:
             if self._try_specials_and_cache(hash_string(string), tokens, has_special, with_special_cases):
                 pass
-            elif (self.token_match and self.token_match(string)) or \
-                    (self.url_match and \
-                    self.url_match(string)):
+            elif (
+                (self.token_match and self.token_match(string)) or
+                (self.url_match and self.url_match(string))
+            ):
+
                 # We're always saying 'no' to spaces here -- the caller will
                 # fix up the outermost one, with reference to the original.
                 # See Issue #859
@@ -823,7 +820,7 @@ cdef class Tokenizer:
         self.infix_finditer = None
         self.token_match = None
         self.url_match = None
-        msg = util.from_bytes(bytes_data, deserializers, exclude)
+        util.from_bytes(bytes_data, deserializers, exclude)
         if "prefix_search" in data and isinstance(data["prefix_search"], str):
             self.prefix_search = re.compile(data["prefix_search"]).search
         if "suffix_search" in data and isinstance(data["suffix_search"], str):
@@ -834,10 +831,12 @@ cdef class Tokenizer:
             self.token_match = re.compile(data["token_match"]).match
         if "url_match" in data and isinstance(data["url_match"], str):
             self.url_match = re.compile(data["url_match"]).match
-        if "rules" in data and isinstance(data["rules"], dict):
-            self.rules = data["rules"]
         if "faster_heuristics" in data:
             self.faster_heuristics = data["faster_heuristics"]
+        # always load rules last so that all other settings are set before the
+        # internal tokenization for the phrase matcher
+        if "rules" in data and isinstance(data["rules"], dict):
+            self.rules = data["rules"]
         return self
 
 
