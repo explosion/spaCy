@@ -118,6 +118,7 @@ class registry(thinc.registry):
     augmenters = catalogue.create("spacy", "augmenters", entry_points=True)
     loggers = catalogue.create("spacy", "loggers", entry_points=True)
     scorers = catalogue.create("spacy", "scorers", entry_points=True)
+    vectors = catalogue.create("spacy", "vectors", entry_points=True)
     # These are factories registered via third-party packages and the
     # spacy_factories entry point. This registry only exists so we can easily
     # load them via the entry points. The "true" factories are added via the
