@@ -553,7 +553,8 @@ class Errors(metaclass=ErrorsWithCodes):
             "during training, make sure to include it in 'annotating components'")
 
     # New errors added in v3.x
-    E849 = ("Unable to {action} vectors for vectors of type {vectors_type}.")
+    E849 = ("The vocab only supports {method} for vectors of type "
+            "spacy.vectors.Vectors, not {vectors_type}.")
     E850 = ("The PretrainVectors objective currently only supports default or "
             "floret vectors, not {mode} vectors.")
     E851 = ("The 'textcat' component labels should only have values of 0 or 1, "
