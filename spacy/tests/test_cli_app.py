@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -60,7 +61,7 @@ seed = 0
 gpu_allocator = null
 
 [nlp]
-lang = "xx"
+lang = "mul"
 pipeline = ["noop", "noop2"]
 disabled = []
 before_creation = null
@@ -160,7 +161,7 @@ after_init = null
 
 @pytest.fixture
 def data_paths():
-    nlp = spacy.blank("xx")
+    nlp = spacy.blank("mul")
     doc = nlp("ok")
     with make_tempdir() as tdir:
         db = DocBin()
@@ -219,7 +220,7 @@ def test_multi_code(cmd, code_paths, data_paths, noop_config):
     # check that it fails without the code arg
     cmd = cmd.split()
     output = ["."] if cmd[0] == "assemble" else []
-    cmd = ["python", "-m", "spacy"] + cmd
+    cmd = [sys.executable, "-m", "spacy"] + cmd
     result = subprocess.run([*cmd, str(noop_config), *output, *data_paths])
     assert result.returncode == 1
 
