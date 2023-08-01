@@ -644,23 +644,26 @@ As an example, the following `BPEmbVectors` class implements support for
 
 ```python
 # requires: pip install bpemb
-from typing import cast, Callable, Optional
-from pathlib import Path
 import warnings
+from pathlib import Path
+from typing import Callable, Optional, cast
+
 from bpemb import BPEmb
-from spacy.util import registry
-from spacy.vectors import BaseVectors
-from spacy.vocab import Vocab
 from thinc.api import Ops, get_current_ops
 from thinc.backends import get_array_ops
 from thinc.types import Floats2d
+
+from spacy.strings import StringStore
+from spacy.util import registry
+from spacy.vectors import BaseVectors
+from spacy.vocab import Vocab
 
 
 class BPEmbVectors(BaseVectors):
     def __init__(
         self,
         *,
-        strings: Optional[str] = None,
+        strings: Optional[StringStore] = None,
         lang: Optional[str] = None,
         vs: Optional[int] = None,
         dim: Optional[int] = None,
