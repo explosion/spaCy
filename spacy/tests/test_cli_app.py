@@ -235,14 +235,14 @@ def test_multi_code_evaluate(code_paths, data_paths, noop_config):
     # the other commands.
 
     # Train a model to evaluate
-    cmd = f"python -m spacy train {noop_config} -o model".split()
+    cmd = f"{sys.executable} -m spacy train {noop_config} -o model".split()
     result = subprocess.run([*cmd, *data_paths, *code_paths])
     assert result.returncode == 0
 
     # now do the evaluation
 
     eval_data = data_paths[-1]
-    cmd = f"python -m spacy evaluate model/model-best {eval_data}".split()
+    cmd = f"{sys.executable} -m spacy evaluate model/model-best {eval_data}".split()
 
     # check that it fails without the code arg
     result = subprocess.run(cmd)
