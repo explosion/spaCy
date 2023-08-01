@@ -122,10 +122,10 @@ print(doc.cats)
 # {"COMPLIMENT": 1.0, "INSULT": 0.0}
 ```
 
-
 ### Example 2: Add a text classifier using an open-source model through HuggingFace {id="example-2"}
 
-The same TextCat task can also be used with an open source model from HuggingFace.
+The same TextCat task can also be used with an open source model from
+HuggingFace.
 
 To run this example, ensure that you have a GPU enabled, and `transformers`,
 `torch` and CUDA installed. For more background information, see the
@@ -173,37 +173,24 @@ first time you use it. You can
 by setting the environmental variable `HF_HOME`. Also, you can upgrade the model
 to be `"databricks/dolly-v2-12b"` for better performance.
 
-
 ### Example 3: Add NER using a GPT-3 model from OpenAI {id="example-3"}
 
-In previous versions of the `spacy-llm` `NER` and `SpanCat` tasks, you could configure
-a zero-shot pipeline without any examples. The new `v3` (`spacy.NER.v3` and `spacy.SpanCat.v3`)
-tasks use few-shot learning exclusively require at least 1 prompt example to be configured.
+In previous versions of the `spacy-llm` `NER` and `SpanCat` tasks, you could
+configure a zero-shot pipeline without any examples. The new `v3`
+(`spacy.NER.v3` and `spacy.SpanCat.v3`) tasks use few-shot learning exclusively
+require at least 1 prompt example to be configured.
 
-The old zero-shot prompt we were using really didn't work that well from our evaluations on
-well known NER datasets (# TODO: link to evaluation results?)
+The old zero-shot prompt we were using really didn't work that well from our
+evaluations on well known NER datasets (# TODO: link to evaluation results?)
 
-The new v3 task prompts are based on the [PromptNER](https://arxiv.org/abs/2305.15444) paper and use
-chain-of-thought reasoning to improve model quality. The accuracy of this prompt should be much better
-for most NER cases but it does require a little bit more work upfront.
-
-
-```
-@misc{ashok2023promptner,
-      title={PromptNER: Prompting For Named Entity Recognition},
-      author={Dhananjay Ashok and Zachary C. Lipton},
-      year={2023},
-      eprint={2305.15444},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL}
-}
-```
-
+The new v3 task prompts are based on the
+[PromptNER](https://arxiv.org/abs/2305.15444) paper and use chain-of-thought
+reasoning to improve model quality. The accuracy of this prompt should be much
+better for most NER cases but it does require a little bit more work upfront.
 
 Create a config file `config.cfg` containing at least the following (or see the
 full example
 [here](https://github.com/explosion/spacy-llm/tree/main/usage_examples/ner_openai)):
-
 
 ```ini
 [nlp]
@@ -510,20 +497,22 @@ It should accept an iterable of `Example`s as input and return a score
 dictionary. If the `scorer` method is defined, `spacy-llm` will call it to
 evaluate the component.
 
-| Component                                                               | Description                                                                                                                                                           |
-| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`spacy.Summarization.v1`](/api/large-language-models#summarization-v1) | The summarization task prompts the model for a concise summary of the provided text.                                                                                  |
-| [`spacy.NER.v2`](/api/large-language-models#ner-v2)                     | The built-in NER task supports both zero-shot and few-shot prompting. This version also supports explicitly defining the provided labels with custom descriptions.    |
-| [`spacy.NER.v1`](/api/large-language-models#ner-v1)                     | The original version of the built-in NER task supports both zero-shot and few-shot prompting.                                                                         |
-| [`spacy.SpanCat.v2`](/api/large-language-models#spancat-v2)             | The built-in SpanCat task is a simple adaptation of the NER task to support overlapping entities and store its annotations in `doc.spans`.                            |
-| [`spacy.SpanCat.v1`](/api/large-language-models#spancat-v1)             | The original version of the built-in SpanCat task is a simple adaptation of the v1 NER task to support overlapping entities and store its annotations in `doc.spans`. |
-| [`spacy.TextCat.v3`](/api/large-language-models#textcat-v3)             | Version 3 (the most recent) of the built-in TextCat task supports both zero-shot and few-shot prompting. It allows setting definitions of labels.                     |
-| [`spacy.TextCat.v2`](/api/large-language-models#textcat-v2)             | Version 2 of the built-in TextCat task supports both zero-shot and few-shot prompting and includes an improved prompt template.                                       |
-| [`spacy.TextCat.v1`](/api/large-language-models#textcat-v1)             | Version 1 of the built-in TextCat task supports both zero-shot and few-shot prompting.                                                                                |
-| [`spacy.REL.v1`](/api/large-language-models#rel-v1)                     | The built-in REL task supports both zero-shot and few-shot prompting. It relies on an upstream NER component for entities extraction.                                 |
-| [`spacy.Lemma.v1`](/api/large-language-models#lemma-v1)                 | The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.                                                  |
-| [`spacy.Sentiment.v1`](/api/large-language-models#sentiment-v1)         | Performs sentiment analysis on provided texts.                                                                                                                        |
-| [`spacy.NoOp.v1`](/api/large-language-models#noop-v1)                   | This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.                                                     |
+| Component                                                               | Description                                                                                                                                                                                                                  |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`spacy.Summarization.v1`](/api/large-language-models#summarization-v1) | The summarization task prompts the model for a concise summary of the provided text.                                                                                                                                         |
+| [`spacy.NER.v3`](/api/large-language-models#ner-v3)                     | The most accurate built-in NER task supports few-shot Chain-of-Thought prompting. This version also supports explicitly defining the task and the provided labels with custom descriptions.                                  |
+| [`spacy.NER.v2`](/api/large-language-models#ner-v2)                     | The built-in NER task supports both zero-shot and few-shot prompting. This version also supports explicitly defining the provided labels with custom descriptions.                                                           |
+| [`spacy.NER.v1`](/api/large-language-models#ner-v1)                     | The original version of the built-in NER task supports both zero-shot and few-shot prompting.                                                                                                                                |
+| [`spacy.SpanCat.v3`](/api/large-language-models#spancat-v3)             | The most accurate built-in SpanCat task supports few-shot Chain-of-Thought prompting. It is a simple adaptation of the `spacy.NER.v3` task with support for overlapping entities and storing its annotations in `doc.spans`. |
+| [`spacy.SpanCat.v2`](/api/large-language-models#spancat-v2)             | The built-in SpanCat task is a simple adaptation of the NER task to support overlapping entities and store its annotations in `doc.spans`.                                                                                   |
+| [`spacy.SpanCat.v1`](/api/large-language-models#spancat-v1)             | The original version of the built-in SpanCat task is a simple adaptation of the v1 NER task to support overlapping entities and store its annotations in `doc.spans`.                                                        |
+| [`spacy.TextCat.v3`](/api/large-language-models#textcat-v3)             | Version 3 (the most recent) of the built-in TextCat task supports both zero-shot and few-shot prompting. It allows setting definitions of labels.                                                                            |
+| [`spacy.TextCat.v2`](/api/large-language-models#textcat-v2)             | Version 2 of the built-in TextCat task supports both zero-shot and few-shot prompting and includes an improved prompt template.                                                                                              |
+| [`spacy.TextCat.v1`](/api/large-language-models#textcat-v1)             | Version 1 of the built-in TextCat task supports both zero-shot and few-shot prompting.                                                                                                                                       |
+| [`spacy.REL.v1`](/api/large-language-models#rel-v1)                     | The built-in REL task supports both zero-shot and few-shot prompting. It relies on an upstream NER component for entities extraction.                                                                                        |
+| [`spacy.Lemma.v1`](/api/large-language-models#lemma-v1)                 | The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.                                                                                                         |
+| [`spacy.Sentiment.v1`](/api/large-language-models#sentiment-v1)         | Performs sentiment analysis on provided texts.                                                                                                                                                                               |
+| [`spacy.NoOp.v1`](/api/large-language-models#noop-v1)                   | This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.                                                                                                            |
 
 #### Providing examples for few-shot prompts {id="few-shot-prompts"}
 
@@ -538,7 +527,7 @@ A file containing examples for few-shot prompting can be configured like this:
 
 ```ini
 [components.llm.task]
-@llm_tasks = "spacy.NER.v2"
+@llm_tasks = "spacy.NER.v3"
 labels = PERSON,ORGANISATION,LOCATION
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
