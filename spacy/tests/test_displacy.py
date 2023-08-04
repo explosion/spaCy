@@ -113,7 +113,7 @@ def test_issue5838():
     doc = nlp(sample_text)
     doc.ents = [Span(doc, 7, 8, label="test")]
     html = displacy.render(doc, style="ent")
-    found = html.count("</br>")
+    found = html.count("<br>")
     assert found == 4
 
 

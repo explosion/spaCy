@@ -567,7 +567,7 @@ class EntityRenderer:
             for i, fragment in enumerate(fragments):
                 markup += escape_html(fragment)
                 if len(fragments) > 1 and i != len(fragments) - 1:
-                    markup += "</br>"
+                    markup += "<br>"
             if self.ents is None or label.upper() in self.ents:
                 color = self.colors.get(label.upper(), self.default_color)
                 ent_settings = {
@@ -585,7 +585,7 @@ class EntityRenderer:
         for i, fragment in enumerate(fragments):
             markup += escape_html(fragment)
             if len(fragments) > 1 and i != len(fragments) - 1:
-                markup += "</br>"
+                markup += "<br>"
         markup = TPL_ENTS.format(content=markup, dir=self.direction)
         if title:
             markup = TPL_TITLE.format(title=title) + markup

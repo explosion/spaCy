@@ -403,7 +403,7 @@ def _format_sources(data: Any) -> str:
         if author:
             result += " ({})".format(author)
         sources.append(result)
-    return "<br />".join(sources)
+    return "<br>".join(sources)
 
 
 def _format_accuracy(data: Dict[str, Any], exclude: List[str] = ["speed"]) -> str:
