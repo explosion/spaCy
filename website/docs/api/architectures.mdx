@@ -497,10 +497,10 @@ Construct an ALBERT transformer model.
 | `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
 | `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
 | `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
-| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                               |
+| `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
 | `embedding_width`              | Width of the embedding representations. ~~int~~                                          |
 | `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
-| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and embedding layers. ~~float~~        |
+| `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
 | `hidden_width`                 | Width of the final representations. ~~int~~                                              |
 | `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
 | `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
@@ -524,9 +524,9 @@ Construct a BERT transformer model.
 | `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
 | `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
 | `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
-| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                               |
+| `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
 | `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
-| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and embedding layers. ~~float~~        |
+| `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
 | `hidden_width`                 | Width of the final representations. ~~int~~                                              |
 | `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
 | `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
@@ -549,9 +549,9 @@ Construct a CamemBERT transformer model.
 | `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
 | `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
 | `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
-| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                               |
+| `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
 | `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
-| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and embedding layers. ~~float~~        |
+| `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
 | `hidden_width`                 | Width of the final representations. ~~int~~                                              |
 | `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
 | `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
@@ -574,9 +574,9 @@ Construct a RoBERTa transformer model.
 | `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
 | `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
 | `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
-| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                               |
+| `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
 | `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
-| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and embedding layers. ~~float~~        |
+| `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
 | `hidden_width`                 | Width of the final representations. ~~int~~                                              |
 | `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
 | `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
@@ -599,9 +599,9 @@ Construct a XLM-RoBERTa transformer model.
 | `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
 | `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
 | `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
-| `attention_probs_dropout_prob` | Dropout probabilty of the self-attention layers. ~~float~~                               |
+| `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
 | `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
-| `hidden_dropout_prob`          | Dropout probabilty of the point-wise feed-forward and embedding layers. ~~float~~        |
+| `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
 | `hidden_width`                 | Width of the final representations. ~~int~~                                              |
 | `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
 | `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
@@ -632,7 +632,7 @@ weighted representation of the same.
 
 Construct a listener layer that communicates with one or more upstream
 Transformer components. This layer extracts the output of the last transformer
-layer and performs pooling over the individual pieces of each Doc token,
+layer and performs pooling over the individual pieces of each `Doc` token,
 returning their corresponding representations. The upstream name should either
 be the wildcard string '\*', or the name of the Transformer component.
 
@@ -644,7 +644,7 @@ with more than one Transformer component in the pipeline.
 
 | Name            | Description                                                                                                            |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `layers`        | The the number of layers produced by the upstream transformer component, excluding the embedding layer. ~~int~~        |
+| `layers`        | The number of layers produced by the upstream transformer component, excluding the embedding layer. ~~int~~            |
 | `width`         | The width of the vectors produced by the upstream transformer component. ~~int~~                                       |
 | `pooling`       | Model that is used to perform pooling over the piece representations. ~~Model~~                                        |
 | `upstream_name` | A string to identify the 'upstream' Transformer component to communicate with. ~~str~~                                 |
