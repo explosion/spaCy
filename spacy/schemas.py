@@ -16,19 +16,34 @@ from typing import (
     Union,
 )
 
-from pydantic import (
-    BaseModel,
-    ConstrainedStr,
-    Field,
-    StrictBool,
-    StrictFloat,
-    StrictInt,
-    StrictStr,
-    ValidationError,
-    create_model,
-    validator,
-)
-from pydantic.main import ModelMetaclass
+try:
+    from pydantic.v1 import (
+        BaseModel,
+        ConstrainedStr,
+        Field,
+        StrictBool,
+        StrictFloat,
+        StrictInt,
+        StrictStr,
+        ValidationError,
+        create_model,
+        validator,
+    )
+    from pydantic.v1.main import ModelMetaclass
+except ImportError:
+    from pydantic import (  # type: ignore
+        BaseModel,
+        ConstrainedStr,
+        Field,
+        StrictBool,
+        StrictFloat,
+        StrictInt,
+        StrictStr,
+        ValidationError,
+        create_model,
+        validator,
+    )
+    from pydantic.main import ModelMetaclass  # type: ignore
 from thinc.api import ConfigValidationError, Model, Optimizer
 from thinc.config import Promise
 
