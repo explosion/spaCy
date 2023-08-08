@@ -1,18 +1,13 @@
 ---
 title: CuratedTransformer
-teaser: Pipeline component for multi-task learning with transformer models
+teaser:
+  Pipeline component for multi-task learning with curated transformer models
 tag: class
 source: github.com/explosion/spacy-transformers/blob/master/spacy_curated_transformers/pipeline_component.py
 version: 3.7
 api_base_class: /api/pipe
-api_string_name: transformer
+api_string_name: curated_transformer
 ---
-
-> #### Installation
->
-> ```bash
-> $ pip install -U spacy-curated-transformers
-> ```
 
 <Infobox title="Important note" variant="warning">
 
@@ -20,37 +15,31 @@ This component is available via the extension package
 [`spacy-curated-transformers`](https://github.com/explosion/spacy-curated-transformers).
 It exposes the component via entry points, so if you have the package installed,
 using `factory = "curated_transformer"` in your
-[training config](/usage/training#config) or
-`nlp.add_pipe("curated_transformer")` will work out-of-the-box.
+[training config](/usage/training#config) will work out-of-the-box.
 
 </Infobox>
 
-This Python package provides a curated set of transformer models for spaCy. It
-is focused on deep integration into spaCy and will support deployment-focused
-features such as distillation and quantization in the future. spaCy curated
-transformers currently supports the following model types:
+This pipeline component lets you use a curated set of transformer models in your
+pipeline. spaCy Curated Transformers currently supports the following model
+types:
 
 - ALBERT
 - BERT
 - CamemBERT
 - RoBERTa
-- XLM-RoBERTa
+- XLM-RoBERT
+
+If you want to use another type of model, use
+[spacy-transformers](/api/spacy-transformers), which allows you to use all
+Hugging Face transformer models with spaCy.
 
 You will usually connect downstream components to a shared curated transformer
 using one of the curated transformer listener layers. This works similarly to
 spaCy's [Tok2Vec](/api/tok2vec), and the
-[Tok2VecListener](/api/architectures/#Tok2VecListener) sublayer.
-
-Supporting a wide variety of transformer models is a non-goal. If you want to
-use another type of model, use [spacy-transformers](/api/spacy-transformers),
-which allows you to use Hugging Face transformers models with spaCy.
-
-The component assigns the output of the transformer to the `Doc`'s extension
-attributes. We also calculate an alignment between the word-piece tokens and the
-spaCy tokenization, so that we can use the last hidden states to set the
-`Doc.tensor` attribute. When multiple word-piece tokens align to the same spaCy
-token, the spaCy token receives the sum of their values. To access the values,
-you can use the custom [`Doc._.trf_data`](#assigned-attributes) attribute.
+[Tok2VecListener](/api/architectures/#Tok2VecListener) sublayer. The component
+assigns the output of the transformer to the `Doc`'s extension attributes. To
+access the values, you can use the custom
+[`Doc._.trf_data`](#assigned-attributes) attribute.
 
 For more details, see the [usage documentation](/usage/embeddings-transformers).
 
@@ -59,9 +48,9 @@ For more details, see the [usage documentation](/usage/embeddings-transformers).
 The component sets the following
 [custom extension attribute](/usage/processing-pipeline#custom-components-attributes):
 
-| Location         | Value                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------ |
-| `Doc._.trf_data` | CuratedTransformer tokens and outputs for the `Doc` object. ~~DocTransformerOutput~~ |
+| Location         | Value                                                                      |
+| ---------------- | -------------------------------------------------------------------------- |
+| `Doc._.trf_data` | Curated transformer outputs for the `Doc` object. ~~DocTransformerOutput~~ |
 
 ## Config and implementation {id="config"}
 
@@ -72,13 +61,19 @@ how the component should be configured. You can override its settings via the
 [model architectures](/api/architectures#transformers) documentation for details
 on the transformer architectures and their arguments and hyperparameters.
 
+Note that the default config does not include the mandatory `vocab_size`
+hyperparameter as this value can differ between different models. So, you will
+need to explicitly specify this before adding the pipe (as shown in the example
+below).
+
 > #### Example
 >
 > ```python
 > from spacy_curated_transformers.pipeline.transformer import DEFAULT_CONFIG
 >
-> DEFAULT_CONFIG["transformer"]["model"]["vocab_size"] = 250002
-> nlp.add_pipe("curated_transformer", config=DEFAULT_CONFIG["transformer"])
+> config = DEFAULT_CONFIG.copy()
+> config["transformer"]["model"]["vocab_size"] = 250002
+> nlp.add_pipe("curated_transformer", config=config["transformer"])
 > ```
 
 | Setting             | Description                                                                                                                                                                                                                                        |
