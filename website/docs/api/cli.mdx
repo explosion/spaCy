@@ -194,7 +194,7 @@ is read from the `initialize.components.transformer.encoder_loader` config
 section.
 
 ```bash
-$ python -m spacy init fill-config-transformer [base_path] [output_file]
+$ python -m spacy init fill-config-transformer [base_path] [output_file] [--code] [--name]
 ```
 
 | Name           | Description                                                                                                                                                                          |
@@ -1043,7 +1043,7 @@ $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P
 Analyze word- or sentencepiece stats.
 
 ```bash
-$ python -m spacy debug pieces [config_path] [code_path] [transformer_name]
+$ python -m spacy debug pieces [config_path] [--code] [--name] [overrides]
 ```
 
 | Name           | Description                                                                                                                                                                                |
