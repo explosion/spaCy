@@ -259,7 +259,7 @@ layers.
 The `CuratedTransformer` component therefore does not perform a weight update
 during its own `update` method. Instead, it runs its transformer model and
 communicates the output and the backpropagation callback to any downstream
-components that have been connected to it via the TransformerListener sublayer.
+components that have been connected to it via the transformer listener sublayer.
 If there are multiple listeners, the last layer will actually backprop to the
 transformer and call the optimizer, while the others simply increment the
 gradients.
