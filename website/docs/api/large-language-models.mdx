@@ -379,10 +379,10 @@ definitions are included in the prompt.
 > [components.llm.task]
 > @llm_tasks = "spacy.TextCat.v3"
 > labels = ["COMPLIMENT", "INSULT"]
-> label_definitions = {
->   "COMPLIMENT": "a polite expression of praise or admiration.",
->   "INSULT": "a disrespectful or scornfully abusive remark or act."
-> }
+>
+> [components.llm.task.label_definitions]
+> "COMPLIMENT" = "a polite expression of praise or admiration.",
+> "INSULT" = "a disrespectful or scornfully abusive remark or act."
 > examples = null
 > ```
 
