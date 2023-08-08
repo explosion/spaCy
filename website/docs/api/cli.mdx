@@ -1018,7 +1018,7 @@ $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P
 | overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **PRINTS**              | Debugging information.                                                                                                                                                                                             |
 
-### debug pieces {id="debug-pieces",version="3.6",tag="command"}
+### debug pieces {id="debug-pieces",version="3.7",tag="command"}
 
 Analyze word- or sentencepiece stats.
 
@@ -1027,13 +1027,12 @@ $ python -m spacy debug pieces [config_path] [code_path] [transformer_name]
 ```
 
 | Name               | Description                                                                                                                                                                                |
-|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `config_path`      | Path to config file. ~~Union[Path, str] (positional)~~                                                                                                                                     |
 | `code_path`        | Path to Python file with additional code (registered functions) to be imported. ~~Union[Path, str] (option)~~                                                                              |
 | `transformer_name` | Name of the transformer pipe to gather piece statistics for (default: first transformer pipe). ~~str (option)~~                                                                            |
 | overrides          | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
 | **PRINTS**         | Debugging information.                                                                                                                                                                     |
-
 
 <Accordion title="Example outputs" spaced>
 
@@ -1052,6 +1051,7 @@ Median token length: 1.0
 Mean token length: 1.44
 Token length range: [1, 8]
 ```
+
 </Accordion>
 
 ## train {id="train",tag="command"}
@@ -1686,10 +1686,10 @@ $ python -m spacy huggingface-hub push [whl_path] [--org] [--msg] [--verbose]
 > $ python -m spacy huggingface-hub push en_ner_fashion-0.0.0-py3-none-any.whl
 > ```
 
-| Name                 | Description                                                                                                                                     |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `whl_path`           | The path to the `.whl` file packaged with [`spacy package`](https://spacy.io/api/cli#package). ~~Path(positional)~~                             |
-| `--org`, `-o`        | Optional name of organization to which the pipeline should be uploaded. ~~str (option)~~                                                        |
-| `--msg`, `-m`        | Commit message to use for update. Defaults to `"Update spaCy pipeline"`. ~~str (option)~~                                                       |
-| `--verbose`, `-V`    | Output additional info for debugging, e.g. the full generated hub metadata. ~~bool (flag)~~                                                     |
-| **UPLOADS**          | The pipeline to the hub.                                                                                                                        |
+| Name              | Description                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `whl_path`        | The path to the `.whl` file packaged with [`spacy package`](https://spacy.io/api/cli#package). ~~Path(positional)~~ |
+| `--org`, `-o`     | Optional name of organization to which the pipeline should be uploaded. ~~str (option)~~                            |
+| `--msg`, `-m`     | Commit message to use for update. Defaults to `"Update spaCy pipeline"`. ~~str (option)~~                           |
+| `--verbose`, `-V` | Output additional info for debugging, e.g. the full generated hub metadata. ~~bool (flag)~~                         |
+| **UPLOADS**       | The pipeline to the hub.                                                                                            |
