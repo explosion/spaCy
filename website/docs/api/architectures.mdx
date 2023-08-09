@@ -488,6 +488,13 @@ The following architectures are provided by the package
 See the [usage documentation](/usage/embeddings-transformers#transformers) for
 how to integrate the architectures into your training config.
 
+When loading the model
+[from the Hugging Face Hub](/api/curated-transformer#hf_trfencoder_loader), the
+model config's parameters must be same as the hyperparameters used by the
+pre-trained model. The
+[`init fill-config-transformer`](/api/cli#init-fill-config-transformer) CLI
+command can be used to automatically fill in these values.
+
 ### spacy-curated-transformers.AlbertTransformer.v1
 
 Construct an ALBERT transformer model.
