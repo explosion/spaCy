@@ -58,8 +58,8 @@ The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
 `config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
 [`config.cfg` for training](/usage/training#config). See the
-[model architectures](/api/architectures#transformers) documentation for details
-on the transformer architectures and their arguments and hyperparameters.
+[model architectures](/api/architectures#curated-trf) documentation for details
+on the curated transformer architectures and their arguments and hyperparameters.
 
 Note that the default config does not include the mandatory `vocab_size`
 hyperparameter as this value can differ between different models. So, you will
@@ -100,7 +100,7 @@ https://github.com/explosion/spacy-curated-transformers/blob/main/spacy_curated_
 >         "@architectures": "spacy-curated-transformers.XlmrTransformer.v1",
 >         "vocab_size": 250002,
 >         "num_hidden_layers": 12,
->         "hidden_width": 768
+>         "hidden_width": 768,
 >         "piece_encoder": {
 >             "@architectures": "spacy-curated-transformers.XlmrSentencepieceEncoder.v1"
 >         }
@@ -145,7 +145,7 @@ to the [`predict`](/api/transformer#predict) and
 > doc = nlp("This is a sentence.")
 > trf = nlp.add_pipe("curated_transformer")
 > # This usually happens under the hood
-> processed = transformer(doc)
+> processed = trf(doc)
 > ```
 
 | Name        | Description                      |
