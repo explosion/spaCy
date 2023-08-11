@@ -27,6 +27,12 @@ options:
 | `save_io`        | Whether to save prompts/responses within `Doc.user_data["llm_io"]`. ~~bool~~                            |
 | `validate_types` | Whether to check if signatures of configured model and task are consistent. ~~bool~~                    |
 
+Beyond that, a `llm_TASKNAME` factory is available for each task - `llm_ner` for
+a LLM component with the NER task, `llm_rel` for relationship extraction etc.
+These factories are equivalent to using the `llm` factory and defining the task
+in the configuration. Note: tasks may require more configuration than the just
+the task - compare with the tasks' description below.
+
 An `llm` component is defined by two main settings:
 
 - A [**task**](#tasks), defining the prompt to send to the LLM as well as the
