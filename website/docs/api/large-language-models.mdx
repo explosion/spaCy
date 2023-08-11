@@ -754,7 +754,7 @@ OpenAI's `gpt-4` model family.
 | Argument    | Description                                                                                                                                                 |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"gpt-4"`. ~~Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]~~ |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                          |
+| `config`    | Further configuration passed on to the model. Defaults to `{"temperature": 0}`. ~~Dict[Any, Any]~~                                                          |
 | `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~           |
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                              |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                               |
@@ -775,7 +775,7 @@ OpenAI's `gpt-3-5` model family.
 | Argument    | Description                                                                                                                                                                                         |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"gpt-3.5-turbo"`. ~~Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k"]~~ |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                                                                  |
+| `config`    | Further configuration passed on to the model. Defaults to `{"temperature": 0}`. ~~Dict[Any, Any]~~                                                                                                  |
 | `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~                                                   |
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                                                      |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                                                       |
@@ -796,7 +796,7 @@ OpenAI's `text-davinci` model family.
 | Argument    | Description                                                                                                                                              |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"text-davinci-003"`. ~~Literal["text-davinci-002", "text-davinci-003"]~~ |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                       |
+| `config`    | Further configuration passed on to the model. Defaults to `{"max_tokens": 1000, "temperature": 0}`. ~~Dict[Any, Any]~~                                   |
 | `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~        |
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                           |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                            |
@@ -817,7 +817,7 @@ OpenAI's `code-davinci` model family.
 | Argument    | Description                                                                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"code-davinci-002"`. ~~Literal["code-davinci-002"]~~              |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `config`    | Further configuration passed on to the model. Defaults to `{"max_tokens": 500, "temperature": 0}`. ~~Dict[Any, Any]~~                             |
 | `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
@@ -838,7 +838,7 @@ OpenAI's `text-curie` model family.
 | Argument    | Description                                                                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"text-curie-001"`. ~~Literal["text-curie-001"]~~                  |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `config`    | Further configuration passed on to the model. Defaults to `{"max_tokens": 500, "temperature": 0}`. ~~Dict[Any, Any]~~                             |
 | `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
@@ -859,7 +859,7 @@ OpenAI's `text-babbage` model family.
 | Argument    | Description                                                                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"text-babbage-001"`. ~~Literal["text-babbage-001"]~~              |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `config`    | Further configuration passed on to the model. Defaults to `{"max_tokens": 500, "temperature": 0}`. ~~Dict[Any, Any]~~                             |
 | `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
@@ -880,7 +880,7 @@ OpenAI's `text-ada` model family.
 | Argument    | Description                                                                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"text-ada-001"`. ~~Literal["text-ada-001"]~~                      |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `config`    | Further configuration passed on to the model. Defaults to `{"max_tokens": 500, "temperature": 0}`. ~~Dict[Any, Any]~~                             |
 | `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
@@ -901,7 +901,7 @@ OpenAI's `davinci` model family.
 | Argument    | Description                                                                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"davinci"`. ~~Literal["davinci"]~~                                |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `config`    | Further configuration passed on to the model. Defaults to `{"max_tokens": 500, "temperature": 0}`. ~~Dict[Any, Any]~~                             |
 | `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
@@ -922,7 +922,7 @@ OpenAI's `curie` model family.
 | Argument    | Description                                                                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"curie"`. ~~Literal["curie"]~~                                    |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `config`    | Further configuration passed on to the model. Defaults to `{"max_tokens": 500, "temperature": 0}`. ~~Dict[Any, Any]~~                             |
 | `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
@@ -943,7 +943,7 @@ OpenAI's `babbage` model family.
 | Argument    | Description                                                                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"babbage"`. ~~Literal["babbage"]~~                                |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `config`    | Further configuration passed on to the model. Defaults to `{"max_tokens": 500, "temperature": 0}`. ~~Dict[Any, Any]~~                             |
 | `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
@@ -964,7 +964,7 @@ OpenAI's `ada` model family.
 | Argument    | Description                                                                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"ada"`. ~~Literal["ada"]~~                                        |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `config`    | Further configuration passed on to the model. Defaults to `{"max_tokens": 500, "temperature": 0}`. ~~Dict[Any, Any]~~                             |
 | `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
