@@ -1,18 +1,14 @@
 import math
 import os
-import time
 from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-import numpy
 import pytest
 import srsly
 from click import NoSuchOption
 from packaging.specifiers import SpecifierSet
-from thinc.api import Config, ConfigValidationError
-from weasel.cli.remote_storage import RemoteStorage
-from weasel.cli.run import _check_requirements
+from thinc.api import Config
 
 import spacy
 from spacy import about
@@ -39,7 +35,7 @@ from spacy.cli.validate import get_model_pkgs
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import Language
-from spacy.schemas import RecommendationSchema, validate
+from spacy.schemas import RecommendationSchema
 from spacy.tokens import Doc, DocBin
 from spacy.tokens.span import Span
 from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
