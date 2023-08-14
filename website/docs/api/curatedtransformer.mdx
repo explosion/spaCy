@@ -463,7 +463,40 @@ right context.
 | `window` | The window size. ~~int~~ |
 | `stride` | The stride size. ~~int~~ |
 
-## Tokenizer loaders
+## Model Loaders
+
+[Curated Transformer models](/api/architectures#curated-trf) are constructed
+with default hyperparameters and randomized weights when the pipeline is
+created. To load the weights of an existing pre-trained model into the pipeline,
+one of the following loader callbacks can be used. The pre-trained model must
+have the same hyperparameters as the model used by the pipeline.
+
+### HFTransformerEncoderLoader.v1 {id="hf_trfencoder_loader",tag="registered_function"}
+
+Construct a callback that initializes a supported transformer model with weights
+from a corresponding HuggingFace model.
+
+| Name       | Description                                |
+| ---------- | ------------------------------------------ |
+| `name`     | Name of the HuggingFace model. ~~str~~     |
+| `revision` | Name of the model revision/branch. ~~str~~ |
+
+### PyTorchCheckpointLoader.v1 {id="pytorch_checkpoint_loader",tag="registered_function"}
+
+Construct a callback that initializes a supported transformer model with weights
+from a PyTorch checkpoint.
+
+| Name   | Description                              |
+| ------ | ---------------------------------------- |
+| `path` | Path to the PyTorch checkpoint. ~~Path~~ |
+
+## Tokenizer Loaders
+
+[Curated Transformer models](/api/architectures#curated-trf) must be paired with
+a matching tokenizer (piece encoder) model in a spaCy pipeline. As with the
+transformer models, tokenizers are constructed with an empty vocabulary during
+pipeline creation - They need to be initialized with an appropriate loader
+before use in training/inference.
 
 ### ByteBPELoader.v1 {id="bytebpe_loader",tag="registered_function"}
 
