@@ -96,6 +96,7 @@
                 "items": [
                     { "text": "AttributeRuler", "url": "/api/attributeruler" },
                     { "text": "CoreferenceResolver", "url": "/api/coref" },
+                    { "text": "CuratedTransformer", "url": "/api/curatedtransformer" },
                     { "text": "DependencyParser", "url": "/api/dependencyparser" },
                     { "text": "EditTreeLemmatizer", "url": "/api/edittreelemmatizer" },
                     { "text": "EntityLinker", "url": "/api/entitylinker" },
