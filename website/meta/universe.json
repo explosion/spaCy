@@ -4444,6 +4444,31 @@
             },
             "category": ["pipeline", "standalone", "scientific"],
             "tags": ["ner"]
+        },
+        {
+            "id": "hobbit-spacy",
+            "title": "Hobbit spaCy",
+            "slogan": "NLP for Middle Earth",
+            "description": "Hobbit spaCy is a custom spaCy pipeline designed specifically for working with Middle Earth and texts from the world of J.R.R. Tolkien.",
+            "github": "wjbmattingly/hobbit-spacy",
+            "pip": "en-hobbit",
+            "code_example": [
+                "import spacy",
+                "",
+                "nlp = spacy.load('en_hobbit')",
+                "doc = nlp('Frodo saw Glorfindel and Glóin; and in a corner alone Strider was sitting, clad in his old travel - worn clothes again')"
+            ],
+            "code_language": "python",
+            "thumb": "https://github.com/wjbmattingly/hobbit-spacy/blob/main/images/hobbit-thumbnail.png?raw=true",
+            "image": "https://github.com/wjbmattingly/hobbit-spacy/raw/main/images/hobbitspacy.png",
+            "author": "W.J.B. Mattingly",
+            "author_links": {
+                "twitter": "wjb_mattingly",
+                "github": "wjbmattingly",
+                "website": "https://wjbmattingly.com"
+            },
+            "category": ["pipeline", "standalone"],
+            "tags": ["spans", "rules", "ner"]
         }
     ],
 
