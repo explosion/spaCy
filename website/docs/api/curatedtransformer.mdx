@@ -78,7 +78,7 @@ below).
 
 | Setting             | Description                                                                                                                                                                                                                                        |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`             | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. Defaults to [CuratedTransformerModel](/api/architectures#CuratedTransformerModel). ~~Model[List[Doc], FullCuratedTransformerBatch]~~                                |
+| `model`             | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. Defaults to [`XlmrTransformer`](/api/architectures#curated-trf). ~~Model~~                                                                                          |
 | `frozen`            | If `True`, the model's weights are frozen and no backpropagation is performed. ~~bool~~                                                                                                                                                            |
 | `all_layer_outputs` | If `True`, the model returns the outputs of all the layers. Otherwise, only the output of the last layer is returned. This must be set to `True` if any of the pipe's downstream listeners require the outputs of all transformer layers. ~~bool~~ |
 
@@ -135,9 +135,10 @@ component using its string name and [`nlp.add_pipe`](/api/language#create_pipe).
 Apply the pipe to one document. The document is modified in place, and returned.
 This usually happens under the hood when the `nlp` object is called on a text
 and all pipeline components are applied to the `Doc` in order. Both
-[`__call__`](/api/transformer#call) and [`pipe`](/api/transformer#pipe) delegate
-to the [`predict`](/api/transformer#predict) and
-[`set_annotations`](/api/transformer#set_annotations) methods.
+[`__call__`](/api/curatedtransformer#call) and
+[`pipe`](/api/curatedtransformer#pipe) delegate to the
+[`predict`](/api/curatedtransformer#predict) and
+[`set_annotations`](/api/curatedtransformer#set_annotations) methods.
 
 > #### Example
 >
@@ -157,10 +158,10 @@ to the [`predict`](/api/transformer#predict) and
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
-applied to the `Doc` in order. Both [`__call__`](/api/transformer#call) and
-[`pipe`](/api/transformer#pipe) delegate to the
-[`predict`](/api/transformer#predict) and
-[`set_annotations`](/api/transformer#set_annotations) methods.
+applied to the `Doc` in order. Both [`__call__`](/api/curatedtransformer#call)
+and [`pipe`](/api/curatedtransformer#pipe) delegate to the
+[`predict`](/api/curatedtransformer#predict) and
+[`set_annotations`](/api/curatedtransformer#set_annotations) methods.
 
 > #### Example
 >
@@ -402,10 +403,11 @@ serialization by passing in the string names via the `exclude` argument.
 CuratedTransformer tokens and outputs for one `Doc` object. The transformer
 models return tensors that refer to a whole padded batch of documents. These
 tensors are wrapped into the
-[FullCuratedTransformerBatch](/api/transformer#fulltransformerbatch) object. The
-`FullCuratedTransformerBatch` then splits out the per-document data, which is
-handled by this class. Instances of this class are typically assigned to the
-[`Doc._.trf_data`](/api/transformer#assigned-attributes) extension attribute.
+[FullCuratedTransformerBatch](/api/curatedtransformer#fulltransformerbatch)
+object. The `FullCuratedTransformerBatch` then splits out the per-document data,
+which is handled by this class. Instances of this class are typically assigned
+to the [`Doc._.trf_data`](/api/curatedtransformer#assigned-attributes) extension
+attribute.
 
 | Name           | Description                                                                                                                                                                                                                                                                                                                          |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
