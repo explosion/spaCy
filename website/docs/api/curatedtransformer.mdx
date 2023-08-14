@@ -1,7 +1,7 @@
 ---
 title: CuratedTransformer
 teaser:
-  Pipeline component for multi-task learning with curated transformer models
+  Pipeline component for multi-task learning with Curated Transformer models
 tag: class
 source: github.com/explosion/spacy-curated-transformers/blob/main/spacy_curated_transformers/pipeline/transformer.py
 version: 3.7
@@ -33,9 +33,9 @@ If you want to use another type of model, use
 [spacy-transformers](/api/spacy-transformers), which allows you to use all
 Hugging Face transformer models with spaCy.
 
-You will usually connect downstream components to a shared curated transformer
-using one of the curated transformer listener layers. This works similarly to
-spaCy's [Tok2Vec](/api/tok2vec), and the
+You will usually connect downstream components to a shared Curated Transformer
+pipe using one of the Curated Transformer listener layers. This works similarly
+to spaCy's [Tok2Vec](/api/tok2vec), and the
 [Tok2VecListener](/api/architectures/#Tok2VecListener) sublayer. The component
 assigns the output of the transformer to the `Doc`'s extension attributes. To
 access the values, you can use the custom
@@ -50,9 +50,9 @@ The component sets the following
 
 | Location         | Value                                                                      |
 | ---------------- | -------------------------------------------------------------------------- |
-| `Doc._.trf_data` | Curated transformer outputs for the `Doc` object. ~~DocTransformerOutput~~ |
+| `Doc._.trf_data` | Curated Transformer outputs for the `Doc` object. ~~DocTransformerOutput~~ |
 
-## Config and implementation {id="config"}
+## Config and Implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -380,7 +380,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `CuratedTransformer` object. ~~CuratedTransformer~~                                     |
 
-## Serialization fields {id="serialization-fields"}
+## Serialization Fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from
@@ -445,7 +445,7 @@ Return the number of layer outputs stored in the `DocTransformerOutput` instance
 | ----------- | -------------------------- |
 | **RETURNS** | Numbef of outputs. ~~int~~ |
 
-## Span getters {id="span_getters",source="github.com/explosion/spacy-transformers/blob/master/spacy_curated_transformers/span_getters.py"}
+## Span Getters {id="span_getters",source="github.com/explosion/spacy-transformers/blob/master/spacy_curated_transformers/span_getters.py"}
 
 Span getters are functions that take a batch of [`Doc`](/api/doc) objects and
 return a lists of [`Span`](/api/span) objects for each doc to be processed by
@@ -564,27 +564,6 @@ Construct a callback that initializes a WordPiece piece encoder model.
 | Name   | Description                                      |
 | ------ | ------------------------------------------------ |
 | `path` | Path to the serialized WordPiece model. ~~Path~~ |
-
-## Model Loaders
-
-### HFTransformerEncoderLoader.v1 {id="hf_trfencoder_loader",tag="registered_function"}
-
-Construct a callback that initializes a supported transformer model with weights
-from a corresponding HuggingFace model.
-
-| Name       | Description                                |
-| ---------- | ------------------------------------------ |
-| `name`     | Name of the HuggingFace model. ~~str~~     |
-| `revision` | Name of the model revision/branch. ~~str~~ |
-
-### PyTorchCheckpointLoader.v1 {id="pytorch_checkpoint_loader",tag="registered_function"}
-
-Construct a callback that initializes a supported transformer model with weights
-from a PyTorch checkpoint.
-
-| Name   | Description                              |
-| ------ | ---------------------------------------- |
-| `path` | Path to the PyTorch checkpoint. ~~Path~~ |
 
 ## Callbacks
 
