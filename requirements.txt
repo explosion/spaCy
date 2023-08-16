@@ -12,7 +12,7 @@ catalogue>=2.0.6,<2.1.0
 typer>=0.3.0,<0.10.0
 pathy>=0.10.0
 smart-open>=5.2.1,<7.0.0
-weasel>=0.1.0,<0.3.0
+weasel>=0.1.0,<0.4.0
 # Third party dependencies
 numpy>=1.15.0; python_version < "3.9"
 numpy>=1.19.0; python_version >= "3.9"
