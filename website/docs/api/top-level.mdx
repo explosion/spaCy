@@ -68,7 +68,7 @@ weights, and returns it.
 cls = spacy.util.get_lang_class(lang)  # 1. Get Language class, e.g. English
 nlp = cls()                            # 2. Initialize it
 for name in pipeline:
-    nlp.add_pipe(name)                 # 3. Add the component to the pipeline
+    nlp.add_pipe(name, config={...})   # 3. Add the component to the pipeline
 nlp.from_disk(data_path)               # 4. Load in the binary data
 ```
 
