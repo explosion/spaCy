@@ -219,6 +219,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W125 = ("The StaticVectors key_attr is no longer used. To set a custom "
             "key attribute for vectors, configure it through Vectors(attr=) or "
             "'spacy init vectors --attr'")
+    W126 = ("These keys are unsupported: {unsupported}")
 
 
 class Errors(metaclass=ErrorsWithCodes):
