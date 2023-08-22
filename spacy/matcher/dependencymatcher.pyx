@@ -129,12 +129,20 @@ cdef class DependencyMatcher:
             else:
                 required_keys = {"RIGHT_ID", "RIGHT_ATTRS", "REL_OP", "LEFT_ID"}
                 relation_keys = set(relation.keys())
+                # Identify required keys that have not been specified
                 missing = required_keys - relation_keys
                 if missing:
                     missing_txt = ", ".join(list(missing))
                     raise ValueError(Errors.E100.format(
                         required=required_keys,
                         missing=missing_txt
+                    ))
+                # Identify additional, unsupported keys
+                unsupported = relation_keys - required_keys
+                if unsupported:
+                    unsupported_txt = ", ".join(list(unsupported))
+                    warnings.warn(Warnings.W126.format(
+                        unsupported=unsupported_txt
                     ))
                 if (
                     relation["RIGHT_ID"] in visited_nodes
