@@ -61,19 +61,12 @@ how the component should be configured. You can override its settings via the
 [model architectures](/api/architectures#curated-trf) documentation for details
 on the curated transformer architectures and their arguments and hyperparameters.
 
-Note that the default config does not include the mandatory `vocab_size`
-hyperparameter as this value can differ between different models. So, you will
-need to explicitly specify this before adding the pipe (as shown in the example
-below).
-
 > #### Example
 >
 > ```python
 > from spacy_curated_transformers.pipeline.transformer import DEFAULT_CONFIG
 >
-> config = DEFAULT_CONFIG.copy()
-> config["transformer"]["model"]["vocab_size"] = 250002
-> nlp.add_pipe("curated_transformer", config=config["transformer"])
+> nlp.add_pipe("curated_transformer", config=DEFAULT_CONFIG)
 > ```
 
 | Setting             | Description                                                                                                                                                                                                                                        |
