@@ -657,27 +657,27 @@ These models all take the same parameters:
 | `max_request_time` | Max. time (in seconds) to wait for request to terminate before raising an exception. Defaults to `30.0`. ~~float~~                                |
 | `interval`         | Time interval (in seconds) for API retries in seconds. Defaults to `1.0`. ~~float~~                                                               |
 
-| Model                         | Provider  | Supported names                                                                      | Default name         |
-| ----------------------------- | --------- | ------------------------------------------------------------------------------------ | -------------------- |
-| `spacy.GPT-4.v1`              | OpenAI    | "gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"                                 | gpt-4                |
-| `spacy.GPT-3-5.v1`            | OpenAI    | "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k" | "gpt-3.5-turbo"      |
-| `spacy.Davinci.v1`            | OpenAI    | "davinci"                                                                            | "davinci"            |
-| `spacy.Text-Davinci.v1`       | OpenAI    | "text-davinci-003", "text-davinci-002"                                               | "text-davinci-003"   |
-| `spacy.Code-Davinci.v1`       | OpenAI    | "code-davinci-002"                                                                   | "code-davinci-002"   |
-| `spacy.Curie.v1`              | OpenAI    | "curie"                                                                              | "curie"              |
-| `spacy.Text-Curie.v1`         | OpenAI    | "text-curie-001"                                                                     | "text-curie-001"     |
-| `spacy.Babbage.v1`            | OpenAI    | "babbage"                                                                            | "babbage"            |
-| `spacy.Text-Babbage.v1`       | OpenAI    | "text-babbage-001"                                                                   | "text-babbage-001"   |
-| `spacy.Ada.v1`                | OpenAI    | "ada"                                                                                | "ada"                |
-| `spacy.Text-Ada.v1`           | OpenAI    | "text-ada-001"                                                                       | "text-ada-001"       |
-| `spacy.Command.v1`            | Cohere    | "command", "command-light", "command-light-nightly", "command-nightly"               | "command"            |
-| `spacy.Claude-2.v1`           | Anthropic | "claude-2", "claude-2-100k"                                                          | "claude-2"           |
-| `spacy.Claude-1.v1`           | Anthropic | "claude-1", "claude-1-100k"                                                          | "claude-1"           |
-| `spacy.Claude-1-0.v1`         | Anthropic | "claude-1.0"                                                                         | "claude-1.0"         |
-| `spacy.Claude-1-2.v1`         | Anthropic | "claude-1.2"                                                                         | "claude-1.2"         |
-| `spacy.Claude-1-3.v1`         | Anthropic | "claude-1.3", "claude-1.3-100k"                                                      | "claude-1.3"         |
-| `spacy.Claude-instant-1.v1`   | Anthropic | "claude-instant-1", "claude-instant-1-100k"                                          | "claude-instant-1"   |
-| `spacy.Claude-instant-1-1.v1` | Anthropic | "claude-instant-1.1", "claude-instant-1.1-100k"                                      | "claude-instant-1.1" |
+| Model                         | Provider  | Supported names                                                                          | Default name           |
+| ----------------------------- | --------- | ---------------------------------------------------------------------------------------- | ---------------------- |
+| `spacy.GPT-4.v1`              | OpenAI    | `["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]`                                 | `"gpt-4"`              |
+| `spacy.GPT-3-5.v1`            | OpenAI    | `["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k"]` | `"gpt-3.5-turbo"`      |
+| `spacy.Davinci.v1`            | OpenAI    | `["davinci"]`                                                                            | `"davinci"`            |
+| `spacy.Text-Davinci.v1`       | OpenAI    | `["text-davinci-003", "text-davinci-002"]`                                               | `"text-davinci-003"`   |
+| `spacy.Code-Davinci.v1`       | OpenAI    | `["code-davinci-002"]`                                                                   | `"code-davinci-002"`   |
+| `spacy.Curie.v1`              | OpenAI    | `["curie"]`                                                                              | `"curie"`              |
+| `spacy.Text-Curie.v1`         | OpenAI    | `["text-curie-001"]`                                                                     | `"text-curie-001"`     |
+| `spacy.Babbage.v1`            | OpenAI    | `["babbage"]`                                                                            | `"babbage"`            |
+| `spacy.Text-Babbage.v1`       | OpenAI    | `["text-babbage-001"]`                                                                   | `"text-babbage-001"`   |
+| `spacy.Ada.v1`                | OpenAI    | `["ada"]`                                                                                | `"ada"`                |
+| `spacy.Text-Ada.v1`           | OpenAI    | `["text-ada-001"]`                                                                       | `"text-ada-001"`       |
+| `spacy.Command.v1`            | Cohere    | `["command", "command-light", "command-light-nightly", "command-nightly"]`               | "command"`             |
+| `spacy.Claude-2.v1`           | Anthropic | `["claude-2", "claude-2-100k"]`                                                          | `"claude-2"`           |
+| `spacy.Claude-1.v1`           | Anthropic | `["claude-1", "claude-1-100k"]`                                                          | `"claude-1"`           |
+| `spacy.Claude-1-0.v1`         | Anthropic | `["claude-1.0"]`                                                                         | `"claude-1.0"`         |
+| `spacy.Claude-1-2.v1`         | Anthropic | `["claude-1.2"]`                                                                         | `"claude-1.2"`         |
+| `spacy.Claude-1-3.v1`         | Anthropic | `["claude-1.3", "claude-1.3-100k"]`                                                      | `"claude-1.3"`         |
+| `spacy.Claude-instant-1.v1`   | Anthropic | `["claude-instant-1", "claude-instant-1-100k"]`                                          | `"claude-instant-1"`   |
+| `spacy.Claude-instant-1-1.v1` | Anthropic | `["claude-instant-1.1", "claude-instant-1.1-100k"]`                                      | `"claude-instant-1.1"` |
 
 To use these models, make sure that you've [set the relevant API](#api-keys)
 keys as environment variables.
@@ -727,13 +727,13 @@ These models all take the same parameters:
 | `config_init` | Further configuration passed on to the construction of the model with `transformers.pipeline()`. Defaults to `{}`. ~~Dict[str, Any]~~ |
 | `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                               |
 
-| Model                | Provider        | Supported names                                                                                          | HF directory                           |
-| -------------------- | --------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `spacy.Dolly.v1`     | Databricks      | "dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"                                                             | https://huggingface.co/databricks      |
-| `spacy.Llama2.v1`    | Meta AI         | "Llama-2-7b-hf", "Llama-2-13b-hf", "Llama-2-70b-hf"                                                      | https://huggingface.co/meta-llama      |
-| `spacy.Falcon.v1`    | TII             | "falcon-rw-1b", "falcon-7b", "falcon-7b-instruct", "falcon-40b-instruct"                                 | https://huggingface.co/tiiuae          |
-| `spacy.StableLM.v1`  | Stability AI    | "stablelm-base-alpha-3b", "stablelm-base-alpha-7b", "stablelm-tuned-alpha-3b", "stablelm-tuned-alpha-7b" | https://huggingface.co/stabilityai     |
-| `spacy.OpenLLaMA.v1` | OpenLM Research | "open_llama_3b", "open_llama_7b", "open_llama_7b_v2", "open_llama_13b"                                   | https://huggingface.co/openlm-research |
+| Model                | Provider        | Supported names                                                                                              | HF directory                           |
+| -------------------- | --------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| `spacy.Dolly.v1`     | Databricks      | `["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"]`                                                             | https://huggingface.co/databricks      |
+| `spacy.Llama2.v1`    | Meta AI         | `["Llama-2-7b-hf", "Llama-2-13b-hf", "Llama-2-70b-hf"]`                                                      | https://huggingface.co/meta-llama      |
+| `spacy.Falcon.v1`    | TII             | `["falcon-rw-1b", "falcon-7b", "falcon-7b-instruct", "falcon-40b-instruct"]`                                 | https://huggingface.co/tiiuae          |
+| `spacy.StableLM.v1`  | Stability AI    | `["stablelm-base-alpha-3b", "stablelm-base-alpha-7b", "stablelm-tuned-alpha-3b", "stablelm-tuned-alpha-7b"]` | https://huggingface.co/stabilityai     |
+| `spacy.OpenLLaMA.v1` | OpenLM Research | `["open_llama_3b", "open_llama_7b", "open_llama_7b_v2", "open_llama_13b"]`                                   | https://huggingface.co/openlm-research |
 
 See the "HF directory" for more details on each of the models.
 
