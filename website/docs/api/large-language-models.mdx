@@ -88,6 +88,11 @@ objects. This depends on the return type of the [model](#models).
 | `responses` | The generated prompts. ~~Iterable[Any]~~   |
 | **RETURNS** | The annotated documents. ~~Iterable[Doc]~~ |
 
+### Summarization {id="summarization"}
+
+A summarization task takes a document as input and generates a summary that is
+stored in an extension attribute.
+
 #### spacy.Summarization.v1 {id="summarization-v1"}
 
 The `spacy.Summarization.v1` task supports both zero-shot and few-shot
@@ -154,9 +159,9 @@ The NER task identifies non-overlapping entities in text.
 
 #### spacy.NER.v2 {id="ner-v2"}
 
-The built-in NER task supports both zero-shot and few-shot prompting. This
-version also supports explicitly defining the provided labels with custom
-descriptions.
+This version supports explicitly defining the provided labels with custom
+descriptions, and further supports zero-shot and few-shot prompting just like
+v1.
 
 > #### Example config
 >
@@ -181,15 +186,6 @@ descriptions.
 The parameters `alignment_mode`, `case_sensitive_matching` and `single_match`
 are identical to the [v1](#ner-v1) implementation. The format of few-shot
 examples are also the same.
-
-```ini
-[components.llm.task]
-@llm_tasks = "spacy.NER.v2"
-labels = PERSON,ORGANISATION,LOCATION
-[components.llm.task.examples]
-@misc = "spacy.FewShotReader.v1"
-path = "ner_examples.yml"
-```
 
 > Label descriptions can also be used with explicit examples to give as much
 > info to the LLM model as possible.
@@ -273,18 +269,19 @@ supports `.yml`, `.yaml`, `.json` and `.jsonl`.
 ```
 
 ```ini
-[components.llm.task]
-@llm_tasks = "spacy.NER.v1"
-labels = PERSON,ORGANISATION,LOCATION
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
 path = "ner_examples.yml"
 ```
 
+### SpanCat {id="spancat"}
+
+The SpanCat task identifies potentially overlapping entities in text.
+
 #### spacy.SpanCat.v2 {id="spancat-v2"}
 
-The built-in SpanCat task is a simple adaptation of the NER task to support
-overlapping entities and store its annotations in `doc.spans`.
+The built-in SpanCat v2 task is a simple adaptation of the NER v2 task to
+support overlapping entities and store its annotations in `doc.spans`.
 
 > #### Example config
 >
@@ -307,8 +304,9 @@ overlapping entities and store its annotations in `doc.spans`.
 | `case_sensitive_matching` | Whether to search without case sensitivity. Defaults to `False`. ~~bool~~                                                                                                                                                                                                     |
 | `single_match`            | Whether to match an entity in the LLM's response only once (the first hit) or multiple times. Defaults to `False`. ~~bool~~                                                                                                                                                   |
 
-Except for the `spans_key` parameter, the SpanCat task reuses the configuration
-from the NER task. Refer to [its documentation](#ner-v2) for more insight.
+Except for the `spans_key` parameter, the SpanCat v2 task reuses the
+configuration from the NER v2 task. Refer to [its documentation](#ner-v2) for
+more insight.
 
 #### spacy.SpanCat.v1 {id="spancat-v1"}
 
@@ -335,14 +333,19 @@ v1 NER task to support overlapping entities and store its annotations in
 | `case_sensitive_matching` | Whether to search without case sensitivity. Defaults to `False`. ~~bool~~                                                                                                      |
 | `single_match`            | Whether to match an entity in the LLM's response only once (the first hit) or multiple times. Defaults to `False`. ~~bool~~                                                    |
 
-Except for the `spans_key` parameter, the SpanCat task reuses the configuration
-from the NER task. Refer to [its documentation](#ner-v1) for more insight.
+Except for the `spans_key` parameter, the SpanCat v1 task reuses the
+configuration from the NER v1 task. Refer to [its documentation](#ner-v1) for
+more insight.
+
+### TextCat {id="textcat"}
+
+The TextCat task labels documents with relevant categories.
 
 #### spacy.TextCat.v3 {id="textcat-v3"}
 
-Version 3 (the most recent) of the built-in TextCat task supports both zero-shot
-and few-shot prompting. It allows setting definitions of labels. Those
-definitions are included in the prompt.
+On top of the functionality from v2, version 3 of the built-in TextCat tasks
+allows setting definitions of labels. Those definitions are included in the
+prompt.
 
 > #### Example config
 >
@@ -357,52 +360,23 @@ definitions are included in the prompt.
 > examples = null
 > ```
 
-| Argument            | Description                                                                                                                                                                                                                                                                   |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `labels`            | List of labels or str of comma-separated list of labels. ~~Union[List[str], str]~~                                                                                                                                                                                            |
-| `label_definitions` | Dictionary of label definitions. Included in the prompt, if set. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                                                                                                                             |
-| `template`          | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [`textcat.v3.jinja`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/textcat.v3.jinja). ~~str~~ |
-| `examples`          | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                                                |
-| `normalizer`        | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. Defaults to `None`. ~~Optional[Callable[[str], str]]~~                                                                                                   |
-| `exclusive_classes` | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. Defaults to `False`. ~~bool~~                                                                                                                        |
-| `allow_none`        | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Defaults to `True`. ~~bool~~                                                                                                 |
-| `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                                                                                                                            |
+| Argument                  | Description                                                                                                                                                                                                                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`                  | List of labels or str of comma-separated list of labels. ~~Union[List[str], str]~~                                                                                                                                                                                            |
+| `label_definitions` (NEW) | Dictionary of label definitions. Included in the prompt, if set. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                                                                                                                             |
+| `template`                | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [`textcat.v3.jinja`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/textcat.v3.jinja). ~~str~~ |
+| `examples`                | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                                                |
+| `normalizer`              | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. Defaults to `None`. ~~Optional[Callable[[str], str]]~~                                                                                                   |
+| `exclusive_classes`       | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. Defaults to `False`. ~~bool~~                                                                                                                        |
+| `allow_none`              | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Defaults to `True`. ~~bool~~                                                                                                 |
+| `verbose`                 | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                                                                                                                            |
 
-To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
-you can write down a few examples in a separate file, and provide these to be
-injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
-supports `.yml`, `.yaml`, `.json` and `.jsonl`.
-
-```json
-[
-  {
-    "text": "You look great!",
-    "answer": "Compliment"
-  },
-  {
-    "text": "You are not very clever at all.",
-    "answer": "Insult"
-  }
-]
-```
-
-```ini
-[components.llm.task]
-@llm_tasks = "spacy.TextCat.v3"
-labels = ["COMPLIMENT", "INSULT"]
-label_definitions = {
-  "COMPLIMENT": "a polite expression of praise or admiration.",
-  "INSULT": "a disrespectful or scornfully abusive remark or act."
-}
-[components.llm.task.examples]
-@misc = "spacy.FewShotReader.v1"
-path = "textcat_examples.json"
-```
+The formatting of few-shot examples is the same as those for the
+[v1](#textcat-v1) implementation.
 
 #### spacy.TextCat.v2 {id="textcat-v2"}
 
-Version 2 of the built-in TextCat task supports both zero-shot and few-shot
-prompting and includes an improved prompt template.
+V2 includes all v1 functionality, with an improved prompt template.
 
 > #### Example config
 >
@@ -423,32 +397,8 @@ prompting and includes an improved prompt template.
 | `allow_none`        | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Defaults to `True`. ~~bool~~                                                                                                 |
 | `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                                                                                                                            |
 
-To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
-you can write down a few examples in a separate file, and provide these to be
-injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
-supports `.yml`, `.yaml`, `.json` and `.jsonl`.
-
-```json
-[
-  {
-    "text": "You look great!",
-    "answer": "Compliment"
-  },
-  {
-    "text": "You are not very clever at all.",
-    "answer": "Insult"
-  }
-]
-```
-
-```ini
-[components.llm.task]
-@llm_tasks = "spacy.TextCat.v2"
-labels = ["COMPLIMENT", "INSULT"]
-[components.llm.task.examples]
-@misc = "spacy.FewShotReader.v1"
-path = "textcat_examples.json"
-```
+The formatting of few-shot examples is the same as those for the
+[v1](#textcat-v1) implementation.
 
 #### spacy.TextCat.v1 {id="textcat-v1"}
 
@@ -492,13 +442,14 @@ supports `.yml`, `.yaml`, `.json` and `.jsonl`.
 ```
 
 ```ini
-[components.llm.task]
-@llm_tasks = "spacy.TextCat.v2"
-labels = COMPLIMENT,INSULT
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
 path = "textcat_examples.json"
 ```
+
+### REL {id="rel"}
+
+The REL task extracts relations between named entities.
 
 #### spacy.REL.v1 {id="rel-v1"}
 
@@ -545,10 +496,14 @@ Note: the REL task relies on pre-extracted entities to make its prediction.
 Hence, you'll need to add a component that populates `doc.ents` with recognized
 spans to your spaCy pipeline and put it _before_ the REL component.
 
+### Lemma {id="lemma"}
+
+The Lemma task lemmatizes the provided text and updates the `lemma_` attribute
+in the doc's tokens accordingly.
+
 #### spacy.Lemma.v1 {id="lemma-v1"}
 
-The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_`
-attribute in the doc's tokens accordingly.
+This task supports both zero-shot and few-shot prompting.
 
 > #### Example config
 >
@@ -563,9 +518,9 @@ attribute in the doc's tokens accordingly.
 | `template` | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [lemma.v1.jinja](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/lemma.v1.jinja). ~~str~~ |
 | `examples` | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                                          |
 
-`Lemma.v1` prompts the LLM to lemmatize the passed text and return the
-lemmatized version as a list of tokens and their corresponding lemma. E. g. the
-text `I'm buying ice cream for my friends` should invoke the response
+The task prompts the LLM to lemmatize the passed text and return the lemmatized
+version as a list of tokens and their corresponding lemma. E. g. the text
+`I'm buying ice cream for my friends` should invoke the response
 
 ```
 I: I
@@ -617,11 +572,15 @@ supports `.yml`, `.yaml`, `.json` and `.jsonl`.
 path = "lemma_examples.yml"
 ```
 
-#### spacy.Sentiment.v1 {id="sentiment-v1"}
+### Sentiment {id="sentiment"}
 
 Performs sentiment analysis on provided texts. Scores between 0 and 1 are stored
 in `Doc._.sentiment` - the higher, the more positive. Note in cases of parsing
 issues (e. g. in case of unexpected LLM responses) the value might be `None`.
+
+#### spacy.Sentiment.v1 {id="sentiment-v1"}
+
+This task supports both zero-shot and few-shot prompting.
 
 > #### Example config
 >
@@ -661,6 +620,11 @@ supports `.yml`, `.yaml`, `.json` and `.jsonl`.
 path = "sentiment_examples.yml"
 ```
 
+### NoOp {id="noop"}
+
+This task is only useful for testing - it tells the LLM to do nothing, and does
+not set any fields on the `docs`.
+
 #### spacy.NoOp.v1 {id="noop-v1"}
 
 > #### Example config
@@ -670,10 +634,7 @@ path = "sentiment_examples.yml"
 > @llm_tasks = "spacy.NoOp.v1"
 > ```
 
-This task is only useful for testing - it tells the LLM to do nothing, and does
-not set any fields on the `docs`.
-
-### Models {id="models"}
+## Models {id="models"}
 
 A _model_ defines which LLM model to query, and how to query it. It can be a
 simple function taking a collection of prompts (consistent with the output type
@@ -683,7 +644,7 @@ it's a function of type `Callable[[Iterable[Any]], Iterable[Any]]`, but specific
 implementations can have other signatures, like
 `Callable[[Iterable[str]], Iterable[str]]`.
 
-#### API Keys {id="api-keys"}
+### API Keys {id="api-keys"}
 
 Note that when using hosted services, you have to ensure that the proper API
 keys are set as environment variables as described by the corresponding
@@ -709,9 +670,11 @@ and for Anthropic
 export ANTHROPIC_API_KEY="..."
 ```
 
-#### spacy.GPT-4.v1 {id="gpt-4"}
+### GPT-4 {id="gpt-4"}
 
 OpenAI's `gpt-4` model family.
+
+#### spacy.GPT-4.v1 {id="gpt-4-v1"}
 
 > #### Example config:
 >
@@ -730,9 +693,11 @@ OpenAI's `gpt-4` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                              |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                               |
 
-#### spacy.GPT-3-5.v1 {id="gpt-3-5"}
+### GPT-3-5 {id="gpt-3-5"}
 
 OpenAI's `gpt-3-5` model family.
+
+#### spacy.GPT-3-5.v1 {id="gpt-3-5-v1"}
 
 > #### Example config
 >
@@ -751,9 +716,11 @@ OpenAI's `gpt-3-5` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                                                      |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                                                       |
 
-#### spacy.Text-Davinci.v1 {id="text-davinci"}
+### Text-Davinci {id="text-davinci"}
 
 OpenAI's `text-davinci` model family.
+
+#### spacy.Text-Davinci.v1 {id="text-davinci-v1"}
 
 > #### Example config
 >
@@ -772,9 +739,11 @@ OpenAI's `text-davinci` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                           |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                            |
 
-#### spacy.Code-Davinci.v1 {id="code-davinci"}
+### Code-Davinci {id="code-davinci"}
 
 OpenAI's `code-davinci` model family.
+
+#### spacy.Code-Davinci.v1 {id="code-davinci-v1"}
 
 > #### Example config
 >
@@ -793,9 +762,11 @@ OpenAI's `code-davinci` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Text-Curie.v1 {id="text-curie"}
+### Text-Curie {id="text-curie"}
 
 OpenAI's `text-curie` model family.
+
+#### spacy.Text-Curie.v1 {id="text-curie-v1"}
 
 > #### Example config
 >
@@ -814,9 +785,11 @@ OpenAI's `text-curie` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Text-Babbage.v1 {id="text-babbage"}
+### Text-Babbage {id="text-babbage"}
 
 OpenAI's `text-babbage` model family.
+
+#### spacy.Text-Babbage.v1 {id="text-babbage-v1"}
 
 > #### Example config
 >
@@ -835,9 +808,11 @@ OpenAI's `text-babbage` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Text-Ada.v1 {id="text-ada"}
+### Text-Ada {id="text-ada"}
 
 OpenAI's `text-ada` model family.
+
+#### spacy.Text-Ada.v1 {id="text-ada-v1"}
 
 > #### Example config
 >
@@ -856,9 +831,11 @@ OpenAI's `text-ada` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Davinci.v1 {id="davinci"}
+### Davinci {id="davinci"}
 
 OpenAI's `davinci` model family.
+
+#### spacy.Davinci.v1 {id="davinci-v1"}
 
 > #### Example config
 >
@@ -877,9 +854,11 @@ OpenAI's `davinci` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Curie.v1 {id="curie"}
+### Curie {id="curie"}
 
 OpenAI's `curie` model family.
+
+#### spacy.Curie.v1 {id="curie-v1"}
 
 > #### Example config
 >
@@ -898,9 +877,11 @@ OpenAI's `curie` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Babbage.v1 {id="babbage"}
+### Babbage {id="babbage"}
 
 OpenAI's `babbage` model family.
+
+#### spacy.Babbage.v1 {id="babbage-v1"}
 
 > #### Example config
 >
@@ -919,9 +900,11 @@ OpenAI's `babbage` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Ada.v1 {id="ada"}
+### Ada {id="ada"}
 
 OpenAI's `ada` model family.
+
+#### spacy.Ada.v1 {id="ada-v1"}
 
 > #### Example config
 >
@@ -940,9 +923,11 @@ OpenAI's `ada` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Command.v1 {id="command"}
+### Command {id="command"}
 
 Cohere's `command` model family.
+
+#### spacy.Command.v1 {id="command-v1"}
 
 > #### Example config
 >
@@ -961,9 +946,11 @@ Cohere's `command` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                                  |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                                   |
 
-#### spacy.Claude-2.v1 {id="claude-2"}
+### Claude-2 {id="claude-2"}
 
 Anthropic's `claude-2` model family.
+
+#### spacy.Claude-2.v1 {id="claude-2-v1"}
 
 > #### Example config
 >
@@ -982,9 +969,11 @@ Anthropic's `claude-2` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Claude-1.v1 {id="claude-1"}
+### Claude-1 {id="claude-1"}
 
 Anthropic's `claude-1` model family.
+
+#### spacy.Claude-1.v1 {id="claude-1-v1"}
 
 > #### Example config
 >
@@ -1003,9 +992,11 @@ Anthropic's `claude-1` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Claude-instant-1.v1 {id="claude-instant-1"}
+### Claude-instant-1 {id="claude-instant-1"}
 
 Anthropic's `claude-instant-1` model family.
+
+#### spacy.Claude-instant-1.v1 {id="claude-instant-1-v1"}
 
 > #### Example config
 >
@@ -1024,9 +1015,11 @@ Anthropic's `claude-instant-1` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                 |
 
-#### spacy.Claude-instant-1-1.v1 {id="claude-instant-1-1"}
+### Claude-instant-1-1 {id="claude-instant-1-1"}
 
 Anthropic's `claude-instant-1.1` model family.
+
+#### spacy.Claude-instant-1-1.v1 {id="claude-instant-1-1-v1"}
 
 > #### Example config
 >
@@ -1045,9 +1038,11 @@ Anthropic's `claude-instant-1.1` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                      |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                       |
 
-#### spacy.Claude-1-0.v1 {id="claude-1-0"}
+#### Claude-1-0 {id="claude-1-0"}
 
 Anthropic's `claude-1.0` model family.
+
+#### spacy.Claude-1-0.v1 {id="claude-1-0-v1"}
 
 > #### Example config
 >
@@ -1066,9 +1061,11 @@ Anthropic's `claude-1.0` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Claude-1-2.v1 {id="claude-1-2"}
+#### Claude-1-2 {id="claude-1-2"}
 
 Anthropic's `claude-1.2` model family.
+
+#### spacy.Claude-1-2.v1 {id="claude-1-2-v1"}
 
 > #### Example config
 >
@@ -1087,9 +1084,11 @@ Anthropic's `claude-1.2` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Claude-1-3.v1 {id="claude-1-3"}
+#### Claude-1-3 {id="claude-1-3"}
 
 Anthropic's `claude-1.3` model family.
+
+#### spacy.Claude-1-3.v1 {id="claude-1-3-v1"}
 
 > #### Example config
 >
@@ -1108,7 +1107,11 @@ Anthropic's `claude-1.3` model family.
 | `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
 | `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
 
-#### spacy.Dolly.v1 {id="dolly"}
+### Dolly {id="dolly"}
+
+Databrick's open-source `Dolly` model family.
+
+#### spacy.Dolly.v1 {id="dolly-v1"}
 
 To use this model, ideally you have a GPU enabled and have installed
 `transformers`, `torch` and CUDA in your virtual environment. This allows you to
@@ -1157,7 +1160,11 @@ can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
-#### spacy.Llama2.v1 {id="llama2"}
+### Llama2 {id="llama2"}
+
+Meta AI's open-source `Llama2` model family.
+
+#### spacy.Llama2.v1 {id="llama2-v1"}
 
 To use this model, ideally you have a GPU enabled and have installed
 `transformers`, `torch` and CUDA in your virtual environment. This allows you to
@@ -1203,7 +1210,11 @@ can
 [define the cache directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
-#### spacy.Falcon.v1 {id="falcon"}
+### Falcon {id="falcon"}
+
+TII's open-source `Falcon` model family.
+
+#### spacy.Falcon.v1 {id="falcon-v1"}
 
 To use this model, ideally you have a GPU enabled and have installed
 `transformers`, `torch` and CUDA in your virtual environment. This allows you to
@@ -1244,7 +1255,11 @@ can
 [define the cache directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
-#### spacy.StableLM.v1 {id="stablelm"}
+### StableLM {id="stablelm"}
+
+Stability AI's open-source `StableLM` model family.
+
+#### spacy.StableLM.v1 {id="stablelm-v1"}
 
 To use this model, ideally you have a GPU enabled and have installed
 `transformers`, `torch` and CUDA in your virtual environment.
@@ -1287,7 +1302,11 @@ can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
-#### spacy.OpenLLaMA.v1 {id="openllama"}
+### OpenLLaMA {id="openllama"}
+
+OpenLM Research's open-source `OpenLLaMA` model family.
+
+#### spacy.OpenLLaMA.v1 {id="openllama-v1"}
 
 To use this model, ideally you have a GPU enabled and have installed
 
@@ -1333,7 +1352,7 @@ can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
-#### LangChain models {id="langchain-models"}
+### LangChain models {id="langchain-models"}
 
 To use [LangChain](https://github.com/hwchase17/langchain) for the API retrieval
 part, make sure you have installed it first:
@@ -1374,7 +1393,7 @@ The name of the model to be used has to be passed in via the `name` attribute.
 The default `query` (`spacy.CallLangChain.v1`) executes the prompts by running
 `model(text)` for each given textual prompt.
 
-### Cache {id="cache"}
+## Cache {id="cache"}
 
 Interacting with LLMs, either through an external API or a local instance, is
 costly. Since developing an NLP pipeline generally means a lot of exploration
@@ -1406,9 +1425,9 @@ provide your own registered function returning your own cache implementation. If
 you wish to do so, ensure that your cache object adheres to the `Protocol`
 defined in `spacy_llm.ty.Cache`.
 
-### Various functions {id="various-functions"}
+## Various functions {id="various-functions"}
 
-#### spacy.FewShotReader.v1 {id="fewshotreader-v1"}
+### spacy.FewShotReader.v1 {id="fewshotreader-v1"}
 
 This function is registered in spaCy's `misc` registry, and reads in examples
 from a `.yml`, `.yaml`, `.json` or `.jsonl` file. It uses
@@ -1427,7 +1446,7 @@ them depending on the file extension.
 | -------- | ----------------------------------------------------------------------------------------------- |
 | `path`   | Path to an examples file with suffix `.yml`, `.yaml`, `.json` or `.jsonl`. ~~Union[str, Path]~~ |
 
-#### spacy.FileReader.v1 {id="filereader-v1"}
+### spacy.FileReader.v1 {id="filereader-v1"}
 
 This function is registered in spaCy's `misc` registry, and reads a file
 provided to the `path` to return a `str` representation of its contents. This
@@ -1447,7 +1466,7 @@ template.
 | -------- | ------------------------------------------------- |
 | `path`   | Path to the file to be read. ~~Union[str, Path]~~ |
 
-#### Normalizer functions {id="normalizer-functions"}
+### Normalizer functions {id="normalizer-functions"}
 
 These functions provide simple normalizations for string comparisons, e.g.
 between a list of specified labels and a label given in the raw text of the LLM
