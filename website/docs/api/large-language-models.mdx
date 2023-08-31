@@ -648,13 +648,14 @@ implementations can have other signatures, like
 
 These models all take the same parameters:
 
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Default depends on the specific model (cf. below) ~~str~~                      |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+| Argument           | Description                                                                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`             | Model name, i. e. any supported variant for this particular model. Default depends on the specific model (cf. below) ~~str~~                      |
+| `config`           | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`           | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries`        | Max. number of tries for API request. Defaults to `5`. ~~int~~                                                                                    |
+| `max_request_time` | Max. time (in seconds) to wait for request to terminate before raising an exception. Defaults to `30.0`. ~~float~~                                |
+| `interval`         | Time interval (in seconds) for API retries in seconds. Defaults to `1.0`. ~~float~~                                                               |
 
 | Model                         | Provider  | Supported names                                                                      | Default name         |
 | ----------------------------- | --------- | ------------------------------------------------------------------------------------ | -------------------- |
@@ -690,7 +691,6 @@ keys as environment variables.
 > config = {"temperature": 0.0}
 > ```
 
-
 #### API Keys {id="api-keys"}
 
 Note that when using hosted services, you have to ensure that the proper API
@@ -717,7 +717,6 @@ and for Anthropic
 export ANTHROPIC_API_KEY="..."
 ```
 
-
 ### Models via HuggingFace {id="models-hf"}
 
 These models all take the same parameters:
@@ -743,7 +742,6 @@ can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
-
 #### Installation with HuggingFace {id="install-hf"}
 
 To use models from HuggingFace, ideally you have a GPU enabled and have
@@ -765,7 +763,6 @@ result in extremely slow queries.
 ```shell
 python -m pip install "accelerate>=0.16.0,<1.0"
 ```
-
 
 ### LangChain models {id="langchain-models"}
 
