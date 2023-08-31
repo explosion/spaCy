@@ -644,7 +644,54 @@ it's a function of type `Callable[[Iterable[Any]], Iterable[Any]]`, but specific
 implementations can have other signatures, like
 `Callable[[Iterable[str]], Iterable[str]]`.
 
-### API Keys {id="api-keys"}
+### Models via REST API {id="models-rest"}
+
+These models all take the same parameters:
+
+| Argument    | Description                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Model name, i. e. any supported variant for this particular model. Default depends on the specific model (cf. below) ~~str~~                      |
+| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
+| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
+| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
+
+| Model                         | Provider  | Supported names                                                                      | Default name         |
+| ----------------------------- | --------- | ------------------------------------------------------------------------------------ | -------------------- |
+| `spacy.GPT-4.v1`              | OpenAI    | "gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"                                 | gpt-4                |
+| `spacy.GPT-3-5.v1`            | OpenAI    | "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k" | "gpt-3.5-turbo"      |
+| `spacy.Davinci.v1`            | OpenAI    | "davinci"                                                                            | "davinci"            |
+| `spacy.Text-Davinci.v1`       | OpenAI    | "text-davinci-003", "text-davinci-002"                                               | "text-davinci-003"   |
+| `spacy.Code-Davinci.v1`       | OpenAI    | "code-davinci-002"                                                                   | "code-davinci-002"   |
+| `spacy.Curie.v1`              | OpenAI    | "curie"                                                                              | "curie"              |
+| `spacy.Text-Curie.v1`         | OpenAI    | "text-curie-001"                                                                     | "text-curie-001"     |
+| `spacy.Babbage.v1`            | OpenAI    | "babbage"                                                                            | "babbage"            |
+| `spacy.Text-Babbage.v1`       | OpenAI    | "text-babbage-001"                                                                   | "text-babbage-001"   |
+| `spacy.Ada.v1`                | OpenAI    | "ada"                                                                                | "ada"                |
+| `spacy.Text-Ada.v1`           | OpenAI    | "text-ada-001"                                                                       | "text-ada-001"       |
+| `spacy.Command.v1`            | Cohere    | "command", "command-light", "command-light-nightly", "command-nightly"               | "command"            |
+| `spacy.Claude-2.v1`           | Anthropic | "claude-2", "claude-2-100k"                                                          | "claude-2"           |
+| `spacy.Claude-1.v1`           | Anthropic | "claude-1", "claude-1-100k"                                                          | "claude-1"           |
+| `spacy.Claude-1-0.v1`         | Anthropic | "claude-1.0"                                                                         | "claude-1.0"         |
+| `spacy.Claude-1-2.v1`         | Anthropic | "claude-1.2"                                                                         | "claude-1.2"         |
+| `spacy.Claude-1-3.v1`         | Anthropic | "claude-1.3", "claude-1.3-100k"                                                      | "claude-1.3"         |
+| `spacy.Claude-instant-1.v1`   | Anthropic | "claude-instant-1", "claude-instant-1-100k"                                          | "claude-instant-1"   |
+| `spacy.Claude-instant-1-1.v1` | Anthropic | "claude-instant-1.1", "claude-instant-1.1-100k"                                      | "claude-instant-1.1" |
+
+To use these models, make sure that you've [set the relevant API](#api-keys)
+keys as environment variables.
+
+> #### Example config:
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.GPT-4.v1"
+> name = "gpt-4"
+> config = {"temperature": 0.0}
+> ```
+
+
+#### API Keys {id="api-keys"}
 
 Note that when using hosted services, you have to ensure that the proper API
 keys are set as environment variables as described by the corresponding
@@ -670,506 +717,39 @@ and for Anthropic
 export ANTHROPIC_API_KEY="..."
 ```
 
-### GPT-4 {id="gpt-4"}
 
-OpenAI's `gpt-4` model family.
+### Models via HuggingFace {id="models-hf"}
 
-#### spacy.GPT-4.v1 {id="gpt-4-v1"}
+These models all take the same parameters:
 
-> #### Example config:
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.GPT-4.v1"
-> name = "gpt-4"
-> config = {"temperature": 0.0}
-> ```
+| Argument      | Description                                                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`        | Model name, i. e. any supported variant for this particular model. ~~str~~                                                            |
+| `config_init` | Further configuration passed on to the construction of the model with `transformers.pipeline()`. Defaults to `{}`. ~~Dict[str, Any]~~ |
+| `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                               |
 
-| Argument    | Description                                                                                                                                                 |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"gpt-4"`. ~~Literal["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]~~ |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                          |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~           |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                              |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                               |
+| Model                | Provider        | Supported names                                                                                          | HF directory                           |
+| -------------------- | --------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `spacy.Dolly.v1`     | Databricks      | "dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"                                                             | https://huggingface.co/databricks      |
+| `spacy.Llama2.v1`    | Meta AI         | "Llama-2-7b-hf", "Llama-2-13b-hf", "Llama-2-70b-hf"                                                      | https://huggingface.co/meta-llama      |
+| `spacy.Falcon.v1`    | TII             | "falcon-rw-1b", "falcon-7b", "falcon-7b-instruct", "falcon-40b-instruct"                                 | https://huggingface.co/tiiuae          |
+| `spacy.StableLM.v1`  | Stability AI    | "stablelm-base-alpha-3b", "stablelm-base-alpha-7b", "stablelm-tuned-alpha-3b", "stablelm-tuned-alpha-7b" | https://huggingface.co/stabilityai     |
+| `spacy.OpenLLaMA.v1` | OpenLM Research | "open_llama_3b", "open_llama_7b", "open_llama_7b_v2", "open_llama_13b"                                   | https://huggingface.co/openlm-research |
 
-### GPT-3-5 {id="gpt-3-5"}
+See the "HF directory" for more details on each of the models.
 
-OpenAI's `gpt-3-5` model family.
-
-#### spacy.GPT-3-5.v1 {id="gpt-3-5-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.GPT-3-5.v1"
-> name = "gpt-3.5-turbo"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                                                                         |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"gpt-3.5-turbo"`. ~~Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k"]~~ |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                                                                  |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~                                                   |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                                                      |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                                                       |
-
-### Text-Davinci {id="text-davinci"}
-
-OpenAI's `text-davinci` model family.
-
-#### spacy.Text-Davinci.v1 {id="text-davinci-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Text-Davinci.v1"
-> name = "text-davinci-003"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                              |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"text-davinci-003"`. ~~Literal["text-davinci-002", "text-davinci-003"]~~ |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                       |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~        |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                           |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                            |
-
-### Code-Davinci {id="code-davinci"}
-
-OpenAI's `code-davinci` model family.
-
-#### spacy.Code-Davinci.v1 {id="code-davinci-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Code-Davinci.v1"
-> name = "code-davinci-002"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"code-davinci-002"`. ~~Literal["code-davinci-002"]~~              |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-### Text-Curie {id="text-curie"}
-
-OpenAI's `text-curie` model family.
-
-#### spacy.Text-Curie.v1 {id="text-curie-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Text-Curie.v1"
-> name = "text-curie-001"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"text-curie-001"`. ~~Literal["text-curie-001"]~~                  |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-### Text-Babbage {id="text-babbage"}
-
-OpenAI's `text-babbage` model family.
-
-#### spacy.Text-Babbage.v1 {id="text-babbage-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Text-Babbage.v1"
-> name = "text-babbage-001"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"text-babbage-001"`. ~~Literal["text-babbage-001"]~~              |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-### Text-Ada {id="text-ada"}
-
-OpenAI's `text-ada` model family.
-
-#### spacy.Text-Ada.v1 {id="text-ada-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Text-Ada.v1"
-> name = "text-ada-001"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"text-ada-001"`. ~~Literal["text-ada-001"]~~                      |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-### Davinci {id="davinci"}
-
-OpenAI's `davinci` model family.
-
-#### spacy.Davinci.v1 {id="davinci-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Davinci.v1"
-> name = "davinci"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"davinci"`. ~~Literal["davinci"]~~                                |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-### Curie {id="curie"}
-
-OpenAI's `curie` model family.
-
-#### spacy.Curie.v1 {id="curie-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Curie.v1"
-> name = "curie"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"curie"`. ~~Literal["curie"]~~                                    |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-### Babbage {id="babbage"}
-
-OpenAI's `babbage` model family.
-
-#### spacy.Babbage.v1 {id="babbage-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Babbage.v1"
-> name = "babbage"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"babbage"`. ~~Literal["babbage"]~~                                |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-### Ada {id="ada"}
-
-OpenAI's `ada` model family.
-
-#### spacy.Ada.v1 {id="ada-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Ada.v1"
-> name = "ada"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"ada"`. ~~Literal["ada"]~~                                        |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-### Command {id="command"}
-
-Cohere's `command` model family.
-
-#### spacy.Command.v1 {id="command-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Command.v1"
-> name = "command"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"command"`. ~~Literal["command", "command-light", "command-light-nightly", "command-nightly"]~~ |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                                              |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~                               |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                                  |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                                   |
-
-### Claude-2 {id="claude-2"}
-
-Anthropic's `claude-2` model family.
-
-#### spacy.Claude-2.v1 {id="claude-2-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Claude-2.v1"
-> name = "claude-2"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-2"`. ~~Literal["claude-2", "claude-2-100k"]~~             |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-### Claude-1 {id="claude-1"}
-
-Anthropic's `claude-1` model family.
-
-#### spacy.Claude-1.v1 {id="claude-1-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Claude-1.v1"
-> name = "claude-1"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-1"`. ~~Literal["claude-1", "claude-1-100k"]~~             |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-### Claude-instant-1 {id="claude-instant-1"}
-
-Anthropic's `claude-instant-1` model family.
-
-#### spacy.Claude-instant-1.v1 {id="claude-instant-1-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Claude-instant-1.v1"
-> name = "claude-instant-1"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                                   |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-instant-1"`. ~~Literal["claude-instant-1", "claude-instant-1-100k"]~~ |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                            |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~             |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                 |
-
-### Claude-instant-1-1 {id="claude-instant-1-1"}
-
-Anthropic's `claude-instant-1.1` model family.
-
-#### spacy.Claude-instant-1-1.v1 {id="claude-instant-1-1-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Claude-instant-1-1.v1"
-> name = "claude-instant-1.1"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                                         |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-instant-1.1"`. ~~Literal["claude-instant-1.1", "claude-instant-1.1-100k"]~~ |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                                  |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~                   |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                                      |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                                       |
-
-#### Claude-1-0 {id="claude-1-0"}
-
-Anthropic's `claude-1.0` model family.
-
-#### spacy.Claude-1-0.v1 {id="claude-1-0-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Claude-1-0.v1"
-> name = "claude-1.0"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-1.0"`. ~~Literal["claude-1.0"]~~                          |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-#### Claude-1-2 {id="claude-1-2"}
-
-Anthropic's `claude-1.2` model family.
-
-#### spacy.Claude-1-2.v1 {id="claude-1-2-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Claude-1-2.v1 "
-> name = "claude-1.2"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-1.2"`. ~~Literal["claude-1.2"]~~                          |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-#### Claude-1-3 {id="claude-1-3"}
-
-Anthropic's `claude-1.3` model family.
-
-#### spacy.Claude-1-3.v1 {id="claude-1-3-v1"}
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Claude-1-3.v1"
-> name = "claude-1.3"
-> config = {"temperature": 0.0}
-> ```
-
-| Argument    | Description                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Model name, i. e. any supported variant for this particular model. Defaults to `"claude-1.3"`. ~~Literal["claude-1.3", "claude-1.3-100k"]~~       |
-| `config`    | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
-| `strict`    | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
-| `max_tries` | Max. number of tries for API request. Defaults to `3`. ~~int~~                                                                                    |
-| `timeout`   | Timeout for API request in seconds. Defaults to `30`. ~~int~~                                                                                     |
-
-### Dolly {id="dolly"}
-
-Databrick's open-source `Dolly` model family.
-
-#### spacy.Dolly.v1 {id="dolly-v1"}
-
-To use this model, ideally you have a GPU enabled and have installed
-`transformers`, `torch` and CUDA in your virtual environment. This allows you to
-have the setting `device=cuda:0` in your config, which ensures that the model is
-loaded entirely on the GPU (and fails otherwise).
-
-You can do so with
-
-```shell
-python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
-```
-
-If you don't have access to a GPU, you can install `accelerate` and
-set`device_map=auto` instead, but be aware that this may result in some layers
-getting distributed to the CPU or even the hard drive, which may ultimately
-result in extremely slow queries.
-
-```shell
-python -m pip install "accelerate>=0.16.0,<1.0"
-```
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Dolly.v1"
-> name = "dolly-v2-3b"
-> ```
-
-| Argument      | Description                                                                                                                                    |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`        | The name of a Dolly model that is supported (e. g. "dolly-v2-3b" or "dolly-v2-12b"). ~~Literal["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"]~~ |
-| `config_init` | Further configuration passed on to the construction of the model with `transformers.pipeline()`. Defaults to `{}`. ~~Dict[str, Any]~~          |
-| `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                                        |
-
-Supported models (see the
-[Databricks models page](https://huggingface.co/databricks) on Hugging Face for
-details):
-
-- `"databricks/dolly-v2-3b"`
-- `"databricks/dolly-v2-7b"`
-- `"databricks/dolly-v2-12b"`
-
-Note that Hugging Face will download this model the first time you use it - you
+Note that Hugging Face will download the model the first time you use it - you
 can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
 by setting the environmental variable `HF_HOME`.
 
-### Llama2 {id="llama2"}
 
-Meta AI's open-source `Llama2` model family.
+#### Installation with HuggingFace {id="install-hf"}
 
-#### spacy.Llama2.v1 {id="llama2-v1"}
-
-To use this model, ideally you have a GPU enabled and have installed
-`transformers`, `torch` and CUDA in your virtual environment. This allows you to
-have the setting `device=cuda:0` in your config, which ensures that the model is
-loaded entirely on the GPU (and fails otherwise).
+To use models from HuggingFace, ideally you have a GPU enabled and have
+installed `transformers`, `torch` and CUDA in your virtual environment. This
+allows you to have the setting `device=cuda:0` in your config, which ensures
+that the model is loaded entirely on the GPU (and fails otherwise).
 
 You can do so with
 
@@ -1186,171 +766,6 @@ result in extremely slow queries.
 python -m pip install "accelerate>=0.16.0,<1.0"
 ```
 
-Note that the chat models variants of Llama 2 are currently not supported. This
-is because they need a particular prompting setup and don't add any discernible
-benefits in the use case of `spacy-llm` (i. e. no interactive chat) compared the
-completion model variants.
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Llama2.v1"
-> name = "llama2-7b-hf"
-> ```
-
-| Argument      | Description                                                                                                                                            |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`        | The name of a Llama 2 model variant that is supported. Defaults to `"Llama-2-7b-hf"`. ~~Literal["Llama-2-7b-hf", "Llama-2-13b-hf", "Llama-2-70b-hf"]~~ |
-| `config_init` | Further configuration passed on to the construction of the model with `transformers.pipeline()`. Defaults to `{}`. ~~Dict[str, Any]~~                  |
-| `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                                                |
-
-Note that Hugging Face will download this model the first time you use it - you
-can
-[define the cache directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
-by setting the environmental variable `HF_HOME`.
-
-### Falcon {id="falcon"}
-
-TII's open-source `Falcon` model family.
-
-#### spacy.Falcon.v1 {id="falcon-v1"}
-
-To use this model, ideally you have a GPU enabled and have installed
-`transformers`, `torch` and CUDA in your virtual environment. This allows you to
-have the setting `device=cuda:0` in your config, which ensures that the model is
-loaded entirely on the GPU (and fails otherwise).
-
-You can do so with
-
-```shell
-python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
-```
-
-If you don't have access to a GPU, you can install `accelerate` and
-set`device_map=auto` instead, but be aware that this may result in some layers
-getting distributed to the CPU or even the hard drive, which may ultimately
-result in extremely slow queries.
-
-```shell
-python -m pip install "accelerate>=0.16.0,<1.0"
-```
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.Falcon.v1"
-> name = "falcon-7b"
-> ```
-
-| Argument      | Description                                                                                                                                                              |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`        | The name of a Falcon model variant that is supported. Defaults to `"7b-instruct"`. ~~Literal["falcon-rw-1b", "falcon-7b", "falcon-7b-instruct", "falcon-40b-instruct"]~~ |
-| `config_init` | Further configuration passed on to the construction of the model with `transformers.pipeline()`. Defaults to `{}`. ~~Dict[str, Any]~~                                    |
-| `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                                                                  |
-
-Note that Hugging Face will download this model the first time you use it - you
-can
-[define the cache directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
-by setting the environmental variable `HF_HOME`.
-
-### StableLM {id="stablelm"}
-
-Stability AI's open-source `StableLM` model family.
-
-#### spacy.StableLM.v1 {id="stablelm-v1"}
-
-To use this model, ideally you have a GPU enabled and have installed
-`transformers`, `torch` and CUDA in your virtual environment.
-
-You can do so with
-
-```shell
-python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
-```
-
-If you don't have access to a GPU, you can install `accelerate` and
-set`device_map=auto` instead, but be aware that this may result in some layers
-getting distributed to the CPU or even the hard drive, which may ultimately
-result in extremely slow queries.
-
-```shell
-python -m pip install "accelerate>=0.16.0,<1.0"
-```
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.StableLM.v1"
-> name = "stablelm-tuned-alpha-7b"
-> ```
-
-| Argument      | Description                                                                                                                                                                                             |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`        | The name of a StableLM model that is supported (e. g. "stablelm-tuned-alpha-7b"). ~~Literal["stablelm-base-alpha-3b", "stablelm-base-alpha-7b", "stablelm-tuned-alpha-3b", "stablelm-tuned-alpha-7b"]~~ |
-| `config_init` | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. Defaults to `{}`. ~~Dict[str, Any]~~                                       |
-| `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                                                                                                 |
-
-See the
-[Stability AI StableLM GitHub repo](https://github.com/Stability-AI/StableLM/#stablelm-alpha)
-for details.
-
-Note that Hugging Face will download this model the first time you use it - you
-can
-[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
-by setting the environmental variable `HF_HOME`.
-
-### OpenLLaMA {id="openllama"}
-
-OpenLM Research's open-source `OpenLLaMA` model family.
-
-#### spacy.OpenLLaMA.v1 {id="openllama-v1"}
-
-To use this model, ideally you have a GPU enabled and have installed
-
-- `transformers[sentencepiece]`
-- `torch`
-- CUDA in your virtual environment.
-
-You can do so with
-
-```shell
-python -m pip install "spacy-llm[transformers]" "transformers[sentencepiece]"
-```
-
-If you don't have access to a GPU, you can install `accelerate` and
-set`device_map=auto` instead, but be aware that this may result in some layers
-getting distributed to the CPU or even the hard drive, which may ultimately
-result in extremely slow queries.
-
-```shell
-python -m pip install "accelerate>=0.16.0,<1.0"
-```
-
-> #### Example config
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.OpenLLaMA.v1"
-> name = "open_llama_3b"
-> ```
-
-| Argument      | Description                                                                                                                                                       |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`        | The name of a OpenLLaMA model that is supported. ~~Literal["open_llama_3b", "open_llama_7b", "open_llama_7b_v2", "open_llama_13b"]~~                              |
-| `config_init` | Further configuration passed on to the construction of the model with `transformers.AutoModelForCausalLM.from_pretrained()`. Defaults to `{}`. ~~Dict[str, Any]~~ |
-| `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                                                           |
-
-See the
-[OpenLM Research OpenLLaMA GitHub repo](https://github.com/openlm-research/open_llama)
-for details.
-
-Note that Hugging Face will download this model the first time you use it - you
-can
-[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
-by setting the environmental variable `HF_HOME`.
 
 ### LangChain models {id="langchain-models"}
 
