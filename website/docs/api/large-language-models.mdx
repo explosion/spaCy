@@ -659,6 +659,15 @@ These models all take the same parameters:
 | `max_request_time` | Max. time (in seconds) to wait for request to terminate before raising an exception. Defaults to `30.0`. ~~float~~                                |
 | `interval`         | Time interval (in seconds) for API retries in seconds. Defaults to `1.0`. ~~float~~                                                               |
 
+> #### Example config:
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.GPT-4.v1"
+> name = "gpt-4"
+> config = {"temperature": 0.0}
+> ```
+
 | Model                         | Provider  | Supported names                                                                          | Default name           |
 | ----------------------------- | --------- | ---------------------------------------------------------------------------------------- | ---------------------- |
 | `spacy.GPT-4.v1`              | OpenAI    | `["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]`                                 | `"gpt-4"`              |
@@ -683,15 +692,6 @@ These models all take the same parameters:
 
 To use these models, make sure that you've [set the relevant API](#api-keys)
 keys as environment variables.
-
-> #### Example config:
->
-> ```ini
-> [components.llm.model]
-> @llm_models = "spacy.GPT-4.v1"
-> name = "gpt-4"
-> config = {"temperature": 0.0}
-> ```
 
 #### API Keys {id="api-keys"}
 
@@ -728,6 +728,14 @@ These models all take the same parameters:
 | `name`        | Model name, i. e. any supported variant for this particular model. ~~str~~                                                            |
 | `config_init` | Further configuration passed on to the construction of the model with `transformers.pipeline()`. Defaults to `{}`. ~~Dict[str, Any]~~ |
 | `config_run`  | Further configuration used during model inference. Defaults to `{}`. ~~Dict[str, Any]~~                                               |
+
+> #### Example config
+>
+> ```ini
+> [components.llm.model]
+> @llm_models = "spacy.Llama2.v1"
+> name = "llama2-7b-hf"
+> ```
 
 | Model                | Provider        | Supported names                                                                                              | HF directory                           |
 | -------------------- | --------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
