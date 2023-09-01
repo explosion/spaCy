@@ -113,7 +113,7 @@ note that this requirement will be included in the prompt, but the task doesn't
 perform a hard cut-off. It's hence possible that your summary exceeds
 `max_n_words`.
 
-To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
 you can write down a few examples in a separate file, and provide these to be
 injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
 supports `.yml`, `.yaml`, `.json` and `.jsonl`.
@@ -192,7 +192,7 @@ the following parameters:
   span to the next token boundaries, e.g. expanding `"New Y"` out to
   `"New York"`.
 
-To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
 you can write down a few examples in a separate file, and provide these to be
 injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
 supports `.yml`, `.yaml`, `.json` and `.jsonl`.
@@ -282,7 +282,7 @@ the following parameters:
   span to the next token boundaries, e.g. expanding `"New Y"` out to
   `"New York"`.
 
-To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
 you can write down a few examples in a separate file, and provide these to be
 injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
 supports `.yml`, `.yaml`, `.json` and `.jsonl`.
@@ -397,7 +397,7 @@ definitions are included in the prompt.
 | `allow_none`        | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Defaults to `True`. ~~bool~~                                                                                           |
 | `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                                                                                                                      |
 
-To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
 you can write down a few examples in a separate file, and provide these to be
 injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
 supports `.yml`, `.yaml`, `.json` and `.jsonl`.
@@ -452,7 +452,7 @@ prompting and includes an improved prompt template.
 | `allow_none`        | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Defaults to `True`. ~~bool~~                                                                                           |
 | `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                                                                                                                      |
 
-To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
 you can write down a few examples in a separate file, and provide these to be
 injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
 supports `.yml`, `.yaml`, `.json` and `.jsonl`.
@@ -502,7 +502,7 @@ prompting.
 | `allow_none`        | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Deafults to `True`. ~~bool~~ |
 | `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Deafults to `False`. ~~bool~~                                                            |
 
-To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
 you can write down a few examples in a separate file, and provide these to be
 injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
 supports `.yml`, `.yaml`, `.json` and `.jsonl`.
@@ -546,12 +546,12 @@ on an upstream NER component for entities extraction.
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `labels`            | List of labels or str of comma-separated list of labels. ~~Union[List[str], str]~~                                                                                                                                                                              |
 | `template`          | Custom prompt template to send to LLM model. Default templates for each task are located in the `spacy_llm/tasks/templates` directory. Defaults to [`rel.jinja`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/rel.jinja). ~~str~~ |
-| `label_description` | Dictionary providing a description for each relation label. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                                                                                                                    |
+| `label_definitions` | Dictionary providing a description for each relation label. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                                                                                                                    |
 | `examples`          | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                                                                  |
 | `normalizer`        | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. Defaults to `None`. ~~Optional[Callable[[str], str]]~~                                                                                     |
 | `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                                                                                                              |
 
-To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
 you can write down a few examples in a separate file, and provide these to be
 injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
 supports `.yml`, `.yaml`, `.json` and `.jsonl`.
@@ -565,6 +565,7 @@ supports `.yml`, `.yaml`, `.json` and `.jsonl`.
 [components.llm.task]
 @llm_tasks = "spacy.REL.v1"
 labels = ["LivesIn", "Visits"]
+
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
 path = "rel_examples.jsonl"
@@ -613,7 +614,7 @@ doesn't match the number of tokens from the pipeline's tokenizer, no lemmas are
 stored in the corresponding doc's tokens. Otherwise the tokens `.lemma_`
 property is updated with the lemma suggested by the LLM.
 
-To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
 you can write down a few examples in a separate file, and provide these to be
 injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
 supports `.yml`, `.yaml`, `.json` and `.jsonl`.
@@ -666,7 +667,7 @@ issues (e. g. in case of unexpected LLM responses) the value might be `None`.
 | `examples` | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                                             |
 | `field`    | Name of extension attribute to store summary in (i. e. the summary will be available in `doc._.{field}`). Defaults to `sentiment`. ~~str~~                                                                                 |
 
-To perform [few-shot learning](/usage/large-langauge-models#few-shot-prompts),
+To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
 you can write down a few examples in a separate file, and provide these to be
 injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
 supports `.yml`, `.yaml`, `.json` and `.jsonl`.
