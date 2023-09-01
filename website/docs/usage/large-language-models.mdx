@@ -180,11 +180,11 @@ nlp.add_pipe(
     "llm",
     config={
         "task": {
-            "@llm_tasks": "spacy.NER.v2",
+            "@llm_tasks": "spacy.NER.v3",
             "labels": ["PERSON", "ORGANISATION", "LOCATION"]
         },
         "model": {
-            "@llm_models": "spacy.gpt-3.5.v1",
+            "@llm_models": "spacy.GPT-3-5.v1",
         },
     },
 )
