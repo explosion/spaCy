@@ -191,6 +191,64 @@ means that the task will always perform few-shot prompting under the hood.
 Note that the `single_match` parameter, used in v1 and v2, is not supported
 anymore, as the CoT parsing algorithm takes care of this automatically.
 
+New to v3 is the fact that you can provide an explicit description of what entities should look like.
+You can use this feature in addition to `label_definitions`.
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v3"
+labels = ["DISH", "INGREDIENT", "EQUIPMENT"]
+description = Entities are the names food dishes,
+    ingredients, and any kind of cooking equipment.
+    Adjectives, verbs, adverbs are not entities.
+    Pronouns are not entities.
+
+[components.llm.task.label_definitions]
+DISH = "Known food dishes, e.g. Lobster Ravioli, garlic bread"
+INGREDIENT = "Individual parts of a food dish, including herbs and spices."
+EQUIPMENT = "Any kind of cooking equipment. e.g. oven, cooking pot, grill"
+```
+
+To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
+you can write down a few examples in a separate file, and provide these to be
+injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
+supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+While not required, this task works best when both positive and negative examples are provided.
+The format is different than the files required for v1 and v2, as additional fields such as
+`is_entity` and `reason` should now be provided.
+
+```json
+[
+  {
+    "text": "You can't get a great chocolate flavor with carob.",
+    "spans": [
+      {
+        "text": "chocolate",
+        "is_entity": false,
+        "label": "==NONE==",
+        "reason": "is a flavor in this context, not an ingredient"
+      },
+      {
+        "text": "carob",
+        "is_entity": true,
+        "label": "INGREDIENT",
+        "reason": "is an ingredient to add chocolate flavor"
+      }
+    ]
+  },
+  ...
+]
+```
+
+```ini
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "${paths.examples}"
+```
+
+For a fully working example, see this [usage example](https://github.com/explosion/spacy-llm/tree/main/usage_examples/ner_v3_openai).
+
 #### spacy.NER.v2 {id="ner-v2"}
 
 This version supports explicitly defining the provided labels with custom
@@ -239,6 +297,8 @@ labels = PERSON,SPORTS_TEAM
 PERSON = "Extract any named individual in the text."
 SPORTS_TEAM = "Extract the names of any professional sports team. e.g. Golden State Warriors, LA Lakers, Man City, Real Madrid"
 ```
+
+For a fully working example, see this [usage example](https://github.com/explosion/spacy-llm/tree/main/usage_examples/ner_dolly).
 
 #### spacy.NER.v1 {id="ner-v1"}
 
@@ -560,6 +620,8 @@ path = "rel_examples.jsonl"
 Note: the REL task relies on pre-extracted entities to make its prediction.
 Hence, you'll need to add a component that populates `doc.ents` with recognized
 spans to your spaCy pipeline and put it _before_ the REL component.
+
+For a fully working example, see this [usage example](https://github.com/explosion/spacy-llm/tree/main/usage_examples/rel_openai).
 
 ### Lemma {id="lemma"}
 
