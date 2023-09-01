@@ -160,9 +160,9 @@ The NER task identifies non-overlapping entities in text.
 #### spacy.NER.v3 {id="ner-v3"}
 
 Version 3 is fundamentally different to v1 and v2, as it implements
-Chain-of-Thought prompting, based on
-[the PromptNER paper by Ashok and Lipton (2023)](https://arxiv.org/pdf/2305.15444.pdf).
-From preliminary experiments, we've found this implementation to obtain
+Chain-of-Thought prompting, based on the
+[PromptNER paper](https://arxiv.org/pdf/2305.15444.pdf) by Ashok and Lipton
+(2023). From preliminary experiments, we've found this implementation to obtain
 significant better accuracy.
 
 > #### Example config
@@ -191,8 +191,9 @@ means that the task will always perform few-shot prompting under the hood.
 Note that the `single_match` parameter, used in v1 and v2, is not supported
 anymore, as the CoT parsing algorithm takes care of this automatically.
 
-New to v3 is the fact that you can provide an explicit description of what entities should look like.
-You can use this feature in addition to `label_definitions`.
+New to v3 is the fact that you can provide an explicit description of what
+entities should look like. You can use this feature in addition to
+`label_definitions`.
 
 ```ini
 [components.llm.task]
@@ -214,9 +215,10 @@ you can write down a few examples in a separate file, and provide these to be
 injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
 supports `.yml`, `.yaml`, `.json` and `.jsonl`.
 
-While not required, this task works best when both positive and negative examples are provided.
-The format is different than the files required for v1 and v2, as additional fields such as
-`is_entity` and `reason` should now be provided.
+While not required, this task works best when both positive and negative
+examples are provided. The format is different than the files required for v1
+and v2, as additional fields such as `is_entity` and `reason` should now be
+provided.
 
 ```json
 [
@@ -247,7 +249,8 @@ The format is different than the files required for v1 and v2, as additional fie
 path = "${paths.examples}"
 ```
 
-For a fully working example, see this [usage example](https://github.com/explosion/spacy-llm/tree/main/usage_examples/ner_v3_openai).
+For a fully working example, see this
+[usage example](https://github.com/explosion/spacy-llm/tree/main/usage_examples/ner_v3_openai).
 
 #### spacy.NER.v2 {id="ner-v2"}
 
@@ -293,12 +296,14 @@ counter examples seems to work quite well.
 [components.llm.task]
 @llm_tasks = "spacy.NER.v2"
 labels = PERSON,SPORTS_TEAM
+
 [components.llm.task.label_definitions]
 PERSON = "Extract any named individual in the text."
 SPORTS_TEAM = "Extract the names of any professional sports team. e.g. Golden State Warriors, LA Lakers, Man City, Real Madrid"
 ```
 
-For a fully working example, see this [usage example](https://github.com/explosion/spacy-llm/tree/main/usage_examples/ner_dolly).
+For a fully working example, see this
+[usage example](https://github.com/explosion/spacy-llm/tree/main/usage_examples/ner_dolly).
 
 #### spacy.NER.v1 {id="ner-v1"}
 
@@ -619,7 +624,8 @@ Note: the REL task relies on pre-extracted entities to make its prediction.
 Hence, you'll need to add a component that populates `doc.ents` with recognized
 spans to your spaCy pipeline and put it _before_ the REL component.
 
-For a fully working example, see this [usage example](https://github.com/explosion/spacy-llm/tree/main/usage_examples/rel_openai).
+For a fully working example, see this
+[usage example](https://github.com/explosion/spacy-llm/tree/main/usage_examples/rel_openai).
 
 ### Lemma {id="lemma"}
 

@@ -142,7 +142,7 @@ pipeline = ["llm"]
 factory = "llm"
 
 [components.llm.task]
-@llm_tasks = "spacy.NER.v2"
+@llm_tasks = "spacy.NER.v3"
 labels = ["PERSON", "ORGANISATION", "LOCATION"]
 
 [components.llm.model]
@@ -366,7 +366,7 @@ evaluate the component.
 | Component                                                               | Description                                                                                                       |
 | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | [`spacy.Summarization.v1`](/api/large-language-models#summarization-v1) | The summarization task prompts the model for a concise summary of the provided text.                              |
-| [`spacy.NER.v3`](/api/large-language-models#ner-v3                      | Implements Chain-of-Thought reasoning for NER extraction - obtains higher accuracy than v1 or v2.                 |
+| [`spacy.NER.v3`](/api/large-language-models#ner-v3)                     | Implements Chain-of-Thought reasoning for NER extraction - obtains higher accuracy than v1 or v2.                 |
 | [`spacy.NER.v2`](/api/large-language-models#ner-v2)                     | Builds on v1 and additionally supports defining the provided labels with explicit descriptions.                   |
 | [`spacy.NER.v1`](/api/large-language-models#ner-v1)                     | The original version of the built-in NER task supports both zero-shot and few-shot prompting.                     |
 | [`spacy.SpanCat.v3`](/api/large-language-models#spancat-v3)             | Adaptation of the v3 NER task to support overlapping entities and store its annotations in `doc.spans`.           |
