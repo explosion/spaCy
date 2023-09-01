@@ -363,20 +363,21 @@ It should accept an iterable of `Example` objects as input and return a score
 dictionary. If the `scorer` method is defined, `spacy-llm` will call it to
 evaluate the component.
 
-| Component                                                               | Description                                                                                                                                                           |
-| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`spacy.Summarization.v1`](/api/large-language-models#summarization-v1) | The summarization task prompts the model for a concise summary of the provided text.                                                                                  |
-| [`spacy.NER.v2`](/api/large-language-models#ner-v2)                     | The built-in NER task supports both zero-shot and few-shot prompting. This version also supports explicitly defining the provided labels with custom descriptions.    |
-| [`spacy.NER.v1`](/api/large-language-models#ner-v1)                     | The original version of the built-in NER task supports both zero-shot and few-shot prompting.                                                                         |
-| [`spacy.SpanCat.v2`](/api/large-language-models#spancat-v2)             | The built-in SpanCat task is a simple adaptation of the NER task to support overlapping entities and store its annotations in `doc.spans`.                            |
-| [`spacy.SpanCat.v1`](/api/large-language-models#spancat-v1)             | The original version of the built-in SpanCat task is a simple adaptation of the v1 NER task to support overlapping entities and store its annotations in `doc.spans`. |
-| [`spacy.TextCat.v3`](/api/large-language-models#textcat-v3)             | Version 3 (the most recent) of the built-in TextCat task supports both zero-shot and few-shot prompting. It allows setting definitions of labels.                     |
-| [`spacy.TextCat.v2`](/api/large-language-models#textcat-v2)             | Version 2 of the built-in TextCat task supports both zero-shot and few-shot prompting and includes an improved prompt template.                                       |
-| [`spacy.TextCat.v1`](/api/large-language-models#textcat-v1)             | Version 1 of the built-in TextCat task supports both zero-shot and few-shot prompting.                                                                                |
-| [`spacy.REL.v1`](/api/large-language-models#rel-v1)                     | The built-in REL task supports both zero-shot and few-shot prompting. It relies on an upstream NER component for entities extraction.                                 |
-| [`spacy.Lemma.v1`](/api/large-language-models#lemma-v1)                 | The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.                                                  |
-| [`spacy.Sentiment.v1`](/api/large-language-models#sentiment-v1)         | Performs sentiment analysis on provided texts.                                                                                                                        |
-| [`spacy.NoOp.v1`](/api/large-language-models#noop-v1)                   | This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.                                                     |
+| Component                                                               | Description                                                                                                       |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [`spacy.Summarization.v1`](/api/large-language-models#summarization-v1) | The summarization task prompts the model for a concise summary of the provided text.                              |
+| [`spacy.NER.v3`](/api/large-language-models#ner-v3                      | Implements Chain-of-Thought reasoning for NER extraction - obtains higher accuracy than v1 or v2.                 |
+| [`spacy.NER.v2`](/api/large-language-models#ner-v2)                     | Builds on v1 and additionally supports defining the provided labels with explicit descriptions.                   |
+| [`spacy.NER.v1`](/api/large-language-models#ner-v1)                     | The original version of the built-in NER task supports both zero-shot and few-shot prompting.                     |
+| [`spacy.SpanCat.v2`](/api/large-language-models#spancat-v2)             | Adaptation of the v2 NER task to support overlapping entities and store its annotations in `doc.spans`.           |
+| [`spacy.SpanCat.v1`](/api/large-language-models#spancat-v1)             | Adaptation of the v1 NER task to support overlapping entities and store its annotations in `doc.spans`.           |
+| [`spacy.TextCat.v3`](/api/large-language-models#textcat-v3)             | Version 3 builds on v2 and allows setting definitions of labels.                                                  |
+| [`spacy.TextCat.v2`](/api/large-language-models#textcat-v2)             | Version 2 builds on v1 and includes an improved prompt template.                                                  |
+| [`spacy.TextCat.v1`](/api/large-language-models#textcat-v1)             | Version 1 of the built-in TextCat task supports both zero-shot and few-shot prompting.                            |
+| [`spacy.REL.v1`](/api/large-language-models#rel-v1)                     | Relation Extraction task supporting both zero-shot and few-shot prompting.                                        |
+| [`spacy.Lemma.v1`](/api/large-language-models#lemma-v1)                 | Lemmatizes the provided text and updates the `lemma_` attribute of the tokens accordingly.                        |
+| [`spacy.Sentiment.v1`](/api/large-language-models#sentiment-v1)         | Performs sentiment analysis on provided texts.                                                                    |
+| [`spacy.NoOp.v1`](/api/large-language-models#noop-v1)                   | This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`. |
 
 #### Providing examples for few-shot prompts {id="few-shot-prompts"}
 
