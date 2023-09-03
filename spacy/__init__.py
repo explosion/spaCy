@@ -13,7 +13,13 @@ from thinc.api import Config, prefer_gpu, require_cpu, require_gpu  # noqa: F401
 from . import pipeline  # noqa: F401
 from . import util
 from .about import __version__  # noqa: F401
-from .cli.info import info  # noqa: F401
+try:  
+    # Emscripten does not make use of the CLI and can not use the CLI libraries
+    # (typer etc.) that are imported here. Additionally importing requests,
+    # which is also done here, requires a workaround on this platform.
+    from .cli.info import info  # noqa: F401
+except ImportError:
+    info = lambda *args: "Importing the CLI failed. Info function not available."
 from .errors import Errors
 from .glossary import explain  # noqa: F401
 from .language import Language
