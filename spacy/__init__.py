@@ -19,7 +19,8 @@ try:
     # which is also done here, requires a workaround on this platform.
     from .cli.info import info  # noqa: F401
 except ImportError:
-    info = lambda *args: "Importing the CLI failed. Info function not available."
+    def info(*args, **kwargs):
+        raise RuntimeError("Importing the CLI failed. Info function not available.")
 from .errors import Errors
 from .glossary import explain  # noqa: F401
 from .language import Language
