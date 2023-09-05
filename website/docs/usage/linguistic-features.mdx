@@ -1301,7 +1301,7 @@ correct type.
 @spacy.registry.tokenizers("bert_word_piece_tokenizer")
 def create_whitespace_tokenizer(vocab_file: str, lowercase: bool):
     def create_tokenizer(nlp):
-        return BertWordPieceTokenizer(nlp.vocab, vocab_file, lowercase)
+        return BertWordPieceTokenizer(vocab_file, lowercase=lowercase)
 
     return create_tokenizer
 ```
