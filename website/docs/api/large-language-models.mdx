@@ -648,12 +648,14 @@ implementations can have other signatures, like
 
 ### Models via REST API {id="models-rest"}
 
-These models all take the same parameters, but note that the `config` should contain provider-specific keys and values, as it will be passed onwards to the provider's API.
+These models all take the same parameters, but note that the `config` should
+contain provider-specific keys and values, as it will be passed onwards to the
+provider's API.
 
 | Argument           | Description                                                                                                                                       |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`             | Model name, i. e. any supported variant for this particular model. Default depends on the specific model (cf. below) ~~str~~                      |
-| `config`           | Further configuration passed on to the model. Defaults to `{}`. ~~Dict[Any, Any]~~                                                                |
+| `config`           | Further configuration passed on to the model. Default depends on the specific model (cf. below). ~~Dict[Any, Any]~~                               |
 | `strict`           | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~ |
 | `max_tries`        | Max. number of tries for API request. Defaults to `5`. ~~int~~                                                                                    |
 | `max_request_time` | Max. time (in seconds) to wait for request to terminate before raising an exception. Defaults to `30.0`. ~~float~~                                |
@@ -668,27 +670,38 @@ These models all take the same parameters, but note that the `config` should con
 > config = {"temperature": 0.0}
 > ```
 
-| Model                         | Provider  | Supported names                                                                          | Default name           |
-| ----------------------------- | --------- | ---------------------------------------------------------------------------------------- | ---------------------- |
-| `spacy.GPT-4.v1`              | OpenAI    | `["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]`                                 | `"gpt-4"`              |
-| `spacy.GPT-3-5.v1`            | OpenAI    | `["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k"]` | `"gpt-3.5-turbo"`      |
-| `spacy.Davinci.v1`            | OpenAI    | `["davinci"]`                                                                            | `"davinci"`            |
-| `spacy.Text-Davinci.v1`       | OpenAI    | `["text-davinci-003", "text-davinci-002"]`                                               | `"text-davinci-003"`   |
-| `spacy.Code-Davinci.v1`       | OpenAI    | `["code-davinci-002"]`                                                                   | `"code-davinci-002"`   |
-| `spacy.Curie.v1`              | OpenAI    | `["curie"]`                                                                              | `"curie"`              |
-| `spacy.Text-Curie.v1`         | OpenAI    | `["text-curie-001"]`                                                                     | `"text-curie-001"`     |
-| `spacy.Babbage.v1`            | OpenAI    | `["babbage"]`                                                                            | `"babbage"`            |
-| `spacy.Text-Babbage.v1`       | OpenAI    | `["text-babbage-001"]`                                                                   | `"text-babbage-001"`   |
-| `spacy.Ada.v1`                | OpenAI    | `["ada"]`                                                                                | `"ada"`                |
-| `spacy.Text-Ada.v1`           | OpenAI    | `["text-ada-001"]`                                                                       | `"text-ada-001"`       |
-| `spacy.Command.v1`            | Cohere    | `["command", "command-light", "command-light-nightly", "command-nightly"]`               | "command"`             |
-| `spacy.Claude-2.v1`           | Anthropic | `["claude-2", "claude-2-100k"]`                                                          | `"claude-2"`           |
-| `spacy.Claude-1.v1`           | Anthropic | `["claude-1", "claude-1-100k"]`                                                          | `"claude-1"`           |
-| `spacy.Claude-1-0.v1`         | Anthropic | `["claude-1.0"]`                                                                         | `"claude-1.0"`         |
-| `spacy.Claude-1-2.v1`         | Anthropic | `["claude-1.2"]`                                                                         | `"claude-1.2"`         |
-| `spacy.Claude-1-3.v1`         | Anthropic | `["claude-1.3", "claude-1.3-100k"]`                                                      | `"claude-1.3"`         |
-| `spacy.Claude-instant-1.v1`   | Anthropic | `["claude-instant-1", "claude-instant-1-100k"]`                                          | `"claude-instant-1"`   |
-| `spacy.Claude-instant-1-1.v1` | Anthropic | `["claude-instant-1.1", "claude-instant-1.1-100k"]`                                      | `"claude-instant-1.1"` |
+| Model                         | Provider  | Supported names                                                                          | Default name           | Default config                       |
+| ----------------------------- | --------- | ---------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------ |
+| `spacy.GPT-4.v1`              | OpenAI    | `["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]`                                 | `"gpt-4"`              | `{}`                                 |
+| `spacy.GPT-4.v2`              | OpenAI    | `["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]`                                 | `"gpt-4"`              | `{temperature=0.0}`                  |
+| `spacy.GPT-3-5.v1`            | OpenAI    | `["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k"]` | `"gpt-3.5-turbo"`      | `{}`                                 |
+| `spacy.GPT-3-5.v2`            | OpenAI    | `["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k"]` | `"gpt-3.5-turbo"`      | `{temperature=0.0}`                  |
+| `spacy.Davinci.v1`            | OpenAI    | `["davinci"]`                                                                            | `"davinci"`            | `{}`                                 |
+| `spacy.Davinci.v2`            | OpenAI    | `["davinci"]`                                                                            | `"davinci"`            | `{temperature=0.0, max_tokens=500}`  |
+| `spacy.Text-Davinci.v1`       | OpenAI    | `["text-davinci-003", "text-davinci-002"]`                                               | `"text-davinci-003"`   | `{}`                                 |
+| `spacy.Text-Davinci.v2`       | OpenAI    | `["text-davinci-003", "text-davinci-002"]`                                               | `"text-davinci-003"`   | `{temperature=0.0, max_tokens=1000}` |
+| `spacy.Code-Davinci.v1`       | OpenAI    | `["code-davinci-002"]`                                                                   | `"code-davinci-002"`   | `{}`                                 |
+| `spacy.Code-Davinci.v2`       | OpenAI    | `["code-davinci-002"]`                                                                   | `"code-davinci-002"`   | `{temperature=0.0, max_tokens=500}`  |
+| `spacy.Curie.v1`              | OpenAI    | `["curie"]`                                                                              | `"curie"`              | `{}`                                 |
+| `spacy.Curie.v2`              | OpenAI    | `["curie"]`                                                                              | `"curie"`              | `{temperature=0.0, max_tokens=500}`  |
+| `spacy.Text-Curie.v1`         | OpenAI    | `["text-curie-001"]`                                                                     | `"text-curie-001"`     | `{}`                                 |
+| `spacy.Text-Curie.v2`         | OpenAI    | `["text-curie-001"]`                                                                     | `"text-curie-001"`     | `{temperature=0.0, max_tokens=500}`  |
+| `spacy.Babbage.v1`            | OpenAI    | `["babbage"]`                                                                            | `"babbage"`            | `{}`                                 |
+| `spacy.Babbage.v2`            | OpenAI    | `["babbage"]`                                                                            | `"babbage"`            | `{temperature=0.0, max_tokens=500}`  |
+| `spacy.Text-Babbage.v1`       | OpenAI    | `["text-babbage-001"]`                                                                   | `"text-babbage-001"`   | `{}`                                 |
+| `spacy.Text-Babbage.v2`       | OpenAI    | `["text-babbage-001"]`                                                                   | `"text-babbage-001"`   | `{temperature=0.0, max_tokens=500}`  |
+| `spacy.Ada.v1`                | OpenAI    | `["ada"]`                                                                                | `"ada"`                | `{}`                                 |
+| `spacy.Ada.v2`                | OpenAI    | `["ada"]`                                                                                | `"ada"`                | `{temperature=0.0, max_tokens=500}`  |
+| `spacy.Text-Ada.v1`           | OpenAI    | `["text-ada-001"]`                                                                       | `"text-ada-001"`       | `{}`                                 |
+| `spacy.Text-Ada.v2`           | OpenAI    | `["text-ada-001"]`                                                                       | `"text-ada-001"`       | `{temperature=0.0, max_tokens=500}`  |
+| `spacy.Command.v1`            | Cohere    | `["command", "command-light", "command-light-nightly", "command-nightly"]`               | `"command"`            | `{}`                                 |
+| `spacy.Claude-2.v1`           | Anthropic | `["claude-2", "claude-2-100k"]`                                                          | `"claude-2"`           | `{}`                                 |
+| `spacy.Claude-1.v1`           | Anthropic | `["claude-1", "claude-1-100k"]`                                                          | `"claude-1"`           | `{}`                                 |
+| `spacy.Claude-1-0.v1`         | Anthropic | `["claude-1.0"]`                                                                         | `"claude-1.0"`         | `{}`                                 |
+| `spacy.Claude-1-2.v1`         | Anthropic | `["claude-1.2"]`                                                                         | `"claude-1.2"`         | `{}`                                 |
+| `spacy.Claude-1-3.v1`         | Anthropic | `["claude-1.3", "claude-1.3-100k"]`                                                      | `"claude-1.3"`         | `{}`                                 |
+| `spacy.Claude-instant-1.v1`   | Anthropic | `["claude-instant-1", "claude-instant-1-100k"]`                                          | `"claude-instant-1"`   | `{}`                                 |
+| `spacy.Claude-instant-1-1.v1` | Anthropic | `["claude-instant-1.1", "claude-instant-1.1-100k"]`                                      | `"claude-instant-1.1"` | `{}`                                 |
 
 To use these models, make sure that you've [set the relevant API](#api-keys)
 keys as environment variables.
