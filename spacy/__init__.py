@@ -21,7 +21,7 @@ try:
     from .cli.info import info  # noqa: F401
 except ImportError:
 
-    def info(*args, **kwargs):
+    def info(*args, **kwargs):  # type: ignore
         raise RuntimeError("Importing the CLI failed. Info function not available.")
 
 
