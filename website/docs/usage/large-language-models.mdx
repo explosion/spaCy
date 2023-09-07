@@ -169,25 +169,17 @@ to be `"databricks/dolly-v2-12b"` for better performance.
 
 ### Example 3: Create the component directly in Python {id="example-3"}
 
-The `llm` component behaves as any other component does, so adding it to an
-existing pipeline follows the same pattern:
+The `llm` component behaves as any other component does, and there are
+[task-specific components](/api/large-language-models#implementation) defined to
+help you hit the ground running with a reasonable built-in task implementation.
 
 ```python
 import spacy
 
 nlp = spacy.blank("en")
-nlp.add_pipe(
-    "llm",
-    config={
-        "task": {
-            "@llm_tasks": "spacy.NER.v2",
-            "labels": ["PERSON", "ORGANISATION", "LOCATION"]
-        },
-        "model": {
-            "@llm_models": "spacy.GPT-3-5.v1",
-        },
-    },
-)
+llm_ner = nlp.add_pipe("llm_ner")
+llm_ner.add_label("PERSON")
+llm_ner.add_label("LOCATION")
 nlp.initialize()
 doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
 print([(ent.text, ent.label_) for ent in doc.ents])
@@ -314,7 +306,7 @@ COMPLIMENT
 
 ## API {id="api"}
 
-`spacy-llm` exposes a `llm` factory with
+`spacy-llm` exposes an `llm` factory with
 [configurable settings](/api/large-language-models#config).
 
 An `llm` component is defined by two main settings:
