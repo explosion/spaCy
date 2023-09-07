@@ -602,7 +602,7 @@ on an upstream NER component for entities extraction.
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `labels`            | List of labels or str of comma-separated list of labels. ~~Union[List[str], str]~~                                                                                          |
 | `template`          | Custom prompt template to send to LLM model. Defaults to [`rel.v3.jinja`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/rel.v1.jinja). ~~str~~ |
-| `label_description` | Dictionary providing a description for each relation label. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                                |
+| `label_definitions` | Dictionary providing a description for each relation label. Defaults to `None`. ~~Optional[Dict[str, str]]~~                                                                |
 | `examples`          | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                              |
 | `normalizer`        | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. Defaults to `None`. ~~Optional[Callable[[str], str]]~~ |
 | `verbose`           | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                          |
@@ -621,6 +621,7 @@ supports `.yml`, `.yaml`, `.json` and `.jsonl`.
 [components.llm.task]
 @llm_tasks = "spacy.REL.v1"
 labels = ["LivesIn", "Visits"]
+
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
 path = "rel_examples.jsonl"
