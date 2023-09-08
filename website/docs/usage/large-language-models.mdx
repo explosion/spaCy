@@ -108,7 +108,7 @@ labels = ["COMPLIMENT", "INSULT"]
 
 [components.llm.model]
 @llm_models = "spacy.GPT-3-5.v1"
-config = {"temperature": 0.3}
+config = {"temperature": 0.0}
 ```
 
 Now run:
@@ -142,7 +142,7 @@ pipeline = ["llm"]
 factory = "llm"
 
 [components.llm.task]
-@llm_tasks = "spacy.NER.v2"
+@llm_tasks = "spacy.NER.v3"
 labels = ["PERSON", "ORGANISATION", "LOCATION"]
 
 [components.llm.model]
@@ -169,25 +169,17 @@ to be `"databricks/dolly-v2-12b"` for better performance.
 
 ### Example 3: Create the component directly in Python {id="example-3"}
 
-The `llm` component behaves as any other component does, so adding it to an
-existing pipeline follows the same pattern:
+The `llm` component behaves as any other component does, and there are
+[task-specific components](/api/large-language-models#config) defined to
+help you hit the ground running with a reasonable built-in task implementation.
 
 ```python
 import spacy
 
 nlp = spacy.blank("en")
-nlp.add_pipe(
-    "llm",
-    config={
-        "task": {
-            "@llm_tasks": "spacy.NER.v2",
-            "labels": ["PERSON", "ORGANISATION", "LOCATION"]
-        },
-        "model": {
-            "@llm_models": "spacy.GPT-3-5.v1",
-        },
-    },
-)
+llm_ner = nlp.add_pipe("llm_ner")
+llm_ner.add_label("PERSON")
+llm_ner.add_label("LOCATION")
 nlp.initialize()
 doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
 print([(ent.text, ent.label_) for ent in doc.ents])
@@ -314,7 +306,7 @@ COMPLIMENT
 
 ## API {id="api"}
 
-`spacy-llm` exposes a `llm` factory with
+`spacy-llm` exposes an `llm` factory with
 [configurable settings](/api/large-language-models#config).
 
 An `llm` component is defined by two main settings:
@@ -359,24 +351,26 @@ function.
 | [`task.parse_responses`](/api/large-language-models#task-parse-responses)   | Takes a collection of LLM responses and the original documents, parses the responses into structured information, and sets the annotations on the documents. |
 
 Moreover, the task may define an optional [`scorer` method](/api/scorer#score).
-It should accept an iterable of `Example`s as input and return a score
+It should accept an iterable of `Example` objects as input and return a score
 dictionary. If the `scorer` method is defined, `spacy-llm` will call it to
 evaluate the component.
 
-| Component                                                               | Description                                                                                                                                                           |
-| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`spacy.Summarization.v1`](/api/large-language-models#summarization-v1) | The summarization task prompts the model for a concise summary of the provided text.                                                                                  |
-| [`spacy.NER.v2`](/api/large-language-models#ner-v2)                     | The built-in NER task supports both zero-shot and few-shot prompting. This version also supports explicitly defining the provided labels with custom descriptions.    |
-| [`spacy.NER.v1`](/api/large-language-models#ner-v1)                     | The original version of the built-in NER task supports both zero-shot and few-shot prompting.                                                                         |
-| [`spacy.SpanCat.v2`](/api/large-language-models#spancat-v2)             | The built-in SpanCat task is a simple adaptation of the NER task to support overlapping entities and store its annotations in `doc.spans`.                            |
-| [`spacy.SpanCat.v1`](/api/large-language-models#spancat-v1)             | The original version of the built-in SpanCat task is a simple adaptation of the v1 NER task to support overlapping entities and store its annotations in `doc.spans`. |
-| [`spacy.TextCat.v3`](/api/large-language-models#textcat-v3)             | Version 3 (the most recent) of the built-in TextCat task supports both zero-shot and few-shot prompting. It allows setting definitions of labels.                     |
-| [`spacy.TextCat.v2`](/api/large-language-models#textcat-v2)             | Version 2 of the built-in TextCat task supports both zero-shot and few-shot prompting and includes an improved prompt template.                                       |
-| [`spacy.TextCat.v1`](/api/large-language-models#textcat-v1)             | Version 1 of the built-in TextCat task supports both zero-shot and few-shot prompting.                                                                                |
-| [`spacy.REL.v1`](/api/large-language-models#rel-v1)                     | The built-in REL task supports both zero-shot and few-shot prompting. It relies on an upstream NER component for entities extraction.                                 |
-| [`spacy.Lemma.v1`](/api/large-language-models#lemma-v1)                 | The `Lemma.v1` task lemmatizes the provided text and updates the `lemma_` attribute in the doc's tokens accordingly.                                                  |
-| [`spacy.Sentiment.v1`](/api/large-language-models#sentiment-v1)         | Performs sentiment analysis on provided texts.                                                                                                                        |
-| [`spacy.NoOp.v1`](/api/large-language-models#noop-v1)                   | This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`.                                                     |
+| Component                                                               | Description                                                                                                       |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [`spacy.Summarization.v1`](/api/large-language-models#summarization-v1) | The summarization task prompts the model for a concise summary of the provided text.                              |
+| [`spacy.NER.v3`](/api/large-language-models#ner-v3)                     | Implements Chain-of-Thought reasoning for NER extraction - obtains higher accuracy than v1 or v2.                 |
+| [`spacy.NER.v2`](/api/large-language-models#ner-v2)                     | Builds on v1 and additionally supports defining the provided labels with explicit descriptions.                   |
+| [`spacy.NER.v1`](/api/large-language-models#ner-v1)                     | The original version of the built-in NER task supports both zero-shot and few-shot prompting.                     |
+| [`spacy.SpanCat.v3`](/api/large-language-models#spancat-v3)             | Adaptation of the v3 NER task to support overlapping entities and store its annotations in `doc.spans`.           |
+| [`spacy.SpanCat.v2`](/api/large-language-models#spancat-v2)             | Adaptation of the v2 NER task to support overlapping entities and store its annotations in `doc.spans`.           |
+| [`spacy.SpanCat.v1`](/api/large-language-models#spancat-v1)             | Adaptation of the v1 NER task to support overlapping entities and store its annotations in `doc.spans`.           |
+| [`spacy.REL.v1`](/api/large-language-models#rel-v1)                     | Relation Extraction task supporting both zero-shot and few-shot prompting.                                        |
+| [`spacy.TextCat.v3`](/api/large-language-models#textcat-v3)             | Version 3 builds on v2 and allows setting definitions of labels.                                                  |
+| [`spacy.TextCat.v2`](/api/large-language-models#textcat-v2)             | Version 2 builds on v1 and includes an improved prompt template.                                                  |
+| [`spacy.TextCat.v1`](/api/large-language-models#textcat-v1)             | Version 1 of the built-in TextCat task supports both zero-shot and few-shot prompting.                            |
+| [`spacy.Lemma.v1`](/api/large-language-models#lemma-v1)                 | Lemmatizes the provided text and updates the `lemma_` attribute of the tokens accordingly.                        |
+| [`spacy.Sentiment.v1`](/api/large-language-models#sentiment-v1)         | Performs sentiment analysis on provided texts.                                                                    |
+| [`spacy.NoOp.v1`](/api/large-language-models#noop-v1)                   | This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`. |
 
 #### Providing examples for few-shot prompts {id="few-shot-prompts"}
 
@@ -469,31 +463,38 @@ provider's documentation.
 
 </Infobox>
 
-| Component                                                                      | Description                                                                          |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| [`spacy.GPT-4.v1`](/api/large-language-models#gpt-4)                           | OpenAI’s `gpt-4` model family.                                                       |
-| [`spacy.GPT-3-5.v1`](/api/large-language-models#gpt-3-5)                       | OpenAI’s `gpt-3-5` model family.                                                     |
-| [`spacy.Text-Davinci.v1`](/api/large-language-models#text-davinci)             | OpenAI’s `text-davinci` model family.                                                |
-| [`spacy.Code-Davinci.v1`](/api/large-language-models#code-davinci)             | OpenAI’s `code-davinci` model family.                                                |
-| [`spacy.Text-Curie.v1`](/api/large-language-models#text-curie)                 | OpenAI’s `text-curie` model family.                                                  |
-| [`spacy.Text-Babbage.v1`](/api/large-language-models#text-babbage)             | OpenAI’s `text-babbage` model family.                                                |
-| [`spacy.Text-Ada.v1`](/api/large-language-models#text-ada)                     | OpenAI’s `text-ada` model family.                                                    |
-| [`spacy.Davinci.v1`](/api/large-language-models#davinci)                       | OpenAI’s `davinci` model family.                                                     |
-| [`spacy.Curie.v1`](/api/large-language-models#curie)                           | OpenAI’s `curie` model family.                                                       |
-| [`spacy.Babbage.v1`](/api/large-language-models#babbage)                       | OpenAI’s `babbage` model family.                                                     |
-| [`spacy.Ada.v1`](/api/large-language-models#ada)                               | OpenAI’s `ada` model family.                                                         |
-| [`spacy.Command.v1`](/api/large-language-models#command)                       | Cohere’s `command` model family.                                                     |
-| [`spacy.Claude-1.v1`](/api/large-language-models#claude-1)                     | Anthropic’s `claude-1` model family.                                                 |
-| [`spacy.Claude-instant-1.v1`](/api/large-language-models#claude-instant-1)     | Anthropic’s `claude-instant-1` model family.                                         |
-| [`spacy.Claude-instant-1-1.v1`](/api/large-language-models#claude-instant-1-1) | Anthropic’s `claude-instant-1.1` model family.                                       |
-| [`spacy.Claude-1-0.v1`](/api/large-language-models#claude-1-0)                 | Anthropic’s `claude-1.0` model family.                                               |
-| [`spacy.Claude-1-2.v1`](/api/large-language-models#claude-1-2)                 | Anthropic’s `claude-1.2` model family.                                               |
-| [`spacy.Claude-1-3.v1`](/api/large-language-models#claude-1-3)                 | Anthropic’s `claude-1.3` model family.                                               |
-| [`spacy.Dolly.v1`](/api/large-language-models#dolly)                           | Dolly models through [Databricks](https://huggingface.co/databricks) on HuggingFace. |
-| [`spacy.Falcon.v1`](/api/large-language-models#falcon)                         | Falcon model through HuggingFace.                                                    |
-| [`spacy.StableLM.v1`](/api/large-language-models#stablelm)                     | StableLM model through HuggingFace.                                                  |
-| [`spacy.OpenLLaMA.v1`](/api/large-language-models#openllama)                   | OpenLLaMA model through HuggingFace.                                                 |
-| [LangChain models](/api/large-language-models#langchain-models)                | LangChain models for API retrieval.                                                  |
+| Model                                                                   | Description                                    |
+| ----------------------------------------------------------------------- | ---------------------------------------------- |
+| [`spacy.GPT-4.v2`](/api/large-language-models#models-rest)              | OpenAI’s `gpt-4` model family.                 |
+| [`spacy.GPT-3-5.v2`](/api/large-language-models#models-rest)            | OpenAI’s `gpt-3-5` model family.               |
+| [`spacy.Text-Davinci.v2`](/api/large-language-models#models-rest)       | OpenAI’s `text-davinci` model family.          |
+| [`spacy.Code-Davinci.v2`](/api/large-language-models#models-rest)       | OpenAI’s `code-davinci` model family.          |
+| [`spacy.Text-Curie.v2`](/api/large-language-models#models-rest)         | OpenAI’s `text-curie` model family.            |
+| [`spacy.Text-Babbage.v2`](/api/large-language-models#models-rest)       | OpenAI’s `text-babbage` model family.          |
+| [`spacy.Text-Ada.v2`](/api/large-language-models#models-rest)           | OpenAI’s `text-ada` model family.              |
+| [`spacy.Davinci.v2`](/api/large-language-models#models-rest)            | OpenAI’s `davinci` model family.               |
+| [`spacy.Curie.v2`](/api/large-language-models#models-rest)              | OpenAI’s `curie` model family.                 |
+| [`spacy.Babbage.v2`](/api/large-language-models#models-rest)            | OpenAI’s `babbage` model family.               |
+| [`spacy.Ada.v2`](/api/large-language-models#models-rest)                | OpenAI’s `ada` model family.                   |
+| [`spacy.Command.v1`](/api/large-language-models#models-rest)            | Cohere’s `command` model family.               |
+| [`spacy.Claude-2.v1`](/api/large-language-models#models-rest)           | Anthropic’s `claude-2` model family.           |
+| [`spacy.Claude-1.v1`](/api/large-language-models#models-rest)           | Anthropic’s `claude-1` model family.           |
+| [`spacy.Claude-instant-1.v1`](/api/large-language-models#models-rest)   | Anthropic’s `claude-instant-1` model family.   |
+| [`spacy.Claude-instant-1-1.v1`](/api/large-language-models#models-rest) | Anthropic’s `claude-instant-1.1` model family. |
+| [`spacy.Claude-1-0.v1`](/api/large-language-models#models-rest)         | Anthropic’s `claude-1.0` model family.         |
+| [`spacy.Claude-1-2.v1`](/api/large-language-models#models-rest)         | Anthropic’s `claude-1.2` model family.         |
+| [`spacy.Claude-1-3.v1`](/api/large-language-models#models-rest)         | Anthropic’s `claude-1.3` model family.         |
+| [`spacy.Dolly.v1`](/api/large-language-models#models-hf)                | Dolly models through HuggingFace.              |
+| [`spacy.Falcon.v1`](/api/large-language-models#models-hf)               | Falcon models through HuggingFace.             |
+| [`spacy.Llama2.v1`](/api/large-language-models#models-hf)               | Llama2 models through HuggingFace.             |
+| [`spacy.StableLM.v1`](/api/large-language-models#models-hf)             | StableLM models through HuggingFace.           |
+| [`spacy.OpenLLaMA.v1`](/api/large-language-models#models-hf)            | OpenLLaMA models through HuggingFace.          |
+| [LangChain models](/api/large-language-models#langchain-models)         | LangChain models for API retrieval.            |
+
+Note that the chat models variants of Llama 2 are currently not supported. This
+is because they need a particular prompting setup and don't add any discernible
+benefits in the use case of `spacy-llm` (i. e. no interactive chat) compared to
+the completion model variants.
 
 ### Cache {id="cache"}
 
@@ -505,7 +506,7 @@ documents at each run that keeps batches of documents stored on disk.
 
 ### Various functions {id="various-functions"}
 
-| Component                                                               | Description                                                                                                                                                                                                                                                                          |
+| Function                                                                | Description                                                                                                                                                                                                                                                                          |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [`spacy.FewShotReader.v1`](/api/large-language-models#fewshotreader-v1) | This function is registered in spaCy's `misc` registry, and reads in examples from a `.yml`, `.yaml`, `.json` or `.jsonl` file. It uses [`srsly`](https://github.com/explosion/srsly) to read in these files and parses them depending on the file extension.                        |
 | [`spacy.FileReader.v1`](/api/large-language-models#filereader-v1)       | This function is registered in spaCy's `misc` registry, and reads a file provided to the `path` to return a `str` representation of its contents. This function is typically used to read [Jinja](https://jinja.palletsprojects.com/en/3.1.x/) files containing the prompt template. |
