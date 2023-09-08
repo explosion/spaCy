@@ -31,7 +31,7 @@ as well as through task-specific component factories: `llm_ner`, `llm_spancat`, 
 > config = {"task": {"@llm_tasks": "spacy.NER.v3", "labels": ["PERSON", "ORGANISATION", "LOCATION"]}}
 > llm = nlp.add_pipe("llm", config=config)
 >
-> # Construction via add_pipe with task-specific factory and default GPT3.5 model
+> # Construction via add_pipe with a task-specific factory and default GPT3.5 model
 > llm = nlp.add_pipe("llm-ner")
 >
 > # Construction from class
