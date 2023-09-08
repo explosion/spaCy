@@ -19,26 +19,20 @@ prototyping** and **prompting**, and turning unstructured responses into
 An LLM component is implemented through the `LLMWrapper` class. It is accessible
 through a generic `llm`
 [component factory](https://spacy.io/usage/processing-pipelines#custom-components-factories)
-as well as through task-specific component factories:
-
-- `llm_ner`
-- `llm_spancat`
-- `llm_rel`
-- `llm_textcat`
-- `llm_sentiment`
-- `llm_summarization`
+as well as through task-specific component factories: `llm_ner`, `llm_spancat`, `llm_rel`,
+`llm_textcat`, `llm_sentiment` and `llm_summarization`.
 
 ### LLMWrapper.\_\_init\_\_ {id="init",tag="method"}
 
 > #### Example
 >
 > ```python
-> # Construction via add_pipe with default GPT3.5 model and NER task
+> # Construction via add_pipe with the default GPT 3.5 model and an explicitly defined task
 > config = {"task": {"@llm_tasks": "spacy.NER.v3", "labels": ["PERSON", "ORGANISATION", "LOCATION"]}}
-> llm = nlp.add_pipe("llm")
+> llm = nlp.add_pipe("llm", config=config)
 >
-> # Construction via add_pipe with task-specific factory and default GPT3.5 model
-> parser = nlp.add_pipe("llm-ner", config=config)
+> # Construction via add_pipe with a task-specific factory and default GPT3.5 model
+> llm = nlp.add_pipe("llm-ner")
 >
 > # Construction from class
 > from spacy_llm.pipeline import LLMWrapper
@@ -956,6 +950,8 @@ provider's API.
 > config = {"temperature": 0.0}
 > ```
 
+Currently, these models are provided as part of the core library:
+
 | Model                         | Provider  | Supported names                                                                          | Default name           | Default config                       |
 | ----------------------------- | --------- | ---------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------ |
 | `spacy.GPT-4.v1`              | OpenAI    | `["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]`                                 | `"gpt-4"`              | `{}`                                 |
@@ -1036,6 +1032,8 @@ These models all take the same parameters:
 > name = "llama2-7b-hf"
 > ```
 
+Currently, these models are provided as part of the core library:
+
 | Model                | Provider        | Supported names                                                                                              | HF directory                           |
 | -------------------- | --------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
 | `spacy.Dolly.v1`     | Databricks      | `["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"]`                                                             | https://huggingface.co/databricks      |
@@ -1043,8 +1041,6 @@ These models all take the same parameters:
 | `spacy.Falcon.v1`    | TII             | `["falcon-rw-1b", "falcon-7b", "falcon-7b-instruct", "falcon-40b-instruct"]`                                 | https://huggingface.co/tiiuae          |
 | `spacy.StableLM.v1`  | Stability AI    | `["stablelm-base-alpha-3b", "stablelm-base-alpha-7b", "stablelm-tuned-alpha-3b", "stablelm-tuned-alpha-7b"]` | https://huggingface.co/stabilityai     |
 | `spacy.OpenLLaMA.v1` | OpenLM Research | `["open_llama_3b", "open_llama_7b", "open_llama_7b_v2", "open_llama_13b"]`                                   | https://huggingface.co/openlm-research |
-
-See the "HF directory" for more details on each of the models.
 
 Note that Hugging Face will download the model the first time you use it - you
 can
