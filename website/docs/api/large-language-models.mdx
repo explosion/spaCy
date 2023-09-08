@@ -2,7 +2,7 @@
 title: Large Language Models
 teaser: Integrating LLMs into structured NLP pipelines
 menu:
-  - ['Config', 'config']
+  - ['Config and implementation', 'config']
   - ['Tasks', 'tasks']
   - ['Models', 'models']
   - ['Cache', 'cache']
@@ -14,49 +14,196 @@ Language Models (LLMs) into spaCy, featuring a modular system for **fast
 prototyping** and **prompting**, and turning unstructured responses into
 **robust outputs** for various NLP tasks, **no training data** required.
 
-## Config {id="config"}
+## Config and implementation {id="config"}
 
-`spacy-llm` exposes a `llm` factory that accepts the following configuration
-options:
+An LLM component is implemented through the `LLMWrapper` class. It is accessible
+through a generic `llm`
+[component factory](https://spacy.io/usage/processing-pipelines#custom-components-factories)
+as well as through task-specific component factories:
 
-| Argument         | Description                                                                                             |
-| ---------------- | ------------------------------------------------------------------------------------------------------- |
-| `task`           | An LLMTask can generate prompts and parse LLM responses. See [docs](#tasks). ~~Optional[LLMTask]~~      |
-| `model`          | Callable querying a specific LLM API. See [docs](#models). ~~Callable[[Iterable[Any]], Iterable[Any]]~~ |
-| `cache`          | Cache to use for caching prompts and responses per doc (batch). See [docs](#cache). ~~Cache~~           |
-| `save_io`        | Whether to save prompts/responses within `Doc.user_data["llm_io"]`. ~~bool~~                            |
-| `validate_types` | Whether to check if signatures of configured model and task are consistent. ~~bool~~                    |
+- `llm_ner`
+- `llm_spancat`
+- `llm_rel`
+- `llm_textcat`
+- `llm_sentiment`
+- `llm_summarization`
 
-Beyond that, an `llm_TASKNAME` factory is available for each task - `llm_ner` for
-an LLM component with the NER task, `llm_rel` for relationship extraction etc.
-These factories are equivalent to using the `llm` factory and defining the task
-in the configuration. Note: tasks may require more configuration than just
-the task factory - compare with the tasks' description below.
+### LLMWrapper.\_\_init\_\_ {id="init",tag="method"}
 
-An `llm` component is defined by two main settings:
+> #### Example
+>
+> ```python
+> # Construction via add_pipe with default GPT3.5 model and NER task
+> config = {"task": {"@llm_tasks": "spacy.NER.v3", "labels": ["PERSON", "ORGANISATION", "LOCATION"]}}
+> llm = nlp.add_pipe("llm")
+>
+> # Construction via add_pipe with task-specific factory and default GPT3.5 model
+> parser = nlp.add_pipe("llm-ner", config=config)
+>
+> # Construction from class
+> from spacy_llm.pipeline import LLMWrapper
+> llm = LLMWrapper(vocab=nlp.vocab, task=task, model=model, cache=cache, save_io=True)
+> ```
 
-- A [**task**](#tasks), defining the prompt to send to the LLM as well as the
-  functionality to parse the resulting response back into structured fields on
-  the [Doc](/api/doc) objects.
-- A [**model**](#models) defining the model and how to connect to it. Note that
-  `spacy-llm` supports both access to external APIs (such as OpenAI) as well as
-  access to self-hosted open-source LLMs (such as using Dolly through Hugging
-  Face).
+Create a new pipeline instance. In your application, you would normally use a
+shortcut for this and instantiate the component using its string name and
+[`nlp.add_pipe`](/api/language#add_pipe).
 
-Moreover, `spacy-llm` exposes a customizable [**caching**](#cache) functionality
-to avoid running the same document through an LLM service (be it local or
-through a REST API) more than once.
+| Name           | Description                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| `name`         | String name of the component instance. `llm` by default. ~~str~~                                   |
+| _keyword-only_ |                                                                                                    |
+| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                   |
+| `task`         | An [LLM Task](#tasks) can generate prompts and parse LLM responses. ~~LLMTask~~                    |
+| `model`        | The [LLM Model](#models) queries a specific LLM API.. ~~Callable[[Iterable[Any]], Iterable[Any]]~~ |
+| `cache`        | [Cache](#cache) to use for caching prompts and responses per doc. ~~Cache~~                        |
+| `save_io`      | Whether to save LLM I/O (prompts and responses) in the `Doc._.llm_io` custom attribute. ~~bool~~   |
 
-Finally, you can choose to save a stringified version of LLM prompts/responses
-within the `Doc.user_data["llm_io"]` attribute by setting `save_io` to `True`.
-`Doc.user_data["llm_io"]` is a dictionary containing one entry for every LLM
-component within the `nlp` pipeline. Each entry is itself a dictionary, with two
-keys: `prompt` and `response`.
+### LLMWrapper.\_\_call\_\_ {id="call",tag="method"}
 
-A note on `validate_types`: by default, `spacy-llm` checks whether the
-signatures of the `model` and `task` callables are consistent with each other
-and emits a warning if they don't. `validate_types` can be set to `False` if you
-want to disable this behavior.
+Apply the pipe to one document. The document is modified in place and returned.
+This usually happens under the hood when the `nlp` object is called on a text
+and all pipeline components are applied to the `Doc` in order.
+
+> #### Example
+>
+> ```python
+> doc = nlp("Ingrid visited Paris.")
+> llm_ner = nlp.add_pipe("llm_ner")
+> # This usually happens under the hood
+> processed = llm_ner(doc)
+> ```
+
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `doc`       | The document to process. ~~Doc~~ |
+| **RETURNS** | The processed document. ~~Doc~~  |
+
+### LLMWrapper.pipe {id="pipe",tag="method"}
+
+Apply the pipe to a stream of documents. This usually happens under the hood
+when the `nlp` object is called on a text and all pipeline components are
+applied to the `Doc` in order.
+
+> #### Example
+>
+> ```python
+> llm_ner = nlp.add_pipe("llm_ner")
+> for doc in llm_ner.pipe(docs, batch_size=50):
+>     pass
+> ```
+
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `docs`         | A stream of documents. ~~Iterable[Doc]~~                      |
+| _keyword-only_ |                                                               |
+| `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
+| **YIELDS**     | The processed documents in order. ~~Doc~~                     |
+
+### LLMWrapper.add_label {id="add_label",tag="method"}
+
+Add a new label to the pipe's task. Alternatively, provide the labels upon the
+[task](#task) definition, or through the `[initialize]` block of the
+[config](#config).
+
+> #### Example
+>
+> ```python
+> llm_ner = nlp.add_pipe("llm_ner")
+> llm_ner.add_label("MY_LABEL")
+> ```
+
+| Name        | Description                                                 |
+| ----------- | ----------------------------------------------------------- |
+| `label`     | The label to add. ~~str~~                                   |
+| **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
+
+### LLMWrapper.to_disk {id="to_disk",tag="method"}
+
+Serialize the pipe to disk.
+
+> #### Example
+>
+> ```python
+> llm_ner = nlp.add_pipe("llm_ner")
+> llm_ner.to_disk("/path/to/llm_ner")
+> ```
+
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
+
+### LLMWrapper.from_disk {id="from_disk",tag="method"}
+
+Load the pipe from disk. Modifies the object in place and returns it.
+
+> #### Example
+>
+> ```python
+> llm_ner = nlp.add_pipe("llm_ner")
+> llm_ner.from_disk("/path/to/llm_ner")
+> ```
+
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified `LLMWrapper` object. ~~LLMWrapper~~                                                |
+
+### LLMWrapper.to_bytes {id="to_bytes",tag="method"}
+
+> #### Example
+>
+> ```python
+> llm_ner = nlp.add_pipe("llm_ner")
+> ner_bytes = llm_ner.to_bytes()
+> ```
+
+Serialize the pipe to a bytestring.
+
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the `LLMWrapper` object. ~~bytes~~                                   |
+
+### LLMWrapper.from_bytes {id="from_bytes",tag="method"}
+
+Load the pipe from a bytestring. Modifies the object in place and returns it.
+
+> #### Example
+>
+> ```python
+> ner_bytes = llm_ner.to_bytes()
+> llm_ner = nlp.add_pipe("llm_ner")
+> llm_ner.from_bytes(ner_bytes)
+> ```
+
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `LLMWrapper` object. ~~LLMWrapper~~                                                     |
+
+### LLMWrapper.labels {id="labels",tag="property"}
+
+The labels currently added to the component. Empty tuple if the LLM's task does
+not require labels.
+
+> #### Example
+>
+> ```python
+> llm_ner.add_label("MY_LABEL")
+> assert "MY_LABEL" in llm_ner.labels
+> ```
+
+| Name        | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
 
 ## Tasks {id="tasks"}
 
@@ -168,8 +315,9 @@ The NER task identifies non-overlapping entities in text.
 Version 3 is fundamentally different to v1 and v2, as it implements
 Chain-of-Thought prompting, based on the
 [PromptNER paper](https://arxiv.org/pdf/2305.15444.pdf) by Ashok and Lipton
-(2023). From preliminary experiments, we've found this implementation to obtain
-significant better accuracy.
+(2023). On an internal use-case, we have found this implementation to obtain
+significant better accuracy - with an increase of F-score of up to 15 percentage
+points.
 
 > #### Example config
 >
