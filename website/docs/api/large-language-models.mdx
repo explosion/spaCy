@@ -205,7 +205,6 @@ not require labels.
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
 
-
 ## Tasks {id="tasks"}
 
 ### Task implementation {id="task-implementation"}
@@ -316,8 +315,9 @@ The NER task identifies non-overlapping entities in text.
 Version 3 is fundamentally different to v1 and v2, as it implements
 Chain-of-Thought prompting, based on the
 [PromptNER paper](https://arxiv.org/pdf/2305.15444.pdf) by Ashok and Lipton
-(2023). From preliminary experiments, we've found this implementation to obtain
-significant better accuracy.
+(2023). On an internal use-case, we have found this implementation to obtain
+significant better accuracy - with an increase of F-score of up to 15 percentage
+points.
 
 > #### Example config
 >
