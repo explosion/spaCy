@@ -1030,6 +1030,8 @@ These models all take the same parameters:
 > name = "llama2-7b-hf"
 > ```
 
+Currently, these models are provided as part of the core library:
+
 | Model                | Provider        | Supported names                                                                                              | HF directory                           |
 | -------------------- | --------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
 | `spacy.Dolly.v1`     | Databricks      | `["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"]`                                                             | https://huggingface.co/databricks      |
@@ -1037,8 +1039,6 @@ These models all take the same parameters:
 | `spacy.Falcon.v1`    | TII             | `["falcon-rw-1b", "falcon-7b", "falcon-7b-instruct", "falcon-40b-instruct"]`                                 | https://huggingface.co/tiiuae          |
 | `spacy.StableLM.v1`  | Stability AI    | `["stablelm-base-alpha-3b", "stablelm-base-alpha-7b", "stablelm-tuned-alpha-3b", "stablelm-tuned-alpha-7b"]` | https://huggingface.co/stabilityai     |
 | `spacy.OpenLLaMA.v1` | OpenLM Research | `["open_llama_3b", "open_llama_7b", "open_llama_7b_v2", "open_llama_13b"]`                                   | https://huggingface.co/openlm-research |
-
-See the "HF directory" for more details on each of the models.
 
 Note that Hugging Face will download the model the first time you use it - you
 can
