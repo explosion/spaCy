@@ -33,12 +33,12 @@ as well as through task-specific component factories:
 > #### Example
 >
 > ```python
-> # Construction via add_pipe with default GPT3.5 model and NER task
+> # Construction via add_pipe with the default GPT3.5 model and an explicitly defined task
 > config = {"task": {"@llm_tasks": "spacy.NER.v3", "labels": ["PERSON", "ORGANISATION", "LOCATION"]}}
-> llm = nlp.add_pipe("llm")
+> llm = nlp.add_pipe("llm", config=config)
 >
 > # Construction via add_pipe with task-specific factory and default GPT3.5 model
-> parser = nlp.add_pipe("llm-ner", config=config)
+> llm = nlp.add_pipe("llm-ner")
 >
 > # Construction from class
 > from spacy_llm.pipeline import LLMWrapper
