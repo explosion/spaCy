@@ -1,4 +1,4 @@
-# cython: infer_types=True, bounds_check=False, profile=True
+# cython: infer_types=True, bounds_check=False
 from cymem.cymem cimport Pool
 from libc.string cimport memset
 

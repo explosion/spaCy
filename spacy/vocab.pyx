@@ -1,4 +1,3 @@
-# cython: profile=True
 import functools
 
 import numpy

@@ -1,4 +1,4 @@
-# cython: infer_types=True, bounds_check=False, profile=True
+# cython: infer_types=True, bounds_check=False
 from typing import Set
 
 cimport cython

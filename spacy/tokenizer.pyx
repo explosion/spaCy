@@ -1,4 +1,4 @@
-# cython: embedsignature=True, profile=True, binding=True
+# cython: embedsignature=True, binding=True
 cimport cython
 from cymem.cymem cimport Pool
 from cython.operator cimport dereference as deref
