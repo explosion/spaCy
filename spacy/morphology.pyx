@@ -1,4 +1,5 @@
 # cython: infer_types
+# cython: profile=False
 import warnings
 
 import numpy

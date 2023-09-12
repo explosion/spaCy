@@ -1,4 +1,5 @@
 # cython: optimize.unpack_method_calls=False
+# cython: profile=False
 IDS = {
     "": NIL,
     "IS_ALPHA": IS_ALPHA,

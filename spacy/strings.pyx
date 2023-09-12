@@ -1,4 +1,5 @@
 # cython: infer_types=True
+# cython: profile=False
 cimport cython
 from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
