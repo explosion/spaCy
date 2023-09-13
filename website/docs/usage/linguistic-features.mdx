@@ -1299,9 +1299,9 @@ correct type.
 
 ```python {title="functions.py",highlight="1"}
 @spacy.registry.tokenizers("bert_word_piece_tokenizer")
-def create_whitespace_tokenizer(vocab_file: str, lowercase: bool):
+def create_bert_tokenizer(vocab_file: str, lowercase: bool):
     def create_tokenizer(nlp):
-        return BertWordPieceTokenizer(nlp.vocab, vocab_file, lowercase)
+        return BertTokenizer(nlp.vocab, vocab_file, lowercase)
 
     return create_tokenizer
 ```
