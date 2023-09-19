@@ -170,8 +170,8 @@ to be `"databricks/dolly-v2-12b"` for better performance.
 ### Example 3: Create the component directly in Python {id="example-3"}
 
 The `llm` component behaves as any other component does, and there are
-[task-specific components](/api/large-language-models#config) defined to
-help you hit the ground running with a reasonable built-in task implementation.
+[task-specific components](/api/large-language-models#config) defined to help
+you hit the ground running with a reasonable built-in task implementation.
 
 ```python
 import spacy
@@ -357,6 +357,7 @@ evaluate the component.
 
 | Component                                                               | Description                                                                                                       |
 | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [`spacy.EL.v1`](/api/large-language-models#summarization-v1)            | The entity linking task prompts the model to link all entities in a given text to entries in a knowledge base.    |
 | [`spacy.Summarization.v1`](/api/large-language-models#summarization-v1) | The summarization task prompts the model for a concise summary of the provided text.                              |
 | [`spacy.NER.v3`](/api/large-language-models#ner-v3)                     | Implements Chain-of-Thought reasoning for NER extraction - obtains higher accuracy than v1 or v2.                 |
 | [`spacy.NER.v2`](/api/large-language-models#ner-v2)                     | Builds on v1 and additionally supports defining the provided labels with explicit descriptions.                   |

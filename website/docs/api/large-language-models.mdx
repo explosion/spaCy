@@ -19,8 +19,8 @@ prototyping** and **prompting**, and turning unstructured responses into
 An LLM component is implemented through the `LLMWrapper` class. It is accessible
 through a generic `llm`
 [component factory](https://spacy.io/usage/processing-pipelines#custom-components-factories)
-as well as through task-specific component factories: `llm_ner`, `llm_spancat`, `llm_rel`,
-`llm_textcat`, `llm_sentiment` and `llm_summarization`.
+as well as through task-specific component factories: `llm_ner`, `llm_spancat`,
+`llm_rel`, `llm_textcat`, `llm_sentiment` and `llm_summarization`.
 
 ### LLMWrapper.\_\_init\_\_ {id="init",tag="method"}
 
@@ -299,6 +299,87 @@ max_n_words = 20
 @misc = "spacy.FewShotReader.v1"
 path = "summarization_examples.yml"
 ```
+
+### EL (Entity Linking) {id="nel"}
+
+The EL links recognized entities (see [NER](#ner)) against a provided knowledge
+base (KB). The EL task prompts the LLM to choose a shortlist of (the most
+likely) candidates from the KB. How this KB looks like and stores data can be
+arbitrary.
+
+Note that the documents run through the entity linking task are expected to have
+recognized entities in `.ents`. This can be achieved by - prior to running the
+EL task - running the [NER task](#ner), a trained spaCy NER model or by setting
+your docs' entities manually.
+
+In order to be able to pull data from the KB, an object implementing the
+`CandidateSelector` protocol has to be provided. This requires two functions:
+(1) `__call__()` to fetch candidate entities for entity mentions in the text
+(assumed to be available in `Doc.ents`) and (2) `get_entity_description()` to
+fetch descriptions for any given entity ID. Descriptions can be empty, but
+ideally provide more context for entities stored in the KB.
+
+`spacy-llm` provides a `CandidateSelector` implementation
+(`spacy.CandidateSelector.v1`) that leverages a spaCy pipeline with an
+`entity_linking` component to select candidates. Note that this pipeline doesn't
+have to provide a trained EL model, merely its default (or custom) candidate
+selection capabilities.
+
+#### spacy.EL.v1 {id="el-v1"}
+
+Supports zero- and few-shot prompting.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.EntityLinker.v1"
+>
+> [initialize]
+> [initialize.components]
+> [initialize.components.llm]
+> [initialize.components.llm.candidate_selector]
+> @llm_misc = "spacy.CandidateSelector.v1"
+> nlp_path = ${paths.el_nlp}
+> desc_path = ${paths.el_desc}
+> ```
+
+| Argument              | Description                                                                                                                                                                             |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`            | Custom prompt template to send to LLM model. Defaults to [ner.v3.jinja](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/ner.v3.jinja). ~~str~~               |
+| `parse_responses`     | Callable for parsing LLM responses for this task. Defaults to the internal parsing method for this task. ~~Optional[TaskResponseParser[EntityLinkerTask]]~~                             |
+| `prompt_example_type` | Type to use for fewshot examples. Defaults to `ELExample`. ~~Optional[Type[FewshotExample]]~~                                                                                           |
+| `examples`            | Optional callable that reads a file containing task examples for few-shot learning. If None is passed, then zero-shot learning will be used. Defaults to `None`. ~~ExamplesConfigType~~ |
+| `scorer`              | Scorer function. Defaults to the metric used by spaCy to evaluate entity linking performance. ~~Optional[Scorer]~~                                                                      |
+
+##### spacy.CandidateSelector.v1 {id="candidate-selector-v1"}
+
+`spacy.CandidateSelector.v1` is an implementation of the `CandidateSelector`
+protocol required by [`spacy.EL.v1`](#el-v1). The built-in candidate selector
+method leverages a spaCy pipeline with an entity linking component. The
+pipeline's EL component's candidate selection capabilities are used to select
+the most likely entity candidates for the specified mentions.
+
+> ##### Example config
+>
+> ```ini
+> [initialize]
+> [initialize.components]
+> [initialize.components.llm]
+> [initialize.components.llm.candidate_selector]
+> @llm_misc = "spacy.CandidateSelector.v1"
+> nlp_path = ${paths.el_nlp}
+> desc_path = ${paths.el_desc}
+> top_n = 3
+> ```
+
+| Argument            | Description                                                                                                                                                                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nlp_path`          | Path to stored spaCy pipeline. ~~Union[Path, str]~~                                                                                                                                                                                                      |
+| `desc_path`         | Path to .csv file with descriptions for entities. Has to have two columns with the first one being the entity ID, the second one being the description. The entity ID has to match with the entity ID in the stored knowledge base. ~~Union[Path, str]~~ |
+| `el_component_name` | Name of EL component in spaCy pipeline loaded from `nlp_path`. Defaults to `entity_linker`. ~~str~~                                                                                                                                                      |
+| `top_n`             | Top n candidates to include in prompt. Defaults to 5. ~~int~~                                                                                                                                                                                            |
+| `ent_desc_reader`   | Entity description reader. Defaults to an internal method expecting a CSV file without header row, with ";" as delimiters, and with two columns - one for the entitys' IDs, one for their descriptions. ~~Optional[Scorer]~~                             |
 
 ### NER {id="ner"}
 
