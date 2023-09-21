@@ -1080,6 +1080,21 @@ Currently, these models are provided as part of the core library:
 | `spacy.StableLM.v1`  | Stability AI    | `["stablelm-base-alpha-3b", "stablelm-base-alpha-7b", "stablelm-tuned-alpha-3b", "stablelm-tuned-alpha-7b"]` | https://huggingface.co/stabilityai     |
 | `spacy.OpenLLaMA.v1` | OpenLM Research | `["open_llama_3b", "open_llama_7b", "open_llama_7b_v2", "open_llama_13b"]`                                   | https://huggingface.co/openlm-research |
 
+<Infobox variant="warning" title="Gated models on Hugging Face" id="hf_licensing">
+
+Some models available on Hugging Face (HF), such as Llama 2, are _gated models_.
+That means that users have to fulfill certain requirements to be allowed access
+to these models. In the case of Llama 2 you'll need to request agree to Meta's
+Terms of Service while logged in with your HF account. After Meta grants you
+permission to use Llama 2, you'll be able to download and use the model.
+
+This requires that you are logged in with your HF account on your local
+machine - check out the HF quick start documentation. In a nutshell, you'll need
+to create an access token on HF and log in to HF using your access token, e. g.
+with `huggingface-cli login`.
+
+</Infobox>
+
 Note that Hugging Face will download the model the first time you use it - you
 can
 [define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
