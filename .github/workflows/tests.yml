@@ -58,7 +58,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python_version: ["3.11"]
+        python_version: ["3.11", "3.12.0-rc.2"]
         include:
           - os: windows-latest
             python_version: "3.7"
