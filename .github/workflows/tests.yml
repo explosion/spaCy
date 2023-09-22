@@ -93,6 +93,7 @@ jobs:
       - name: Run mypy
         run: |
           python -m mypy spacy
+        if: matrix.python_version != '3.7'
 
       - name: Delete source directory and .egg-info
         run: |
