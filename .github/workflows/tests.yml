@@ -60,8 +60,6 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python_version: ["3.11"]
         include:
-          - os: ubuntu-20.04
-            python_version: "3.6"
           - os: windows-latest
             python_version: "3.7"
           - os: macos-latest
@@ -95,7 +93,6 @@ jobs:
       - name: Run mypy
         run: |
           python -m mypy spacy
-        if: matrix.python_version != '3.6'
 
       - name: Delete source directory and .egg-info
         run: |
