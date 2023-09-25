@@ -1197,7 +1197,7 @@ $ python -m spacy benchmark accuracy [model] [data_path] [--output] [--code] [--
 | `--displacy-path`, `-dp`                             | Directory to output rendered parses as HTML. If not set, no visualizations will be generated. ~~Optional[Path] \(option)~~                                                           |
 | `--displacy-limit`, `-dl`                            | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. ~~int (option)~~            |
 | `--per-component`, `-P` <Tag variant="new">3.6</Tag> | Whether to return the scores keyed by component name. Defaults to `False`. ~~bool (flag)~~                                                                                           |
-| `--spans-key`, `-sk`                                 | Spans key to use when evaluating `Doc.spans`. Defaults to `sc`. ~~str (option)~~                                                                                                     |
+| `--spans-key`, `-sk` <Tag variant="new">3.6.2</Tag>  | Spans key to use when evaluating `Doc.spans`. Defaults to `sc`. ~~str (option)~~                                                                                                     |
 | `--help`, `-h`                                       | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                                          | Training results and optional metrics and visualizations.                                                                                                                            |
 
