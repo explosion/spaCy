@@ -3,7 +3,12 @@ import os
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
+
+try:
+    from pydantic.v1 import ValidationError
+except ImportError:
+    from pydantic import ValidationError  # type: ignore
+
 from thinc.api import (
     Config,
     ConfigValidationError,

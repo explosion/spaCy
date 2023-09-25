@@ -7,6 +7,7 @@ menu:
   - ['info', 'info']
   - ['validate', 'validate']
   - ['init', 'init']
+  - ['find-function', 'find-function']
   - ['convert', 'convert']
   - ['debug', 'debug']
   - ['train', 'train']
@@ -273,6 +274,27 @@ $ python -m spacy init labels [config_path] [output_path] [--code] [--verbose] [
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **CREATES**       | The label files.                                                                                                                                                                                                   |
+
+## find-function {id="find-function",version="3.7",tag="command"}
+
+Find the module, path and line number to the file for a given registered
+function. This functionality is helpful to understand where registered
+functions, as used in the config file, are defined.
+
+```bash
+$ python -m spacy find-function [func_name] [--registry]
+```
+
+> #### Example
+>
+> ```bash
+> $ python -m spacy find-function spacy.TextCatBOW.v1
+> ```
+
+| Name               | Description                                           |
+| ------------------ | ----------------------------------------------------- |
+| `func_name`        | Name of the registered function. ~~str (positional)~~ |
+| `--registry`, `-r` | Name of the catalogue registry. ~~str (option)~~      |
 
 ## convert {id="convert",tag="command"}
 

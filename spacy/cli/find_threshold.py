@@ -52,8 +52,8 @@ def find_threshold_cli(
 
     DOCS: https://spacy.io/api/cli#find-threshold
     """
-
-    util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    if verbose:
+        util.logger.setLevel(logging.DEBUG)
     import_code(code_path)
     find_threshold(
         model=model,
