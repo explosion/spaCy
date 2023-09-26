@@ -4483,10 +4483,10 @@
                 "import spacy",
                 "nlp = spacy.load(\"ro_legal_fl\")",
                 "",
-                "doc = nlp(\"Titlul III din LEGEA nr. 255 din 19 iulie 2013, publicată în MONITORUL OFICIAL\")"
-                "# legal entity identification"
-                "for entity in doc.ents:"
-                "    print('entity: ', entity, '; entity type: ', entity.label_)"
+                "doc = nlp(\"Titlul III din LEGEA nr. 255 din 19 iulie 2013, publicată în MONITORUL OFICIAL\")",
+                "# legal entity identification",
+                "for entity in doc.ents:",
+                "    print('entity: ', entity, '; entity type: ', entity.label_)",
                 "",
                 "# floret n-gram embeddings robust to typos",
                 "print(nlp('achizit1e public@').similarity(nlp('achiziții publice')))"
