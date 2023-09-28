@@ -4472,10 +4472,10 @@
         },
         {
             "id": "rolegal",
-            "title": "A Spacy Package for Romanian Legal Document Processing",
+            "title": "A spaCy Package for Romanian Legal Document Processing",
             "thumb": "https://raw.githubusercontent.com/senisioi/rolegal/main/img/paper200x200.jpeg",
-            "slogan": "rolegal: a Spacy Package for Noisy Romanian Legal Document Processing",
-            "description": "This is a spacy language model for Romanian legal domain trained with floret 4-gram to 5-gram embeddings and `LEGAL` entity recognition. Useful for processing OCR-resulted noisy legal documents.",
+            "slogan": "rolegal: a spaCy Package for Noisy Romanian Legal Document Processing",
+            "description": "This is a spaCy language model for Romanian legal domain trained with floret 4-gram to 5-gram embeddings and `LEGAL` entity recognition. Useful for processing OCR-resulted noisy legal documents.",
             "github": "senisioi/rolegal",
             "pip": "ro-legal-fl",
             "tags": ["legal", "floret", "ner", "romanian"],
