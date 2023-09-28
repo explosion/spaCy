@@ -981,6 +981,8 @@ class Errors(metaclass=ErrorsWithCodes):
              " 'min_length': {min_length}, 'max_length': {max_length}")
     E1054 = ("The text, including whitespace, must match between reference and "
              "predicted docs when training {component}.")
+    E1055 = ("To use the `llm` component, `spacy-llm` needs to be installed. `spacy-llm` was not found in your "
+             "environment, install it with `pip install spacy-llm`.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

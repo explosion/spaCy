@@ -628,7 +628,6 @@ def test_parse_cli_overrides():
     "pipeline",
     [
         ["tagger", "parser", "ner"],
-        [],
         ["ner", "textcat", "sentencizer"],
         ["morphologizer", "spancat", "entity_linker"],
         ["spancat_singlelabel", "textcat_multilabel"],
@@ -648,6 +647,26 @@ def test_init_config(lang, pipeline, optimize, pretraining):
     assert isinstance(config, Config)
     if pretraining:
         config["paths"]["raw_text"] = "my_data.jsonl"
+    load_model_from_config(config, auto_fill=True)
+
+
+@pytest.mark.parametrize("pipeline", [["llm"]])
+@pytest.mark.parametrize("llm_model", ["noop"])
+@pytest.mark.parametrize("llm_task", ["ner", "sentiment"])
+def test_init_config_llm(pipeline, llm_model, llm_task):
+    config = init_config(
+        lang="en",
+        pipeline=pipeline,
+        llm_model=llm_model,
+        llm_task=llm_task,
+        optimize="accuracy",
+        pretraining=False,
+        gpu=False,
+    )
+    assert isinstance(config, Config)
+    assert len(config["components"]) == 1
+    assert "llm" in config["components"]
+
     load_model_from_config(config, auto_fill=True)
 
 
