@@ -313,6 +313,8 @@ class DependencyRenderer:
                 self.lang = settings.get("lang", DEFAULT_LANG)
             render_id = f"{id_prefix}-{i}"
             svg = self.render_svg(render_id, p["words"], p["arcs"])
+            if p.get("title"):
+                svg = TPL_TITLE.format(title=p.get("title")) + svg
             rendered.append(svg)
         if page:
             content = "".join([TPL_FIGURE.format(content=svg) for svg in rendered])
@@ -565,7 +567,7 @@ class EntityRenderer:
             for i, fragment in enumerate(fragments):
                 markup += escape_html(fragment)
                 if len(fragments) > 1 and i != len(fragments) - 1:
-                    markup += "</br>"
+                    markup += "<br>"
             if self.ents is None or label.upper() in self.ents:
                 color = self.colors.get(label.upper(), self.default_color)
                 ent_settings = {
@@ -583,7 +585,7 @@ class EntityRenderer:
         for i, fragment in enumerate(fragments):
             markup += escape_html(fragment)
             if len(fragments) > 1 and i != len(fragments) - 1:
-                markup += "</br>"
+                markup += "<br>"
         markup = TPL_ENTS.format(content=markup, dir=self.direction)
         if title:
             markup = TPL_TITLE.format(title=title) + markup

@@ -244,7 +244,7 @@ tagging pipeline. This is also why the pipeline state is always held by the
 together and returns an instance of `Language` with a pipeline set and access to
 the binary data:
 
-```python {title="spacy.load under the hood"}
+```python {title="spacy.load under the hood (abstract example)"}
 lang = "en"
 pipeline = ["tok2vec", "tagger", "parser", "ner", "attribute_ruler", "lemmatizer"]
 data_path = "path/to/en_core_web_sm/en_core_web_sm-3.0.0"
@@ -252,7 +252,7 @@ data_path = "path/to/en_core_web_sm/en_core_web_sm-3.0.0"
 cls = spacy.util.get_lang_class(lang)  # 1. Get Language class, e.g. English
 nlp = cls()                            # 2. Initialize it
 for name in pipeline:
-    nlp.add_pipe(name)                 # 3. Add the component to the pipeline
+    nlp.add_pipe(name, config={...})   # 3. Add the component to the pipeline
 nlp.from_disk(data_path)               # 4. Load in the binary data
 ```
 

@@ -894,7 +894,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
     if "spacy_version" in meta:
         if not is_compatible_version(about.__version__, meta["spacy_version"]):
             lower_version = get_model_lower_version(meta["spacy_version"])
-            lower_version = get_minor_version(lower_version)  # type: ignore[arg-type]
+            lower_version = get_base_version(lower_version)  # type: ignore[arg-type]
             if lower_version is not None:
                 lower_version = "v" + lower_version
             elif "spacy_git_version" in meta:

@@ -12,6 +12,7 @@ from thinc.api import Config
 
 import spacy
 from spacy import about
+from spacy import info as spacy_info
 from spacy.cli import info
 from spacy.cli._util import parse_config_overrides, string_to_list, walk_directory
 from spacy.cli.apply import apply
@@ -190,6 +191,9 @@ def test_cli_info():
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
         raw_data = info(tmp_dir, exclude=[""])
+        assert raw_data["lang"] == "nl"
+        assert raw_data["components"] == ["textcat"]
+        raw_data = spacy_info(tmp_dir, exclude=[""])
         assert raw_data["lang"] == "nl"
         assert raw_data["components"] == ["textcat"]
 
