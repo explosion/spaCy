@@ -63,7 +63,7 @@ def create_plain_text_reader(
     path: Optional[Path],
     min_length: int = 0,
     max_length: int = 0,
-) -> Callable[["Language"], Iterable[Doc]]:
+) -> Callable[["Language"], Iterable[Example]]:
     """Iterate Example objects from a file or directory of plain text
     UTF-8 files with one line per doc.
 

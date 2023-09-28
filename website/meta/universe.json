@@ -4469,6 +4469,37 @@
             },
             "category": ["pipeline", "standalone"],
             "tags": ["spans", "rules", "ner"]
+        },
+        {
+            "id": "rolegal",
+            "title": "A spaCy Package for Romanian Legal Document Processing",
+            "thumb": "https://raw.githubusercontent.com/senisioi/rolegal/main/img/paper200x200.jpeg",
+            "slogan": "rolegal: a spaCy Package for Noisy Romanian Legal Document Processing",
+            "description": "This is a spaCy language model for Romanian legal domain trained with floret 4-gram to 5-gram embeddings and `LEGAL` entity recognition. Useful for processing OCR-resulted noisy legal documents.",
+            "github": "senisioi/rolegal",
+            "pip": "ro-legal-fl",
+            "tags": ["legal", "floret", "ner", "romanian"],
+            "code_example": [
+                "import spacy",
+                "nlp = spacy.load(\"ro_legal_fl\")",
+                "",
+                "doc = nlp(\"Titlul III din LEGEA nr. 255 din 19 iulie 2013, publicată în MONITORUL OFICIAL\")",
+                "# legal entity identification",
+                "for entity in doc.ents:",
+                "    print('entity: ', entity, '; entity type: ', entity.label_)",
+                "",
+                "# floret n-gram embeddings robust to typos",
+                "print(nlp('achizit1e public@').similarity(nlp('achiziții publice')))",
+                "# 0.7393895566928835",
+                "print(nlp('achizitii publice').similarity(nlp('achiziții publice')))",
+                "# 0.8996480808279399"
+            ],
+            "author": "Sergiu Nisioi",
+            "author_links": {
+                "github": "senisioi",
+                "website": "https://nlp.unibuc.ro/people/snisioi.html"
+            },
+            "category": ["pipeline", "training", "models"]
         }
     ],
 

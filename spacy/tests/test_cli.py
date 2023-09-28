@@ -1,31 +1,20 @@
 import math
 import os
-import time
 from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-import numpy
 import pytest
 import srsly
 from click import NoSuchOption
 from packaging.specifiers import SpecifierSet
-from thinc.api import Config, ConfigValidationError
+from thinc.api import Config
 
 import spacy
 from spacy import about
+from spacy import info as spacy_info
 from spacy.cli import info
-from spacy.cli._util import (
-    download_file,
-    is_subpath_of,
-    load_project_config,
-    parse_config_overrides,
-    string_to_list,
-    substitute_project_variables,
-    upload_file,
-    validate_project_commands,
-    walk_directory,
-)
+from spacy.cli._util import parse_config_overrides, string_to_list, walk_directory
 from spacy.cli.apply import apply
 from spacy.cli.debug_data import (
     _compile_gold,
@@ -43,13 +32,11 @@ from spacy.cli.find_threshold import find_threshold
 from spacy.cli.init_config import RECOMMENDATIONS, fill_config, init_config
 from spacy.cli.init_pipeline import _init_labels
 from spacy.cli.package import _is_permitted_package_name, get_third_party_dependencies
-from spacy.cli.project.remote_storage import RemoteStorage
-from spacy.cli.project.run import _check_requirements
 from spacy.cli.validate import get_model_pkgs
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import Language
-from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
+from spacy.schemas import RecommendationSchema
 from spacy.tokens import Doc, DocBin
 from spacy.tokens.span import Span
 from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
@@ -134,25 +121,6 @@ def test_issue7055():
     assert "model" in filled_cfg["components"]["ner"]
 
 
-@pytest.mark.issue(11235)
-def test_issue11235():
-    """
-    Test that the cli handles interpolation in the directory names correctly when loading project config.
-    """
-    lang_var = "en"
-    variables = {"lang": lang_var}
-    commands = [{"name": "x", "script": ["hello ${vars.lang}"]}]
-    directories = ["cfg", "${vars.lang}_model"]
-    project = {"commands": commands, "vars": variables, "directories": directories}
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d)
-        # Check that the directories are interpolated and created correctly
-        assert os.path.exists(d / "cfg")
-        assert os.path.exists(d / f"{lang_var}_model")
-    assert cfg["commands"][0]["script"][0] == f"hello {lang_var}"
-
-
 @pytest.mark.issue(12566)
 @pytest.mark.parametrize(
     "factory,output_file",
@@ -223,6 +191,9 @@ def test_cli_info():
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
         raw_data = info(tmp_dir, exclude=[""])
+        assert raw_data["lang"] == "nl"
+        assert raw_data["components"] == ["textcat"]
+        raw_data = spacy_info(tmp_dir, exclude=[""])
         assert raw_data["lang"] == "nl"
         assert raw_data["components"] == ["textcat"]
 
@@ -443,136 +414,6 @@ def test_cli_converters_conll_ner_to_docs():
         assert ent.text in ["New York City", "London"]
 
 
-def test_project_config_validation_full():
-    config = {
-        "vars": {"some_var": 20},
-        "directories": ["assets", "configs", "corpus", "scripts", "training"],
-        "assets": [
-            {
-                "dest": "x",
-                "extra": True,
-                "url": "https://example.com",
-                "checksum": "63373dd656daa1fd3043ce166a59474c",
-            },
-            {
-                "dest": "y",
-                "git": {
-                    "repo": "https://github.com/example/repo",
-                    "branch": "develop",
-                    "path": "y",
-                },
-            },
-            {
-                "dest": "z",
-                "extra": False,
-                "url": "https://example.com",
-                "checksum": "63373dd656daa1fd3043ce166a59474c",
-            },
-        ],
-        "commands": [
-            {
-                "name": "train",
-                "help": "Train a model",
-                "script": ["python -m spacy train config.cfg -o training"],
-                "deps": ["config.cfg", "corpus/training.spcy"],
-                "outputs": ["training/model-best"],
-            },
-            {"name": "test", "script": ["pytest", "custom.py"], "no_skip": True},
-        ],
-        "workflows": {"all": ["train", "test"], "train": ["train"]},
-    }
-    errors = validate(ProjectConfigSchema, config)
-    assert not errors
-
-
-@pytest.mark.parametrize(
-    "config",
-    [
-        {"commands": [{"name": "a"}, {"name": "a"}]},
-        {"commands": [{"name": "a"}], "workflows": {"a": []}},
-        {"commands": [{"name": "a"}], "workflows": {"b": ["c"]}},
-    ],
-)
-def test_project_config_validation1(config):
-    with pytest.raises(SystemExit):
-        validate_project_commands(config)
-
-
-@pytest.mark.parametrize(
-    "config,n_errors",
-    [
-        ({"commands": {"a": []}}, 1),
-        ({"commands": [{"help": "..."}]}, 1),
-        ({"commands": [{"name": "a", "extra": "b"}]}, 1),
-        ({"commands": [{"extra": "b"}]}, 2),
-        ({"commands": [{"name": "a", "deps": [123]}]}, 1),
-    ],
-)
-def test_project_config_validation2(config, n_errors):
-    errors = validate(ProjectConfigSchema, config)
-    assert len(errors) == n_errors
-
-
-@pytest.mark.parametrize(
-    "int_value",
-    [10, pytest.param("10", marks=pytest.mark.xfail)],
-)
-def test_project_config_interpolation(int_value):
-    variables = {"a": int_value, "b": {"c": "foo", "d": True}}
-    commands = [
-        {"name": "x", "script": ["hello ${vars.a} ${vars.b.c}"]},
-        {"name": "y", "script": ["${vars.b.c} ${vars.b.d}"]},
-    ]
-    project = {"commands": commands, "vars": variables}
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d)
-    assert type(cfg) == dict
-    assert type(cfg["commands"]) == list
-    assert cfg["commands"][0]["script"][0] == "hello 10 foo"
-    assert cfg["commands"][1]["script"][0] == "foo true"
-    commands = [{"name": "x", "script": ["hello ${vars.a} ${vars.b.e}"]}]
-    project = {"commands": commands, "vars": variables}
-    with pytest.raises(ConfigValidationError):
-        substitute_project_variables(project)
-
-
-@pytest.mark.parametrize(
-    "greeting",
-    [342, "everyone", "tout le monde", pytest.param("42", marks=pytest.mark.xfail)],
-)
-def test_project_config_interpolation_override(greeting):
-    variables = {"a": "world"}
-    commands = [
-        {"name": "x", "script": ["hello ${vars.a}"]},
-    ]
-    overrides = {"vars.a": greeting}
-    project = {"commands": commands, "vars": variables}
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d, overrides=overrides)
-    assert type(cfg) == dict
-    assert type(cfg["commands"]) == list
-    assert cfg["commands"][0]["script"][0] == f"hello {greeting}"
-
-
-def test_project_config_interpolation_env():
-    variables = {"a": 10}
-    env_var = "SPACY_TEST_FOO"
-    env_vars = {"foo": env_var}
-    commands = [{"name": "x", "script": ["hello ${vars.a} ${env.foo}"]}]
-    project = {"commands": commands, "vars": variables, "env": env_vars}
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d)
-    assert cfg["commands"][0]["script"][0] == "hello 10 "
-    os.environ[env_var] = "123"
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d)
-    assert cfg["commands"][0]["script"][0] == "hello 10 123"
-
-
 @pytest.mark.parametrize(
     "args,expected",
     [
@@ -697,6 +538,7 @@ def test_string_to_list_intify(value):
     assert string_to_list(value, intify=True) == [1, 2, 3]
 
 
+@pytest.mark.skip(reason="Temporarily skip before 3.7 models are published")
 def test_download_compatibility():
     spec = SpecifierSet("==" + about.__version__)
     spec.prereleases = False
@@ -707,6 +549,7 @@ def test_download_compatibility():
         assert get_minor_version(about.__version__) == get_minor_version(version)
 
 
+@pytest.mark.skip(reason="Temporarily skip before 3.7 models are published")
 def test_validate_compatibility_table():
     spec = SpecifierSet("==" + about.__version__)
     spec.prereleases = False
@@ -780,21 +623,6 @@ def test_get_third_party_dependencies():
     nlp.add_pipe("third_party_test")
     # Before #9674 this would throw an exception
     get_third_party_dependencies(nlp.config)
-
-
-@pytest.mark.parametrize(
-    "parent,child,expected",
-    [
-        ("/tmp", "/tmp", True),
-        ("/tmp", "/", False),
-        ("/tmp", "/tmp/subdir", True),
-        ("/tmp", "/tmpdir", False),
-        ("/tmp", "/tmp/subdir/..", True),
-        ("/tmp", "/tmp/..", False),
-    ],
-)
-def test_is_subpath_of(parent, child, expected):
-    assert is_subpath_of(parent, child) == expected
 
 
 @pytest.mark.slow
@@ -1042,60 +870,6 @@ def test_applycli_user_data():
         assert result[0]._.ext == val
 
 
-def test_local_remote_storage():
-    with make_tempdir() as d:
-        filename = "a.txt"
-
-        content_hashes = ("aaaa", "cccc", "bbbb")
-        for i, content_hash in enumerate(content_hashes):
-            # make sure that each subsequent file has a later timestamp
-            if i > 0:
-                time.sleep(1)
-            content = f"{content_hash} content"
-            loc_file = d / "root" / filename
-            if not loc_file.parent.exists():
-                loc_file.parent.mkdir(parents=True)
-            with loc_file.open(mode="w") as file_:
-                file_.write(content)
-
-            # push first version to remote storage
-            remote = RemoteStorage(d / "root", str(d / "remote"))
-            remote.push(filename, "aaaa", content_hash)
-
-            # retrieve with full hashes
-            loc_file.unlink()
-            remote.pull(filename, command_hash="aaaa", content_hash=content_hash)
-            with loc_file.open(mode="r") as file_:
-                assert file_.read() == content
-
-            # retrieve with command hash
-            loc_file.unlink()
-            remote.pull(filename, command_hash="aaaa")
-            with loc_file.open(mode="r") as file_:
-                assert file_.read() == content
-
-            # retrieve with content hash
-            loc_file.unlink()
-            remote.pull(filename, content_hash=content_hash)
-            with loc_file.open(mode="r") as file_:
-                assert file_.read() == content
-
-            # retrieve with no hashes
-            loc_file.unlink()
-            remote.pull(filename)
-            with loc_file.open(mode="r") as file_:
-                assert file_.read() == content
-
-
-def test_local_remote_storage_pull_missing():
-    # pulling from a non-existent remote pulls nothing gracefully
-    with make_tempdir() as d:
-        filename = "a.txt"
-        remote = RemoteStorage(d / "root", str(d / "remote"))
-        assert remote.pull(filename, command_hash="aaaa") is None
-        assert remote.pull(filename) is None
-
-
 def test_cli_find_threshold(capsys):
     def make_examples(nlp: Language) -> List[Example]:
         docs: List[Example] = []
@@ -1204,63 +978,6 @@ def test_cli_find_threshold(capsys):
                     scores_key="cats_macro_f",
                     silent=True,
                 )
-
-
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
-@pytest.mark.parametrize(
-    "reqs,output",
-    [
-        [
-            """
-            spacy
-
-            # comment
-
-            thinc""",
-            (False, False),
-        ],
-        [
-            """# comment
-            --some-flag
-            spacy""",
-            (False, False),
-        ],
-        [
-            """# comment
-            --some-flag
-            spacy; python_version >= '3.6'""",
-            (False, False),
-        ],
-        [
-            """# comment
-             spacyunknowndoesnotexist12345""",
-            (True, False),
-        ],
-    ],
-)
-def test_project_check_requirements(reqs, output):
-    import pkg_resources
-
-    # excessive guard against unlikely package name
-    try:
-        pkg_resources.require("spacyunknowndoesnotexist12345")
-    except pkg_resources.DistributionNotFound:
-        assert output == _check_requirements([req.strip() for req in reqs.split("\n")])
-
-
-def test_upload_download_local_file():
-    with make_tempdir() as d1, make_tempdir() as d2:
-        filename = "f.txt"
-        content = "content"
-        local_file = d1 / filename
-        remote_file = d2 / filename
-        with local_file.open(mode="w") as file_:
-            file_.write(content)
-        upload_file(local_file, remote_file)
-        local_file.unlink()
-        download_file(remote_file, local_file)
-        with local_file.open(mode="r") as file_:
-            assert file_.read() == content
 
 
 def test_walk_directory():

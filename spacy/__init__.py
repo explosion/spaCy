@@ -13,7 +13,6 @@ from thinc.api import Config, prefer_gpu, require_cpu, require_gpu  # noqa: F401
 from . import pipeline  # noqa: F401
 from . import util
 from .about import __version__  # noqa: F401
-from .cli.info import info  # noqa: F401
 from .errors import Errors
 from .glossary import explain  # noqa: F401
 from .language import Language
@@ -77,3 +76,9 @@ def blank(
     # We should accept both dot notation and nested dict here for consistency
     config = util.dot_to_dict(config)
     return LangClass.from_config(config, vocab=vocab, meta=meta)
+
+
+def info(*args, **kwargs):
+    from .cli.info import info as cli_info
+
+    return cli_info(*args, **kwargs)
