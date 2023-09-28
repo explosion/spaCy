@@ -14,6 +14,7 @@ from .debug_diff import debug_diff  # noqa: F401
 from .debug_model import debug_model  # noqa: F401
 from .download import download  # noqa: F401
 from .evaluate import evaluate  # noqa: F401
+from .find_function import find_function  # noqa: F401
 from .find_threshold import find_threshold  # noqa: F401
 from .info import info  # noqa: F401
 from .init_config import fill_config, init_config  # noqa: F401

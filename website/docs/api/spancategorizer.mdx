@@ -67,7 +67,6 @@ architectures and their arguments and hyperparameters.
 > ```python
 > from spacy.pipeline.spancat import DEFAULT_SPANCAT_SINGLELABEL_MODEL
 > config = {
->     "threshold": 0.5,
 >     "spans_key": "labeled_spans",
 >     "model": DEFAULT_SPANCAT_SINGLELABEL_MODEL,
 >     "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
@@ -522,7 +521,7 @@ has two columns, indicating the start and end position.
 | Name        | Description                                                                  |
 | ----------- | ---------------------------------------------------------------------------- |
 | `min_size`  | The minimal phrase lengths to suggest (inclusive). ~~[int]~~                 |
-| `max_size`  | The maximal phrase lengths to suggest (exclusive). ~~[int]~~                 |
+| `max_size`  | The maximal phrase lengths to suggest (inclusive). ~~[int]~~                 |
 | **CREATES** | The suggester function. ~~Callable[[Iterable[Doc], Optional[Ops]], Ragged]~~ |
 
 ### spacy.preset_spans_suggester.v1 {id="preset_spans_suggester"}

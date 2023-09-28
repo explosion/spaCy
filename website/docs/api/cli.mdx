@@ -7,6 +7,7 @@ menu:
   - ['info', 'info']
   - ['validate', 'validate']
   - ['init', 'init']
+  - ['find-function', 'find-function']
   - ['convert', 'convert']
   - ['debug', 'debug']
   - ['train', 'train']
@@ -273,6 +274,27 @@ $ python -m spacy init labels [config_path] [output_path] [--code] [--verbose] [
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **CREATES**       | The label files.                                                                                                                                                                                                   |
+
+## find-function {id="find-function",version="3.7",tag="command"}
+
+Find the module, path and line number to the file for a given registered
+function. This functionality is helpful to understand where registered
+functions, as used in the config file, are defined.
+
+```bash
+$ python -m spacy find-function [func_name] [--registry]
+```
+
+> #### Example
+>
+> ```bash
+> $ python -m spacy find-function spacy.TextCatBOW.v1
+> ```
+
+| Name               | Description                                           |
+| ------------------ | ----------------------------------------------------- |
+| `func_name`        | Name of the registered function. ~~str (positional)~~ |
+| `--registry`, `-r` | Name of the catalogue registry. ~~str (option)~~      |
 
 ## convert {id="convert",tag="command"}
 
@@ -1220,7 +1242,7 @@ skew. To render a sample of dependency parses in a HTML file using the
 `--displacy-path` argument.
 
 ```bash
-$ python -m spacy benchmark accuracy [model] [data_path] [--output] [--code] [--gold-preproc] [--gpu-id] [--displacy-path] [--displacy-limit]
+$ python -m spacy benchmark accuracy [model] [data_path] [--output] [--code] [--gold-preproc] [--gpu-id] [--displacy-path] [--displacy-limit] [--per-component] [--spans-key]
 ```
 
 | Name                                                 | Description                                                                                                                                                                          |
@@ -1234,6 +1256,7 @@ $ python -m spacy benchmark accuracy [model] [data_path] [--output] [--code] [--
 | `--displacy-path`, `-dp`                             | Directory to output rendered parses as HTML. If not set, no visualizations will be generated. ~~Optional[Path] \(option)~~                                                           |
 | `--displacy-limit`, `-dl`                            | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. ~~int (option)~~            |
 | `--per-component`, `-P` <Tag variant="new">3.6</Tag> | Whether to return the scores keyed by component name. Defaults to `False`. ~~bool (flag)~~                                                                                           |
+| `--spans-key`, `-sk` <Tag variant="new">3.6.2</Tag>  | Spans key to use when evaluating `Doc.spans`. Defaults to `sc`. ~~str (option)~~                                                                                                     |
 | `--help`, `-h`                                       | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                                          | Training results and optional metrics and visualizations.                                                                                                                            |
 

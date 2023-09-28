@@ -106,50 +106,21 @@ const Landing = () => {
 
             <LandingBannerGrid>
                 <LandingBanner
-                    to="https://explosion.ai/custom-solutions"
+                    label="NEW"
+                    title="Large Language Models: Integrating LLMs into structured NLP pipelines"
+                    to="/usage/large-language-models"
                     button="Learn more"
-                    background="#E4F4F9"
-                    color="#1e1935"
                     small
                 >
                     <p>
-                        <Link to="https://explosion.ai/custom-solutions" hidden>
-                            <ImageFill
-                                image={tailoredPipelinesImage}
-                                alt="spaCy Tailored Pipelines"
-                            />
-                        </Link>
+                        <Link to="https://github.com/explosion/spacy-llm">
+                            The spacy-llm package
+                        </Link>{' '}
+                        integrates Large Language Models (LLMs) into spaCy, featuring a modular
+                        system for <strong>fast prototyping</strong> and <strong>prompting</strong>,
+                        and turning unstructured responses into <strong>robust outputs</strong> for
+                        various NLP tasks, <strong>no training data</strong> required. 
                     </p>
-                    <p>
-                        <strong>
-                            Get a custom spaCy pipeline, tailor-made for your NLP problem by
-                            spaCy&apos;s core developers.
-                        </strong>
-                    </p>
-                    <Ul>
-                        <Li emoji="🔥">
-                            <strong>Streamlined.</strong> Nobody knows spaCy better than we do. Send
-                            us your pipeline requirements and we&apos;ll be ready to start producing
-                            your solution in no time at all.
-                        </Li>
-                        <Li emoji="🐿 ">
-                            <strong>Production ready.</strong> spaCy pipelines are robust and easy
-                            to deploy. You&apos;ll get a complete spaCy project folder which is
-                            ready to <InlineCode>spacy project run</InlineCode>.
-                        </Li>
-                        <Li emoji="🔮">
-                            <strong>Predictable.</strong> You&apos;ll know exactly what you&apos;re
-                            going to get and what it&apos;s going to cost. We quote fees up-front,
-                            let you try before you buy, and don&apos;t charge for over-runs at our
-                            end — all the risk is on us.
-                        </Li>
-                        <Li emoji="🛠">
-                            <strong>Maintainable.</strong> spaCy is an industry standard, and
-                            we&apos;ll deliver your pipeline with full code, data, tests and
-                            documentation, so your team can retrain, update and extend the solution
-                            as your requirements change.
-                        </Li>
-                    </Ul>
                 </LandingBanner>
 
                 <LandingBanner
@@ -240,21 +211,50 @@ const Landing = () => {
 
             <LandingBannerGrid>
                 <LandingBanner
-                    label="New in v3.0"
-                    title="Transformer-based pipelines, new training system, project templates &amp; more"
-                    to="/usage/v3"
-                    button="See what's new"
+                    to="https://explosion.ai/custom-solutions"
+                    button="Learn more"
+                    background="#E4F4F9"
+                    color="#1e1935"
                     small
                 >
                     <p>
-                        spaCy v3.0 features all new <strong>transformer-based pipelines</strong>{' '}
-                        that bring spaCy&apos;s accuracy right up to the current{' '}
-                        <strong>state-of-the-art</strong>. You can use any pretrained transformer to
-                        train your own pipelines, and even share one transformer between multiple
-                        components with <strong>multi-task learning</strong>. Training is now fully
-                        configurable and extensible, and you can define your own custom models using{' '}
-                        <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks.
+                        <Link to="https://explosion.ai/custom-solutions" noLinkLayout>
+                            <ImageFill
+                                image={tailoredPipelinesImage}
+                                alt="spaCy Tailored Pipelines"
+                            />
+                        </Link>
                     </p>
+                    <p>
+                        <strong>
+                            Get a custom spaCy pipeline, tailor-made for your NLP problem by
+                            spaCy&apos;s core developers.
+                        </strong>
+                    </p>
+                    <Ul>
+                        <Li emoji="🔥">
+                            <strong>Streamlined.</strong> Nobody knows spaCy better than we do. Send
+                            us your pipeline requirements and we&apos;ll be ready to start producing
+                            your solution in no time at all.
+                        </Li>
+                        <Li emoji="🐿 ">
+                            <strong>Production ready.</strong> spaCy pipelines are robust and easy
+                            to deploy. You&apos;ll get a complete spaCy project folder which is
+                            ready to <InlineCode>spacy project run</InlineCode>.
+                        </Li>
+                        <Li emoji="🔮">
+                            <strong>Predictable.</strong> You&apos;ll know exactly what you&apos;re
+                            going to get and what it&apos;s going to cost. We quote fees up-front,
+                            let you try before you buy, and don&apos;t charge for over-runs at our
+                            end — all the risk is on us.
+                        </Li>
+                        <Li emoji="🛠">
+                            <strong>Maintainable.</strong> spaCy is an industry standard, and
+                            we&apos;ll deliver your pipeline with full code, data, tests and
+                            documentation, so your team can retrain, update and extend the solution
+                            as your requirements change.
+                        </Li>
+                    </Ul>
                 </LandingBanner>
                 <LandingBanner
                     to="https://course.spacy.io"
@@ -264,7 +264,7 @@ const Landing = () => {
                     small
                 >
                     <p>
-                        <Link to="https://course.spacy.io" hidden>
+                        <Link to="https://course.spacy.io" noLinkLayout>
                             <ImageFill
                                 image={courseImage}
                                 alt="Advanced NLP with spaCy: A free online course"
