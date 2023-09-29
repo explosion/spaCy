@@ -1,4 +1,5 @@
 # cython: infer_types=True
+# cython: profile=False
 # Compiler crashes on memory view coercion without this. Should report bug.
 cimport numpy as np
 

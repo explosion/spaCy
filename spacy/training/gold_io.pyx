@@ -1,3 +1,4 @@
+# cython: profile=False
 import warnings
 
 import srsly

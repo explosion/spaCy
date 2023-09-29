@@ -78,6 +78,7 @@ COMPILER_DIRECTIVES = {
     "language_level": -3,
     "embedsignature": True,
     "annotation_typing": False,
+    "profile": sys.version_info < (3, 12),
 }
 # Files to copy into the package that are otherwise not included
 COPY_FILES = {
