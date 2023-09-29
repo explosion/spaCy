@@ -22,10 +22,10 @@ brings minor changes to spaCy-specific settings in spaCy projects (see
 [upgrading](#upgrading) below), but also makes it possible to use the workflow
 functionality outside of spaCy.
 
-<Infobox variant="warning">
+<Infobox title="Remote storage for Python 3.12" variant="warning">
 
-Remote storage is not yet supported for Python 3.12. Use Python 3.11 or earlier
-for remote storage.
+Remote storage for spaCy projects is not yet supported for Python 3.12. Use
+Python 3.11 or earlier for remote storage.
 
 </Infobox>
 
@@ -35,7 +35,7 @@ You can specify a custom registered vectors class under `[nlp.vectors]` in order
 to use static vectors in formats other than the ones supported by
 [`Vectors`](/api/vectors). To implement your custom vectors, extend the abstract
 class [`BaseVectors`](/api/basevectors). See an example using
-[BPEmb subword embeddings](/docs/usage/embeddings-transformers#custom-vectors).
+[BPEmb subword embeddings](/usage/embeddings-transformers#custom-vectors).
 
 ### Additional features and improvements {id="additional-features-and-improvements"}
 
