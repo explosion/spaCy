@@ -19,8 +19,11 @@ library.
 The [spaCy projects](/usage/projects) functionality has been factored out into a
 new standalone library [Weasel](https://github.com/explosion/weasel). This
 brings minor changes to spaCy-specific settings in spaCy projects (see
-[upgrading](#upgrading) below), but also makes it possible to use the workflow
-functionality outside of spaCy.
+[upgrading](#upgrading) below), but also makes it possible to use the same
+workflow functionality outside of spaCy.
+
+All `spacy project` commands should run as before, just now they're using Weasel
+under the hood.
 
 <Infobox title="Remote storage for Python 3.12" variant="warning">
 
