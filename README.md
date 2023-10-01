@@ -16,7 +16,7 @@ model packaging, deployment and workflow management. spaCy is commercial
 open-source software, released under the
 [MIT license](https://github.com/explosion/spaCy/blob/master/LICENSE).
 
-💫 **Version 3.6 out now!**
+💫 **Version 3.7 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
 [![tests](https://github.com/explosion/spaCy/actions/workflows/tests.yml/badge.svg)](https://github.com/explosion/spaCy/actions/workflows/tests.yml)
