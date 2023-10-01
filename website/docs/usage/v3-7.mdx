@@ -14,11 +14,13 @@ the transformer-based trained pipelines to use our new
 [Curated Transformers](https://github.com/explosion/curated-transformers)
 library.
 
+This release drops support for Python 3.6.
+
 ### Weasel {id="weasel"}
 
-The [spaCy projects](/usage/projects) functionality has been factored out into a
-new standalone library [Weasel](https://github.com/explosion/weasel). This
-brings minor changes to spaCy-specific settings in spaCy projects (see
+The [spaCy projects](/usage/projects) functionality has been moved into a new
+standalone library [Weasel](https://github.com/explosion/weasel). This brings
+minor changes to spaCy-specific settings in spaCy projects (see
 [upgrading](#upgrading) below), but also makes it possible to use the same
 workflow functionality outside of spaCy.
 
@@ -57,7 +59,7 @@ class [`BaseVectors`](/api/basevectors). See an example using
   - Add left and right pointing angle brackets as punctuation to ancient Greek.
   - Update example sentences for Turkish.
 - Package setup updates:
-  - Update NumPy build constraints for NumPy 1.25. For Python 3.9+, it is no
+  - Update NumPy build constraints for NumPy 1.25+. For Python 3.9+, it is no
     longer necessary to set build constraints while building binary wheels.
   - Refactor Cython profiling in order to disable profiling for Python 3.12 in
     the package setup, since Cython does not currently support profiling for
@@ -74,13 +76,11 @@ library using the Thinc model wrappers and pipeline component from
 
 ## Notes about upgrading from v3.6 {id="upgrading"}
 
-spaCy v3.7:
+This release drops support for Python 3.6, drops mypy checks for Python 3.7 and
+removes the `ray` extra. In addition there are several minor changes for spaCy
+projects described in the following section.
 
-- Drops support for Python 3.6.
-- Drops mypy checks for Python 3.7.
-- Removes the `ray` extra.
-
-### spaCy Projects with Weasel {id="upgrading-weasel"}
+### Backwards incompatibilities for spaCy Projects {id="upgrading-projects"}
 
 `spacy project` has a few backwards incompatibilities due to the transition to
 the standalone library [Weasel](https://github.com/explosion/weasel), which is
@@ -94,7 +94,7 @@ spaCy-specific settings in your environment or project config.
   can set configuration overrides using `WEASEL_CONFIG_OVERRIDES`.
 - Support for `SPACY_PROJECT_USE_GIT_VERSION` environment variable has been
   dropped.
-- Error codes are now Weasel-specific, and do not follow spaCy error codes.
+- Error codes are now Weasel-specific and do not follow spaCy error codes.
 
 ### Pipeline package version compatibility {id="version-compat"}
 
