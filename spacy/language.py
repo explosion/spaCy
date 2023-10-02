@@ -1,4 +1,5 @@
 import functools
+import inspect
 import itertools
 import multiprocessing as mp
 import random
@@ -64,6 +65,7 @@ from .util import (
     registry,
     warn_if_jupyter_cupy,
 )
+from .vectors import BaseVectors
 from .vocab import Vocab, create_vocab
 
 PipeCallable = Callable[[Doc], Doc]
@@ -157,6 +159,7 @@ class Language:
         max_length: int = 10**6,
         meta: Dict[str, Any] = {},
         create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
+        create_vectors: Optional[Callable[["Vocab"], BaseVectors]] = None,
         batch_size: int = 1000,
         **kwargs,
     ) -> None:
@@ -197,6 +200,10 @@ class Language:
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
             vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)
+            if not create_vectors:
+                vectors_cfg = {"vectors": self._config["nlp"]["vectors"]}
+                create_vectors = registry.resolve(vectors_cfg)["vectors"]
+            vocab.vectors = create_vectors(vocab)
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
@@ -1764,6 +1771,10 @@ class Language:
             ).merge(config)
         if "nlp" not in config:
             raise ValueError(Errors.E985.format(config=config))
+        # fill in [nlp.vectors] if not present (as a narrower alternative to
+        # auto-filling [nlp] from the default config)
+        if "vectors" not in config["nlp"]:
+            config["nlp"]["vectors"] = {"@vectors": "spacy.Vectors.v1"}
         config_lang = config["nlp"].get("lang")
         if config_lang is not None and config_lang != cls.lang:
             raise ValueError(
@@ -1795,6 +1806,7 @@ class Language:
             filled["nlp"], validate=validate, schema=ConfigSchemaNlp
         )
         create_tokenizer = resolved_nlp["tokenizer"]
+        create_vectors = resolved_nlp["vectors"]
         before_creation = resolved_nlp["before_creation"]
         after_creation = resolved_nlp["after_creation"]
         after_pipeline_creation = resolved_nlp["after_pipeline_creation"]
@@ -1815,7 +1827,12 @@ class Language:
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
         # and then again when we load from disk.
-        nlp = lang_cls(vocab=vocab, create_tokenizer=create_tokenizer, meta=meta)
+        nlp = lang_cls(
+            vocab=vocab,
+            create_tokenizer=create_tokenizer,
+            create_vectors=create_vectors,
+            meta=meta,
+        )
         if after_creation is not None:
             nlp = after_creation(nlp)
             if not isinstance(nlp, cls):
@@ -1825,7 +1842,6 @@ class Language:
         # Later we replace the component config with the raw config again.
         interpolated = filled.interpolate() if not filled.is_interpolated else filled
         pipeline = interpolated.get("components", {})
-        sourced = util.get_sourced_components(interpolated)
         # If components are loaded from a source (existing models), we cache
         # them here so they're only loaded once
         source_nlps = {}
@@ -1958,7 +1974,7 @@ class Language:
         useful when training a pipeline with components sourced from an existing
         pipeline: if multiple components (e.g. tagger, parser, NER) listen to
         the same tok2vec component, but some of them are frozen and not updated,
-        their performance may degrade significally as the tok2vec component is
+        their performance may degrade significantly as the tok2vec component is
         updated with new data. To prevent this, listeners can be replaced with
         a standalone tok2vec layer that is owned by the component and doesn't
         change if the component isn't updated.
@@ -2033,8 +2049,20 @@ class Language:
             # Go over the listener layers and replace them
             for listener in pipe_listeners:
                 new_model = tok2vec_model.copy()
-                if "replace_listener" in tok2vec_model.attrs:
-                    new_model = tok2vec_model.attrs["replace_listener"](new_model)
+                replace_listener_func = tok2vec_model.attrs.get("replace_listener")
+                if replace_listener_func is not None:
+                    # Pass the extra args to the callback without breaking compatibility with
+                    # old library versions that only expect a single parameter.
+                    num_params = len(
+                        inspect.signature(replace_listener_func).parameters
+                    )
+                    if num_params == 1:
+                        new_model = replace_listener_func(new_model)
+                    elif num_params == 3:
+                        new_model = replace_listener_func(new_model, listener, tok2vec)
+                    else:
+                        raise ValueError(Errors.E1055.format(num_params=num_params))
+
                 util.replace_model_node(pipe.model, listener, new_model)  # type: ignore[attr-defined]
                 tok2vec.remove_listener(listener, pipe_name)
 

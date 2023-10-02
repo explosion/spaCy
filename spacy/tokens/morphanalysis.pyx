@@ -1,3 +1,4 @@
+# cython: profile=False
 cimport numpy as np
 from libc.string cimport memset
 
@@ -89,4 +90,3 @@ cdef class MorphAnalysis:
 
     def __repr__(self):
         return self.to_json()
-

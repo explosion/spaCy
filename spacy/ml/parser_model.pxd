@@ -40,11 +40,16 @@ cdef ActivationsC alloc_activations(SizesC n) nogil
 
 cdef void free_activations(const ActivationsC* A) nogil
 
-cdef void predict_states(CBlas cblas, ActivationsC* A, StateC** states,
-        const WeightsC* W, SizesC n) nogil
- 
+cdef void predict_states(
+    CBlas cblas, ActivationsC* A, StateC** states, const WeightsC* W, SizesC n
+) nogil
+
 cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) nogil
 
-cdef void cpu_log_loss(float* d_scores,
-        const float* costs, const int* is_valid, const float* scores, int O) nogil
- 
+cdef void cpu_log_loss(
+    float* d_scores,
+    const float* costs,
+    const int* is_valid,
+    const float* scores,
+    int O
+) nogil

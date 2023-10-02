@@ -1,6 +1,3 @@
-# cython: profile=True
-from libc.string cimport memcpy
-
 import functools
 
 import numpy
@@ -19,7 +16,6 @@ from .errors import Errors
 from .lang.lex_attrs import LEX_ATTRS, get_lang, is_stop
 from .lang.norm_exceptions import BASE_NORMS
 from .lookups import Lookups
-from .util import registry
 from .vectors import Mode as VectorsMode
 from .vectors import Vectors
 
@@ -51,9 +47,17 @@ cdef class Vocab:
 
     DOCS: https://spacy.io/api/vocab
     """
-    def __init__(self, lex_attr_getters=None, strings=tuple(), lookups=None,
-                 oov_prob=-20., vectors_name=None, writing_system={},
-                 get_noun_chunks=None, **deprecated_kwargs):
+    def __init__(
+        self,
+        lex_attr_getters=None,
+        strings=tuple(),
+        lookups=None,
+        oov_prob=-20.,
+        vectors_name=None,
+        writing_system={},  # no-cython-lint
+        get_noun_chunks=None,
+        **deprecated_kwargs
+    ):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -89,8 +93,9 @@ cdef class Vocab:
             return self._vectors
 
         def __set__(self, vectors):
-            for s in vectors.strings:
-                self.strings.add(s)
+            if hasattr(vectors, "strings"):
+                for s in vectors.strings:
+                    self.strings.add(s)
             self._vectors = vectors
             self._vectors.strings = self.strings
 
@@ -150,7 +155,6 @@ cdef class Vocab:
         cdef LexemeC* lex
         cdef hash_t key = self.strings[string]
         lex = <LexemeC*>self._by_orth.get(key)
-        cdef size_t addr
         if lex != NULL:
             assert lex.orth in self.strings
             if lex.orth != key:
@@ -183,13 +187,13 @@ cdef class Vocab:
         # of the doc ownership).
         # TODO: Change the C API so that the mem isn't passed in here.
         mem = self.mem
-        #if len(string) < 3 or self.length < 10000:
+        # if len(string) < 3 or self.length < 10000:
         #    mem = self.mem
         cdef bint is_oov = mem is not self.mem
         lex = <LexemeC*>mem.alloc(1, sizeof(LexemeC))
         lex.orth = self.strings.add(string)
         lex.length = len(string)
-        if self.vectors is not None:
+        if self.vectors is not None and hasattr(self.vectors, "key2row"):
             lex.id = self.vectors.key2row.get(lex.orth, OOV_RANK)
         else:
             lex.id = OOV_RANK
@@ -285,12 +289,17 @@ cdef class Vocab:
 
     @property
     def vectors_length(self):
-        return self.vectors.shape[1]
+        if hasattr(self.vectors, "shape"):
+            return self.vectors.shape[1]
+        else:
+            return -1
 
     def reset_vectors(self, *, width=None, shape=None):
         """Drop the current vector table. Because all vectors must be the same
         width, you have to call this to change the size of the vectors.
         """
+        if not isinstance(self.vectors, Vectors):
+            raise ValueError(Errors.E849.format(method="reset_vectors", vectors_type=type(self.vectors)))
         if width is not None and shape is not None:
             raise ValueError(Errors.E065.format(width=width, shape=shape))
         elif shape is not None:
@@ -300,6 +309,8 @@ cdef class Vocab:
             self.vectors = Vectors(strings=self.strings, shape=(self.vectors.shape[0], width))
 
     def deduplicate_vectors(self):
+        if not isinstance(self.vectors, Vectors):
+            raise ValueError(Errors.E849.format(method="deduplicate_vectors", vectors_type=type(self.vectors)))
         if self.vectors.mode != VectorsMode.default:
             raise ValueError(Errors.E858.format(
                 mode=self.vectors.mode,
@@ -353,6 +364,8 @@ cdef class Vocab:
 
         DOCS: https://spacy.io/api/vocab#prune_vectors
         """
+        if not isinstance(self.vectors, Vectors):
+            raise ValueError(Errors.E849.format(method="prune_vectors", vectors_type=type(self.vectors)))
         if self.vectors.mode != VectorsMode.default:
             raise ValueError(Errors.E858.format(
                 mode=self.vectors.mode,
@@ -463,7 +476,6 @@ cdef class Vocab:
                     self.lookups.get_table("lexeme_norm"),
                 )
 
-
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
 
@@ -476,7 +488,6 @@ cdef class Vocab:
         path = util.ensure_path(path)
         if not path.exists():
             path.mkdir()
-        setters = ["strings", "vectors"]
         if "strings" not in exclude:
             self.strings.to_disk(path / "strings.json")
         if "vectors" not in exclude:
@@ -495,7 +506,6 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#to_disk
         """
         path = util.ensure_path(path)
-        getters = ["strings", "vectors"]
         if "strings" not in exclude:
             self.strings.from_disk(path / "strings.json")  # TODO: add exclude?
         if "vectors" not in exclude:

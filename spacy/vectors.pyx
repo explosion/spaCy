@@ -1,13 +1,15 @@
-cimport numpy as np
+# cython: infer_types=True, binding=True
+from typing import Callable
+
 from cython.operator cimport dereference as deref
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp.set cimport set as cppset
 from murmurhash.mrmr cimport hash128_x64
 
-import functools
 import warnings
 from enum import Enum
-from typing import cast
+from pathlib import Path
+from typing import TYPE_CHECKING, Union, cast
 
 import numpy
 import srsly
@@ -23,6 +25,9 @@ from .attrs import IDS
 from .errors import Errors, Warnings
 from .strings import get_string_id
 
+if TYPE_CHECKING:
+    from .vocab import Vocab  # noqa: F401  # no-cython-lint
+
 
 def unpickle_vectors(bytes_data):
     return Vectors().from_bytes(bytes_data)
@@ -37,7 +42,71 @@ class Mode(str, Enum):
         return list(cls.__members__.keys())
 
 
-cdef class Vectors:
+cdef class BaseVectors:
+    def __init__(self, *, strings=None):
+        # Make sure abstract BaseVectors is not instantiated.
+        if self.__class__ == BaseVectors:
+            raise TypeError(
+                Errors.E1046.format(cls_name=self.__class__.__name__)
+            )
+
+    def __getitem__(self, key):
+        raise NotImplementedError
+
+    def __contains__(self, key):
+        raise NotImplementedError
+
+    def is_full(self):
+        raise NotImplementedError
+
+    def get_batch(self, keys):
+        raise NotImplementedError
+
+    @property
+    def shape(self):
+        raise NotImplementedError
+
+    def __len__(self):
+        raise NotImplementedError
+
+    @property
+    def vectors_length(self):
+        raise NotImplementedError
+
+    @property
+    def size(self):
+        raise NotImplementedError
+
+    def add(self, key, *, vector=None):
+        raise NotImplementedError
+
+    def to_ops(self, ops: Ops):
+        pass
+
+    # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
+    # allow serialization
+    def to_bytes(self, **kwargs):
+        return b""
+
+    def from_bytes(self, data: bytes, **kwargs):
+        return self
+
+    def to_disk(self, path: Union[str, Path], **kwargs):
+        return None
+
+    def from_disk(self, path: Union[str, Path], **kwargs):
+        return self
+
+
+@util.registry.vectors("spacy.Vectors.v1")
+def create_mode_vectors() -> Callable[["Vocab"], BaseVectors]:
+    def vectors_factory(vocab: "Vocab") -> BaseVectors:
+        return Vectors(strings=vocab.strings)
+
+    return vectors_factory
+
+
+cdef class Vectors(BaseVectors):
     """Store, save and load word vectors.
 
     Vectors data is kept in the vectors.data attribute, which should be an
@@ -119,7 +188,7 @@ cdef class Vectors:
         if self.mode == Mode.default:
             if data is None:
                 if shape is None:
-                    shape = (0,0)
+                    shape = (0, 0)
                 ops = get_current_ops()
                 data = ops.xp.zeros(shape, dtype="f")
                 self._unset = cppset[int]({i for i in range(data.shape[0])})
@@ -260,11 +329,10 @@ cdef class Vectors:
     def __eq__(self, other):
         # Check for equality, with faster checks first
         return (
-                self.shape == other.shape
-                and self.key2row == other.key2row
-                and self.to_bytes(exclude=["strings"])
-                  == other.to_bytes(exclude=["strings"])
-               )
+            self.shape == other.shape
+            and self.key2row == other.key2row
+            and self.to_bytes(exclude=["strings"]) == other.to_bytes(exclude=["strings"])
+        )
 
     def resize(self, shape, inplace=False):
         """Resize the underlying vectors array. If inplace=True, the memory
@@ -520,11 +588,12 @@ cdef class Vectors:
             # vectors e.g. (10000, 300)
             # sims    e.g. (1024, 10000)
             sims = xp.dot(batch, vectors.T)
-            best_rows[i:i+batch_size] = xp.argpartition(sims, -n, axis=1)[:,-n:]
-            scores[i:i+batch_size] = xp.partition(sims, -n, axis=1)[:,-n:]
+            best_rows[i:i+batch_size] = xp.argpartition(sims, -n, axis=1)[:, -n:]
+            scores[i:i+batch_size] = xp.partition(sims, -n, axis=1)[:, -n:]
 
             if sort and n >= 2:
-                sorted_index = xp.arange(scores.shape[0])[:,None][i:i+batch_size],xp.argsort(scores[i:i+batch_size], axis=1)[:,::-1]
+                sorted_index = xp.arange(scores.shape[0])[:, None][i:i+batch_size], \
+                    xp.argsort(scores[i:i+batch_size], axis=1)[:, ::-1]
                 scores[i:i+batch_size] = scores[sorted_index]
                 best_rows[i:i+batch_size] = best_rows[sorted_index]
 
@@ -538,8 +607,12 @@ cdef class Vectors:
 
         numpy_rows = get_current_ops().to_numpy(best_rows)
         keys = xp.asarray(
-            [[row2key[row] for row in numpy_rows[i] if row in row2key]
-                    for i in range(len(queries)) ], dtype="uint64")
+            [
+                [row2key[row] for row in numpy_rows[i] if row in row2key]
+                for i in range(len(queries))
+            ],
+            dtype="uint64"
+        )
         return (keys, best_rows, scores)
 
     def to_ops(self, ops: Ops):
@@ -582,9 +655,9 @@ cdef class Vectors:
         """
         xp = get_array_module(self.data)
         if xp is numpy:
-            save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)
+            save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)  # no-cython-lint
         else:
-            save_array = lambda arr, file_: xp.save(file_, arr)
+            save_array = lambda arr, file_: xp.save(file_, arr)  # no-cython-lint
 
         def save_vectors(path):
             # the source of numpy.save indicates that the file object is closed after use.

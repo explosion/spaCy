@@ -1,4 +1,5 @@
 # cython: infer_types=True
+# cython: profile=False
 from __future__ import print_function
 
 from cymem.cymem cimport Pool
@@ -8,9 +9,7 @@ from collections import Counter
 import srsly
 
 from ...structs cimport TokenC
-from ...tokens.doc cimport Doc
 from ...typedefs cimport attr_t, weight_t
-from . cimport _beam_utils
 from .stateclass cimport StateClass
 
 from ... import util
@@ -231,7 +230,6 @@ cdef class TransitionSystem:
         return self
 
     def to_bytes(self, exclude=tuple()):
-        transitions = []
         serializers = {
             'moves': lambda: srsly.json_dumps(self.labels),
             'strings': lambda: self.strings.to_bytes(),

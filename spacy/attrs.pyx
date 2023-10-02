@@ -1,3 +1,4 @@
+# cython: profile=False
 from .errors import Errors
 
 IOB_STRINGS = ("", "I", "O", "B")
@@ -117,7 +118,7 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
         if "pos" in stringy_attrs:
             stringy_attrs["TAG"] = stringy_attrs.pop("pos")
         if "morph" in stringy_attrs:
-            morphs = stringy_attrs.pop("morph")
+            morphs = stringy_attrs.pop("morph")  # no-cython-lint
         if "number" in stringy_attrs:
             stringy_attrs.pop("number")
         if "tenspect" in stringy_attrs:

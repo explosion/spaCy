@@ -1,3 +1,4 @@
+# cython: profile=False
 from typing import List
 
 import numpy

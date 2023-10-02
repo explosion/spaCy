@@ -1,8 +1,7 @@
-# cython: infer_types=True, profile=True, binding=True
+# cython: infer_types=True, binding=True
 from itertools import islice
 from typing import Callable, Optional
 
-import srsly
 from thinc.api import Config, Model, SequenceCategoricalCrossentropy
 
 from ..tokens.doc cimport Doc

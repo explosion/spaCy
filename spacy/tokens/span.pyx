@@ -1,5 +1,5 @@
+# cython: profile=False
 cimport numpy as np
-from libc.math cimport sqrt
 
 import copy
 import warnings
@@ -10,11 +10,10 @@ from thinc.api import get_array_module
 from ..attrs cimport *
 from ..attrs cimport ORTH, attr_id_t
 from ..lexeme cimport Lexeme
-from ..parts_of_speech cimport univ_pos_t
-from ..structs cimport LexemeC, TokenC
+from ..structs cimport TokenC
 from ..symbols cimport dep
-from ..typedefs cimport attr_t, flags_t, hash_t
-from .doc cimport _get_lca_matrix, get_token_attr, token_by_end, token_by_start
+from ..typedefs cimport attr_t, hash_t
+from .doc cimport _get_lca_matrix, get_token_attr
 from .token cimport Token
 
 from ..errors import Errors, Warnings
@@ -594,7 +593,6 @@ cdef class Span:
             whitespace).
         """
         return "".join([t.text_with_ws for t in self])
-
 
     @property
     def noun_chunks(self):
