@@ -1048,6 +1048,9 @@ that the keys are set as environmental variables:
 - Deployed Azure OpenAI models are reachable via a resource-specific base URL,
   usually of the form `https://{resource}.openai.azure.com`. Hence the URL has to
   be specified via the `base_url` argument.
+- Azure further expects the _API version_ to be specified. The default value for
+  this, via the `api_version` argument, is currently `2023-05-15` but may be
+  updated in the future.
 
 ```shell
 export OPENAI_API_KEY="sk-..."
