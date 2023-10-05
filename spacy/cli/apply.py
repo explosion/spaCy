@@ -133,7 +133,9 @@ def apply(
     if len(text_files) > 0:
         streams.append(_stream_texts(text_files))
     datagen = cast(DocOrStrStream, chain(*streams))
-    for doc in tqdm.tqdm(nlp.pipe(datagen, batch_size=batch_size, n_process=n_process)):
+    for doc in tqdm.tqdm(
+        nlp.pipe(datagen, batch_size=batch_size, n_process=n_process), disable=None
+    ):
         docbin.add(doc)
     if output_file.suffix == "":
         output_file = output_file.with_suffix(".spacy")

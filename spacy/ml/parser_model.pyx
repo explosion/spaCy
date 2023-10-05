@@ -1,4 +1,5 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False
+# cython: profile=False
 cimport numpy as np
 from libc.math cimport exp
 from libc.stdlib cimport calloc, free, realloc

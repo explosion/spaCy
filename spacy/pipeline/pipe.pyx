@@ -1,4 +1,4 @@
-# cython: infer_types=True, profile=True, binding=True
+# cython: infer_types=True, binding=True
 import warnings
 from typing import Callable, Dict, Iterable, Iterator, Tuple, Union
 

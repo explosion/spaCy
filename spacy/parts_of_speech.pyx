@@ -1,4 +1,4 @@
-
+# cython: profile=False
 IDS = {
     "": NO_TAG,
     "ADJ": ADJ,
