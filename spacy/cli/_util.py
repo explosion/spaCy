@@ -41,10 +41,6 @@ from ..util import (
     run_command,
 )
 
-if TYPE_CHECKING:
-    from pathy import FluidPath  # noqa: F401
-
-
 SDIST_SUFFIX = ".tar.gz"
 WHEEL_SUFFIX = "-py3-none-any.whl"
 
