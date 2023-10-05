@@ -724,8 +724,8 @@ prompting.
 | `scorer` (NEW)              | Scorer function that evaluates the task performance on provided examples. Defaults to the metric used by spaCy. ~~Optional[Scorer]~~                                          |
 | `labels`                    | Comma-separated list of labels. ~~str~~                                                                                                                                       |
 | `normalizer`                | Function that normalizes the labels as returned by the LLM. If `None`, falls back to `spacy.LowercaseNormalizer.v1`. ~~Optional[Callable[[str], str]]~~                       |
-| `exclusive_classes`         | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. Deafults to `False`. ~~bool~~                        |
-| `allow_none`                | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Deafults to `True`. ~~bool~~ |
+| `exclusive_classes`         | If set to `True`, only one label per document should be valid. If set to `False`, one document can have multiple labels. Defaults to `False`. ~~bool~~                        |
+| `allow_none`                | When set to `True`, allows the LLM to not return any of the given label. The resulting dict in `doc.cats` will have `0.0` scores for all labels. Defaults to `True`. ~~bool~~ |
 | `verbose`                   | If set to `True`, warnings will be generated when the LLM returns invalid responses. Defaults to `False`. ~~bool~~                                                            |
 
 To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
