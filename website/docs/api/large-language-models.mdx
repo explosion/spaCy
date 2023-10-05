@@ -1028,7 +1028,7 @@ Currently, these models are provided as part of the core library:
 To use these models, make sure that you've [set the relevant API](#api-keys)
 keys as environment variables.
 
-**⚠️ A note on `spacy.Azure.v1`** Working with Azure OpenAI is slightly
+**⚠️ A note on `spacy.Azure.v1`.** Working with Azure OpenAI is slightly
 different than working with models from other providers:
 
 - In Azure LLMs have to be made available by creating a _deployment_ of a given
@@ -1036,8 +1036,8 @@ different than working with models from other providers:
   argument, which everywhere else denotes the model name (e. g. `claude-1.0`,
   `gpt-3.5`), here refers to the _deployment name_.
 - Deployed Azure OpenAI models are reachable via a resource-specific base URL,
-  usually of the form `https://{resource}.openai.azure.com`. Hence the URL has to
-  be specified via the `base_url` argument.
+  usually of the form `https://{resource}.openai.azure.com`. Hence the URL has
+  to be specified via the `base_url` argument.
 - Azure further expects the _API version_ to be specified. The default value for
   this, via the `api_version` argument, is currently `2023-05-15` but may be
   updated in the future.
