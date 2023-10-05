@@ -1044,7 +1044,10 @@ that the keys are set as environmental variables:
 - In Azure LLMs have to be made available by creating a _deployment_ of a given
   model (e. g. GPT-3.5). This deployment can have an arbitrary name. The `name`
   argument, which everywhere else denotes the model name (e. g. `claude-1.0`,
-  `gpt-3.5`), here denotes the _deployment name_.
+  `gpt-3.5`), here refers to the _deployment name_.
+- Deployed Azure OpenAI models are reachable via a resource-specific base URL,
+  usually of the form `https://{resource}.openai.azure.com`. Hence the URL has to
+  be specified via the `base_url` argument.
 
 ```shell
 export OPENAI_API_KEY="sk-..."
