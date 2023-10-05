@@ -28,6 +28,7 @@ def evaluate_cli(
     displacy_path: Optional[Path] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML", exists=True, file_okay=False),
     displacy_limit: int = Opt(25, "--displacy-limit", "-dl", help="Limit of parses to render as HTML"),
     per_component: bool = Opt(False, "--per-component", "-P", help="Return scores per component, only applicable when an output JSON file is specified."),
+    spans_key: str = Opt("sc", "--spans-key", "-sk", help="Spans key to use when evaluating Doc.spans"),
     # fmt: on
 ):
     """
@@ -53,6 +54,7 @@ def evaluate_cli(
         displacy_limit=displacy_limit,
         per_component=per_component,
         silent=False,
+        spans_key=spans_key,
     )
 
 

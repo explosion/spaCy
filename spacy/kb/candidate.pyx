@@ -1,4 +1,4 @@
-# cython: infer_types=True, profile=True
+# cython: infer_types=True
 
 from typing import Iterable
 

@@ -1,4 +1,5 @@
 # cython: infer_types=True, binding=True
+# cython: profile=False
 from cython.operator cimport dereference as deref
 from libc.stdint cimport UINT32_MAX, uint32_t
 from libc.string cimport memset

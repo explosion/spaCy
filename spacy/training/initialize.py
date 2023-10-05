@@ -302,7 +302,7 @@ def read_vectors(
             shape = (truncate_vectors, shape[1])
     vectors_data = numpy.zeros(shape=shape, dtype="f")
     vectors_keys = []
-    for i, line in enumerate(tqdm.tqdm(f)):
+    for i, line in enumerate(tqdm.tqdm(f, disable=None)):
         line = line.rstrip()
         pieces = line.rsplit(" ", vectors_data.shape[1])
         word = pieces.pop(0)

@@ -1,4 +1,3 @@
-# cython: profile=True
 import functools
 
 import numpy
@@ -94,8 +93,9 @@ cdef class Vocab:
             return self._vectors
 
         def __set__(self, vectors):
-            for s in vectors.strings:
-                self.strings.add(s)
+            if hasattr(vectors, "strings"):
+                for s in vectors.strings:
+                    self.strings.add(s)
             self._vectors = vectors
             self._vectors.strings = self.strings
 
@@ -193,7 +193,7 @@ cdef class Vocab:
         lex = <LexemeC*>mem.alloc(1, sizeof(LexemeC))
         lex.orth = self.strings.add(string)
         lex.length = len(string)
-        if self.vectors is not None:
+        if self.vectors is not None and hasattr(self.vectors, "key2row"):
             lex.id = self.vectors.key2row.get(lex.orth, OOV_RANK)
         else:
             lex.id = OOV_RANK
@@ -289,12 +289,17 @@ cdef class Vocab:
 
     @property
     def vectors_length(self):
-        return self.vectors.shape[1]
+        if hasattr(self.vectors, "shape"):
+            return self.vectors.shape[1]
+        else:
+            return -1
 
     def reset_vectors(self, *, width=None, shape=None):
         """Drop the current vector table. Because all vectors must be the same
         width, you have to call this to change the size of the vectors.
         """
+        if not isinstance(self.vectors, Vectors):
+            raise ValueError(Errors.E849.format(method="reset_vectors", vectors_type=type(self.vectors)))
         if width is not None and shape is not None:
             raise ValueError(Errors.E065.format(width=width, shape=shape))
         elif shape is not None:
@@ -304,6 +309,8 @@ cdef class Vocab:
             self.vectors = Vectors(strings=self.strings, shape=(self.vectors.shape[0], width))
 
     def deduplicate_vectors(self):
+        if not isinstance(self.vectors, Vectors):
+            raise ValueError(Errors.E849.format(method="deduplicate_vectors", vectors_type=type(self.vectors)))
         if self.vectors.mode != VectorsMode.default:
             raise ValueError(Errors.E858.format(
                 mode=self.vectors.mode,
@@ -357,6 +364,8 @@ cdef class Vocab:
 
         DOCS: https://spacy.io/api/vocab#prune_vectors
         """
+        if not isinstance(self.vectors, Vectors):
+            raise ValueError(Errors.E849.format(method="prune_vectors", vectors_type=type(self.vectors)))
         if self.vectors.mode != VectorsMode.default:
             raise ValueError(Errors.E858.format(
                 mode=self.vectors.mode,

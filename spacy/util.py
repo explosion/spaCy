@@ -101,7 +101,6 @@ logger.addHandler(logger_stream_handler)
 
 class ENV_VARS:
     CONFIG_OVERRIDES = "SPACY_CONFIG_OVERRIDES"
-    PROJECT_USE_GIT_VERSION = "SPACY_PROJECT_USE_GIT_VERSION"
 
 
 class registry(thinc.registry):
@@ -119,6 +118,7 @@ class registry(thinc.registry):
     augmenters = catalogue.create("spacy", "augmenters", entry_points=True)
     loggers = catalogue.create("spacy", "loggers", entry_points=True)
     scorers = catalogue.create("spacy", "scorers", entry_points=True)
+    vectors = catalogue.create("spacy", "vectors", entry_points=True)
     # These are factories registered via third-party packages and the
     # spacy_factories entry point. This registry only exists so we can easily
     # load them via the entry points. The "true" factories are added via the
@@ -974,21 +974,10 @@ def replace_model_node(model: Model, target: Model, replacement: Model) -> None:
 
 def split_command(command: str) -> List[str]:
     """Split a string command using shlex. Handles platform compatibility.
-
     command (str) : The command to split
     RETURNS (List[str]): The split command.
     """
     return shlex.split(command, posix=not is_windows)
-
-
-def join_command(command: List[str]) -> str:
-    """Join a command using shlex. shlex.join is only available for Python 3.8+,
-    so we're using a workaround here.
-
-    command (List[str]): The command to join.
-    RETURNS (str): The joined command
-    """
-    return " ".join(shlex.quote(cmd) for cmd in command)
 
 
 def run_command(
@@ -999,7 +988,6 @@ def run_command(
 ) -> subprocess.CompletedProcess:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
-
     command (str / List[str]): The command. If provided as a string, the
         string will be split using shlex.split.
     stdin (Optional[Any]): stdin to read from or None.
@@ -1050,7 +1038,6 @@ def run_command(
 @contextmanager
 def working_dir(path: Union[str, Path]) -> Iterator[Path]:
     """Change current working directory and returns to previous on exit.
-
     path (str / Path): The directory to navigate to.
     YIELDS (Path): The absolute path to the current working directory. This
         should be used if the block needs to perform actions within the working
@@ -1069,7 +1056,6 @@ def working_dir(path: Union[str, Path]) -> Iterator[Path]:
 def make_tempdir() -> Generator[Path, None, None]:
     """Execute a block in a temporary directory and remove the directory and
     its contents at the end of the with block.
-
     YIELDS (Path): The path of the temp directory.
     """
     d = Path(tempfile.mkdtemp())
@@ -1082,18 +1068,12 @@ def make_tempdir() -> Generator[Path, None, None]:
         rmfunc(path)
 
     try:
-        shutil.rmtree(str(d), onerror=force_remove)
+        if sys.version_info >= (3, 12):
+            shutil.rmtree(str(d), onexc=force_remove)
+        else:
+            shutil.rmtree(str(d), onerror=force_remove)
     except PermissionError as e:
         warnings.warn(Warnings.W091.format(dir=d, msg=e))
-
-
-def is_cwd(path: Union[Path, str]) -> bool:
-    """Check whether a path is the current working directory.
-
-    path (Union[Path, str]): The directory path.
-    RETURNS (bool): Whether the path is the current working directory.
-    """
-    return str(Path(path).resolve()).lower() == str(Path.cwd().resolve()).lower()
 
 
 def is_in_jupyter() -> bool:
