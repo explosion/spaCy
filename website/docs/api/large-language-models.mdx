@@ -1041,6 +1041,11 @@ provider's documentation.
 E. g. when using OpenAI, you have to get an API key from openai.com, and ensure
 that the keys are set as environmental variables:
 
+- In Azure LLMs have to be made available by creating a _deployment_ of a given
+  model (e. g. GPT-3.5). This deployment can have an arbitrary name. The `name`
+  argument, which everywhere else denotes the model name (e. g. `claude-1.0`,
+  `gpt-3.5`), here denotes the _deployment name_.
+
 ```shell
 export OPENAI_API_KEY="sk-..."
 export OPENAI_API_ORG="org-..."
