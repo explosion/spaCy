@@ -1031,16 +1031,6 @@ keys as environment variables.
 **⚠️ A note on `spacy.Azure.v1`** Working with Azure OpenAI is slightly
 different than working with models from other providers:
 
-
-#### API Keys {id="api-keys"}
-
-Note that when using hosted services, you have to ensure that the proper API
-keys are set as environment variables as described by the corresponding
-provider's documentation.
-
-E. g. when using OpenAI, you have to get an API key from openai.com, and ensure
-that the keys are set as environmental variables:
-
 - In Azure LLMs have to be made available by creating a _deployment_ of a given
   model (e. g. GPT-3.5). This deployment can have an arbitrary name. The `name`
   argument, which everywhere else denotes the model name (e. g. `claude-1.0`,
@@ -1051,6 +1041,19 @@ that the keys are set as environmental variables:
 - Azure further expects the _API version_ to be specified. The default value for
   this, via the `api_version` argument, is currently `2023-05-15` but may be
   updated in the future.
+- Finally, since we can't infer information about the model from the deployment
+  name, `spacy-llm` requires the `model_type` to be set to either
+  `"completions"` or `"chat"`, depending on whether the deployed model is a
+  completion or chat model.
+
+#### API Keys {id="api-keys"}
+
+Note that when using hosted services, you have to ensure that the proper API
+keys are set as environment variables as described by the corresponding
+provider's documentation.
+
+E. g. when using OpenAI, you have to get an API key from openai.com, and ensure
+that the keys are set as environmental variables:
 
 ```shell
 export OPENAI_API_KEY="sk-..."
