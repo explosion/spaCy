@@ -290,10 +290,9 @@ for token in doc:
 | toward        | `prep`     | shift     | `NOUN`   | manufacturers           |
 | manufacturers | `pobj`     | toward    | `ADP`    |                         |
 
-<Iframe
-  title="displaCy visualization of dependencies and entities 2"
-  src="/images/displacy-long2.html"
-  height={450}
+<ImageScrollable
+  src="/images/displacy-long2.svg"
+  width={1275}
 />
 
 Because the syntactic relations form a tree, every word has **exactly one
@@ -709,11 +708,9 @@ doc = nlp(text)
 displacy.serve(doc, style="ent")
 ```
 
-<Iframe
-  title="displaCy visualizer for entities"
-  src="/images/displacy-ent2.html"
-  height={180}
-/>
+<Standalone height={180}>
+<div style={{lineHeight: 2.5, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'", fontSize: 18}}>When <mark style={{ background: '#aa9cfc', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>Sebastian Thrun <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>PERSON</span></mark> started working on self-driving cars at <mark style={{ background: '#7aecec', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>Google <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>ORG</span></mark> in <mark style={{ background: '#bfe1d9', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>2007 <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>DATE</span></mark>, few people outside of the company took him seriously.</div>
+</Standalone>
 
 ## Entity Linking {id="entity-linking"}
 

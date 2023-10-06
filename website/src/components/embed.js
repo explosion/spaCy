@@ -107,6 +107,22 @@ const Image = ({ src, alt, title, href, ...props }) => {
     )
 }
 
+const ImageScrollable = ({ src, alt, width, ...props }) => {
+    return (
+        <figure className={classNames(classes.standalone, classes.scrollable)}>
+            <img className={classes['image-scrollable']} src={src} alt={alt} width={width} height="auto" />
+        </figure>
+    )
+}
+
+const Standalone = ({ height, children, ...props }) => {
+    return (
+        <figure className={classes.standalone} style={{ height }}>
+            {children}
+        </figure>
+    )
+}
+
 const ImageFill = ({ image, ...props }) => {
     return (
         <span
@@ -137,4 +153,4 @@ const GoogleSheet = ({ id, link, height, button = 'View full table' }) => {
     )
 }
 
-export { YouTube, SoundCloud, Iframe, Image, ImageFill, GoogleSheet }
+export { YouTube, SoundCloud, Iframe, Image, ImageFill, ImageScrollable, GoogleSheet, Standalone }
