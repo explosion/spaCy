@@ -673,6 +673,22 @@ prompt.
 The formatting of few-shot examples is the same as those for the
 [v1](#textcat-v1) implementation.
 
+If you want to perform few-shot learning with a binary classifier, you can
+provide positive and negative examples - e. g.:
+
+```json
+[
+  {
+    "text": "You won the lottery! Wire a fee of 200$ to be able to withdraw your winnings.",
+    "answer": "Spam"
+  },
+  {
+    "text": "Your order #123456789 has arrived",
+    "answer": "NotSpam"
+  }
+]
+```
+
 #### spacy.TextCat.v2 {id="textcat-v2"}
 
 V2 includes all v1 functionality, with an improved prompt template.
@@ -701,6 +717,22 @@ V2 includes all v1 functionality, with an improved prompt template.
 
 The formatting of few-shot examples is the same as those for the
 [v1](#textcat-v1) implementation.
+
+If you want to perform few-shot learning with a binary classifier, you can
+provide positive and negative examples - e. g.:
+
+```json
+[
+  {
+    "text": "You won the lottery! Wire a fee of 200$ to be able to withdraw your winnings.",
+    "answer": "Spam"
+  },
+  {
+    "text": "Your order #123456789 has arrived",
+    "answer": "NotSpam"
+  }
+]
+```
 
 #### spacy.TextCat.v1 {id="textcat-v1"}
 
@@ -750,6 +782,22 @@ supports `.yml`, `.yaml`, `.json` and `.jsonl`.
 [components.llm.task.examples]
 @misc = "spacy.FewShotReader.v1"
 path = "textcat_examples.json"
+```
+
+If you want to perform few-shot learning with a binary classifier, you can
+provide positive and negative examples - e. g.:
+
+```json
+[
+  {
+    "text": "You won the lottery! Wire a fee of 200$ to be able to withdraw your winnings.",
+    "answer": "Spam"
+  },
+  {
+    "text": "Your order #123456789 has arrived",
+    "answer": "NotSpam"
+  }
+]
 ```
 
 ### REL {id="rel"}
