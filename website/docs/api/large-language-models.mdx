@@ -754,8 +754,9 @@ path = "textcat_examples.json"
 
 If you want to perform few-shot learning with a binary classifier (i. e. a text
 either should or should not be assigned to a given class), you can provide
-positive and negative examples with the POS/NEG label. An example for spam
-classification:
+positive and negative examples with answers of "POS" or "NEG". "POS" means that
+this example should be assigned the class label defined in the configuration,
+"NEG" means it shouldn't. E. g. for spam classification:
 
 ```json
 [
