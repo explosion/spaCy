@@ -325,7 +325,7 @@ ideally provide more context for entities stored in the KB.
 have to provide a trained EL model, merely its default (or custom) candidate
 selection capabilities.
 
-#### spacy.EL.v1 {id="el-v1"}
+#### spacy.EntityLinker.v1 {id="el-v1"}
 
 Supports zero- and few-shot prompting.
 
@@ -355,8 +355,8 @@ Supports zero- and few-shot prompting.
 ##### spacy.CandidateSelector.v1 {id="candidate-selector-v1"}
 
 `spacy.CandidateSelector.v1` is an implementation of the `CandidateSelector`
-protocol required by [`spacy.EL.v1`](#el-v1). The built-in candidate selector
-method leverages a spaCy pipeline with an entity linking component. The
+protocol required by [`spacy.EntityLinker.v1`](#el-v1). The built-in candidate
+selector method leverages a spaCy pipeline with an entity linking component. The
 pipeline's EL component's candidate selection capabilities are used to select
 the most likely entity candidates for the specified mentions.
 
