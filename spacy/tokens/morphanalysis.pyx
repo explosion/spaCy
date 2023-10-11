@@ -1,3 +1,4 @@
+# cython: profile=False
 cimport numpy as np
 from libc.string cimport memset
 

@@ -437,7 +437,7 @@ respectively. Alternatively you can use LangChain to access hosted or local
 models by specifying one of the models registered with the `langchain.` prefix.
 
 <Infobox>
-_Why LangChain if there are also are a native REST and a HuggingFace interface? When should I use what?_
+_Why LangChain if there are also are native REST and HuggingFace interfaces? When should I use what?_
 
 Third-party libraries like `langchain` focus on prompt management, integration
 of many different LLM APIs, and other related features such as conversational
@@ -477,6 +477,7 @@ provider's documentation.
 | [`spacy.Curie.v2`](/api/large-language-models#models-rest)              | OpenAI’s `curie` model family.                 |
 | [`spacy.Babbage.v2`](/api/large-language-models#models-rest)            | OpenAI’s `babbage` model family.               |
 | [`spacy.Ada.v2`](/api/large-language-models#models-rest)                | OpenAI’s `ada` model family.                   |
+| [`spacy.Azure.v1`](/api/large-language-models#models-rest)              | Azure's OpenAI models.                         |
 | [`spacy.Command.v1`](/api/large-language-models#models-rest)            | Cohere’s `command` model family.               |
 | [`spacy.Claude-2.v1`](/api/large-language-models#models-rest)           | Anthropic’s `claude-2` model family.           |
 | [`spacy.Claude-1.v1`](/api/large-language-models#models-rest)           | Anthropic’s `claude-1` model family.           |
@@ -485,8 +486,10 @@ provider's documentation.
 | [`spacy.Claude-1-0.v1`](/api/large-language-models#models-rest)         | Anthropic’s `claude-1.0` model family.         |
 | [`spacy.Claude-1-2.v1`](/api/large-language-models#models-rest)         | Anthropic’s `claude-1.2` model family.         |
 | [`spacy.Claude-1-3.v1`](/api/large-language-models#models-rest)         | Anthropic’s `claude-1.3` model family.         |
+| [`spacy.PaLM.v1`](/api/large-language-models#models-rest)               | Google’s `PaLM` model family.                  |
 | [`spacy.Dolly.v1`](/api/large-language-models#models-hf)                | Dolly models through HuggingFace.              |
 | [`spacy.Falcon.v1`](/api/large-language-models#models-hf)               | Falcon models through HuggingFace.             |
+| [`spacy.Mistral.v1`](/api/large-language-models#models-hf)              | Mistral models through HuggingFace.            |
 | [`spacy.Llama2.v1`](/api/large-language-models#models-hf)               | Llama2 models through HuggingFace.             |
 | [`spacy.StableLM.v1`](/api/large-language-models#models-hf)             | StableLM models through HuggingFace.           |
 | [`spacy.OpenLLaMA.v1`](/api/large-language-models#models-hf)            | OpenLLaMA models through HuggingFace.          |

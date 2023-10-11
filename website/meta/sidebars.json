@@ -15,7 +15,8 @@
                     { "text": "New in v3.3", "url": "/usage/v3-3" },
                     { "text": "New in v3.4", "url": "/usage/v3-4" },
                     { "text": "New in v3.5", "url": "/usage/v3-5" },
-                    { "text": "New in v3.6", "url": "/usage/v3-6" }
+                    { "text": "New in v3.6", "url": "/usage/v3-6" },
+                    { "text": "New in v3.7", "url": "/usage/v3-7" }
                 ]
             },
             {
@@ -100,6 +101,7 @@
                 "items": [
                     { "text": "AttributeRuler", "url": "/api/attributeruler" },
                     { "text": "CoreferenceResolver", "url": "/api/coref" },
+                    { "text": "CuratedTransformer", "url": "/api/curatedtransformer" },
                     { "text": "DependencyParser", "url": "/api/dependencyparser" },
                     { "text": "EditTreeLemmatizer", "url": "/api/edittreelemmatizer" },
                     { "text": "EntityLinker", "url": "/api/entitylinker" },
@@ -135,6 +137,7 @@
                 "label": "Other",
                 "items": [
                     { "text": "Attributes", "url": "/api/attributes" },
+                    { "text": "BaseVectors", "url": "/api/basevectors" },
                     { "text": "Corpus", "url": "/api/corpus" },
                     { "text": "InMemoryLookupKB", "url": "/api/inmemorylookupkb" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },

@@ -1,4 +1,4 @@
-# cython: infer_types=True, profile=True
+# cython: infer_types=True
 from preshed.maps cimport map_clear, map_get, map_init, map_iter, map_set
 
 import warnings

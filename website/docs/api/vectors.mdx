@@ -297,10 +297,9 @@ The vector size, i.e. `rows * dims`.
 
 ## Vectors.is_full {id="is_full",tag="property"}
 
-Whether the vectors table is full and has no slots are available for new keys.
-If a table is full, it can be resized using
-[`Vectors.resize`](/api/vectors#resize). In `floret` mode, the table is always
-full and cannot be resized.
+Whether the vectors table is full and no slots are available for new keys. If a
+table is full, it can be resized using [`Vectors.resize`](/api/vectors#resize).
+In `floret` mode, the table is always full and cannot be resized.
 
 > #### Example
 >
@@ -441,7 +440,7 @@ Load state from a binary string.
 > #### Example
 >
 > ```python
-> fron spacy.vectors import Vectors
+> from spacy.vectors import Vectors
 > vectors_bytes = vectors.to_bytes()
 > new_vectors = Vectors(StringStore())
 > new_vectors.from_bytes(vectors_bytes)

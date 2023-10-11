@@ -1,3 +1,4 @@
+# cython: profile=False
 from cymem.cymem cimport Pool
 from libc.stdint cimport int32_t
 
