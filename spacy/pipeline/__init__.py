@@ -22,6 +22,7 @@ from .trainable_pipe import TrainablePipe
 __all__ = [
     "AttributeRuler",
     "DependencyParser",
+    "EditTreeLemmatizer",
     "EntityLinker",
     "EntityRecognizer",
     "EntityRuler",
