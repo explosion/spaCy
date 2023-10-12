@@ -140,14 +140,14 @@ cdef class Token:
         return self.__str__()
 
     def __richcmp__(self, object other, int op):
-        if not isinstance(other, Token):
-            return False
         # http://cython.readthedocs.io/en/latest/src/userguide/special_methods.html
         if other is None:
             if op in (0, 1, 2):
                 return False
             else:
                 return True
+        if not isinstance(other, Token):
+            return False
         cdef Token other_token = other
         cdef Doc my_doc = self.doc
         cdef Doc other_doc = other_token.doc

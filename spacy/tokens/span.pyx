@@ -128,13 +128,13 @@ cdef class Span:
         self._vector_norm = vector_norm
 
     def __richcmp__(self, object other, int op):
-        if not isinstance(other, Span):
-            return False
         if other is None:
             if op == 0 or op == 1 or op == 2:
                 return False
             else:
                 return True
+        if not isinstance(other, Span):
+            return False
         cdef Span other_span = other
         self_tuple = (self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id, self.id, self.doc)
         other_tuple = (other_span.c.start_char, other_span.c.end_char, other_span.c.label, other_span.c.kb_id, other_span.id, other_span.doc)
