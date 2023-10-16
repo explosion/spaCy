@@ -16,3 +16,28 @@ from .iob_utils import (  # noqa: F401
     tags_to_entities,
 )
 from .loggers import console_logger  # noqa: F401
+
+__all__ = [
+    "Alignment",
+    "Corpus",
+    "Example",
+    "JsonlCorpus",
+    "PlainTextCorpus",
+    "biluo_tags_to_offsets",
+    "biluo_tags_to_spans",
+    "biluo_to_iob",
+    "create_copy_from_base_model",
+    "docs_to_json",
+    "dont_augment",
+    "iob_to_biluo",
+    "minibatch_by_padded_size",
+    "minibatch_by_words",
+    "offsets_to_biluo_tags",
+    "orth_variants_augmenter",
+    "read_json_file",
+    "remove_bilu_prefix",
+    "split_bilu_label",
+    "tags_to_entities",
+    "validate_get_examples",
+    "validate_examples",
+]
