@@ -484,7 +484,7 @@ def test_displacy_span_stacking():
     assert len(per_token_info) == len(tokens)
     assert all([len(per_token_info[i]["entities"]) == 1 for i in (0, 3, 4)])
     assert all([len(per_token_info[i]["entities"]) == 2 for i in (1, 2)])
-    assert per_token_info[1]["entities"][1]["render_slot"] == 1
-    assert per_token_info[1]["entities"][2]["render_slot"] == 2
-    assert per_token_info[2]["entities"][1]["render_slot"] == 2
-    assert per_token_info[2]["entities"][2]["render_slot"] == 3
+    assert per_token_info[1]["entities"][0]["render_slot"] == 1
+    assert per_token_info[1]["entities"][1]["render_slot"] == 2
+    assert per_token_info[2]["entities"][0]["render_slot"] == 2
+    assert per_token_info[2]["entities"][1]["render_slot"] == 3
