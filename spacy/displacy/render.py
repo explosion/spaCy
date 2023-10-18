@@ -163,7 +163,6 @@ class SpanRenderer:
             # start token of said Span. We'll use this for the final HTML render
             token_markup: Dict[str, Any] = {}
             token_markup["text"] = token
-            concurrent_spans = 0
             intersecting_spans: List[Dict[str, Any]] = []
             entities = []
             for span in spans:
@@ -176,8 +175,11 @@ class SpanRenderer:
                         # When the span starts, we need to know how many other
                         # spans are on the 'span stack' and will be rendered.
                         # This value becomes the vertical render slot for this entire span
-                        span["render_slot"] = \
-                            (intersecting_spans[-1]["render_slot"] if len(intersecting_spans) else 0) + 1
+                        span["render_slot"] = (
+                            intersecting_spans[-1]["render_slot"]
+                            if len(intersecting_spans)
+                            else 0
+                        ) + 1
                     intersecting_spans.append(span)
                     ent["render_slot"] = span["render_slot"]
                     kb_id = span.get("kb_id", "")
