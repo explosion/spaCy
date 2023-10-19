@@ -730,6 +730,7 @@ object, or the `ent_kb_id` and `ent_kb_id_` attributes of a
 ```python
 import spacy
 
+# "my_custom_el_pipeline" is assumed to be a custom NLP pipeline that was trained and serialized to disk
 nlp = spacy.load("my_custom_el_pipeline")
 doc = nlp("Ada Lovelace was born in London")
 
