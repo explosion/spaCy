@@ -290,10 +290,7 @@ for token in doc:
 | toward        | `prep`     | shift     | `NOUN`   | manufacturers           |
 | manufacturers | `pobj`     | toward    | `ADP`    |                         |
 
-<ImageScrollable
-  src="/images/displacy-long2.svg"
-  width={1275}
-/>
+<ImageScrollable src="/images/displacy-long2.svg" width={1275} />
 
 Because the syntactic relations form a tree, every word has **exactly one
 head**. You can therefore iterate over the arcs in the tree by iterating over
@@ -709,7 +706,85 @@ displacy.serve(doc, style="ent")
 ```
 
 <Standalone height={180}>
-<div style={{lineHeight: 2.5, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'", fontSize: 18}}>When <mark style={{ background: '#aa9cfc', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>Sebastian Thrun <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>PERSON</span></mark> started working on self-driving cars at <mark style={{ background: '#7aecec', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>Google <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>ORG</span></mark> in <mark style={{ background: '#bfe1d9', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>2007 <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>DATE</span></mark>, few people outside of the company took him seriously.</div>
+  <div
+    style={{
+      lineHeight: 2.5,
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'",
+      fontSize: 18,
+    }}
+  >
+    When{' '}
+    <mark
+      style={{
+        background: '#aa9cfc',
+        padding: '0.45em 0.6em',
+        margin: '0 0.25em',
+        lineHeight: 1,
+        borderRadius: '0.35em',
+      }}
+    >
+      Sebastian Thrun{' '}
+      <span
+        style={{
+          fontSize: '0.8em',
+          fontWeight: 'bold',
+          lineHeight: 1,
+          borderRadius: '0.35em',
+          marginLeft: '0.5rem',
+        }}
+      >
+        PERSON
+      </span>
+    </mark>{' '}
+    started working on self-driving cars at{' '}
+    <mark
+      style={{
+        background: '#7aecec',
+        padding: '0.45em 0.6em',
+        margin: '0 0.25em',
+        lineHeight: 1,
+        borderRadius: '0.35em',
+      }}
+    >
+      Google{' '}
+      <span
+        style={{
+          fontSize: '0.8em',
+          fontWeight: 'bold',
+          lineHeight: 1,
+          borderRadius: '0.35em',
+          marginLeft: '0.5rem',
+        }}
+      >
+        ORG
+      </span>
+    </mark>{' '}
+    in{' '}
+    <mark
+      style={{
+        background: '#bfe1d9',
+        padding: '0.45em 0.6em',
+        margin: '0 0.25em',
+        lineHeight: 1,
+        borderRadius: '0.35em',
+      }}
+    >
+      2007{' '}
+      <span
+        style={{
+          fontSize: '0.8em',
+          fontWeight: 'bold',
+          lineHeight: 1,
+          borderRadius: '0.35em',
+          marginLeft: '0.5rem',
+        }}
+      >
+        DATE
+      </span>
+    </mark>
+    , few people outside of the company took him seriously.
+  </div>
 </Standalone>
 
 ## Entity Linking {id="entity-linking"}
@@ -721,7 +796,8 @@ identifier from a knowledge base (KB). You can create your own
 [`EntityLinker`](/api/entitylinker) using that custom knowledge base.
 
 As an example on how to define a KnowledgeBase and train an entity linker model,
-see this [`this tutorial`](https://github.com/explosion/projects/blob/v3/tutorials/nel_emerson)
+see this
+[`this tutorial`](https://github.com/explosion/projects/blob/v3/tutorials/nel_emerson)
 using [spaCy projects](/usage/projects).
 
 ### Accessing entity identifiers {id="entity-linking-accessing",model="entity linking"}
