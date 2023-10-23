@@ -7,7 +7,13 @@ from wasabi import msg
 
 from .. import about
 from ..errors import OLD_MODEL_SHORTCUTS
-from ..util import get_minor_version, is_package, is_prerelease_version, run_command
+from ..util import (
+    get_minor_version,
+    is_in_jupyter,
+    is_package,
+    is_prerelease_version,
+    run_command,
+)
 from ._util import SDIST_SUFFIX, WHEEL_SUFFIX, Arg, Opt, app
 
 
@@ -76,6 +82,22 @@ def download(
     msg.good(
         "Download and installation successful",
         f"You can now load the package via spacy.load('{model_name}')",
+    )
+
+    reload_deps_msg = (
+        "If you have one or more instances of the Python runtime executing "
+        "in the background, you'll need to restart them to correctly load "
+        "the dependencies of the newly downloaded model. "
+    )
+    if is_in_jupyter():
+        reload_deps_msg = (
+            f"{reload_deps_msg}This includes the current Jupyter session: "
+            "You can do this clicking on the 'Restart Kernel' button (or "
+            "'Restart Runtime' button in the case of Google Colab)"
+        )
+    msg.info(
+        "Reloading dependencies",
+        reload_deps_msg,
     )
 
 
