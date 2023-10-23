@@ -32,7 +32,7 @@ as well as through task-specific component factories: `llm_ner`, `llm_spancat`,
 > llm = nlp.add_pipe("llm", config=config)
 >
 > # Construction via add_pipe with a task-specific factory and default GPT3.5 model
-> llm = nlp.add_pipe("llm-ner")
+> llm = nlp.add_pipe("llm_ner")
 >
 > # Construction from class
 > from spacy_llm.pipeline import LLMWrapper
