@@ -229,8 +229,9 @@ class Errors(metaclass=ErrorsWithCodes):
             "If you're using a Transformer, make sure to install 'spacy-transformers'. "
             "If you're using a custom component, make sure you've added the "
             "decorator `@Language.component` (for function components) or "
-            "`@Language.factory` (for class components).\n\nAvailable "
-            "factories: {opts}")
+            "`@Language.factory` (for class components). If you installed the model "
+            "during the current Python session, you'll need to restart Python to "
+            "correctly load the dependencies.\n\nAvailable factories: {opts}")
     E003 = ("Not a valid pipeline component. Expected callable, but "
             "got {component} (name: '{name}'). If you're using a custom "
             "component factory, double-check that it correctly returns your "
