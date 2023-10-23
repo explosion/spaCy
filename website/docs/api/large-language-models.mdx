@@ -16,14 +16,6 @@ prototyping** and **prompting**, and turning unstructured responses into
 
 ## Config and implementation {id="config"}
 
-An LLM component is implemented through the `LLMWrapper` class. It is accessible
-through a generic `llm`
-[component factory](https://spacy.io/usage/processing-pipelines#custom-components-factories)
-as well as through task-specific component factories: `llm_ner`, `llm_spancat`,
-`llm_rel`, `llm_textcat`, `llm_sentiment` and `llm_summarization`.
-
-### LLMWrapper.\_\_init\_\_ {id="init",tag="method"}
-
 > #### Example
 >
 > ```python
@@ -34,10 +26,23 @@ as well as through task-specific component factories: `llm_ner`, `llm_spancat`,
 > # Construction via add_pipe with a task-specific factory and default GPT3.5 model
 > llm = nlp.add_pipe("llm_ner")
 >
+> # Construction via add_pipe with a task-specific factory and custom model
+> llm = nlp.add_pipe("llm_ner", config={"model": {"@llm_models": "spacy.Dolly.v1", "name": "dolly-v2-12b"}})
+>
 > # Construction from class
 > from spacy_llm.pipeline import LLMWrapper
 > llm = LLMWrapper(vocab=nlp.vocab, task=task, model=model, cache=cache, save_io=True)
 > ```
+
+An LLM component is implemented through the `LLMWrapper` class. It is accessible
+through a generic `llm`
+[component factory](https://spacy.io/usage/processing-pipelines#custom-components-factories)
+as well as through task-specific component factories: `llm_ner`, `llm_spancat`,
+`llm_rel`, `llm_textcat`, `llm_sentiment` and `llm_summarization`. For these
+factories, the GPT-3-5 model from OpenAI is used by default, but this can be
+customized.
+
+### LLMWrapper.\_\_init\_\_ {id="init",tag="method"}
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
