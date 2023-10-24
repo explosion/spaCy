@@ -43,11 +43,12 @@ import catalogue
 import langcodes
 import numpy
 import srsly
-import thinc
 from catalogue import Registry, RegistryError
 from packaging.requirements import Requirement
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import InvalidVersion, Version
+
+import thinc
 from thinc.api import (
     Adam,
     Config,
@@ -1109,6 +1110,15 @@ def is_in_jupyter() -> bool:
     except NameError:
         return False  # Probably standard Python interpreter
     return False
+
+
+def is_in_interactive() -> bool:
+    """Check if user is running spaCy from an interactive Python
+    shell. Will return True in Jupyter notebooks too.
+    RETURNS (bool): True if in interactive mode, False if not.
+    """
+    # https://stackoverflow.com/questions/2356399/tell-if-python-is-in-interactive-mode
+    return hasattr(sys, "ps1") or hasattr(sys, "ps2")
 
 
 def get_object_name(obj: Any) -> str:

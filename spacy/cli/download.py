@@ -9,6 +9,7 @@ from .. import about
 from ..errors import OLD_MODEL_SHORTCUTS
 from ..util import (
     get_minor_version,
+    is_in_interactive,
     is_in_jupyter,
     is_package,
     is_prerelease_version,
@@ -94,6 +95,11 @@ def download(
             f"{reload_deps_msg}This includes the current Jupyter session: "
             "You can do this clicking on the 'Restart Kernel' button (or "
             "'Restart Runtime' button in the case of Google Colab)"
+        )
+    elif is_in_interactive():
+        reload_deps_msg = (
+            f"{reload_deps_msg}This includes the current interactive Python session: "
+            "You can do this by pressing 'Ctrl+D' (or 'Ctrl+Z' and 'Enter' on Windows)."
         )
     msg.info(
         "Reloading dependencies",
