@@ -43,12 +43,11 @@ import catalogue
 import langcodes
 import numpy
 import srsly
+import thinc
 from catalogue import Registry, RegistryError
 from packaging.requirements import Requirement
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import InvalidVersion, Version
-
-import thinc
 from thinc.api import (
     Adam,
     Config,
