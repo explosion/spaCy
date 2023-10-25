@@ -112,7 +112,6 @@ def sentence_strategy(draw: hypothesis.strategies.DrawFn, max_n_words: int = 4) 
     return " ".join([token for token_pair in sentence for token in token_pair])
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("lang", LANGUAGES)
 @hypothesis.given(sentence=sentence_strategy())
 def test_tokenizer_explain_fuzzy(lang: str, sentence: str) -> None:
@@ -123,6 +122,9 @@ def test_tokenizer_explain_fuzzy(lang: str, sentence: str) -> None:
     """
 
     tokenizer: Tokenizer = spacy.blank(lang).tokenizer
-    tokens = [t.text for t in tokenizer(sentence) if not t.is_space]
+    # Tokenizer.explain is not intended to handle whitespace or control
+    # characters in the same way as Tokenizer
+    sentence = re.sub(r"\s+", " ", sentence).strip()
+    tokens = [t.text for t in tokenizer(sentence)]
     debug_tokens = [t[1] for t in tokenizer.explain(sentence)]
     assert tokens == debug_tokens, f"{tokens}, {debug_tokens}, {sentence}"
