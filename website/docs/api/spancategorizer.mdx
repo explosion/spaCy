@@ -91,16 +91,15 @@ architectures and their arguments and hyperparameters.
 
 <Infobox variant="warning">
 
-> If you set a non-default value for `spans_key`, you'll have to update
-> `[training.score_weights]` as well so that weights are computed properly. E.
-> g. for `span_key == "myspankey"`, include this in your config:
->
-> ```ini
-> [training.score_weights]
-> spans_myspankey_f = 1.0
-> spans_myspankey_p = 0.0
-> spans_myspankey_r = 0.0
-> ```
+If you set a non-default value for `spans_key`, you'll have to update
+`[training.score_weights]` as well so that weights are computed properly. E. g. for `span_key == "myspankey"`, include this in your config:
+
+```ini
+[training.score_weights]
+spans_myspankey_f = 1.0
+spans_myspankey_p = 0.0
+spans_myspankey_r = 0.0
+```
 
 </Infobox>
 
