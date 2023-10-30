@@ -89,9 +89,11 @@ architectures and their arguments and hyperparameters.
 | `negative_weight` <Tag variant="new">3.5.1</Tag>    | Multiplier for the loss terms. It can be used to downweight the negative samples if there are too many. It is only used when `add_negative_label` is `True`. Defaults to `1.0`. ~~float~~                                                                                                               |
 | `allow_overlap` <Tag variant="new">3.5.1</Tag>      | If `True`, the data is assumed to contain overlapping spans. It is only available when `max_positive` is exactly 1. Defaults to `True`. ~~bool~~                                                                                                                                                        |
 
-> ⚠️ Caution: if you set a non-default value for `spans_key`, you'll have to
-> update `[training.score_weights]` as well so that weights are computed
-> properly. E. g. for `span_key == "myspankey"`, include this in your config:
+<Infobox variant="warning">
+
+> If you set a non-default value for `spans_key`, you'll have to update
+> `[training.score_weights]` as well so that weights are computed properly. E.
+> g. for `span_key == "myspankey"`, include this in your config:
 >
 > ```ini
 > [training.score_weights]
@@ -99,6 +101,8 @@ architectures and their arguments and hyperparameters.
 > spans_myspankey_p = 0.0
 > spans_myspankey_r = 0.0
 > ```
+
+</Infobox>
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/spancat.py
