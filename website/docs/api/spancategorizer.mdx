@@ -92,17 +92,17 @@ architectures and their arguments and hyperparameters.
 > ⚠️ Note that if you set a non-default value for `spans_key`, you'll have to
 > update `[training.score_weights]` as well so that weights are computed
 > properly. I. e. for `span_key == "myspankey"`, include this in your config:
-
-````ini
-[training.score_weights]
-spans_myspankey_f = 1.0
-spans_myspankey_p = 0.0
-spans_myspankey_r = 0.0
-```ini
+>
+> ```ini
+> [training.score_weights]
+> spans_myspankey_f = 1.0
+> spans_myspankey_p = 0.0
+> spans_myspankey_r = 0.0
+> ```
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/spancat.py
-````
+```
 
 ## SpanCategorizer.\_\_init\_\_ {id="init",tag="method"}
 
