@@ -290,10 +290,7 @@ for token in doc:
 | toward        | `prep`     | shift     | `NOUN`   | manufacturers           |
 | manufacturers | `pobj`     | toward    | `ADP`    |                         |
 
-<ImageScrollable
-  src="/images/displacy-long2.svg"
-  width={1275}
-/>
+<ImageScrollable src="/images/displacy-long2.svg" width={1275} />
 
 Because the syntactic relations form a tree, every word has **exactly one
 head**. You can therefore iterate over the arcs in the tree by iterating over
@@ -720,6 +717,10 @@ identifier from a knowledge base (KB). You can create your own
 [`KnowledgeBase`](/api/kb) and [train](/usage/training) a new
 [`EntityLinker`](/api/entitylinker) using that custom knowledge base.
 
+As an example on how to define a KnowledgeBase and train an entity linker model,
+see [`this tutorial`](https://github.com/explosion/projects/blob/v3/tutorials/nel_emerson)
+using [spaCy projects](/usage/projects).
+
 ### Accessing entity identifiers {id="entity-linking-accessing",model="entity linking"}
 
 The annotated KB identifier is accessible as either a hash value or as a string,
@@ -730,6 +731,7 @@ object, or the `ent_kb_id` and `ent_kb_id_` attributes of a
 ```python
 import spacy
 
+# "my_custom_el_pipeline" is assumed to be a custom NLP pipeline that was trained and serialized to disk
 nlp = spacy.load("my_custom_el_pipeline")
 doc = nlp("Ada Lovelace was born in London")
 
