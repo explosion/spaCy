@@ -12,7 +12,6 @@ from thinc.api import Config
 
 import spacy
 from spacy import about
-from spacy import info as spacy_info
 from spacy.cli import info
 from spacy.cli._util import parse_config_overrides, string_to_list, walk_directory
 from spacy.cli.apply import apply
@@ -191,9 +190,6 @@ def test_cli_info():
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
         raw_data = info(tmp_dir, exclude=[""])
-        assert raw_data["lang"] == "nl"
-        assert raw_data["components"] == ["textcat"]
-        raw_data = spacy_info(tmp_dir, exclude=[""])
         assert raw_data["lang"] == "nl"
         assert raw_data["components"] == ["textcat"]
 
@@ -538,7 +534,6 @@ def test_string_to_list_intify(value):
     assert string_to_list(value, intify=True) == [1, 2, 3]
 
 
-@pytest.mark.skip(reason="Temporarily skip before 3.7 models are published")
 def test_download_compatibility():
     spec = SpecifierSet("==" + about.__version__)
     spec.prereleases = False
@@ -549,7 +544,6 @@ def test_download_compatibility():
         assert get_minor_version(about.__version__) == get_minor_version(version)
 
 
-@pytest.mark.skip(reason="Temporarily skip before 3.7 models are published")
 def test_validate_compatibility_table():
     spec = SpecifierSet("==" + about.__version__)
     spec.prereleases = False
@@ -1067,3 +1061,8 @@ def test_debug_data_trainable_lemmatizer_not_annotated():
 
     data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
     assert data["no_lemma_annotations"] == 2
+
+
+def test_project_api_imports():
+    from spacy.cli import project_run
+    from spacy.cli.project.run import project_run  # noqa: F401, F811

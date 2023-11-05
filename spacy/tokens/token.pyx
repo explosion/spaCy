@@ -139,17 +139,20 @@ cdef class Token:
     def __repr__(self):
         return self.__str__()
 
-    def __richcmp__(self, Token other, int op):
+    def __richcmp__(self, object other, int op):
         # http://cython.readthedocs.io/en/latest/src/userguide/special_methods.html
         if other is None:
             if op in (0, 1, 2):
                 return False
             else:
                 return True
+        if not isinstance(other, Token):
+            return False
+        cdef Token other_token = other
         cdef Doc my_doc = self.doc
-        cdef Doc other_doc = other.doc
+        cdef Doc other_doc = other_token.doc
         my = self.idx
-        their = other.idx
+        their = other_token.idx
         if op == 0:
             return my < their
         elif op == 2:

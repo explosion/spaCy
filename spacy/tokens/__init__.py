@@ -5,4 +5,4 @@ from .span import Span
 from .span_group import SpanGroup
 from .token import Token
 
-__all__ = ["Doc", "Token", "Span", "SpanGroup", "DocBin", "MorphAnalysis"]
+__all__ = ["Doc", "DocBin", "MorphAnalysis", "Span", "SpanGroup", "Token"]
