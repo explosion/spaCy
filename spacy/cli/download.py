@@ -84,27 +84,27 @@ def download(
         "Download and installation successful",
         f"You can now load the package via spacy.load('{model_name}')",
     )
-
-    reload_deps_msg = (
-        "If you have one or more instances of the Python runtime executing "
-        "in the background, you'll need to restart them to correctly load "
-        "the dependencies of the newly downloaded model. "
-    )
     if is_in_jupyter():
         reload_deps_msg = (
-            f"{reload_deps_msg}This includes the current Jupyter session: "
-            "You can do this clicking on the 'Restart Kernel' button (or "
-            "'Restart Runtime' button in the case of Google Colab)"
+            "If you are in a Jupyter or Colab notebook, you may need to "
+            "restart Python in order to load all the package's dependencies. "
+            "You can do this by selecting the 'Restart kernel' or 'Restart "
+            "runtime' option."
+        )
+        msg.warn(
+            "Restart to reload dependencies",
+            reload_deps_msg,
         )
     elif is_in_interactive():
         reload_deps_msg = (
-            f"{reload_deps_msg}This includes the current interactive Python session: "
-            "You can do this by pressing 'Ctrl+D' (or 'Ctrl+Z' and 'Enter' on Windows)."
+            "If you are in an interactive Python session, you may need to "
+            "exit and restart Python to load all the package's dependencies. "
+            "You can exit with Ctrl-D (or Ctrl-Z and Enter on Windows)."
         )
-    msg.info(
-        "Reloading dependencies",
-        reload_deps_msg,
-    )
+        msg.warn(
+            "Restart to reload dependencies",
+            reload_deps_msg,
+        )
 
 
 def get_model_filename(model_name: str, version: str, sdist: bool = False) -> str:
