@@ -1097,17 +1097,26 @@ def is_cwd(path: Union[Path, str]) -> bool:
 
 
 def is_in_jupyter() -> bool:
-    """Check if user is running spaCy from a Jupyter notebook by detecting the
-    IPython kernel. Mainly used for the displaCy visualizer.
-    RETURNS (bool): True if in Jupyter, False if not.
+    """Check if user is running spaCy from a Jupyter or Colab notebook by
+    detecting the IPython kernel. Mainly used for the displaCy visualizer.
+    RETURNS (bool): True if in Jupyter/Colab, False if not.
     """
     # https://stackoverflow.com/a/39662359/6400719
+    # https://stackoverflow.com/questions/15411967
     try:
-        shell = get_ipython().__class__.__name__  # type: ignore[name-defined]
-        if shell == "ZMQInteractiveShell":
+        if get_ipython().__class__.__name__ == "ZMQInteractiveShell":  # type: ignore[name-defined]
             return True  # Jupyter notebook or qtconsole
+        if get_ipython().__class__.__module__ == "google.colab._shell":  # type: ignore[name-defined]
+            return True  # Colab notebook
     except NameError:
         return False  # Probably standard Python interpreter
+    # additional check for Colab
+    try:
+        import google.colab
+
+        return True  # Colab notebook
+    except ImportError:
+        return False
     return False
 
 
