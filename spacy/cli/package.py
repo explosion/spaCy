@@ -11,6 +11,7 @@ from thinc.api import Config
 from wasabi import MarkdownRenderer, Printer, get_raw_input
 
 from .. import about, util
+from ..compat import importlib_metadata
 from ..schemas import ModelMetaSchema, validate
 from ._util import SDIST_SUFFIX, WHEEL_SUFFIX, Arg, Opt, app, string_to_list
 
@@ -35,7 +36,7 @@ def package_cli(
     specified output directory, and the data will be copied over. If
     --create-meta is set and a meta.json already exists in the output directory,
     the existing values will be used as the defaults in the command-line prompt.
-    After packaging, "python setup.py sdist" is run in the package directory,
+    After packaging, "python -m build --sdist" is run in the package directory,
     which will create a .tar.gz archive that can be installed via "pip install".
 
     If additional code files are provided (e.g. Python files containing custom
@@ -78,9 +79,9 @@ def package(
     input_path = util.ensure_path(input_dir)
     output_path = util.ensure_path(output_dir)
     meta_path = util.ensure_path(meta_path)
-    if create_wheel and not has_wheel():
-        err = "Generating a binary .whl file requires wheel to be installed"
-        msg.fail(err, "pip install wheel", exits=1)
+    if (create_sdist or create_wheel) and not has_build():
+        err = "Generating packages requires 'build' to be installed"
+        msg.fail(err, "pip install build", exits=1)
     if not input_path or not input_path.exists():
         msg.fail("Can't locate pipeline data", input_path, exits=1)
     if not output_path or not output_path.exists():
@@ -184,12 +185,16 @@ def package(
     msg.good(f"Successfully created package directory '{model_name_v}'", main_path)
     if create_sdist:
         with util.working_dir(main_path):
-            util.run_command([sys.executable, "setup.py", "sdist"], capture=False)
+            util.run_command(
+                [sys.executable, "-m", "build", ".", "--sdist"], capture=False
+            )
         zip_file = main_path / "dist" / f"{model_name_v}{SDIST_SUFFIX}"
         msg.good(f"Successfully created zipped Python package", zip_file)
     if create_wheel:
         with util.working_dir(main_path):
-            util.run_command([sys.executable, "setup.py", "bdist_wheel"], capture=False)
+            util.run_command(
+                [sys.executable, "-m", "build", ".", "--wheel"], capture=False
+            )
         wheel_name_squashed = re.sub("_+", "_", model_name_v)
         wheel = main_path / "dist" / f"{wheel_name_squashed}{WHEEL_SUFFIX}"
         msg.good(f"Successfully created binary wheel", wheel)
@@ -206,6 +211,17 @@ def has_wheel() -> bool:
 
         return True
     except ImportError:
+        return False
+
+
+def has_build() -> bool:
+    # it's very likely that there is a local directory named build/ (especially
+    # in an editable install), so an import check is not sufficient; instead
+    # check that there is a package version
+    try:
+        importlib_metadata.version("build")
+        return True
+    except importlib_metadata.PackageNotFoundError:  # type: ignore[attr-defined]
         return False
 
 
