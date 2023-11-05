@@ -9,13 +9,9 @@
                     { "text": "Models & Languages", "url": "/usage/models" },
                     { "text": "Facts & Figures", "url": "/usage/facts-figures" },
                     { "text": "spaCy 101", "url": "/usage/spacy-101" },
-                    { "text": "New in v3.0", "url": "/usage/v3" },
-                    { "text": "New in v3.1", "url": "/usage/v3-1" },
-                    { "text": "New in v3.2", "url": "/usage/v3-2" },
-                    { "text": "New in v3.3", "url": "/usage/v3-3" },
-                    { "text": "New in v3.4", "url": "/usage/v3-4" },
-                    { "text": "New in v3.5", "url": "/usage/v3-5" },
-                    { "text": "New in v3.6", "url": "/usage/v3-6" }
+                    { "text": "New in v3.7", "url": "/usage/v3-7" },
+                    { "text": "New in v3.6", "url": "/usage/v3-6" },
+                    { "text": "New in v3.5", "url": "/usage/v3-5" }
                 ]
             },
             {
@@ -100,6 +96,7 @@
                 "items": [
                     { "text": "AttributeRuler", "url": "/api/attributeruler" },
                     { "text": "CoreferenceResolver", "url": "/api/coref" },
+                    { "text": "CuratedTransformer", "url": "/api/curatedtransformer" },
                     { "text": "DependencyParser", "url": "/api/dependencyparser" },
                     { "text": "EditTreeLemmatizer", "url": "/api/edittreelemmatizer" },
                     { "text": "EntityLinker", "url": "/api/entitylinker" },
@@ -135,6 +132,7 @@
                 "label": "Other",
                 "items": [
                     { "text": "Attributes", "url": "/api/attributes" },
+                    { "text": "BaseVectors", "url": "/api/basevectors" },
                     { "text": "Corpus", "url": "/api/corpus" },
                     { "text": "InMemoryLookupKB", "url": "/api/inmemorylookupkb" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },

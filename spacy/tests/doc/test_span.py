@@ -731,3 +731,12 @@ def test_for_no_ent_sents():
     sents = list(doc.ents[0].sents)
     assert len(sents) == 1
     assert str(sents[0]) == str(doc.ents[0].sent) == "ENTITY"
+
+
+def test_span_api_richcmp_other(en_tokenizer):
+    doc1 = en_tokenizer("a b")
+    doc2 = en_tokenizer("b c")
+    assert not doc1[1:2] == doc1[1]
+    assert not doc1[1:2] == doc2[0]
+    assert not doc1[1:2] == doc2[0:1]
+    assert not doc1[0:1] == doc2

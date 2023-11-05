@@ -1,4 +1,5 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
+# cython: profile=False
 from __future__ import print_function
 
 cimport numpy as np
