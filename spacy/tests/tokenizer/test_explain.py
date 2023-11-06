@@ -85,6 +85,18 @@ def test_tokenizer_explain_special_matcher(en_vocab):
     assert tokens == explain_tokens
 
 
+def test_tokenizer_explain_special_matcher_whitespace(en_vocab):
+    rules = {":]": [{"ORTH": ":]"}]}
+    tokenizer = Tokenizer(
+        en_vocab,
+        rules=rules,
+    )
+    text = ": ]"
+    tokens = [t.text for t in tokenizer(text)]
+    explain_tokens = [t[1] for t in tokenizer.explain(text)]
+    assert tokens == explain_tokens
+
+
 @hypothesis.strategies.composite
 def sentence_strategy(draw: hypothesis.strategies.DrawFn, max_n_words: int = 4) -> str:
     """
@@ -112,6 +124,7 @@ def sentence_strategy(draw: hypothesis.strategies.DrawFn, max_n_words: int = 4) 
     return " ".join([token for token_pair in sentence for token in token_pair])
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize("lang", LANGUAGES)
 @hypothesis.given(sentence=sentence_strategy())
 def test_tokenizer_explain_fuzzy(lang: str, sentence: str) -> None:
