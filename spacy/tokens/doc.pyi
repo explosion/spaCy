@@ -42,7 +42,7 @@ class Doc:
     user_hooks: Dict[str, Callable[..., Any]]
     user_token_hooks: Dict[str, Callable[..., Any]]
     user_span_hooks: Dict[str, Callable[..., Any]]
-    tensor: np.ndarray[Any, np.dtype[np.float_]]
+    tensor: np.ndarray[Any, np.dtype[np.float64]]
     user_data: Dict[str, Any]
     has_unknown_spaces: bool
     _context: Any
@@ -166,7 +166,7 @@ class Doc:
     ) -> Doc: ...
     def to_array(
         self, py_attr_ids: Union[int, str, List[Union[int, str]]]
-    ) -> np.ndarray[Any, np.dtype[np.float_]]: ...
+    ) -> np.ndarray[Any, np.dtype[np.float64]]: ...
     @staticmethod
     def from_docs(
         docs: List[Doc],
