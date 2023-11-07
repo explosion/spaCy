@@ -19,4 +19,4 @@ class NorwegianNynorsk(Language):
     Defaults = NorwegianNynorskDefaults
 
 
-__all__ = ["Norwegian"]
+__all__ = ["NorwegianNynorsk"]
