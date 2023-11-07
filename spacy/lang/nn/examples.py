@@ -1,7 +1,7 @@
 """
 Example sentences to test spaCy and its language models.
 
->>> from mv_spacy_lang.nn.examples import sentences
+>>> from spacy.lang.nn.examples import sentences
 >>> docs = nlp.pipe(sentences)
 """
 
