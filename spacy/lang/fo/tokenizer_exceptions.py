@@ -1,7 +1,6 @@
-"""Exceptions for the faroese tokenizer - mainly abbreviations copied from CD-ORD ressources"""
-from spacy.lang.tokenizer_exceptions import BASE_EXCEPTIONS
-from spacy.util import update_exc
-from spacy.symbols import ORTH
+from ...symbols import ORTH
+from ...util import update_exc
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 
 _exc = {}
 

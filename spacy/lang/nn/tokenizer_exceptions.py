@@ -1,6 +1,6 @@
-from spacy.symbols import NORM, ORTH
-from spacy.util import update_exc
-from spacy.lang.tokenizer_exceptions import BASE_EXCEPTIONS
+from ...symbols import NORM, ORTH
+from ...util import update_exc
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 
 _exc = {}
 

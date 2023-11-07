@@ -1,4 +1,4 @@
-from spacy.lang.char_classes import (
+from ..char_classes import (
     ALPHA,
     ALPHA_LOWER,
     ALPHA_UPPER,
@@ -12,7 +12,7 @@ from spacy.lang.char_classes import (
     PUNCT,
     UNITS,
 )
-from spacy.lang.punctuation import TOKENIZER_SUFFIXES
+from ..punctuation import TOKENIZER_SUFFIXES
 
 _quotes = CONCAT_QUOTES.replace("'", "")
 _list_punct = [x for x in LIST_PUNCT if x != "#"]
