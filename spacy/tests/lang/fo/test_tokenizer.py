@@ -1,6 +1,6 @@
 import pytest
 
-# examples taken from Basic LAnguage Resource Kit 1.0 for Faroese (https://www.openslr.org/125/)
+# examples taken from Basic LAnguage Resource Kit 1.0 for Faroese (https://maltokni.fo/en/resources) licensed with CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 FO_TOKEN_EXCEPTION_TESTS = [
     (
         "Eftir løgtingslóg um samsýning og eftirløn landsstýrismanna v.m., skulu løgmaður og landsstýrismenn vanliga siga frá sær størv í almennari tænastu ella privatum virkjum, samtøkum ella stovnum. ",
