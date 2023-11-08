@@ -6,6 +6,7 @@ Example sentences to test spaCy and its language models.
 """
 
 
+# sentences taken from Omsetjingsminne frå Nynorsk pressekontor 2022 (https://www.nb.no/sprakbanken/en/resource-catalogue/oai-nb-no-sbr-80/)
 sentences = [
     "Konseptet går ut på at alle tre omgangar tel, alle hopparar må stille i kvalifiseringa og poengsummen skal telje.",
     "Det er ein meir enn i same periode i fjor.",

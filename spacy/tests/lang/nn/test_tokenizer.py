@@ -1,5 +1,6 @@
 import pytest
 
+# examples taken from Omsetjingsminne frå Nynorsk pressekontor 2022 (https://www.nb.no/sprakbanken/en/resource-catalogue/oai-nb-no-sbr-80/)
 NN_TOKEN_EXCEPTION_TESTS = [
     (
         "Målet til direktoratet er at alle skal bli tilbydd jobb i politiet så raskt som mogleg i 2014.",
