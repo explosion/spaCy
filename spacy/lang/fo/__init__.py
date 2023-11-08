@@ -1,12 +1,6 @@
-import spacy
+from ...language import BaseDefaults, Language
+from ..punctuation import TOKENIZER_INFIXES, TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from spacy.lang.punctuation import (
-    TOKENIZER_SUFFIXES,
-    TOKENIZER_PREFIXES,
-    TOKENIZER_INFIXES,
-)
-
-from spacy.language import Language, BaseDefaults
 
 
 class FaroeseDefaults(BaseDefaults):
@@ -16,7 +10,6 @@ class FaroeseDefaults(BaseDefaults):
     prefixes = TOKENIZER_PREFIXES
 
 
-@spacy.registry.languages("fo")
 class Faroese(Language):
     lang = "fo"
     Defaults = FaroeseDefaults
