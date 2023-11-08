@@ -1089,14 +1089,14 @@ def is_in_jupyter() -> bool:
         if get_ipython().__class__.__module__ == "google.colab._shell":  # type: ignore[name-defined]
             return True  # Colab notebook
     except NameError:
-        return False  # Probably standard Python interpreter
+        pass  # Probably standard Python interpreter
     # additional check for Colab
     try:
         import google.colab
 
         return True  # Colab notebook
     except ImportError:
-        return False
+        pass
     return False
 
 
