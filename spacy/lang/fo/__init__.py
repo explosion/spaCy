@@ -1,4 +1,3 @@
-"""Module for creating a faroese language class."""
 import spacy
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from spacy.lang.punctuation import (
