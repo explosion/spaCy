@@ -453,15 +453,19 @@ The KB .yaml file has to stick to the following format:
 
 ```yaml
 entities:
-  ID1:  # This can be whatever ID identifies this entity in your knowledge base.
+  # The key should be whatever ID identifies this entity in your knowledge base.
+  ID1:
       name: "..."
       desc: "..."
   ID2:
       ...
-aliases:  # Aliases in your knowledge base - e. g. "Apple" for the entity "Apple Inc.".
+# Data on aliases in your knowledge base - e. g. "Apple" for the entity "Apple Inc.".
+aliases:
   - alias: "..."
-    entities: ["ID1", "ID2", ...]  # List of all entities that this alias refers to.
-    probabilities: [0.5, 0.2, ...]  # Prior probabilities that this alias refers to the n-th entity in the "entities" attribute. This is optional.
+    # List of all entities that this alias refers to.
+    entities: ["ID1", "ID2", ...]
+    # Optional: prior probabilities that this alias refers to the n-th entity in the "entities" attribute.
+    probabilities: [0.5, 0.2, ...]
   - alias: "..."
     entities: [...]
     probabilities: [...]
