@@ -11,6 +11,7 @@ for exc_data in [
     {ORTH: "mar.", NORM: "mars"},
     {ORTH: "apr.", NORM: "april"},
     {ORTH: "jun.", NORM: "juni"},
+    # note: "jul." is in the simple list below without a NORM exception
     {ORTH: "aug.", NORM: "august"},
     {ORTH: "sep.", NORM: "september"},
     {ORTH: "okt.", NORM: "oktober"},
