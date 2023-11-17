@@ -350,7 +350,7 @@ candidate.
 > [initialize.components.llm.candidate_selector]
 > @llm_misc = "spacy.CandidateSelector.v1"
 >
-> # Load a KB from a KB file. For loading KBs from spaCy pipelines see spacy.KBObjectLoader.v1.
+> # Load a KB from a KB file. For loading KBs from spaCy pipelines see [`spacy.KBObjectLoader.v1`](#kb-object-loader-v1).
 > [initialize.components.llm.candidate_selector.kb_loader]
 > @llm_misc = "spacy.KBFileLoader.v1"
 > # Path to knowledge base .yaml file.
@@ -400,8 +400,8 @@ entity candidates for the specified mentions.
 ##### spacy.KBObjectLoader.v1 {id="kb-object-loader-v1"}
 
 Adheres to the `InMemoryLookupKBLoader` interface required by
-`spacy.CandidateSelector.v1`. Loads a knowledge base from an existing spaCy
-pipeline.
+[`spacy.CandidateSelector.v1`](#candidate-selector-v1). Loads a knowledge base
+from an existing spaCy pipeline.
 
 > #### Example config for spacy.KBObjectLoader.v1
 >
@@ -426,8 +426,9 @@ pipeline.
 ##### spacy.KBFileLoader.v1 {id="kb-file-loader-v1"}
 
 Adheres to the `InMemoryLookupKBLoader` interface required by
-`spacy.CandidateSelector.v1`. Loads a knowledge base from a knowledge base file.
-The KB .yaml file has to stick to the following format:
+[`spacy.CandidateSelector.v1`](#candidate-selector-v1). Loads a knowledge base
+from a knowledge base file. The KB .yaml file has to stick to the following
+format:
 
 ```yaml
 entities:
