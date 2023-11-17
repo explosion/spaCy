@@ -352,17 +352,7 @@ candidate.
 > [initialize.components.llm.candidate_selector]
 > @llm_misc = "spacy.CandidateSelector.v1"
 >
-> # Loading a KB from a spaCy pipeline:
-> [initialize.components.llm.candidate_selector.kb_loader]
-> @llm_misc = "spacy.KBObjectLoader.v1"
-> # Path to knowledge base directory in serialized spaCy pipeline.
-> path = ${paths.el_kb}
-> # Path to spaCy pipeline. If this is not specified, spacy-llm tries to determine this automatically (but may fail).
-> nlp_path = ${paths.el_nlp}
-> # Path to file with descriptions for entity.
-> desc_path = ${paths.el_desc}
->
-> # Alternatively: load a KB from a KB file.
+> # Load a KB from a KB file. For loading KBs from spaCy pipelines see spacy.KBObjectLoader.v1.
 > [initialize.components.llm.candidate_selector.kb_loader]
 > @llm_misc = "spacy.KBFileLoader.v1"
 > # Path to knowledge base .yaml file.
@@ -397,17 +387,7 @@ entity candidates for the specified mentions.
 > [initialize.components.llm.candidate_selector]
 > @llm_misc = "spacy.CandidateSelector.v1"
 >
-> # Loading a KB from a spaCy pipeline:
-> [initialize.components.llm.candidate_selector.kb_loader]
-> @llm_misc = "spacy.KBObjectLoader.v1"
-> # Path to knowledge base directory in serialized spaCy pipeline.
-> path = ${paths.el_kb}
-> # Path to spaCy pipeline. If this is not specified, spacy-llm tries to determine this automatically (but may fail).
-> nlp_path = ${paths.el_nlp}
-> # Path to file with descriptions for entity.
-> desc_path = ${paths.el_desc}
->
-> # Alternatively: load a KB from a KB file.
+> # Load a KB from a KB file. For loading KBs from spaCy pipelines see spacy.KBObjectLoader.v1.
 > [initialize.components.llm.candidate_selector.kb_loader]
 > @llm_misc = "spacy.KBFileLoader.v1"
 > # Path to knowledge base .yaml file.
