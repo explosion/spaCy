@@ -329,9 +329,11 @@ doesn't have to be trained) or from a separate .yaml file.
 
 #### spacy.EntityLinker.v1 {id="el-v1"}
 
-Supports zero- and few-shot prompting.
+Supports zero- and few-shot prompting. Relies on a configurable component
+suggesting viable entities before letting the LLM pick the most likely
+candidate.
 
-> #### Example config (loading a knowledge base from a spaCy pipeline)
+> #### Example config
 >
 > ```ini
 > [paths]
@@ -350,6 +352,7 @@ Supports zero- and few-shot prompting.
 > [initialize.components.llm.candidate_selector]
 > @llm_misc = "spacy.CandidateSelector.v1"
 >
+> # Loading a KB from a spaCy pipeline:
 > [initialize.components.llm.candidate_selector.kb_loader]
 > @llm_misc = "spacy.KBObjectLoader.v1"
 > # Path to knowledge base directory in serialized spaCy pipeline.
@@ -358,25 +361,8 @@ Supports zero- and few-shot prompting.
 > nlp_path = ${paths.el_nlp}
 > # Path to file with descriptions for entity.
 > desc_path = ${paths.el_desc}
-> ```
-
-> #### Example config (loading a knowledge base from a knowledge base file)
 >
-> ```ini
-> [paths]
-> el_kb = null
->
-> ...
->
-> [components.llm.task]
-> @llm_tasks = "spacy.EntityLinker.v1"
->
-> [initialize]
-> [initialize.components]
-> [initialize.components.llm]
-> [initialize.components.llm.candidate_selector]
-> @llm_misc = "spacy.CandidateSelector.v1"
->
+> # Alternatively: load a KB from a KB file.
 > [initialize.components.llm.candidate_selector.kb_loader]
 > @llm_misc = "spacy.KBFileLoader.v1"
 > # Path to knowledge base .yaml file.
@@ -402,7 +388,7 @@ Either way the loaded data will be converted to a spaCy `InMemoryLookupKB`
 instance. The KB's selection capabilities are used to select the most likely
 entity candidates for the specified mentions.
 
-> #### Example config (loading a knowledge base from a spaCy pipeline)
+> #### Example config (loading a KB from a spaCy pipeline)
 >
 > ```ini
 > [initialize]
@@ -411,6 +397,7 @@ entity candidates for the specified mentions.
 > [initialize.components.llm.candidate_selector]
 > @llm_misc = "spacy.CandidateSelector.v1"
 >
+> # Loading a KB from a spaCy pipeline:
 > [initialize.components.llm.candidate_selector.kb_loader]
 > @llm_misc = "spacy.KBObjectLoader.v1"
 > # Path to knowledge base directory in serialized spaCy pipeline.
@@ -419,17 +406,8 @@ entity candidates for the specified mentions.
 > nlp_path = ${paths.el_nlp}
 > # Path to file with descriptions for entity.
 > desc_path = ${paths.el_desc}
-> ```
-
-> #### Example config (loading a knowledge base from a knowledge base file)
 >
-> ```ini
-> [initialize]
-> [initialize.components]
-> [initialize.components.llm]
-> [initialize.components.llm.candidate_selector]
-> @llm_misc = "spacy.CandidateSelector.v1"
->
+> # Alternatively: load a KB from a KB file.
 > [initialize.components.llm.candidate_selector.kb_loader]
 > @llm_misc = "spacy.KBFileLoader.v1"
 > # Path to knowledge base .yaml file.
