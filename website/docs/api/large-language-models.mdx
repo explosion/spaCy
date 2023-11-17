@@ -460,12 +460,12 @@ pipeline.
 > desc_path = ${paths.el_desc}
 > ```
 
-| Argument          | Description                                                                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `path`            | Path to KB file. ~~Union[str, Path]~~                                                                                                            |
-| `nlp_path`        | Path to serialized NLP pipeline. If None, path will be guessed. ~~Optional[Union[Path, str]]~~                                                   |
-| `desc_path`       | Path to file with descriptions for entities. ~~int~~                                                                                             |
-| `ent_desc_reader` | Reader function for entity description file. Defaults to a reader expecting a CSV with two columns: entity ID and decsription. ~~EntDescReader~~ |
+| Argument          | Description                                                                                                                                                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`            | Path to KB file. ~~Union[str, Path]~~                                                                                                                                                                                               |
+| `nlp_path`        | Path to serialized NLP pipeline. If None, path will be guessed. ~~Optional[Union[Path, str]]~~                                                                                                                                      |
+| `desc_path`       | Path to file with descriptions for entities. ~~int~~                                                                                                                                                                                |
+| `ent_desc_reader` | Entity description reader. Defaults to an internal method expecting a CSV file without header row, with ";" as delimiters, and with two columns - one for the entitys' IDs, one for their descriptions. ~~Optional[EntDescReader]~~ |
 
 ##### spacy.KBFileLoader.v1 {id="kb-file-loader-v1"}
 
