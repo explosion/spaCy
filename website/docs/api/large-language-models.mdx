@@ -333,7 +333,7 @@ Supports zero- and few-shot prompting. Relies on a configurable component
 suggesting viable entities before letting the LLM pick the most likely
 candidate.
 
-> #### Example config
+> #### Example config for spacy.EntityLinker.v1
 >
 > ```ini
 > [paths]
@@ -388,7 +388,7 @@ Either way the loaded data will be converted to a spaCy `InMemoryLookupKB`
 instance. The KB's selection capabilities are used to select the most likely
 entity candidates for the specified mentions.
 
-> #### Example config (loading a KB from a spaCy pipeline)
+> #### Example config for spacy.CandidateSelector.v1
 >
 > ```ini
 > [initialize]
@@ -425,7 +425,7 @@ Adheres to the `InMemoryLookupKBLoader` interface required by
 `spacy.CandidateSelector.v1`. Loads a knowledge base from an existing spaCy
 pipeline.
 
-> #### Example config
+> #### Example config for spacy.KBObjectLoader.v1
 >
 > ```ini
 > [initialize.components.llm.candidate_selector.kb_loader]
@@ -476,7 +476,7 @@ See
 [here](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tests/tasks/misc/el_kb_data.yml)
 for a toy example of how such a KB file might look like.
 
-> #### Example config
+> #### Example config for spacy.KBFileLoader.v1
 >
 > ```ini
 > [initialize.components.llm.candidate_selector.kb_loader]
