@@ -103,7 +103,7 @@ for orth in [
     "istf.",
     "jf.",
     "jr.",
-    "jun.",
+    "jul.",
     "juris.",
     "kfr.",
     "kgl.",
