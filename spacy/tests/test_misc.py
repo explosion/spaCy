@@ -376,8 +376,9 @@ def test_util_dot_section():
     factory = "textcat"
 
     [components.textcat.model]
-    @architectures = "spacy.TextCatBOW.v2"
+    @architectures = "spacy.TextCatBOW.v3"
     exclusive_classes = true
+    length_exponent = 18
     ngram_size = 1
     no_output_layer = false
     """

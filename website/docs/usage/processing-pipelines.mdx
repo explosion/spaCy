@@ -1328,8 +1328,9 @@ labels = []
 # This function is created and then passed to the "textcat" component as
 # the argument "model"
 [components.textcat.model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
+length_exponent = 18
 ngram_size = 1
 no_output_layer = false
 
