@@ -38,7 +38,7 @@ depth = 2
 [model.linear_model]
 @architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
-length_exponent = 18
+length = 262144
 ngram_size = 1
 no_output_layer = false
 """
@@ -48,7 +48,7 @@ single_label_bow_config = """
 [model]
 @architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
-length_exponent = 18
+length = 262144
 ngram_size = 1
 no_output_layer = false
 """

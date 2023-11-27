@@ -37,7 +37,7 @@ depth = 2
 [model.linear_model]
 @architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = false
-length_exponent = 18
+length = 262144
 ngram_size = 1
 no_output_layer = false
 """

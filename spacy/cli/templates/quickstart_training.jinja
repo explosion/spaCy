@@ -273,7 +273,7 @@ grad_factor = 1.0
 [components.textcat.model.linear_model]
 @architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
-length_exponent = 18
+length = 262144
 ngram_size = 1
 no_output_layer = false
 
@@ -311,7 +311,7 @@ grad_factor = 1.0
 [components.textcat_multilabel.model.linear_model]
 @architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = false
-length_exponent = 18
+length = 262144
 ngram_size = 1
 no_output_layer = false
 
@@ -546,7 +546,7 @@ width = ${components.tok2vec.model.encode.width}
 [components.textcat.model.linear_model]
 @architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
-length_exponent = 18
+length = 262144
 ngram_size = 1
 no_output_layer = false
 
@@ -575,7 +575,7 @@ width = ${components.tok2vec.model.encode.width}
 [components.textcat_multilabel.model.linear_model]
 @architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = false
-length_exponent = 18
+length = 262144
 ngram_size = 1
 no_output_layer = false
 
@@ -583,7 +583,7 @@ no_output_layer = false
 [components.textcat_multilabel.model]
 @architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = false
-length_exponent = 18
+length = 262144
 ngram_size = 1
 no_output_layer = false
 {%- endif %}

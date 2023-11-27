@@ -378,7 +378,7 @@ def test_util_dot_section():
     [components.textcat.model]
     @architectures = "spacy.TextCatBOW.v3"
     exclusive_classes = true
-    length_exponent = 18
+    length = 262144
     ngram_size = 1
     no_output_layer = false
     """

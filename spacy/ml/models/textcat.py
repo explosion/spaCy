@@ -111,15 +111,21 @@ def build_bow_text_classifier_v3(
     exclusive_classes: bool,
     ngram_size: int,
     no_output_layer: bool,
-    length_exponent: int = 18,
+    length: int = 262144,
     nO: Optional[int] = None,
 ) -> Model[List[Doc], Floats2d]:
+    if length < 1:
+        raise ValueError(Errors.E1056.format(length=length))
+
+    # Find k such that 2**(k-1) < length <= 2**k.
+    length = 2 ** (length - 1).bit_length()
+
     return _build_bow_text_classifier(
         exclusive_classes=exclusive_classes,
         ngram_size=ngram_size,
         no_output_layer=no_output_layer,
         nO=nO,
-        sparse_linear=SparseLinear_v2(nO=nO, length=2**length_exponent),
+        sparse_linear=SparseLinear_v2(nO=nO, length=length),
     )
 
 
