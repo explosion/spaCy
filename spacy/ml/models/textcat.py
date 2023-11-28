@@ -29,6 +29,7 @@ from thinc.layers.resizable import resize_linear_weighted, resize_model
 from thinc.types import ArrayXd, Floats2d
 
 from ...attrs import ORTH
+from ...errors import Errors
 from ...tokens import Doc
 from ...util import registry
 from ..extract_ngrams import extract_ngrams
