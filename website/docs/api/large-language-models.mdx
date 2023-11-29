@@ -322,7 +322,7 @@ fetch descriptions for any given entity ID. Descriptions can be empty, but
 ideally provide more context for entities stored in the KB.
 
 `spacy-llm` provides a `CandidateSelector` implementation
-(`spacy.CandidateSelector.v1`) that leverages a spaCy knowledge base -as used
+(`spacy.CandidateSelector.v1`) that leverages a spaCy knowledge base - as used
 in an `entity_linking` component - to select candidates. This knowledge base can
 be loaded from an existing spaCy pipeline (note that the pipeline's EL component
 doesn't have to be trained) or from a separate .yaml file.
@@ -359,7 +359,7 @@ candidate.
 
 | Argument              | Description                                                                                                                                                                          |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `template`            | Custom prompt template to send to LLM model. Defaults to [ner.v3.jinja](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/ner.v3.jinja). ~~str~~            |
+| `template`            | Custom prompt template to send to LLM model. Defaults to [entity_linker.v1.jinja](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/entity_linker.v1.jinja). ~~str~~            |
 | `parse_responses`     | Callable for parsing LLM responses for this task. Defaults to the internal parsing method for this task. ~~Optional[TaskResponseParser[EntityLinkerTask]]~~                          |
 | `prompt_example_type` | Type to use for fewshot examples. Defaults to `ELExample`. ~~Optional[Type[FewshotExample]]~~                                                                                        |
 | `examples`            | Optional callable that reads a file containing task examples for few-shot learning. If `None` is passed, zero-shot learning will be used. Defaults to `None`. ~~ExamplesConfigType~~ |
