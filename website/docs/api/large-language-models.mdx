@@ -306,7 +306,7 @@ path = "summarization_examples.yml"
 ### EL (Entity Linking) {id="nel"}
 
 The EL links recognized entities (see [NER](#ner)) to those in a knowledge base
-(KB). The EL task prompts the LLM to select the most likely candidates from the
+(KB). The EL task prompts the LLM to select the most likely candidate from the
 KB, whose structure can be arbitrary.
 
 Note that the documents processed by the entity linking task are expected to
@@ -322,7 +322,7 @@ fetch descriptions for any given entity ID. Descriptions can be empty, but
 ideally provide more context for entities stored in the KB.
 
 `spacy-llm` provides a `CandidateSelector` implementation
-(`spacy.CandidateSelector.v1`) that leverages a a spaCy knowledge base -as used
+(`spacy.CandidateSelector.v1`) that leverages a spaCy knowledge base -as used
 in an `entity_linking` component - to select candidates. This knowledge base can
 be loaded from an existing spaCy pipeline (note that the pipeline's EL component
 doesn't have to be trained) or from a separate .yaml file.
@@ -432,7 +432,7 @@ format:
 
 ```yaml
 entities:
-  # The key should be whatever ID identifies this entity in your knowledge base.
+  # The key should be whatever ID identifies this entity uniquely in your knowledge base.
   ID1:
       name: "..."
       desc: "..."
@@ -459,7 +459,7 @@ for a toy example of how such a KB file might look like.
 >
 > ```ini
 > [initialize.components.llm.candidate_selector.kb_loader]
-> @llm_misc = "spacy.KBObjectLoader.v1"
+> @llm_misc = "spacy.KBFileLoader.v1"
 > # Path to knowledge base file.
 > path = ${paths.el_kb}
 > ```
