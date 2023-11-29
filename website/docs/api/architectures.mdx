@@ -78,16 +78,16 @@ subword features, and a
 [MaxoutWindowEncoder](/api/architectures#MaxoutWindowEncoder) encoding layer
 consisting of a CNN and a layer-normalized maxout activation function.
 
-| Name                 | Description                                                                                                                                                                                                                                                                   |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`              | The width of the input and output. These are required to be the same, so that residual connections can be used. Recommended values are `96`, `128` or `300`. ~~int~~                                                                                                          |
-| `depth`              | The number of convolutional layers to use. Recommended values are between `2` and `8`. ~~int~~                                                                                                                                                                                |
-| `embed_size`         | The number of rows in the hash embedding tables. This can be surprisingly small, due to the use of the hash embeddings. Recommended values are between `2000` and `10000`. ~~int~~                                                                                            |
+| Name                 | Description                                                                                                                                                                                                                                                                 |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`              | The width of the input and output. These are required to be the same, so that residual connections can be used. Recommended values are `96`, `128` or `300`. ~~int~~                                                                                                        |
+| `depth`              | The number of convolutional layers to use. Recommended values are between `2` and `8`. ~~int~~                                                                                                                                                                              |
+| `embed_size`         | The number of rows in the hash embedding tables. This can be surprisingly small, due to the use of the hash embeddings. Recommended values are between `2000` and `10000`. ~~int~~                                                                                          |
 | `window_size`        | The number of tokens on either side to concatenate during the convolutions. The receptive field of the CNN will be `depth * window_size * 2 + 1`, so a 4-layer network with a window size of `2` will be sensitive to 17 words at a time. Recommended value is `1`. ~~int~~ |
-| `maxout_pieces`      | The number of pieces to use in the maxout non-linearity. If `1`, the [`Mish`](https://thinc.ai/docs/api-layers#mish) non-linearity is used instead. Recommended values are `1`-`3`. ~~int~~                                                                                   |
-| `subword_features`   | Whether to also embed subword features, specifically the prefix, suffix and word shape. This is recommended for alphabetic languages like English, but not if single-character tokens are used for a language such as Chinese. ~~bool~~                                       |
-| `pretrained_vectors` | Whether to also use static vectors. ~~bool~~                                                                                                                                                                                                                                  |
-| **CREATES**          | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
+| `maxout_pieces`      | The number of pieces to use in the maxout non-linearity. If `1`, the [`Mish`](https://thinc.ai/docs/api-layers#mish) non-linearity is used instead. Recommended values are `1`-`3`. ~~int~~                                                                                 |
+| `subword_features`   | Whether to also embed subword features, specifically the prefix, suffix and word shape. This is recommended for alphabetic languages like English, but not if single-character tokens are used for a language such as Chinese. ~~bool~~                                     |
+| `pretrained_vectors` | Whether to also use static vectors. ~~bool~~                                                                                                                                                                                                                                |
+| **CREATES**          | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                      |
 
 ### spacy.Tok2VecListener.v1 {id="Tok2VecListener"}
 
@@ -962,8 +962,9 @@ single-label use-cases where `exclusive_classes = true`, while the
 > nO = null
 >
 > [model.linear_model]
-> @architectures = "spacy.TextCatBOW.v2"
+> @architectures = "spacy.TextCatBOW.v3"
 > exclusive_classes = true
+> length = 262144
 > ngram_size = 1
 > no_output_layer = false
 >
@@ -1057,14 +1058,15 @@ after training.
 
 </Accordion>
 
-### spacy.TextCatBOW.v2 {id="TextCatBOW"}
+### spacy.TextCatBOW.v3 {id="TextCatBOW"}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.TextCatBOW.v2"
+> @architectures = "spacy.TextCatBOW.v3"
 > exclusive_classes = false
+> length = 262144
 > ngram_size = 1
 > no_output_layer = false
 > nO = null
@@ -1078,14 +1080,19 @@ the others, but may not be as accurate, especially if texts are short.
 | `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
 | `ngram_size`        | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3` would give unigram, trigram and bigram features. ~~int~~                                           |
 | `no_output_layer`   | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes` is `True`, else `Logistic`). ~~bool~~                                                          |
+| `length`            | The size of the weights vector. The length will be rounded up to the next power of two if it is not a power of two. Defaults to `262144`. ~~int~~                                              |
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
 
-<Accordion title="spacy.TextCatBOW.v1 definition" spaced>
+<Accordion title="Previous versions of spacy.TextCatBOW" spaced>
 
-[TextCatBOW.v1](/api/legacy#TextCatBOW_v1) had the exact same signature, but was
-not yet resizable. Since v2, new labels can be added to this component, even
-after training.
+- [TextCatBOW.v1](/api/legacy#TextCatBOW_v1) was not yet resizable. Since v2,
+  new labels can be added to this component, even after training.
+- [TextCatBOW.v1](/api/legacy#TextCatBOW_v1) and
+  [TextCatBOW.v2](/api/legacy#TextCatBOW_v2) used an erroneous sparse linear
+  layer that only used a small number of the allocated parameters.
+- [TextCatBOW.v1](/api/legacy#TextCatBOW_v1) and
+  [TextCatBOW.v2](/api/legacy#TextCatBOW_v2) did not have the `length` argument.
 
 </Accordion>
 
