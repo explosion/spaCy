@@ -20,7 +20,8 @@ An LLM component is implemented through the `LLMWrapper` class. It is accessible
 through a generic `llm`
 [component factory](https://spacy.io/usage/processing-pipelines#custom-components-factories)
 as well as through task-specific component factories: `llm_ner`, `llm_spancat`,
-`llm_rel`, `llm_textcat`, `llm_sentiment` and `llm_summarization`.
+`llm_rel`, `llm_textcat`, `llm_sentiment`, `llm_summarization` and
+`llm_entity_linker`.
 
 ### LLMWrapper.\_\_init\_\_ {id="init",tag="method"}
 
@@ -301,6 +302,171 @@ max_n_words = 20
 @misc = "spacy.FewShotReader.v1"
 path = "summarization_examples.yml"
 ```
+
+### EL (Entity Linking) {id="nel"}
+
+The EL links recognized entities (see [NER](#ner)) to those in a knowledge base
+(KB). The EL task prompts the LLM to select the most likely candidate from the
+KB, whose structure can be arbitrary.
+
+Note that the documents processed by the entity linking task are expected to
+have recognized entities in their `.ents` attribute. This can be achieved by
+either running the [NER task](#ner), using a trained spaCy NER model or setting
+the entities manually prior to running the EL task.
+
+In order to be able to pull data from the KB, an object implementing the
+`CandidateSelector` protocol has to be provided. This requires two functions:
+(1) `__call__()` to fetch candidate entities for entity mentions in the text
+(assumed to be available in `Doc.ents`) and (2) `get_entity_description()` to
+fetch descriptions for any given entity ID. Descriptions can be empty, but
+ideally provide more context for entities stored in the KB.
+
+`spacy-llm` provides a `CandidateSelector` implementation
+(`spacy.CandidateSelector.v1`) that leverages a spaCy knowledge base - as used
+in an `entity_linking` component - to select candidates. This knowledge base can
+be loaded from an existing spaCy pipeline (note that the pipeline's EL component
+doesn't have to be trained) or from a separate .yaml file.
+
+#### spacy.EntityLinker.v1 {id="el-v1"}
+
+Supports zero- and few-shot prompting. Relies on a configurable component
+suggesting viable entities before letting the LLM pick the most likely
+candidate.
+
+> #### Example config for spacy.EntityLinker.v1
+>
+> ```ini
+> [paths]
+> el_nlp = null
+>
+> ...
+>
+> [components.llm.task]
+> @llm_tasks = "spacy.EntityLinker.v1"
+>
+> [initialize]
+> [initialize.components]
+> [initialize.components.llm]
+> [initialize.components.llm.candidate_selector]
+> @llm_misc = "spacy.CandidateSelector.v1"
+>
+> # Load a KB from a KB file. For loading KBs from spaCy pipelines see spacy.KBObjectLoader.v1.
+> [initialize.components.llm.candidate_selector.kb_loader]
+> @llm_misc = "spacy.KBFileLoader.v1"
+> # Path to knowledge base .yaml file.
+> path = ${paths.el_kb}
+> ```
+
+| Argument              | Description                                                                                                                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`            | Custom prompt template to send to LLM model. Defaults to [entity_linker.v1.jinja](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/entity_linker.v1.jinja). ~~str~~ |
+| `parse_responses`     | Callable for parsing LLM responses for this task. Defaults to the internal parsing method for this task. ~~Optional[TaskResponseParser[EntityLinkerTask]]~~                                   |
+| `prompt_example_type` | Type to use for fewshot examples. Defaults to `ELExample`. ~~Optional[Type[FewshotExample]]~~                                                                                                 |
+| `examples`            | Optional callable that reads a file containing task examples for few-shot learning. If `None` is passed, zero-shot learning will be used. Defaults to `None`. ~~ExamplesConfigType~~          |
+| `scorer`              | Scorer function. Defaults to the metric used by spaCy to evaluate entity linking performance. ~~Optional[Scorer]~~                                                                            |
+
+##### spacy.CandidateSelector.v1 {id="candidate-selector-v1"}
+
+`spacy.CandidateSelector.v1` is an implementation of the `CandidateSelector`
+protocol required by [`spacy.EntityLinker.v1`](#el-v1). The built-in candidate
+selector method allows loading existing knowledge bases in several ways, e. g.
+loading from a spaCy pipeline with a (not necessarily trained) entity linking
+component, and loading from a file describing the knowlege base as a .yaml file.
+Either way the loaded data will be converted to a spaCy `InMemoryLookupKB`
+instance. The KB's selection capabilities are used to select the most likely
+entity candidates for the specified mentions.
+
+> #### Example config for spacy.CandidateSelector.v1
+>
+> ```ini
+> [initialize]
+> [initialize.components]
+> [initialize.components.llm]
+> [initialize.components.llm.candidate_selector]
+> @llm_misc = "spacy.CandidateSelector.v1"
+>
+> # Load a KB from a KB file. For loading KBs from spaCy pipelines see spacy.KBObjectLoader.v1.
+> [initialize.components.llm.candidate_selector.kb_loader]
+> @llm_misc = "spacy.KBFileLoader.v1"
+> # Path to knowledge base .yaml file.
+> path = ${paths.el_kb}
+> ```
+
+| Argument    | Description                                                       |
+| ----------- | ----------------------------------------------------------------- |
+| `kb_loader` | KB loader object. ~~InMemoryLookupKBLoader~~                      |
+| `top_n`     | Top-n candidates to include in the prompt. Defaults to 5. ~~int~~ |
+
+##### spacy.KBObjectLoader.v1 {id="kb-object-loader-v1"}
+
+Adheres to the `InMemoryLookupKBLoader` interface required by
+[`spacy.CandidateSelector.v1`](#candidate-selector-v1). Loads a knowledge base
+from an existing spaCy pipeline.
+
+> #### Example config for spacy.KBObjectLoader.v1
+>
+> ```ini
+> [initialize.components.llm.candidate_selector.kb_loader]
+> @llm_misc = "spacy.KBObjectLoader.v1"
+> # Path to knowledge base directory in serialized spaCy pipeline.
+> path = ${paths.el_kb}
+> # Path to spaCy pipeline. If this is not specified, spacy-llm tries to determine this automatically (but may fail).
+> nlp_path = ${paths.el_nlp}
+> # Path to file with descriptions for entity.
+> desc_path = ${paths.el_desc}
+> ```
+
+| Argument          | Description                                                                                                                                                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`            | Path to KB file. ~~Union[str, Path]~~                                                                                                                                                                                               |
+| `nlp_path`        | Path to serialized NLP pipeline. If None, path will be guessed. ~~Optional[Union[Path, str]]~~                                                                                                                                      |
+| `desc_path`       | Path to file with descriptions for entities. ~~int~~                                                                                                                                                                                |
+| `ent_desc_reader` | Entity description reader. Defaults to an internal method expecting a CSV file without header row, with ";" as delimiters, and with two columns - one for the entitys' IDs, one for their descriptions. ~~Optional[EntDescReader]~~ |
+
+##### spacy.KBFileLoader.v1 {id="kb-file-loader-v1"}
+
+Adheres to the `InMemoryLookupKBLoader` interface required by
+[`spacy.CandidateSelector.v1`](#candidate-selector-v1). Loads a knowledge base
+from a knowledge base file. The KB .yaml file has to stick to the following
+format:
+
+```yaml
+entities:
+  # The key should be whatever ID identifies this entity uniquely in your knowledge base.
+  ID1:
+      name: "..."
+      desc: "..."
+  ID2:
+      ...
+# Data on aliases in your knowledge base - e. g. "Apple" for the entity "Apple Inc.".
+aliases:
+  - alias: "..."
+    # List of all entities that this alias refers to.
+    entities: ["ID1", "ID2", ...]
+    # Optional: prior probabilities that this alias refers to the n-th entity in the "entities" attribute.
+    probabilities: [0.5, 0.2, ...]
+  - alias: "..."
+    entities: [...]
+    probabilities: [...]
+  ...
+```
+
+See
+[here](https://github.com/explosion/spacy-llm/blob/main/usage_examples/el_openai/el_kb_data.yml)
+for a toy example of how such a KB file might look like.
+
+> #### Example config for spacy.KBFileLoader.v1
+>
+> ```ini
+> [initialize.components.llm.candidate_selector.kb_loader]
+> @llm_misc = "spacy.KBFileLoader.v1"
+> # Path to knowledge base file.
+> path = ${paths.el_kb}
+> ```
+
+| Argument | Description                           |
+| -------- | ------------------------------------- |
+| `path`   | Path to KB file. ~~Union[str, Path]~~ |
 
 ### NER {id="ner"}
 
