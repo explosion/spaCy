@@ -236,17 +236,14 @@ objects. This depends on the return type of the [model](#models).
 | `responses` | The generated prompts. ~~Iterable[Any]~~   |
 | **RETURNS** | The annotated documents. ~~Iterable[Doc]~~ |
 
-### Summarization {id="summarization"}
+### Raw prompting {id="raw"}
 
-A summarization task takes a document as input and generates a summary that is
-stored in an extension attribute.
-
-#### spacy.Raw.v1 {id="raw-v1"}
-
-Different to all other tasks `spacy.Raw.v1` doesn't provide a specific prompt,
+Different to all other tasks `spacy.Raw.vX` doesn't provide a specific prompt,
 wrapping doc data, to the model. Instead it instructs the model to reply to the
 doc content. This is handy for use cases like question answering (where each doc
 contains one question) or if you want include customized prompts for each doc.
+
+#### spacy.Raw.v1 {id="raw-v1"}
 
 Note that since this task may request arbitrary information, it doesn't do any
 parsing per se - the model response is stored in a custom `Doc` attribute (i. e.
@@ -299,6 +296,11 @@ field = "llm_reply"
 @misc = "spacy.FewShotReader.v1"
 path = "raw_examples.yml"
 ```
+
+### Summarization {id="summarization"}
+
+A summarization task takes a document as input and generates a summary that is
+stored in an extension attribute.
 
 #### spacy.Summarization.v1 {id="summarization-v1"}
 
