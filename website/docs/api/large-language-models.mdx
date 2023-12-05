@@ -236,6 +236,57 @@ objects. This depends on the return type of the [model](#models).
 | `responses` | The generated prompts. ~~Iterable[Any]~~   |
 | **RETURNS** | The annotated documents. ~~Iterable[Doc]~~ |
 
+### Translation {id="translation"}
+
+The translation task translates texts from a defined or inferred source to a
+defined target language.
+
+#### spacy.Translation.v1 {id="translation-v1"}
+
+`spacy.Translation.v1` supports both zero-shot and few-shot prompting.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.Translation.v1"
+> examples = null
+> target_lang = "Spanish"
+> ```
+
+| Argument                    | Description                                                                                                                                                                                   |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`                  | Custom prompt template to send to LLM model. Defaults to [summarization.v1.jinja](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/summarization.v1.jinja). ~~str~~ |
+| `examples`                  | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                |
+| `parse_responses` (NEW)     | Callable for parsing LLM responses for this task. Defaults to the internal parsing method for this task. ~~Optional[TaskResponseParser[SummarizationTask]]~~                                  |
+| `prompt_example_type` (NEW) | Type to use for fewshot examples. Defaults to `SummarizationExample`. ~~Optional[Type[FewshotExample]]~~                                                                                      |
+| `source_lang`               | Language to translate from. Doesn't have to be set. ~~Optional[str]~~                                                                                                                         |
+| `target_lang`               | Language to translate to. No default value, has to be set. ~~str~~                                                                                                                            |
+| `field`                     | Name of extension attribute to store translation in (i. e. the translation will be available in `doc._.{field}`). Defaults to `translation`. ~~str~~                                          |
+
+To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
+you can write down a few examples in a separate file, and provide these to be
+injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
+supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+- text: 'Top of the morning to you!'
+  translation: '¡Muy buenos días!'
+- text: 'The weather is great today.'
+  translation: 'El clima está fantástico hoy.'
+- text: 'Do you know what will happen tomorrow?'
+  translation: '¿Sabes qué pasará mañana?'
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Translation.v1"
+target_lang = "Spanish"
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "translation_examples.yml"
+```
+
 ### Summarization {id="summarization"}
 
 A summarization task takes a document as input and generates a summary that is
