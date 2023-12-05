@@ -241,6 +241,65 @@ objects. This depends on the return type of the [model](#models).
 A summarization task takes a document as input and generates a summary that is
 stored in an extension attribute.
 
+#### spacy.Raw.v1 {id="raw-v1"}
+
+Different to all other tasks `spacy.Raw.v1` doesn't provide a specific prompt,
+wrapping doc data, to the model. Instead it instructs the model to reply to the
+doc content. This is handy for use cases like question answering (where each doc
+contains one question) or if you want include customized prompts for each doc.
+
+Note that since this task may request arbitrary information, it doesn't do any
+parsing per se - the model response is stored in a custom `Doc` attribute (i. e.
+can be accessed via `doc._.{field}`).
+
+It supports both zero-shot and few-shot prompting.
+
+> #### Example config
+>
+> ```ini
+> [components.llm.task]
+> @llm_tasks = "spacy.Raw.v1"
+> examples = null
+> ```
+
+| Argument              | Description                                                                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`            | Custom prompt template to send to LLM model. Defaults to [raw.v1.jinja](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/raw.v1.jinja). ~~str~~ |
+| `examples`            | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                            |
+| `parse_responses`     | Callable for parsing LLM responses for this task. Defaults to the internal parsing method for this task. ~~Optional[TaskResponseParser[RawTask]]~~                        |
+| `prompt_example_type` | Type to use for fewshot examples. Defaults to `RawExample`. ~~Optional[Type[FewshotExample]]~~                                                                            |
+| `field`               | Name of extension attribute to store model reply in (i. e. the reply will be available in `doc._.{field}`). Defaults to `reply`. ~~str~~                                  |
+
+To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
+you can write down a few examples in a separate file, and provide these to be
+injected into the prompt to the LLM. The default reader `spacy.FewShotReader.v1`
+supports `.yml`, `.yaml`, `.json` and `.jsonl`.
+
+```yaml
+# Each example can follow an arbitrary pattern. It might help the prompt performance though if the examples resemble
+# the actual docs' content.
+- text: "3 + 5 = x. What's x?"
+  reply: '8'
+
+- text: 'Write me a limerick.'
+  reply:
+    "There was an Old Man with a beard, Who said, 'It is just as I feared! Two
+    Owls and a Hen, Four Larks and a Wren, Have all built their nests in my
+    beard!"
+
+- text: "Analyse the sentiment of the text 'This is great'."
+  reply: "'This is great' expresses a very positive sentiment."
+```
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.Raw.v1"
+field = "llm_reply"
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "raw_examples.yml"
+```
+
 #### spacy.Summarization.v1 {id="summarization-v1"}
 
 The `spacy.Summarization.v1` task supports both zero-shot and few-shot
