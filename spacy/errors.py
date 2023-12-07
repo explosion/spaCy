@@ -983,6 +983,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "predicted docs when training {component}.")
     E1055 = ("The 'replace_listener' callback expects {num_params} parameters, "
              "but only callbacks with one or three parameters are supported")
+    E1056 = ("The `TextCatBOW` architecture expects a length of at least 1, was {length}.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
