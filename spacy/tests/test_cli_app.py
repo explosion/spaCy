@@ -238,7 +238,7 @@ def test_project_push_pull(project_dir):
 
 def test_find_function_valid():
     # example of architecture in main code base
-    function = "spacy.TextCatBOW.v2"
+    function = "spacy.TextCatBOW.v3"
     result = CliRunner().invoke(app, ["find-function", function, "-r", "architectures"])
     assert f"Found registered function '{function}'" in result.stdout
     assert "textcat.py" in result.stdout
@@ -257,7 +257,7 @@ def test_find_function_valid():
 
 def test_find_function_invalid():
     # invalid registry
-    function = "spacy.TextCatBOW.v2"
+    function = "spacy.TextCatBOW.v3"
     registry = "foobar"
     result = CliRunner().invoke(
         app, ["find-function", function, "--registry", registry]

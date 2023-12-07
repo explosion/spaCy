@@ -1,5 +1,5 @@
 from functools import partial
-from typing import List, Optional, cast
+from typing import List, Optional, Tuple, cast
 
 from thinc.api import (
     Dropout,
@@ -12,6 +12,7 @@ from thinc.api import (
     Relu,
     Softmax,
     SparseLinear,
+    SparseLinear_v2,
     chain,
     clone,
     concatenate,
@@ -25,9 +26,10 @@ from thinc.api import (
 )
 from thinc.layers.chain import init as init_chain
 from thinc.layers.resizable import resize_linear_weighted, resize_model
-from thinc.types import Floats2d
+from thinc.types import ArrayXd, Floats2d
 
 from ...attrs import ORTH
+from ...errors import Errors
 from ...tokens import Doc
 from ...util import registry
 from ..extract_ngrams import extract_ngrams
@@ -96,9 +98,47 @@ def build_bow_text_classifier(
     no_output_layer: bool,
     nO: Optional[int] = None,
 ) -> Model[List[Doc], Floats2d]:
+    return _build_bow_text_classifier(
+        exclusive_classes=exclusive_classes,
+        ngram_size=ngram_size,
+        no_output_layer=no_output_layer,
+        nO=nO,
+        sparse_linear=SparseLinear(nO=nO),
+    )
+
+
+@registry.architectures("spacy.TextCatBOW.v3")
+def build_bow_text_classifier_v3(
+    exclusive_classes: bool,
+    ngram_size: int,
+    no_output_layer: bool,
+    length: int = 262144,
+    nO: Optional[int] = None,
+) -> Model[List[Doc], Floats2d]:
+    if length < 1:
+        raise ValueError(Errors.E1056.format(length=length))
+
+    # Find k such that 2**(k-1) < length <= 2**k.
+    length = 2 ** (length - 1).bit_length()
+
+    return _build_bow_text_classifier(
+        exclusive_classes=exclusive_classes,
+        ngram_size=ngram_size,
+        no_output_layer=no_output_layer,
+        nO=nO,
+        sparse_linear=SparseLinear_v2(nO=nO, length=length),
+    )
+
+
+def _build_bow_text_classifier(
+    exclusive_classes: bool,
+    ngram_size: int,
+    no_output_layer: bool,
+    sparse_linear: Model[Tuple[ArrayXd, ArrayXd, ArrayXd], ArrayXd],
+    nO: Optional[int] = None,
+) -> Model[List[Doc], Floats2d]:
     fill_defaults = {"b": 0, "W": 0}
     with Model.define_operators({">>": chain}):
-        sparse_linear = SparseLinear(nO=nO)
         output_layer = None
         if not no_output_layer:
             fill_defaults["b"] = NEG_VALUE
