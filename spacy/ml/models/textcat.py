@@ -221,12 +221,12 @@ def build_reduce_text_classifier(
     """Build a model that classifies pooled `Doc` representations.
 
     Pooling is performed using reductions. Reductions are concatenated when
-    multible reductions are used.
+    multiple reductions are used.
 
     tok2vec (Model): the tok2vec layer to pool over.
     exclusive_classes (bool): Whether or not classes are mutually exclusive.
     use_reduce_first (bool): Pool by using the hidden representation of the
-        first token of a `Doc`
+        first token of a `Doc`.
     use_reduce_max (bool): Pool by taking the maximum values of the hidden
         representations of a `Doc`.
     use_reduce_mean (bool): Pool by taking the mean of all hidden
