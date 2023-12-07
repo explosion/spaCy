@@ -1326,7 +1326,7 @@ cdef class Doc:
 
         path (str / Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Doc): The modified `Doc` object.
 
         DOCS: https://spacy.io/api/doc#from_disk
@@ -1339,7 +1339,7 @@ cdef class Doc:
     def to_bytes(self, *, exclude=tuple()):
         """Serialize, i.e. export the document contents to a binary string.
 
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
             all annotations.
 
@@ -1351,7 +1351,7 @@ cdef class Doc:
         """Deserialize, i.e. import the document contents from a binary string.
 
         data (bytes): The string to load from.
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Doc): Itself.
 
         DOCS: https://spacy.io/api/doc#from_bytes
@@ -1361,11 +1361,9 @@ cdef class Doc:
     def to_dict(self, *, exclude=tuple()):
         """Export the document contents to a dictionary for serialization.
 
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
             all annotations.
-
-        DOCS: https://spacy.io/api/doc#to_bytes
         """
         array_head = Doc._get_array_attrs()
         strings = set()
