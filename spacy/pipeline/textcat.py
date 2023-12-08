@@ -55,8 +55,11 @@ no_output_layer = false
 
 single_label_cnn_config = """
 [model]
-@architectures = "spacy.TextCatCNN.v2"
+@architectures = "spacy.TextCatReduce.v1"
 exclusive_classes = true
+use_reduce_first = false
+use_reduce_max = false
+use_reduce_mean = true
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v2"
