@@ -402,7 +402,9 @@ def test_is_distillable():
     assert parser.is_distillable
 
 
-def test_distill():
+@pytest.mark.slow
+@pytest.mark.parametrize("max_moves", [0, 1, 5, 100])
+def test_distill(max_moves):
     teacher = English()
     teacher_parser = teacher.add_pipe("parser")
     train_examples = []
@@ -420,6 +422,7 @@ def test_distill():
 
     student = English()
     student_parser = student.add_pipe("parser")
+    student_parser.cfg["update_with_oracle_cut_size"] = max_moves
     student_parser.initialize(
         get_examples=lambda: train_examples, labels=teacher_parser.label_data
     )

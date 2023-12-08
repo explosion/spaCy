@@ -296,7 +296,7 @@ cdef class Parser(TrainablePipe):
             # batch uniform length. Since we do not have a gold standard
             # sequence, we use the teacher's predictions as the gold
             # standard.
-            max_moves = int(random.uniform(max_moves // 2, max_moves * 2))
+            max_moves = int(random.uniform(max(max_moves // 2, 1), max_moves * 2))
             states = self._init_batch(teacher_step_model, student_docs, max_moves)
         else:
             states = self.moves.init_batch(student_docs)
