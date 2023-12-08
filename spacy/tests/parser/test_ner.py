@@ -623,9 +623,7 @@ def test_is_distillable():
     assert ner.is_distillable
 
 
-@pytest.mark.slow
-@pytest.mark.parametrize("max_moves", [0, 1, 5, 100])
-def test_distill(max_moves):
+def test_distill():
     teacher = English()
     teacher_ner = teacher.add_pipe("ner")
     train_examples = []
@@ -643,7 +641,6 @@ def test_distill(max_moves):
 
     student = English()
     student_ner = student.add_pipe("ner")
-    student_ner.cfg["update_with_oracle_cut_size"] = max_moves
     student_ner.initialize(
         get_examples=lambda: train_examples, labels=teacher_ner.label_data
     )
