@@ -17,6 +17,7 @@ from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.tokens import Doc, Span
 from spacy.training import Example, iob_to_biluo, split_bilu_label
 from spacy.vocab import Vocab
+import logging
 
 from ..util import make_tempdir
 
@@ -413,7 +414,7 @@ def test_train_empty():
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
     ner = nlp.add_pipe("ner", last=True)
     ner.add_label("PERSON")
-    nlp.initialize(get_examples=lambda: train_examples)
+    nlp.initialize()
     for itn in range(2):
         losses = {}
         batches = util.minibatch(train_examples, size=8)
@@ -540,11 +541,11 @@ def test_block_ner():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
-def test_overfitting_IO():
-    fix_random_seed(1)
+@pytest.mark.parametrize("use_upper", [True, False])
+def test_overfitting_IO(use_upper):
     # Simple test to try and quickly overfit the NER component
     nlp = English()
-    ner = nlp.add_pipe("ner", config={"model": {}})
+    ner = nlp.add_pipe("ner", config={"model": {"use_upper": use_upper}})
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
@@ -576,6 +577,7 @@ def test_overfitting_IO():
         assert ents2[0].label_ == "LOC"
         # Ensure that the predictions are still the same, even after adding a new label
         ner2 = nlp2.get_pipe("ner")
+        assert ner2.model.attrs["has_upper"] == use_upper
         ner2.add_label("RANDOM_NEW_LABEL")
         doc3 = nlp2(test_text)
         ents3 = doc3.ents

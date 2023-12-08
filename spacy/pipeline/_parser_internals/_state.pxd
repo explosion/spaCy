@@ -7,6 +7,8 @@ from libc.string cimport memcpy, memset
 from libcpp.set cimport set
 from libcpp.unordered_map cimport unordered_map
 from libcpp.vector cimport vector
+from libcpp.set cimport set
+from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from murmurhash.mrmr cimport hash64
 
 from ...attrs cimport IS_SPACE
@@ -26,7 +28,7 @@ cdef struct ArcC:
 
 
 cdef cppclass StateC:
-    vector[int] _heads
+    int* _heads
     const TokenC* _sent
     vector[int] _stack
     vector[int] _rebuffer
@@ -34,33 +36,30 @@ cdef cppclass StateC:
     unordered_map[int, vector[ArcC]] _left_arcs
     unordered_map[int, vector[ArcC]] _right_arcs
     vector[libcpp.bool] _unshiftable
-    vector[int] history
     set[int] _sent_starts
     TokenC _empty_token
     int length
     int offset
     int _b_i
 
-    __init__(const TokenC* sent, int length) nogil except +:
-        this._heads.resize(length, -1)
-        this._unshiftable.resize(length, False)
-
-        # Reserve memory ahead of time to minimize allocations during parsing.
-        # The initial capacity set here ideally reflects the expected average-case/majority usage.
-        cdef int init_capacity = 32
-        this._stack.reserve(init_capacity)
-        this._rebuffer.reserve(init_capacity)
-        this._ents.reserve(init_capacity)
-        this._left_arcs.reserve(init_capacity)
-        this._right_arcs.reserve(init_capacity)
-        this.history.reserve(init_capacity)
-
+    __init__(const TokenC* sent, int length) nogil:
         this._sent = sent
+        this._heads = <int*>calloc(length, sizeof(int))
+        if not (this._sent and this._heads):
+            with gil:
+                PyErr_SetFromErrno(MemoryError)
+                PyErr_CheckSignals()
         this.offset = 0
         this.length = length
         this._b_i = 0
+        for i in range(length):
+            this._heads[i] = -1
+            this._unshiftable.push_back(0)
         memset(&this._empty_token, 0, sizeof(TokenC))
         this._empty_token.lex = &EMPTY_LEXEME
+
+    __dealloc__():
+        free(this._heads)
 
     void set_context_tokens(int* ids, int n) nogil:
         cdef int i, j
@@ -134,20 +133,19 @@ cdef cppclass StateC:
                 ids[i] = -1
 
     int S(int i) nogil const:
-        cdef int stack_size = this._stack.size()
-        if i >= stack_size or i < 0:
+        if i >= this._stack.size():
             return -1
-        else:
-            return this._stack[stack_size - (i+1)]
+        elif i < 0:
+            return -1
+        return this._stack.at(this._stack.size() - (i+1))
 
     int B(int i) nogil const:
-        cdef int buf_size = this._rebuffer.size()
         if i < 0:
             return -1
-        elif i < buf_size:
-            return this._rebuffer[buf_size - (i+1)]
+        elif i < this._rebuffer.size():
+            return this._rebuffer.at(this._rebuffer.size() - (i+1))
         else:
-            b_i = this._b_i + (i - buf_size)
+            b_i = this._b_i + (i - this._rebuffer.size())
             if b_i >= this.length:
                 return -1
             else:
@@ -246,7 +244,7 @@ cdef cppclass StateC:
             return 0
         elif this._sent[word].sent_start == 1:
             return 1
-        elif this._sent_starts.const_find(word) != this._sent_starts.const_end():
+        elif this._sent_starts.count(word) >= 1:
             return 1
         else:
             return 0
@@ -330,7 +328,7 @@ cdef cppclass StateC:
         if item >= this._unshiftable.size():
             return 0
         else:
-            return this._unshiftable[item]
+            return this._unshiftable.at(item)
 
     void set_reshiftable(int item) nogil:
         if item < this._unshiftable.size():
@@ -350,9 +348,6 @@ cdef cppclass StateC:
         this._heads[child] = head
 
     void map_del_arc(unordered_map[int, vector[ArcC]]* heads_arcs, int h_i, int c_i) nogil:
-        cdef vector[ArcC]* arcs
-        cdef ArcC* arc
-
         arcs_it = heads_arcs.find(h_i)
         if arcs_it == heads_arcs.end():
             return
@@ -361,12 +356,12 @@ cdef cppclass StateC:
         if arcs.size() == 0:
             return
 
-        arc = &arcs.back()
+        arc = arcs.back()
         if arc.head == h_i and arc.child == c_i:
             arcs.pop_back()
         else:
             for i in range(arcs.size()-1):
-                arc = &deref(arcs)[i]
+                arc = arcs.at(i)
                 if arc.head == h_i and arc.child == c_i:
                     arc.head = -1
                     arc.child = -1
@@ -406,11 +401,10 @@ cdef cppclass StateC:
         this._rebuffer = src._rebuffer
         this._sent_starts = src._sent_starts
         this._unshiftable = src._unshiftable
-        this._heads = src._heads
+        memcpy(this._heads, src._heads, this.length * sizeof(this._heads[0]))
         this._ents = src._ents
         this._left_arcs = src._left_arcs
         this._right_arcs = src._right_arcs
         this._b_i = src._b_i
         this.offset = src.offset
         this._empty_token = src._empty_token
-        this.history = src.history

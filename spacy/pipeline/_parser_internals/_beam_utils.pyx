@@ -6,8 +6,6 @@ from ...typedefs cimport class_t
 from .transition_system cimport Transition, TransitionSystem
 
 from ...errors import Errors
-
-from .batch cimport Batch
 from .search cimport Beam, MaxViolation
 
 from .search import MaxViolation
@@ -29,7 +27,7 @@ cdef int check_final_state(void* _state, void* extra_args) except -1:
     return state.is_final()
 
 
-cdef class BeamBatch(Batch):
+cdef class BeamBatch(object):
     cdef public TransitionSystem moves
     cdef public object states
     cdef public object docs
