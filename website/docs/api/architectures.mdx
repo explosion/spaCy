@@ -1084,6 +1084,14 @@ A classifier that pools token hidden representations of each `Doc` using first,
 max or mean reduction and then applies a classification layer. Reductions are
 concatenated when multiple reductions are used.
 
+<Infobox variant="warning" title="Relation to TextCatCNN" id="TextCatCNN">
+
+`TextCatReduce` is a generalization of the older
+[`TextCatCNN`](/api/legacy#TextCatCNN_v2) model. `TextCatCNN` always uses a mean
+reduction, whereas `TextCatReduce` also supports first/max reductions.
+
+</Infobox>
+
 | Name                | Description                                                                                                                                                                                    |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
