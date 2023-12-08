@@ -5,8 +5,9 @@ from typing import Callable, Optional
 from thinc.api import Config, Model
 
 from ._parser_internals.transition_system import TransitionSystem
-from .transition_parser cimport Parser
+
 from ._parser_internals.arc_eager cimport ArcEager
+from .transition_parser cimport Parser
 
 from ..language import Language
 from ..scorer import Scorer

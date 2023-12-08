@@ -1,4 +1,5 @@
 cimport libcpp
+from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as incr
 from libc.stdint cimport uint32_t, uint64_t
@@ -7,8 +8,6 @@ from libc.string cimport memcpy, memset
 from libcpp.set cimport set
 from libcpp.unordered_map cimport unordered_map
 from libcpp.vector cimport vector
-from libcpp.set cimport set
-from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from murmurhash.mrmr cimport hash64
 
 from ...attrs cimport IS_SPACE

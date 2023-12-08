@@ -1,11 +1,11 @@
 from cymem.cymem cimport Pool
 from thinc.backends.cblas cimport CBlas
 
+from ..ml.parser_model cimport ActivationsC, SizesC, WeightsC
 from ..vocab cimport Vocab
-from .trainable_pipe cimport TrainablePipe
-from ._parser_internals.transition_system cimport Transition, TransitionSystem
 from ._parser_internals._state cimport StateC
-from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC
+from ._parser_internals.transition_system cimport Transition, TransitionSystem
+from .trainable_pipe cimport TrainablePipe
 
 
 cdef class Parser(TrainablePipe):

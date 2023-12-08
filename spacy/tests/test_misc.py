@@ -1,6 +1,7 @@
 import ctypes
 import os
 from pathlib import Path
+
 import pytest
 
 try:
@@ -8,15 +9,16 @@ try:
 except ImportError:
     from pydantic import ValidationError  # type: ignore
 
-from spacy.about import __version__ as spacy_version
-from spacy import util
-from spacy import prefer_gpu, require_gpu, require_cpu
-from spacy.ml._precomputable_affine import PrecomputableAffine
-from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
-from spacy.util import dot_to_object, SimpleFrozenList, import_file
-from spacy.util import to_ternary_int, find_available_port
-from thinc.api import Config, Optimizer, ConfigValidationError
-from thinc.api import get_current_ops, set_current_ops, NumpyOps, CupyOps, MPSOps
+from thinc.api import (
+    Config,
+    ConfigValidationError,
+    CupyOps,
+    MPSOps,
+    NumpyOps,
+    Optimizer,
+    get_current_ops,
+    set_current_ops,
+)
 from thinc.compat import has_cupy_gpu, has_torch_mps_gpu
 
 from spacy import prefer_gpu, require_cpu, require_gpu, util
@@ -24,6 +26,10 @@ from spacy.about import __version__ as spacy_version
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import DEFAULT_CONFIG_PATH
+from spacy.ml._precomputable_affine import (
+    PrecomputableAffine,
+    _backprop_precomputable_affine_padding,
+)
 from spacy.schemas import ConfigSchemaTraining, TokenPattern, TokenPatternSchema
 from spacy.training.batchers import minibatch_by_words
 from spacy.util import (

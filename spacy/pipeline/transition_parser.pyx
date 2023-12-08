@@ -1,20 +1,19 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
 from __future__ import print_function
+
 from typing import Dict, Iterable, List, Optional, Tuple
-from cymem.cymem cimport Pool
+
 cimport numpy as np
+from cymem.cymem cimport Pool
+
 from itertools import islice
-from libcpp.vector cimport vector
-from libc.string cimport memset, memcpy
+
 from libc.stdlib cimport calloc, free
+from libc.string cimport memcpy, memset
+from libcpp.vector cimport vector
+
 import random
 
-import srsly
-from thinc.api import get_ops, set_dropout_rate, CupyOps, NumpyOps, Optimizer
-from thinc.api import chain, softmax_activation, use_ops
-from thinc.legacy import LegacySequenceCategoricalCrossentropy
-from thinc.types import Floats2d
-import numpy.random
 import numpy
 import numpy.random
 import srsly
@@ -22,21 +21,36 @@ from thinc.api import (
     CupyOps,
     NumpyOps,
     Optimizer,
+    chain,
     get_array_module,
     get_ops,
     set_dropout_rate,
+    softmax_activation,
+    use_ops,
 )
+from thinc.legacy import LegacySequenceCategoricalCrossentropy
 from thinc.types import Floats2d, Ints1d
 
-from ._parser_internals.stateclass cimport StateClass
-from ._parser_internals.search cimport Beam
-from ..ml.parser_model cimport alloc_activations, free_activations
-from ..ml.parser_model cimport predict_states, arg_max_if_valid
-from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
-from ..ml.parser_model cimport get_c_weights, get_c_sizes
+from ..ml.parser_model cimport (
+    ActivationsC,
+    SizesC,
+    WeightsC,
+    alloc_activations,
+    arg_max_if_valid,
+    cpu_log_loss,
+    free_activations,
+    get_c_sizes,
+    get_c_weights,
+    predict_states,
+)
 from ..tokens.doc cimport Doc
+from ._parser_internals.search cimport Beam
+from ._parser_internals.stateclass cimport StateClass
+
 from .trainable_pipe import TrainablePipe
+
 from ._parser_internals cimport _beam_utils
+
 from ._parser_internals import _beam_utils
 
 from ..tokens.doc cimport Doc
@@ -55,7 +69,6 @@ from ..training import (
     validate_get_examples,
 )
 from ._parser_internals import _beam_utils
-
 
 NUMPY_OPS = NumpyOps()
 
