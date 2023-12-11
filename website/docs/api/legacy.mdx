@@ -165,7 +165,7 @@ that you can add labels to a previously trained textcat. `TextCatCNN` v1 did not
 yet support that. `TextCatCNN` has been replaced by the more general
 [`TextCatReduce`](/api/architectures#TextCatReduce) layer. `TextCatCNN` is
 identical to `TextCatReduce` with `use_reduce_mean=true`,
-`use_reduce_first=false` and `use_reduce_max=false`.
+`use_reduce_first=false`, `reduce_last=false` and `use_reduce_max=false`.
 
 > #### Example Config
 >
@@ -225,7 +225,7 @@ architecture is usually less accurate than the ensemble, but runs faster.
 `TextCatCNN` has been replaced by the more general
 [`TextCatReduce`](/api/architectures#TextCatReduce) layer. `TextCatCNN` is
 identical to `TextCatReduce` with `use_reduce_mean=true`,
-`use_reduce_first=false` and `use_reduce_max=false`.
+`use_reduce_first=false`, `reduce_last=false` and `use_reduce_max=false`.
 
 | Name                | Description                                                                                                                                                                                    |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

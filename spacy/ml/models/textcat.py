@@ -18,6 +18,7 @@ from thinc.api import (
     concatenate,
     list2ragged,
     reduce_first,
+    reduce_last,
     reduce_max,
     reduce_mean,
     reduce_sum,
@@ -55,6 +56,7 @@ def build_simple_cnn_text_classifier(
         tok2vec=tok2vec,
         exclusive_classes=exclusive_classes,
         use_reduce_first=False,
+        use_reduce_last=False,
         use_reduce_max=False,
         use_reduce_mean=True,
         nO=nO,
@@ -214,6 +216,7 @@ def build_reduce_text_classifier(
     tok2vec: Model,
     exclusive_classes: bool,
     use_reduce_first: bool,
+    use_reduce_last: bool,
     use_reduce_max: bool,
     use_reduce_mean: bool,
     nO: Optional[int] = None,
@@ -227,6 +230,8 @@ def build_reduce_text_classifier(
     exclusive_classes (bool): Whether or not classes are mutually exclusive.
     use_reduce_first (bool): Pool by using the hidden representation of the
         first token of a `Doc`.
+    use_reduce_first (bool): Pool by using the hidden representation of the
+        last token of a `Doc`.
     use_reduce_max (bool): Pool by taking the maximum values of the hidden
         representations of a `Doc`.
     use_reduce_mean (bool): Pool by taking the mean of all hidden
@@ -238,6 +243,8 @@ def build_reduce_text_classifier(
     reductions = []
     if use_reduce_first:
         reductions.append(reduce_first())
+    if use_reduce_last:
+        reductions.append(reduce_last())
     if use_reduce_max:
         reductions.append(reduce_max())
     if use_reduce_mean:

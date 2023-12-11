@@ -296,6 +296,7 @@ def test_textcat_reduce_invalid_args():
             tok2vec=tok2vec,
             exclusive_classes=False,
             use_reduce_first=False,
+            use_reduce_last=False,
             use_reduce_max=False,
             use_reduce_mean=False,
         )
