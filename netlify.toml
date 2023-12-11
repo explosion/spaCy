@@ -55,7 +55,6 @@ redirects = [
     {from = "/models/comparison", to = "/models", force = true},
     {from = "/api/#section-cython", to = "/api/cython", force = true},
     {from = "/api/#cython", to = "/api/cython", force = true},
-    {from = "/api/architectures#TextCatCNN", to = "/api/legacy#TextCatCNN_v2", force = true},
     {from = "/api/sentencesegmenter", to="/api/sentencizer"},
     {from = "/universe", to = "/universe/project/:id", query = {id = ":id"}, force = true},
     {from = "/universe", to = "/universe/category/:category", query = {category = ":category"}, force = true},
