@@ -254,15 +254,15 @@ defined target language.
 > target_lang = "Spanish"
 > ```
 
-| Argument                    | Description                                                                                                                                                                                   |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `template`                  | Custom prompt template to send to LLM model. Defaults to [summarization.v1.jinja](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/summarization.v1.jinja). ~~str~~ |
-| `examples`                  | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                                |
-| `parse_responses` (NEW)     | Callable for parsing LLM responses for this task. Defaults to the internal parsing method for this task. ~~Optional[TaskResponseParser[SummarizationTask]]~~                                  |
-| `prompt_example_type` (NEW) | Type to use for fewshot examples. Defaults to `SummarizationExample`. ~~Optional[Type[FewshotExample]]~~                                                                                      |
-| `source_lang`               | Language to translate from. Doesn't have to be set. ~~Optional[str]~~                                                                                                                         |
-| `target_lang`               | Language to translate to. No default value, has to be set. ~~str~~                                                                                                                            |
-| `field`                     | Name of extension attribute to store translation in (i. e. the translation will be available in `doc._.{field}`). Defaults to `translation`. ~~str~~                                          |
+| Argument                    | Description                                                                                                                                                                               |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`                  | Custom prompt template to send to LLM model. Defaults to [translation.v1.jinja](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/tasks/templates/translation.v1.jinja). ~~str~~ |
+| `examples`                  | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                            |
+| `parse_responses` (NEW)     | Callable for parsing LLM responses for this task. Defaults to the internal parsing method for this task. ~~Optional[TaskResponseParser[TranslationTask]]~~                                |
+| `prompt_example_type` (NEW) | Type to use for fewshot examples. Defaults to `TranslationExample`. ~~Optional[Type[FewshotExample]]~~                                                                                    |
+| `source_lang`               | Language to translate from. Doesn't have to be set. ~~Optional[str]~~                                                                                                                     |
+| `target_lang`               | Language to translate to. No default value, has to be set. ~~str~~                                                                                                                        |
+| `field`                     | Name of extension attribute to store translation in (i. e. the translation will be available in `doc._.{field}`). Defaults to `translation`. ~~str~~                                      |
 
 To perform [few-shot learning](/usage/large-language-models#few-shot-prompts),
 you can write down a few examples in a separate file, and provide these to be
