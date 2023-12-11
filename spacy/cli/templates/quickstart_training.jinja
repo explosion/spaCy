@@ -318,7 +318,7 @@ no_output_layer = false
 {% else -%}
 [components.textcat_multilabel.model]
 @architectures = "spacy.TextCatCNN.v2"
-exclusive_classes = true
+exclusive_classes = false
 nO = null
 
 [components.textcat_multilabel.model.tok2vec]
