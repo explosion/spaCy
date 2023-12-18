@@ -1,4 +1,3 @@
-import warnings
 from collections.abc import Iterable as IterableInstance
 
 import numpy

@@ -13,7 +13,7 @@ from .. import util
 from ..errors import Errors
 
 from ..pipeline._parser_internals.stateclass cimport StateClass
-from ..typedefs cimport class_t, hash_t, weight_t
+from ..typedefs cimport weight_t
 
 
 cdef WeightsC get_c_weights(model) except *:
@@ -78,31 +78,31 @@ cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
         A._max_size = n.states
     else:
         A.token_ids = <int*>realloc(A.token_ids,
-            n.states * n.feats * sizeof(A.token_ids[0]))
+                                    n.states * n.feats * sizeof(A.token_ids[0]))
         A.scores = <float*>realloc(A.scores,
-            n.states * n.classes * sizeof(A.scores[0]))
+                                   n.states * n.classes * sizeof(A.scores[0]))
         A.unmaxed = <float*>realloc(A.unmaxed,
-            n.states * n.hiddens * n.pieces * sizeof(A.unmaxed[0]))
+                                    n.states * n.hiddens * n.pieces * sizeof(A.unmaxed[0]))
         A.hiddens = <float*>realloc(A.hiddens,
-            n.states * n.hiddens * sizeof(A.hiddens[0]))
+                                    n.states * n.hiddens * sizeof(A.hiddens[0]))
         A.is_valid = <int*>realloc(A.is_valid,
-            n.states * n.classes * sizeof(A.is_valid[0]))
+                                   n.states * n.classes * sizeof(A.is_valid[0]))
         A._max_size = n.states
     A._curr_size = n.states
 
 
 cdef void predict_states(CBlas cblas, ActivationsC* A, StateC** states,
-        const WeightsC* W, SizesC n) nogil:
-    cdef double one = 1.0
+                         const WeightsC* W, SizesC n) nogil:
     resize_activations(A, n)
     for i in range(n.states):
         states[i].set_context_tokens(&A.token_ids[i*n.feats], n.feats)
     memset(A.unmaxed, 0, n.states * n.hiddens * n.pieces * sizeof(float))
     memset(A.hiddens, 0, n.states * n.hiddens * sizeof(float))
-    sum_state_features(cblas, A.unmaxed,
-        W.feat_weights, A.token_ids, n.states, n.feats, n.hiddens * n.pieces)
+    sum_state_features(cblas, A.unmaxed, W.feat_weights, A.token_ids, n.states,
+                       n.feats, n.hiddens * n.pieces)
     for i in range(n.states):
-        saxpy(cblas)(n.hiddens * n.pieces, 1., W.feat_bias, 1, &A.unmaxed[i*n.hiddens*n.pieces], 1)
+        saxpy(cblas)(n.hiddens * n.pieces, 1., W.feat_bias, 1,
+                     &A.unmaxed[i*n.hiddens*n.pieces], 1)
         for j in range(n.hiddens):
             index = i * n.hiddens * n.pieces + j * n.pieces
             which = _arg_max(&A.unmaxed[index], n.pieces)
@@ -112,10 +112,10 @@ cdef void predict_states(CBlas cblas, ActivationsC* A, StateC** states,
         memcpy(A.scores, A.hiddens, n.states * n.classes * sizeof(float))
     else:
         # Compute hidden-to-output
-        sgemm(cblas)(False, True, n.states, n.classes, n.hiddens,
-            1.0, <const float *>A.hiddens, n.hiddens,
-            <const float *>W.hidden_weights, n.hiddens,
-            0.0, A.scores, n.classes)
+        sgemm(cblas)(False, True, n.states, n.classes, n.hiddens, 1.0,
+                     <const float *>A.hiddens, n.hiddens,
+                     <const float *>W.hidden_weights, n.hiddens, 0.0,
+                     A.scores, n.classes)
         # Add bias
         for i in range(n.states):
             saxpy(cblas)(n.classes, 1., W.hidden_bias, 1, &A.scores[i*n.classes], 1)
@@ -131,9 +131,9 @@ cdef void predict_states(CBlas cblas, ActivationsC* A, StateC** states,
                 A.scores[i*n.classes+j] = min_
 
 
-cdef void sum_state_features(CBlas cblas, float* output,
-        const float* cached, const int* token_ids, int B, int F, int O) nogil:
-    cdef int idx, b, f, i
+cdef void sum_state_features(CBlas cblas, float* output, const float* cached,
+                             const int* token_ids, int B, int F, int O) nogil:
+    cdef int idx, b, f
     cdef const float* feature
     padding = cached
     cached += F * O
@@ -150,9 +150,8 @@ cdef void sum_state_features(CBlas cblas, float* output,
         token_ids += F
 
 
-cdef void cpu_log_loss(float* d_scores,
-        const float* costs, const int* is_valid, const float* scores,
-        int O) nogil:
+cdef void cpu_log_loss(float* d_scores, const float* costs, const int* is_valid,
+                       const float* scores, int O) nogil:
     """Do multi-label log loss"""
     cdef double max_, gmax, Z, gZ
     best = arg_max_if_gold(scores, costs, is_valid, O)
@@ -178,7 +177,7 @@ cdef void cpu_log_loss(float* d_scores,
 
 
 cdef int arg_max_if_gold(const weight_t* scores, const weight_t* costs,
-        const int* is_valid, int n) nogil:
+                         const int* is_valid, int n) nogil:
     # Find minimum cost
     cdef float cost = 1
     for i in range(n):
@@ -202,10 +201,9 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
     return best
 
 
-
 class ParserStepModel(Model):
     def __init__(self, docs, layers, *, has_upper, unseen_classes=None, train=True,
-            dropout=0.1):
+                 dropout=0.1):
         Model.__init__(self, name="parser_step_model", forward=step_forward)
         self.attrs["has_upper"] = has_upper
         self.attrs["dropout_rate"] = dropout
@@ -267,7 +265,7 @@ class ParserStepModel(Model):
 
     def backprop_step(self, token_ids, d_vector, get_d_tokvecs):
         if isinstance(self.state2vec.ops, CupyOps) \
-        and not isinstance(token_ids, self.state2vec.ops.xp.ndarray):
+           and not isinstance(token_ids, self.state2vec.ops.xp.ndarray):
             # Move token_ids and d_vector to GPU, asynchronously
             self.backprops.append((
                 util.get_async(self.cuda_stream, token_ids),
@@ -276,7 +274,6 @@ class ParserStepModel(Model):
             ))
         else:
             self.backprops.append((token_ids, d_vector, get_d_tokvecs))
-
 
     def finish_steps(self, golds):
         # Add a padding vector to the d_tokvecs gradient, so that missing
@@ -290,13 +287,14 @@ class ParserStepModel(Model):
             ids = ids.flatten()
             d_state_features = d_state_features.reshape(
                 (ids.size, d_state_features.shape[2]))
-            self.ops.scatter_add(d_tokvecs, ids,
-                d_state_features)
+            self.ops.scatter_add(d_tokvecs, ids, d_state_features)
         # Padded -- see update()
         self.bp_tokvecs(d_tokvecs[:-1])
         return d_tokvecs
 
+
 NUMPY_OPS = NumpyOps()
+
 
 def step_forward(model: ParserStepModel, states, is_train):
     token_ids = model.get_token_ids(states)
@@ -310,7 +308,7 @@ def step_forward(model: ParserStepModel, states, is_train):
         scores, get_d_vector = model.vec2scores(vector, is_train)
     else:
         scores = NumpyOps().asarray(vector)
-        get_d_vector = lambda d_scores: d_scores
+        def get_d_vector(d_scores): return d_scores
     # If the class is unseen, make sure its score is minimum
     scores[:, model._class_mask == 0] = numpy.nanmin(scores)
 
@@ -445,8 +443,8 @@ cdef class precompute_hiddens:
         feat_weights = self.get_feat_weights()
         cdef int[:, ::1] ids = token_ids
         sum_state_features(cblas, <float*>state_vector.data,
-            feat_weights, &ids[0,0],
-            token_ids.shape[0], self.nF, self.nO*self.nP)
+                           feat_weights, &ids[0, 0], token_ids.shape[0],
+                           self.nF, self.nO*self.nP)
         state_vector += self.bias
         state_vector, bp_nonlinearity = self._nonlinearity(state_vector)
 
@@ -471,7 +469,7 @@ cdef class precompute_hiddens:
 
         def backprop_maxout(d_best):
             return self.ops.backprop_maxout(d_best, mask, self.nP)
-        
+
         return state_vector, backprop_maxout
 
     def _relu_nonlinearity(self, state_vector):
@@ -485,7 +483,7 @@ cdef class precompute_hiddens:
         def backprop_relu(d_best):
             d_best *= mask
             return d_best.reshape((d_best.shape + (1,)))
- 
+
         return state_vector, backprop_relu
 
 cdef inline int _arg_max(const float* scores, const int n_classes) nogil:

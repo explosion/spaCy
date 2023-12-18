@@ -15,7 +15,7 @@ cdef class Parser(TrainablePipe):
     cdef object _cpu_ops
 
     cdef void _parseC(self, CBlas cblas, StateC** states,
-            WeightsC weights, SizesC sizes) nogil
+                      WeightsC weights, SizesC sizes) nogil
 
     cdef void c_transition_batch(self, StateC** states, const float* scores,
-            int nr_class, int batch_size) nogil
+                                 int nr_class, int batch_size) nogil

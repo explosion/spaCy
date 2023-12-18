@@ -9,7 +9,7 @@ from cymem.cymem cimport Pool
 from itertools import islice
 
 from libc.stdlib cimport calloc, free
-from libc.string cimport memcpy, memset
+from libc.string cimport memset
 from libcpp.vector cimport vector
 
 import random
@@ -22,14 +22,13 @@ from thinc.api import (
     NumpyOps,
     Optimizer,
     chain,
-    get_array_module,
     get_ops,
     set_dropout_rate,
     softmax_activation,
     use_ops,
 )
 from thinc.legacy import LegacySequenceCategoricalCrossentropy
-from thinc.types import Floats2d, Ints1d
+from thinc.types import Floats2d
 
 from ..ml.parser_model cimport (
     ActivationsC,
@@ -44,7 +43,6 @@ from ..ml.parser_model cimport (
     predict_states,
 )
 from ..tokens.doc cimport Doc
-from ._parser_internals.search cimport Beam
 from ._parser_internals.stateclass cimport StateClass
 
 from .trainable_pipe import TrainablePipe
@@ -54,11 +52,10 @@ from ._parser_internals cimport _beam_utils
 from ._parser_internals import _beam_utils
 
 from ..tokens.doc cimport Doc
-from ..typedefs cimport weight_t
 from ..vocab cimport Vocab
 from ._parser_internals cimport _beam_utils
 from ._parser_internals.stateclass cimport StateC, StateClass
-from ._parser_internals.transition_system cimport Transition, TransitionSystem
+from ._parser_internals.transition_system cimport Transition
 from .trainable_pipe cimport TrainablePipe
 
 from .. import util
@@ -289,7 +286,7 @@ cdef class Parser(TrainablePipe):
         with use_ops("numpy"):
             teacher_model = chain(teacher_step_model, softmax_activation())
             student_model = chain(student_step_model, softmax_activation())
-        
+
         max_moves = self.cfg["update_with_oracle_cut_size"]
         if max_moves >= 1:
             # Chop sequences into lengths of this many words, to make the
@@ -434,8 +431,6 @@ cdef class Parser(TrainablePipe):
         return batch
 
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
-        cdef Beam beam
-        cdef Doc doc
         self._ensure_labels_are_added(docs)
         batch = _beam_utils.BeamBatch(
             self.moves,
@@ -456,15 +451,15 @@ cdef class Parser(TrainablePipe):
         return list(batch)
 
     cdef void _parseC(self, CBlas cblas, StateC** states,
-            WeightsC weights, SizesC sizes) nogil:
-        cdef int i, j
+                      WeightsC weights, SizesC sizes) nogil:
+        cdef int i
         cdef vector[StateC*] unfinished
         cdef ActivationsC activations = alloc_activations(sizes)
         while sizes.states >= 1:
             predict_states(cblas, &activations, states, &weights, sizes)
             # Validate actions, argmax, take action.
-            self.c_transition_batch(states,
-                activations.scores, sizes.classes, sizes.states)
+            self.c_transition_batch(states, activations.scores,
+                                    sizes.classes, sizes.states)
             for i in range(sizes.states):
                 if not states[i].is_final():
                     unfinished.push_back(states[i])
@@ -493,7 +488,7 @@ cdef class Parser(TrainablePipe):
         return [state for state in states if not state.c.is_final()]
 
     cdef void c_transition_batch(self, StateC** states, const float* scores,
-            int nr_class, int batch_size) nogil:
+                                 int nr_class, int batch_size) nogil:
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         with gil:
             assert self.moves.n_moves > 0, Errors.E924.format(name=self.name)
@@ -551,8 +546,7 @@ cdef class Parser(TrainablePipe):
         if not states:
             return losses
         model, backprop_tok2vec = self.model.begin_update([eg.x for eg in examples])
- 
-        all_states = list(states)
+
         states_golds = list(zip(states, golds))
         n_moves = 0
         while states_golds:
@@ -632,8 +626,8 @@ cdef class Parser(TrainablePipe):
         del tutor
         return losses
 
-    def update_beam(self, examples, *, beam_width,
-            drop=0., sgd=None, losses=None, beam_density=0.0):
+    def update_beam(self, examples, *, beam_width, drop=0., sgd=None,
+                    losses=None, beam_density=0.0):
         states, golds, _ = self.moves.init_gold_batch(examples)
         if not states:
             return losses
@@ -664,7 +658,7 @@ cdef class Parser(TrainablePipe):
         is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
         costs = <float*>mem.alloc(self.moves.n_moves, sizeof(float))
         cdef np.ndarray d_scores = numpy.zeros((len(states), self.moves.n_moves),
-                                        dtype='f', order='C')
+                                               dtype='f', order='C')
         c_d_scores = <float*>d_scores.data
         unseen_classes = self.model.attrs["unseen_classes"]
         for i, (state, gold) in enumerate(zip(states, golds)):
@@ -674,8 +668,8 @@ cdef class Parser(TrainablePipe):
             for j in range(self.moves.n_moves):
                 if costs[j] <= 0.0 and j in unseen_classes:
                     unseen_classes.remove(j)
-            cpu_log_loss(c_d_scores,
-                costs, is_valid, &scores[i, 0], d_scores.shape[1])
+            cpu_log_loss(c_d_scores, costs, is_valid, &scores[i, 0],
+                         d_scores.shape[1])
             c_d_scores += d_scores.shape[1]
         # Note that we don't normalize this. See comment in update() for why.
         if losses is not None:
@@ -785,10 +779,7 @@ cdef class Parser(TrainablePipe):
         long_doc[:N], and another representing long_doc[N:]. In contrast to
         _init_gold_batch, this version uses a teacher model to generate the
         cut sequences."""
-        cdef:
-            StateClass start_state
-            StateClass state
-            Transition action
+        cdef StateClass state
         all_states = self.moves.init_batch(docs)
         states = []
         to_cut = []
@@ -809,7 +800,6 @@ cdef class Parser(TrainablePipe):
                 to_cut = [state for state in to_cut if not state.is_final()]
                 length += 1
         return states
-
 
     def _init_gold_batch(self, examples, max_length):
         """Make a square batch, of length equal to the shortest transition

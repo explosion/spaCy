@@ -127,6 +127,7 @@ def make_parser(
         scorer=scorer,
     )
 
+
 @Language.factory(
     "beam_parser",
     assigns=["token.dep", "token.head", "token.is_sent_start", "doc.sents"],
