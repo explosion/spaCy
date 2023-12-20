@@ -230,7 +230,7 @@ def build_reduce_text_classifier(
     exclusive_classes (bool): Whether or not classes are mutually exclusive.
     use_reduce_first (bool): Pool by using the hidden representation of the
         first token of a `Doc`.
-    use_reduce_first (bool): Pool by using the hidden representation of the
+    use_reduce_last (bool): Pool by using the hidden representation of the
         last token of a `Doc`.
     use_reduce_max (bool): Pool by taking the maximum values of the hidden
         representations of a `Doc`.
