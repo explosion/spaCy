@@ -26,7 +26,6 @@ from spacy.ml.models import (
     build_Tok2Vec_model,
 )
 from spacy.ml.staticvectors import StaticVectors
-from spacy.pipeline import tok2vec
 from spacy.util import registry
 
 
