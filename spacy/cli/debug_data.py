@@ -1073,7 +1073,8 @@ def _get_distribution(docs, normalize: bool = True) -> Counter:
     word_counts: Counter = Counter()
     for doc in docs:
         for token in doc:
-            word_counts[token.text] += 1
+            t = token.text.lower()
+            word_counts[t] += 1
     if normalize:
         total = sum(word_counts.values(), 0.0)
         word_counts = Counter({k: v / total for k, v in word_counts.items()})
