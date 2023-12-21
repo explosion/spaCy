@@ -1018,46 +1018,6 @@ but used an internal `tok2vec` instead of taking it as argument:
 
 </Accordion>
 
-### spacy.TextCatCNN.v2 {id="TextCatCNN"}
-
-> #### Example Config
->
-> ```ini
-> [model]
-> @architectures = "spacy.TextCatCNN.v2"
-> exclusive_classes = false
-> nO = null
->
-> [model.tok2vec]
-> @architectures = "spacy.HashEmbedCNN.v2"
-> pretrained_vectors = null
-> width = 96
-> depth = 4
-> embed_size = 2000
-> window_size = 1
-> maxout_pieces = 3
-> subword_features = true
-> ```
-
-A neural network model where token vectors are calculated using a CNN. The
-vectors are mean pooled and used as features in a feed-forward network. This
-architecture is usually less accurate than the ensemble, but runs faster.
-
-| Name                | Description                                                                                                                                                                                    |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
-| `tok2vec`           | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                        |
-| `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
-| **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
-
-<Accordion title="spacy.TextCatCNN.v1 definition" spaced>
-
-[TextCatCNN.v1](/api/legacy#TextCatCNN_v1) had the exact same signature, but was
-not yet resizable. Since v2, new labels can be added to this component, even
-after training.
-
-</Accordion>
-
 ### spacy.TextCatBOW.v3 {id="TextCatBOW"}
 
 > #### Example Config
@@ -1095,6 +1055,54 @@ the others, but may not be as accurate, especially if texts are short.
   [TextCatBOW.v2](/api/legacy#TextCatBOW_v2) did not have the `length` argument.
 
 </Accordion>
+
+### spacy.TextCatReduce.v1 {id="TextCatReduce"}
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.TextCatReduce.v1"
+> exclusive_classes = false
+> use_reduce_first = false
+> use_reduce_last = false
+> use_reduce_max = false
+> use_reduce_mean = true
+> nO = null
+>
+> [model.tok2vec]
+> @architectures = "spacy.HashEmbedCNN.v2"
+> pretrained_vectors = null
+> width = 96
+> depth = 4
+> embed_size = 2000
+> window_size = 1
+> maxout_pieces = 3
+> subword_features = true
+> ```
+
+A classifier that pools token hidden representations of each `Doc` using first,
+max or mean reduction and then applies a classification layer. Reductions are
+concatenated when multiple reductions are used.
+
+<Infobox variant="warning" title="Relation to TextCatCNN" id="TextCatCNN">
+
+`TextCatReduce` is a generalization of the older
+[`TextCatCNN`](/api/legacy#TextCatCNN_v2) model. `TextCatCNN` always uses a mean
+reduction, whereas `TextCatReduce` also supports first/max reductions.
+
+</Infobox>
+
+| Name                | Description                                                                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
+| `tok2vec`           | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                        |
+| `use_reduce_first`  | Pool by using the hidden representation of the first token of a `Doc`. ~~bool~~                                                                                                                |
+| `use_reduce_last`   | Pool by using the hidden representation of the last token of a `Doc`. ~~bool~~                                                                                                                 |
+| `use_reduce_max`    | Pool by taking the maximum values of the hidden representations of a `Doc`. ~~bool~~                                                                                                           |
+| `use_reduce_mean`   | Pool by taking the mean of all hidden representations of a `Doc`. ~~bool~~                                                                                                                     |
+| `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
+| **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
 
 ## Span classification architectures {id="spancat",source="spacy/ml/models/spancat.py"}
 
