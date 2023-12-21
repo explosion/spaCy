@@ -405,6 +405,7 @@ def test_is_distillable():
 @pytest.mark.slow
 @pytest.mark.parametrize("max_moves", [0, 1, 5, 100])
 def test_distill(max_moves):
+    fix_random_seed(0)
     teacher = English()
     teacher_parser = teacher.add_pipe("parser")
     train_examples = []
