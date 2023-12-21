@@ -278,6 +278,7 @@ def _init_parametric_attention_with_residual_nonlinear(model, X, Y) -> Model:
     model.get_ref("norm_layer").set_dim("nI", tok2vec_width)
     model.get_ref("norm_layer").set_dim("nO", tok2vec_width)
     init_chain(model, X, Y)
+    return model
 
 
 @registry.architectures("spacy.TextCatReduce.v1")
