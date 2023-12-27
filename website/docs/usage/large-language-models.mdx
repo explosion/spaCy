@@ -372,10 +372,10 @@ documents. |
 
 | |
 [`task.generate_prompts`](/api/large-language-models#task-sharding-generate-prompts)
-| Takes a collection of documents, and returns a collection of collection of
+| Takes a collection of documents, and returns a collection of collections of
 prompt shards, which can be of type `Any`. | |
 [`task.parse_responses`](/api/large-language-models#task-sharding-parse-responses)
-| Takes a collection of collection of LLM responses (one per prompt shard) and
+| Takes a collection of collections of LLM responses (one per prompt shard) and
 the original documents, parses the responses into structured information, sets
 the annotations on the doc shards, and merges those doc shards back into a
 single doc instance. |
