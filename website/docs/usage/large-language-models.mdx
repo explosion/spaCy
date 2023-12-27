@@ -340,15 +340,45 @@ A _task_ defines an NLP problem or question, that will be sent to the LLM via a
 prompt. Further, the task defines how to parse the LLM's responses back into
 structured information. All tasks are registered in the `llm_tasks` registry.
 
-Practically speaking, a task should adhere to the `Protocol` `LLMTask` defined
-in [`ty.py`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/ty.py).
-It needs to define a `generate_prompts` function and a `parse_responses`
-function.
+Practically speaking, a task should adhere to the `Protocol` named `LLMTask`
+defined in
+[`ty.py`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/ty.py). It
+needs to define a `generate_prompts` function and a `parse_responses` function.
 
-| Task                                                                        | Description                                                                                                                                                  |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`task.generate_prompts`](/api/large-language-models#task-generate-prompts) | Takes a collection of documents, and returns a collection of "prompts", which can be of type `Any`.                                                          |
-| [`task.parse_responses`](/api/large-language-models#task-parse-responses)   | Takes a collection of LLM responses and the original documents, parses the responses into structured information, and sets the annotations on the documents. |
+Tasks may support prompt sharding (for more info see the API docs on
+[sharding](/api/large-language-models#task-sharding) and
+[non-sharding](/api/large-language-models#task-nonsharding) tasks). The function
+signatures for `generate_prompts` and `parse_responses` depend on whether they
+do.
+
+| _For tasks *not supporting* sharding:_ | Task | Description |     |
+| -------------------------------------- | ---- | ----------- | --- |
+
+---
+
+| |
+[`task.generate_prompts`](/api/large-language-models#task-nonsharding-generate-prompts)
+| Takes a collection of documents, and returns a collection of prompts, which
+can be of type `Any`. | |
+[`task.parse_responses`](/api/large-language-models#task-nonsharding-parse-responses)
+| Takes a collection of LLM responses and the original documents, parses the
+responses into structured information, and sets the annotations on the
+documents. |
+
+| _For tasks *supporting* sharding:_ | Task | Description |     |
+| ---------------------------------- | ---- | ----------- | --- |
+
+---
+
+| |
+[`task.generate_prompts`](/api/large-language-models#task-sharding-generate-prompts)
+| Takes a collection of documents, and returns a collection of collection of
+prompt shards, which can be of type `Any`. | |
+[`task.parse_responses`](/api/large-language-models#task-sharding-parse-responses)
+| Takes a collection of collection of LLM responses (one per prompt shard) and
+the original documents, parses the responses into structured information, sets
+the annotations on the doc shards, and merges those doc shards back into a
+single doc instance. |
 
 Moreover, the task may define an optional [`scorer` method](/api/scorer#score).
 It should accept an iterable of `Example` objects as input and return a score
@@ -370,7 +400,9 @@ evaluate the component.
 | [`spacy.TextCat.v2`](/api/large-language-models#textcat-v2)             | Version 2 builds on v1 and includes an improved prompt template.                                                  |
 | [`spacy.TextCat.v1`](/api/large-language-models#textcat-v1)             | Version 1 of the built-in TextCat task supports both zero-shot and few-shot prompting.                            |
 | [`spacy.Lemma.v1`](/api/large-language-models#lemma-v1)                 | Lemmatizes the provided text and updates the `lemma_` attribute of the tokens accordingly.                        |
+| [`spacy.Raw.v1`](/api/large-language-models#raw-v1)                     | Executes raw doc content as prompt to LLM.                                                                        |
 | [`spacy.Sentiment.v1`](/api/large-language-models#sentiment-v1)         | Performs sentiment analysis on provided texts.                                                                    |
+| [`spacy.Translation.v1`](/api/large-language-models#translation-v1)     | Translates doc content into the specified target language.                                                        |
 | [`spacy.NoOp.v1`](/api/large-language-models#noop-v1)                   | This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`. |
 
 #### Providing examples for few-shot prompts {id="few-shot-prompts"}
