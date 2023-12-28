@@ -6,8 +6,7 @@ requires = [
     "preshed>=3.0.2,<3.1.0",
     "murmurhash>=0.28.0,<1.1.0",
     "thinc>=8.1.8,<8.3.0",
-    "numpy>=1.15.0; python_version < '3.9'",
-    "numpy>=1.25.0; python_version >= '3.9'",
+    "numpy>=1.25.0",
 ]
 build-backend = "setuptools.build_meta"
 
