@@ -3,12 +3,14 @@ from typing import List, Optional, Tuple, cast
 
 from thinc.api import (
     Dropout,
+    Gelu,
     LayerNorm,
     Linear,
     Logistic,
     Maxout,
     Model,
     ParametricAttention,
+    ParametricAttention_v2,
     Relu,
     Softmax,
     SparseLinear,
@@ -146,6 +148,9 @@ def build_text_classifier_v2(
     linear_model: Model[List[Doc], Floats2d],
     nO: Optional[int] = None,
 ) -> Model[List[Doc], Floats2d]:
+    # TODO: build the model with _build_parametric_attention_with_residual_nonlinear
+    # in spaCy v4. We don't do this in spaCy v3 to preserve model
+    # compatibility.
     exclusive_classes = not linear_model.attrs["multi_label"]
     with Model.define_operators({">>": chain, "|": concatenate}):
         width = tok2vec.maybe_get_dim("nO")
@@ -208,6 +213,71 @@ def build_text_classifier_lowdata(
         if dropout:
             model = model >> Dropout(dropout)
         model = model >> Logistic()
+    return model
+
+
+@registry.architectures("spacy.TextCatParametricAttention.v1")
+def build_textcat_parametric_attention_v1(
+    tok2vec: Model[List[Doc], List[Floats2d]],
+    exclusive_classes: bool,
+    nO: Optional[int] = None,
+) -> Model[List[Doc], Floats2d]:
+    width = tok2vec.maybe_get_dim("nO")
+    parametric_attention = _build_parametric_attention_with_residual_nonlinear(
+        tok2vec=tok2vec,
+        nonlinear_layer=Maxout(nI=width, nO=width),
+        key_transform=Gelu(nI=width, nO=width),
+    )
+    with Model.define_operators({">>": chain}):
+        if exclusive_classes:
+            output_layer = Softmax(nO=nO)
+        else:
+            output_layer = Linear(nO=nO) >> Logistic()
+        model = parametric_attention >> output_layer
+    if model.has_dim("nO") is not False and nO is not None:
+        model.set_dim("nO", cast(int, nO))
+    model.set_ref("output_layer", output_layer)
+    model.attrs["multi_label"] = not exclusive_classes
+
+    return model
+
+
+def _build_parametric_attention_with_residual_nonlinear(
+    *,
+    tok2vec: Model[List[Doc], List[Floats2d]],
+    nonlinear_layer: Model[Floats2d, Floats2d],
+    key_transform: Optional[Model[Floats2d, Floats2d]] = None,
+) -> Model[List[Doc], Floats2d]:
+    with Model.define_operators({">>": chain, "|": concatenate}):
+        width = tok2vec.maybe_get_dim("nO")
+        attention_layer = ParametricAttention_v2(nO=width, key_transform=key_transform)
+        norm_layer = LayerNorm(nI=width)
+        parametric_attention = (
+            tok2vec
+            >> list2ragged()
+            >> attention_layer
+            >> reduce_sum()
+            >> residual(nonlinear_layer >> norm_layer >> Dropout(0.0))
+        )
+
+        parametric_attention.init = _init_parametric_attention_with_residual_nonlinear
+
+        parametric_attention.set_ref("tok2vec", tok2vec)
+        parametric_attention.set_ref("attention_layer", attention_layer)
+        parametric_attention.set_ref("nonlinear_layer", nonlinear_layer)
+        parametric_attention.set_ref("norm_layer", norm_layer)
+
+        return parametric_attention
+
+
+def _init_parametric_attention_with_residual_nonlinear(model, X, Y) -> Model:
+    tok2vec_width = get_tok2vec_width(model)
+    model.get_ref("attention_layer").set_dim("nO", tok2vec_width)
+    model.get_ref("nonlinear_layer").set_dim("nO", tok2vec_width)
+    model.get_ref("nonlinear_layer").set_dim("nI", tok2vec_width)
+    model.get_ref("norm_layer").set_dim("nI", tok2vec_width)
+    model.get_ref("norm_layer").set_dim("nO", tok2vec_width)
+    init_chain(model, X, Y)
     return model
 
 
