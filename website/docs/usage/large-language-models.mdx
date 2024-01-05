@@ -351,34 +351,19 @@ Tasks may support prompt sharding (for more info see the API docs on
 signatures for `generate_prompts` and `parse_responses` depend on whether they
 do.
 
-| _For tasks *not supporting* sharding:_ | Task | Description |     |
-| -------------------------------------- | ---- | ----------- | --- |
+_For tasks *not supporting* sharding:_
 
----
+| Task                                                                                    | Description                                                                                                                                                  |     |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- |
+| [`task.generate_prompts`](/api/large-language-models#task-nonsharding-generate-prompts) | Takes a collection of documents, and returns a collection of prompts, which can be of type `Any`.                                                            |
+| [`task.parse_responses`](/api/large-language-models#task-nonsharding-parse-responses)   | Takes a collection of LLM responses and the original documents, parses the responses into structured information, and sets the annotations on the documents. |
 
-| |
-[`task.generate_prompts`](/api/large-language-models#task-nonsharding-generate-prompts)
-| Takes a collection of documents, and returns a collection of prompts, which
-can be of type `Any`. | |
-[`task.parse_responses`](/api/large-language-models#task-nonsharding-parse-responses)
-| Takes a collection of LLM responses and the original documents, parses the
-responses into structured information, and sets the annotations on the
-documents. |
+_For tasks *supporting* sharding:_
 
-| _For tasks *supporting* sharding:_ | Task | Description |     |
-| ---------------------------------- | ---- | ----------- | --- |
-
----
-
-| |
-[`task.generate_prompts`](/api/large-language-models#task-sharding-generate-prompts)
-| Takes a collection of documents, and returns a collection of collections of
-prompt shards, which can be of type `Any`. | |
-[`task.parse_responses`](/api/large-language-models#task-sharding-parse-responses)
-| Takes a collection of collections of LLM responses (one per prompt shard) and
-the original documents, parses the responses into structured information, sets
-the annotations on the doc shards, and merges those doc shards back into a
-single doc instance. |
+| Task                                                                                 | Description                                                                                                                                                                                                                                                  |     |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- |
+| [`task.generate_prompts`](/api/large-language-models#task-sharding-generate-prompts) | Takes a collection of documents, and returns a collection of collections of prompt shards, which can be of type `Any`.                                                                                                                                       |
+| [`task.parse_responses`](/api/large-language-models#task-sharding-parse-responses)   | Takes a collection of collections of LLM responses (one per prompt shard) and the original documents, parses the responses into structured information, sets the annotations on the doc shards, and merges those doc shards back into a single doc instance. |
 
 Moreover, the task may define an optional [`scorer` method](/api/scorer#score).
 It should accept an iterable of `Example` objects as input and return a score
