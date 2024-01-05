@@ -9,8 +9,8 @@ menu:
   - ['Various Functions', 'various-functions']
 ---
 
-[The spacy-llm package](https://github.com/explosion/spacy-llm) integrates Large
-Language Models (LLMs) into spaCy, featuring a modular system for **fast
+[The `spacy-llm` package](https://github.com/explosion/spacy-llm) integrates
+Large Language Models (LLMs) into spaCy, featuring a modular system for **fast
 prototyping** and **prompting**, and turning unstructured responses into
 **robust outputs** for various NLP tasks, **no training data** required.
 
@@ -202,13 +202,82 @@ not require labels.
 
 ## Tasks {id="tasks"}
 
-### Task implementation {id="task-implementation"}
+In `spacy-llm`, a _task_ defines an NLP problem or question and its solution
+using an LLM. It does so by implementing the following responsibilities:
 
-A _task_ defines an NLP problem or question, that will be sent to the LLM via a
-prompt. Further, the task defines how to parse the LLM's responses back into
-structured information. All tasks are registered in the `llm_tasks` registry.
+1. Loading a prompt template and injecting documents' data into the prompt.
+   Optionally, include fewshot examples in the prompt.
+2. Splitting the prompt into several pieces following a map-reduce paradigm,
+   _if_ the prompt is too long to fit into the model's context and the task
+   supports sharding prompts.
+3. Parsing the LLM's responses back into structured information and validating
+   the parsed output.
 
-#### task.generate_prompts {id="task-generate-prompts"}
+Two different task interfaces are supported: `ShardingLLMTask` and
+`NonShardingLLMTask`. Only the former supports the sharding of documents, i. e.
+splitting up prompts if they are too long.
+
+All tasks are registered in the `llm_tasks` registry.
+
+### On Sharding {id="task-sharding"}
+
+"Sharding" describes, generally speaking, the process of distributing parts of a
+dataset across multiple storage units for easier processing and lookups. In
+`spacy-llm` we use this term (synonymously: "mapping") to describe the splitting
+up of prompts if they are too long for a model to handle, and "fusing"
+(synonymously: "reducing") to describe how the model responses for several shards
+are merged back together into a single document.
+
+Prompts are broken up in a manner that _always_ keeps the prompt in the template
+intact, meaning that the instructions to the LLM will always stay complete. The
+document content however will be split, if the length of the fully rendered
+prompt exceeds a model context length.
+
+A toy example: let's assume a model has a context window of 25 tokens and the
+prompt template for our fictional, sharding-supporting task looks like this:
+
+```
+Estimate the sentiment of this text:
+"{text}"
+Estimated sentiment:
+```
+
+Depending on how tokens are counted exactly (this is a config setting), we might
+come up with `n = 12` tokens for the number of tokens in the prompt
+instructions. Furthermore let's assume that our `text` is "This has been
+amazing - I can't remember the last time I left the cinema so impressed." -
+which has roughly 19 tokens.
+
+Considering we only have 13 tokens to add to our prompt before we hit the
+context limit, we'll have to split our prompt into two parts. Thus `spacy-llm`,
+assuming the task used supports sharding, will split the prompt into two (the
+default splitting strategy splits by tokens, but alternative splitting
+strategies splitting e. g. by sentences can be configured):
+
+_(Prompt 1/2)_
+
+```
+Estimate the sentiment of this text:
+"This has been amazing - I can't remember "
+Estimated sentiment:
+```
+
+_(Prompt 2/2)_
+
+```
+Estimate the sentiment of this text:
+"the last time I left the cinema so impressed."
+Estimated sentiment:
+```
+
+The reduction step is task-specific - a sentiment estimation task might e. g. do
+a weighted average of the sentiment scores. Note that prompt sharding introduces
+potential inaccuracies, as the LLM won't have access to the entire document at
+once. Depending on your use case this might or might not be problematic.
+
+### `NonShardingLLMTask` {id="task-nonsharding"}
+
+#### task.generate_prompts {id="task-nonsharding-generate-prompts"}
 
 Takes a collection of documents, and returns a collection of "prompts", which
 can be of type `Any`. Often, prompts are of type `str` - but this is not
@@ -219,7 +288,7 @@ enforced to allow for maximum flexibility in the framework.
 | `docs`      | The input documents. ~~Iterable[Doc]~~   |
 | **RETURNS** | The generated prompts. ~~Iterable[Any]~~ |
 
-#### task.parse_responses {id="task-parse-responses"}
+#### task.parse_responses {id="task-non-sharding-parse-responses"}
 
 Takes a collection of LLM responses and the original documents, parses the
 responses into structured information, and sets the annotations on the
@@ -230,19 +299,44 @@ defined fields.
 The `responses` are of type `Iterable[Any]`, though they will often be `str`
 objects. This depends on the return type of the [model](#models).
 
-| Argument    | Description                                |
-| ----------- | ------------------------------------------ |
-| `docs`      | The input documents. ~~Iterable[Doc]~~     |
-| `responses` | The generated prompts. ~~Iterable[Any]~~   |
-| **RETURNS** | The annotated documents. ~~Iterable[Doc]~~ |
+| Argument    | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| `docs`      | The input documents. ~~Iterable[Doc]~~                 |
+| `responses` | The responses received from the LLM. ~~Iterable[Any]~~ |
+| **RETURNS** | The annotated documents. ~~Iterable[Doc]~~             |
 
-### Raw prompting {id="raw"}
+### `ShardingLLMTask` {id="task-sharding"}
 
-Different to all other tasks `spacy.Raw.vX` doesn't provide a specific prompt,
-wrapping doc data, to the model. Instead it instructs the model to reply to the
-doc content. This is handy for use cases like question answering (where each doc
-contains one question) or if you want to include customized prompts for each
-doc.
+#### task.generate_prompts {id="task-sharding-generate-prompts"}
+
+Takes a collection of documents, breaks them up into shards if necessary to fit
+all content into the model's context, and returns a collection of collections of
+"prompts" (i. e. each doc can have multiple shards, each of which have exactly
+one prompt), which can be of type `Any`. Often, prompts are of type `str` - but
+this is not enforced to allow for maximum flexibility in the framework.
+
+| Argument    | Description                                        |
+| ----------- | -------------------------------------------------- |
+| `docs`      | The input documents. ~~Iterable[Doc]~~             |
+| **RETURNS** | The generated prompts. ~~Iterable[Iterable[Any]]~~ |
+
+#### task.parse_responses {id="task-sharding-parse-responses"}
+
+Receives a collection of collections of LLM responses (i. e. each doc can have
+multiple shards, each of which have exactly one prompt / prompt response) and
+the original shards, parses the responses into structured information, sets the
+annotations on the shards, and merges back doc shards into single docs. The
+`parse_responses` function is free to set the annotations in any way, including
+`Doc` fields like `ents`, `spans` or `cats`, or using custom defined fields.
+
+The `responses` are of type `Iterable[Iterable[Any]]`, though they will often be
+`str` objects. This depends on the return type of the [model](#models).
+
+| Argument    | Description                                                      |
+| ----------- | ---------------------------------------------------------------- |
+| `shards`    | The input document shards. ~~Iterable[Iterable[Doc]]~~           |
+| `responses` | The responses received from the LLM. ~~Iterable[Iterable[Any]]~~ |
+| **RETURNS** | The annotated documents. ~~Iterable[Doc]~~                       |
 
 ### Translation {id="translation"}
 
@@ -294,6 +388,14 @@ target_lang = "Spanish"
 @misc = "spacy.FewShotReader.v1"
 path = "translation_examples.yml"
 ```
+
+### Raw prompting {id="raw"}
+
+Different to all other tasks `spacy.Raw.vX` doesn't provide a specific prompt,
+wrapping doc data, to the model. Instead it instructs the model to reply to the
+doc content. This is handy for use cases like question answering (where each doc
+contains one question) or if you want to include customized prompts for each
+doc.
 
 #### spacy.Raw.v1 {id="raw-v1"}
 
@@ -1239,9 +1341,15 @@ A _model_ defines which LLM model to query, and how to query it. It can be a
 simple function taking a collection of prompts (consistent with the output type
 of `task.generate_prompts()`) and returning a collection of responses
 (consistent with the expected input of `parse_responses`). Generally speaking,
-it's a function of type `Callable[[Iterable[Any]], Iterable[Any]]`, but specific
+it's a function of type
+`Callable[[Iterable[Iterable[Any]]], Iterable[Iterable[Any]]]`, but specific
 implementations can have other signatures, like
-`Callable[[Iterable[str]], Iterable[str]]`.
+`Callable[[Iterable[Iterable[str]]], Iterable[Iterable[str]]]`.
+
+Note: the model signature expects a nested iterable so it's able to deal with
+sharded docs. Unsharded docs (i. e. those produced by (nonsharding
+tasks)[/api/large-language-models#task-nonsharding]) are reshaped to fit the
+expected data structure.
 
 ### Models via REST API {id="models-rest"}
 
