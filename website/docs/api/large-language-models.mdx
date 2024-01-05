@@ -225,7 +225,7 @@ All tasks are registered in the `llm_tasks` registry.
 dataset across multiple storage units for easier processing and lookups. In
 `spacy-llm` we use this term (synonymously: "mapping") to describe the splitting
 up of prompts if they are too long for a model to handle, and "fusing"
-(synonymously: "reducing") to describe how the model responses for several shars
+(synonymously: "reducing") to describe how the model responses for several shards
 are merged back together into a single document.
 
 Prompts are broken up in a manner that _always_ keeps the prompt in the template
@@ -239,10 +239,10 @@ prompt template for our fictional, sharding-supporting task looks like this:
 ```
 Estimate the sentiment of this text:
 "{text}"
-Estimated entiment:
+Estimated sentiment:
 ```
 
-Depening on how tokens are counted exactly (this is a config setting), we might
+Depending on how tokens are counted exactly (this is a config setting), we might
 come up with `n = 12` tokens for the number of tokens in the prompt
 instructions. Furthermore let's assume that our `text` is "This has been
 amazing - I can't remember the last time I left the cinema so impressed." -
@@ -259,7 +259,7 @@ _(Prompt 1/2)_
 ```
 Estimate the sentiment of this text:
 "This has been amazing - I can't remember "
-Estimated entiment:
+Estimated sentiment:
 ```
 
 _(Prompt 2/2)_
@@ -267,7 +267,7 @@ _(Prompt 2/2)_
 ```
 Estimate the sentiment of this text:
 "the last time I left the cinema so impressed."
-Estimated entiment:
+Estimated sentiment:
 ```
 
 The reduction step is task-specific - a sentiment estimation task might e. g. do
