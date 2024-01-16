@@ -21,13 +21,13 @@ from thinc.api import (
     CupyOps,
     NumpyOps,
     Optimizer,
+    SequenceCategoricalCrossentropy,
     chain,
     get_ops,
     set_dropout_rate,
     softmax_activation,
     use_ops,
 )
-from thinc.legacy import LegacySequenceCategoricalCrossentropy
 from thinc.types import Floats2d
 
 from ..ml.parser_model cimport (
@@ -349,7 +349,7 @@ cdef class Parser(TrainablePipe):
 
         DOCS: https://spacy.io/api/dependencyparser#get_teacher_student_loss
         """
-        loss_func = LegacySequenceCategoricalCrossentropy(normalize=False)
+        loss_func = SequenceCategoricalCrossentropy(normalize=False)
         d_scores, loss = loss_func(student_scores, teacher_scores)
         if self.model.ops.xp.isnan(loss):
             raise ValueError(Errors.E910.format(name=self.name))
