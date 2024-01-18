@@ -13,7 +13,7 @@ from .. import util
 from ..language import Language
 from ..tokens import Doc
 from ..training import Corpus
-from ._util import Arg, Opt, benchmark_cli, setup_gpu, import_code
+from ._util import Arg, Opt, benchmark_cli, import_code, setup_gpu
 
 
 @benchmark_cli.command(
