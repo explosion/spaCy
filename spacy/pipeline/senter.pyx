@@ -2,8 +2,7 @@
 from itertools import islice
 from typing import Callable, Iterable, Optional
 
-from thinc.api import Config, Model
-from thinc.legacy import LegacySequenceCategoricalCrossentropy
+from thinc.api import Config, Model, SequenceCategoricalCrossentropy
 
 from ..tokens.doc cimport Doc
 
@@ -158,7 +157,7 @@ class SentenceRecognizer(Tagger):
         """
         validate_examples(examples, "SentenceRecognizer.get_loss")
         labels = self.labels
-        loss_func = LegacySequenceCategoricalCrossentropy(names=labels, normalize=False)
+        loss_func = SequenceCategoricalCrossentropy(names=labels, normalize=False)
         truths = []
         for eg in examples:
             eg_truth = []

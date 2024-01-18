@@ -10,15 +10,23 @@ from ..training import remove_bilu_prefix
 from ..util import registry
 from ._parser_internals.ner import BiluoPushDown
 from ._parser_internals.transition_system import TransitionSystem
-from .transition_parser import Parser
+
+from ._parser_internals.ner cimport BiluoPushDown
+from .transition_parser cimport Parser
+
+from ..language import Language
+from ..scorer import get_ner_prf
+from ..training import remove_bilu_prefix
+from ..util import registry
 
 default_model_config = """
 [model]
-@architectures = "spacy.TransitionBasedParser.v3"
+@architectures = "spacy.TransitionBasedParser.v2"
 state_type = "ner"
 extra_state_tokens = false
 hidden_width = 64
 maxout_pieces = 2
+use_upper = true
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v2"
@@ -43,12 +51,8 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "incorrect_spans_key": None,
         "scorer": {"@scorers": "spacy.ner_scorer.v1"},
     },
-    default_score_weights={
-        "ents_f": 1.0,
-        "ents_p": 0.0,
-        "ents_r": 0.0,
-        "ents_per_type": None,
-    },
+    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
+
 )
 def make_ner(
     nlp: Language,
@@ -115,12 +119,7 @@ def make_ner(
         "incorrect_spans_key": None,
         "scorer": None,
     },
-    default_score_weights={
-        "ents_f": 1.0,
-        "ents_p": 0.0,
-        "ents_r": 0.0,
-        "ents_per_type": None,
-    },
+    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
 )
 def make_beam_ner(
     nlp: Language,
@@ -194,12 +193,11 @@ def make_ner_scorer():
     return ner_score
 
 
-class EntityRecognizer(Parser):
+cdef class EntityRecognizer(Parser):
     """Pipeline component for named entity recognition.
 
     DOCS: https://spacy.io/api/entityrecognizer
     """
-
     TransitionSystem = BiluoPushDown
 
     def __init__(
@@ -217,14 +215,15 @@ class EntityRecognizer(Parser):
         incorrect_spans_key=None,
         scorer=ner_score,
     ):
-        """Create an EntityRecognizer."""
+        """Create an EntityRecognizer.
+        """
         super().__init__(
             vocab,
             model,
             name,
             moves,
             update_with_oracle_cut_size=update_with_oracle_cut_size,
-            min_action_freq=1,  # not relevant for NER
+            min_action_freq=1,   # not relevant for NER
             learn_tokens=False,  # not relevant for NER
             beam_width=beam_width,
             beam_density=beam_density,

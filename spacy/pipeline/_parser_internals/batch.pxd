@@ -1,2 +1,0 @@
-cdef class Batch:
-    pass

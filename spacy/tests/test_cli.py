@@ -1042,6 +1042,13 @@ def test_applycli_user_data():
         assert result[0]._.ext == val
 
 
+# TODO: remove this xfail after merging master into v4. The issue
+#       is that for local files, pathy started returning os.stat_result,
+#       which doesn't have a last_modified property. So, recency-sorting
+#       fails and the test fails. However, once we merge master into
+#       v4, we'll use weasel, which in turn uses cloudpathlib, which
+#       should resolve this issue.
+@pytest.mark.xfail(reason="Recency sorting is broken on some platforms")
 def test_local_remote_storage():
     with make_tempdir() as d:
         filename = "a.txt"
