@@ -1,5 +1,4 @@
 # cython: infer_types=True
-# cython: profile=True
 import numpy
 
 from ...typedefs cimport class_t

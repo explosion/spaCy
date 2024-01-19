@@ -1,8 +1,12 @@
 from collections import defaultdict
 from typing import Any, Dict, List, Union
 
-from pydantic import BaseModel, Field, ValidationError
-from pydantic.types import StrictBool, StrictInt, StrictStr
+try:
+    from pydantic.v1 import BaseModel, Field, ValidationError
+    from pydantic.v1.types import StrictBool, StrictInt, StrictStr
+except ImportError:
+    from pydantic import BaseModel, Field, ValidationError  # type: ignore
+    from pydantic.types import StrictBool, StrictInt, StrictStr  # type: ignore
 
 
 class MatchNodeSchema(BaseModel):

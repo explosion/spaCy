@@ -153,8 +153,9 @@ maxout_pieces = 3
 depth = 2
 
 [components.textcat.model.linear_model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
+length = 262144
 ngram_size = 1
 no_output_layer = false
 ```
@@ -170,8 +171,9 @@ factory = "textcat"
 labels = []
 
 [components.textcat.model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
+length = 262144
 ngram_size = 1
 no_output_layer = false
 nO = null

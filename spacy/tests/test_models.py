@@ -26,6 +26,7 @@ from spacy.ml.models import (
     build_Tok2Vec_model,
 )
 from spacy.ml.staticvectors import StaticVectors
+from spacy.util import registry
 
 
 def get_textcat_bow_kwargs():
@@ -284,3 +285,17 @@ def test_spancat_model_forward_backward(nO=5):
     Y, backprop = model((docs, spans), is_train=True)
     assert Y.shape == (spans.dataXd.shape[0], nO)
     backprop(Y)
+
+
+def test_textcat_reduce_invalid_args():
+    textcat_reduce = registry.architectures.get("spacy.TextCatReduce.v1")
+    tok2vec = make_test_tok2vec()
+    with pytest.raises(ValueError, match=r"must be used with at least one reduction"):
+        textcat_reduce(
+            tok2vec=tok2vec,
+            exclusive_classes=False,
+            use_reduce_first=False,
+            use_reduce_last=False,
+            use_reduce_max=False,
+            use_reduce_mean=False,
+        )

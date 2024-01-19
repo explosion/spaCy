@@ -1,0 +1,143 @@
+---
+title: BaseVectors
+teaser: Abstract class for word vectors
+tag: class
+source: spacy/vectors.pyx
+version: 3.7
+---
+
+`BaseVectors` is an abstract class to support the development of custom vectors
+implementations.
+
+For use in training with [`StaticVectors`](/api/architectures#staticvectors),
+`get_batch` must be implemented. For improved performance, use efficient
+batching in `get_batch` and implement `to_ops` to copy the vector data to the
+current device. See an example custom implementation for
+[BPEmb subword embeddings](/usage/embeddings-transformers#custom-vectors).
+
+## BaseVectors.\_\_init\_\_ {id="init",tag="method"}
+
+Create a new vector store.
+
+| Name           | Description                                                                                                           |
+| -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                                                       |
+| `strings`      | The string store. A new string store is created if one is not provided. Defaults to `None`. ~~Optional[StringStore]~~ |
+
+## BaseVectors.\_\_getitem\_\_ {id="getitem",tag="method"}
+
+Get a vector by key. If the key is not found in the table, a `KeyError` should
+be raised.
+
+| Name        | Description                                                      |
+| ----------- | ---------------------------------------------------------------- |
+| `key`       | The key to get the vector for. ~~Union[int, str]~~               |
+| **RETURNS** | The vector for the key. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
+
+## BaseVectors.\_\_len\_\_ {id="len",tag="method"}
+
+Return the number of vectors in the table.
+
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| **RETURNS** | The number of vectors in the table. ~~int~~ |
+
+## BaseVectors.\_\_contains\_\_ {id="contains",tag="method"}
+
+Check whether there is a vector entry for the given key.
+
+| Name        | Description                                  |
+| ----------- | -------------------------------------------- |
+| `key`       | The key to check. ~~int~~                    |
+| **RETURNS** | Whether the key has a vector entry. ~~bool~~ |
+
+## BaseVectors.add {id="add",tag="method"}
+
+Add a key to the table, if possible. If no keys can be added, return `-1`.
+
+| Name        | Description                                                                         |
+| ----------- | ----------------------------------------------------------------------------------- |
+| `key`       | The key to add. ~~Union[str, int]~~                                                 |
+| **RETURNS** | The row the vector was added to, or `-1` if the operation is not supported. ~~int~~ |
+
+## BaseVectors.shape {id="shape",tag="property"}
+
+Get `(rows, dims)` tuples of number of rows and number of dimensions in the
+vector table.
+
+| Name        | Description                                |
+| ----------- | ------------------------------------------ |
+| **RETURNS** | A `(rows, dims)` pair. ~~Tuple[int, int]~~ |
+
+## BaseVectors.size {id="size",tag="property"}
+
+The vector size, i.e. `rows * dims`.
+
+| Name        | Description              |
+| ----------- | ------------------------ |
+| **RETURNS** | The vector size. ~~int~~ |
+
+## BaseVectors.is_full {id="is_full",tag="property"}
+
+Whether the vectors table is full and no slots are available for new keys.
+
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| **RETURNS** | Whether the vectors table is full. ~~bool~~ |
+
+## BaseVectors.get_batch {id="get_batch",tag="method",version="3.2"}
+
+Get the vectors for the provided keys efficiently as a batch. Required to use
+the vectors with [`StaticVectors`](/api/architectures#StaticVectors) for
+training.
+
+| Name   | Description                             |
+| ------ | --------------------------------------- |
+| `keys` | The keys. ~~Iterable[Union[int, str]]~~ |
+
+## BaseVectors.to_ops {id="to_ops",tag="method"}
+
+Dummy method. Implement this to change the embedding matrix to use different
+Thinc ops.
+
+| Name  | Description                                              |
+| ----- | -------------------------------------------------------- |
+| `ops` | The Thinc ops to switch the embedding matrix to. ~~Ops~~ |
+
+## BaseVectors.to_disk {id="to_disk",tag="method"}
+
+Dummy method to allow serialization. Implement to save vector data with the
+pipeline.
+
+| Name   | Description                                                                                                                                |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+
+## BaseVectors.from_disk {id="from_disk",tag="method"}
+
+Dummy method to allow serialization. Implement to load vector data from a saved
+pipeline.
+
+| Name        | Description                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| `path`      | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| **RETURNS** | The modified vectors object. ~~BaseVectors~~                                                    |
+
+## BaseVectors.to_bytes {id="to_bytes",tag="method"}
+
+Dummy method to allow serialization. Implement to serialize vector data to a
+binary string.
+
+| Name        | Description                                          |
+| ----------- | ---------------------------------------------------- |
+| **RETURNS** | The serialized form of the vectors object. ~~bytes~~ |
+
+## BaseVectors.from_bytes {id="from_bytes",tag="method"}
+
+Dummy method to allow serialization. Implement to load vector data from a binary
+string.
+
+| Name        | Description                         |
+| ----------- | ----------------------------------- |
+| `data`      | The data to load from. ~~bytes~~    |
+| **RETURNS** | The vectors object. ~~BaseVectors~~ |

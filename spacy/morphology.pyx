@@ -1,4 +1,5 @@
 # cython: infer_types
+# cython: profile=False
 import warnings
 from typing import Dict, List, Optional, Tuple, Union
 

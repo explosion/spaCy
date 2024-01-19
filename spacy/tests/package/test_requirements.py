@@ -5,6 +5,7 @@ from pathlib import Path
 def test_build_dependencies():
     # Check that library requirements are pinned exactly the same across different setup files.
     libs_ignore_requirements = [
+        "numpy",
         "pytest",
         "pytest-timeout",
         "mock",
@@ -22,6 +23,7 @@ def test_build_dependencies():
     ]
     # ignore language-specific packages that shouldn't be installed by all
     libs_ignore_setup = [
+        "numpy",
         "fugashi",
         "mecab-ko",
         "pythainlp",

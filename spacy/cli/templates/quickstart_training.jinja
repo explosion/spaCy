@@ -271,8 +271,9 @@ grad_factor = 1.0
 @layers = "reduce_mean.v1"
 
 [components.textcat.model.linear_model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
+length = 262144
 ngram_size = 1
 no_output_layer = false
 
@@ -308,8 +309,9 @@ grad_factor = 1.0
 @layers = "reduce_mean.v1"
 
 [components.textcat_multilabel.model.linear_model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = false
+length = 262144
 ngram_size = 1
 no_output_layer = false
 
@@ -542,14 +544,15 @@ nO = null
 width = ${components.tok2vec.model.encode.width}
 
 [components.textcat.model.linear_model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
+length = 262144
 ngram_size = 1
 no_output_layer = false
 
 {% else -%}
 [components.textcat.model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
@@ -570,15 +573,17 @@ nO = null
 width = ${components.tok2vec.model.encode.width}
 
 [components.textcat_multilabel.model.linear_model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = false
+length = 262144
 ngram_size = 1
 no_output_layer = false
 
 {% else -%}
 [components.textcat_multilabel.model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = false
+length = 262144
 ngram_size = 1
 no_output_layer = false
 {%- endif %}

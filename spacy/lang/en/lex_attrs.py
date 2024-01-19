@@ -6,7 +6,8 @@ _num_words = [
     "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
     "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "thirty", "forty",
     "fifty", "sixty", "seventy", "eighty", "ninety", "hundred", "thousand",
-    "million", "billion", "trillion", "quadrillion", "gajillion", "bazillion"
+    "million", "billion", "trillion", "quadrillion", "quintillion", "sextillion",
+    "septillion", "octillion", "nonillion", "decillion", "gajillion", "bazillion"
 ]
 _ordinal_words = [
     "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth",
@@ -14,7 +15,8 @@ _ordinal_words = [
     "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth",
     "twentieth", "thirtieth", "fortieth", "fiftieth", "sixtieth", "seventieth",
     "eightieth", "ninetieth", "hundredth", "thousandth", "millionth", "billionth",
-    "trillionth", "quadrillionth", "gajillionth", "bazillionth"
+    "trillionth", "quadrillionth", "quintillionth", "sextillionth", "septillionth",
+    "octillionth", "nonillionth", "decillionth", "gajillionth", "bazillionth"
 ]
 # fmt: on
 

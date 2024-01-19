@@ -90,7 +90,8 @@ def init_pipeline_cli(
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
 ):
-    util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    if verbose:
+        util.logger.setLevel(logging.DEBUG)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     setup_gpu(use_gpu)
@@ -119,7 +120,8 @@ def init_labels_cli(
     """Generate JSON files for the labels in the data. This helps speed up the
     training process, since spaCy won't have to preprocess the data to
     extract the labels."""
-    util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    if verbose:
+        util.logger.setLevel(logging.DEBUG)
     if not output_path.exists():
         output_path.mkdir(parents=True)
     overrides = parse_config_overrides(ctx.args)

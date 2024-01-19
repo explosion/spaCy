@@ -1,3 +1,4 @@
+# cython: profile=False
 cimport numpy as np
 from libcpp.memory cimport make_shared
 
@@ -127,12 +128,15 @@ cdef class Span:
         self._vector = vector
         self._vector_norm = vector_norm
 
-    def __richcmp__(self, Span other, int op):
+    def __richcmp__(self, object other, int op):
         if other is None:
             if op == 0 or op == 1 or op == 2:
                 return False
             else:
                 return True
+
+        if not isinstance(other, Span):
+            return False
 
         self_tuple = self._cmp_tuple()
         other_tuple = other._cmp_tuple()

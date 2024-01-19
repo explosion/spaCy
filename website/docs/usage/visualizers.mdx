@@ -119,11 +119,9 @@ doc = nlp(text)
 displacy.serve(doc, style="ent")
 ```
 
-<Iframe
-  title="displaCy visualizer for entities"
-  src="/images/displacy-ent2.html"
-  height={180}
-/>
+<Standalone height={180}>
+<div style={{lineHeight: 2.5, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'", fontSize: 18}}>When <mark style={{ background: '#aa9cfc', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>Sebastian Thrun <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>PERSON</span></mark> started working on self-driving cars at <mark style={{ background: '#7aecec', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>Google <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>ORG</span></mark> in <mark style={{ background: '#bfe1d9', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>2007 <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>DATE</span></mark>, few people outside of the company took him seriously.</div>
+</Standalone>
 
 The entity visualizer lets you customize the following `options`:
 
@@ -148,11 +146,9 @@ use the `colors` setting to add your own colors for them.
 > displacy.serve(doc, style="ent", options=options)
 > ```
 
-<Iframe
-  title="displaCy visualizer for entities (custom styling)"
-  src="/images/displacy-ent-custom.html"
-  height={225}
-/>
+<Standalone height={225}>
+<div style={{lineHeight: 2.5, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'", fontSize: 18}}>But <mark style={{ background: 'linear-gradient(90deg, #aa9cfc, #fc9ce7)', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>Google <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>ORG</span></mark> is starting from behind. The company made a late push into hardware, and <mark style={{ background: 'linear-gradient(90deg, #aa9cfc, #fc9ce7)', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>Apple <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>ORG</span></mark>’s Siri, available on iPhones, and <mark style={{ background: 'linear-gradient(90deg, #aa9cfc, #fc9ce7)', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>Amazon <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>ORG</span></mark>’s Alexa software, which runs on its Echo and Dot devices, have clear leads in consumer adoption.</div>
+</Standalone>
 
 The above example uses a little trick: Since the background color values are
 added as the `background` style attribute, you can use any
@@ -197,11 +193,9 @@ doc.spans["sc"] = [
 displacy.serve(doc, style="span")
 ```
 
-<Iframe
-  title="displaCy visualizer for overlapping spans"
-  src="/images/displacy-span.html"
-  height={180}
-/>
+<Standalone height={100}>
+<div style={{ lineHeight: 2.5, direction: 'ltr', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'", fontSize: 18 }}>Welcome to the <span style={{ fontWeight: 'bold', display: 'inline-block', position: 'relative'}}>Bank<span style={{ background: '#7aecec', top: 40, height: 4, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}></span><span style={{ background: '#7aecec', top: 40, height: 4, borderTopLeftRadius: 3, borderBottomLeftRadius: 3, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}><span style={{ background: '#7aecec', color: '#000', top: '-0.5em', padding: '2px 3px', position: 'absolute', fontSize: '0.6em', fontWeight: 'bold', lineHeight: 1, borderRadius: 3 }}>ORG</span></span></span> <span style={{ fontWeight: 'bold', display: 'inline-block', position: 'relative'}}>of <span style={{ background: '#7aecec', top: 40, height: 4, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}></span></span> <span style={{ fontWeight: 'bold', display: 'inline-block', position: 'relative'}}>China<span style={{ background: '#7aecec', top: 40, height: 4, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}></span><span style={{ background: '#feca74', top: 57, height: 4, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}></span><span style={{ background: '#feca74', top: 57, height: 4, borderTopLeftRadius: 3, borderBottomLeftRadius: 3, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}><span style={{ background: '#feca74', color: '#000', top: '-0.5em', padding: '2px 3px', position: 'absolute', fontSize: '0.6em', fontWeight: 'bold', lineHeight: 1, borderRadius: 3 }}>GPE</span></span></span>.</div>
+</Standalone>
 
 The span visualizer lets you customize the following `options`:
 
@@ -223,11 +217,9 @@ specify which one displaCy should use with `spans_key` (`sc` is the default).
 > displacy.serve(doc, style="span", options=options)
 > ```
 
-<Iframe
-  title="displaCy visualizer for spans (custom spans_key)"
-  src="/images/displacy-span-custom.html"
-  height={225}
-/>
+<Standalone height={100}>
+<div style={{ lineHeight: 2.5, direction: 'ltr', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'", fontSize: 18 }}>Welcome to the <span style={{ fontWeight: 'bold', display: 'inline-block', position: 'relative'}}>Bank<span style={{ background: '#ddd', top: 40, height: 4, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}></span><span style={{ background: '#ddd', top: 40, height: 4, borderTopLeftRadius: 3, borderBottomLeftRadius: 3, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}><span style={{ background: '#ddd', color: '#000', top: '-0.5em', padding: '2px 3px', position: 'absolute', fontSize: '0.6em', fontWeight: 'bold', lineHeight: 1, borderRadius: 3 }}>BANK</span></span></span> <span style={{ fontWeight: 'bold', display: 'inline-block', position: 'relative'}}>of <span style={{ background: '#ddd', top: 40, height: 4, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}></span></span> <span style={{ fontWeight: 'bold', display: 'inline-block', position: 'relative'}}>China<span style={{ background: '#ddd', top: 40, height: 4, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}></span></span>.</div>
+</Standalone>
 
 ## Using displaCy in Jupyter notebooks {id="jupyter"}
 
@@ -349,7 +341,8 @@ or
 [SyntaxNet](https://github.com/tensorflow/models/tree/master/research/syntaxnet).
 If you set `manual=True` on either `render()` or `serve()`, you can pass in data
 in displaCy's format as a dictionary (instead of `Doc` objects). There are
-helper functions for converting `Doc` objects to displaCy's format for use with
+helper functions for converting `Doc` objects to
+[displaCy's format](/api/top-level#displacy_structures) for use with
 `manual=True`: [`displacy.parse_deps`](/api/top-level#displacy.parse_deps),
 [`displacy.parse_ents`](/api/top-level#displacy.parse_ents), and
 [`displacy.parse_spans`](/api/top-level#displacy.parse_spans).
