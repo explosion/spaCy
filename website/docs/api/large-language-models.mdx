@@ -20,10 +20,9 @@ An LLM component is implemented through the `LLMWrapper` class. It is accessible
 through a generic `llm`
 [component factory](https://spacy.io/usage/processing-pipelines#custom-components-factories)
 as well as through task-specific component factories: `llm_ner`, `llm_spancat`,
-`llm_rel`, `llm_textcat`, `llm_sentiment`, `llm_summarization` and
-`llm_entity_linker`.
-
-### LLMWrapper.\_\_init\_\_ {id="init",tag="method"}
+`llm_rel`, `llm_textcat`, `llm_sentiment`, `llm_summarization`,
+`llm_entity_linker`, `llm_raw` and `llm_translation`. For these factories, the
+GPT-3-5 model from OpenAI is used by default, but this can be customized.
 
 > #### Example
 >
@@ -42,14 +41,6 @@ as well as through task-specific component factories: `llm_ner`, `llm_spancat`,
 > from spacy_llm.pipeline import LLMWrapper
 > llm = LLMWrapper(vocab=nlp.vocab, task=task, model=model, cache=cache, save_io=True)
 > ```
-
-An LLM component is implemented through the `LLMWrapper` class. It is accessible
-through a generic `llm`
-[component factory](https://spacy.io/usage/processing-pipelines#custom-components-factories)
-as well as through task-specific component factories: `llm_ner`, `llm_spancat`,
-`llm_rel`, `llm_textcat`, `llm_sentiment` and `llm_summarization`. For these
-factories, the GPT-3-5 model from OpenAI is used by default, but this can be
-customized.
 
 ### LLMWrapper.\_\_init\_\_ {id="init",tag="method"}
 
@@ -238,8 +229,8 @@ All tasks are registered in the `llm_tasks` registry.
 dataset across multiple storage units for easier processing and lookups. In
 `spacy-llm` we use this term (synonymously: "mapping") to describe the splitting
 up of prompts if they are too long for a model to handle, and "fusing"
-(synonymously: "reducing") to describe how the model responses for several shards
-are merged back together into a single document.
+(synonymously: "reducing") to describe how the model responses for several
+shards are merged back together into a single document.
 
 Prompts are broken up in a manner that _always_ keeps the prompt in the template
 intact, meaning that the instructions to the LLM will always stay complete. The
