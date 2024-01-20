@@ -486,8 +486,8 @@ def test_to_ternary_int():
 
 def test_find_available_port():
     host = "0.0.0.0"
-    port = 5000
-    assert find_available_port(port, host) == port, "Port 5000 isn't free"
+    port = 5001
+    assert find_available_port(port, host) == port, "Port 5001 isn't free"
 
     from wsgiref.simple_server import demo_app, make_server
 
