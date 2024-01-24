@@ -9,6 +9,10 @@ def annotations_to_doc(
     tok_annot: Dict[str, Any],
     doc_annot: Dict[str, Any],
 ) -> Doc: ...
+def validate_distillation_examples(
+    examples: Iterable[Example],
+    method: str,
+) -> None: ...
 def validate_examples(
     examples: Iterable[Example],
     method: str,

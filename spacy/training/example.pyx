@@ -58,6 +58,12 @@ def validate_examples(examples, method):
 
 
 def validate_distillation_examples(examples, method):
+    """Check that a batch of examples received during processing is valid
+    for distillation.
+
+    examples (Iterable[Examples]): A batch of examples.
+    method (str): The method name to show in error messages.
+    """
     validate_examples(examples, method)
     for eg in examples:
         if [token.text for token in eg.reference] != [token.text for token in eg.predicted]:
