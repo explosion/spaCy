@@ -67,25 +67,27 @@ def test_build_dependencies():
                     "{} and {} respectively".format(lib, v, req_v)
                 )
                 setup_keys.add(lib)
-    assert sorted(setup_keys) == sorted(
-        req_dict.keys()
-    )  # if fail: requirements.txt contains a lib not in setup.cfg
 
     # check pyproject.toml and compare the versions of the libs to requirements.txt
     # does not fail when there are missing or additional libs
     toml_file = root_dir / "pyproject.toml"
     with toml_file.open() as f:
         lines = f.readlines()
+    pyproject_keys = set()
     for line in lines:
         line = line.strip().strip(",").strip('"')
         if not line.startswith("#"):
             lib, v = _parse_req(line)
             if lib and lib not in libs_ignore_requirements:
+                pyproject_keys.add(lib)
                 req_v = req_dict.get(lib, None)
                 assert (lib + v) == (lib + req_v), (
                     "{} has different version in pyproject.toml and in requirements.txt: "
                     "{} and {} respectively".format(lib, v, req_v)
                 )
+
+    # if fail: requirements.txt contains a lib not in setup.cfg or pyproject.toml
+    assert set(setup_keys).union(set(pyproject_keys)) == set(req_dict.keys())
 
 
 def _parse_req(line):
