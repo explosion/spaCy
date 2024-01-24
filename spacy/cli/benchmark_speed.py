@@ -173,7 +173,5 @@ def print_outliers(sample: numpy.ndarray):
 def warmup(
     nlp: Language, docs: List[Doc], warmup_epochs: int, batch_size: Optional[int]
 ) -> numpy.ndarray:
-    warmup_docs = []
-    for _ in range(warmup_epochs):
-        warmup_docs += [doc.from_docs([doc]) for doc in docs]
-    return annotate(nlp, warmup_docs, batch_size)
+    docs = [doc.copy() for doc in docs * warmup_epochs]
+    return annotate(nlp, docs, batch_size)
