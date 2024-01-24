@@ -180,7 +180,7 @@ Some of the main advantages and features of spaCy's training config are:
 
 Under the hood, the config is parsed into a dictionary. It's divided into
 sections and subsections, indicated by the square brackets and dot notation. For
-example, `[training]` is a section and `[training.batch_size]` a subsection.
+example, `[training]` is a section and `[training.batcher]` a subsection.
 Subsections can define values, just like a dictionary, or use the `@` syntax to
 refer to [registered functions](#config-functions). This allows the config to
 not just define static settings, but also construct objects like architectures,
@@ -254,7 +254,7 @@ For cases like this, you can set additional command-line options starting with
 block.
 
 ```bash
-$ python -m spacy train config.cfg --paths.train ./corpus/train.spacy --paths.dev ./corpus/dev.spacy --training.batch_size 128
+$ python -m spacy train config.cfg --paths.train ./corpus/train.spacy --paths.dev ./corpus/dev.spacy --training.max_epochs 3
 ```
 
 Only existing sections and values in the config can be overwritten. At the end
@@ -279,7 +279,7 @@ process. Environment variables **take precedence** over CLI overrides and values
 defined in the config file.
 
 ```bash
-$ SPACY_CONFIG_OVERRIDES="--system.gpu_allocator pytorch --training.batch_size 128" ./your_script.sh
+$ SPACY_CONFIG_OVERRIDES="--system.gpu_allocator pytorch --training.max_epochs 3" ./your_script.sh
 ```
 
 ### Reading from standard input {id="config-stdin"}
@@ -578,16 +578,17 @@ now-updated model to the predicted docs.
 
 The training configuration defined in the config file doesn't have to only
 consist of static values. Some settings can also be **functions**. For instance,
-the `batch_size` can be a number that doesn't change, or a schedule, like a
+the batch size can be a number that doesn't change, or a schedule, like a
 sequence of compounding values, which has shown to be an effective trick (see
 [Smith et al., 2017](https://arxiv.org/abs/1711.00489)).
 
 ```ini {title="With static value"}
-[training]
-batch_size = 128
+[training.batcher]
+@batchers = "spacy.batch_by_words.v1"
+size = 3000
 ```
 
-To refer to a function instead, you can make `[training.batch_size]` its own
+To refer to a function instead, you can make `[training.batcher.size]` its own
 section and use the `@` syntax to specify the function and its arguments – in
 this case [`compounding.v1`](https://thinc.ai/docs/api-schedules#compounding)
 defined in the [function registry](/api/top-level#registry). All other values
@@ -606,7 +607,7 @@ from your configs.
 > optimizer.
 
 ```ini {title="With registered function"}
-[training.batch_size]
+[training.batcher.size]
 @schedules = "compounding.v1"
 start = 100
 stop = 1000
@@ -1027,14 +1028,14 @@ def my_custom_schedule(start: int = 1, factor: float = 1.001):
 ```
 
 In your config, you can now reference the schedule in the
-`[training.batch_size]` block via `@schedules`. If a block contains a key
+`[training.batcher.size]` block via `@schedules`. If a block contains a key
 starting with an `@`, it's interpreted as a reference to a function. All other
 settings in the block will be passed to the function as keyword arguments. Keep
 in mind that the config shouldn't have any hidden defaults and all arguments on
 the functions need to be represented in the config.
 
 ```ini {title="config.cfg (excerpt)"}
-[training.batch_size]
+[training.batcher.size]
 @schedules = "my_custom_schedule.v1"
 start = 2
 factor = 1.005

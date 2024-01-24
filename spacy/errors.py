@@ -214,6 +214,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W125 = ("The StaticVectors key_attr is no longer used. To set a custom "
             "key attribute for vectors, configure it through Vectors(attr=) or "
             "'spacy init vectors --attr'")
+    W126 = ("These keys are unsupported: {unsupported}")
 
     # v4 warning strings
     W401 = ("`incl_prior is True`, but the selected knowledge base type {kb_type} doesn't support prior probability "
@@ -226,7 +227,6 @@ class Errors(metaclass=ErrorsWithCodes):
     E002 = ("Can't find factory for '{name}' for language {lang} ({lang_code}). "
             "This usually happens when spaCy calls `nlp.{method}` with a custom "
             "component name that's not registered on the current language class. "
-            "If you're using a Transformer, make sure to install 'spacy-transformers'. "
             "If you're using a custom component, make sure you've added the "
             "decorator `@Language.component` (for function components) or "
             "`@Language.factory` (for class components).\n\nAvailable "
@@ -551,12 +551,12 @@ class Errors(metaclass=ErrorsWithCodes):
             "during training, make sure to include it in 'annotating components'")
 
     # New errors added in v3.x
+    E849 = ("The vocab only supports {method} for vectors of type "
+            "spacy.vectors.Vectors, not {vectors_type}.")
     E850 = ("The PretrainVectors objective currently only supports default or "
             "floret vectors, not {mode} vectors.")
     E851 = ("The 'textcat' component labels should only have values of 0 or 1, "
             "but found value of '{val}'.")
-    E852 = ("The tar file pulled from the remote attempted an unsafe path "
-            "traversal.")
     E853 = ("Unsupported component factory name '{name}'. The character '.' is "
             "not permitted in factory names.")
     E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
@@ -970,6 +970,12 @@ class Errors(metaclass=ErrorsWithCodes):
              " 'min_length': {min_length}, 'max_length': {max_length}")
     E1054 = ("The text, including whitespace, must match between reference and "
              "predicted docs when training {component}.")
+    E1055 = ("The 'replace_listener' callback expects {num_params} parameters, "
+             "but only callbacks with one or three parameters are supported")
+    E1056 = ("The `TextCatBOW` architecture expects a length of at least 1, was {length}.")
+    E1057 = ("The `TextCatReduce` architecture must be used with at least one "
+             "reduction. Please enable one of `use_reduce_first`, "
+             "`use_reduce_last`, `use_reduce_max` or `use_reduce_mean`.")
 
     # v4 error strings
     E4000 = ("Expected a Doc as input, but got: '{type}'")

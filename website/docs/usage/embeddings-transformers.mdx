@@ -632,6 +632,165 @@ def MyCustomVectors(
     )
 ```
 
+#### Creating a custom vectors implementation {id="custom-vectors",version="3.7"}
+
+You can specify a custom registered vectors class under `[nlp.vectors]` in order
+to use static vectors in formats other than the ones supported by
+[`Vectors`](/api/vectors). Extend the abstract [`BaseVectors`](/api/basevectors)
+class to implement your custom vectors.
+
+As an example, the following `BPEmbVectors` class implements support for
+[BPEmb subword embeddings](https://bpemb.h-its.org/):
+
+```python
+# requires: pip install bpemb
+import warnings
+from pathlib import Path
+from typing import Callable, Optional, cast
+
+from bpemb import BPEmb
+from thinc.api import Ops, get_current_ops
+from thinc.backends import get_array_ops
+from thinc.types import Floats2d
+
+from spacy.strings import StringStore
+from spacy.util import registry
+from spacy.vectors import BaseVectors
+from spacy.vocab import Vocab
+
+
+class BPEmbVectors(BaseVectors):
+    def __init__(
+        self,
+        *,
+        strings: Optional[StringStore] = None,
+        lang: Optional[str] = None,
+        vs: Optional[int] = None,
+        dim: Optional[int] = None,
+        cache_dir: Optional[Path] = None,
+        encode_extra_options: Optional[str] = None,
+        model_file: Optional[Path] = None,
+        emb_file: Optional[Path] = None,
+    ):
+        kwargs = {}
+        if lang is not None:
+            kwargs["lang"] = lang
+        if vs is not None:
+            kwargs["vs"] = vs
+        if dim is not None:
+            kwargs["dim"] = dim
+        if cache_dir is not None:
+            kwargs["cache_dir"] = cache_dir
+        if encode_extra_options is not None:
+            kwargs["encode_extra_options"] = encode_extra_options
+        if model_file is not None:
+            kwargs["model_file"] = model_file
+        if emb_file is not None:
+            kwargs["emb_file"] = emb_file
+        self.bpemb = BPEmb(**kwargs)
+        self.strings = strings
+        self.name = repr(self.bpemb)
+        self.n_keys = -1
+        self.mode = "BPEmb"
+        self.to_ops(get_current_ops())
+
+    def __contains__(self, key):
+        return True
+
+    def is_full(self):
+        return True
+
+    def add(self, key, *, vector=None, row=None):
+        warnings.warn(
+            (
+                "Skipping BPEmbVectors.add: the bpemb vector table cannot be "
+                "modified. Vectors are calculated from bytepieces."
+            )
+        )
+        return -1
+
+    def __getitem__(self, key):
+        return self.get_batch([key])[0]
+
+    def get_batch(self, keys):
+        keys = [self.strings.as_string(key) for key in keys]
+        bp_ids = self.bpemb.encode_ids(keys)
+        ops = get_array_ops(self.bpemb.emb.vectors)
+        indices = ops.asarray(ops.xp.hstack(bp_ids), dtype="int32")
+        lengths = ops.asarray([len(x) for x in bp_ids], dtype="int32")
+        vecs = ops.reduce_mean(cast(Floats2d, self.bpemb.emb.vectors[indices]), lengths)
+        return vecs
+
+    @property
+    def shape(self):
+        return self.bpemb.vectors.shape
+
+    def __len__(self):
+        return self.shape[0]
+
+    @property
+    def vectors_length(self):
+        return self.shape[1]
+
+    @property
+    def size(self):
+        return self.bpemb.vectors.size
+
+    def to_ops(self, ops: Ops):
+        self.bpemb.emb.vectors = ops.asarray(self.bpemb.emb.vectors)
+
+
+@registry.vectors("BPEmbVectors.v1")
+def create_bpemb_vectors(
+    lang: Optional[str] = "multi",
+    vs: Optional[int] = None,
+    dim: Optional[int] = None,
+    cache_dir: Optional[Path] = None,
+    encode_extra_options: Optional[str] = None,
+    model_file: Optional[Path] = None,
+    emb_file: Optional[Path] = None,
+) -> Callable[[Vocab], BPEmbVectors]:
+    def bpemb_vectors_factory(vocab: Vocab) -> BPEmbVectors:
+        return BPEmbVectors(
+            strings=vocab.strings,
+            lang=lang,
+            vs=vs,
+            dim=dim,
+            cache_dir=cache_dir,
+            encode_extra_options=encode_extra_options,
+            model_file=model_file,
+            emb_file=emb_file,
+        )
+
+    return bpemb_vectors_factory
+```
+
+<Infobox variant="warning">
+
+Note that the serialization methods are not implemented, so the embeddings are
+loaded from your local cache or downloaded by `BPEmb` each time the pipeline is
+loaded.
+
+</Infobox>
+
+To use this in your pipeline, specify this registered function under
+`[nlp.vectors]` in your config:
+
+```ini
+[nlp.vectors]
+@vectors = "BPEmbVectors.v1"
+lang = "en"
+```
+
+Or specify it when creating a blank pipeline:
+
+```python
+nlp = spacy.blank("en", config={"nlp.vectors": {"@vectors": "BPEmbVectors.v1", "lang": "en"}})
+```
+
+Remember to include this code with `--code` when using
+[`spacy train`](/api/cli#train) and [`spacy package`](/api/cli#package).
+
 ## Pretraining {id="pretraining"}
 
 The [`spacy pretrain`](/api/cli#pretrain) command lets you initialize your

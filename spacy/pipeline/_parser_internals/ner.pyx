@@ -1,3 +1,4 @@
+# cython: profile=False
 from cymem.cymem cimport Pool
 from libcpp.memory cimport shared_ptr
 from libcpp.vector cimport vector

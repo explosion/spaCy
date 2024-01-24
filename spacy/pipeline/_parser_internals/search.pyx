@@ -1,4 +1,4 @@
-# cython: profile=True, experimental_cpp_class_def=True, cdivision=True, infer_types=True
+# cython: experimental_cpp_class_def=True, cdivision=True, infer_types=True
 cimport cython
 from cymem.cymem cimport Pool
 from libc.math cimport exp

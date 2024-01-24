@@ -12,7 +12,9 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Sized,
     Tuple,
+    TypeVar,
     Union,
 )
 
@@ -22,7 +24,6 @@ from wasabi import Printer
 from .. import ty
 from ..errors import Errors
 from ..schemas import ConfigSchemaDistill, ConfigSchemaTraining
-from ..tokens.doc import Doc
 from ..util import (
     logger,
     registry,
@@ -282,7 +283,7 @@ def _distill_loop(
     teacher: "Language",
     student: "Language",
     optimizer: Optimizer,
-    distill_data: Iterable[List[Example]],
+    distill_data: Iterable[Tuple[int, List[Example]]],
     evaluate: Callable[[], Tuple[float, Dict[str, float]]],
     *,
     dropout: float,
@@ -401,7 +402,7 @@ def _distill_loop(
 def train_while_improving(
     nlp: "Language",
     optimizer: Optimizer,
-    train_data: Iterable[List[Example]],
+    train_data: Iterable[Tuple[int, List[Example]]],
     evaluate: Callable[[], Tuple[float, Dict[str, float]]],
     *,
     dropout: float,
@@ -520,15 +521,16 @@ def train_while_improving(
             break
 
 
+ItemT = TypeVar("ItemT", bound=Sized)
+
+
 def subdivide_batch(
-    batch: Union[Iterable[Doc], Iterable[Example]], accumulate_gradient: int
-):
+    batch: Iterable[ItemT], accumulate_gradient: int
+) -> Iterable[List[ItemT]]:
     batch = list(batch)
     if len(batch):
-        if isinstance(batch[0], Example):
-            batch.sort(key=lambda eg: len(eg.predicted))
-        else:
-            batch.sort(key=lambda doc: len(doc))
+        # Examples are sorted by their predicted length.
+        batch.sort(key=lambda item: len(item))
     sub_len = len(batch) // accumulate_gradient
     start = 0
     for i in range(accumulate_gradient):
@@ -578,7 +580,7 @@ def create_distill_batches(
     corpus: Callable[["Language"], Iterable[Example]],
     batcher: Callable[[Iterable[Example]], Iterable[List[Example]]],
     max_epochs: int,
-):
+) -> Iterable[Tuple[int, List[Example]]]:
     """Create distillation batches. In contrast to training, the corpus
     is normally too large to load into memory and shuffle."""
     epoch = 0
@@ -592,9 +594,9 @@ def create_distill_batches(
 def create_train_batches(
     nlp: "Language",
     corpus: Callable[["Language"], Iterable[Example]],
-    batcher: Callable[[Iterable[Example]], Iterable[Example]],
+    batcher: Callable[[Iterable[Example]], Iterable[List[Example]]],
     max_epochs: int,
-):
+) -> Iterable[Tuple[int, List[Example]]]:
     epoch = 0
     if max_epochs >= 0:
         examples = list(corpus(nlp))  # type: Iterable[Example]

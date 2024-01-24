@@ -3,4 +3,4 @@ from .levenshtein import levenshtein
 from .matcher import Matcher
 from .phrasematcher import PhraseMatcher
 
-__all__ = ["Matcher", "PhraseMatcher", "DependencyMatcher", "levenshtein"]
+__all__ = ["DependencyMatcher", "Matcher", "PhraseMatcher", "levenshtein"]

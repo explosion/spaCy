@@ -1,7 +1,7 @@
 from typing import Callable, Iterable, Iterator
 
 import pytest
-from thinc.api import Config
+from thinc.api import Config, fix_random_seed
 
 from spacy import Language
 from spacy.training import Example
@@ -88,6 +88,8 @@ TRAIN_DATA = [
 
 @pytest.mark.slow
 def test_distill_loop(config_str):
+    fix_random_seed(0)
+
     @registry.readers("sentence_corpus")
     def create_sentence_corpus() -> Callable[[Language], Iterable[Example]]:
         return SentenceCorpus()

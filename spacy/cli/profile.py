@@ -71,7 +71,7 @@ def profile(model: str, inputs: Optional[Path] = None, n_texts: int = 10000) -> 
 
 
 def parse_texts(nlp: Language, texts: Sequence[str]) -> None:
-    for doc in nlp.pipe(tqdm.tqdm(texts), batch_size=16):
+    for doc in nlp.pipe(tqdm.tqdm(texts, disable=None), batch_size=16):
         pass
 
 

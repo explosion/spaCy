@@ -1,4 +1,5 @@
 # cython: infer_types=True
+# cython: profile=False
 from __future__ import print_function
 
 from cymem.cymem cimport Pool

@@ -1,4 +1,4 @@
-# cython: profile=True, cdivision=True, infer_types=True
+# cython: cdivision=True, infer_types=True
 from cymem.cymem cimport Address, Pool
 from libc.stdint cimport int32_t
 from libcpp.vector cimport vector

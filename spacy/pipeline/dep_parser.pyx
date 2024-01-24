@@ -1,4 +1,4 @@
-# cython: infer_types=True, profile=True, binding=True
+# cython: infer_types=True, binding=True
 from collections import defaultdict
 from typing import Callable, Optional
 

@@ -1,4 +1,5 @@
 # cython: infer_types=True
+# cython: profile=False
 from libcpp.vector cimport vector
 
 from ...tokens.doc cimport Doc
@@ -28,7 +29,7 @@ cdef class StateClass:
         return [self.B(i) for i in range(self.c.buffer_length())]
 
     @property
-    def token_vector_lenth(self):
+    def token_vector_length(self):
         return self.doc.tensor.shape[1]
 
     @property
