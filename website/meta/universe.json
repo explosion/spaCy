@@ -4500,6 +4500,23 @@
                 "website": "https://nlp.unibuc.ro/people/snisioi.html"
             },
             "category": ["pipeline", "training", "models"]
+        },
+        {
+            "id": "redfield-spacy-nodes",
+            "title": "Redfield NLP Nodes for KNIME",
+            "slogan": "Makes the functionality of the spaCy library available in KNIME Analytics Platform.",
+            "description": "This extension provides nodes that make the functionality of the spaCy library available in the [KNIME Analytics Platform](https://www.knime.com/).",
+            "github": "Redfield-AB/Spacy-Nodes",
+            "url": "https://redfield.ai/spacy-redfield/",
+            "thumb": "https://raw.githubusercontent.com/Redfield-AB/Spacy-Nodes/master/resource/redfield_logo_100x100.png",
+            "image": "https://raw.githubusercontent.com/Redfield-AB/Spacy-Nodes/master/resource/screen1.png",
+            "author": "Redfield AB",
+            "author_links": {
+                "twitter": "Redfield_AB",
+                "github": "Redfield-AB",
+                "website": "https://redfield.ai"
+            },
+            "category": ["standalone"]
         }
     ],
 

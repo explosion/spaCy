@@ -400,6 +400,14 @@ identifiers are grouped by token. Instances of this class are typically assigned
 to the [`Doc._.trf_data`](/api/curatedtransformer#assigned-attributes) extension
 attribute.
 
+> #### Example
+>
+> ```python
+> # Get the last hidden layer output for "is" (token index 1)
+> doc = nlp("This is a text.")
+> tensors = doc._.trf_data.last_hidden_layer_state[1]
+> ```
+
 | Name              | Description                                                                                                                                                                        |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `all_outputs`     | List of `Ragged` tensors that correspends to outputs of the different transformer layers. Each tensor element corresponds to a piece identifier's representation. ~~List[Ragged]~~ |
