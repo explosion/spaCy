@@ -1296,6 +1296,9 @@ input formats are:
 
 When a directory is provided it is traversed recursively to collect all files.
 
+When loading a .spacy file, any potential annotations stored on the `Doc` will be preserved.
+If you want to evaluate the pipeline on raw text only, make sure that the .spacy file does not contain any annotations.
+
 ```bash
 $ python -m spacy apply [model] [data-path] [output-file] [--code] [--text-key] [--force-overwrite] [--gpu-id] [--batch-size] [--n-process]
 ```
