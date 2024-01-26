@@ -66,6 +66,10 @@
                 {
                     "text": "Stack Overflow",
                     "url": "http://stackoverflow.com/questions/tagged/spacy"
+                },
+                {
+                    "text": "Merchandise",
+                    "url": "https://explosion.ai/merch"
                 }
             ]
         },

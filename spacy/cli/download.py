@@ -7,7 +7,14 @@ from wasabi import msg
 
 from .. import about
 from ..errors import OLD_MODEL_SHORTCUTS
-from ..util import get_minor_version, is_package, is_prerelease_version, run_command
+from ..util import (
+    get_minor_version,
+    is_in_interactive,
+    is_in_jupyter,
+    is_package,
+    is_prerelease_version,
+    run_command,
+)
 from ._util import SDIST_SUFFIX, WHEEL_SUFFIX, Arg, Opt, app
 
 
@@ -77,6 +84,27 @@ def download(
         "Download and installation successful",
         f"You can now load the package via spacy.load('{model_name}')",
     )
+    if is_in_jupyter():
+        reload_deps_msg = (
+            "If you are in a Jupyter or Colab notebook, you may need to "
+            "restart Python in order to load all the package's dependencies. "
+            "You can do this by selecting the 'Restart kernel' or 'Restart "
+            "runtime' option."
+        )
+        msg.warn(
+            "Restart to reload dependencies",
+            reload_deps_msg,
+        )
+    elif is_in_interactive():
+        reload_deps_msg = (
+            "If you are in an interactive Python session, you may need to "
+            "exit and restart Python to load all the package's dependencies. "
+            "You can exit with Ctrl-D (or Ctrl-Z and Enter on Windows)."
+        )
+        msg.warn(
+            "Restart to reload dependencies",
+            reload_deps_msg,
+        )
 
 
 def get_model_filename(model_name: str, version: str, sdist: bool = False) -> str:
