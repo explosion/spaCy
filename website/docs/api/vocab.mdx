@@ -13,7 +13,7 @@ between `Doc` objects.
 <Infobox variant ="warning">
 
 Note that a `Vocab` instance is not static. It increases in size as texts with
-new tokens are processed.
+new tokens are processed. Some models may have an empty vocab at initialization.
 
 </Infobox>
 
@@ -93,6 +93,7 @@ given string, you need to look it up in
 > #### Example
 >
 > ```python
+> nlp("I'm eating an apple")
 > apple = nlp.vocab.strings["apple"]
 > oov = nlp.vocab.strings["dskfodkfos"]
 > assert apple in nlp.vocab
