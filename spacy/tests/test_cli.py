@@ -1061,3 +1061,8 @@ def test_debug_data_trainable_lemmatizer_not_annotated():
 
     data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
     assert data["no_lemma_annotations"] == 2
+
+
+def test_project_api_imports():
+    from spacy.cli import project_run
+    from spacy.cli.project.run import project_run  # noqa: F401, F811

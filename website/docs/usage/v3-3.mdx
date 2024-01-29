@@ -77,11 +77,9 @@ doc.spans["custom"] = [Span(doc, 3, 6, "ORG"), Span(doc, 5, 6, "GPE")]
 displacy.serve(doc, style="span", options={"spans_key": "custom"})
 ```
 
-<Iframe
-  title="displaCy visualizer for overlapping spans"
-  src="/images/displacy-span.html"
-  height={180}
-/>
+<Standalone height={100}>
+<div style={{ lineHeight: 2.5, direction: 'ltr', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'", fontSize: 18 }}>Welcome to the <span style={{ fontWeight: 'bold', display: 'inline-block', position: 'relative'}}>Bank<span style={{ background: '#7aecec', top: 40, height: 4, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}></span><span style={{ background: '#7aecec', top: 40, height: 4, borderTopLeftRadius: 3, borderBottomLeftRadius: 3, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}><span style={{ background: '#7aecec', color: '#000', top: '-0.5em', padding: '2px 3px', position: 'absolute', fontSize: '0.6em', fontWeight: 'bold', lineHeight: 1, borderRadius: 3 }}>ORG</span></span></span> <span style={{ fontWeight: 'bold', display: 'inline-block', position: 'relative'}}>of <span style={{ background: '#7aecec', top: 40, height: 4, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}></span></span> <span style={{ fontWeight: 'bold', display: 'inline-block', position: 'relative'}}>China<span style={{ background: '#7aecec', top: 40, height: 4, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}></span><span style={{ background: '#feca74', top: 57, height: 4, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}></span><span style={{ background: '#feca74', top: 57, height: 4, borderTopLeftRadius: 3, borderBottomLeftRadius: 3, left: -1, width: 'calc(100% + 2px)', position: 'absolute' }}><span style={{ background: '#feca74', color: '#000', top: '-0.5em', padding: '2px 3px', position: 'absolute', fontSize: '0.6em', fontWeight: 'bold', lineHeight: 1, borderRadius: 3 }}>GPE</span></span></span>.</div>
+</Standalone>
 
 ## Additional features and improvements
 

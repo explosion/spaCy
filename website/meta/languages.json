@@ -104,6 +104,10 @@
             "models": ["fi_core_news_sm", "fi_core_news_md", "fi_core_news_lg"]
         },
         {
+            "code": "fo",
+            "name": "Faroese"
+        },
+        {
             "code": "fr",
             "name": "French",
             "models": ["fr_core_news_sm", "fr_core_news_md", "fr_core_news_lg", "fr_dep_news_trf"],
@@ -288,6 +292,12 @@
             "name": "Dutch",
             "models": ["nl_core_news_sm", "nl_core_news_md", "nl_core_news_lg"],
             "example": "Dit is een zin.",
+            "has_examples": true
+        },
+        {
+            "code": "nn",
+            "name": "Norwegian Nynorsk",
+            "example": "Det er ein meir enn i same periode i fjor.",
             "has_examples": true
         },
         {
