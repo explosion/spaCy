@@ -397,6 +397,17 @@ are wrapped into the
 by this class. Instances of this class are typically assigned to the
 [`Doc._.trf_data`](/api/transformer#assigned-attributes) extension attribute.
 
+> #### Example
+>
+> ```python
+> # Get the last hidden layer output for "is" (token index 1)
+> doc = nlp("This is a text.")
+> indices = doc._.trf_data.align[1].data.flatten()
+> last_hidden_state = doc._.trf_data.model_output.last_hidden_state
+> dim = last_hidden_state.shape[-1]
+> tensors = last_hidden_state.reshape(-1, dim)[indices]
+> ```
+
 | Name           | Description                                                                                                                                                                                                                                                                                                                          |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `tokens`       | A slice of the tokens data produced by the tokenizer. This may have several fields, including the token IDs, the texts and the attention mask. See the [`transformers.BatchEncoding`](https://huggingface.co/transformers/main_classes/tokenizer.html#transformers.BatchEncoding) object for details. ~~dict~~                       |

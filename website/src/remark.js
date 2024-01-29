@@ -13,7 +13,7 @@ import Aside from './components/aside'
 import Button from './components/button'
 import Tag from './components/tag'
 import Grid from './components/grid'
-import { YouTube, SoundCloud, Iframe, Image, GoogleSheet } from './components/embed'
+import { YouTube, SoundCloud, Iframe, Image, ImageScrollable, GoogleSheet, Standalone } from './components/embed'
 import Project from './widgets/project'
 import { Integration, IntegrationLogo } from './widgets/integration.js'
 import { Logos, Colors, Patterns } from './widgets/styleguide'
@@ -90,6 +90,8 @@ export const remarkComponents = {
      * For regular img elements it is not possible to pass properties
      */
     Image,
+    ImageScrollable,
+    Standalone,
 
     Label,
     Logos,

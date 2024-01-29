@@ -294,3 +294,12 @@ def test_missing_head_dep(en_vocab):
     assert aligned_heads[0] == ref_heads[0]
     assert aligned_deps[5] == ref_deps[5]
     assert aligned_heads[5] == ref_heads[5]
+
+
+def test_token_api_richcmp_other(en_tokenizer):
+    doc1 = en_tokenizer("a b")
+    doc2 = en_tokenizer("b c")
+    assert not doc1[1] == doc1[0:1]
+    assert not doc1[1] == doc2[1:2]
+    assert not doc1[1] == doc2[0]
+    assert not doc1[0] == doc2

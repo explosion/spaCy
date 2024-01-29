@@ -20,10 +20,9 @@ An LLM component is implemented through the `LLMWrapper` class. It is accessible
 through a generic `llm`
 [component factory](https://spacy.io/usage/processing-pipelines#custom-components-factories)
 as well as through task-specific component factories: `llm_ner`, `llm_spancat`,
-`llm_rel`, `llm_textcat`, `llm_sentiment`, `llm_summarization` and
-`llm_entity_linker`.
-
-### LLMWrapper.\_\_init\_\_ {id="init",tag="method"}
+`llm_rel`, `llm_textcat`, `llm_sentiment`, `llm_summarization`,
+`llm_entity_linker`, `llm_raw` and `llm_translation`. For these factories, the
+GPT-3-5 model from OpenAI is used by default, but this can be customized.
 
 > #### Example
 >
@@ -33,12 +32,17 @@ as well as through task-specific component factories: `llm_ner`, `llm_spancat`,
 > llm = nlp.add_pipe("llm", config=config)
 >
 > # Construction via add_pipe with a task-specific factory and default GPT3.5 model
-> llm = nlp.add_pipe("llm-ner")
+> llm = nlp.add_pipe("llm_ner")
+>
+> # Construction via add_pipe with a task-specific factory and custom model
+> llm = nlp.add_pipe("llm_ner", config={"model": {"@llm_models": "spacy.Dolly.v1", "name": "dolly-v2-12b"}})
 >
 > # Construction from class
 > from spacy_llm.pipeline import LLMWrapper
 > llm = LLMWrapper(vocab=nlp.vocab, task=task, model=model, cache=cache, save_io=True)
 > ```
+
+### LLMWrapper.\_\_init\_\_ {id="init",tag="method"}
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
@@ -225,8 +229,8 @@ All tasks are registered in the `llm_tasks` registry.
 dataset across multiple storage units for easier processing and lookups. In
 `spacy-llm` we use this term (synonymously: "mapping") to describe the splitting
 up of prompts if they are too long for a model to handle, and "fusing"
-(synonymously: "reducing") to describe how the model responses for several shards
-are merged back together into a single document.
+(synonymously: "reducing") to describe how the model responses for several
+shards are merged back together into a single document.
 
 Prompts are broken up in a manner that _always_ keeps the prompt in the template
 intact, meaning that the instructions to the LLM will always stay complete. The
@@ -1133,6 +1137,25 @@ supports `.yml`, `.yaml`, `.json` and `.jsonl`.
 path = "textcat_examples.json"
 ```
 
+If you want to perform few-shot learning with a binary classifier (i. e. a text
+either should or should not be assigned to a given class), you can provide
+positive and negative examples with answers of "POS" or "NEG". "POS" means that
+this example should be assigned the class label defined in the configuration,
+"NEG" means it shouldn't. E. g. for spam classification:
+
+```json
+[
+  {
+    "text": "You won the lottery! Wire a fee of 200$ to be able to withdraw your winnings.",
+    "answer": "POS"
+  },
+  {
+    "text": "Your order #123456789 has arrived",
+    "answer": "NEG"
+  }
+]
+```
+
 ### REL {id="rel"}
 
 The REL task extracts relations between named entities.
@@ -1484,7 +1507,7 @@ These models all take the same parameters:
 > ```ini
 > [components.llm.model]
 > @llm_models = "spacy.Llama2.v1"
-> name = "llama2-7b-hf"
+> name = "Llama-2-7b-hf"
 > ```
 
 Currently, these models are provided as part of the core library:

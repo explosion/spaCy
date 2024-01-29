@@ -405,7 +405,7 @@ available to spaCy, all you need to do is install the package in your
 environment:
 
 ```bash
-$ python setup.py develop
+$ python -m pip install .
 ```
 
 spaCy is now able to create the pipeline component `"snek"` – even though you
@@ -586,11 +586,9 @@ After installing the package, the custom colors will be used when visualizing
 text with `displacy`. Whenever the label `SNEK` is assigned, it will be
 displayed in `#3dff74`.
 
-<Iframe
-  title="displaCy visualization of entities"
-  src="/images/displacy-ent-snek.html"
-  height={100}
-/>
+<Standalone height={100}>
+<div style={{lineHeight: 2.5, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'", fontSize: 18}}>🌱🌿 <mark style={{ background: '#3dff74', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>🐍 <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>SNEK</span></mark> ____ 🌳🌲 ____ <mark style={{ background: '#cfc5ff', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>👨‍🌾 <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>HUMAN</span></mark> 🏘️</div>
+</Standalone>
 
 ## Saving, loading and distributing trained pipelines {id="models"}
 
@@ -675,7 +673,7 @@ $ python -m spacy package ./en_example_pipeline ./packages
 ```
 
 This command will create a pipeline package directory and will run
-`python setup.py sdist` in that directory to create a binary `.whl` file or
+`python -m build` in that directory to create a binary `.whl` file or
 `.tar.gz` archive of your package that can be installed using `pip install`.
 Installing the binary wheel is usually more efficient.
 
