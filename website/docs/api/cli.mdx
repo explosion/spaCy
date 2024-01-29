@@ -1268,20 +1268,21 @@ the [binary `.spacy` format](/api/data-formats#binary-training). The pipeline is
 warmed up before any measurements are taken.
 
 ```cli
-$ python -m spacy benchmark speed [model] [data_path] [--batch_size] [--no-shuffle] [--gpu-id] [--batches] [--warmup]
+$ python -m spacy benchmark speed [model] [data_path] [--code] [--batch_size] [--no-shuffle] [--gpu-id] [--batches] [--warmup]
 ```
 
-| Name                 | Description                                                                                              |
-| -------------------- | -------------------------------------------------------------------------------------------------------- |
-| `model`              | Pipeline to benchmark the speed of. Can be a package or a path to a data directory. ~~str (positional)~~ |
-| `data_path`          | Location of benchmark data in spaCy's [binary format](/api/data-formats#training). ~~Path (positional)~~ |
-| `--batch-size`, `-b` | Set the batch size. If not set, the pipeline's batch size is used. ~~Optional[int] \(option)~~           |
-| `--no-shuffle`       | Do not shuffle documents in the benchmark data. ~~bool (flag)~~                                          |
-| `--gpu-id`, `-g`     | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                           |
-| `--batches`          | Number of batches to benchmark on. Defaults to `50`. ~~Optional[int] \(option)~~                         |
-| `--warmup`, `-w`     | Iterations over the benchmark data for warmup. Defaults to `3` ~~Optional[int] \(option)~~               |
-| `--help`, `-h`       | Show help message and available arguments. ~~bool (flag)~~                                               |
-| **PRINTS**           | Pipeline speed in words per second with a 95% confidence interval.                                       |
+| Name                 | Description                                                                                                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`              | Pipeline to benchmark the speed of. Can be a package or a path to a data directory. ~~str (positional)~~                                                                             |
+| `data_path`          | Location of benchmark data in spaCy's [binary format](/api/data-formats#training). ~~Path (positional)~~                                                                             |
+| `--code`, `-c`       | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~ |
+| `--batch-size`, `-b` | Set the batch size. If not set, the pipeline's batch size is used. ~~Optional[int] \(option)~~                                                                                       |
+| `--no-shuffle`       | Do not shuffle documents in the benchmark data. ~~bool (flag)~~                                                                                                                      |
+| `--gpu-id`, `-g`     | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                                       |
+| `--batches`          | Number of batches to benchmark on. Defaults to `50`. ~~Optional[int] \(option)~~                                                                                                     |
+| `--warmup`, `-w`     | Iterations over the benchmark data for warmup. Defaults to `3` ~~Optional[int] \(option)~~                                                                                           |
+| `--help`, `-h`       | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
+| **PRINTS**           | Pipeline speed in words per second with a 95% confidence interval.                                                                                                                   |
 
 ## apply {id="apply", version="3.5", tag="command"}
 
@@ -1295,6 +1296,9 @@ input formats are:
    a single document.
 
 When a directory is provided it is traversed recursively to collect all files.
+
+When loading a .spacy file, any potential annotations stored on the `Doc` that are not overwritten by the pipeline will be preserved.
+If you want to evaluate the pipeline on raw text only, make sure that the .spacy file does not contain any annotations.
 
 ```bash
 $ python -m spacy apply [model] [data-path] [output-file] [--code] [--text-key] [--force-overwrite] [--gpu-id] [--batch-size] [--n-process]
