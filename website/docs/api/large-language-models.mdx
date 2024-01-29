@@ -21,8 +21,8 @@ through a generic `llm`
 [component factory](https://spacy.io/usage/processing-pipelines#custom-components-factories)
 as well as through task-specific component factories: `llm_ner`, `llm_spancat`,
 `llm_rel`, `llm_textcat`, `llm_sentiment`, `llm_summarization`,
-`llm_entity_linker`, `llm_raw` and `llm_translation`. For these factories, the
-GPT-3-5 model from OpenAI is used by default, but this can be customized.
+`llm_entity_linker`, `llm_raw` and `llm_translation`. For these factories,
+OpenAI's GPT-3.5 model is used by default, but this can be customized.
 
 > #### Example
 >
@@ -31,7 +31,7 @@ GPT-3-5 model from OpenAI is used by default, but this can be customized.
 > config = {"task": {"@llm_tasks": "spacy.NER.v3", "labels": ["PERSON", "ORGANISATION", "LOCATION"]}}
 > llm = nlp.add_pipe("llm", config=config)
 >
-> # Construction via add_pipe with a task-specific factory and default GPT3.5 model
+> # Construction via add_pipe with a task-specific factory and default GPT-3.5 model
 > llm = nlp.add_pipe("llm_ner")
 >
 > # Construction via add_pipe with a task-specific factory and custom model
@@ -1382,7 +1382,7 @@ provider's API.
 
 | Argument           | Description                                                                                                                                                                    |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`             | Model name, i. e. any supported variant for this particular model. Default depends on the specific model (cf. below) ~~str~~                                                   |
+| `name`             | Any supporte model name for this particular model provider. ~~str~~                                                                                                            |
 | `config`           | Further configuration passed on to the model. Default depends on the specific model (cf. below). ~~Dict[Any, Any]~~                                                            |
 | `strict`           | If `True`, raises an error if the LLM API returns a malformed response. Otherwise, return the error responses as is. Defaults to `True`. ~~bool~~                              |
 | `max_tries`        | Max. number of tries for API request. Defaults to `5`. ~~int~~                                                                                                                 |
@@ -1394,50 +1394,21 @@ provider's API.
 >
 > ```ini
 > [components.llm.model]
-> @llm_models = "spacy.GPT-4.v1"
+> @llm_models = "spacy.OpenAI.v1"
 > name = "gpt-4"
 > config = {"temperature": 0.0}
 > ```
 
-Currently, these models are provided as part of the core library:
+Currently, these model providers are supported as part of the core library (more
+can be used by leverage the LangChain integration):
 
-| Model                         | Provider          | Supported names                                                                                                    | Default name           | Default config                       |
-| ----------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------- | ------------------------------------ |
-| `spacy.GPT-4.v1`              | OpenAI            | `["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]`                                                           | `"gpt-4"`              | `{}`                                 |
-| `spacy.GPT-4.v2`              | OpenAI            | `["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]`                                                           | `"gpt-4"`              | `{temperature=0.0}`                  |
-| `spacy.GPT-4.v3`              | OpenAI            | All names of [GPT-4 models](https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo) offered by OpenAI       | `"gpt-4"`              | `{temperature=0.0}`                  |
-| `spacy.GPT-3-5.v1`            | OpenAI            | `["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k", "gpt-3.5-turbo-instruct"]` | `"gpt-3.5-turbo"`      | `{}`                                 |
-| `spacy.GPT-3-5.v2`            | OpenAI            | `["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-0613-16k", "gpt-3.5-turbo-instruct"]` | `"gpt-3.5-turbo"`      | `{temperature=0.0}`                  |
-| `spacy.GPT-3-5.v3`            | OpenAI            | All names of [GPT-3.5 models](https://platform.openai.com/docs/models/gpt-3-5) offered by OpenAI                   | `"gpt-3.5-turbo"`      | `{temperature=0.0}`                  |
-| `spacy.Davinci.v1`            | OpenAI            | `["davinci"]`                                                                                                      | `"davinci"`            | `{}`                                 |
-| `spacy.Davinci.v2`            | OpenAI            | `["davinci"]`                                                                                                      | `"davinci"`            | `{temperature=0.0, max_tokens=500}`  |
-| `spacy.Text-Davinci.v1`       | OpenAI            | `["text-davinci-003", "text-davinci-002"]`                                                                         | `"text-davinci-003"`   | `{}`                                 |
-| `spacy.Text-Davinci.v2`       | OpenAI            | `["text-davinci-003", "text-davinci-002"]`                                                                         | `"text-davinci-003"`   | `{temperature=0.0, max_tokens=1000}` |
-| `spacy.Code-Davinci.v1`       | OpenAI            | `["code-davinci-002"]`                                                                                             | `"code-davinci-002"`   | `{}`                                 |
-| `spacy.Code-Davinci.v2`       | OpenAI            | `["code-davinci-002"]`                                                                                             | `"code-davinci-002"`   | `{temperature=0.0, max_tokens=500}`  |
-| `spacy.Curie.v1`              | OpenAI            | `["curie"]`                                                                                                        | `"curie"`              | `{}`                                 |
-| `spacy.Curie.v2`              | OpenAI            | `["curie"]`                                                                                                        | `"curie"`              | `{temperature=0.0, max_tokens=500}`  |
-| `spacy.Text-Curie.v1`         | OpenAI            | `["text-curie-001"]`                                                                                               | `"text-curie-001"`     | `{}`                                 |
-| `spacy.Text-Curie.v2`         | OpenAI            | `["text-curie-001"]`                                                                                               | `"text-curie-001"`     | `{temperature=0.0, max_tokens=500}`  |
-| `spacy.Babbage.v1`            | OpenAI            | `["babbage"]`                                                                                                      | `"babbage"`            | `{}`                                 |
-| `spacy.Babbage.v2`            | OpenAI            | `["babbage"]`                                                                                                      | `"babbage"`            | `{temperature=0.0, max_tokens=500}`  |
-| `spacy.Text-Babbage.v1`       | OpenAI            | `["text-babbage-001"]`                                                                                             | `"text-babbage-001"`   | `{}`                                 |
-| `spacy.Text-Babbage.v2`       | OpenAI            | `["text-babbage-001"]`                                                                                             | `"text-babbage-001"`   | `{temperature=0.0, max_tokens=500}`  |
-| `spacy.Ada.v1`                | OpenAI            | `["ada"]`                                                                                                          | `"ada"`                | `{}`                                 |
-| `spacy.Ada.v2`                | OpenAI            | `["ada"]`                                                                                                          | `"ada"`                | `{temperature=0.0, max_tokens=500}`  |
-| `spacy.Text-Ada.v1`           | OpenAI            | `["text-ada-001"]`                                                                                                 | `"text-ada-001"`       | `{}`                                 |
-| `spacy.Text-Ada.v2`           | OpenAI            | `["text-ada-001"]`                                                                                                 | `"text-ada-001"`       | `{temperature=0.0, max_tokens=500}`  |
-| `spacy.Azure.v1`              | Microsoft, OpenAI | Arbitrary values                                                                                                   | No default             | `{temperature=0.0}`                  |
-| `spacy.Command.v1`            | Cohere            | `["command", "command-light", "command-light-nightly", "command-nightly"]`                                         | `"command"`            | `{}`                                 |
-| `spacy.Claude-2-1.v1`         | Anthropic         | `["claude-2-1"]`                                                                                                   | `"claude-2-1"`         | `{}`                                 |
-| `spacy.Claude-2.v1`           | Anthropic         | `["claude-2", "claude-2-100k"]`                                                                                    | `"claude-2"`           | `{}`                                 |
-| `spacy.Claude-1.v1`           | Anthropic         | `["claude-1", "claude-1-100k"]`                                                                                    | `"claude-1"`           | `{}`                                 |
-| `spacy.Claude-1-0.v1`         | Anthropic         | `["claude-1.0"]`                                                                                                   | `"claude-1.0"`         | `{}`                                 |
-| `spacy.Claude-1-2.v1`         | Anthropic         | `["claude-1.2"]`                                                                                                   | `"claude-1.2"`         | `{}`                                 |
-| `spacy.Claude-1-3.v1`         | Anthropic         | `["claude-1.3", "claude-1.3-100k"]`                                                                                | `"claude-1.3"`         | `{}`                                 |
-| `spacy.Claude-instant-1.v1`   | Anthropic         | `["claude-instant-1", "claude-instant-1-100k"]`                                                                    | `"claude-instant-1"`   | `{}`                                 |
-| `spacy.Claude-instant-1-1.v1` | Anthropic         | `["claude-instant-1.1", "claude-instant-1.1-100k"]`                                                                | `"claude-instant-1.1"` | `{}`                                 |
-| `spacy.PaLM.v1`               | Google            | `["chat-bison-001", "text-bison-001"]`                                                                             | `"text-bison-001"`     | `{temperature=0.0}`                  |
+| Model                | Provider          | Information on available models                                                                                                  | Default config      |
+| -------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `spacy.OpenAI.v1`    | OpenAI            | All completion/chat models listed [here](https://platform.openai.com/docs/models)                                                | `{}`                |
+| `spacy.Azure.v1`     | Microsoft, OpenAI | All completion/chat models listed [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)             | `{temperature=0.0}` |
+| `spacy.Cohere.v1`    | Cohere            | All models listed [here](https://docs.cohere.com/docs/models)                                                                    | `{}`                |
+| `spacy.Anthropic.v1` | Anthropic         | All models listed [here](https://docs.anthropic.com/claude/reference/selecting-a-model)                                          | `{}`                |
+| `spacy.Google.v1`    | Google            | All completion/chat models listed [here](https://cloud.google.com/vertex-ai/docs/generative-ai/language-model-overview#palm-api) | `{temperature=0.0}` |
 
 To use these models, make sure that you've [set the relevant API](#api-keys)
 keys as environment variables.
