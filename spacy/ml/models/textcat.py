@@ -185,6 +185,11 @@ def build_text_classifier_v2(
 
 
 def init_ensemble_textcat(model, X, Y) -> Model:
+    # When tok2vec is lazily initialized, we need to initialize it before
+    # the rest of the chain to ensure that we can get its width.
+    tok2vec = model.get_ref("tok2vec")
+    tok2vec.initialize(X)
+
     tok2vec_width = get_tok2vec_width(model)
     model.get_ref("attention_layer").set_dim("nO", tok2vec_width)
     model.get_ref("maxout_layer").set_dim("nO", tok2vec_width)
@@ -272,6 +277,11 @@ def _build_parametric_attention_with_residual_nonlinear(
 
 
 def _init_parametric_attention_with_residual_nonlinear(model, X, Y) -> Model:
+    # When tok2vec is lazily initialized, we need to initialize it before
+    # the rest of the chain to ensure that we can get its width.
+    tok2vec = model.get_ref("tok2vec")
+    tok2vec.initialize(X)
+
     tok2vec_width = get_tok2vec_width(model)
     model.get_ref("attention_layer").set_dim("nO", tok2vec_width)
     model.get_ref("key_transform").set_dim("nI", tok2vec_width)
