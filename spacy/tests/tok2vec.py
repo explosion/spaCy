@@ -1,9 +1,10 @@
 from typing import List
 
-from spacy.util import registry
-from thinc.types import Floats2d
-from spacy.tokens import Doc
 from thinc.api import Model
+from thinc.types import Floats2d
+
+from spacy.tokens import Doc
+from spacy.util import registry
 
 
 @registry.architectures("LazyInitTok2Vec.v1")

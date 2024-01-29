@@ -28,10 +28,9 @@ from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 from spacy.training.initialize import init_nlp
 
-from ..util import make_tempdir
-
 # Ensure that the architecture gets added to the registry.
 from ..tok2vec import build_lazy_init_tok2vec as _
+from ..util import make_tempdir
 
 TRAIN_DATA_SINGLE_LABEL = [
     ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),
