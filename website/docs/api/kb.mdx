@@ -63,8 +63,8 @@ The length of the fixed-size entity vectors in the knowledge base.
 Given textual mentions for an arbitrary number of documents as input, retrieve a
 list of candidate entities of type [`Candidate`](/api/kb#candidate) for each
 mention. The [`EntityLinker`](/api/entitylinker) component passes a generator
-yielding all mentions to retreive candidates for as
-[`SpanGroup`](/api/spangroup)) per document. The decision of how to batch
+that yields mentions as [`SpanGroup`](/api/spangroup))s per document. 
+The decision of how to batch
 candidate retrieval lookups over multiple documents is left up to the
 implementation of `KnowledgeBase.get_candidates()`.
 
