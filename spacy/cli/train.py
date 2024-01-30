@@ -13,7 +13,7 @@ from ._util import (
     Arg,
     Opt,
     app,
-    import_code,
+    import_code_paths,
     parse_config_overrides,
     setup_gpu,
     show_validation_error,
@@ -28,7 +28,7 @@ def train_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    code_path: str = Opt("", "--code", "-c", help="Comma-separated paths to Python files with additional code (registered functions) to be imported"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
@@ -47,9 +47,10 @@ def train_cli(
 
     DOCS: https://spacy.io/api/cli#train
     """
-    util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    if verbose:
+        util.logger.setLevel(logging.DEBUG)
     overrides = parse_config_overrides(ctx.args)
-    import_code(code_path)
+    import_code_paths(code_path)
     train(config_path, output_path, use_gpu=use_gpu, overrides=overrides)
 
 

@@ -1,0 +1,580 @@
+---
+title: CuratedTransformer
+teaser:
+  Pipeline component for multi-task learning with Curated Transformer models
+tag: class
+source: github.com/explosion/spacy-curated-transformers/blob/main/spacy_curated_transformers/pipeline/transformer.py
+version: 3.7
+api_base_class: /api/pipe
+api_string_name: curated_transformer
+---
+
+<Infobox title="Important note" variant="warning">
+
+This component is available via the extension package
+[`spacy-curated-transformers`](https://github.com/explosion/spacy-curated-transformers).
+It exposes the component via entry points, so if you have the package installed,
+using `factory = "curated_transformer"` in your
+[training config](/usage/training#config) will work out-of-the-box.
+
+</Infobox>
+
+This pipeline component lets you use a curated set of transformer models in your
+pipeline. spaCy Curated Transformers currently supports the following model
+types:
+
+- ALBERT
+- BERT
+- CamemBERT
+- RoBERTa
+- XLM-RoBERT
+
+If you want to use another type of model, use
+[spacy-transformers](/api/spacy-transformers), which allows you to use all
+Hugging Face transformer models with spaCy.
+
+You will usually connect downstream components to a shared Curated Transformer
+pipe using one of the Curated Transformer listener layers. This works similarly
+to spaCy's [Tok2Vec](/api/tok2vec), and the
+[Tok2VecListener](/api/architectures/#Tok2VecListener) sublayer. The component
+assigns the output of the transformer to the `Doc`'s extension attributes. To
+access the values, you can use the custom
+[`Doc._.trf_data`](#assigned-attributes) attribute.
+
+For more details, see the [usage documentation](/usage/embeddings-transformers).
+
+## Assigned Attributes {id="assigned-attributes"}
+
+The component sets the following
+[custom extension attribute](/usage/processing-pipeline#custom-components-attributes):
+
+| Location         | Value                                                                      |
+| ---------------- | -------------------------------------------------------------------------- |
+| `Doc._.trf_data` | Curated Transformer outputs for the `Doc` object. ~~DocTransformerOutput~~ |
+
+## Config and Implementation {id="config"}
+
+The default config is defined by the pipeline component factory and describes
+how the component should be configured. You can override its settings via the
+`config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
+[`config.cfg` for training](/usage/training#config). See the
+[model architectures](/api/architectures#curated-trf) documentation for details
+on the curated transformer architectures and their arguments and
+hyperparameters.
+
+> #### Example
+>
+> ```python
+> from spacy_curated_transformers.pipeline.transformer import DEFAULT_CONFIG
+>
+> nlp.add_pipe("curated_transformer", config=DEFAULT_CONFIG)
+> ```
+
+| Setting             | Description                                                                                                                                                                                                                                        |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`             | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. Defaults to [`XlmrTransformer`](/api/architectures#curated-trf). ~~Model~~                                                                                          |
+| `frozen`            | If `True`, the model's weights are frozen and no backpropagation is performed. ~~bool~~                                                                                                                                                            |
+| `all_layer_outputs` | If `True`, the model returns the outputs of all the layers. Otherwise, only the output of the last layer is returned. This must be set to `True` if any of the pipe's downstream listeners require the outputs of all transformer layers. ~~bool~~ |
+
+```python
+https://github.com/explosion/spacy-curated-transformers/blob/main/spacy_curated_transformers/pipeline/transformer.py
+```
+
+## CuratedTransformer.\_\_init\_\_ {id="init",tag="method"}
+
+> #### Example
+>
+> ```python
+> # Construction via add_pipe with default model
+> trf = nlp.add_pipe("curated_transformer")
+>
+> # Construction via add_pipe with custom config
+> config = {
+>     "model": {
+>         "@architectures": "spacy-curated-transformers.XlmrTransformer.v1",
+>         "vocab_size": 250002,
+>         "num_hidden_layers": 12,
+>         "hidden_width": 768,
+>         "piece_encoder": {
+>             "@architectures": "spacy-curated-transformers.XlmrSentencepieceEncoder.v1"
+>         }
+>     }
+> }
+> trf = nlp.add_pipe("curated_transformer", config=config)
+>
+> # Construction from class
+> from spacy_curated_transformers import CuratedTransformer
+> trf = CuratedTransformer(nlp.vocab, model)
+> ```
+
+Construct a `CuratedTransformer` component. One or more subsequent spaCy
+components can use the transformer outputs as features in its model, with
+gradients backpropagated to the single shared weights. The activations from the
+transformer are saved in the [`Doc._.trf_data`](#assigned-attributes) extension
+attribute. You can also provide a callback to set additional annotations. In
+your application, you would normally use a shortcut for this and instantiate the
+component using its string name and [`nlp.add_pipe`](/api/language#create_pipe).
+
+| Name                | Description                                                                                                                                                                                                                                        |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`             | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                   |
+| `model`             | One of the supported pre-trained transformer models. ~~Model~~                                                                                                                                                                                     |
+| _keyword-only_      |                                                                                                                                                                                                                                                    |
+| `name`              | The component instance name. ~~str~~                                                                                                                                                                                                               |
+| `frozen`            | If `True`, the model's weights are frozen and no backpropagation is performed. ~~bool~~                                                                                                                                                            |
+| `all_layer_outputs` | If `True`, the model returns the outputs of all the layers. Otherwise, only the output of the last layer is returned. This must be set to `True` if any of the pipe's downstream listeners require the outputs of all transformer layers. ~~bool~~ |
+
+## CuratedTransformer.\_\_call\_\_ {id="call",tag="method"}
+
+Apply the pipe to one document. The document is modified in place, and returned.
+This usually happens under the hood when the `nlp` object is called on a text
+and all pipeline components are applied to the `Doc` in order. Both
+[`__call__`](/api/curatedtransformer#call) and
+[`pipe`](/api/curatedtransformer#pipe) delegate to the
+[`predict`](/api/curatedtransformer#predict) and
+[`set_annotations`](/api/curatedtransformer#set_annotations) methods.
+
+> #### Example
+>
+> ```python
+> doc = nlp("This is a sentence.")
+> trf = nlp.add_pipe("curated_transformer")
+> # This usually happens under the hood
+> processed = trf(doc)
+> ```
+
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `doc`       | The document to process. ~~Doc~~ |
+| **RETURNS** | The processed document. ~~Doc~~  |
+
+## CuratedTransformer.pipe {id="pipe",tag="method"}
+
+Apply the pipe to a stream of documents. This usually happens under the hood
+when the `nlp` object is called on a text and all pipeline components are
+applied to the `Doc` in order. Both [`__call__`](/api/curatedtransformer#call)
+and [`pipe`](/api/curatedtransformer#pipe) delegate to the
+[`predict`](/api/curatedtransformer#predict) and
+[`set_annotations`](/api/curatedtransformer#set_annotations) methods.
+
+> #### Example
+>
+> ```python
+> trf = nlp.add_pipe("curated_transformer")
+> for doc in trf.pipe(docs, batch_size=50):
+>     pass
+> ```
+
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `stream`       | A stream of documents. ~~Iterable[Doc]~~                      |
+| _keyword-only_ |                                                               |
+| `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
+| **YIELDS**     | The processed documents in order. ~~Doc~~                     |
+
+## CuratedTransformer.initialize {id="initialize",tag="method"}
+
+Initialize the component for training and return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
+function that returns an iterable of [`Example`](/api/example) objects. **At
+least one example should be supplied.** The data examples are used to
+**initialize the model** of the component and can either be the full training
+data or a representative sample. Initialization includes validating the network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data. This method is typically called
+by [`Language.initialize`](/api/language#initialize).
+
+> #### Example
+>
+> ```python
+> trf = nlp.add_pipe("curated_transformer")
+> trf.initialize(lambda: examples, nlp=nlp)
+> ```
+
+| Name             | Description                                                                                                                                                                |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples`   | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. Must contain at least one `Example`. ~~Callable[[], Iterable[Example]]~~ |
+| _keyword-only_   |                                                                                                                                                                            |
+| `nlp`            | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                       |
+| `encoder_loader` | Initialization callback for the transformer model. ~~Optional[Callable]~~                                                                                                  |
+| `piece_loader`   | Initialization callback for the input piece encoder. ~~Optional[Callable]~~                                                                                                |
+
+## CuratedTransformer.predict {id="predict",tag="method"}
+
+Apply the component's model to a batch of [`Doc`](/api/doc) objects without
+modifying them.
+
+> #### Example
+>
+> ```python
+> trf = nlp.add_pipe("curated_transformer")
+> scores = trf.predict([doc1, doc2])
+> ```
+
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
+| **RETURNS** | The model's prediction for each document.   |
+
+## CuratedTransformer.set_annotations {id="set_annotations",tag="method"}
+
+Assign the extracted features to the `Doc` objects. By default, the
+[`DocTransformerOutput`](/api/curatedtransformer#doctransformeroutput) object is
+written to the [`Doc._.trf_data`](#assigned-attributes) attribute. Your
+`set_extra_annotations` callback is then called, if provided.
+
+> #### Example
+>
+> ```python
+> trf = nlp.add_pipe("curated_transformer")
+> scores = trf.predict(docs)
+> trf.set_annotations(docs, scores)
+> ```
+
+| Name     | Description                                                  |
+| -------- | ------------------------------------------------------------ |
+| `docs`   | The documents to modify. ~~Iterable[Doc]~~                   |
+| `scores` | The scores to set, produced by `CuratedTransformer.predict`. |
+
+## CuratedTransformer.update {id="update",tag="method"}
+
+Prepare for an update to the transformer.
+
+Like the [`Tok2Vec`](api/tok2vec) component, the `CuratedTransformer` component
+is unusual in that it does not receive "gold standard" annotations to calculate
+a weight update. The optimal output of the transformer data is unknown; it's a
+hidden layer inside the network that is updated by backpropagating from output
+layers.
+
+The `CuratedTransformer` component therefore does not perform a weight update
+during its own `update` method. Instead, it runs its transformer model and
+communicates the output and the backpropagation callback to any downstream
+components that have been connected to it via the transformer listener sublayer.
+If there are multiple listeners, the last layer will actually backprop to the
+transformer and call the optimizer, while the others simply increment the
+gradients.
+
+> #### Example
+>
+> ```python
+> trf = nlp.add_pipe("curated_transformer")
+> optimizer = nlp.initialize()
+> losses = trf.update(examples, sgd=optimizer)
+> ```
+
+| Name           | Description                                                                                                                                                                      |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`     | A batch of [`Example`](/api/example) objects. Only the [`Example.predicted`](/api/example#predicted) `Doc` object is used, the reference `Doc` is ignored. ~~Iterable[Example]~~ |
+| _keyword-only_ |                                                                                                                                                                                  |
+| `drop`         | The dropout rate. ~~float~~                                                                                                                                                      |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                                                                    |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~                                                         |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                                                            |
+
+## CuratedTransformer.create_optimizer {id="create_optimizer",tag="method"}
+
+Create an optimizer for the pipeline component.
+
+> #### Example
+>
+> ```python
+> trf = nlp.add_pipe("curated_transformer")
+> optimizer = trf.create_optimizer()
+> ```
+
+| Name        | Description                  |
+| ----------- | ---------------------------- |
+| **RETURNS** | The optimizer. ~~Optimizer~~ |
+
+## CuratedTransformer.use_params {id="use_params",tag="method, contextmanager"}
+
+Modify the pipe's model to use the given parameter values. At the end of the
+context, the original parameters are restored.
+
+> #### Example
+>
+> ```python
+> trf = nlp.add_pipe("curated_transformer")
+> with trf.use_params(optimizer.averages):
+>     trf.to_disk("/best_model")
+> ```
+
+| Name     | Description                                        |
+| -------- | -------------------------------------------------- |
+| `params` | The parameter values to use in the model. ~~dict~~ |
+
+## CuratedTransformer.to_disk {id="to_disk",tag="method"}
+
+Serialize the pipe to disk.
+
+> #### Example
+>
+> ```python
+> trf = nlp.add_pipe("curated_transformer")
+> trf.to_disk("/path/to/transformer")
+> ```
+
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
+
+## CuratedTransformer.from_disk {id="from_disk",tag="method"}
+
+Load the pipe from disk. Modifies the object in place and returns it.
+
+> #### Example
+>
+> ```python
+> trf = nlp.add_pipe("curated_transformer")
+> trf.from_disk("/path/to/transformer")
+> ```
+
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified `CuratedTransformer` object. ~~CuratedTransformer~~                                |
+
+## CuratedTransformer.to_bytes {id="to_bytes",tag="method"}
+
+> #### Example
+>
+> ```python
+> trf = nlp.add_pipe("curated_transformer")
+> trf_bytes = trf.to_bytes()
+> ```
+
+Serialize the pipe to a bytestring.
+
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the `CuratedTransformer` object. ~~bytes~~                           |
+
+## CuratedTransformer.from_bytes {id="from_bytes",tag="method"}
+
+Load the pipe from a bytestring. Modifies the object in place and returns it.
+
+> #### Example
+>
+> ```python
+> trf_bytes = trf.to_bytes()
+> trf = nlp.add_pipe("curated_transformer")
+> trf.from_bytes(trf_bytes)
+> ```
+
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `CuratedTransformer` object. ~~CuratedTransformer~~                                     |
+
+## Serialization Fields {id="serialization-fields"}
+
+During serialization, spaCy will export several data fields used to restore
+different aspects of the object. If needed, you can exclude them from
+serialization by passing in the string names via the `exclude` argument.
+
+> #### Example
+>
+> ```python
+> data = trf.to_disk("/path", exclude=["vocab"])
+> ```
+
+| Name    | Description                                                    |
+| ------- | -------------------------------------------------------------- |
+| `vocab` | The shared [`Vocab`](/api/vocab).                              |
+| `cfg`   | The config file. You usually don't want to exclude this.       |
+| `model` | The binary model data. You usually don't want to exclude this. |
+
+## DocTransformerOutput {id="doctransformeroutput",tag="dataclass"}
+
+Curated Transformer outputs for one `Doc` object. Stores the dense
+representations generated by the transformer for each piece identifier. Piece
+identifiers are grouped by token. Instances of this class are typically assigned
+to the [`Doc._.trf_data`](/api/curatedtransformer#assigned-attributes) extension
+attribute.
+
+> #### Example
+>
+> ```python
+> # Get the last hidden layer output for "is" (token index 1)
+> doc = nlp("This is a text.")
+> tensors = doc._.trf_data.last_hidden_layer_state[1]
+> ```
+
+| Name              | Description                                                                                                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `all_outputs`     | List of `Ragged` tensors that correspends to outputs of the different transformer layers. Each tensor element corresponds to a piece identifier's representation. ~~List[Ragged]~~ |
+| `last_layer_only` | If only the last transformer layer's outputs are preserved. ~~bool~~                                                                                                               |
+
+### DocTransformerOutput.embedding_layer {id="doctransformeroutput-embeddinglayer",tag="property"}
+
+Return the output of the transformer's embedding layer or `None` if
+`last_layer_only` is `True`.
+
+| Name        | Description                                  |
+| ----------- | -------------------------------------------- |
+| **RETURNS** | Embedding layer output. ~~Optional[Ragged]~~ |
+
+### DocTransformerOutput.last_hidden_layer_state {id="doctransformeroutput-lasthiddenlayerstate",tag="property"}
+
+Return the output of the transformer's last hidden layer.
+
+| Name        | Description                          |
+| ----------- | ------------------------------------ |
+| **RETURNS** | Last hidden layer output. ~~Ragged~~ |
+
+### DocTransformerOutput.all_hidden_layer_states {id="doctransformeroutput-allhiddenlayerstates",tag="property"}
+
+Return the outputs of all transformer layers (excluding the embedding layer).
+
+| Name        | Description                            |
+| ----------- | -------------------------------------- |
+| **RETURNS** | Hidden layer outputs. ~~List[Ragged]~~ |
+
+### DocTransformerOutput.num_outputs {id="doctransformeroutput-numoutputs",tag="property"}
+
+Return the number of layer outputs stored in the `DocTransformerOutput` instance
+(including the embedding layer).
+
+| Name        | Description                |
+| ----------- | -------------------------- |
+| **RETURNS** | Numbef of outputs. ~~int~~ |
+
+## Span Getters {id="span_getters",source="github.com/explosion/spacy-transformers/blob/master/spacy_curated_transformers/span_getters.py"}
+
+Span getters are functions that take a batch of [`Doc`](/api/doc) objects and
+return a lists of [`Span`](/api/span) objects for each doc to be processed by
+the transformer. This is used to manage long documents by cutting them into
+smaller sequences before running the transformer. The spans are allowed to
+overlap, and you can also omit sections of the `Doc` if they are not relevant.
+Span getters can be referenced in the
+`[components.transformer.model.with_spans]` block of the config to customize the
+sequences processed by the transformer.
+
+| Name        | Description                                                   |
+| ----------- | ------------------------------------------------------------- |
+| `docs`      | A batch of `Doc` objects. ~~Iterable[Doc]~~                   |
+| **RETURNS** | The spans to process by the transformer. ~~List[List[Span]]~~ |
+
+### WithStridedSpans.v1 {id="strided_spans",tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [transformer.model.with_spans]
+> @architectures = "spacy-curated-transformers.WithStridedSpans.v1"
+> stride = 96
+> window = 128
+> ```
+
+Create a span getter for strided spans. If you set the `window` and `stride` to
+the same value, the spans will cover each token once. Setting `stride` lower
+than `window` will allow for an overlap, so that some tokens are counted twice.
+This can be desirable, because it allows all tokens to have both a left and
+right context.
+
+| Name     | Description              |
+| -------- | ------------------------ |
+| `window` | The window size. ~~int~~ |
+| `stride` | The stride size. ~~int~~ |
+
+## Model Loaders
+
+[Curated Transformer models](/api/architectures#curated-trf) are constructed
+with default hyperparameters and randomized weights when the pipeline is
+created. To load the weights of an existing pre-trained model into the pipeline,
+one of the following loader callbacks can be used. The pre-trained model must
+have the same hyperparameters as the model used by the pipeline.
+
+### HFTransformerEncoderLoader.v1 {id="hf_trfencoder_loader",tag="registered_function"}
+
+Construct a callback that initializes a supported transformer model with weights
+from a corresponding HuggingFace model.
+
+| Name       | Description                                |
+| ---------- | ------------------------------------------ |
+| `name`     | Name of the HuggingFace model. ~~str~~     |
+| `revision` | Name of the model revision/branch. ~~str~~ |
+
+### PyTorchCheckpointLoader.v1 {id="pytorch_checkpoint_loader",tag="registered_function"}
+
+Construct a callback that initializes a supported transformer model with weights
+from a PyTorch checkpoint.
+
+| Name   | Description                              |
+| ------ | ---------------------------------------- |
+| `path` | Path to the PyTorch checkpoint. ~~Path~~ |
+
+## Tokenizer Loaders
+
+[Curated Transformer models](/api/architectures#curated-trf) must be paired with
+a matching tokenizer (piece encoder) model in a spaCy pipeline. As with the
+transformer models, tokenizers are constructed with an empty vocabulary during
+pipeline creation - They need to be initialized with an appropriate loader
+before use in training/inference.
+
+### ByteBPELoader.v1 {id="bytebpe_loader",tag="registered_function"}
+
+Construct a callback that initializes a Byte-BPE piece encoder model.
+
+| Name          | Description                           |
+| ------------- | ------------------------------------- |
+| `vocab_path`  | Path to the vocabulary file. ~~Path~~ |
+| `merges_path` | Path to the merges file. ~~Path~~     |
+
+### CharEncoderLoader.v1 {id="charencoder_loader",tag="registered_function"}
+
+Construct a callback that initializes a character piece encoder model.
+
+| Name        | Description                                                                 |
+| ----------- | --------------------------------------------------------------------------- |
+| `path`      | Path to the serialized character model. ~~Path~~                            |
+| `bos_piece` | Piece used as a beginning-of-sentence token. Defaults to `"[BOS]"`. ~~str~~ |
+| `eos_piece` | Piece used as a end-of-sentence token. Defaults to `"[EOS]"`. ~~str~~       |
+| `unk_piece` | Piece used as a stand-in for unknown tokens. Defaults to `"[UNK]"`. ~~str~~ |
+| `normalize` | Unicode normalization form to use. Defaults to `"NFKC"`. ~~str~~            |
+
+### HFPieceEncoderLoader.v1 {id="hf_pieceencoder_loader",tag="registered_function"}
+
+Construct a callback that initializes a HuggingFace piece encoder model. Used in
+conjunction with the HuggingFace model loader.
+
+| Name       | Description                                |
+| ---------- | ------------------------------------------ |
+| `name`     | Name of the HuggingFace model. ~~str~~     |
+| `revision` | Name of the model revision/branch. ~~str~~ |
+
+### SentencepieceLoader.v1 {id="sentencepiece_loader",tag="registered_function"}
+
+Construct a callback that initializes a SentencePiece piece encoder model.
+
+| Name   | Description                                          |
+| ------ | ---------------------------------------------------- |
+| `path` | Path to the serialized SentencePiece model. ~~Path~~ |
+
+### WordpieceLoader.v1 {id="wordpiece_loader",tag="registered_function"}
+
+Construct a callback that initializes a WordPiece piece encoder model.
+
+| Name   | Description                                      |
+| ------ | ------------------------------------------------ |
+| `path` | Path to the serialized WordPiece model. ~~Path~~ |
+
+## Callbacks
+
+### gradual_transformer_unfreezing.v1 {id="gradual_transformer_unfreezing",tag="registered_function"}
+
+Construct a callback that can be used to gradually unfreeze the weights of one
+or more Transformer components during training. This can be used to prevent
+catastrophic forgetting during fine-tuning.
+
+| Name           | Description                                                                                                                                                                  |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `target_pipes` | A dictionary whose keys and values correspond to the names of Transformer components and the training step at which they should be unfrozen respectively. ~~Dict[str, int]~~ |

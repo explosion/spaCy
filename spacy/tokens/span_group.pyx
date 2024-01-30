@@ -1,3 +1,4 @@
+# cython: profile=False
 import struct
 import weakref
 from copy import deepcopy

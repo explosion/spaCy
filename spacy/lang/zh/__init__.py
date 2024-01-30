@@ -31,7 +31,7 @@ segmenter = "char"
 [initialize]
 
 [initialize.tokenizer]
-pkuseg_model = null
+pkuseg_model = "spacy_ontonotes"
 pkuseg_user_dict = "default"
 """
 

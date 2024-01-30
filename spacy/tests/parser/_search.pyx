@@ -12,7 +12,7 @@ from ..conftest import cytest
 cdef struct TestState:
     int length
     int x
-    Py_UNICODE* string
+    char *string
 
 
 cdef int transition(void* dest, void* src, class_t clas, void* extra_args) except -1:
@@ -22,7 +22,7 @@ cdef int transition(void* dest, void* src, class_t clas, void* extra_args) excep
     dest_state.x = src_state.x
     dest_state.x += clas
     if extra_args != NULL:
-        dest_state.string = <Py_UNICODE*>extra_args
+        dest_state.string = <char *>extra_args
     else:
         dest_state.string = src_state.string
 
@@ -32,9 +32,9 @@ cdef void* initialize(Pool mem, int n, void* extra_args) except NULL:
     state.length = n
     state.x = 1
     if extra_args == NULL:
-        state.string = u'default'
+        state.string = 'default'
     else:
-        state.string = <Py_UNICODE*>extra_args
+        state.string = <char *>extra_args
     return state
 
 
@@ -77,7 +77,7 @@ def test_initialize(nr_class, beam_width, length):
     for i in range(b.width):
         s = <TestState*>b.at(i)
         assert s.length == length, s.length
-        assert s.string == 'default'
+        assert s.string.decode('utf8') == 'default'
 
 
 @cytest
@@ -88,11 +88,12 @@ def test_initialize(nr_class, beam_width, length):
                          ]
                          )
 def test_initialize_extra(nr_class, beam_width, length, extra):
+    extra = extra.encode("utf-8") if extra is not None else None
     b = Beam(nr_class, beam_width)
     if extra is None:
         b.initialize(initialize, destroy, length, NULL)
     else:
-        b.initialize(initialize, destroy, length, <void*><Py_UNICODE*>extra)
+        b.initialize(initialize, destroy, length, <void*><char*>extra)
     for i in range(b.width):
         s = <TestState*>b.at(i)
         assert s.length == length

@@ -1,4 +1,4 @@
-# cython: infer_types=True, bounds_check=False, profile=True
+# cython: infer_types=True, bounds_check=False
 from typing import Set
 
 cimport cython
@@ -1340,7 +1340,7 @@ cdef class Doc:
 
         path (str / Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Doc): The modified `Doc` object.
 
         DOCS: https://spacy.io/api/doc#from_disk
@@ -1353,7 +1353,7 @@ cdef class Doc:
     def to_bytes(self, *, exclude=tuple()):
         """Serialize, i.e. export the document contents to a binary string.
 
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
             all annotations.
 
@@ -1365,7 +1365,7 @@ cdef class Doc:
         """Deserialize, i.e. import the document contents from a binary string.
 
         data (bytes): The string to load from.
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Doc): Itself.
 
         DOCS: https://spacy.io/api/doc#from_bytes
@@ -1375,11 +1375,8 @@ cdef class Doc:
     def to_dict(self, *, exclude=tuple()):
         """Export the document contents to a dictionary for serialization.
 
-        exclude (list): String names of serialization fields to exclude.
-        RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
-            all annotations.
-
-        DOCS: https://spacy.io/api/doc#to_bytes
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (Dict[str, Any]): A dictionary representation of the `Doc`
         """
         array_head = Doc._get_array_attrs()
         strings = set()
@@ -1424,13 +1421,11 @@ cdef class Doc:
         return util.to_dict(serializers, exclude)
 
     def from_dict(self, msg, *, exclude=tuple()):
-        """Deserialize, i.e. import the document contents from a binary string.
+        """Deserialize the document contents from a dictionary representation.
 
-        data (bytes): The string to load from.
-        exclude (list): String names of serialization fields to exclude.
+        msg (Dict[str, Any]): The dictionary to load from.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Doc): Itself.
-
-        DOCS: https://spacy.io/api/doc#from_dict
         """
         if self.length != 0:
             raise ValueError(Errors.E033.format(length=self.length))

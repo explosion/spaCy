@@ -5,7 +5,6 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, 
 import numpy as np
 import srsly
 from thinc.api import Config, Model, NumpyOps, SequenceCategoricalCrossentropy
-from thinc.legacy import LegacySequenceCategoricalCrossentropy
 from thinc.types import ArrayXd, Floats2d, Ints1d
 
 from .. import util
@@ -131,9 +130,7 @@ class EditTreeLemmatizer(TrainablePipe):
         self, examples: Iterable[Example], scores: List[Floats2d]
     ) -> Tuple[float, List[Floats2d]]:
         validate_examples(examples, "EditTreeLemmatizer.get_loss")
-        loss_func = LegacySequenceCategoricalCrossentropy(
-            normalize=False, missing_value=-1
-        )
+        loss_func = SequenceCategoricalCrossentropy(normalize=False, missing_value=-1)
 
         truths = []
         for eg in examples:
@@ -169,7 +166,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
         DOCS: https://spacy.io/api/edittreelemmatizer#get_teacher_student_loss
         """
-        loss_func = LegacySequenceCategoricalCrossentropy(normalize=False)
+        loss_func = SequenceCategoricalCrossentropy(normalize=False)
         d_scores, loss = loss_func(student_scores, teacher_scores)
         if self.model.ops.xp.isnan(loss):
             raise ValueError(Errors.E910.format(name=self.name))

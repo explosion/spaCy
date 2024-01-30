@@ -1,4 +1,5 @@
 # cython: infer_types=True
+# cython: profile=False
 from libcpp.vector cimport vector
 
 from ...tokens.doc cimport Doc
@@ -20,10 +21,6 @@ cdef class StateClass:
             del self.c
 
     @property
-    def history(self):
-        return list(self.c.history)
-
-    @property
     def stack(self):
         return [self.S(i) for i in range(self.c.stack_depth())]
 
@@ -32,7 +29,7 @@ cdef class StateClass:
         return [self.B(i) for i in range(self.c.buffer_length())]
 
     @property
-    def token_vector_lenth(self):
+    def token_vector_length(self):
         return self.doc.tensor.shape[1]
 
     @property
@@ -179,6 +176,3 @@ cdef class StateClass:
 
     def clone(self, StateClass src):
         self.c.clone(src.c)
-
-    def set_context_tokens(self, int[:, :] output, int row, int n_feats):
-        self.c.set_context_tokens(&output[row, 0], n_feats)

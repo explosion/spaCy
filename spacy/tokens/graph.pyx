@@ -1,4 +1,5 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
+# cython: profile=False
 from typing import Generator, List, Tuple
 
 cimport cython

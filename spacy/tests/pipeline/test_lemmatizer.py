@@ -2,9 +2,11 @@ import pickle
 
 import pytest
 
+import spacy
 from spacy import registry, util
+from spacy.about import __lookups_url__
 from spacy.lang.en import English
-from spacy.lookups import Lookups
+from spacy.lookups import Lookups, load_lookups_data_from_url
 
 from ..util import make_tempdir
 
@@ -113,3 +115,15 @@ def test_lemmatizer_serialize(nlp):
 
     # Make sure that lemmatizer cache can be pickled
     pickle.dumps(lemmatizer2)
+
+
+@pytest.mark.parametrize("lang", ("ca", "en"))
+def test_lemmatizer_load_lookups_from_url(lang):
+    nlp = spacy.blank(lang)
+    lemmatizer = nlp.add_pipe("lemmatizer")
+    req_tables, opt_tables = lemmatizer.get_lookups_config(mode=lemmatizer.mode)
+    lookups = load_lookups_data_from_url(
+        nlp.lang, req_tables + opt_tables, __lookups_url__
+    )
+    lemmatizer.initialize(lookups=lookups)
+    assert set(lemmatizer.lookups.tables) == set(req_tables + opt_tables)

@@ -2,6 +2,7 @@ import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
+import srsly
 from thinc.api import Model
 
 from .. import util
@@ -155,8 +156,24 @@ class Lemmatizer(Pipe):
         """
         required_tables, optional_tables = self.get_lookups_config(self.mode)
         if lookups is None:
-            logger.debug("Lemmatizer: loading tables from spacy-lookups-data")
-            lookups = load_lookups(lang=self.vocab.lang, tables=required_tables)
+            logger.debug(
+                "Lemmatizer: no lemmatizer lookups tables provided, "
+                "trying to load tables from registered lookups (usually "
+                "spacy-lookups-data)"
+            )
+            lookups = load_lookups(
+                lang=self.vocab.lang, tables=required_tables, strict=False
+            )
+            missing_tables = set(required_tables) - set(lookups.tables)
+            if len(missing_tables) > 0:
+                raise ValueError(
+                    Errors.E4010.format(
+                        missing_tables=list(missing_tables),
+                        pipe_name=self.name,
+                        required_tables=srsly.json_dumps(required_tables),
+                        tables=srsly.json_dumps(required_tables + optional_tables),
+                    )
+                )
             optional_lookups = load_lookups(
                 lang=self.vocab.lang, tables=optional_tables, strict=False
             )

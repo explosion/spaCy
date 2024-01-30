@@ -1,4 +1,4 @@
-# cython: infer_types=True, profile=True
+# cython: infer_types=True
 
 from pathlib import Path
 from typing import Iterable, Iterator, Tuple, Union

@@ -89,7 +89,7 @@ class Quartiles:
 def annotate(
     nlp: Language, docs: List[Doc], batch_size: Optional[int]
 ) -> numpy.ndarray:
-    docs = nlp.pipe(tqdm(docs, unit="doc"), batch_size=batch_size)
+    docs = nlp.pipe(tqdm(docs, unit="doc", disable=None), batch_size=batch_size)
     wps = []
     while True:
         with time_context() as elapsed:

@@ -189,11 +189,33 @@ width = ${components.tok2vec.model.width}
 
 parser_config_string_upper = """
 [model]
-@architectures = "spacy.TransitionBasedParser.v3"
+@architectures = "spacy.TransitionBasedParser.v2"
 state_type = "parser"
 extra_state_tokens = false
 hidden_width = 66
 maxout_pieces = 2
+use_upper = true
+
+[model.tok2vec]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 333
+depth = 4
+embed_size = 5555
+window_size = 1
+maxout_pieces = 7
+subword_features = false
+"""
+
+
+parser_config_string_no_upper = """
+[model]
+@architectures = "spacy.TransitionBasedParser.v2"
+state_type = "parser"
+extra_state_tokens = false
+hidden_width = 66
+maxout_pieces = 2
+use_upper = false
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v1"
@@ -224,6 +246,7 @@ def my_parser():
         extra_state_tokens=True,
         hidden_width=65,
         maxout_pieces=5,
+        use_upper=True,
     )
     return parser
 
@@ -337,16 +360,15 @@ def test_serialize_custom_nlp():
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
         model = nlp2.get_pipe("parser").model
-        assert model.get_ref("tok2vec") is not None
-        assert model.has_param("hidden_W")
-        assert model.has_param("hidden_b")
-        output = model.get_ref("output")
-        assert output is not None
-        assert output.has_param("W")
-        assert output.has_param("b")
+        model.get_ref("tok2vec")
+        # check that we have the correct settings, not the default ones
+        assert model.get_ref("upper").get_dim("nI") == 65
+        assert model.get_ref("lower").get_dim("nI") == 65
 
 
-@pytest.mark.parametrize("parser_config_string", [parser_config_string_upper])
+@pytest.mark.parametrize(
+    "parser_config_string", [parser_config_string_upper, parser_config_string_no_upper]
+)
 def test_serialize_parser(parser_config_string):
     """Create a non-default parser config to check nlp serializes it correctly"""
     nlp = English()
@@ -359,13 +381,11 @@ def test_serialize_parser(parser_config_string):
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
         model = nlp2.get_pipe("parser").model
-        assert model.get_ref("tok2vec") is not None
-        assert model.has_param("hidden_W")
-        assert model.has_param("hidden_b")
-        output = model.get_ref("output")
-        assert output is not None
-        assert output.has_param("b")
-        assert output.has_param("W")
+        model.get_ref("tok2vec")
+        # check that we have the correct settings, not the default ones
+        if model.attrs["has_upper"]:
+            assert model.get_ref("upper").get_dim("nI") == 66
+        assert model.get_ref("lower").get_dim("nI") == 66
 
 
 def test_config_nlp_roundtrip():
@@ -561,7 +581,9 @@ def test_config_auto_fill_extra_fields():
     load_model_from_config(nlp.config)
 
 
-@pytest.mark.parametrize("parser_config_string", [parser_config_string_upper])
+@pytest.mark.parametrize(
+    "parser_config_string", [parser_config_string_upper, parser_config_string_no_upper]
+)
 def test_config_validate_literal(parser_config_string):
     nlp = English()
     config = Config().from_str(parser_config_string)

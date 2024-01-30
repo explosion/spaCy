@@ -216,6 +216,11 @@ def test_dependency_matcher_pattern_validation(en_vocab):
         pattern2 = copy.deepcopy(pattern)
         pattern2[1]["RIGHT_ID"] = "fox"
         matcher.add("FOUNDED", [pattern2])
+    # invalid key
+    with pytest.warns(UserWarning):
+        pattern2 = copy.deepcopy(pattern)
+        pattern2[1]["FOO"] = "BAR"
+        matcher.add("FOUNDED", [pattern2])
 
 
 def test_dependency_matcher_callback(en_vocab, doc):

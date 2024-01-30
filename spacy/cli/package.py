@@ -1,5 +1,8 @@
+import importlib.metadata
+import os
 import re
 import shutil
+import subprocess
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -20,7 +23,7 @@ def package_cli(
     # fmt: off
     input_dir: Path = Arg(..., help="Directory with pipeline data", exists=True, file_okay=False),
     output_dir: Path = Arg(..., help="Output parent directory", exists=True, file_okay=False),
-    code_paths: str = Opt("", "--code", "-c", help="Comma-separated paths to Python file with additional code (registered functions) to be included in the package"),
+    code_paths: str = Opt("", "--code", "-c", help="Comma-separated paths to Python files with additional code (registered functions) to be included in the package"),
     meta_path: Optional[Path] = Opt(None, "--meta-path", "--meta", "-m", help="Path to meta.json", exists=True, dir_okay=False),
     create_meta: bool = Opt(False, "--create-meta", "-C", help="Create meta.json, even if one exists"),
     name: Optional[str] = Opt(None, "--name", "-n", help="Package name to override meta"),
@@ -35,7 +38,7 @@ def package_cli(
     specified output directory, and the data will be copied over. If
     --create-meta is set and a meta.json already exists in the output directory,
     the existing values will be used as the defaults in the command-line prompt.
-    After packaging, "python setup.py sdist" is run in the package directory,
+    After packaging, "python -m build --sdist" is run in the package directory,
     which will create a .tar.gz archive that can be installed via "pip install".
 
     If additional code files are provided (e.g. Python files containing custom
@@ -78,9 +81,17 @@ def package(
     input_path = util.ensure_path(input_dir)
     output_path = util.ensure_path(output_dir)
     meta_path = util.ensure_path(meta_path)
-    if create_wheel and not has_wheel():
-        err = "Generating a binary .whl file requires wheel to be installed"
-        msg.fail(err, "pip install wheel", exits=1)
+    if create_wheel and not has_wheel() and not has_build():
+        err = (
+            "Generating wheels requires 'build' or 'wheel' (deprecated) to be installed"
+        )
+        msg.fail(err, "pip install build", exits=1)
+    if not has_build():
+        msg.warn(
+            "Generating packages without the 'build' package is deprecated and "
+            "will not be supported in the future. To install 'build': pip "
+            "install build"
+        )
     if not input_path or not input_path.exists():
         msg.fail("Can't locate pipeline data", input_path, exits=1)
     if not output_path or not output_path.exists():
@@ -184,12 +195,37 @@ def package(
     msg.good(f"Successfully created package directory '{model_name_v}'", main_path)
     if create_sdist:
         with util.working_dir(main_path):
-            util.run_command([sys.executable, "setup.py", "sdist"], capture=False)
+            # run directly, since util.run_command is not designed to continue
+            # after a command fails
+            ret = subprocess.run(
+                [sys.executable, "-m", "build", ".", "--sdist"],
+                env=os.environ.copy(),
+            )
+            if ret.returncode != 0:
+                msg.warn(
+                    "Creating sdist with 'python -m build' failed. Falling "
+                    "back to deprecated use of 'python setup.py sdist'"
+                )
+                util.run_command([sys.executable, "setup.py", "sdist"], capture=False)
         zip_file = main_path / "dist" / f"{model_name_v}{SDIST_SUFFIX}"
         msg.good(f"Successfully created zipped Python package", zip_file)
     if create_wheel:
         with util.working_dir(main_path):
-            util.run_command([sys.executable, "setup.py", "bdist_wheel"], capture=False)
+            # run directly, since util.run_command is not designed to continue
+            # after a command fails
+            ret = subprocess.run(
+                [sys.executable, "-m", "build", ".", "--wheel"],
+                env=os.environ.copy(),
+            )
+            if ret.returncode != 0:
+                msg.warn(
+                    "Creating wheel with 'python -m build' failed. Falling "
+                    "back to deprecated use of 'wheel' with "
+                    "'python setup.py bdist_wheel'"
+                )
+                util.run_command(
+                    [sys.executable, "setup.py", "bdist_wheel"], capture=False
+                )
         wheel_name_squashed = re.sub("_+", "_", model_name_v)
         wheel = main_path / "dist" / f"{wheel_name_squashed}{WHEEL_SUFFIX}"
         msg.good(f"Successfully created binary wheel", wheel)
@@ -206,6 +242,17 @@ def has_wheel() -> bool:
 
         return True
     except ImportError:
+        return False
+
+
+def has_build() -> bool:
+    # it's very likely that there is a local directory named build/ (especially
+    # in an editable install), so an import check is not sufficient; instead
+    # check that there is a package version
+    try:
+        importlib.metadata.version("build")
+        return True
+    except importlib.metadata.PackageNotFoundError:  # type: ignore[attr-defined]
         return False
 
 
@@ -403,7 +450,7 @@ def _format_sources(data: Any) -> str:
         if author:
             result += " ({})".format(author)
         sources.append(result)
-    return "<br />".join(sources)
+    return "<br>".join(sources)
 
 
 def _format_accuracy(data: Dict[str, Any], exclude: List[str] = ["speed"]) -> str:

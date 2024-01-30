@@ -40,7 +40,7 @@ from ._util import (
     _format_number,
     app,
     debug_cli,
-    import_code,
+    import_code_paths,
     parse_config_overrides,
     show_validation_error,
 )
@@ -72,7 +72,7 @@ def debug_data_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
-    code_path: Optional[Path] = Opt(None, "--code-path", "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    code_path: str = Opt("", "--code", "-c", help="Comma-separated paths to Python files with additional code (registered functions) to be imported"),
     ignore_warnings: bool = Opt(False, "--ignore-warnings", "-IW", help="Ignore warnings, only show stats and errors"),
     verbose: bool = Opt(False, "--verbose", "-V", help="Print additional information and explanations"),
     no_format: bool = Opt(False, "--no-format", "-NF", help="Don't pretty-print the results"),
@@ -92,7 +92,7 @@ def debug_data_cli(
             "--help for an overview of the other available debugging commands."
         )
     overrides = parse_config_overrides(ctx.args)
-    import_code(code_path)
+    import_code_paths(code_path)
     debug_data(
         config_path,
         config_overrides=overrides,
