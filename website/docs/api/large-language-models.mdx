@@ -1477,20 +1477,21 @@ These models all take the same parameters:
 >
 > ```ini
 > [components.llm.model]
-> @llm_models = "spacy.Llama2.v1"
+> @llm_models = "spacy.HF.v1"
 > name = "Llama-2-7b-hf"
 > ```
 
-Currently, these models are provided as part of the core library:
+Currently, these models are provided as part of the core library (more models
+can be accessed through the `langchain` integration):
 
-| Model                | Provider        | Supported names                                                                                              | HF directory                           |
-| -------------------- | --------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
-| `spacy.Dolly.v1`     | Databricks      | `["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"]`                                                             | https://huggingface.co/databricks      |
-| `spacy.Falcon.v1`    | TII             | `["falcon-rw-1b", "falcon-7b", "falcon-7b-instruct", "falcon-40b-instruct"]`                                 | https://huggingface.co/tiiuae          |
-| `spacy.Llama2.v1`    | Meta AI         | `["Llama-2-7b-hf", "Llama-2-13b-hf", "Llama-2-70b-hf"]`                                                      | https://huggingface.co/meta-llama      |
-| `spacy.Mistral.v1`   | Mistral AI      | `["Mistral-7B-v0.1", "Mistral-7B-Instruct-v0.1"]`                                                            | https://huggingface.co/mistralai       |
-| `spacy.StableLM.v1`  | Stability AI    | `["stablelm-base-alpha-3b", "stablelm-base-alpha-7b", "stablelm-tuned-alpha-3b", "stablelm-tuned-alpha-7b"]` | https://huggingface.co/stabilityai     |
-| `spacy.OpenLLaMA.v1` | OpenLM Research | `["open_llama_3b", "open_llama_7b", "open_llama_7b_v2", "open_llama_13b"]`                                   | https://huggingface.co/openlm-research |
+| Model family | Author          | Names of available model                                                                                     | HF directory                           |
+| ------------ | --------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| Dolly        | Databricks      | `["dolly-v2-3b", "dolly-v2-7b", "dolly-v2-12b"]`                                                             | https://huggingface.co/databricks      |
+| Falcon       | TII             | `["falcon-rw-1b", "falcon-7b", "falcon-7b-instruct", "falcon-40b-instruct"]`                                 | https://huggingface.co/tiiuae          |
+| Llama 2      | Meta AI         | `["Llama-2-7b-hf", "Llama-2-13b-hf", "Llama-2-70b-hf"]`                                                      | https://huggingface.co/meta-llama      |
+| Mistral      | Mistral AI      | `["Mistral-7B-v0.1", "Mistral-7B-Instruct-v0.1"]`                                                            | https://huggingface.co/mistralai       |
+| Stable LM    | Stability AI    | `["stablelm-base-alpha-3b", "stablelm-base-alpha-7b", "stablelm-tuned-alpha-3b", "stablelm-tuned-alpha-7b"]` | https://huggingface.co/stabilityai     |
+| OpenLLaMa    | OpenLM Research | `["open_llama_3b", "open_llama_7b", "open_llama_7b_v2", "open_llama_13b"]`                                   | https://huggingface.co/openlm-research |
 
 <Infobox variant="warning" title="Gated models on Hugging Face" id="hf_licensing">
 
@@ -1540,7 +1541,7 @@ To use [LangChain](https://github.com/hwchase17/langchain) for the API retrieval
 part, make sure you have installed it first:
 
 ```shell
-python -m pip install "langchain==0.0.191"
+python -m pip install "langchain>=0.1,<0.2"
 # Or install with spacy-llm directly
 python -m pip install "spacy-llm[extras]"
 ```
@@ -1550,9 +1551,12 @@ Note that LangChain currently only supports Python 3.9 and beyond.
 LangChain models in `spacy-llm` work slightly differently. `langchain`'s models
 are parsed automatically, each LLM class in `langchain` has one entry in
 `spacy-llm`'s registry. As `langchain`'s design has one class per API and not
-per model, this results in registry entries like `langchain.OpenAI.v1` - i. e.
-there is one registry entry per API and not per model (family), as for the REST-
-and HuggingFace-based entries.
+per model, this results in registry entries like `langchain.OpenAIChat.v1` - i.
+e. there is one registry entry per API and not per model (family), as for the
+REST- and HuggingFace-based entries. LangChain provides access to many more
+model that `spacy-llm` does natively, so if your model or provider of choice
+isn't available directly, just leverage the `langchain` integration by
+specifying your model with `langchain.YourModel.v1`!
 
 The name of the model to be used has to be passed in via the `name` attribute.
 
@@ -1560,7 +1564,7 @@ The name of the model to be used has to be passed in via the `name` attribute.
 >
 > ```ini
 > [components.llm.model]
-> @llm_models = "langchain.OpenAI.v1"
+> @llm_models = "langchain.OpenAIChat.v1"
 > name = "gpt-3.5-turbo"
 > query = {"@llm_queries": "spacy.CallLangChain.v1"}
 > config = {"temperature": 0.0}
