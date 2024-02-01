@@ -9,6 +9,8 @@ from ..errors import Errors
 from ..tokens import SpanGroup
 from ..util import SimpleFrozenList
 from .candidate import Candidate
+from .typedefs import CandidatesForMention
+
 
 
 cdef class KnowledgeBase:
@@ -32,7 +34,7 @@ cdef class KnowledgeBase:
         self.entity_vector_length = entity_vector_length
         self.mem = Pool()
 
-    def get_candidates(self, mentions: Iterator[SpanGroup]) -> Iterator[Iterable[Iterable[Candidate]]]:
+    def get_candidates(self, mentions: Iterator[SpanGroup]) -> Iterator[Iterable[CandidatesForMention]]:
         """
         Return candidate entities for a specified Span mention. Each candidate defines at least the entity and the
         entity's embedding vector. Depending on the KB implementation, further properties - such as the prior
