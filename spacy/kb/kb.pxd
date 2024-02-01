@@ -5,6 +5,7 @@ from libc.stdint cimport int64_t
 
 from ..vocab cimport Vocab
 
+
 cdef class KnowledgeBase:
     cdef Pool mem
     cdef readonly Vocab vocab
