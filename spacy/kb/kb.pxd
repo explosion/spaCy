@@ -2,7 +2,6 @@
 
 from cymem.cymem cimport Pool
 from libc.stdint cimport int64_t
-
 from ..vocab cimport Vocab
 
 

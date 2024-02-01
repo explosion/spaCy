@@ -1,6 +1,6 @@
 import random
 import warnings
-from itertools import islice
+from itertools import islice, tee
 from pathlib import Path
 from typing import (
     Any,
@@ -446,7 +446,7 @@ class EntityLinker(TrainablePipe):
         if isinstance(docs, Doc):
             docs = [docs]
 
-        docs = list(docs)
+        docs_iters = tee(docs, 2)
 
         # Call candidate generator.
         all_ent_cands = self.get_candidates(
@@ -458,11 +458,11 @@ class EntityLinker(TrainablePipe):
                         ent for ent in doc.ents if ent.label_ not in self.labels_discard
                     ],
                 )
-                for doc in docs
+                for doc in docs_iters[0]
             ),
         )
 
-        for doc in docs:
+        for doc in docs_iters[1]:
             doc_ents: List[Ints1d] = []
             doc_scores: List[Floats1d] = []
             if len(doc) == 0 or len(doc.ents) == 0:

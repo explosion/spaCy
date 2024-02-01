@@ -8,7 +8,7 @@ from cymem.cymem cimport Pool
 from ..errors import Errors
 from ..tokens import SpanGroup
 from ..util import SimpleFrozenList
-from .typedefs cimport CandidatesForMention
+from .candidate cimport Candidate
 
 
 cdef class KnowledgeBase:
@@ -19,6 +19,8 @@ cdef class KnowledgeBase:
 
     DOCS: https://spacy.io/api/kb
     """
+    CandidatesForMentionT = Iterable[Candidate]
+    CandidatesForDocT = Iterable[CandidatesForMentionT]
 
     def __init__(self, vocab: Vocab, entity_vector_length: int):
         """Create a KnowledgeBase."""
@@ -32,14 +34,14 @@ cdef class KnowledgeBase:
         self.entity_vector_length = entity_vector_length
         self.mem = Pool()
 
-    def get_candidates(self, mentions: Iterator[SpanGroup]) -> Iterator[Iterable[CandidatesForMention]]:
+    def get_candidates(self, mentions: Iterator[SpanGroup]) -> Iterator[CandidatesForDocT]:
         """
         Return candidate entities for a specified Span mention. Each candidate defines at least the entity and the
         entity's embedding vector. Depending on the KB implementation, further properties - such as the prior
         probability of the specified mention text resolving to that entity - might be included.
         If no candidates are found for a given mention, an empty list is returned.
         mentions (Iterator[SpanGroup]): Mentions for which to get candidates.
-        RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates.
+        RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per mention/doc/doc batch.
         """
         raise NotImplementedError(
             Errors.E1045.format(
