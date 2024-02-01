@@ -8,7 +8,7 @@ from cymem.cymem cimport Pool
 from ..errors import Errors
 from ..tokens import SpanGroup
 from ..util import SimpleFrozenList
-from .typedefs import CandidatesForMention
+from .typedefs cimport CandidatesForMention
 
 
 cdef class KnowledgeBase:
