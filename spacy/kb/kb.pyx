@@ -12,7 +12,6 @@ from .candidate import Candidate
 from .typedefs import CandidatesForMention
 
 
-
 cdef class KnowledgeBase:
     """A `KnowledgeBase` instance stores unique identifiers for entities and
     their textual aliases, to support entity linking of named entities to
