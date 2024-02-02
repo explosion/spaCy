@@ -44,7 +44,7 @@ TRAIN_DATA_MULTI_LABEL = [
 
 lazy_init_model_config = """
 [model]
-@architectures = "LazyInitTok2Vec.v1"
+@architectures = "test.LazyInitTok2Vec.v1"
 width = 96
 """
 LAZY_INIT_TOK2VEC_MODEL = Config().from_str(lazy_init_model_config)["model"]

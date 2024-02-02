@@ -7,7 +7,7 @@ from spacy.tokens import Doc
 from spacy.util import registry
 
 
-@registry.architectures("LazyInitTok2Vec.v1")
+@registry.architectures("test.LazyInitTok2Vec.v1")
 def build_lazy_init_tok2vec(*, width: int) -> Model[List[Doc], List[Floats2d]]:
     """tok2vec model of which the output size is only known after
     initialization. This implementation does not output meaningful
