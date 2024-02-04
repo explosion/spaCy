@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        branch: [master, v4]
+        branch: [master, main]
     if: github.repository_owner == 'explosion'
     runs-on: ubuntu-latest
     steps:
