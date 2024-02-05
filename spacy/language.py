@@ -1716,6 +1716,7 @@ class Language:
             # is done, so that they can exit gracefully.
             for q in texts_q:
                 q.put(_WORK_DONE_SENTINEL)
+                q.close()
 
             # Otherwise, we are stopping because the error handler raised an
             # exception. The sentinel will be last to go out of the queue.
@@ -2347,7 +2348,8 @@ def _apply_pipes(
 
             # Stop working if we encounter the end-of-work sentinel.
             if isinstance(texts_with_ctx, _WorkDoneSentinel):
-                return
+                sender.close()
+                receiver.close()
 
             docs = (
                 ensure_doc(doc_like, context) for doc_like, context in texts_with_ctx
@@ -2371,7 +2373,8 @@ def _apply_pipes(
             # Parent has closed the pipe prematurely. This happens when a
             # worker encounters an error and the error handler is set to
             # stop processing.
-            return
+            sender.close()
+            receiver.close()
 
 
 class _Sender:
