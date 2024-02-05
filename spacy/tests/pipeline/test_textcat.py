@@ -28,6 +28,8 @@ from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 from spacy.training.initialize import init_nlp
 
+# Ensure that the architecture gets added to the registry.
+from ..tok2vec import build_lazy_init_tok2vec as _
 from ..util import make_tempdir
 
 TRAIN_DATA_SINGLE_LABEL = [
@@ -39,6 +41,13 @@ TRAIN_DATA_MULTI_LABEL = [
     ("I'm angry and confused", {"cats": {"ANGRY": 1.0, "CONFUSED": 1.0, "HAPPY": 0.0}}),
     ("I'm confused but happy", {"cats": {"ANGRY": 0.0, "CONFUSED": 1.0, "HAPPY": 1.0}}),
 ]
+
+lazy_init_model_config = """
+[model]
+@architectures = "test.LazyInitTok2Vec.v1"
+width = 96
+"""
+LAZY_INIT_TOK2VEC_MODEL = Config().from_str(lazy_init_model_config)["model"]
 
 
 def make_get_examples_single_label(nlp):
@@ -414,7 +423,7 @@ def test_implicit_label(name, get_examples):
 @pytest.mark.parametrize(
     "name,textcat_config",
     [
-        # BOW
+        # BOW V1
         ("textcat", {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}),
         ("textcat", {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}),
         ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}),
@@ -451,14 +460,14 @@ def test_no_resize(name, textcat_config):
 @pytest.mark.parametrize(
     "name,textcat_config",
     [
-        # BOW
-        ("textcat", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}),
-        ("textcat", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}),
-        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}),
-        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": True, "ngram_size": 3}),
+        # BOW V3
+        ("textcat", {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}),
+        ("textcat", {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": False, "no_output_layer": True, "ngram_size": 3}),
         # CNN
-        ("textcat", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True}),
-        ("textcat_multilabel", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
+        ("textcat", {"@architectures": "spacy.TextCatReduce.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True, "use_reduce_first": True, "use_reduce_last": True, "use_reduce_max": True, "use_reduce_mean": True}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatReduce.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False, "use_reduce_first": True, "use_reduce_last": True, "use_reduce_max": True, "use_reduce_mean": True}),
     ],
 )
 # fmt: on
@@ -480,14 +489,14 @@ def test_resize(name, textcat_config):
 @pytest.mark.parametrize(
     "name,textcat_config",
     [
-        # BOW
-        ("textcat", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}),
-        ("textcat", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}),
-        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}),
-        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": True, "ngram_size": 3}),
-        # CNN
-        ("textcat", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True}),
-        ("textcat_multilabel", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
+        # BOW v3
+        ("textcat", {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}),
+        ("textcat", {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": False, "no_output_layer": True, "ngram_size": 3}),
+        # REDUCE
+        ("textcat", {"@architectures": "spacy.TextCatReduce.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True, "use_reduce_first": True, "use_reduce_last": True, "use_reduce_max": True, "use_reduce_mean": True}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatReduce.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False, "use_reduce_first": True, "use_reduce_last": True, "use_reduce_max": True, "use_reduce_mean": True}),
     ],
 )
 # fmt: on
@@ -544,6 +553,34 @@ def test_error_with_multi_labels():
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
     with pytest.raises(ValueError):
         nlp.initialize(get_examples=lambda: train_examples)
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "name,textcat_config",
+    [
+        # ENSEMBLE V2
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": LAZY_INIT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False}}),
+        ("textcat", {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": LAZY_INIT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": True, "ngram_size": 5, "no_output_layer": False}}),
+        # PARAMETRIC ATTENTION V1
+        ("textcat", {"@architectures": "spacy.TextCatParametricAttention.v1", "tok2vec": LAZY_INIT_TOK2VEC_MODEL, "exclusive_classes": True}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatParametricAttention.v1", "tok2vec": LAZY_INIT_TOK2VEC_MODEL, "exclusive_classes": False}),
+        # REDUCE
+        ("textcat", {"@architectures": "spacy.TextCatReduce.v1", "tok2vec": LAZY_INIT_TOK2VEC_MODEL, "exclusive_classes": True, "use_reduce_first": True, "use_reduce_last": True, "use_reduce_max": True, "use_reduce_mean": True}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatReduce.v1", "tok2vec": LAZY_INIT_TOK2VEC_MODEL, "exclusive_classes": False, "use_reduce_first": True, "use_reduce_last": True, "use_reduce_max": True, "use_reduce_mean": True}),
+    ],
+)
+# fmt: on
+def test_tok2vec_lazy_init(name, textcat_config):
+    # Check that we can properly initialize and use a textcat model using
+    # a lazily-initialized tok2vec.
+    nlp = English()
+    pipe_config = {"model": textcat_config}
+    textcat = nlp.add_pipe(name, config=pipe_config)
+    textcat.add_label("POSITIVE")
+    textcat.add_label("NEGATIVE")
+    nlp.initialize()
+    nlp.pipe(["This is a test."])
 
 
 @pytest.mark.parametrize(
@@ -693,12 +730,23 @@ def test_overfitting_IO_multi():
         ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "ngram_size": 4, "no_output_layer": False}),
         ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "ngram_size": 3, "no_output_layer": True}),
         ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "ngram_size": 2, "no_output_layer": True}),
+        # BOW V3
+        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False}),
+        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": True, "ngram_size": 4, "no_output_layer": False}),
+        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": False, "ngram_size": 3, "no_output_layer": True}),
+        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": True, "ngram_size": 2, "no_output_layer": True}),
         # ENSEMBLE V2
-        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False}}),
-        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "ngram_size": 5, "no_output_layer": False}}),
-        # CNN V2
+        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False}}),
+        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v3", "exclusive_classes": True, "ngram_size": 5, "no_output_layer": False}}),
+        # CNN V2 (legacy)
         ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True}),
         ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
+        # PARAMETRIC ATTENTION V1
+        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatParametricAttention.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True}),
+        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatParametricAttention.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
+        # REDUCE V1
+        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatReduce.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True, "use_reduce_first": True, "use_reduce_last": True, "use_reduce_max": True, "use_reduce_mean": True}),
+        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatReduce.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False, "use_reduce_first": True, "use_reduce_last": True, "use_reduce_max": True, "use_reduce_mean": True}),
     ],
 )
 # fmt: on

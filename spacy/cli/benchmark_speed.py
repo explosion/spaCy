@@ -13,7 +13,7 @@ from .. import util
 from ..language import Language
 from ..tokens import Doc
 from ..training import Corpus
-from ._util import Arg, Opt, benchmark_cli, setup_gpu
+from ._util import Arg, Opt, benchmark_cli, import_code, setup_gpu
 
 
 @benchmark_cli.command(
@@ -30,12 +30,14 @@ def benchmark_speed_cli(
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     n_batches: int = Opt(50, "--batches", help="Minimum number of batches to benchmark", min=30,),
     warmup_epochs: int = Opt(3, "--warmup", "-w", min=0, help="Number of iterations over the data for warmup"),
+    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     # fmt: on
 ):
     """
     Benchmark a pipeline. Expects a loadable spaCy pipeline and benchmark
     data in the binary .spacy format.
     """
+    import_code(code_path)
     setup_gpu(use_gpu=use_gpu, silent=False)
 
     nlp = util.load_model(model)
@@ -171,5 +173,5 @@ def print_outliers(sample: numpy.ndarray):
 def warmup(
     nlp: Language, docs: List[Doc], warmup_epochs: int, batch_size: Optional[int]
 ) -> numpy.ndarray:
-    docs = warmup_epochs * docs
+    docs = [doc.copy() for doc in docs * warmup_epochs]
     return annotate(nlp, docs, batch_size)

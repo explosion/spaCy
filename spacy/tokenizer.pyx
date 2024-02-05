@@ -730,9 +730,16 @@ cdef class Tokenizer:
             if i in spans_by_start:
                 span = spans_by_start[i]
                 exc = [d[ORTH] for d in special_cases[span.label_]]
-                for j, orth in enumerate(exc):
-                    final_tokens.append((f"SPECIAL-{j + 1}", self.vocab.strings[orth]))
-                i += len(span)
+                # The phrase matcher can overmatch for tokens separated by
+                # spaces in the text but not in the underlying rule, so skip
+                # cases where the texts aren't identical
+                if span.text != "".join([self.vocab.strings[orth] for orth in exc]):
+                    final_tokens.append(tokens[i])
+                    i += 1
+                else:
+                    for j, orth in enumerate(exc):
+                        final_tokens.append((f"SPECIAL-{j + 1}", self.vocab.strings[orth]))
+                    i += len(span)
             else:
                 final_tokens.append(tokens[i])
                 i += 1

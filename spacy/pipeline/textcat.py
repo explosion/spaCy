@@ -36,8 +36,9 @@ maxout_pieces = 3
 depth = 2
 
 [model.linear_model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
+length = 262144
 ngram_size = 1
 no_output_layer = false
 """
@@ -45,16 +46,21 @@ DEFAULT_SINGLE_TEXTCAT_MODEL = Config().from_str(single_label_default_config)["m
 
 single_label_bow_config = """
 [model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
+length = 262144
 ngram_size = 1
 no_output_layer = false
 """
 
 single_label_cnn_config = """
 [model]
-@architectures = "spacy.TextCatCNN.v2"
+@architectures = "spacy.TextCatReduce.v1"
 exclusive_classes = true
+use_reduce_first = false
+use_reduce_last = false
+use_reduce_max = false
+use_reduce_mean = true
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v2"

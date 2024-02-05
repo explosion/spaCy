@@ -405,7 +405,7 @@ available to spaCy, all you need to do is install the package in your
 environment:
 
 ```bash
-$ python setup.py develop
+$ python -m pip install .
 ```
 
 spaCy is now able to create the pipeline component `"snek"` – even though you
@@ -673,7 +673,7 @@ $ python -m spacy package ./en_example_pipeline ./packages
 ```
 
 This command will create a pipeline package directory and will run
-`python setup.py sdist` in that directory to create a binary `.whl` file or
+`python -m build` in that directory to create a binary `.whl` file or
 `.tar.gz` archive of your package that can be installed using `pip install`.
 Installing the binary wheel is usually more efficient.
 

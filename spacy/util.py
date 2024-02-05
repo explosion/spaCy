@@ -1077,18 +1077,36 @@ def make_tempdir() -> Generator[Path, None, None]:
 
 
 def is_in_jupyter() -> bool:
-    """Check if user is running spaCy from a Jupyter notebook by detecting the
-    IPython kernel. Mainly used for the displaCy visualizer.
-    RETURNS (bool): True if in Jupyter, False if not.
+    """Check if user is running spaCy from a Jupyter or Colab notebook by
+    detecting the IPython kernel. Mainly used for the displaCy visualizer.
+    RETURNS (bool): True if in Jupyter/Colab, False if not.
     """
     # https://stackoverflow.com/a/39662359/6400719
+    # https://stackoverflow.com/questions/15411967
     try:
-        shell = get_ipython().__class__.__name__  # type: ignore[name-defined]
-        if shell == "ZMQInteractiveShell":
+        if get_ipython().__class__.__name__ == "ZMQInteractiveShell":  # type: ignore[name-defined]
             return True  # Jupyter notebook or qtconsole
+        if get_ipython().__class__.__module__ == "google.colab._shell":  # type: ignore[name-defined]
+            return True  # Colab notebook
     except NameError:
-        return False  # Probably standard Python interpreter
+        pass  # Probably standard Python interpreter
+    # additional check for Colab
+    try:
+        import google.colab
+
+        return True  # Colab notebook
+    except ImportError:
+        pass
     return False
+
+
+def is_in_interactive() -> bool:
+    """Check if user is running spaCy from an interactive Python
+    shell. Will return True in Jupyter notebooks too.
+    RETURNS (bool): True if in interactive mode, False if not.
+    """
+    # https://stackoverflow.com/questions/2356399/tell-if-python-is-in-interactive-mode
+    return hasattr(sys, "ps1") or hasattr(sys, "ps2")
 
 
 def get_object_name(obj: Any) -> str:

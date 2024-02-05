@@ -452,10 +452,9 @@ and plugins in spaCy v3.0, and we can't wait to see what you build with it!
   spaCy website. If you're sharing your project on Twitter, feel free to tag
   [@spacy_io](https://twitter.com/spacy_io) so we can check it out.
 
-- Once your extension is published, you can open an issue on the
-  [issue tracker](https://github.com/explosion/spacy/issues) to suggest it for the
-  [resources directory](https://spacy.io/usage/resources#extensions) on the
-  website.
+- Once your extension is published, you can open a
+  [PR](https://github.com/explosion/spaCy/pulls) to suggest it for the
+  [Universe](https://spacy.io/universe) page.
 
 📖 **For more tips and best practices, see the [checklist for developing spaCy extensions](https://spacy.io/usage/processing-pipelines#extensions).**
 

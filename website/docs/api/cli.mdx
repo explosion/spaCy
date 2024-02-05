@@ -1268,20 +1268,21 @@ the [binary `.spacy` format](/api/data-formats#binary-training). The pipeline is
 warmed up before any measurements are taken.
 
 ```cli
-$ python -m spacy benchmark speed [model] [data_path] [--batch_size] [--no-shuffle] [--gpu-id] [--batches] [--warmup]
+$ python -m spacy benchmark speed [model] [data_path] [--code] [--batch_size] [--no-shuffle] [--gpu-id] [--batches] [--warmup]
 ```
 
-| Name                 | Description                                                                                              |
-| -------------------- | -------------------------------------------------------------------------------------------------------- |
-| `model`              | Pipeline to benchmark the speed of. Can be a package or a path to a data directory. ~~str (positional)~~ |
-| `data_path`          | Location of benchmark data in spaCy's [binary format](/api/data-formats#training). ~~Path (positional)~~ |
-| `--batch-size`, `-b` | Set the batch size. If not set, the pipeline's batch size is used. ~~Optional[int] \(option)~~           |
-| `--no-shuffle`       | Do not shuffle documents in the benchmark data. ~~bool (flag)~~                                          |
-| `--gpu-id`, `-g`     | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                           |
-| `--batches`          | Number of batches to benchmark on. Defaults to `50`. ~~Optional[int] \(option)~~                         |
-| `--warmup`, `-w`     | Iterations over the benchmark data for warmup. Defaults to `3` ~~Optional[int] \(option)~~               |
-| `--help`, `-h`       | Show help message and available arguments. ~~bool (flag)~~                                               |
-| **PRINTS**           | Pipeline speed in words per second with a 95% confidence interval.                                       |
+| Name                 | Description                                                                                                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`              | Pipeline to benchmark the speed of. Can be a package or a path to a data directory. ~~str (positional)~~                                                                             |
+| `data_path`          | Location of benchmark data in spaCy's [binary format](/api/data-formats#training). ~~Path (positional)~~                                                                             |
+| `--code`, `-c`       | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~ |
+| `--batch-size`, `-b` | Set the batch size. If not set, the pipeline's batch size is used. ~~Optional[int] \(option)~~                                                                                       |
+| `--no-shuffle`       | Do not shuffle documents in the benchmark data. ~~bool (flag)~~                                                                                                                      |
+| `--gpu-id`, `-g`     | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                                       |
+| `--batches`          | Number of batches to benchmark on. Defaults to `50`. ~~Optional[int] \(option)~~                                                                                                     |
+| `--warmup`, `-w`     | Iterations over the benchmark data for warmup. Defaults to `3` ~~Optional[int] \(option)~~                                                                                           |
+| `--help`, `-h`       | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
+| **PRINTS**           | Pipeline speed in words per second with a 95% confidence interval.                                                                                                                   |
 
 ## apply {id="apply", version="3.5", tag="command"}
 
@@ -1547,9 +1548,9 @@ obsolete files is left up to you.
 
 Remotes can be defined in the `remotes` section of the
 [`project.yml`](/usage/projects#project-yml). Under the hood, spaCy uses
-[`Pathy`](https://github.com/justindujardin/pathy) to communicate with the
-remote storages, so you can use any protocol that `Pathy` supports, including
-[S3](https://aws.amazon.com/s3/),
+[`cloudpathlib`](https://cloudpathlib.drivendata.org) to communicate with the
+remote storages, so you can use any protocol that `cloudpathlib` supports,
+including [S3](https://aws.amazon.com/s3/),
 [Google Cloud Storage](https://cloud.google.com/storage), and the local
 filesystem, although you may need to install extra dependencies to use certain
 protocols.
