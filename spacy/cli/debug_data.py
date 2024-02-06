@@ -1073,8 +1073,7 @@ def _get_distribution(docs, normalize: bool = True) -> Counter:
     word_counts: Counter = Counter()
     for doc in docs:
         for token in doc:
-            # Normalize the text
-            t = token.text.lower().replace("``", '"').replace("''", '"')
+            t = token.text.lower()
             word_counts[t] += 1
     if normalize:
         total = sum(word_counts.values(), 0.0)
