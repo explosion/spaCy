@@ -1,3 +1,6 @@
+# cython: infer_types=True, binding=True
+from typing import Callable
+
 from cython.operator cimport dereference as deref
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp.set cimport set as cppset
@@ -5,7 +8,8 @@ from murmurhash.mrmr cimport hash128_x64
 
 import warnings
 from enum import Enum
-from typing import cast
+from pathlib import Path
+from typing import TYPE_CHECKING, Union, cast
 
 import numpy
 import srsly
@@ -21,6 +25,9 @@ from .attrs import IDS
 from .errors import Errors, Warnings
 from .strings import get_string_id
 
+if TYPE_CHECKING:
+    from .vocab import Vocab  # noqa: F401  # no-cython-lint
+
 
 def unpickle_vectors(bytes_data):
     return Vectors().from_bytes(bytes_data)
@@ -35,7 +42,71 @@ class Mode(str, Enum):
         return list(cls.__members__.keys())
 
 
-cdef class Vectors:
+cdef class BaseVectors:
+    def __init__(self, *, strings=None):
+        # Make sure abstract BaseVectors is not instantiated.
+        if self.__class__ == BaseVectors:
+            raise TypeError(
+                Errors.E1046.format(cls_name=self.__class__.__name__)
+            )
+
+    def __getitem__(self, key):
+        raise NotImplementedError
+
+    def __contains__(self, key):
+        raise NotImplementedError
+
+    def is_full(self):
+        raise NotImplementedError
+
+    def get_batch(self, keys):
+        raise NotImplementedError
+
+    @property
+    def shape(self):
+        raise NotImplementedError
+
+    def __len__(self):
+        raise NotImplementedError
+
+    @property
+    def vectors_length(self):
+        raise NotImplementedError
+
+    @property
+    def size(self):
+        raise NotImplementedError
+
+    def add(self, key, *, vector=None):
+        raise NotImplementedError
+
+    def to_ops(self, ops: Ops):
+        pass
+
+    # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
+    # allow serialization
+    def to_bytes(self, **kwargs):
+        return b""
+
+    def from_bytes(self, data: bytes, **kwargs):
+        return self
+
+    def to_disk(self, path: Union[str, Path], **kwargs):
+        return None
+
+    def from_disk(self, path: Union[str, Path], **kwargs):
+        return self
+
+
+@util.registry.vectors("spacy.Vectors.v1")
+def create_mode_vectors() -> Callable[["Vocab"], BaseVectors]:
+    def vectors_factory(vocab: "Vocab") -> BaseVectors:
+        return Vectors(strings=vocab.strings)
+
+    return vectors_factory
+
+
+cdef class Vectors(BaseVectors):
     """Store, save and load word vectors.
 
     Vectors data is kept in the vectors.data attribute, which should be an

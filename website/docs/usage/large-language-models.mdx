@@ -1,0 +1,534 @@
+---
+title: Large Language Models
+teaser: Integrating LLMs into structured NLP pipelines
+menu:
+  - ['Motivation', 'motivation']
+  - ['Install', 'install']
+  - ['Usage', 'usage']
+  - ['Logging', 'logging']
+  - ['API', 'api']
+  - ['Tasks', 'tasks']
+  - ['Models', 'models']
+---
+
+[The spacy-llm package](https://github.com/explosion/spacy-llm) integrates Large
+Language Models (LLMs) into spaCy pipelines, featuring a modular system for
+**fast prototyping** and **prompting**, and turning unstructured responses into
+**robust outputs** for various NLP tasks, **no training data** required.
+
+- Serializable `llm` **component** to integrate prompts into your pipeline
+- **Modular functions** to define the [**task**](#tasks) (prompting and parsing)
+  and [**model**](#models) (model to use)
+- Support for **hosted APIs** and self-hosted **open-source models**
+- Integration with [`LangChain`](https://github.com/hwchase17/langchain)
+- Access to
+  **[OpenAI API](https://platform.openai.com/docs/api-reference/introduction)**,
+  including GPT-4 and various GPT-3 models
+- Built-in support for various **open-source** models hosted on
+  [Hugging Face](https://huggingface.co/)
+- Usage examples for standard NLP tasks such as **Named Entity Recognition** and
+  **Text Classification**
+- Easy implementation of **your own functions** via the
+  [registry](/api/top-level#registry) for custom prompting, parsing and model
+  integrations
+
+## Motivation {id="motivation"}
+
+Large Language Models (LLMs) feature powerful natural language understanding
+capabilities. With only a few (and sometimes no) examples, an LLM can be
+prompted to perform custom NLP tasks such as text categorization, named entity
+recognition, coreference resolution, information extraction and more.
+
+Supervised learning is much worse than LLM prompting for prototyping, but for
+many tasks it's much better for production. A transformer model that runs
+comfortably on a single GPU is extremely powerful, and it's likely to be a
+better choice for any task for which you have a well-defined output. You train
+the model with anything from a few hundred to a few thousand labelled examples,
+and it will learn to do exactly that. Efficiency, reliability and control are
+all better with supervised learning, and accuracy will generally be higher than
+LLM prompting as well.
+
+`spacy-llm` lets you have **the best of both worlds**. You can quickly
+initialize a pipeline with components powered by LLM prompts, and freely mix in
+components powered by other approaches. As your project progresses, you can look
+at replacing some or all of the LLM-powered components as you require.
+
+Of course, there can be components in your system for which the power of an LLM
+is fully justified. If you want a system that can synthesize information from
+multiple documents in subtle ways and generate a nuanced summary for you, bigger
+is better. However, even if your production system needs an LLM for some of the
+task, that doesn't mean you need an LLM for all of it. Maybe you want to use a
+cheap text classification model to help you find the texts to summarize, or
+maybe you want to add a rule-based system to sanity check the output of the
+summary. These before-and-after tasks are much easier with a mature and
+well-thought-out library, which is exactly what spaCy provides.
+
+## Install {id="install"}
+
+`spacy-llm` will be installed automatically in future spaCy versions. For now,
+you can run the following in the same virtual environment where you already have
+`spacy` [installed](/usage).
+
+> ⚠️ This package is still experimental and it is possible that changes made to
+> the interface will be breaking in minor version updates.
+
+```bash
+python -m pip install spacy-llm
+```
+
+## Usage {id="usage"}
+
+The task and the model have to be supplied to the `llm` pipeline component using
+the [config system](/api/data-formats#config). This package provides various
+built-in functionality, as detailed in the [API](#-api) documentation.
+
+### Example 1: Add a text classifier using a GPT-3 model from OpenAI {id="example-1"}
+
+Create a new API key from openai.com or fetch an existing one, and ensure the
+keys are set as environmental variables. For more background information, see
+the [OpenAI](/api/large-language-models#gpt-3-5) section.
+
+Create a config file `config.cfg` containing at least the following (or see the
+full example
+[here](https://github.com/explosion/spacy-llm/tree/main/usage_examples/textcat_openai)):
+
+```ini
+[nlp]
+lang = "en"
+pipeline = ["llm"]
+
+[components]
+
+[components.llm]
+factory = "llm"
+
+[components.llm.task]
+@llm_tasks = "spacy.TextCat.v2"
+labels = ["COMPLIMENT", "INSULT"]
+
+[components.llm.model]
+@llm_models = "spacy.GPT-3-5.v1"
+config = {"temperature": 0.0}
+```
+
+Now run:
+
+```python
+from spacy_llm.util import assemble
+
+nlp = assemble("config.cfg")
+doc = nlp("You look gorgeous!")
+print(doc.cats)
+```
+
+### Example 2: Add NER using an open-source model through Hugging Face {id="example-2"}
+
+To run this example, ensure that you have a GPU enabled, and `transformers`,
+`torch` and CUDA installed. For more background information, see the
+[DollyHF](/api/large-language-models#dolly) section.
+
+Create a config file `config.cfg` containing at least the following (or see the
+full example
+[here](https://github.com/explosion/spacy-llm/tree/main/usage_examples/ner_dolly)):
+
+```ini
+[nlp]
+lang = "en"
+pipeline = ["llm"]
+
+[components]
+
+[components.llm]
+factory = "llm"
+
+[components.llm.task]
+@llm_tasks = "spacy.NER.v3"
+labels = ["PERSON", "ORGANISATION", "LOCATION"]
+
+[components.llm.model]
+@llm_models = "spacy.Dolly.v1"
+# For better performance, use dolly-v2-12b instead
+name = "dolly-v2-3b"
+```
+
+Now run:
+
+```python
+from spacy_llm.util import assemble
+
+nlp = assemble("config.cfg")
+doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
+print([(ent.text, ent.label_) for ent in doc.ents])
+```
+
+Note that Hugging Face will download the `"databricks/dolly-v2-3b"` model the
+first time you use it. You can
+[define the cached directory](https://huggingface.co/docs/huggingface_hub/main/en/guides/manage-cache)
+by setting the environmental variable `HF_HOME`. Also, you can upgrade the model
+to be `"databricks/dolly-v2-12b"` for better performance.
+
+### Example 3: Create the component directly in Python {id="example-3"}
+
+The `llm` component behaves as any other component does, and there are
+[task-specific components](/api/large-language-models#config) defined to help
+you hit the ground running with a reasonable built-in task implementation.
+
+```python
+import spacy
+
+nlp = spacy.blank("en")
+llm_ner = nlp.add_pipe("llm_ner")
+llm_ner.add_label("PERSON")
+llm_ner.add_label("LOCATION")
+nlp.initialize()
+doc = nlp("Jack and Jill rode up the hill in Les Deux Alpes")
+print([(ent.text, ent.label_) for ent in doc.ents])
+```
+
+Note that for efficient usage of resources, typically you would use
+[`nlp.pipe(docs)`](/api/language#pipe) with a batch, instead of calling
+`nlp(doc)` with a single document.
+
+### Example 4: Implement your own custom task {id="example-4"}
+
+To write a [`task`](#tasks), you need to implement two functions:
+`generate_prompts` that takes a list of [`Doc`](/api/doc) objects and transforms
+them into a list of prompts, and `parse_responses` that transforms the LLM
+outputs into annotations on the [`Doc`](/api/doc), e.g. entity spans, text
+categories and more.
+
+To register your custom task, decorate a factory function using the
+`spacy_llm.registry.llm_tasks` decorator with a custom name that you can refer
+to in your config.
+
+> 📖 For more details, see the
+> [**usage example on writing your own task**](https://github.com/explosion/spacy-llm/tree/main/usage_examples#writing-your-own-task)
+
+```python
+from typing import Iterable, List
+from spacy.tokens import Doc
+from spacy_llm.registry import registry
+from spacy_llm.util import split_labels
+
+
+@registry.llm_tasks("my_namespace.MyTask.v1")
+def make_my_task(labels: str, my_other_config_val: float) -> "MyTask":
+    labels_list = split_labels(labels)
+    return MyTask(labels=labels_list, my_other_config_val=my_other_config_val)
+
+
+class MyTask:
+    def __init__(self, labels: List[str], my_other_config_val: float):
+        ...
+
+    def generate_prompts(self, docs: Iterable[Doc]) -> Iterable[str]:
+        ...
+
+    def parse_responses(
+        self, docs: Iterable[Doc], responses: Iterable[str]
+    ) -> Iterable[Doc]:
+        ...
+```
+
+```ini
+# config.cfg (excerpt)
+[components.llm.task]
+@llm_tasks = "my_namespace.MyTask.v1"
+labels = LABEL1,LABEL2,LABEL3
+my_other_config_val = 0.3
+```
+
+## Logging {id="logging"}
+
+spacy-llm has a built-in logger that can log the prompt sent to the LLM as well
+as its raw response. This logger uses the debug level and by default has a
+`logging.NullHandler()` configured.
+
+In order to use this logger, you can setup a simple handler like this:
+
+```python
+import logging
+import spacy_llm
+
+
+spacy_llm.logger.addHandler(logging.StreamHandler())
+spacy_llm.logger.setLevel(logging.DEBUG)
+```
+
+> NOTE: Any `logging` handler will work here so you probably want to use some
+> sort of rotating `FileHandler` as the generated prompts can be quite long,
+> especially for tasks with few-shot examples.
+
+Then when using the pipeline you'll be able to view the prompt and response.
+
+E.g. with the config and code from [Example 1](#example-1) above:
+
+```python
+from spacy_llm.util import assemble
+
+
+nlp = assemble("config.cfg")
+doc = nlp("You look gorgeous!")
+print(doc.cats)
+```
+
+You will see `logging` output similar to:
+
+```
+Generated prompt for doc: You look gorgeous!
+
+You are an expert Text Classification system. Your task is to accept Text as input
+and provide a category for the text based on the predefined labels.
+
+Classify the text below to any of the following labels: COMPLIMENT, INSULT
+The task is non-exclusive, so you can provide more than one label as long as
+they're comma-delimited. For example: Label1, Label2, Label3.
+Do not put any other text in your answer, only one or more of the provided labels with nothing before or after.
+If the text cannot be classified into any of the provided labels, answer `==NONE==`.
+
+Here is the text that needs classification
+
+
+Text:
+'''
+You look gorgeous!
+'''
+
+Model response for doc: You look gorgeous!
+COMPLIMENT
+```
+
+`print(doc.cats)` to standard output should look like:
+
+```
+{'COMPLIMENT': 1.0, 'INSULT': 0.0}
+```
+
+## API {id="api"}
+
+`spacy-llm` exposes an `llm` factory with
+[configurable settings](/api/large-language-models#config).
+
+An `llm` component is defined by two main settings:
+
+- A [**task**](#tasks), defining the prompt to send to the LLM as well as the
+  functionality to parse the resulting response back into structured fields on
+  the [Doc](/api/doc) objects.
+- A [**model**](#models) defining the model to use and how to connect to it.
+  Note that `spacy-llm` supports both access to external APIs (such as OpenAI)
+  as well as access to self-hosted open-source LLMs (such as using Dolly through
+  Hugging Face).
+
+Moreover, `spacy-llm` exposes a customizable [**caching**](#cache) functionality
+to avoid running the same document through an LLM service (be it local or
+through a REST API) more than once.
+
+Finally, you can choose to save a stringified version of LLM prompts/responses
+within the `Doc.user_data["llm_io"]` attribute by setting `save_io` to `True`.
+`Doc.user_data["llm_io"]` is a dictionary containing one entry for every LLM
+component within the `nlp` pipeline. Each entry is itself a dictionary, with two
+keys: `prompt` and `response`.
+
+A note on `validate_types`: by default, `spacy-llm` checks whether the
+signatures of the `model` and `task` callables are consistent with each other
+and emits a warning if they don't. `validate_types` can be set to `False` if you
+want to disable this behavior.
+
+### Tasks {id="tasks"}
+
+A _task_ defines an NLP problem or question, that will be sent to the LLM via a
+prompt. Further, the task defines how to parse the LLM's responses back into
+structured information. All tasks are registered in the `llm_tasks` registry.
+
+Practically speaking, a task should adhere to the `Protocol` named `LLMTask`
+defined in
+[`ty.py`](https://github.com/explosion/spacy-llm/blob/main/spacy_llm/ty.py). It
+needs to define a `generate_prompts` function and a `parse_responses` function.
+
+Tasks may support prompt sharding (for more info see the API docs on
+[sharding](/api/large-language-models#task-sharding) and
+[non-sharding](/api/large-language-models#task-nonsharding) tasks). The function
+signatures for `generate_prompts` and `parse_responses` depend on whether they
+do.
+
+For tasks **not supporting** sharding:
+
+| Task                                                                                    | Description                                                                                                                                                  |     |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- |
+| [`task.generate_prompts`](/api/large-language-models#task-nonsharding-generate-prompts) | Takes a collection of documents, and returns a collection of prompts, which can be of type `Any`.                                                            |
+| [`task.parse_responses`](/api/large-language-models#task-nonsharding-parse-responses)   | Takes a collection of LLM responses and the original documents, parses the responses into structured information, and sets the annotations on the documents. |
+
+For tasks **supporting** sharding:
+
+| Task                                                                                 | Description                                                                                                                                                                                                                                                  |     |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- |
+| [`task.generate_prompts`](/api/large-language-models#task-sharding-generate-prompts) | Takes a collection of documents, and returns a collection of collections of prompt shards, which can be of type `Any`.                                                                                                                                       |
+| [`task.parse_responses`](/api/large-language-models#task-sharding-parse-responses)   | Takes a collection of collections of LLM responses (one per prompt shard) and the original documents, parses the responses into structured information, sets the annotations on the doc shards, and merges those doc shards back into a single doc instance. |
+
+Moreover, the task may define an optional [`scorer` method](/api/scorer#score).
+It should accept an iterable of `Example` objects as input and return a score
+dictionary. If the `scorer` method is defined, `spacy-llm` will call it to
+evaluate the component.
+
+| Component                                                               | Description                                                                                                       |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [`spacy.EntityLinker.v1`](/api/large-language-models#el-v1)             | The entity linking task prompts the model to link all entities in a given text to entries in a knowledge base.    |
+| [`spacy.Summarization.v1`](/api/large-language-models#summarization-v1) | The summarization task prompts the model for a concise summary of the provided text.                              |
+| [`spacy.NER.v3`](/api/large-language-models#ner-v3)                     | Implements Chain-of-Thought reasoning for NER extraction - obtains higher accuracy than v1 or v2.                 |
+| [`spacy.NER.v2`](/api/large-language-models#ner-v2)                     | Builds on v1 and additionally supports defining the provided labels with explicit descriptions.                   |
+| [`spacy.NER.v1`](/api/large-language-models#ner-v1)                     | The original version of the built-in NER task supports both zero-shot and few-shot prompting.                     |
+| [`spacy.SpanCat.v3`](/api/large-language-models#spancat-v3)             | Adaptation of the v3 NER task to support overlapping entities and store its annotations in `doc.spans`.           |
+| [`spacy.SpanCat.v2`](/api/large-language-models#spancat-v2)             | Adaptation of the v2 NER task to support overlapping entities and store its annotations in `doc.spans`.           |
+| [`spacy.SpanCat.v1`](/api/large-language-models#spancat-v1)             | Adaptation of the v1 NER task to support overlapping entities and store its annotations in `doc.spans`.           |
+| [`spacy.REL.v1`](/api/large-language-models#rel-v1)                     | Relation Extraction task supporting both zero-shot and few-shot prompting.                                        |
+| [`spacy.TextCat.v3`](/api/large-language-models#textcat-v3)             | Version 3 builds on v2 and allows setting definitions of labels.                                                  |
+| [`spacy.TextCat.v2`](/api/large-language-models#textcat-v2)             | Version 2 builds on v1 and includes an improved prompt template.                                                  |
+| [`spacy.TextCat.v1`](/api/large-language-models#textcat-v1)             | Version 1 of the built-in TextCat task supports both zero-shot and few-shot prompting.                            |
+| [`spacy.Lemma.v1`](/api/large-language-models#lemma-v1)                 | Lemmatizes the provided text and updates the `lemma_` attribute of the tokens accordingly.                        |
+| [`spacy.Raw.v1`](/api/large-language-models#raw-v1)                     | Executes raw doc content as prompt to LLM.                                                                        |
+| [`spacy.Sentiment.v1`](/api/large-language-models#sentiment-v1)         | Performs sentiment analysis on provided texts.                                                                    |
+| [`spacy.Translation.v1`](/api/large-language-models#translation-v1)     | Translates doc content into the specified target language.                                                        |
+| [`spacy.NoOp.v1`](/api/large-language-models#noop-v1)                   | This task is only useful for testing - it tells the LLM to do nothing, and does not set any fields on the `docs`. |
+
+#### Providing examples for few-shot prompts {id="few-shot-prompts"}
+
+All built-in tasks support few-shot prompts, i. e. including examples in a
+prompt. Examples can be supplied in two ways: (1) as a separate file containing
+only examples or (2) by initializing `llm` with a `get_examples()` callback
+(like any other pipeline component).
+
+##### (1) Few-shot example file
+
+A file containing examples for few-shot prompting can be configured like this:
+
+```ini
+[components.llm.task]
+@llm_tasks = "spacy.NER.v2"
+labels = PERSON,ORGANISATION,LOCATION
+[components.llm.task.examples]
+@misc = "spacy.FewShotReader.v1"
+path = "ner_examples.yml"
+```
+
+The supplied file has to conform to the format expected by the required task
+(see the task documentation further down).
+
+##### (2) Initializing the `llm` component with a `get_examples()` callback
+
+Alternatively, you can initialize your `nlp` pipeline by providing a
+`get_examples` callback for [`nlp.initialize`](/api/language#initialize) and
+setting `n_prompt_examples` to a positive number to automatically fetch a few
+examples for few-shot learning. Set `n_prompt_examples` to `-1` to use all
+examples as part of the few-shot learning prompt.
+
+```ini
+[initialize.components.llm]
+n_prompt_examples = 3
+```
+
+### Model {id="models"}
+
+A _model_ defines which LLM model to query, and how to query it. It can be a
+simple function taking a collection of prompts (consistent with the output type
+of `task.generate_prompts()`) and returning a collection of responses
+(consistent with the expected input of `parse_responses`). Generally speaking,
+it's a function of type `Callable[[Iterable[Any]], Iterable[Any]]`, but specific
+implementations can have other signatures, like
+`Callable[[Iterable[str]], Iterable[str]]`.
+
+All built-in models are registered in `llm_models`. If no model is specified,
+the repo currently connects to the `OpenAI` API by default using REST, and
+accesses the `"gpt-3.5-turbo"` model.
+
+Currently three different approaches to use LLMs are supported:
+
+1. `spacy-llm`s native REST interface. This is the default for all hosted models
+   (e. g. OpenAI, Cohere, Anthropic, ...).
+2. A HuggingFace integration that allows to run a limited set of HF models
+   locally.
+3. A LangChain integration that allows to run any model supported by LangChain
+   (hosted or locally).
+
+Approaches 1. and 2 are the default for hosted model and local models,
+respectively. Alternatively you can use LangChain to access hosted or local
+models by specifying one of the models registered with the `langchain.` prefix.
+
+<Infobox>
+_Why LangChain if there are also are native REST and HuggingFace interfaces? When should I use what?_
+
+Third-party libraries like `langchain` focus on prompt management, integration
+of many different LLM APIs, and other related features such as conversational
+memory or agents. `spacy-llm` on the other hand emphasizes features we consider
+useful in the context of NLP pipelines utilizing LLMs to process documents
+(mostly) independent from each other. It makes sense that the feature sets of
+such third-party libraries and `spacy-llm` aren't identical - and users might
+want to take advantage of features not available in `spacy-llm`.
+
+The advantage of implementing our own REST and HuggingFace integrations is that
+we can ensure a larger degree of stability and robustness, as we can guarantee
+backwards-compatibility and more smoothly integrated error handling.
+
+If however there are features or APIs not natively covered by `spacy-llm`, it's
+trivial to utilize LangChain to cover this - and easy to customize the prompting
+mechanism, if so required.
+
+</Infobox>
+
+<Infobox variant="warning">
+Note that when using hosted services, you have to ensure that the [proper API
+keys](/api/large-language-models#api-keys) are set as environment variables as described by the corresponding
+provider's documentation.
+
+</Infobox>
+
+| Model                                                                   | Description                                    |
+| ----------------------------------------------------------------------- | ---------------------------------------------- |
+| [`spacy.GPT-4.v2`](/api/large-language-models#models-rest)              | OpenAI’s `gpt-4` model family.                 |
+| [`spacy.GPT-3-5.v2`](/api/large-language-models#models-rest)            | OpenAI’s `gpt-3-5` model family.               |
+| [`spacy.Text-Davinci.v2`](/api/large-language-models#models-rest)       | OpenAI’s `text-davinci` model family.          |
+| [`spacy.Code-Davinci.v2`](/api/large-language-models#models-rest)       | OpenAI’s `code-davinci` model family.          |
+| [`spacy.Text-Curie.v2`](/api/large-language-models#models-rest)         | OpenAI’s `text-curie` model family.            |
+| [`spacy.Text-Babbage.v2`](/api/large-language-models#models-rest)       | OpenAI’s `text-babbage` model family.          |
+| [`spacy.Text-Ada.v2`](/api/large-language-models#models-rest)           | OpenAI’s `text-ada` model family.              |
+| [`spacy.Davinci.v2`](/api/large-language-models#models-rest)            | OpenAI’s `davinci` model family.               |
+| [`spacy.Curie.v2`](/api/large-language-models#models-rest)              | OpenAI’s `curie` model family.                 |
+| [`spacy.Babbage.v2`](/api/large-language-models#models-rest)            | OpenAI’s `babbage` model family.               |
+| [`spacy.Ada.v2`](/api/large-language-models#models-rest)                | OpenAI’s `ada` model family.                   |
+| [`spacy.Azure.v1`](/api/large-language-models#models-rest)              | Azure's OpenAI models.                         |
+| [`spacy.Command.v1`](/api/large-language-models#models-rest)            | Cohere’s `command` model family.               |
+| [`spacy.Claude-2.v1`](/api/large-language-models#models-rest)           | Anthropic’s `claude-2` model family.           |
+| [`spacy.Claude-1.v1`](/api/large-language-models#models-rest)           | Anthropic’s `claude-1` model family.           |
+| [`spacy.Claude-instant-1.v1`](/api/large-language-models#models-rest)   | Anthropic’s `claude-instant-1` model family.   |
+| [`spacy.Claude-instant-1-1.v1`](/api/large-language-models#models-rest) | Anthropic’s `claude-instant-1.1` model family. |
+| [`spacy.Claude-1-0.v1`](/api/large-language-models#models-rest)         | Anthropic’s `claude-1.0` model family.         |
+| [`spacy.Claude-1-2.v1`](/api/large-language-models#models-rest)         | Anthropic’s `claude-1.2` model family.         |
+| [`spacy.Claude-1-3.v1`](/api/large-language-models#models-rest)         | Anthropic’s `claude-1.3` model family.         |
+| [`spacy.PaLM.v1`](/api/large-language-models#models-rest)               | Google’s `PaLM` model family.                  |
+| [`spacy.Dolly.v1`](/api/large-language-models#models-hf)                | Dolly models through HuggingFace.              |
+| [`spacy.Falcon.v1`](/api/large-language-models#models-hf)               | Falcon models through HuggingFace.             |
+| [`spacy.Mistral.v1`](/api/large-language-models#models-hf)              | Mistral models through HuggingFace.            |
+| [`spacy.Llama2.v1`](/api/large-language-models#models-hf)               | Llama2 models through HuggingFace.             |
+| [`spacy.StableLM.v1`](/api/large-language-models#models-hf)             | StableLM models through HuggingFace.           |
+| [`spacy.OpenLLaMA.v1`](/api/large-language-models#models-hf)            | OpenLLaMA models through HuggingFace.          |
+| [LangChain models](/api/large-language-models#langchain-models)         | LangChain models for API retrieval.            |
+
+Note that the chat models variants of Llama 2 are currently not supported. This
+is because they need a particular prompting setup and don't add any discernible
+benefits in the use case of `spacy-llm` (i. e. no interactive chat) compared to
+the completion model variants.
+
+### Cache {id="cache"}
+
+Interacting with LLMs, either through an external API or a local instance, is
+costly. Since developing an NLP pipeline generally means a lot of exploration
+and prototyping, `spacy-llm` implements a built-in
+[cache](/api/large-language-models#cache) to avoid reprocessing the same
+documents at each run that keeps batches of documents stored on disk.
+
+### Various functions {id="various-functions"}
+
+| Function                                                                | Description                                                                                                                                                                                                                                                                          |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`spacy.FewShotReader.v1`](/api/large-language-models#fewshotreader-v1) | This function is registered in spaCy's `misc` registry, and reads in examples from a `.yml`, `.yaml`, `.json` or `.jsonl` file. It uses [`srsly`](https://github.com/explosion/srsly) to read in these files and parses them depending on the file extension.                        |
+| [`spacy.FileReader.v1`](/api/large-language-models#filereader-v1)       | This function is registered in spaCy's `misc` registry, and reads a file provided to the `path` to return a `str` representation of its contents. This function is typically used to read [Jinja](https://jinja.palletsprojects.com/en/3.1.x/) files containing the prompt template. |
+| [Normalizer functions](/api/large-language-models#normalizer-functions) | These functions provide simple normalizations for string comparisons, e.g. between a list of specified labels and a label given in the raw text of the LLM response.                                                                                                                 |

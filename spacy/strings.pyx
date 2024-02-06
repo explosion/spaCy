@@ -1,4 +1,5 @@
 # cython: infer_types=True
+# cython: profile=False
 from typing import Iterable, Iterator, List, Optional, Tuple, Union
 
 from libc.stdint cimport uint32_t

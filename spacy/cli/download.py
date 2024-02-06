@@ -10,6 +10,8 @@ from ..util import (
     get_installed_models,
     get_minor_version,
     get_package_version,
+    is_in_interactive,
+    is_in_jupyter,
     is_package,
     is_prerelease_version,
     run_command,
@@ -85,6 +87,27 @@ def download(
         "Download and installation successful",
         f"You can now load the package via spacy.load('{model_name}')",
     )
+    if is_in_jupyter():
+        reload_deps_msg = (
+            "If you are in a Jupyter or Colab notebook, you may need to "
+            "restart Python in order to load all the package's dependencies. "
+            "You can do this by selecting the 'Restart kernel' or 'Restart "
+            "runtime' option."
+        )
+        msg.warn(
+            "Restart to reload dependencies",
+            reload_deps_msg,
+        )
+    elif is_in_interactive():
+        reload_deps_msg = (
+            "If you are in an interactive Python session, you may need to "
+            "exit and restart Python to load all the package's dependencies. "
+            "You can exit with Ctrl-D (or Ctrl-Z and Enter on Windows)."
+        )
+        msg.warn(
+            "Restart to reload dependencies",
+            reload_deps_msg,
+        )
 
 
 def get_model_filename(model_name: str, version: str, sdist: bool = False) -> str:

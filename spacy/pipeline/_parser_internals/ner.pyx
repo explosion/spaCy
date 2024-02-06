@@ -1,3 +1,4 @@
+# cython: profile=False
 from cymem.cymem cimport Pool
 from libcpp.memory cimport shared_ptr
 from libcpp.vector cimport vector
@@ -306,8 +307,6 @@ cdef class BiluoPushDown(TransitionSystem):
             for span in eg.y.spans.get(neg_key, []):
                 if span.start >= start and span.end <= end:
                     return True
-        if end is not None and end < 0:
-            end = None
         for word in eg.y[start:end]:
             if word.ent_iob != 0:
                 return True

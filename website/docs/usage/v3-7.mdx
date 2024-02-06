@@ -1,0 +1,140 @@
+---
+title: What's New in v3.7
+teaser: New features and how to upgrade
+menu:
+  - ['New Features', 'features']
+  - ['Upgrading Notes', 'upgrading']
+---
+
+## New features {id="features",hidden="true"}
+
+spaCy v3.7 adds support for Python 3.12, introduces the new standalone library
+[Weasel](https://github.com/explosion/weasel) for project workflows, and updates
+the transformer-based trained pipelines to use our new
+[Curated Transformers](https://github.com/explosion/curated-transformers)
+library.
+
+This release drops support for Python 3.6.
+
+### Weasel {id="weasel"}
+
+The [spaCy projects](/usage/projects) functionality has been moved into a new
+standalone library [Weasel](https://github.com/explosion/weasel). This brings
+minor changes to spaCy-specific settings in spaCy projects (see
+[upgrading](#upgrading) below), but also makes it possible to use the same
+workflow functionality outside of spaCy.
+
+All `spacy project` commands should run as before, just now they're using Weasel
+under the hood.
+
+<Infobox title="Remote storage for Python 3.12" variant="warning">
+
+Remote storage for spaCy projects is not yet supported for Python 3.12. Use
+Python 3.11 or earlier for remote storage.
+
+</Infobox>
+
+### Registered vectors {id="custom-vectors"}
+
+You can specify a custom registered vectors class under `[nlp.vectors]` in order
+to use static vectors in formats other than the ones supported by
+[`Vectors`](/api/vectors). To implement your custom vectors, extend the abstract
+class [`BaseVectors`](/api/basevectors). See an example using
+[BPEmb subword embeddings](/usage/embeddings-transformers#custom-vectors).
+
+### Additional features and improvements {id="additional-features-and-improvements"}
+
+- Add support for Python 3.12.
+- Extend to Thinc v8.2.
+- Extend `transformers` extra to `spacy-transformers` v1.3.
+- Add `--spans-key` option for CLI evaluation with `spacy benchmark accuracy`.
+- Load the CLI module lazily for `spacy.info`.
+- Add type stubs for for `spacy.training.example`.
+- Warn for unsupported pattern keys in dependency matcher.
+- `Language.replace_listeners`: Pass the replaced listener and the `tok2vec`
+  pipe to the callback in order to support `spacy-curated-transformers`.
+- Always use `tqdm` with `disable=None` in order to disable output in
+  non-interactive environments.
+- Language updates:
+  - Add left and right pointing angle brackets as punctuation to ancient Greek.
+  - Update example sentences for Turkish.
+- Package setup updates:
+  - Update NumPy build constraints for NumPy 1.25+. For Python 3.9+, it is no
+    longer necessary to set build constraints while building binary wheels.
+  - Refactor Cython profiling in order to disable profiling for Python 3.12 in
+    the package setup, since Cython does not currently support profiling for
+    Python 3.12.
+
+## Trained pipelines {id="pipelines"}
+
+### Pipeline updates {id="pipeline-updates"}
+
+The transformer-based `trf` pipelines have been updated to use our new
+[Curated Transformers](https://github.com/explosion/curated-transformers)
+library using the Thinc model wrappers and pipeline component from
+[spaCy Curated Transformers](https://github.com/explosion/spacy-curated-transformers).
+
+## Notes about upgrading from v3.6 {id="upgrading"}
+
+This release drops support for Python 3.6, drops mypy checks for Python 3.7 and
+removes the `ray` extra. In addition there are several minor changes for spaCy
+projects described in the following section.
+
+### Backwards incompatibilities for spaCy Projects {id="upgrading-projects"}
+
+`spacy project` has a few backwards incompatibilities due to the transition to
+the standalone library [Weasel](https://github.com/explosion/weasel), which is
+not as tightly coupled to spaCy. Weasel produces warnings when it detects older
+spaCy-specific settings in your environment or project config.
+
+- Support for the `spacy_version` configuration key has been dropped.
+- Support for the `check_requirements` configuration key has been dropped due to
+  the deprecation of `pkg_resources`.
+- The `SPACY_CONFIG_OVERRIDES` environment variable is no longer checked. You
+  can set configuration overrides using `WEASEL_CONFIG_OVERRIDES`.
+- Support for `SPACY_PROJECT_USE_GIT_VERSION` environment variable has been
+  dropped.
+- Error codes are now Weasel-specific and do not follow spaCy error codes.
+
+### Pipeline package version compatibility {id="version-compat"}
+
+> #### Using legacy implementations
+>
+> In spaCy v3, you'll still be able to load and reference legacy implementations
+> via [`spacy-legacy`](https://github.com/explosion/spacy-legacy), even if the
+> components or architectures change and newer versions are available in the
+> core library.
+
+When you're loading a pipeline package trained with an earlier version of spaCy
+v3, you will see a warning telling you that the pipeline may be incompatible.
+This doesn't necessarily have to be true, but we recommend running your
+pipelines against your test suite or evaluation data to make sure there are no
+unexpected results.
+
+If you're using one of the [trained pipelines](/models) we provide, you should
+run [`spacy download`](/api/cli#download) to update to the latest version. To
+see an overview of all installed packages and their compatibility, you can run
+[`spacy validate`](/api/cli#validate).
+
+If you've trained your own custom pipeline and you've confirmed that it's still
+working as expected, you can update the spaCy version requirements in the
+[`meta.json`](/api/data-formats#meta):
+
+```diff
+- "spacy_version": ">=3.6.0,<3.7.0",
++ "spacy_version": ">=3.6.0,<3.8.0",
+```
+
+### Updating v3.6 configs
+
+To update a config from spaCy v3.6 with the new v3.7 settings, run
+[`init fill-config`](/api/cli#init-fill-config):
+
+```cli
+$ python -m spacy init fill-config config-v3.6.cfg config-v3.7.cfg
+```
+
+In many cases ([`spacy train`](/api/cli#train),
+[`spacy.load`](/api/top-level#spacy.load)), the new defaults will be filled in
+automatically, but you'll need to fill in the new settings to run
+[`debug config`](/api/cli#debug) and [`debug data`](/api/cli#debug-data).

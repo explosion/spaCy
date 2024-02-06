@@ -1,3 +1,4 @@
+# cython: profile=False
 from .errors import Errors
 
 IOB_STRINGS = ("", "I", "O", "B")

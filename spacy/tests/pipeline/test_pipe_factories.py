@@ -1,5 +1,10 @@
 import pytest
-from pydantic import StrictInt, StrictStr
+
+try:
+    from pydantic.v1 import StrictInt, StrictStr
+except ImportError:
+    from pydantic import StrictInt, StrictStr  # type: ignore
+
 from thinc.api import ConfigValidationError, Linear, Model
 
 import spacy
@@ -198,7 +203,7 @@ def test_pipe_class_component_model():
             "@architectures": "spacy.TextCatEnsemble.v2",
             "tok2vec": DEFAULT_TOK2VEC_MODEL,
             "linear_model": {
-                "@architectures": "spacy.TextCatBOW.v2",
+                "@architectures": "spacy.TextCatBOW.v3",
                 "exclusive_classes": False,
                 "ngram_size": 1,
                 "no_output_layer": False,

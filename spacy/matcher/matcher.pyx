@@ -1,4 +1,4 @@
-# cython: binding=True, infer_types=True, profile=True
+# cython: binding=True, infer_types=True
 from typing import Iterable, List
 
 from cymem.cymem cimport Pool
