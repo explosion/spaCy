@@ -21,6 +21,9 @@ from ...util import registry
 from ...vocab import Vocab
 from ..extract_spans import extract_spans
 
+CandidatesForMentionT = Iterable[Candidate]
+CandidatesForDocT = Iterable[CandidatesForMentionT]
+
 
 @registry.architectures("spacy.EntityLinker.v2")
 def build_nel_encoder(
@@ -118,8 +121,7 @@ def empty_kb(
 
 @registry.misc("spacy.CandidateGenerator.v1")
 def create_get_candidates() -> Callable[
-    [KnowledgeBase, Iterator[SpanGroup]],
-    Iterator[Iterable[Iterable[Candidate]]],
+    [KnowledgeBase, Iterator[SpanGroup]], Iterator[CandidatesForDocT]
 ]:
     return get_candidates
 

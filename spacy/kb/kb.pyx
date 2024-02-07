@@ -36,9 +36,10 @@ cdef class KnowledgeBase:
 
     def get_candidates(self, mentions: Iterator[SpanGroup]) -> Iterator[CandidatesForDocT]:
         """
-        Return candidate entities for a specified Span mention. Each candidate defines at least the entity and the
-        entity's embedding vector. Depending on the KB implementation, further properties - such as the prior
-        probability of the specified mention text resolving to that entity - might be included.
+        Return candidate entities for the specified groups of mentions (as SpanGroup) per Doc.
+        Each candidate for a mention defines at least the entity and the entity's embedding vector. Depending on the KB
+        implementation, further properties - such as the prior probability of the specified mention text resolving to
+        that entity - might be included.
         If no candidates are found for a given mention, an empty list is returned.
         mentions (Iterator[SpanGroup]): Mentions for which to get candidates.
         RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per mention/doc/doc batch.
