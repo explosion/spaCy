@@ -25,6 +25,8 @@ from spacy.cli.debug_data import (
     _get_spans_length_freq_dist,
     _print_span_characteristics,
 )
+
+from spacy.cli import download_module
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.evaluate import render_parses
 from spacy.cli.find_threshold import find_threshold
@@ -1066,3 +1068,15 @@ def test_debug_data_trainable_lemmatizer_not_annotated():
 def test_project_api_imports():
     from spacy.cli import project_run
     from spacy.cli.project.run import project_run  # noqa: F401, F811
+
+
+def test_download_rejects_relative_urls(monkeypatch):
+    """Test that we can't tell spacy download to get an arbitrary model by using a
+    relative path in the filename"""
+
+    monkeypatch.setattr(download_module, "run_command", lambda cmd: None)
+
+    # Check that normal download works
+    download_module.download("en_core_web_sm-3.7.1", direct=True)
+    with pytest.raises(SystemExit):
+        download_module.download("../en_core_web_sm-3.7.1", direct=True)
