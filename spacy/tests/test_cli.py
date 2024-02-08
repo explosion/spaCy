@@ -12,7 +12,7 @@ from thinc.api import Config
 
 import spacy
 from spacy import about
-from spacy.cli import info
+from spacy.cli import download_module, info
 from spacy.cli._util import parse_config_overrides, string_to_list, walk_directory
 from spacy.cli.apply import apply
 from spacy.cli.debug_data import (
@@ -25,8 +25,6 @@ from spacy.cli.debug_data import (
     _get_spans_length_freq_dist,
     _print_span_characteristics,
 )
-
-from spacy.cli import download_module
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.evaluate import render_parses
 from spacy.cli.find_threshold import find_threshold

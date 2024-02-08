@@ -1,10 +1,10 @@
 import sys
 from typing import Optional, Sequence
+from urllib.parse import urljoin
 
 import requests
 import typer
 from wasabi import msg
-from urllib.parse import urljoin
 
 from .. import about
 from ..errors import OLD_MODEL_SHORTCUTS
