@@ -526,12 +526,16 @@ application's `requirements.txt`. If you're running your own internal PyPi
 installation, you can upload the pipeline packages there. pip's
 [requirements file format](https://pip.pypa.io/en/latest/reference/requirements-file-format/)
 supports both package names to download via a PyPi server, as well as
-[direct URLs](#pipeline-urls).
+[direct URLs](#pipeline-urls). For instance, you can specify the
+`en_core_web_sm` model for spaCy 3.7.x as follows:
 
 ```text {title="requirements.txt"}
 spacy>=3.0.0,<4.0.0
-en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.4.0/en_core_web_sm-3.4.0-py3-none-any.whl
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
 ```
+
+See the [list of models](https://spacy.io/models) for model download links for
+the current spaCy version.
 
 All pipeline packages are versioned and specify their spaCy dependency. This
 ensures cross-compatibility and lets you specify exact version requirements for
