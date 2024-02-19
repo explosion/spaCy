@@ -139,7 +139,7 @@ def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
     RETURNS (Iterable[Candidate]): Identified candidates for specified mention.
     """
     return next(
-        next(get_candidates_v2(kb, iter([SpanGroup(mention.doc, spans=[mention])])))[0]
+        next(get_candidates_v2(kb, iter([SpanGroup(mention.doc, spans=[mention])])))[0]  # type: ignore[index]
     )
 
 
