@@ -453,10 +453,13 @@ def test_candidate_generation(nlp):
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
-    adam_ent_cands = next(get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[adam_ent])))[0]
+    adam_ent_cands = next(
+        get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[adam_ent]))
+    )[0]
     assert len(adam_ent_cands) == 1
     assert (
-        len(next(get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[douglas_ent])))[0]) == 2
+        len(next(get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[douglas_ent])))[0])
+        == 2
     )
     assert (
         len(next(get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[Adam_ent])))[0]) == 0
