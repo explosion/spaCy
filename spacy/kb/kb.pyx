@@ -1,14 +1,14 @@
 # cython: infer_types=True
 
 from pathlib import Path
-from typing import Iterable, Tuple, Union
+from typing import Iterable, Iterator, Tuple, Union
 
 from cymem.cymem cimport Pool
 
 from ..errors import Errors
-from ..tokens import Span, SpanGroup
+from ..tokens import SpanGroup
 from ..util import SimpleFrozenList
-from .candidate import Candidate
+from .candidate cimport Candidate
 
 
 cdef class KnowledgeBase:
@@ -19,6 +19,8 @@ cdef class KnowledgeBase:
 
     DOCS: https://spacy.io/api/kb
     """
+    CandidatesForMentionT = Iterable[Candidate]
+    CandidatesForDocT = Iterable[CandidatesForMentionT]
 
     def __init__(self, vocab: Vocab, entity_vector_length: int):
         """Create a KnowledgeBase."""
@@ -32,27 +34,15 @@ cdef class KnowledgeBase:
         self.entity_vector_length = entity_vector_length
         self.mem = Pool()
 
-    def get_candidates_batch(
-            self, mentions: SpanGroup
-    ) -> Iterable[Iterable[Candidate]]:
+    def get_candidates(self, mentions: Iterator[SpanGroup]) -> Iterator[CandidatesForDocT]:
         """
-        Return candidate entities for a specified Span mention. Each candidate defines at least the entity and the
-        entity's embedding vector. Depending on the KB implementation, further properties - such as the prior
-        probability of the specified mention text resolving to that entity - might be included.
+        Return candidate entities for the specified groups of mentions (as SpanGroup) per Doc.
+        Each candidate for a mention defines at least the entity and the entity's embedding vector. Depending on the KB
+        implementation, further properties - such as the prior probability of the specified mention text resolving to
+        that entity - might be included.
         If no candidates are found for a given mention, an empty list is returned.
-        mentions (SpanGroup): Mentions for which to get candidates.
-        RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
-        """
-        return [self.get_candidates(span) for span in mentions]
-
-    def get_candidates(self, mention: Span) -> Iterable[Candidate]:
-        """
-        Return candidate entities for a specific mention. Each candidate defines at least the entity and the
-        entity's embedding vector. Depending on the KB implementation, further properties - such as the prior
-        probability of the specified mention text resolving to that entity - might be included.
-        If no candidate is found for the given mention, an empty list is returned.
-        mention (Span): Mention for which to get candidates.
-        RETURNS (Iterable[Candidate]): Identified candidates.
+        mentions (Iterator[SpanGroup]): Mentions for which to get candidates.
+        RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per mention/doc/doc batch.
         """
         raise NotImplementedError(
             Errors.E1045.format(

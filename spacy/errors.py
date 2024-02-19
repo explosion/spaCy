@@ -950,7 +950,6 @@ class Errors(metaclass=ErrorsWithCodes):
              "case pass an empty list for the previously not specified argument to avoid this error.")
     E1043 = ("Expected None or a value in range [{range_start}, {range_end}] for entity linker threshold, but got "
              "{value}.")
-    E1044 = ("Expected `candidates_batch_size` to be >= 1, but got: {value}")
     E1045 = ("Encountered {parent} subclass without `{parent}.{method}` "
              "method in '{name}'. If you want to use this method, make "
              "sure it's overwritten on the subclass.")

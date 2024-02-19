@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Callable, Iterable, Iterator, List, Optional, Tuple
 
 from thinc.api import (
     Linear,
@@ -20,6 +20,9 @@ from ...tokens import Doc, Span, SpanGroup
 from ...util import registry
 from ...vocab import Vocab
 from ..extract_spans import extract_spans
+
+CandidatesForMentionT = Iterable[Candidate]
+CandidatesForDocT = Iterable[CandidatesForMentionT]
 
 
 @registry.architectures("spacy.EntityLinker.v2")
@@ -117,34 +120,38 @@ def empty_kb(
 
 
 @registry.misc("spacy.CandidateGenerator.v1")
-def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
+def create_get_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
     return get_candidates
 
 
-@registry.misc("spacy.CandidateBatchGenerator.v1")
-def create_candidates_batch() -> Callable[
-    [KnowledgeBase, SpanGroup], Iterable[Iterable[Candidate]]
+@registry.misc("spacy.CandidateGenerator.v2")
+def create_get_candidates_v2() -> Callable[
+    [KnowledgeBase, Iterator[SpanGroup]], Iterator[CandidatesForDocT]
 ]:
-    return get_candidates_batch
+    return get_candidates_v2
 
 
 def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
     """
-    Return candidate entities for a given mention and fetching appropriate entries from the index.
+    Return candidate entities for the given mention from the KB.
     kb (KnowledgeBase): Knowledge base to query.
-    mention (Span): Entity mention for which to identify candidates.
-    RETURNS (Iterable[Candidate]): Identified candidates.
+    mention (Span): Entity mention.
+    RETURNS (Iterable[Candidate]): Identified candidates for specified mention.
     """
-    return kb.get_candidates(mention)
+    cands_per_doc = next(
+        get_candidates_v2(kb, iter([SpanGroup(mention.doc, spans=[mention])]))
+    )
+    assert isinstance(cands_per_doc, list)
+    return next(cands_per_doc[0])
 
 
-def get_candidates_batch(
-    kb: KnowledgeBase, mentions: SpanGroup
-) -> Iterable[Iterable[Candidate]]:
+def get_candidates_v2(
+    kb: KnowledgeBase, mentions: Iterator[SpanGroup]
+) -> Iterator[Iterable[Iterable[Candidate]]]:
     """
-    Return candidate entities for the given mentions and fetching appropriate entries from the index.
+    Return candidate entities for the given mentions from the KB.
     kb (KnowledgeBase): Knowledge base to query.
-    mentions (SpanGroup): Entity mentions for which to identify candidates.
-    RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
+    mentions (Iterator[SpanGroup]): Mentions per doc.
+    RETURNS (Iterator[Iterable[Iterable[Candidate]]]): Identified candidates per mentions in document/SpanGroup.
     """
-    return kb.get_candidates_batch(mentions)
+    return kb.get_candidates(mentions)

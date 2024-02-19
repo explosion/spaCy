@@ -1,21 +1,21 @@
-from typing import Any, Callable, Dict, Iterable, cast
+from typing import Any, Callable, Dict, Iterable, Iterator, cast
 
 import pytest
 from numpy.testing import assert_equal
 from thinc.types import Ragged
 
-from spacy import Language, registry, util
+from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
 from spacy.kb import Candidate, InMemoryLookupKB, KnowledgeBase
 from spacy.lang.en import English
 from spacy.ml import load_kb
-from spacy.ml.models.entity_linker import build_span_maker, get_candidates
+from spacy.ml.models.entity_linker import build_span_maker, get_candidates_v2
 from spacy.pipeline import EntityLinker, TrainablePipe
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
 from spacy.tests.util import make_tempdir
-from spacy.tokens import Doc, Span
+from spacy.tokens import Doc, Span, SpanGroup
 from spacy.training import Example
 from spacy.util import ensure_path
 from spacy.vocab import Vocab
@@ -453,17 +453,107 @@ def test_candidate_generation(nlp):
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
-    adam_ent_cands = get_candidates(mykb, adam_ent)
-    assert len(get_candidates(mykb, douglas_ent)) == 2
+    adam_ent_cands = next(
+        get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[adam_ent]))
+    )[0]
     assert len(adam_ent_cands) == 1
-    assert len(get_candidates(mykb, Adam_ent)) == 0  # default case sensitive
-    assert len(get_candidates(mykb, shrubbery_ent)) == 0
+    assert (
+        len(next(get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[douglas_ent])))[0])
+        == 2
+    )
+    assert (
+        len(next(get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[Adam_ent])))[0]) == 0
+    )  # default case sensitive
+    assert (
+        len(next(get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[shrubbery_ent])))[0])
+        == 0
+    )
 
     # test the content of the candidates
     assert adam_ent_cands[0].entity_id_ == "Q2"
     assert adam_ent_cands[0].alias == "adam"
     assert_almost_equal(adam_ent_cands[0].entity_freq, 12)
     assert_almost_equal(adam_ent_cands[0].prior_prob, 0.9)
+
+
+def test_candidate_generation_multiple_docs(nlp):
+    """Test correct candidate generation with multiple docs."""
+    mykb = InMemoryLookupKB(nlp.vocab, entity_vector_length=1)
+    docs = [nlp("douglas adam Adam shrubbery"), nlp("shrubbery Adam douglas adam")]
+
+    douglas_ents = [docs[0][0:1], docs[1][2:3]]
+    adam_ents = [docs[0][1:2], docs[1][3:4]]
+    Adam_ents = [docs[0][2:3], docs[1][1:2]]
+    shrubbery_ents = [docs[0][3:4], docs[1][0:1]]
+
+    # adding entities
+    mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
+    mykb.add_entity(entity="Q2", freq=12, entity_vector=[2])
+    mykb.add_entity(entity="Q3", freq=5, entity_vector=[3])
+
+    # adding aliases
+    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.1])
+    mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
+
+    # test the size of the relevant candidates
+    adam_ent_cands = list(
+        get_candidates_v2(
+            mykb,
+            [
+                SpanGroup(doc=docs[0], spans=[adam_ents[0]]),
+                SpanGroup(doc=docs[1], spans=[adam_ents[1]]),
+            ],
+        )
+    )
+    assert len(adam_ent_cands) == 2
+    assert (
+        len(
+            list(
+                get_candidates_v2(
+                    mykb,
+                    [
+                        SpanGroup(doc=docs[0], spans=[douglas_ents[0]]),
+                        SpanGroup(doc=docs[1], spans=[douglas_ents[1]]),
+                    ],
+                )
+            )
+        )
+        == 2
+    )
+    Adam_ent_cands = list(
+        get_candidates_v2(
+            mykb,
+            [
+                SpanGroup(doc=docs[0], spans=[Adam_ents[0]]),
+                SpanGroup(doc=docs[1], spans=[Adam_ents[1]]),
+            ],
+        )
+    )
+    assert len(Adam_ent_cands) == 2
+    assert (
+        len(Adam_ent_cands[0][0]) == 0 and len(Adam_ent_cands[1][0]) == 0
+    )  # default case sensitive
+    shrubbery_ents_cands = list(
+        get_candidates_v2(
+            mykb,
+            [
+                SpanGroup(doc=docs[0], spans=[shrubbery_ents[0]]),
+                SpanGroup(doc=docs[1], spans=[shrubbery_ents[1]]),
+            ],
+        )
+    )
+    assert len(shrubbery_ents_cands) == 2
+    assert len(shrubbery_ents_cands[0][0]) == 0 and len(shrubbery_ents_cands[1][0]) == 0
+
+    # test the content of the candidates
+    assert (
+        adam_ent_cands[0][0][0].entity_id_ == adam_ent_cands[1][0][0].entity_id_ == "Q2"
+    )
+    assert adam_ent_cands[0][0][0].alias == adam_ent_cands[1][0][0].alias == "adam"
+    assert_almost_equal(adam_ent_cands[0][0][0].entity_freq, 12)
+    assert_almost_equal(adam_ent_cands[1][0][0].entity_freq, 12)
+    assert_almost_equal(adam_ent_cands[0][0][0].prior_prob, 0.9)
+    assert_almost_equal(adam_ent_cands[1][0][0].prior_prob, 0.9)
 
 
 def test_el_pipe_configuration(nlp):
@@ -490,23 +580,19 @@ def test_el_pipe_configuration(nlp):
     assert doc[1].ent_kb_id_ == ""
     assert doc[2].ent_kb_id_ == "Q2"
 
-    def get_lowercased_candidates(kb, span):
-        return kb._get_alias_candidates(span.text.lower())
-
-    def get_lowercased_candidates_batch(kb, spans):
-        return [get_lowercased_candidates(kb, span) for span in spans]
+    def get_lowercased_candidates(kb: InMemoryLookupKB, mentions: Iterator[SpanGroup]):
+        for mentions_for_doc in mentions:
+            yield [
+                kb._get_alias_candidates(ent_span.text.lower())
+                for ent_span in mentions_for_doc
+            ]
 
     @registry.misc("spacy.LowercaseCandidateGenerator.v1")
-    def create_candidates() -> (
-        Callable[[InMemoryLookupKB, "Span"], Iterable[Candidate]]
-    ):
+    def create_candidates() -> Callable[
+        [InMemoryLookupKB, Iterator[SpanGroup]],
+        Iterator[Iterable[Iterable[Candidate]]],
+    ]:
         return get_lowercased_candidates
-
-    @registry.misc("spacy.LowercaseCandidateBatchGenerator.v1")
-    def create_candidates_batch() -> (
-        Callable[[InMemoryLookupKB, Iterable["Span"]], Iterable[Iterable[Candidate]]]
-    ):
-        return get_lowercased_candidates_batch
 
     # replace the pipe with a new one with with a different candidate generator
     entity_linker = nlp.replace_pipe(
@@ -515,9 +601,6 @@ def test_el_pipe_configuration(nlp):
         config={
             "incl_context": False,
             "get_candidates": {"@misc": "spacy.LowercaseCandidateGenerator.v1"},
-            "get_candidates_batch": {
-                "@misc": "spacy.LowercaseCandidateBatchGenerator.v1"
-            },
         },
     )
     entity_linker.set_kb(create_kb)
