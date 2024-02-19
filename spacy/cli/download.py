@@ -165,10 +165,10 @@ def download_model(
     # allow relative paths or other shenanigans to trick us into download
     # from outside our own repo.
     base_url = about.__download_url__
+    # urljoin requires that the path ends with /, or the last path part will be dropped
     if not base_url.endswith("/"):
         base_url = about.__download_url__ + "/"
     download_url = urljoin(base_url, filename)
-    print(base_url, filename, download_url)
     if not download_url.startswith(about.__download_url__):
         raise ValueError(f"Download from {filename} rejected. Was it a relative path?")
     pip_args = list(user_pip_args) if user_pip_args is not None else []
