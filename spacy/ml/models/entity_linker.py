@@ -138,9 +138,9 @@ def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
     mention (Span): Entity mention.
     RETURNS (Iterable[Candidate]): Identified candidates for specified mention.
     """
-    return next(
-        next(get_candidates_v2(kb, iter([SpanGroup(mention.doc, spans=[mention])])))[0]  # type: ignore[index]
-    )
+    cands_per_doc = next(get_candidates_v2(kb, iter([SpanGroup(mention.doc, spans=[mention])])))
+    assert isinstance(cands_per_doc, list)
+    return next(cands_per_doc[0])
 
 
 def get_candidates_v2(
