@@ -10,7 +10,7 @@ from spacy.compat import pickle
 from spacy.kb import Candidate, InMemoryLookupKB, KnowledgeBase
 from spacy.lang.en import English
 from spacy.ml import load_kb
-from spacy.ml.models.entity_linker import build_span_maker, get_candidates
+from spacy.ml.models.entity_linker import build_span_maker, get_candidates_v2
 from spacy.pipeline import EntityLinker, TrainablePipe
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
@@ -453,16 +453,16 @@ def test_candidate_generation(nlp):
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
-    adam_ent_cands = next(get_candidates(mykb, SpanGroup(doc=doc, spans=[adam_ent])))[0]
+    adam_ent_cands = next(get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[adam_ent])))[0]
     assert len(adam_ent_cands) == 1
     assert (
-        len(next(get_candidates(mykb, SpanGroup(doc=doc, spans=[douglas_ent])))[0]) == 2
+        len(next(get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[douglas_ent])))[0]) == 2
     )
     assert (
-        len(next(get_candidates(mykb, SpanGroup(doc=doc, spans=[Adam_ent])))[0]) == 0
+        len(next(get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[Adam_ent])))[0]) == 0
     )  # default case sensitive
     assert (
-        len(next(get_candidates(mykb, SpanGroup(doc=doc, spans=[shrubbery_ent])))[0])
+        len(next(get_candidates_v2(mykb, SpanGroup(doc=doc, spans=[shrubbery_ent])))[0])
         == 0
     )
 

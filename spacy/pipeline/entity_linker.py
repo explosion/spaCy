@@ -65,7 +65,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "incl_prior": True,
         "incl_context": True,
         "entity_vector_length": 64,
-        "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
+        "get_candidates": {"@misc": "spacy.CandidateGenerator.v2"},
         "overwrite": False,
         "generate_empty_kb": {"@misc": "spacy.EmptyKB.v2"},
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},

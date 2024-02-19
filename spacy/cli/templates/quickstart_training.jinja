@@ -238,7 +238,7 @@ grad_factor = 1.0
 {% if "entity_linker" in components -%}
 [components.entity_linker]
 factory = "entity_linker"
-get_candidates = {"@misc":"spacy.CandidateGenerator.v1"}
+get_candidates = {"@misc":"spacy.CandidateGenerator.v2"}
 incl_context = true
 incl_prior = true
 
@@ -517,7 +517,7 @@ width = ${components.tok2vec.model.encode.width}
 {% if "entity_linker" in components -%}
 [components.entity_linker]
 factory = "entity_linker"
-get_candidates = {"@misc":"spacy.CandidateGenerator.v1"}
+get_candidates = {"@misc":"spacy.CandidateGenerator.v2"}
 incl_context = true
 incl_prior = true
 

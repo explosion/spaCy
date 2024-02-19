@@ -1255,6 +1255,15 @@ A function that reads an existing `KnowledgeBase` from file.
 | --------- | -------------------------------------------------------- |
 | `kb_path` | The location of the KB that was stored to file. ~~Path~~ |
 
+### spacy.CandidateGenerator.v2 {id="CandidateGenerator-v2"}
+
+A function that takes as input a [`KnowledgeBase`](/api/kb) and a
+`Iterator[SpanGroup]` object denoting a collection of named entities for
+multiple [`Doc`](/api/doc), and returns an iterable of plausible
+[`Candidate`](/api/kb/#candidate) objects per `Doc`. The default
+`CandidateGenerator` uses the text of a mention to find its potential aliases in
+the `KnowledgeBase`. Note that this function is case-dependent.
+
 ### spacy.CandidateGenerator.v1 {id="CandidateGenerator"}
 
 A function that takes as input a [`KnowledgeBase`](/api/kb) and a

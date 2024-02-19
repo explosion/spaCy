@@ -120,13 +120,28 @@ def empty_kb(
 
 
 @registry.misc("spacy.CandidateGenerator.v1")
-def create_get_candidates() -> Callable[
-    [KnowledgeBase, Iterator[SpanGroup]], Iterator[CandidatesForDocT]
-]:
+def create_get_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
     return get_candidates
 
 
-def get_candidates(
+@registry.misc("spacy.CandidateGenerator.v2")
+def create_get_candidates_v2() -> Callable[
+    [KnowledgeBase, Iterator[SpanGroup]], Iterator[CandidatesForDocT]
+]:
+    return get_candidates_v2
+
+
+def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
+    """
+    Return candidate entities for the given mention from the KB.
+    kb (KnowledgeBase): Knowledge base to query.
+    mention (Span): Entity mention.
+    RETURNS (Iterable[Candidate]): Identified candidates for specified mention.
+    """
+    return next(next(get_candidates_v2(kb, iter([SpanGroup(mention.doc, spans=[mention])])))[0])
+
+
+def get_candidates_v2(
     kb: KnowledgeBase, mentions: Iterator[SpanGroup]
 ) -> Iterator[Iterable[Iterable[Candidate]]]:
     """
