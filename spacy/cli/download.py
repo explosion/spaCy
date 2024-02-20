@@ -1,5 +1,6 @@
 import sys
 from typing import Optional, Sequence
+from urllib.parse import urljoin
 
 import requests
 import typer
@@ -63,6 +64,13 @@ def download(
         )
         pip_args = pip_args + ("--no-deps",)
     if direct:
+        # Reject model names with '/', in order to prevent shenanigans.
+        if "/" in model:
+            msg.fail(
+                title="Model download rejected",
+                text=f"Cannot download model '{model}'. Models are expected to be file names, not URLs or fragments",
+                exits=True,
+            )
         components = model.split("-")
         model_name = "".join(components[:-1])
         version = components[-1]
@@ -153,7 +161,16 @@ def get_latest_version(model: str) -> str:
 def download_model(
     filename: str, user_pip_args: Optional[Sequence[str]] = None
 ) -> None:
-    download_url = about.__download_url__ + "/" + filename
+    # Construct the download URL carefully. We need to make sure we don't
+    # allow relative paths or other shenanigans to trick us into download
+    # from outside our own repo.
+    base_url = about.__download_url__
+    # urljoin requires that the path ends with /, or the last path part will be dropped
+    if not base_url.endswith("/"):
+        base_url = about.__download_url__ + "/"
+    download_url = urljoin(base_url, filename)
+    if not download_url.startswith(about.__download_url__):
+        raise ValueError(f"Download from {filename} rejected. Was it a relative path?")
     pip_args = list(user_pip_args) if user_pip_args is not None else []
     cmd = [sys.executable, "-m", "pip", "install"] + pip_args + [download_url]
     run_command(cmd)

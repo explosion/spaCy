@@ -1,5 +1,7 @@
 from wasabi import msg
 
+# Needed for testing
+from . import download as download_module  # noqa: F401
 from ._util import app, setup_cli  # noqa: F401
 from .apply import apply  # noqa: F401
 from .assemble import assemble_cli  # noqa: F401
