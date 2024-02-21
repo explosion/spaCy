@@ -1,3 +1,4 @@
+import re
 from typing import Callable, Dict, List, Optional, Tuple
 
 from thinc.api import Model
@@ -7,6 +8,7 @@ from ...pipeline.lemmatizer import lemmatizer_score
 from ...symbols import POS
 from ...tokens import Token
 from ...vocab import Vocab
+from ..char_classes import COMBINING_DIACRITICS
 
 PUNCT_RULES = {"«": '"', "»": '"'}
 
@@ -51,9 +53,10 @@ class RussianLemmatizer(Lemmatizer):
         super().__init__(
             vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
         )
+        self._diacritics_re = re.compile(f"[{COMBINING_DIACRITICS}]")
 
     def _pymorphy_lemmatize(self, token: Token) -> List[str]:
-        string = token.text
+        string = self._diacritics_re.sub("", token.text)
         univ_pos = token.pos_
         morphology = token.morph.to_dict()
         if univ_pos == "PUNCT":

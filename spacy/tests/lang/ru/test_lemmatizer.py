@@ -65,6 +65,8 @@ def test_ru_lemmatizer_works_with_different_pos_homonyms(
         ("гвоздики", "Gender=Masc", "гвоздик"),
         ("вина", "Gender=Fem", "вина"),
         ("вина", "Gender=Neut", "вино"),
+        ("жену", "Gender=Fem", "жена"),
+        ("жену́", "Gender=Fem", "жена"),
     ],
 )
 def test_ru_lemmatizer_works_with_noun_homonyms(ru_lemmatizer, text, morph, lemma):
