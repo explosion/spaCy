@@ -200,7 +200,7 @@ class CoordinationSplitter(Pipe):
         """Clear the default splitting rules."""
         self.rules = []
 
-    def add_default_rules(self) -> List[SplittingRule]:
+    def add_default_rules(self) -> None:
         """Reset the default splitting rules."""
         default_rules = [
             split_noun_coordination,
