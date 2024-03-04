@@ -1,7 +1,7 @@
 import re
 from typing import Callable, List, Optional, Union
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from ..language import Language
 from ..tokens import Doc, Token
@@ -137,7 +137,7 @@ def split_noun_coordination(doc: Doc) -> Union[List[str], None]:
 class SplittingRule(BaseModel):
     function: Callable[[Doc], Union[List[str], None]]
 
-    @validator("function")
+    @field_validator("function")
     def check_return_type(cls, v):
         dummy_doc = Doc(Language().vocab, words=["dummy", "doc"], spaces=[True, False])
         result = v(dummy_doc)
