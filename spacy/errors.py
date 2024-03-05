@@ -220,6 +220,7 @@ class Warnings(metaclass=ErrorsWithCodes):
             "key attribute for vectors, configure it through Vectors(attr=) or "
             "'spacy init vectors --attr'")
     W126 = ("These keys are unsupported: {unsupported}")
+    W127 = ("Not all `Language.pipe` worker processes completed successfully")
 
 
 class Errors(metaclass=ErrorsWithCodes):
