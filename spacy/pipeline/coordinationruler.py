@@ -1,7 +1,7 @@
 import re
 from typing import Callable, List, Optional, Union
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, validator
 
 from ..language import Language
 from ..tokens import Doc, Token
@@ -26,32 +26,17 @@ def _split_doc(doc: Doc) -> bool:
     noun_modified = False
     has_conjunction = False
 
-    noun_count = 0
-    modifiers = set()
-
     for token in doc:
-        if token.pos_ == "NOUN":
-            noun_count += 1
         if token.head.pos_ == "NOUN":  ## check to see that the phrase is a noun phrase
             for child in token.head.children:
                 if child.dep_ in ["amod", "advmod", "nmod"]:
-                    modifiers.add(child.text)
                     noun_modified = True
-        for child in token.children:
-            if child.dep_ == "conj" and child.pos_ == "ADJ":
-                modifiers.add(child.text)
 
         # check if there is a conjunction in the phrase
         if token.pos_ == "CCONJ":
             has_conjunction = True
 
-    modifier_count = len(modifiers)
-
-    noun_modified = modifier_count > 0
-
-    all_nouns_modified = modifier_count == noun_count
-
-    if noun_modified and has_conjunction and not all_nouns_modified:
+    if noun_modified and has_conjunction:
         return True
 
     else:
@@ -152,7 +137,7 @@ def split_noun_coordination(doc: Doc) -> Union[List[str], None]:
 class SplittingRule(BaseModel):
     function: Callable[[Doc], Union[List[str], None]]
 
-    @field_validator("function")
+    @validator("function")
     def check_return_type(cls, v):
         dummy_doc = Doc(Language().vocab, words=["dummy", "doc"], spaces=[True, False])
         result = v(dummy_doc)

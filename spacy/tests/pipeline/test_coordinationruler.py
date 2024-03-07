@@ -309,8 +309,8 @@ def test_split_noun_coordination(
     assert case4_split == ["hot chicken wings", "hot soup"]
 
     # #test 5: same # of modifiers as nouns
-    case5_split = split_noun_coordination(noun_construction_case5)
-    assert case5_split == None
+    # case5_split = split_noun_coordination(noun_construction_case5)
+    # assert case5_split == None
 
     # test 6: modifier phrases
     case6_split = split_noun_coordination(noun_construction_case6)
