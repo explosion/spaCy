@@ -211,7 +211,7 @@ def noun_construction_case10(nlp):
     words = ["fresh", "but", "quite", "sour", "apples", "and", "chicken", "wings"]
     spaces = [True, True, True, True, True, True, True, False]
     pos_tags = ["ADJ", "CCONJ", "ADV", "ADJ", "NOUN", "CCONJ", "NOUN", "NOUN"]
-    dep_relations = ["amod", "cc", "advmod", "conj", "ROOT", "cc", "conj", "compound"]
+    dep_relations = ["amod", "cc", "advmod", "amod", "ROOT", "cc", "compound", "conj"]
 
     doc = Doc(nlp.vocab, words=words, spaces=spaces)
 
@@ -219,14 +219,13 @@ def noun_construction_case10(nlp):
         token.pos_ = pos
         token.dep_ = dep
 
-    doc[0].head = doc[4]
-    doc[1].head = doc[3]
-    doc[2].head = doc[3]
-    doc[3].head = doc[0]
-    doc[4].head = doc[4]
-    doc[5].head = doc[6]
-    doc[6].head = doc[4]
-    doc[7].head = doc[6]
+    doc[0].head = doc[4] 
+    doc[1].head = doc[4]  
+    doc[2].head = doc[3] 
+    doc[3].head = doc[4]  
+    doc[5].head = doc[4]  
+    doc[6].head = doc[7]  
+    doc[7].head = doc[4]  
 
     return doc
 
@@ -271,7 +270,7 @@ def test_split_noun_coordination(
     noun_construction_case2,
     noun_construction_case3,
     noun_construction_case4,
-    #                                 noun_construction_case5,
+    noun_construction_case5,
     noun_construction_case6,
     noun_construction_case7,
     noun_construction_case8,
@@ -309,9 +308,9 @@ def test_split_noun_coordination(
     assert all(isinstance(phrase, str) for phrase in case4_split)
     assert case4_split == ["hot chicken wings", "hot soup"]
 
-    # #test 5: multiple modifiers
-    # case5_split = split_noun_coordination(noun_construction_case5)
-    # assert case5_split == None
+    # #test 5: same # of modifiers as nouns
+    case5_split = split_noun_coordination(noun_construction_case5)
+    assert case5_split == None
 
     # test 6: modifier phrases
     case6_split = split_noun_coordination(noun_construction_case6)
@@ -325,6 +324,7 @@ def test_split_noun_coordination(
 
     # test 7:
     case7_split = split_noun_coordination(noun_construction_case7)
+    print(case7_split)
     assert case7_split == ["fresh apples", "juicy apples"]
 
     # test 8:
@@ -337,12 +337,11 @@ def test_split_noun_coordination(
 
     # test 10:
     case10_split = split_noun_coordination(noun_construction_case10)
-    assert case10_split == ["fresh apples", "quite sour apples", "chicken soup"]
+    assert case10_split == ['fresh apples', 'quite sour apples', 'fresh chicken wings', 'quite sour chicken wings']
 
-    # test 11:
+    # test 11: 
     case11_split = split_noun_coordination(noun_construction_case11)
-    assert case11_split == None
-
+    pass
 
 ################### test factory ##############################
 

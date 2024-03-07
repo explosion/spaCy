@@ -26,22 +26,36 @@ def _split_doc(doc: Doc) -> bool:
     noun_modified = False
     has_conjunction = False
 
-    for token in doc:
-        if token.head.pos_ == "NOUN":  ## check to see that the phrase is a noun phrase
-            has_modifier = any(
-                child.dep_ == "amod" for child in token.head.children
-            )  # check to see if the noun has a modifier
-            if has_modifier:
-                noun_modified = True
+    noun_count = 0
+    modifiers = set()
 
+    for token in doc:
+        if token.pos_ == "NOUN":
+            noun_count += 1
+        if token.head.pos_ == "NOUN":  ## check to see that the phrase is a noun phrase
+            for child in token.head.children:
+                if child.dep_ in ["amod", "advmod", "nmod"]:
+                    modifiers.add(child.text)
+                    noun_modified = True 
+        for child in token.children:
+            if child.dep_ == "conj" and child.pos_ == "ADJ":
+                modifiers.add(child.text)
+            
         # check if there is a conjunction in the phrase
         if token.pos_ == "CCONJ":
             has_conjunction = True
 
-    return (
-        True if noun_modified and has_conjunction else False
-    )  # and not all_nouns_modified else False
+    modifier_count = len(modifiers)
 
+    noun_modified = modifier_count > 0
+
+    all_nouns_modified = modifier_count == noun_count
+
+    if noun_modified and has_conjunction and not all_nouns_modified:
+        return True
+
+    else:
+        return False
 
 def _collect_modifiers(token: Token) -> List[str]:
     """Collects adverbial modifiers for a given token.
