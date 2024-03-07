@@ -1,7 +1,12 @@
 import re
 from typing import Callable, List, Optional, Union
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
+
+try:
+    from pydantic import validator
+except ImportError:
+    from pydantic import field_validator as validator
 
 from ..language import Language
 from ..tokens import Doc, Token
