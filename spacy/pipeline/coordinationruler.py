@@ -1,11 +1,12 @@
 import re
 from typing import Callable, List, Optional, Union
 
+import pydantic
 from pydantic import BaseModel
 
-try:
+if pydantic.VERSION.split(".")[0] == "1":  # type: ignore
     from pydantic import validator  # type: ignore
-except ImportError:
+else:
     from pydantic import field_validator as validator  # type: ignore
 
 from ..language import Language
