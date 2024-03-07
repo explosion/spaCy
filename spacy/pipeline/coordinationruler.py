@@ -4,9 +4,9 @@ from typing import Callable, List, Optional, Union
 from pydantic import BaseModel
 
 try:
-    from pydantic import validator
+    from pydantic import validator  # type: ignore
 except ImportError:
-    from pydantic import field_validator as validator
+    from pydantic import field_validator as validator  # type: ignore
 
 from ..language import Language
 from ..tokens import Doc, Token
