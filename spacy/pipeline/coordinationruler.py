@@ -36,11 +36,11 @@ def _split_doc(doc: Doc) -> bool:
             for child in token.head.children:
                 if child.dep_ in ["amod", "advmod", "nmod"]:
                     modifiers.add(child.text)
-                    noun_modified = True 
+                    noun_modified = True
         for child in token.children:
             if child.dep_ == "conj" and child.pos_ == "ADJ":
                 modifiers.add(child.text)
-            
+
         # check if there is a conjunction in the phrase
         if token.pos_ == "CCONJ":
             has_conjunction = True
@@ -56,6 +56,7 @@ def _split_doc(doc: Doc) -> bool:
 
     else:
         return False
+
 
 def _collect_modifiers(token: Token) -> List[str]:
     """Collects adverbial modifiers for a given token.

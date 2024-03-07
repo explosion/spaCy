@@ -219,13 +219,13 @@ def noun_construction_case10(nlp):
         token.pos_ = pos
         token.dep_ = dep
 
-    doc[0].head = doc[4] 
-    doc[1].head = doc[4]  
-    doc[2].head = doc[3] 
-    doc[3].head = doc[4]  
-    doc[5].head = doc[4]  
-    doc[6].head = doc[7]  
-    doc[7].head = doc[4]  
+    doc[0].head = doc[4]
+    doc[1].head = doc[4]
+    doc[2].head = doc[3]
+    doc[3].head = doc[4]
+    doc[5].head = doc[4]
+    doc[6].head = doc[7]
+    doc[7].head = doc[4]
 
     return doc
 
@@ -337,11 +337,17 @@ def test_split_noun_coordination(
 
     # test 10:
     case10_split = split_noun_coordination(noun_construction_case10)
-    assert case10_split == ['fresh apples', 'quite sour apples', 'fresh chicken wings', 'quite sour chicken wings']
+    assert case10_split == [
+        "fresh apples",
+        "quite sour apples",
+        "fresh chicken wings",
+        "quite sour chicken wings",
+    ]
 
-    # test 11: 
+    # test 11:
     case11_split = split_noun_coordination(noun_construction_case11)
     pass
+
 
 ################### test factory ##############################
 
