@@ -67,11 +67,15 @@ TOKENIZER_INFIXES = (
         r"(?<=[{al}{q}])\.(?=[{au}{q}])".format(
             al=ALPHA_LOWER, au=ALPHA_UPPER, q=CONCAT_QUOTES
         ),
-        r"(?<=[0-9])[+\-\*^](?=[0-9-])",
+        # r"(?<=[0-9])[+\-\*^](?=[0-9-])",
+        # "2024-12-20" should be one token, so i remove "\-" from the above default regex
+        r"(?<=[0-9])[+\*^](?=[0-9-])",
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
+        r"(?<=\d),(?=[{a}])".format(a=ALPHA),
+        r"(?<=[{a}]),(?=[\d])".format(a=ALPHA),
         r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA),
     ]
-    # plus conditionnal hyphen
+    # conditionnal hyphen: verb-subject inversion
     + [_inversion]
 )
 

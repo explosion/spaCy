@@ -7,7 +7,7 @@ _exc = {
     "St": [{ORTH: "St", NORM: "Saint"}],
     "Ste": [{ORTH: "Ste", NORM: "Sainte"}],
     "Mme": [{ORTH: "Mme", NORM: "Madame"}],
-    "Mr.": [{ORTH: "Mr", NORM: "Monsieur"}],
+    "Mr": [{ORTH: "Mr", NORM: "Monsieur"}],
     "M.": [{ORTH: "M.", NORM: "Monsieur"}],
     "Mlle": [{ORTH: "Mlle", NORM: "Mademoiselle"}],
     "Dr": [{ORTH: "Dr", NORM: "Docteur"}],
