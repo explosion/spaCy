@@ -667,7 +667,8 @@ cdef class Doc:
         else:
             return False
 
-    property vector:
+    @property
+    def vector(self):
         """A real-valued meaning representation. Defaults to an average of the
         token vectors.
 
@@ -676,48 +677,49 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#vector
         """
-        def __get__(self):
-            if "vector" in self.user_hooks:
-                return self.user_hooks["vector"](self)
-            if self._vector is not None:
-                return self._vector
-            xp = get_array_module(self.vocab.vectors.data)
-            if not len(self):
-                self._vector = xp.zeros((self.vocab.vectors_length,), dtype="f")
-                return self._vector
-            elif self.vocab.vectors.size > 0:
-                self._vector = sum(t.vector for t in self) / len(self)
-                return self._vector
-            elif self.tensor.size > 0:
-                self._vector = self.tensor.mean(axis=0)
-                return self._vector
-            else:
-                return xp.zeros((self.vocab.vectors_length,), dtype="float32")
+        if "vector" in self.user_hooks:
+            return self.user_hooks["vector"](self)
+        if self._vector is not None:
+            return self._vector
+        xp = get_array_module(self.vocab.vectors.data)
+        if not len(self):
+            self._vector = xp.zeros((self.vocab.vectors_length,), dtype="f")
+            return self._vector
+        elif self.vocab.vectors.size > 0:
+            self._vector = sum(t.vector for t in self) / len(self)
+            return self._vector
+        elif self.tensor.size > 0:
+            self._vector = self.tensor.mean(axis=0)
+            return self._vector
+        else:
+            return xp.zeros((self.vocab.vectors_length,), dtype="float32")
 
-        def __set__(self, value):
-            self._vector = value
+    @vector.setter
+    def vector(self, value):
+        self._vector = value
 
-    property vector_norm:
+    @property
+    def vector_norm(self):
         """The L2 norm of the document's vector representation.
 
         RETURNS (float): The L2 norm of the vector representation.
 
         DOCS: https://spacy.io/api/doc#vector_norm
         """
-        def __get__(self):
-            if "vector_norm" in self.user_hooks:
-                return self.user_hooks["vector_norm"](self)
-            cdef float value
-            cdef double norm = 0
-            if self._vector_norm is None:
-                norm = 0.0
-                for value in self.vector:
-                    norm += value * value
-                self._vector_norm = sqrt(norm) if norm != 0 else 0
-            return self._vector_norm
+        if "vector_norm" in self.user_hooks:
+            return self.user_hooks["vector_norm"](self)
+        cdef float value
+        cdef double norm = 0
+        if self._vector_norm is None:
+            norm = 0.0
+            for value in self.vector:
+                norm += value * value
+            self._vector_norm = sqrt(norm) if norm != 0 else 0
+        return self._vector_norm
 
-        def __set__(self, value):
-            self._vector_norm = value
+    @vector_norm.setter
+    def vector_norm(self, value):
+        self._vector_norm = value
 
     @property
     def text(self):
@@ -736,7 +738,8 @@ cdef class Doc:
         """
         return self.text
 
-    property ents:
+    @property
+    def ents(self):
         """The named entities in the document. Returns a tuple of named entity
         `Span` objects, if the entity recognizer has been applied.
 
@@ -744,55 +747,55 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#ents
         """
-        def __get__(self):
-            cdef int i
-            cdef const TokenC* token
-            cdef int start = -1
-            cdef attr_t label = 0
-            cdef attr_t kb_id = 0
-            cdef attr_t ent_id = 0
-            output = []
-            for i in range(self.length):
-                token = &self.c[i]
-                if token.ent_iob == 1:
-                    if start == -1:
-                        seq = [f"{t.text}|{t.ent_iob_}" for t in self[i-5:i+5]]
-                        raise ValueError(Errors.E093.format(seq=" ".join(seq)))
-                elif token.ent_iob == 2 or token.ent_iob == 0 or \
-                        (token.ent_iob == 3 and token.ent_type == 0):
-                    if start != -1:
-                        output.append(Span(self, start, i, label=label, kb_id=kb_id, span_id=ent_id))
-                    start = -1
-                    label = 0
-                    kb_id = 0
-                    ent_id = 0
-                elif token.ent_iob == 3:
-                    if start != -1:
-                        output.append(Span(self, start, i, label=label, kb_id=kb_id, span_id=ent_id))
-                    start = i
-                    label = token.ent_type
-                    kb_id = token.ent_kb_id
-                    ent_id = token.ent_id
-            if start != -1:
-                output.append(Span(self, start, self.length, label=label, kb_id=kb_id, span_id=ent_id))
-            # remove empty-label spans
-            output = [o for o in output if o.label_ != ""]
-            return tuple(output)
+        cdef int i
+        cdef const TokenC* token
+        cdef int start = -1
+        cdef attr_t label = 0
+        cdef attr_t kb_id = 0
+        cdef attr_t ent_id = 0
+        output = []
+        for i in range(self.length):
+            token = &self.c[i]
+            if token.ent_iob == 1:
+                if start == -1:
+                    seq = [f"{t.text}|{t.ent_iob_}" for t in self[i-5:i+5]]
+                    raise ValueError(Errors.E093.format(seq=" ".join(seq)))
+            elif token.ent_iob == 2 or token.ent_iob == 0 or \
+                    (token.ent_iob == 3 and token.ent_type == 0):
+                if start != -1:
+                    output.append(Span(self, start, i, label=label, kb_id=kb_id, span_id=ent_id))
+                start = -1
+                label = 0
+                kb_id = 0
+                ent_id = 0
+            elif token.ent_iob == 3:
+                if start != -1:
+                    output.append(Span(self, start, i, label=label, kb_id=kb_id, span_id=ent_id))
+                start = i
+                label = token.ent_type
+                kb_id = token.ent_kb_id
+                ent_id = token.ent_id
+        if start != -1:
+            output.append(Span(self, start, self.length, label=label, kb_id=kb_id, span_id=ent_id))
+        # remove empty-label spans
+        output = [o for o in output if o.label_ != ""]
+        return tuple(output)
 
-        def __set__(self, ents):
-            # TODO:
-            # 1. Test basic data-driven ORTH gazetteer
-            # 2. Test more nuanced date and currency regex
-            cdef attr_t kb_id, ent_id
-            cdef int ent_start, ent_end
-            ent_spans = []
-            for ent_info in ents:
-                entity_type_, kb_id, ent_start, ent_end, ent_id = get_entity_info(ent_info)
-                if isinstance(entity_type_, str):
-                    self.vocab.strings.add(entity_type_)
-                span = Span(self, ent_start, ent_end, label=entity_type_, kb_id=kb_id, span_id=ent_id)
-                ent_spans.append(span)
-            self.set_ents(ent_spans, default=SetEntsDefault.outside)
+    @ents.setter
+    def ents(self, ents):
+        # TODO:
+        # 1. Test basic data-driven ORTH gazetteer
+        # 2. Test more nuanced date and currency regex
+        cdef attr_t kb_id, ent_id
+        cdef int ent_start, ent_end
+        ent_spans = []
+        for ent_info in ents:
+            entity_type_, kb_id, ent_start, ent_end, ent_id = get_entity_info(ent_info)
+            if isinstance(entity_type_, str):
+                self.vocab.strings.add(entity_type_)
+            span = Span(self, ent_start, ent_end, label=entity_type_, kb_id=kb_id, span_id=ent_id)
+            ent_spans.append(span)
+        self.set_ents(ent_spans, default=SetEntsDefault.outside)
 
     def set_ents(self, entities, *, blocked=None, missing=None, outside=None, default=SetEntsDefault.outside):
         """Set entity annotation.
