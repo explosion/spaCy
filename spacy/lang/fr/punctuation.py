@@ -5,9 +5,9 @@ from ..char_classes import (
     CONCAT_QUOTES,
     CURRENCY,
     LIST_ELLIPSES,
+    LIST_ICONS,
     LIST_PUNCT,
     LIST_QUOTES,
-    LIST_ICONS,
     UNITS,
 )
 
@@ -20,12 +20,12 @@ _suffix_inversion = [
     "nous", "vous", "elles", "ils", "iels",
     "moi", "toi", "lui", "leur", "eux",
     # to avoid matching: Villar-le-bois
-    fr"la(?![{HYPHENS}])", 
-    fr"le(?![{HYPHENS}])", 
+    fr"la(?![{HYPHENS}])",
+    fr"le(?![{HYPHENS}])",
     fr"les(?![{HYPHENS}])",
     fr"en(?![{HYPHENS}])", "y",
     # a-t-on, a-t'on
-    fr"t[{HYPHENS}]??[{ELISION}]?", 
+    fr"t[{HYPHENS}]??[{ELISION}]?",
     fr"m[{ELISION}]?",
     "là", "ici",
 ]

@@ -28,7 +28,7 @@ sentences = [
     "Sinon mets-en un peu par terre.",
     "il n'y a plus rien ici, enfin j'crois, nos p'tites affaires ont été enl'vées.",
     "aujourd'hui, c'est comme ça.",
-    "un.e directeur.ice, des employé.es, ",
+    "un.e directeur.ice, des employé.es.",
     "des non-humain-es étaient là aussi, visiblement heureux·ses.",
     "j'ai trouvé ça surhttps://site_inexistant.fr/accueil#milieu ou  www.quelque_part.com/ je pense.",
     "ou alors le 21/12 oui c'est ça c'était le 21/12/2023... ou alors le 12.02.2005",
