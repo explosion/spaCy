@@ -53,9 +53,7 @@ _suffix_inversion = r"|".join(upperandtitle(_suffix_inversion))
 _prefix_elision = r"|".join(upperandtitle(_prefix_elision))
 
 _elision = rf"(?:\b(?:{_prefix_elision})[{ELISION}])"
-_inversion = (
-    rf"(?:(?<=[^\W\d])[{HYPHENS}]\b(?:{_suffix_inversion})\b)"
-)
+_inversion = rf"(?:(?<=[^\W\d])[{HYPHENS}]\b(?:{_suffix_inversion})\b)"
 
 TOKENIZER_PREFIXES = [_elision]
 
