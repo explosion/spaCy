@@ -24,6 +24,7 @@ _suffix_inversion = [
     fr"le(?![{HYPHENS}])",
     fr"les(?![{HYPHENS}])",
     fr"en(?![{HYPHENS}])", "y",
+    "ce",
     # a-t-on, a-t'on
     fr"t[{HYPHENS}]??[{ELISION}]?",
     fr"m[{ELISION}]?",
