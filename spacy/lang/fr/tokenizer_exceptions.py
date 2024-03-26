@@ -13,6 +13,27 @@ _exc = {
     "Dresse": [{ORTH: "Dresse", NORM: "Doctoresse"}],
     "Drsse": [{ORTH: "Drsse", NORM: "Doctoresse"}],
     "etc": [{ORTH: "etc", NORM: "etcaetera"}],
+    # months
+    "jan.": [{ORTH: "jan.", NORM: "janvier"}],
+    "janv.": [{ORTH: "janv.", NORM: "janvier"}],
+    "fév.": [{ORTH: "fév.", NORM: "février"}],
+    "févr.": [{ORTH: "févr.", NORM: "avril"}],
+    "avr.": [{ORTH: "avr.", NORM: "avril"}],
+    "av.": [{ORTH: "av.", NORM: "juin"}],
+    "juil.": [{ORTH: "juil.", NORM: "juillet"}],
+    "sept.": [{ORTH: "sept.", NORM: "septembre"}],
+    "oct.": [{ORTH: "oct.", NORM: "octobre"}],
+    "nov.": [{ORTH: "nov.", NORM: "novembre"}],
+    "déc.": [{ORTH: "déc.", NORM: "décembre"}],
+    "dec.": [{ORTH: "dec.", NORM: "décembre"}],
+    # days
+    "lun.": [{ORTH: "lun.", NORM: "lundi"}],
+    "mar.": [{ORTH: "mar.", NORM: "mardi"}],
+    "mer.": [{ORTH: "mer.", NORM: "mercredi"}],
+    "jeu.": [{ORTH: "jeu.", NORM: "jeudi"}],
+    "ven.": [{ORTH: "ven.", NORM: "vendredi"}],
+    "sam.": [{ORTH: "sam.", NORM: "samedi"}],
+    "dim.": [{ORTH: "dim.", NORM: "dimanche"}],
 }
 
 TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)
