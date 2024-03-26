@@ -25,6 +25,7 @@ _exc = {
     "avr.": [{ORTH: "avr.", NORM: "avril"}],
     "av.": [{ORTH: "av.", NORM: "juin"}],
     "juil.": [{ORTH: "juil.", NORM: "juillet"}],
+    "juill.": [{ORTH: "juill.", NORM: "juillet"}],
     "sept.": [{ORTH: "sept.", NORM: "septembre"}],
     "oct.": [{ORTH: "oct.", NORM: "octobre"}],
     "nov.": [{ORTH: "nov.", NORM: "novembre"}],
