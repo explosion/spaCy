@@ -235,13 +235,39 @@ class EntityLinker(TrainablePipe):
         self.cfg: Dict[str, Any] = {"overwrite": overwrite}
         self.distance = CosineDistance(normalize=False)
         self.kb = generate_empty_kb(self.vocab, entity_vector_length)
-        self.scorer = scorer
         self.use_gold_ents = use_gold_ents
         self.candidates_batch_size = candidates_batch_size
         self.threshold = threshold
 
         if candidates_batch_size < 1:
             raise ValueError(Errors.E1044)
+
+        def _score_augmented(examples, **kwargs):
+            # Because of how spaCy works, we can't just score immediately, because Language.evaluate
+            # calls pipe() on the predicted docs, which won't have entities if there is no NER in the pipeline.
+            if not self.use_gold_ents:
+                return scorer(examples, **kwargs)
+            else:
+                examples = self._augment_examples(examples)
+                docs = self.pipe(
+                    (eg.predicted for eg in examples),
+                )
+                for eg, doc in zip(examples, docs):
+                    eg.predicted = doc
+                return scorer(examples, **kwargs)
+
+        self.scorer = _score_augmented
+
+    def _augment_examples(self, examples: Iterable[Example]) -> Iterable[Example]:
+        """If use_gold_ents is true, set the gold entities to eg.predicted.
+        """
+        new_examples = []
+        for eg in examples:
+            if self.use_gold_ents:
+                ents, _ = eg.get_aligned_ents_and_ner()
+                eg.predicted.ents = ents
+            new_examples.append(eg)
+        return new_examples
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -284,13 +310,9 @@ class EntityLinker(TrainablePipe):
         nO = self.kb.entity_vector_length
         doc_sample = []
         vector_sample = []
-        orig_ents = []
-        for eg in islice(get_examples(), 10):
+        examples = self._augment_examples(islice(get_examples(), 10))
+        for eg in examples:
             doc = eg.x
-            if self.use_gold_ents:
-                orig_ents.append(doc.ents)
-                ents, _ = eg.get_aligned_ents_and_ner()
-                doc.ents = ents
             doc_sample.append(doc)
             vector_sample.append(self.model.ops.alloc1f(nO))
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
@@ -315,10 +337,6 @@ class EntityLinker(TrainablePipe):
         if not has_annotations:
             # Clean up dummy annotation
             doc.ents = []
-        if self.use_gold_ents:
-            assert len(doc_sample) == len(orig_ents)
-            for doc, orig_ent in zip(doc_sample, orig_ents):
-                doc.ents = orig_ent
 
     def batch_has_learnable_example(self, examples):
         """Check if a batch contains a learnable example.
@@ -360,25 +378,15 @@ class EntityLinker(TrainablePipe):
         losses.setdefault(self.name, 0.0)
         if not examples:
             return losses
+        examples = self._augment_examples(examples)
         validate_examples(examples, "EntityLinker.update")
-
-        set_dropout_rate(self.model, drop)
-        docs = [eg.predicted for eg in examples]
-        # save to restore later
-        old_ents = [doc.ents for doc in docs]
-
-        for doc, ex in zip(docs, examples):
-            if self.use_gold_ents:
-                ents, _ = ex.get_aligned_ents_and_ner()
-                doc.ents = ents
-            else:
-                # only keep matching ents
-                doc.ents = ex.get_matching_ents()
 
         # make sure we have something to learn from, if not, short-circuit
         if not self.batch_has_learnable_example(examples):
             return losses
 
+        set_dropout_rate(self.model, drop)
+        docs = [eg.predicted for eg in examples]
         sentence_encodings, bp_context = self.model.begin_update(docs)
 
         loss, d_scores = self.get_loss(
@@ -389,14 +397,10 @@ class EntityLinker(TrainablePipe):
             self.finish_update(sgd)
         losses[self.name] += loss
 
-        # now restore the ents
-        assert len(docs) == len(old_ents)
-        for doc, old in zip(docs, old_ents):
-            doc.ents = old
-
         return losses
 
     def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
+        """ Here, we assume that get_loss is called with augmented examples if need be"""
         validate_examples(examples, "EntityLinker.get_loss")
         entity_encodings = []
         eidx = 0  # indices in gold entities to keep
