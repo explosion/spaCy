@@ -258,14 +258,16 @@ class EntityLinker(TrainablePipe):
         self.scorer = _score_augmented
 
     def _augment_examples(self, examples: Iterable[Example]) -> Iterable[Example]:
-        """If use_gold_ents is true, set the gold entities to eg.predicted.
-        """
+        """If use_gold_ents is true, set the gold entities to (a copy of) eg.predicted."""
+        if not self.use_gold_ents:
+            return examples
+
         new_examples = []
         for eg in examples:
-            if self.use_gold_ents:
-                ents, _ = eg.get_aligned_ents_and_ner()
-                eg.predicted.ents = ents
-            new_examples.append(eg)
+            ents, _ = eg.get_aligned_ents_and_ner()
+            new_eg = eg.copy()
+            new_eg.predicted.ents = ents
+            new_examples.append(new_eg)
         return new_examples
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
@@ -399,7 +401,7 @@ class EntityLinker(TrainablePipe):
         return losses
 
     def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
-        """ Here, we assume that get_loss is called with augmented examples if need be"""
+        """Here, we assume that get_loss is called with augmented examples if need be"""
         validate_examples(examples, "EntityLinker.get_loss")
         entity_encodings = []
         eidx = 0  # indices in gold entities to keep

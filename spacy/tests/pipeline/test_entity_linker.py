@@ -744,7 +744,9 @@ def test_overfitting_IO_gold_entities():
         return mykb
 
     # Create the Entity Linker component and add it to the pipeline
-    entity_linker = nlp.add_pipe("entity_linker", last=True, config={"use_gold_ents": True})
+    entity_linker = nlp.add_pipe(
+        "entity_linker", last=True, config={"use_gold_ents": True}
+    )
     assert isinstance(entity_linker, EntityLinker)
     entity_linker.set_kb(create_kb)
     assert "Q2146908" in entity_linker.vocab.strings
@@ -849,7 +851,9 @@ def test_overfitting_IO_with_ner():
 
     # Create the NER and EL components and add them to the pipeline
     ner = nlp.add_pipe("ner", first=True)
-    entity_linker = nlp.add_pipe("entity_linker", last=True, config={"use_gold_ents": False})
+    entity_linker = nlp.add_pipe(
+        "entity_linker", last=True, config={"use_gold_ents": False}
+    )
     entity_linker.set_kb(create_kb)
 
     train_examples = []
