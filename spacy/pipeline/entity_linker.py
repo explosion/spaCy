@@ -11,7 +11,6 @@ from .. import util
 from ..errors import Errors
 from ..kb import Candidate, KnowledgeBase
 from ..language import Language
-from ..ml import empty_kb
 from ..scorer import Scorer
 from ..tokens import Doc, Span
 from ..training import Example, validate_examples, validate_get_examples
@@ -105,7 +104,7 @@ def make_entity_linker(
         ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
     generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
     scorer (Optional[Callable]): The scoring method.
-    use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
+    use_gold_ents (bool): Whether to copy entities from gold docs during training or not. If false, another
         component must provide entity annotations.
     candidates_batch_size (int): Size of batches for entity candidate generation.
     threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the threshold,
