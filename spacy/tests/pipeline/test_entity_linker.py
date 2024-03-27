@@ -717,7 +717,7 @@ GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 # fmt: on
 
 
-def test_overfitting_IO():
+def test_overfitting_IO_gold_entities():
     # Simple test to try and quickly overfit the NEL component - ensuring the ML models work correctly
     nlp = English()
     vector_length = 3
@@ -744,7 +744,7 @@ def test_overfitting_IO():
         return mykb
 
     # Create the Entity Linker component and add it to the pipeline
-    entity_linker = nlp.add_pipe("entity_linker", last=True)
+    entity_linker = nlp.add_pipe("entity_linker", last=True, config={"use_gold_ents": True})
     assert isinstance(entity_linker, EntityLinker)
     entity_linker.set_kb(create_kb)
     assert "Q2146908" in entity_linker.vocab.strings
