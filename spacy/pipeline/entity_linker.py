@@ -375,10 +375,6 @@ class EntityLinker(TrainablePipe):
 
         sentence_encodings, bp_context = self.model.begin_update(docs)
 
-        # now restore the ents
-        for doc, old in zip(docs, old_ents):
-            doc.ents = old
-
         loss, d_scores = self.get_loss(
             sentence_encodings=sentence_encodings, examples=examples
         )
@@ -386,6 +382,12 @@ class EntityLinker(TrainablePipe):
         if sgd is not None:
             self.finish_update(sgd)
         losses[self.name] += loss
+
+        # now restore the ents
+        assert len(docs) == len(old_ents)
+        for doc, old in zip(docs, old_ents):
+            doc.ents = old
+
         return losses
 
     def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
