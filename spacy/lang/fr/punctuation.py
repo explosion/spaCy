@@ -18,17 +18,16 @@ HYPHENS = r"- – — ‐ ‑".replace(" ", "")
 _suffix_inversion = [
     "je", "tu", "on", "il", "elle", "iel",
     "nous", "vous", "elles", "ils", "iels",
-    "moi", "toi", "lui", "leur", "eux",
+    "moi", "toi", "lui", "leur", "eux", "elleux",
+    "ce", "ici", "là",
     # to avoid matching: Villar-le-bois
     fr"la(?![{HYPHENS}])",
     fr"le(?![{HYPHENS}])",
     fr"les(?![{HYPHENS}])",
     fr"en(?![{HYPHENS}])", "y",
-    "ce",
     # a-t-on, a-t'on
     fr"t[{HYPHENS}]??[{ELISION}]?",
     fr"m[{ELISION}]?",
-    "là", "ici",
 ]
 _prefix_elision = [
     "n", "s", "c", "d", "j", "m", "t", "l", "qu",
