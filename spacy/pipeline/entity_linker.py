@@ -244,6 +244,8 @@ class EntityLinker(TrainablePipe):
         def _score_with_ents_set(examples: Iterable[Example], **kwargs):
             # Because of how spaCy works, we can't just score immediately, because Language.evaluate
             # calls pipe() on the predicted docs, which won't have entities if there is no NER in the pipeline.
+            if not scorer:
+                return scorer
             if not self.use_gold_ents:
                 return scorer(examples, **kwargs)
             else:
