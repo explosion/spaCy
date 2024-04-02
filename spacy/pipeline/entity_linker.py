@@ -241,7 +241,7 @@ class EntityLinker(TrainablePipe):
         if candidates_batch_size < 1:
             raise ValueError(Errors.E1044)
 
-        def _score_augmented(examples: Iterable[Example], **kwargs):
+        def _score_with_ents_set(examples: Iterable[Example], **kwargs):
             # Because of how spaCy works, we can't just score immediately, because Language.evaluate
             # calls pipe() on the predicted docs, which won't have entities if there is no NER in the pipeline.
             if not self.use_gold_ents:
@@ -255,7 +255,7 @@ class EntityLinker(TrainablePipe):
                     eg.predicted = doc
                 return scorer(examples, **kwargs)
 
-        self.scorer = _score_augmented
+        self.scorer = _score_with_ents_set
 
     def _ensure_ents(self, examples: Iterable[Example]) -> Iterable[Example]:
         """If use_gold_ents is true, set the gold entities to (a copy of) eg.predicted."""
@@ -401,9 +401,9 @@ class EntityLinker(TrainablePipe):
         return losses
 
     def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
-        """Here, we assume that get_loss is called with augmented examples if need be"""
         validate_examples(examples, "EntityLinker.get_loss")
         entity_encodings = []
+        # We assume that get_loss is called with gold ents set in the examples if need be
         eidx = 0  # indices in gold entities to keep
         keep_ents = []  # indices in sentence_encodings to keep
 
