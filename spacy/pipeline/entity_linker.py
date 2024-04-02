@@ -241,7 +241,7 @@ class EntityLinker(TrainablePipe):
         if candidates_batch_size < 1:
             raise ValueError(Errors.E1044)
 
-        def _score_augmented(examples, **kwargs):
+        def _score_augmented(examples: Iterable[Example], **kwargs):
             # Because of how spaCy works, we can't just score immediately, because Language.evaluate
             # calls pipe() on the predicted docs, which won't have entities if there is no NER in the pipeline.
             if not self.use_gold_ents:
