@@ -4517,7 +4517,36 @@
                 "website": "https://redfield.ai"
             },
             "category": ["standalone"]
+        },
+        {
+            "id": "gliner-spacy",
+            "title": "GLiNER SpaCy Wrapper",
+            "slogan": "Integrating GLiNER's Advanced NER with SpaCy",
+            "description": "GLiNER SpaCy Wrapper is a project that brings together GLiNER, a zero-shot Named Entity Recognition (NER) model, with SpaCy's NLP capabilities. It provides an easy way to integrate GLiNER within the SpaCy environment, thus enhancing NER tasks with GLiNER's features.",
+            "github": "theirstory/gliner-spacy",
+            "pip": "gliner-spacy",
+            "code_example": [
+                "import spacy",
+                "from gliner_spacy.pipeline import GlinerSpacy",
+                "",
+                "nlp = spacy.blank('en')",
+                "nlp.add_pipe('gliner_spacy')",
+                "text = 'This is a text about Bill Gates and Microsoft.'",
+                "doc = nlp(text)",
+                "",
+                "for ent in doc.ents:",
+                "    print(ent.text, ent.label_)"
+            ],
+            "code_language": "python",
+            "url": "https://github.com/theirstory/gliner-spacy",
+            "author": "TheirStory",
+            "author_links": {
+                "website": "https://theirstory.io"
+            },
+            "category": ["NER Integration"],
+            "tags": ["gliner", "spacy", "nlp", "ner"]
         }
+        
     ],
 
     "categories": [
