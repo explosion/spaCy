@@ -1,8 +1,8 @@
 from pathlib import Path
-import plac
+import plac # type: ignore
 import spacy
 from spacy.training import docs_to_json
-import srsly
+import srsly # type: ignore
 import sys
 
 

@@ -104,3 +104,6 @@ mark both statements:
 | Date                           | 3 November 2017                   |
 | GitHub username                | abhi18av                           |
 | Website (optional)             | https://abhi18av.github.io/        |
+[text][def]
+
+[def]: <../../extra/DEVELOPER_DOCS/Code Conventions.md>
