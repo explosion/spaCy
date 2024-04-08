@@ -4552,7 +4552,40 @@
             },
             "category": ["pipeline"],
             "tags": ["dates", "ner", "nlp", "spacy"]
-        }        
+        },
+        {
+            "id": "spacy-annoy",
+            "title": "Spacy Annoy",
+            "slogan": "Integrating Spacy NLP and Annoy for Semantic Text Search with spaCy linguistic tags.",
+            "description": "Spacy Annoy offers a combination of Spacy's natural language processing (NLP) capabilities and Annoy's efficient similarity search algorithms. This Python class is tailored for analyzing and querying large text corpora, delivering results based on semantic similarity. Key features include contextual window chunking and controlled overlap with preservation of original context at the Doc level, allowing access to all original Spacy properties.",
+            "github": "wjbmattingly/spacy-annoy",
+            "pip": "spacy-annoy",
+            "code_example": [
+                "from SpacyAnnoy import SpacyAnnoy",
+                "",
+                "# Initialize with a Spacy model name",
+                "sa = SpacyAnnoy('en_core_web_lg')",
+                "",
+                "texts = ['This is a text about sports', 'This is a text about dogs']*20",
+                "sa.load_docs(texts)",
+                "",
+                "sa.build_index(n_trees=10, metric='euclidean')",
+                "",
+                "# Query the index",
+                "results = sa.query_index('Dogs and cats.', depth=5)",
+                "",
+                "# Pretty print results",
+                "sa.pretty_print(results)",
+                "",
+                "# Accessing the Spacy span of the first result",
+                "first_result_span = results[0][0]"
+            ],
+            "code_language": "python",
+            "url": "https://github.com/wjbmattingly/spacy-annoy",
+            "category": ["nlp", "search", "similarity"],
+            "tags": ["spacy", "annoy", "text analysis", "semantic search"]
+        }
+                
     ],
 
     "categories": [
