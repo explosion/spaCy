@@ -4549,7 +4549,7 @@
             "author_links": {
                 "website": "https://theirstory.io"
             },
-            "category": ["NLP Integration"],
+            "category": ["standalone"],
             "tags": ["spacy", "whisper", "transcription", "nlp"]
         }
         
