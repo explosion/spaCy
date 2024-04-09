@@ -1,5 +1,5 @@
 # cython: infer_types=True
-from typing import Any, Callable, Dict, Iterable
+from typing import Any, Callable, Dict, Iterable, Iterator
 
 import srsly
 
@@ -12,7 +12,7 @@ from preshed.maps cimport PreshMap
 import warnings
 from pathlib import Path
 
-from ..tokens import Span
+from ..tokens import SpanGroup
 
 from ..typedefs cimport hash_t
 
@@ -255,8 +255,9 @@ cdef class InMemoryLookupKB(KnowledgeBase):
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
 
-    def get_candidates(self, mention: Span) -> Iterable[InMemoryCandidate]:
-        return self._get_alias_candidates(mention.text)  # type: ignore
+    def get_candidates(self, mentions: Iterator[SpanGroup]) -> Iterator[Iterable[Iterable[InMemoryCandidate]]]:
+        for mentions_for_doc in mentions:
+            yield [self._get_alias_candidates(span.text) for span in mentions_for_doc]
 
     def _get_alias_candidates(self, str alias) -> Iterable[InMemoryCandidate]:
         """

@@ -155,35 +155,12 @@ Get a list of all aliases in the knowledge base.
 
 ## InMemoryLookupKB.get_candidates {id="get_candidates",tag="method"}
 
-Given a certain textual mention as input, retrieve a list of candidate entities
-of type [`InMemoryCandidate`](/api/kb#candidate). Wraps
-[`get_alias_candidates()`](/api/inmemorylookupkb#get_alias_candidates).
-
-> #### Example
->
-> ```python
-> from spacy.lang.en import English
-> nlp = English()
-> doc = nlp("Douglas Adams wrote 'The Hitchhiker's Guide to the Galaxy'.")
-> candidates = kb.get_candidates(doc[0:2])
-> ```
-
-| Name        | Description                                                                          |
-| ----------- | ------------------------------------------------------------------------------------ |
-| `mention`   | The textual mention or alias. ~~Span~~                                               |
-| **RETURNS** | An iterable of relevant `InMemoryCandidate` objects. ~~Iterable[InMemoryCandidate]~~ |
-
-## InMemoryLookupKB.get_candidates_batch {id="get_candidates_batch",tag="method"}
-
-Same as [`get_candidates()`](/api/inmemorylookupkb#get_candidates), but for an
-arbitrary number of mentions. The [`EntityLinker`](/api/entitylinker) component
-will call `get_candidates_batch()` instead of `get_candidates()`, if the config
-parameter `candidates_batch_size` is greater or equal than 1.
-
-The default implementation of `get_candidates_batch()` executes
-`get_candidates()` in a loop. We recommend implementing a more efficient way to
-retrieve candidates for multiple mentions at once, if performance is of concern
-to you.
+Given textual mentions for an arbitrary number of documents as input, retrieve a
+list of candidate entities of type [`InMemoryCandidate`](/api/kb#candidate) for
+each mention. The [`EntityLinker`](/api/entitylinker) component passes a
+generator that yields mentions as [`SpanGroup`](/api/spangroup))s per document. The decision of how to batch
+candidate retrieval lookups over multiple documents is left up to the
+implementation of `KnowledgeBase.get_candidates()`.
 
 > #### Example
 >
@@ -192,13 +169,13 @@ to you.
 > from spacy.tokens import SpanGroup
 > nlp = English()
 > doc = nlp("Douglas Adams wrote 'The Hitchhiker's Guide to the Galaxy'.")
-> candidates = kb.get_candidates_batch([SpanGroup(doc, spans=[doc[0:2], doc[3:]]])
+> candidates = kb.get_candidates([SpanGroup(doc, spans=[doc[0:2], doc[3:]]])
 > ```
 
-| Name        | Description                                                                                                  |
-| ----------- | ------------------------------------------------------------------------------------------------------------ |
-| `mentions`  | The textual mentions. ~~SpanGroup~~                                                                          |
-| **RETURNS** | An iterable of iterable with relevant `InMemoryCandidate` objects. ~~Iterable[Iterable[InMemoryCandidate]]~~ |
+| Name        | Description                                                                                                                                                                       |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mentions`  | The textual mentions or aliases (one `SpanGroup` per `Doc` instance). ~~Iterator[SpanGroup]~~                                                                                     |
+| **RETURNS** | An iterator over iterables of iterables with relevant [`InMemoryCandidate`](/api/kb#candidate) objects (per mention and doc). ~~Iterator[Iterable[Iterable[InMemoryCandidate]]]~~ |
 
 ## InMemoryLookupKB.get_vector {id="get_vector",tag="method"}
 
