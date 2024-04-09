@@ -4527,7 +4527,7 @@
             "pip": "bagpipes-spacy",
             "code_example": [
                 "import spacy",
-                "from bagpipes_spacy import PhrasesExtractor"
+                "from bagpipes_spacy import PhrasesExtractor",
                 "nlp = spacy.load(\"en_core_web_md\")",
                 "nlp.add_pipe(\"phrases_extractor\")",
                 "text = 'Seconds later, he had climbed out onto a rather fine antique rug, brushing ash from the sleeves of his long pin-striped cloak, a lime-green bowler hat in his hand.'",
