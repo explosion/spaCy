@@ -4543,7 +4543,7 @@
             "author_links": {
                 "website": "https://theirstory.io"
             },
-            "category": ["NER Integration"],
+            "category": ["pipeline"],
             "tags": ["gliner", "spacy", "nlp", "ner"]
         }
         
