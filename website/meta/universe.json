@@ -4553,7 +4553,7 @@
             },
             "code_language": "python",
             "url": "https://github.com/wjbmattingly/spacy-annoy",
-            "category": ["nlp", "search", "similarity"],
+            "category": ["standalone"],
             "tags": ["spacy", "annoy", "text analysis", "semantic search"]
         }
         
