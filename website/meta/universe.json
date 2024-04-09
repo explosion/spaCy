@@ -4517,6 +4517,42 @@
                 "website": "https://redfield.ai"
             },
             "category": ["standalone"]
+        },
+        {
+            "id": "bagpipes-spacy",
+            "title": "Bagpipes spaCy",
+            "slogan": "A bag of custom spaCy pipes for various NLP tasks.",
+            "description": "Bagpipes spaCy is a versatile collection of custom spaCy pipeline components enhancing text processing capabilities. It includes functionalities such as phrase extraction, text normalization, triple detection, entity and sentence clustering, token clustering, and keyword extraction. These components augment NLP tasks with advanced processing and analysis features, offering a comprehensive toolkit for natural language data handling.",
+            "github": "wjbmattingly/bagpipes-spacy",
+            "pip": "bagpipes-spacy",
+            "code_example": [
+                "import spacy",
+                "from bagpipes_spacy import PhrasesExtractor"
+                "nlp = spacy.load(\"en_core_web_md\")",
+                "nlp.add_pipe(\"phrases_extractor\")",
+                "text = 'Seconds later, he had climbed out onto a rather fine antique rug, brushing ash from the sleeves of his long pin-striped cloak, a lime-green bowler hat in his hand.'",
+                "doc = nlp(text)",
+                "print('Prepositional Phrases')",
+                "print(doc._.prep_phrases)",
+                "print('Noun Phrases')",
+                "print(doc._.noun_phrases)",
+                "print('Verb Phrases')",
+                "print(doc._.verb_phrases)",
+                "print('Adj Phrases')",
+                "print(doc._.adj_phrases)"
+                ],
+            "code_language": "python",
+            "url": "https://github.com/wjbmattingly/bagpipes-spacy",
+            "thumb": "https://github.com/wjbmattingly/bagpipes-spacy/raw/main/images/bagpipes-spacy-icon.png?raw=true",
+            "image": "https://github.com/wjbmattingly/bagpipes-spacy/raw/main/images/bagpipes-spacy-logo.png?raw=true",
+            "author": "W.J.B. Mattingly",
+            "author_links": {
+                "twitter": "wjb_mattingly",
+                "github": "wjbmattingly",
+                "website": "https://www.wjbmattingly.com"
+            },
+            "category": ["pipeline"],
+            "tags": ["spacy", "text processing", "NLP", "custom components"]
         }
     ],
 
