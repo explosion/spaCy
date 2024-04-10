@@ -17,6 +17,40 @@
             "category": ["extension"],
             "tags": []
         },
+		{
+            "id": "constituent_treelib",
+            "title": "Constituent Treelib",
+            "slogan": "Extract constituents with ease!",
+            "description": "Constituent Treelib (CTL) is a lightweight Python library built on top of benepar (Berkeley Neural Parser) as well as the two well-known NLP frameworks spaCy and NLTK. CTL offers you a convenient way to parse sentences into constituent trees, modify them according to their structure, as well as visualize and export them into various file formats. In addition, you can extract phrases according to their phrasal categories (which can be used e.g., as features for various NLP tasks), validate already parsed sentences in bracket notation or convert them back into sentences.",
+            "github": "Halvani/Constituent-Treelib",
+            "pip": "constituent-treelib",
+            "code_example": [
+				"from constituent_treelib import ConstituentTree, Language",
+				"# Define the language for the sentence as well as for the spaCy and benepar models",
+				"language = Language.English",
+				"# Define which specific SpaCy model should be used (default is Medium)",
+				"spacy_model_size = ConstituentTree.SpacyModelSize.Medium",
+				"# Create the pipeline (note, the required models will be downloaded and installed automatically)",
+				"nlp = ConstituentTree.create_pipeline(language, spacy_model_size)",
+				"# Your sentence",
+				"sentence = 'We try to explicitly describe the geometry of the edges of the images.'",
+				"# Create the tree from where we are going to extract the desired noun phrases",
+				"tree = ConstituentTree(sentence, nlp)",
+				"all_phrases = tree.extract_all_phrases(min_words_in_phrases=1)",
+				"print(all_phrases)",
+				"# {'PP': ['of the edges of the images', 'of the images'], 'NP': ['We', 'the geometry of the edges of the images', 'the geometry', 'the edges of the images', 'the edges', 'the images'], 'S': ['We try to explicitly describe the geometry of the edges of the images .', 'to explicitly describe the geometry of the edges of the images'], 'VP': ['try to explicitly describe the geometry of the edges of the images', 'to explicitly describe the geometry of the edges of the images', 'describe the geometry of the edges of the images'], 'ADVP': ['explicitly']}"
+            ],
+            "code_language": "python",
+            "url": "https://github.com/Halvani/Constituent-Treelib",
+            "thumb": "https://github.com/Halvani/Constituent-Treelib/blob/main/assets/images/promo_tree.svg",
+            "author": "Oren Halvani",
+            "author_links": {
+                "github": "Halvani",
+                "website": "https://www.linkedin.com/in/orenhalvani"
+            },
+            "category": ["apis", "standalone", "visualizers"],
+            "tags": ["apis", "deployment", "constituency ", "parsing"]
+        },
         {
             "id": "sayswho",
             "title": "SaysWho",
