@@ -10,6 +10,17 @@ spacy/tests/package/setup.cfg
 spacy/tests/package/pyproject.toml
 spacy/tests/package/requirements.txt
 
+
+
+
+
+
+
+
+
+
+
+
 # Cython / C extensions
 cythonize.json
 spacy/*.html
