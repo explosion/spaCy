@@ -64,7 +64,7 @@ def distill(
 ):
     student_config_path = util.ensure_path(student_config_path)
     output_path = util.ensure_path(output_path)
-    # Make sure all files and paths exists if they are needed
+    # Make sure all files and paths exist if they are needed
     if not student_config_path or (
         str(student_config_path) != "-" and not student_config_path.exists()
     ):
@@ -82,12 +82,12 @@ def distill(
         config = util.load_config(
             student_config_path, overrides=overrides, interpolate=False
         )
-    msg.divider("Initializing pipeline")
+    msg.divider("Initializing student pipeline")
     with show_validation_error(student_config_path, hint_fill=False):
         student = init_nlp_student(config, teacher, use_gpu=use_gpu)
 
-    msg.good("Initialized pipeline")
-    msg.divider("Distilling pipeline")
+    msg.good("Initialized student pipeline")
+    msg.divider("Distilling student pipeline from teacher")
     distill_nlp(
         teacher,
         student,
