@@ -1710,7 +1710,7 @@ typical use case for distillation is to extract a smaller, more performant model
 from a larger high-accuracy model. Since distillation uses the activations of
 the teacher, distillation can be performed on a corpus of raw text without (gold
 standard) annotations. A development set of gold annotations _is_ needed to
-evaluate the distilled model on during distillation.
+evaluate the student pipeline on during distillation.
 
 `distill` will save out the best performing pipeline across all epochs, as well
 as the final pipeline. The `--code` argument can be used to provide a Python
