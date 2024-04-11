@@ -52,6 +52,7 @@ def test_convert_auto_conflict():
 NOOP_CONFIG = """
 [paths]
 train = null
+distill = null
 dev = null
 vectors = null
 init_tok2vec = null
@@ -91,6 +92,14 @@ augmenter = null
 [corpora.train]
 @readers = "spacy.Corpus.v1"
 path = ${paths.train}
+gold_preproc = false
+max_length = 0
+limit = 0
+augmenter = null
+
+[corpora.distill]
+@readers = "spacy.Corpus.v1"
+path = ${paths.distill}
 gold_preproc = false
 max_length = 0
 limit = 0
@@ -143,6 +152,37 @@ learn_rate = 0.001
 
 [training.score_weights]
 
+[distillation]
+student_to_teacher = []
+dropout = 0.1
+max_epochs = 0
+max_steps = 100
+corpus = "corpora.distill"
+
+[distillation.batcher]
+@batchers = "spacy.batch_by_words.v1"
+discard_oversize = false
+tolerance = 0.2
+get_length = null
+
+[distillation.batcher.size]
+@schedules = "compounding.v1"
+start = 100
+stop = 1000
+compound = 1.001
+t = 0.0
+
+[distillation.optimizer]
+@optimizers = "Adam.v1"
+beta1 = 0.9
+beta2 = 0.999
+L2_is_weight_decay = true
+L2 = 0.01
+grad_clip = 1.0
+use_averages = false
+eps = 0.00000001
+learn_rate = 0.001
+
 [pretraining]
 
 [initialize]
@@ -172,6 +212,8 @@ def data_paths():
         db.to_disk(fpath)
 
         args = [
+            "--paths.distill",
+            str(fpath),
             "--paths.train",
             str(fpath),
             "--paths.dev",
@@ -211,21 +253,33 @@ def noop_config():
         yield cfg
 
 
+@pytest.fixture
+def noop_model():
+    with make_tempdir() as temp_d:
+        nlp = spacy.blank("en")
+        path = temp_d / "noop-model"
+        nlp.to_disk(path)
+        yield path
+
+
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "cmd",
-    ["debug config", "debug data", "train", "assemble"],
+    ["debug config", "debug data", "train", "assemble", "distill"],
 )
-def test_multi_code(cmd, code_paths, data_paths, noop_config):
+def test_multi_code(cmd, code_paths, data_paths, noop_config, noop_model):
     # check that it fails without the code arg
     cmd = cmd.split()
     output = ["."] if cmd[0] == "assemble" else []
+    model = [str(noop_model)] if cmd[0] == "distill" else []
     cmd = [sys.executable, "-m", "spacy"] + cmd
-    result = subprocess.run([*cmd, str(noop_config), *output, *data_paths])
+    result = subprocess.run([*cmd, *model, str(noop_config), *output, *data_paths])
     assert result.returncode == 1
 
     # check that it succeeds with the code arg
-    result = subprocess.run([*cmd, str(noop_config), *output, *data_paths, *code_paths])
+    result = subprocess.run(
+        [*cmd, *model, str(noop_config), *output, *data_paths, *code_paths]
+    )
     assert result.returncode == 0
 
 

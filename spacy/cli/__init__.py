@@ -12,6 +12,7 @@ from .debug_config import debug_config  # noqa: F401
 from .debug_data import debug_data  # noqa: F401
 from .debug_diff import debug_diff  # noqa: F401
 from .debug_model import debug_model  # noqa: F401
+from .distill import distill  # noqa: F401
 from .download import download  # noqa: F401
 from .evaluate import evaluate  # noqa: F401
 from .find_function import find_function  # noqa: F401
