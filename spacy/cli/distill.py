@@ -55,7 +55,7 @@ def distill_cli(
 
 
 def distill(
-    teacher_model: str,
+    teacher_model: Union[str, Path],
     student_config_path: Union[str, Path],
     output_path: Optional[Union[str, Path]] = None,
     *,
