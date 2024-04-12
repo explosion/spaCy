@@ -561,7 +561,7 @@ overlaps with will be returned.
 | `orth_`        | Verbatim text content (identical to `Span.text`). Exists mostly for consistency with the other attributes. ~~str~~            |
 | `label`        | The hash value of the span's label. ~~int~~                                                                                   |
 | `label_`       | The span's label. ~~str~~                                                                                                     |
-| `lemma_`       | The span's lemma. Equivalent to `"".join(token.text_with_ws for token in span)`. ~~str~~                                      |
+| `lemma_`       | The span's lemma. Equivalent to `"".join(token.lemma_ + token.whitespace_ for token in span).strip()`. ~~str~~                                      |
 | `kb_id`        | The hash value of the knowledge base ID referred to by the span. ~~int~~                                                      |
 | `kb_id_`       | The knowledge base ID referred to by the span. ~~str~~                                                                        |
 | `ent_id`       | The hash value of the named entity the root token is an instance of. ~~int~~                                                  |
