@@ -495,9 +495,16 @@ pre-trained model. The
 [`init fill-curated-transformer`](/api/cli#init-fill-curated-transformer) CLI
 command can be used to automatically fill in these values.
 
-### spacy-curated-transformers.AlbertTransformer.v1
+### spacy-curated-transformers.AlbertTransformer.v2
 
 Construct an ALBERT transformer model.
+
+<Infobox variant="warning">
+
+`v2` of this model added the `dtype` argument to support other PyTorch data types besides `float32`.
+
+</Infobox>
+
 
 | Name                           | Description                                                                              |
 | ------------------------------ | ---------------------------------------------------------------------------------------- |
@@ -505,6 +512,7 @@ Construct an ALBERT transformer model.
 | `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
 | `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
 | `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
+| `dtype`                        | Torch data type (e.g. `"float32"`). ~~str~~                                              |
 | `embedding_width`              | Width of the embedding representations. ~~int~~                                          |
 | `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
 | `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
@@ -522,16 +530,23 @@ Construct an ALBERT transformer model.
 | `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
 | **CREATES**                    | The model using the architecture ~~Model~~                                               |
 
-### spacy-curated-transformers.BertTransformer.v1
+### spacy-curated-transformers.BertTransformer.v2
 
 Construct a BERT transformer model.
 
+<Infobox variant="warning">
+
+`v2` of this model added the `dtype` argument to support other PyTorch data types besides `float32`.
+
+</Infobox>
+
 | Name                           | Description                                                                              |
 | ------------------------------ | ---------------------------------------------------------------------------------------- |
 | `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
 | `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
 | `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
 | `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
+| `dtype`                        | Torch data type (e.g. `"float32"`). ~~str~~                                              |
 | `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
 | `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
 | `hidden_width`                 | Width of the final representations. ~~int~~                                              |
@@ -547,16 +562,23 @@ Construct a BERT transformer model.
 | `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
 | **CREATES**                    | The model using the architecture ~~Model~~                                               |
 
-### spacy-curated-transformers.CamembertTransformer.v1
+### spacy-curated-transformers.CamembertTransformer.v2
 
 Construct a CamemBERT transformer model.
 
+<Infobox variant="warning">
+
+`v2` of this model added the `dtype` argument to support other PyTorch data types besides `float32`.
+
+</Infobox>
+
 | Name                           | Description                                                                              |
 | ------------------------------ | ---------------------------------------------------------------------------------------- |
 | `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
 | `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
 | `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
 | `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
+| `dtype`                        | Torch data type (e.g. `"float32"`). ~~str~~                                              |
 | `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
 | `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
 | `hidden_width`                 | Width of the final representations. ~~int~~                                              |
@@ -572,16 +594,23 @@ Construct a CamemBERT transformer model.
 | `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
 | **CREATES**                    | The model using the architecture ~~Model~~                                               |
 
-### spacy-curated-transformers.RobertaTransformer.v1
+### spacy-curated-transformers.RobertaTransformer.v2
 
 Construct a RoBERTa transformer model.
 
+<Infobox variant="warning">
+
+`v2` of this model added the `dtype` argument to support other PyTorch data types besides `float32`.
+
+</Infobox>
+
 | Name                           | Description                                                                              |
 | ------------------------------ | ---------------------------------------------------------------------------------------- |
 | `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
 | `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
 | `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
 | `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
+| `dtype`                        | Torch data type (e.g. `"float32"`). ~~str~~                                              |
 | `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
 | `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
 | `hidden_width`                 | Width of the final representations. ~~int~~                                              |
@@ -597,9 +626,15 @@ Construct a RoBERTa transformer model.
 | `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
 | **CREATES**                    | The model using the architecture ~~Model~~                                               |
 
-### spacy-curated-transformers.XlmrTransformer.v1
+### spacy-curated-transformers.XlmrTransformer.v2
 
 Construct a XLM-RoBERTa transformer model.
+
+<Infobox variant="warning">
+
+`v2` of this model added the `dtype` argument to support other PyTorch data types besides `float32`.
+
+</Infobox>
 
 | Name                           | Description                                                                              |
 | ------------------------------ | ---------------------------------------------------------------------------------------- |
@@ -607,6 +642,7 @@ Construct a XLM-RoBERTa transformer model.
 | `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
 | `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
 | `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
+| `dtype`                        | Torch data type (e.g. `"float32"`). ~~str~~                                              |
 | `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
 | `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
 | `hidden_width`                 | Width of the final representations. ~~int~~                                              |
