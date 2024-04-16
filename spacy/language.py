@@ -850,7 +850,7 @@ class Language:
         where you provide a config and let spaCy construct the instance). See 'spacy.load'
         for details of how to load back a pipeline with components added by instance.
 
-        pipe_instance (Callable[[Doc], Doc]): The component to add.
+        component (Callable[[Doc], Doc]): The component to add.
         name (str): Name of pipeline component. Overwrites existing
             component.name attribute if available. If no name is set and
             the component exposes no name attribute, component.__name__ is
