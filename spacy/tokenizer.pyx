@@ -70,65 +70,72 @@ cdef class Tokenizer:
         self._special_matcher = PhraseMatcher(self.vocab)
         self._load_special_cases(rules)
 
-    property token_match:
-        def __get__(self):
-            return self._token_match
+    @property
+    def token_match(self):
+        return self._token_match
 
-        def __set__(self, token_match):
-            self._token_match = token_match
-            self._reload_special_cases()
+    @token_match.setter
+    def token_match(self, token_match):
+        self._token_match = token_match
+        self._reload_special_cases()
 
-    property url_match:
-        def __get__(self):
-            return self._url_match
+    @property
+    def url_match(self):
+        return self._url_match
 
-        def __set__(self, url_match):
-            self._url_match = url_match
-            self._reload_special_cases()
+    @url_match.setter
+    def url_match(self, url_match):
+        self._url_match = url_match
+        self._reload_special_cases()
 
-    property prefix_search:
-        def __get__(self):
-            return self._prefix_search
+    @property
+    def prefix_search(self):
+        return self._prefix_search
 
-        def __set__(self, prefix_search):
-            self._prefix_search = prefix_search
-            self._reload_special_cases()
+    @prefix_search.setter
+    def prefix_search(self, prefix_search):
+        self._prefix_search = prefix_search
+        self._reload_special_cases()
 
-    property suffix_search:
-        def __get__(self):
-            return self._suffix_search
+    @property
+    def suffix_search(self):
+        return self._suffix_search
 
-        def __set__(self, suffix_search):
-            self._suffix_search = suffix_search
-            self._reload_special_cases()
+    @suffix_search.setter
+    def suffix_search(self, suffix_search):
+        self._suffix_search = suffix_search
+        self._reload_special_cases()
 
-    property infix_finditer:
-        def __get__(self):
-            return self._infix_finditer
+    @property
+    def infix_finditer(self):
+        return self._infix_finditer
 
-        def __set__(self, infix_finditer):
-            self._infix_finditer = infix_finditer
-            self._reload_special_cases()
+    @infix_finditer.setter
+    def infix_finditer(self, infix_finditer):
+        self._infix_finditer = infix_finditer
+        self._reload_special_cases()
 
-    property rules:
-        def __get__(self):
-            return self._rules
+    @property
+    def rules(self):
+        return self._rules
 
-        def __set__(self, rules):
-            self._rules = {}
-            self._flush_cache()
-            self._flush_specials()
-            self._cache = PreshMap()
-            self._specials = PreshMap()
-            self._load_special_cases(rules)
+    @rules.setter
+    def rules(self, rules):
+        self._rules = {}
+        self._flush_cache()
+        self._flush_specials()
+        self._cache = PreshMap()
+        self._specials = PreshMap()
+        self._load_special_cases(rules)
 
-    property faster_heuristics:
-        def __get__(self):
-            return bool(self._faster_heuristics)
+    @property
+    def faster_heuristics(self):
+        return bool(self._faster_heuristics)
 
-        def __set__(self, faster_heuristics):
-            self._faster_heuristics = bool(faster_heuristics)
-            self._reload_special_cases()
+    @faster_heuristics.setter
+    def faster_heuristics(self, faster_heuristics):
+        self._faster_heuristics = bool(faster_heuristics)
+        self._reload_special_cases()
 
     def __reduce__(self):
         args = (self.vocab,

@@ -88,16 +88,17 @@ cdef class Vocab:
         self.writing_system = writing_system
         self.get_noun_chunks = get_noun_chunks
 
-    property vectors:
-        def __get__(self):
-            return self._vectors
+    @property
+    def vectors(self):
+        return self._vectors
 
-        def __set__(self, vectors):
-            if hasattr(vectors, "strings"):
-                for s in vectors.strings:
-                    self.strings.add(s)
-            self._vectors = vectors
-            self._vectors.strings = self.strings
+    @vectors.setter
+    def vectors(self, vectors):
+        if hasattr(vectors, "strings"):
+            for s in vectors.strings:
+                self.strings.add(s)
+        self._vectors = vectors
+        self._vectors.strings = self.strings
 
     @property
     def lang(self):
@@ -464,17 +465,18 @@ cdef class Vocab:
         key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
         return key in self.vectors
 
-    property lookups:
-        def __get__(self):
-            return self._lookups
+    @property
+    def lookups(self):
+        return self._lookups
 
-        def __set__(self, lookups):
-            self._lookups = lookups
-            if lookups.has_table("lexeme_norm"):
-                self.lex_attr_getters[NORM] = util.add_lookups(
-                    self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
-                    self.lookups.get_table("lexeme_norm"),
-                )
+    @lookups.setter
+    def lookups(self, lookups):
+        self._lookups = lookups
+        if lookups.has_table("lexeme_norm"):
+            self.lex_attr_getters[NORM] = util.add_lookups(
+                self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
+                self.lookups.get_table("lexeme_norm"),
+            )
 
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
