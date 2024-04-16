@@ -771,12 +771,13 @@ class Language:
         raw_config: Optional[Config] = None,
         validate: bool = True,
     ) -> PipeCallable:
-        """Add a component to the processing pipeline. Valid components are
-        callables that take a `Doc` object, modify it and return it. Only one
-        of before/after/first/last can be set. Default behaviour is "last".
-        Components can be added either by factory name or by instance. If
-        an instance is supplied and you serialize the pipeline, you'll need
-        to also pass an instance into spacy.load() to construct the pipeline.
+        """Add a component to the processing pipeline, by factory name and config.
+        Valid components are callables that take a `Doc` object, modify it, and return it.
+        Only one of before/after/first/last can be set. Default behaviour is "last".
+
+        Using this method tells spaCy how to construct your component, allowing you to load
+        your pipeline back using generic code. See 'Language.add_pipe_instance' to add a
+        component object instead, avoiding the need to create a factory.
 
         factory_name (str): Name of the component factory.
         name (str): Name of pipeline component. Overwrites existing
