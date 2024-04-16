@@ -2436,8 +2436,7 @@ def _get_instantiated_vocab(
                 resolved_vocab = inst_voc
             elif inst_voc is not resolved_vocab:
                 warnings.warn(Warnings.W126.format(name=name))
-        # This is supposed to only be for the type checker --
-        # it should be unreachable
+        # We should guarantee a vocab from the logic above.
         assert resolved_vocab is not None
         return resolved_vocab
 
