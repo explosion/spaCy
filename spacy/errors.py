@@ -220,7 +220,7 @@ class Warnings(metaclass=ErrorsWithCodes):
             "key attribute for vectors, configure it through Vectors(attr=) or "
             "'spacy init vectors --attr'")
     W126 = ("Pipe instance '{name}' is being added with a vocab "
-            "instance that will not match other components. This is "
+            "instance that does not match other components. This is "
             "usually an error.")
 
 
