@@ -16,7 +16,7 @@ These packages are always pulled in when you install spaCy. Most of them are dir
 - [preshed](https://github.com/explosion/preshed): A Cython library for low-level data structures like hash maps, used for memory efficient data storage.
 - [cython-blis](https://github.com/explosion/cython-blis): Fast matrix multiplication using BLIS without depending on system libraries. Required by Thinc, rather than spaCy directly.
 - [murmurhash](https://github.com/explosion/murmurhash): A wrapper library for a C++ murmurhash implementation, used for string IDs in spaCy and preshed.
-- [cymem](https://github.com/explosion/cymem): A small library for RAII-style memory management in Cython. 
+- [cymem](https://github.com/explosion/cymem): A small library for RAII-style memory management in Cython.
 
 ## Optional Extensions for spaCy
 
@@ -25,13 +25,12 @@ These are repos that can be used by spaCy but aren&#39;t part of a default insta
 - [spacy-transformers](https://github.com/explosion/spacy-transformers): A wrapper for the [HuggingFace Transformers](https://huggingface.co/docs/transformers/index) library, this handles the extensive conversion necessary to coordinate spaCy&#39;s powerful `Doc` representation, training pipeline, and the Transformer embeddings. When released, this was known as `spacy-pytorch-transformers`, but it changed to the current name when HuggingFace update the name of their library as well.
 - [spacy-huggingface-hub](https://github.com/explosion/spacy-huggingface-hub): This package has a CLI script for uploading a packaged spaCy pipeline (created with `spacy package`) to the [Hugging Face Hub](https://huggingface.co/models).
 - [spacy-alignments](https://github.com/explosion/spacy-alignments): A wrapper for the tokenizations library (mentioned below) with a modified build system to simplify cross-platform wheel creation. Used in spacy-transformers for aligning spaCy and HuggingFace tokenizations.
-- [spacy-experimental](https://github.com/explosion/spacy-experimental): Experimental components that are not quite ready for inclusion in the main spaCy library. Usually there are unresolved questions around their APIs, so the experimental library allows us to expose them to the community for feedback before fully integrating them. 
+- [spacy-experimental](https://github.com/explosion/spacy-experimental): Experimental components that are not quite ready for inclusion in the main spaCy library. Usually there are unresolved questions around their APIs, so the experimental library allows us to expose them to the community for feedback before fully integrating them.
 - [spacy-lookups-data](https://github.com/explosion/spacy-lookups-data): A repository of linguistic data, such as lemmas, that takes up a lot of disk space. Originally created to reduce the size of the spaCy core library. This is mainly useful if you want the data included but aren&#39;t using a pretrained pipeline; for the affected languages, the relevant data is included in pretrained pipelines directly.
 - [coreferee](https://github.com/explosion/coreferee): Coreference resolution for English, French, German and Polish, optimised for limited training data and easily extensible for further languages. Used as a spaCy pipeline component.
-- [spacy-stanza](https://github.com/explosion/spacy-stanza): This is a wrapper that allows the use of Stanford&#39;s Stanza library in spaCy. 
+- [spacy-stanza](https://github.com/explosion/spacy-stanza): This is a wrapper that allows the use of Stanford&#39;s Stanza library in spaCy.
 - [spacy-streamlit](https://github.com/explosion/spacy-streamlit): A wrapper for the Streamlit dashboard building library to help with integrating [displaCy](https://spacy.io/api/top-level/#displacy).
 - [spacymoji](https://github.com/explosion/spacymoji): A library to add extra support for emoji to spaCy, such as including character names.
-- [thinc-apple-ops](https://github.com/explosion/thinc-apple-ops): A special backend for OSX that uses Apple&#39;s native libraries for improved performance.
 - [os-signpost](https://github.com/explosion/os-signpost): A Python package that allows you to use the `OSSignposter` API in OSX for performance analysis.
 - [spacy-ray](https://github.com/explosion/spacy-ray): A wrapper to integrate spaCy with Ray, a distributed training framework. Currently a work in progress.
 
@@ -79,4 +78,3 @@ Repos that don&#39;t fit in any of the above categories.
 - [tokenizations](https://github.com/explosion/tokenizations): A library originally by Yohei Tamura to align strings with tolerance to some variations in features like case and diacritics, used for aligning tokens and wordpieces. Adopted and maintained by Explosion, but usually spacy-alignments is used instead.
 - [conll-2012](https://github.com/explosion/conll-2012): A repo to hold some slightly cleaned up versions of the official scripts for the CoNLL 2012 shared task involving coreference resolution. Used in the coref project.
 - [fastapi-explosion-extras](https://github.com/explosion/fastapi-explosion-extras): Some small tweaks to FastAPI used at Explosion.
-
