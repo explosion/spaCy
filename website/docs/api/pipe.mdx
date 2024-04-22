@@ -476,6 +476,17 @@ as an attribute to the component's model.
 | ----------- | ---------------------------------------------------------------------------------------------- |
 | **RETURNS** | Whether or not the output dimension of the model can be changed after initialization. ~~bool~~ |
 
+## TrainablePipe.save_activations {id="save_activations",tag="property",version="4"}
+
+Check/set whether this component stores activations. When enabled, the
+activations of the pipe's model are stored in the
+[`Doc.activations`](/api/doc#attributes) dictionary when
+[`set_annotations`](set_annotations) is called.
+
+| Name        | Description                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------- |
+| **RETURNS** | Whether to save activations in the `Doc` object in [`set_annotations`](set_annotations). ~~bool~~ |
+
 ## TrainablePipe.set_output {id="set_output",tag="method"}
 
 Change the output dimension of the component's model. If the component is not
