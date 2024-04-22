@@ -30,7 +30,7 @@ jobs:
       - name: Configure Python version
         uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
+          python-version: "3.9"
           architecture: x64
 
       - name: black
@@ -60,8 +60,6 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python_version: ["3.12"]
         include:
-          - os: macos-latest
-            python_version: "3.8"
           - os: ubuntu-20.04
             python_version: "3.9"
           - os: windows-latest

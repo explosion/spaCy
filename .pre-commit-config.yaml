@@ -1,13 +1,13 @@
 repos:
--   repo: https://github.com/ambv/black
+  - repo: https://github.com/ambv/black
     rev: 22.3.0
     hooks:
-    - id: black
-      language_version: python3.8
-      additional_dependencies: ['click==8.0.4']
--   repo: https://github.com/pycqa/flake8
+      - id: black
+        language_version: python3.9
+        additional_dependencies: ["click==8.0.4"]
+  - repo: https://github.com/pycqa/flake8
     rev: 5.0.4
     hooks:
-    - id: flake8
-      args:
-        - "--config=setup.cfg"
+      - id: flake8
+        args:
+          - "--config=setup.cfg"
