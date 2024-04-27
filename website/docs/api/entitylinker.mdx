@@ -74,10 +74,10 @@ architectures and their arguments and hyperparameters.
 Prior to spaCy v4.0 `get_candidates()` returns a single `Iterable` of candidates
 for one specific mention, i. e. the function was typed as
 `Callable[[KnowledgeBase, Span], Iterable[Candidate]]`. To retrieve candidates
-batch-wise, spaCy >= 3.5 exposes `get_candidates_batched()`, which identifies
+batch-wise, spaCy >= 3.5 exposes `get_candidates_batch()`, which identifies
 candidates for an arbitrary number of spans:
 `Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]]`. The
-main difference between `get_candidates_batched()` and `get_candidates()` in
+main difference between `get_candidates_batch()` and `get_candidates()` in
 spaCy >= 4.0 is that the latter considers the grouping of provided mention spans
 per `Doc` instance.
 

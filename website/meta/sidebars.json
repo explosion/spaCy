@@ -9,9 +9,9 @@
                     { "text": "Models & Languages", "url": "/usage/models" },
                     { "text": "Facts & Figures", "url": "/usage/facts-figures" },
                     { "text": "spaCy 101", "url": "/usage/spacy-101" },
+                    { "text": "New in v4.0", "url": "/usage/v4" },
                     { "text": "New in v3.7", "url": "/usage/v3-7" },
-                    { "text": "New in v3.6", "url": "/usage/v3-6" },
-                    { "text": "New in v3.5", "url": "/usage/v3-5" }
+                    { "text": "New in v3.6", "url": "/usage/v3-6" }
                 ]
             },
             {
