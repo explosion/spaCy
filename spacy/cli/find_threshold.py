@@ -39,7 +39,7 @@ def find_threshold_cli(
     # fmt: on
 ):
     """
-    Runs prediction trials for a trained model with varying tresholds to maximize
+    Runs prediction trials for a trained model with varying thresholds to maximize
     the specified metric. The search space for the threshold is traversed linearly
     from 0 to 1 in `n_trials` steps. Results are displayed in a table on `stdout`
     (the corresponding API call to `spacy.cli.find_threshold.find_threshold()`
@@ -81,7 +81,7 @@ def find_threshold(
     silent: bool = True,
 ) -> Tuple[float, float, Dict[float, float]]:
     """
-    Runs prediction trials for models with varying tresholds to maximize the specified metric.
+    Runs prediction trials for models with varying thresholds to maximize the specified metric.
     model (Union[str, Path]): Pipeline to evaluate. Can be a package or a path to a data directory.
     data_path (Path): Path to file with DocBin with docs to use for threshold search.
     pipe_name (str): Name of pipe to examine thresholds for.
