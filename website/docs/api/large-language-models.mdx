@@ -1461,6 +1461,8 @@ different than working with models from other providers:
   `"completions"` or `"chat"`, depending on whether the deployed model is a
   completion or chat model.
 
+**⚠️ A note on `spacy.Ollama.v1`.** The Ollama models are all local models that run on your GPU-backed machine. Please refer to the [Ollama docs](https://ollama.com/) for more information on installation, but the basic flow will see you running `ollama serve` to start the local server that will route incoming requests from `spacy-llm` to the model. Depending on which model you want, you'll then need to run `ollama pull <MODEL_NAME>` which will download the quantised model files to your local machine.
+
 #### API Keys {id="api-keys"}
 
 Note that when using hosted services, you have to ensure that the proper API
