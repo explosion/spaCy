@@ -1650,10 +1650,10 @@ $ python -m spacy huggingface-hub push [whl_path] [--org] [--msg] [--verbose]
 > $ python -m spacy huggingface-hub push en_ner_fashion-0.0.0-py3-none-any.whl
 > ```
 
-| Name                 | Description                                                                                                                                     |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `whl_path`           | The path to the `.whl` file packaged with [`spacy package`](https://spacy.io/api/cli#package). ~~Path(positional)~~                             |
-| `--org`, `-o`        | Optional name of organization to which the pipeline should be uploaded. ~~str (option)~~                                                        |
-| `--msg`, `-m`        | Commit message to use for update. Defaults to `"Update spaCy pipeline"`. ~~str (option)~~                                                       |
-| `--verbose`, `-V`    | Output additional info for debugging, e.g. the full generated hub metadata. ~~bool (flag)~~                                                     |
-| **UPLOADS**          | The pipeline to the hub.                                                                                                                        |
+| Name              | Description                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `whl_path`        | The path to the `.whl` file packaged with [`spacy package`](https://spacy.io/api/cli#package). ~~Path(positional)~~ |
+| `--org`, `-o`     | Optional name of organization to which the pipeline should be uploaded. ~~str (option)~~                            |
+| `--msg`, `-m`     | Commit message to use for update. Defaults to `"Update spaCy pipeline"`. ~~str (option)~~                           |
+| `--verbose`, `-V` | Output additional info for debugging, e.g. the full generated hub metadata. ~~bool (flag)~~                         |
+| **UPLOADS**       | The pipeline to the hub.                                                                                            |
