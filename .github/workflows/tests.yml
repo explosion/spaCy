@@ -31,7 +31,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.7"
-          architecture: x64
 
       - name: black
         run: |
@@ -81,7 +80,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python_version }}
-          architecture: x64
 
       - name: Install dependencies
         run: |
