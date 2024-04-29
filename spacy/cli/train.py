@@ -1,15 +1,23 @@
-from typing import Optional, Dict, Any, Union
-from pathlib import Path
-from wasabi import msg
-import typer
 import logging
 import sys
+from pathlib import Path
+from typing import Any, Dict, Optional, Union
 
-from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, setup_gpu
-from ..training.loop import train as train_nlp
-from ..training.initialize import init_nlp
+import typer
+from wasabi import msg
+
 from .. import util
+from ..training.initialize import init_nlp
+from ..training.loop import train as train_nlp
+from ._util import (
+    Arg,
+    Opt,
+    app,
+    import_code,
+    parse_config_overrides,
+    setup_gpu,
+    show_validation_error,
+)
 
 
 @app.command(
@@ -39,7 +47,8 @@ def train_cli(
 
     DOCS: https://spacy.io/api/cli#train
     """
-    util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    if verbose:
+        util.logger.setLevel(logging.DEBUG)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     train(config_path, output_path, use_gpu=use_gpu, overrides=overrides)

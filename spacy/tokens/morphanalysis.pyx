@@ -1,11 +1,13 @@
-from libc.string cimport memset
+# cython: profile=False
 cimport numpy as np
+from libc.string cimport memset
 
 from ..errors import Errors
 from ..morphology import Morphology
+
+from ..morphology cimport check_feature, get_by_field, list_features
+from ..typedefs cimport attr_t, hash_t
 from ..vocab cimport Vocab
-from ..typedefs cimport hash_t, attr_t
-from ..morphology cimport list_features, check_feature, get_by_field
 
 
 cdef class MorphAnalysis:
@@ -88,4 +90,3 @@ cdef class MorphAnalysis:
 
     def __repr__(self):
         return self.to_json()
-

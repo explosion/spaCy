@@ -1,6 +1,7 @@
-from typing import List, Tuple
-from itertools import chain
+# cython: profile=False
 import re
+from itertools import chain
+from typing import List, Tuple
 
 from ..errors import Errors
 
@@ -37,10 +38,14 @@ def get_alignments(A: List[str], B: List[str]) -> Tuple[List[List[int]], List[Li
             b2a.append(set())
         # Process the alignment at the current position
         if A[token_idx_a] == B[token_idx_b] and \
-                (char_idx_a == 0 or \
-                    char_to_token_a[char_idx_a - 1] < token_idx_a) and \
-                (char_idx_b == 0 or \
-                    char_to_token_b[char_idx_b - 1] < token_idx_b):
+                (
+                    char_idx_a == 0 or
+                    char_to_token_a[char_idx_a - 1] < token_idx_a
+                ) and \
+                (
+                    char_idx_b == 0 or
+                    char_to_token_b[char_idx_b - 1] < token_idx_b
+                ):
             # Current tokens are identical and both character offsets are the
             # start of a token (either at the beginning of the document or the
             # previous character belongs to a different token)

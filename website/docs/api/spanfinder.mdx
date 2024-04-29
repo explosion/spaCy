@@ -60,7 +60,7 @@ architectures and their arguments and hyperparameters.
 | `model`      | A model instance that is given a list of documents and predicts a probability for each token. ~~Model[List[Doc], Floats2d]~~                                                                                           |
 | `spans_key`  | Key of the [`Doc.spans`](/api/doc#spans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"sc"`. ~~str~~ |
 | `threshold`  | Minimum probability to consider a prediction positive. Defaults to `0.5`. ~~float~~                                                                                                                                    |
-| `max_length` | Maximum length of the produced spans, defaults to `None` meaning unlimited length. ~~Optional[int]~~                                                                                                                   |
+| `max_length` | Maximum length of the produced spans, defaults to `25`. ~~Optional[int]~~                                                                                                                                              |
 | `min_length` | Minimum length of the produced spans, defaults to `None` meaning shortest span length is 1. ~~Optional[int]~~                                                                                                          |
 | `scorer`     | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                      |
 

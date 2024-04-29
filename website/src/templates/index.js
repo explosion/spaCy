@@ -58,8 +58,8 @@ const AlertSpace = ({ nightly, legacy }) => {
 }
 
 const navAlert = (
-    <Link to="/usage/v3-5" noLinkLayout>
-        <strong>💥 Out now:</strong> spaCy v3.5
+    <Link to="https://form.typeform.com/to/WlflqP1b" noLinkLayout>
+        💥 Interested in <strong>Premium spaCy Models</strong>?
     </Link>
 )
 

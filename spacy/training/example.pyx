@@ -1,19 +1,29 @@
+# cython: profile=False
 from collections.abc import Iterable as IterableInstance
-import warnings
+
 import numpy
+
 from murmurhash.mrmr cimport hash64
 
 from ..tokens.doc cimport Doc
 from ..tokens.span cimport Span
-from ..tokens.span import Span
+
 from ..attrs import IDS
-from .alignment import Alignment
-from .iob_utils import biluo_to_iob, offsets_to_biluo_tags, doc_to_biluo_tags
-from .iob_utils import biluo_tags_to_spans, remove_bilu_prefix
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
+from ..tokens.span import Span
+from .alignment import Alignment
+from .iob_utils import (
+    biluo_tags_to_spans,
+    biluo_to_iob,
+    doc_to_biluo_tags,
+    offsets_to_biluo_tags,
+    remove_bilu_prefix,
+)
+
 from ..tokens.token cimport MISSING_DEP
-from ..util import logger, to_ternary_int, all_equal
+
+from ..util import all_equal, logger, to_ternary_int
 
 
 cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
@@ -21,9 +31,9 @@ cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
     attrs, array = _annot2array(vocab, tok_annot, doc_annot)
     output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
     if "entities" in doc_annot:
-       _add_entities_to_doc(output, doc_annot["entities"])
+        _add_entities_to_doc(output, doc_annot["entities"])
     if "spans" in doc_annot:
-       _add_spans_to_doc(output, doc_annot["spans"])
+        _add_spans_to_doc(output, doc_annot["spans"])
     if array.size:
         output = output.from_array(attrs, array)
     # links are currently added with ENT_KB_ID on the token level
@@ -78,23 +88,25 @@ cdef class Example:
     def __len__(self):
         return len(self.predicted)
 
-    property predicted:
-        def __get__(self):
-            return self.x
+    @property
+    def predicted(self):
+        return self.x
 
-        def __set__(self, doc):
-            self.x = doc
-            self._cached_alignment = None
-            self._cached_words_x = [t.text for t in doc]
+    @predicted.setter
+    def predicted(self, doc):
+        self.x = doc
+        self._cached_alignment = None
+        self._cached_words_x = [t.text for t in doc]
 
-    property reference:
-        def __get__(self):
-            return self.y
+    @property
+    def reference(self):
+        return self.y
 
-        def __set__(self, doc):
-            self.y = doc
-            self._cached_alignment = None
-            self._cached_words_y = [t.text for t in doc]
+    @reference.setter
+    def reference(self, doc):
+        self.y = doc
+        self._cached_alignment = None
+        self._cached_words_y = [t.text for t in doc]
 
     def copy(self):
         return Example(
@@ -151,7 +163,6 @@ cdef class Example:
                 self._y_sig = y_sig
                 return self._cached_alignment
 
-
     def _get_aligned_vectorized(self, align, gold_values):
         # Fast path for Doc attributes/fields that are predominantly a single value,
         # i.e., TAG, POS, MORPH.
@@ -194,7 +205,6 @@ cdef class Example:
 
         return output.tolist()
 
-
     def _get_aligned_non_vectorized(self, align, gold_values):
         # Slower path for fields that return multiple values (resulting
         # in ragged arrays that cannot be vectorized trivially).
@@ -210,7 +220,6 @@ cdef class Example:
                 output[token.i] = values[0].item()
 
         return output
-
 
     def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""
@@ -320,7 +329,7 @@ cdef class Example:
             missing=None
         )
         # Now fill the tokens we can align to O.
-        O = 2 # I=1, O=2, B=3
+        O = 2 # I=1, O=2, B=3  # no-cython-lint: E741
         for i, ent_iob in enumerate(self.get_aligned("ENT_IOB")):
             if x_tags[i] is None:
                 if ent_iob == O:
@@ -330,7 +339,7 @@ cdef class Example:
         return x_ents, x_tags
 
     def get_aligned_ner(self):
-        x_ents, x_tags = self.get_aligned_ents_and_ner()
+        _x_ents, x_tags = self.get_aligned_ents_and_ner()
         return x_tags
 
     def get_matching_ents(self, check_label=True):
@@ -388,7 +397,6 @@ cdef class Example:
 
         return span_dict
 
-
     def _links_to_dict(self):
         links = {}
         for ent in self.reference.ents:
@@ -414,9 +422,9 @@ cdef class Example:
                 seen_indices.update(indices)
         return output
 
-    property text:
-        def __get__(self):
-            return self.x.text
+    @property
+    def text(self):
+        return self.x.text
 
     def __str__(self):
         return str(self.to_dict())
@@ -579,6 +587,7 @@ def _fix_legacy_dict_data(example_dict):
         "doc_annotation": doc_dict
     }
 
+
 def _has_field(annot, field):
     if field not in annot:
         return False
@@ -614,6 +623,7 @@ def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces):
             else:
                 ent_types.append("")
     return ent_iobs, ent_types
+
 
 def _parse_links(vocab, words, spaces, links):
     reference = Doc(vocab, words=words, spaces=spaces)

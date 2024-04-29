@@ -1,17 +1,18 @@
-# cython: infer_types=True, profile=True, binding=True
-from typing import Optional, List, Callable
+# cython: infer_types=True, binding=True
+from typing import Callable, List, Optional
+
 import srsly
 
 from ..tokens.doc cimport Doc
 
+from .. import util
+from ..language import Language
 from .pipe import Pipe
 from .senter import senter_score
-from ..language import Language
-from ..scorer import Scorer
-from .. import util
 
 # see #9050
 BACKWARD_OVERWRITE = False
+
 
 @Language.factory(
     "sentencizer",
@@ -35,17 +36,19 @@ class Sentencizer(Pipe):
     DOCS: https://spacy.io/api/sentencizer
     """
 
-    default_punct_chars = ['!', '.', '?', '։', '؟', '۔', '܀', '܁', '܂', '߹',
-            '।', '॥', '၊', '။', '።', '፧', '፨', '᙮', '᜵', '᜶', '᠃', '᠉', '᥄',
-            '᥅', '᪨', '᪩', '᪪', '᪫', '᭚', '᭛', '᭞', '᭟', '᰻', '᰼', '᱾', '᱿',
-            '‼', '‽', '⁇', '⁈', '⁉', '⸮', '⸼', '꓿', '꘎', '꘏', '꛳', '꛷', '꡶',
-            '꡷', '꣎', '꣏', '꤯', '꧈', '꧉', '꩝', '꩞', '꩟', '꫰', '꫱', '꯫', '﹒',
-            '﹖', '﹗', '！', '．', '？', '𐩖', '𐩗', '𑁇', '𑁈', '𑂾', '𑂿', '𑃀',
-            '𑃁', '𑅁', '𑅂', '𑅃', '𑇅', '𑇆', '𑇍', '𑇞', '𑇟', '𑈸', '𑈹', '𑈻', '𑈼',
-            '𑊩', '𑑋', '𑑌', '𑗂', '𑗃', '𑗉', '𑗊', '𑗋', '𑗌', '𑗍', '𑗎', '𑗏', '𑗐',
-            '𑗑', '𑗒', '𑗓', '𑗔', '𑗕', '𑗖', '𑗗', '𑙁', '𑙂', '𑜼', '𑜽', '𑜾', '𑩂',
-            '𑩃', '𑪛', '𑪜', '𑱁', '𑱂', '𖩮', '𖩯', '𖫵', '𖬷', '𖬸', '𖭄', '𛲟', '𝪈',
-            '｡', '。']
+    default_punct_chars = [
+        '!', '.', '?', '։', '؟', '۔', '܀', '܁', '܂', '߹',
+        '।', '॥', '၊', '။', '።', '፧', '፨', '᙮', '᜵', '᜶', '᠃', '᠉', '᥄',
+        '᥅', '᪨', '᪩', '᪪', '᪫', '᭚', '᭛', '᭞', '᭟', '᰻', '᰼', '᱾', '᱿',
+        '‼', '‽', '⁇', '⁈', '⁉', '⸮', '⸼', '꓿', '꘎', '꘏', '꛳', '꛷', '꡶',
+        '꡷', '꣎', '꣏', '꤯', '꧈', '꧉', '꩝', '꩞', '꩟', '꫰', '꫱', '꯫', '﹒',
+        '﹖', '﹗', '！', '．', '？', '𐩖', '𐩗', '𑁇', '𑁈', '𑂾', '𑂿', '𑃀',
+        '𑃁', '𑅁', '𑅂', '𑅃', '𑇅', '𑇆', '𑇍', '𑇞', '𑇟', '𑈸', '𑈹', '𑈻', '𑈼',
+        '𑊩', '𑑋', '𑑌', '𑗂', '𑗃', '𑗉', '𑗊', '𑗋', '𑗌', '𑗍', '𑗎', '𑗏', '𑗐',
+        '𑗑', '𑗒', '𑗓', '𑗔', '𑗕', '𑗖', '𑗗', '𑙁', '𑙂', '𑜼', '𑜽', '𑜾', '𑩂',
+        '𑩃', '𑪛', '𑪜', '𑱁', '𑱂', '𖩮', '𖩯', '𖫵', '𖬷', '𖬸', '𖭄', '𛲟', '𝪈',
+        '｡', '。'
+    ]
 
     def __init__(
         self,
@@ -127,7 +130,6 @@ class Sentencizer(Pipe):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
-        cdef int idx = 0
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             for j, tag_id in enumerate(doc_tag_ids):
@@ -167,7 +169,6 @@ class Sentencizer(Pipe):
         path = util.ensure_path(path)
         path = path.with_suffix(".json")
         srsly.write_json(path, {"punct_chars": list(self.punct_chars), "overwrite": self.overwrite})
-
 
     def from_disk(self, path, *, exclude=tuple()):
         """Load the sentencizer from disk.

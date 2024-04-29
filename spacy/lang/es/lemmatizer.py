@@ -1,5 +1,5 @@
-from typing import List, Optional, Tuple
 import re
+from typing import List, Optional, Tuple
 
 from ...pipeline import Lemmatizer
 from ...tokens import Token
@@ -163,7 +163,7 @@ class SpanishLemmatizer(Lemmatizer):
         for old, new in self.lookups.get_table("lemma_rules").get("det", []):
             if word == old:
                 return [new]
-        # If none of the specfic rules apply, search in the common rules for
+        # If none of the specific rules apply, search in the common rules for
         # determiners and pronouns that follow a unique pattern for
         # lemmatization. If the word is in the list, return the corresponding
         # lemma.
@@ -291,7 +291,7 @@ class SpanishLemmatizer(Lemmatizer):
         for old, new in self.lookups.get_table("lemma_rules").get("pron", []):
             if word == old:
                 return [new]
-        # If none of the specfic rules apply, search in the common rules for
+        # If none of the specific rules apply, search in the common rules for
         # determiners and pronouns that follow a unique pattern for
         # lemmatization. If the word is in the list, return the corresponding
         # lemma.

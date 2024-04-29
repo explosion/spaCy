@@ -1,17 +1,54 @@
-from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple
-from typing import Iterable, TypeVar, TYPE_CHECKING
-from .compat import Literal
-from enum import Enum
-from pydantic import BaseModel, Field, ValidationError, validator, create_model
-from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, ConstrainedStr
-from pydantic.main import ModelMetaclass
-from thinc.api import Optimizer, ConfigValidationError, Model
-from thinc.config import Promise
-from collections import defaultdict
 import inspect
 import re
+from collections import defaultdict
+from enum import Enum
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
+
+try:
+    from pydantic.v1 import (
+        BaseModel,
+        ConstrainedStr,
+        Field,
+        StrictBool,
+        StrictFloat,
+        StrictInt,
+        StrictStr,
+        ValidationError,
+        create_model,
+        validator,
+    )
+    from pydantic.v1.main import ModelMetaclass
+except ImportError:
+    from pydantic import (  # type: ignore
+        BaseModel,
+        ConstrainedStr,
+        Field,
+        StrictBool,
+        StrictFloat,
+        StrictInt,
+        StrictStr,
+        ValidationError,
+        create_model,
+        validator,
+    )
+    from pydantic.main import ModelMetaclass  # type: ignore
+from thinc.api import ConfigValidationError, Model, Optimizer
+from thinc.config import Promise
 
 from .attrs import NAMES
+from .compat import Literal
 from .lookups import Lookups
 from .util import is_cython_func
 
@@ -375,6 +412,7 @@ class ConfigSchemaNlp(BaseModel):
     after_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after creation and before the pipeline is constructed")
     after_pipeline_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after the pipeline is constructed")
     batch_size: Optional[int] = Field(..., title="Default batch size")
+    vectors: Callable = Field(..., title="Vectors implementation")
     # fmt: on
 
     class Config:
@@ -442,66 +480,6 @@ CONFIG_SCHEMAS = {
     "pretraining": ConfigSchemaPretrain,
     "initialize": ConfigSchemaInit,
 }
-
-
-# Project config Schema
-
-
-class ProjectConfigAssetGitItem(BaseModel):
-    # fmt: off
-    repo: StrictStr = Field(..., title="URL of Git repo to download from")
-    path: StrictStr = Field(..., title="File path or sub-directory to download (used for sparse checkout)")
-    branch: StrictStr = Field("master", title="Branch to clone from")
-    # fmt: on
-
-
-class ProjectConfigAssetURL(BaseModel):
-    # fmt: off
-    dest: StrictStr = Field(..., title="Destination of downloaded asset")
-    url: Optional[StrictStr] = Field(None, title="URL of asset")
-    checksum: Optional[str] = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
-    description: StrictStr = Field("", title="Description of asset")
-    # fmt: on
-
-
-class ProjectConfigAssetGit(BaseModel):
-    # fmt: off
-    git: ProjectConfigAssetGitItem = Field(..., title="Git repo information")
-    checksum: Optional[str] = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
-    description: Optional[StrictStr] = Field(None, title="Description of asset")
-    # fmt: on
-
-
-class ProjectConfigCommand(BaseModel):
-    # fmt: off
-    name: StrictStr = Field(..., title="Name of command")
-    help: Optional[StrictStr] = Field(None, title="Command description")
-    script: List[StrictStr] = Field([], title="List of CLI commands to run, in order")
-    deps: List[StrictStr] = Field([], title="File dependencies required by this command")
-    outputs: List[StrictStr] = Field([], title="Outputs produced by this command")
-    outputs_no_cache: List[StrictStr] = Field([], title="Outputs not tracked by DVC (DVC only)")
-    no_skip: bool = Field(False, title="Never skip this command, even if nothing changed")
-    # fmt: on
-
-    class Config:
-        title = "A single named command specified in a project config"
-        extra = "forbid"
-
-
-class ProjectConfigSchema(BaseModel):
-    # fmt: off
-    vars: Dict[StrictStr, Any] = Field({}, title="Optional variables to substitute in commands")
-    env: Dict[StrictStr, Any] = Field({}, title="Optional variable names to substitute in commands, mapped to environment variable names")
-    assets: List[Union[ProjectConfigAssetURL, ProjectConfigAssetGit]] = Field([], title="Data assets")
-    workflows: Dict[StrictStr, List[StrictStr]] = Field({}, title="Named workflows, mapped to list of project commands to run in order")
-    commands: List[ProjectConfigCommand] = Field([], title="Project command shortucts")
-    title: Optional[str] = Field(None, title="Project title")
-    spacy_version: Optional[StrictStr] = Field(None, title="spaCy version range that the project is compatible with")
-    # fmt: on
-
-    class Config:
-        title = "Schema for project configuration file"
-
 
 # Recommendations for init config workflows
 

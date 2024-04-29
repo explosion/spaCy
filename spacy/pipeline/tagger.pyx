@@ -1,26 +1,19 @@
-# cython: infer_types=True, profile=True, binding=True
-from typing import Callable, Optional
-import numpy
-import srsly
-from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
-from thinc.types import Floats2d
-import warnings
+# cython: infer_types=True, binding=True
 from itertools import islice
+from typing import Callable, Optional
+
+import numpy
+from thinc.api import Config, Model, SequenceCategoricalCrossentropy, set_dropout_rate
 
 from ..tokens.doc cimport Doc
-from ..morphology cimport Morphology
-from ..vocab cimport Vocab
 
-from .trainable_pipe import TrainablePipe
-from .pipe import deserialize_config
+from .. import util
+from ..errors import Errors
 from ..language import Language
-from ..attrs import POS, ID
-from ..parts_of_speech import X
-from ..errors import Errors, Warnings
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
 from ..util import registry
-from .. import util
+from .trainable_pipe import TrainablePipe
 
 # See #9050
 BACKWARD_OVERWRITE = False
@@ -168,7 +161,6 @@ class Tagger(TrainablePipe):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
-        cdef Vocab vocab = self.vocab
         cdef bint overwrite = self.cfg["overwrite"]
         labels = self.labels
         for i, doc in enumerate(docs):

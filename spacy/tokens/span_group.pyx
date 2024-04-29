@@ -1,10 +1,13 @@
-from typing import Iterable, Tuple, Union, Optional, TYPE_CHECKING
-import weakref
+# cython: profile=False
 import struct
+import weakref
 from copy import deepcopy
+from typing import Iterable, Optional, Union
+
 import srsly
 
 from spacy.errors import Errors
+
 from .span cimport Span
 
 
@@ -32,7 +35,7 @@ cdef class SpanGroup:
 
     DOCS: https://spacy.io/api/spangroup
     """
-    def __init__(self, doc, *, name="", attrs={}, spans=[]):
+    def __init__(self, doc, *, name="", attrs={}, spans=[]):  # no-cython-lint
         """Create a SpanGroup.
 
         doc (Doc): The reference Doc object.
@@ -309,7 +312,7 @@ cdef class SpanGroup:
 
             other_attrs = deepcopy(other_group.attrs)
             span_group.attrs.update({
-                key: value for key, value in other_attrs.items() \
+                key: value for key, value in other_attrs.items()
                 if key not in span_group.attrs
             })
             if len(other_group):

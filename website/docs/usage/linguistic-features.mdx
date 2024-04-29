@@ -113,7 +113,7 @@ print(doc[2].morph)  # 'Case=Nom|Person=2|PronType=Prs'
 print(doc[2].pos_)  # 'PRON'
 ```
 
-## Lemmatization {id="lemmatization",model="lemmatizer",version="3"}
+## Lemmatization {id="lemmatization",version="3"}
 
 spaCy provides two pipeline components for lemmatization:
 
@@ -170,7 +170,7 @@ nlp = spacy.blank("sv")
 nlp.add_pipe("lemmatizer", config={"mode": "lookup"})
 ```
 
-### Rule-based lemmatizer {id="lemmatizer-rule"}
+### Rule-based lemmatizer {id="lemmatizer-rule",model="morphologizer"}
 
 When training pipelines that include a component that assigns part-of-speech
 tags (a morphologizer or a tagger with a [POS mapping](#mappings-exceptions)), a
@@ -194,7 +194,7 @@ information, without consulting the context of the token. The rule-based
 lemmatizer also accepts list-based exception files. For English, these are
 acquired from [WordNet](https://wordnet.princeton.edu/).
 
-### Trainable lemmatizer
+### Trainable lemmatizer {id="lemmatizer-train",model="trainable_lemmatizer"}
 
 The [`EditTreeLemmatizer`](/api/edittreelemmatizer) can learn form-to-lemma
 transformations from a training corpus that includes lemma annotations. This
@@ -290,11 +290,7 @@ for token in doc:
 | toward        | `prep`     | shift     | `NOUN`   | manufacturers           |
 | manufacturers | `pobj`     | toward    | `ADP`    |                         |
 
-<Iframe
-  title="displaCy visualization of dependencies and entities 2"
-  src="/images/displacy-long2.html"
-  height={450}
-/>
+<ImageScrollable src="/images/displacy-long2.svg" width={1275} />
 
 Because the syntactic relations form a tree, every word has **exactly one
 head**. You can therefore iterate over the arcs in the tree by iterating over
@@ -709,11 +705,9 @@ doc = nlp(text)
 displacy.serve(doc, style="ent")
 ```
 
-<Iframe
-  title="displaCy visualizer for entities"
-  src="/images/displacy-ent2.html"
-  height={180}
-/>
+<Standalone height={180}>
+<div style={{lineHeight: 2.5, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'", fontSize: 18}}>When <mark style={{ background: '#aa9cfc', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>Sebastian Thrun <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>PERSON</span></mark> started working on self-driving cars at <mark style={{ background: '#7aecec', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>Google <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>ORG</span></mark> in <mark style={{ background: '#bfe1d9', padding: '0.45em 0.6em', margin: '0 0.25em', lineHeight: 1, borderRadius: '0.35em'}}>2007 <span style={{ fontSize: '0.8em', fontWeight: 'bold', lineHeight: 1, borderRadius: '0.35em', marginLeft: '0.5rem'}}>DATE</span></mark>, few people outside of the company took him seriously.</div>
+</Standalone>
 
 ## Entity Linking {id="entity-linking"}
 
@@ -722,6 +716,10 @@ to perform entity linking, which resolves a textual entity to a unique
 identifier from a knowledge base (KB). You can create your own
 [`KnowledgeBase`](/api/kb) and [train](/usage/training) a new
 [`EntityLinker`](/api/entitylinker) using that custom knowledge base.
+
+As an example on how to define a KnowledgeBase and train an entity linker model,
+see [`this tutorial`](https://github.com/explosion/projects/blob/v3/tutorials/nel_emerson)
+using [spaCy projects](/usage/projects).
 
 ### Accessing entity identifiers {id="entity-linking-accessing",model="entity linking"}
 
@@ -733,6 +731,7 @@ object, or the `ent_kb_id` and `ent_kb_id_` attributes of a
 ```python
 import spacy
 
+# "my_custom_el_pipeline" is assumed to be a custom NLP pipeline that was trained and serialized to disk
 nlp = spacy.load("my_custom_el_pipeline")
 doc = nlp("Ada Lovelace was born in London")
 
@@ -1299,9 +1298,9 @@ correct type.
 
 ```python {title="functions.py",highlight="1"}
 @spacy.registry.tokenizers("bert_word_piece_tokenizer")
-def create_whitespace_tokenizer(vocab_file: str, lowercase: bool):
+def create_bert_tokenizer(vocab_file: str, lowercase: bool):
     def create_tokenizer(nlp):
-        return BertWordPieceTokenizer(nlp.vocab, vocab_file, lowercase)
+        return BertTokenizer(nlp.vocab, vocab_file, lowercase)
 
     return create_tokenizer
 ```

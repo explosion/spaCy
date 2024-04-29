@@ -1,16 +1,16 @@
-from typing import Optional, List, Dict, Any, Union
-from wasabi import Printer
-from pathlib import Path
 import re
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
 import srsly
 from thinc.api import fix_random_seed
+from wasabi import Printer
 
-from ..training import Corpus
-from ..tokens import Doc
-from ._util import app, Arg, Opt, setup_gpu, import_code, benchmark_cli
+from .. import displacy, util
 from ..scorer import Scorer
-from .. import util
-from .. import displacy
+from ..tokens import Doc
+from ..training import Corpus
+from ._util import Arg, Opt, app, benchmark_cli, import_code, setup_gpu
 
 
 @benchmark_cli.command(
@@ -28,6 +28,7 @@ def evaluate_cli(
     displacy_path: Optional[Path] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML", exists=True, file_okay=False),
     displacy_limit: int = Opt(25, "--displacy-limit", "-dl", help="Limit of parses to render as HTML"),
     per_component: bool = Opt(False, "--per-component", "-P", help="Return scores per component, only applicable when an output JSON file is specified."),
+    spans_key: str = Opt("sc", "--spans-key", "-sk", help="Spans key to use when evaluating Doc.spans"),
     # fmt: on
 ):
     """
@@ -53,6 +54,7 @@ def evaluate_cli(
         displacy_limit=displacy_limit,
         per_component=per_component,
         silent=False,
+        spans_key=spans_key,
     )
 
 

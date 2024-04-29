@@ -1,8 +1,10 @@
-import pytest
+import copy
 import pickle
 import re
-import copy
+
+import pytest
 from mock import Mock
+
 from spacy.matcher import DependencyMatcher
 from spacy.tokens import Doc, Token
 
@@ -213,6 +215,11 @@ def test_dependency_matcher_pattern_validation(en_vocab):
     with pytest.raises(ValueError):
         pattern2 = copy.deepcopy(pattern)
         pattern2[1]["RIGHT_ID"] = "fox"
+        matcher.add("FOUNDED", [pattern2])
+    # invalid key
+    with pytest.warns(UserWarning):
+        pattern2 = copy.deepcopy(pattern)
+        pattern2[1]["FOO"] = "BAR"
         matcher.add("FOUNDED", [pattern2])
 
 

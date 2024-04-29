@@ -1,12 +1,12 @@
-from libcpp.vector cimport vector
-from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
+from libcpp.vector cimport vector
 from murmurhash.mrmr cimport hash64
+from preshed.maps cimport PreshMap
 
+from .morphology cimport Morphology
+from .strings cimport StringStore
 from .structs cimport LexemeC, TokenC
 from .typedefs cimport attr_t, hash_t
-from .strings cimport StringStore
-from .morphology cimport Morphology
 
 
 cdef LexemeC EMPTY_LEXEME
@@ -32,7 +32,7 @@ cdef class Vocab:
     cdef public object writing_system
     cdef public object get_noun_chunks
     cdef readonly int length
-    cdef public object _unused_object # TODO remove in v4, see #9150
+    cdef public object _unused_object  # TODO remove in v4, see #9150
     cdef public object lex_attr_getters
     cdef public object cfg
 

@@ -67,7 +67,6 @@ architectures and their arguments and hyperparameters.
 > ```python
 > from spacy.pipeline.spancat import DEFAULT_SPANCAT_SINGLELABEL_MODEL
 > config = {
->     "threshold": 0.5,
 >     "spans_key": "labeled_spans",
 >     "model": DEFAULT_SPANCAT_SINGLELABEL_MODEL,
 >     "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
@@ -89,6 +88,21 @@ architectures and their arguments and hyperparameters.
 | `add_negative_label` <Tag variant="new">3.5.1</Tag> | Whether to learn to predict a special negative label for each unannotated `Span` . This should be `True` when using a `Softmax` classifier layer and so its `True` by default for `spancat_singlelabel`. Spans with negative labels and their scores are not stored as annotations. ~~bool~~            |
 | `negative_weight` <Tag variant="new">3.5.1</Tag>    | Multiplier for the loss terms. It can be used to downweight the negative samples if there are too many. It is only used when `add_negative_label` is `True`. Defaults to `1.0`. ~~float~~                                                                                                               |
 | `allow_overlap` <Tag variant="new">3.5.1</Tag>      | If `True`, the data is assumed to contain overlapping spans. It is only available when `max_positive` is exactly 1. Defaults to `True`. ~~bool~~                                                                                                                                                        |
+
+<Infobox variant="warning">
+
+If you set a non-default value for `spans_key`, you'll have to update
+`[training.score_weights]` as well so that weights are computed properly. E. g.
+for `spans_key == "myspankey"`, include this in your config:
+
+```ini
+[training.score_weights]
+spans_myspankey_f = 1.0
+spans_myspankey_p = 0.0
+spans_myspankey_r = 0.0
+```
+
+</Infobox>
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/spancat.py
@@ -522,7 +536,7 @@ has two columns, indicating the start and end position.
 | Name        | Description                                                                  |
 | ----------- | ---------------------------------------------------------------------------- |
 | `min_size`  | The minimal phrase lengths to suggest (inclusive). ~~[int]~~                 |
-| `max_size`  | The maximal phrase lengths to suggest (exclusive). ~~[int]~~                 |
+| `max_size`  | The maximal phrase lengths to suggest (inclusive). ~~[int]~~                 |
 | **CREATES** | The suggester function. ~~Callable[[Iterable[Doc], Optional[Ops]], Ragged]~~ |
 
 ### spacy.preset_spans_suggester.v1 {id="preset_spans_suggester"}

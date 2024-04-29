@@ -78,16 +78,16 @@ subword features, and a
 [MaxoutWindowEncoder](/api/architectures#MaxoutWindowEncoder) encoding layer
 consisting of a CNN and a layer-normalized maxout activation function.
 
-| Name                 | Description                                                                                                                                                                                                                                                                   |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`              | The width of the input and output. These are required to be the same, so that residual connections can be used. Recommended values are `96`, `128` or `300`. ~~int~~                                                                                                          |
-| `depth`              | The number of convolutional layers to use. Recommended values are between `2` and `8`. ~~int~~                                                                                                                                                                                |
-| `embed_size`         | The number of rows in the hash embedding tables. This can be surprisingly small, due to the use of the hash embeddings. Recommended values are between `2000` and `10000`. ~~int~~                                                                                            |
-| `window_size`        | The number of tokens on either side to concatenate during the convolutions. The receptive field of the CNN will be `depth * (window_size * 2 + 1)`, so a 4-layer network with a window size of `2` will be sensitive to 20 words at a time. Recommended value is `1`. ~~int~~ |
-| `maxout_pieces`      | The number of pieces to use in the maxout non-linearity. If `1`, the [`Mish`](https://thinc.ai/docs/api-layers#mish) non-linearity is used instead. Recommended values are `1`-`3`. ~~int~~                                                                                   |
-| `subword_features`   | Whether to also embed subword features, specifically the prefix, suffix and word shape. This is recommended for alphabetic languages like English, but not if single-character tokens are used for a language such as Chinese. ~~bool~~                                       |
-| `pretrained_vectors` | Whether to also use static vectors. ~~bool~~                                                                                                                                                                                                                                  |
-| **CREATES**          | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
+| Name                 | Description                                                                                                                                                                                                                                                                 |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`              | The width of the input and output. These are required to be the same, so that residual connections can be used. Recommended values are `96`, `128` or `300`. ~~int~~                                                                                                        |
+| `depth`              | The number of convolutional layers to use. Recommended values are between `2` and `8`. ~~int~~                                                                                                                                                                              |
+| `embed_size`         | The number of rows in the hash embedding tables. This can be surprisingly small, due to the use of the hash embeddings. Recommended values are between `2000` and `10000`. ~~int~~                                                                                          |
+| `window_size`        | The number of tokens on either side to concatenate during the convolutions. The receptive field of the CNN will be `depth * window_size * 2 + 1`, so a 4-layer network with a window size of `2` will be sensitive to 17 words at a time. Recommended value is `1`. ~~int~~ |
+| `maxout_pieces`      | The number of pieces to use in the maxout non-linearity. If `1`, the [`Mish`](https://thinc.ai/docs/api-layers#mish) non-linearity is used instead. Recommended values are `1`-`3`. ~~int~~                                                                                 |
+| `subword_features`   | Whether to also embed subword features, specifically the prefix, suffix and word shape. This is recommended for alphabetic languages like English, but not if single-character tokens are used for a language such as Chinese. ~~bool~~                                     |
+| `pretrained_vectors` | Whether to also use static vectors. ~~bool~~                                                                                                                                                                                                                                |
+| **CREATES**          | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                      |
 
 ### spacy.Tok2VecListener.v1 {id="Tok2VecListener"}
 
@@ -303,7 +303,7 @@ mapped to a zero vector. See the documentation on
 | `nM`        | The width of the static vectors. ~~Optional[int]~~                                                                                                                                                                      |
 | `dropout`   | Optional dropout rate. If set, it's applied per dimension over the whole batch. Defaults to `None`. ~~Optional[float]~~                                                                                                 |
 | `init_W`    | The [initialization function](https://thinc.ai/docs/api-initializers). Defaults to [`glorot_uniform_init`](https://thinc.ai/docs/api-initializers#glorot_uniform_init). ~~Callable[[Ops, Tuple[int, ...]]], FloatsXd]~~ |
-| `key_attr`  | Defaults to `"ORTH"`. ~~str~~                                                                                                                                                                                           |
+| `key_attr`  | This setting is ignored in spaCy v3.6+. To set a custom key attribute for vectors, configure it through [`Vectors`](/api/vectors) or [`spacy init vectors`](/api/cli#init-vectors). Defaults to `"ORTH"`. ~~str~~       |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], Ragged]~~                                                                                                                                                          |
 
 ### spacy.FeatureExtractor.v1 {id="FeatureExtractor"}
@@ -480,6 +480,286 @@ one component.
 The other arguments are shared between all versions.
 
 </Accordion>
+
+## Curated Transformer architectures {id="curated-trf",source="https://github.com/explosion/spacy-curated-transformers/blob/main/spacy_curated_transformers/models/architectures.py"}
+
+The following architectures are provided by the package
+[`spacy-curated-transformers`](https://github.com/explosion/spacy-curated-transformers).
+See the [usage documentation](/usage/embeddings-transformers#transformers) for
+how to integrate the architectures into your training config.
+
+When loading the model
+[from the Hugging Face Hub](/api/curatedtransformer#hf_trfencoder_loader), the
+model config's parameters must be same as the hyperparameters used by the
+pre-trained model. The
+[`init fill-curated-transformer`](/api/cli#init-fill-curated-transformer) CLI
+command can be used to automatically fill in these values.
+
+### spacy-curated-transformers.AlbertTransformer.v1
+
+Construct an ALBERT transformer model.
+
+| Name                           | Description                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
+| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
+| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
+| `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
+| `embedding_width`              | Width of the embedding representations. ~~int~~                                          |
+| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
+| `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
+| `hidden_width`                 | Width of the final representations. ~~int~~                                              |
+| `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
+| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
+| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                                           |
+| `model_max_length`             | Maximum length of model inputs. ~~int~~                                                  |
+| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                                  |
+| `num_hidden_groups`            | Number of layer groups whose constituents share parameters. ~~int~~                      |
+| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                                         |
+| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                                 |
+| `type_vocab_size`              | Type vocabulary size. ~~int~~                                                            |
+| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                                   |
+| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
+| **CREATES**                    | The model using the architecture ~~Model~~                                               |
+
+### spacy-curated-transformers.BertTransformer.v1
+
+Construct a BERT transformer model.
+
+| Name                           | Description                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
+| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
+| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
+| `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
+| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
+| `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
+| `hidden_width`                 | Width of the final representations. ~~int~~                                              |
+| `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
+| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
+| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                                           |
+| `model_max_length`             | Maximum length of model inputs. ~~int~~                                                  |
+| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                                  |
+| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                                         |
+| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                                 |
+| `type_vocab_size`              | Type vocabulary size. ~~int~~                                                            |
+| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                                   |
+| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
+| **CREATES**                    | The model using the architecture ~~Model~~                                               |
+
+### spacy-curated-transformers.CamembertTransformer.v1
+
+Construct a CamemBERT transformer model.
+
+| Name                           | Description                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
+| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
+| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
+| `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
+| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
+| `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
+| `hidden_width`                 | Width of the final representations. ~~int~~                                              |
+| `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
+| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
+| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                                           |
+| `model_max_length`             | Maximum length of model inputs. ~~int~~                                                  |
+| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                                  |
+| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                                         |
+| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                                 |
+| `type_vocab_size`              | Type vocabulary size. ~~int~~                                                            |
+| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                                   |
+| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
+| **CREATES**                    | The model using the architecture ~~Model~~                                               |
+
+### spacy-curated-transformers.RobertaTransformer.v1
+
+Construct a RoBERTa transformer model.
+
+| Name                           | Description                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
+| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
+| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
+| `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
+| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
+| `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
+| `hidden_width`                 | Width of the final representations. ~~int~~                                              |
+| `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
+| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
+| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                                           |
+| `model_max_length`             | Maximum length of model inputs. ~~int~~                                                  |
+| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                                  |
+| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                                         |
+| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                                 |
+| `type_vocab_size`              | Type vocabulary size. ~~int~~                                                            |
+| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                                   |
+| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
+| **CREATES**                    | The model using the architecture ~~Model~~                                               |
+
+### spacy-curated-transformers.XlmrTransformer.v1
+
+Construct a XLM-RoBERTa transformer model.
+
+| Name                           | Description                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `vocab_size`                   | Vocabulary size. ~~int~~                                                                 |
+| `with_spans`                   | Callback that constructs a span generator model. ~~Callable~~                            |
+| `piece_encoder`                | The piece encoder to segment input tokens. ~~Model~~                                     |
+| `attention_probs_dropout_prob` | Dropout probability of the self-attention layers. ~~float~~                              |
+| `hidden_act`                   | Activation used by the point-wise feed-forward layers. ~~str~~                           |
+| `hidden_dropout_prob`          | Dropout probability of the point-wise feed-forward and embedding layers. ~~float~~       |
+| `hidden_width`                 | Width of the final representations. ~~int~~                                              |
+| `intermediate_width`           | Width of the intermediate projection layer in the point-wise feed-forward layer. ~~int~~ |
+| `layer_norm_eps`               | Epsilon for layer normalization. ~~float~~                                               |
+| `max_position_embeddings`      | Maximum length of position embeddings. ~~int~~                                           |
+| `model_max_length`             | Maximum length of model inputs. ~~int~~                                                  |
+| `num_attention_heads`          | Number of self-attention heads. ~~int~~                                                  |
+| `num_hidden_layers`            | Number of hidden layers. ~~int~~                                                         |
+| `padding_idx`                  | Index of the padding meta-token. ~~int~~                                                 |
+| `type_vocab_size`              | Type vocabulary size. ~~int~~                                                            |
+| `mixed_precision`              | Use mixed-precision training. ~~bool~~                                                   |
+| `grad_scaler_config`           | Configuration passed to the PyTorch gradient scaler. ~~dict~~                            |
+| **CREATES**                    | The model using the architecture ~~Model~~                                               |
+
+### spacy-curated-transformers.ScalarWeight.v1
+
+Construct a model that accepts a list of transformer layer outputs and returns a
+weighted representation of the same.
+
+| Name                 | Description                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `num_layers`         | Number of transformer hidden layers. ~~int~~                                  |
+| `dropout_prob`       | Dropout probability. ~~float~~                                                |
+| `mixed_precision`    | Use mixed-precision training. ~~bool~~                                        |
+| `grad_scaler_config` | Configuration passed to the PyTorch gradient scaler. ~~dict~~                 |
+| **CREATES**          | The model using the architecture ~~Model[ScalarWeightInT, ScalarWeightOutT]~~ |
+
+### spacy-curated-transformers.TransformerLayersListener.v1
+
+Construct a listener layer that communicates with one or more upstream
+Transformer components. This layer extracts the output of the last transformer
+layer and performs pooling over the individual pieces of each `Doc` token,
+returning their corresponding representations. The upstream name should either
+be the wildcard string '\*', or the name of the Transformer component.
+
+In almost all cases, the wildcard string will suffice as there'll only be one
+upstream Transformer component. But in certain situations, e.g: you have
+disjoint datasets for certain tasks, or you'd like to use a pre-trained pipeline
+but a downstream task requires its own token representations, you could end up
+with more than one Transformer component in the pipeline.
+
+| Name            | Description                                                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `layers`        | The number of layers produced by the upstream transformer component, excluding the embedding layer. ~~int~~            |
+| `width`         | The width of the vectors produced by the upstream transformer component. ~~int~~                                       |
+| `pooling`       | Model that is used to perform pooling over the piece representations. ~~Model~~                                        |
+| `upstream_name` | A string to identify the 'upstream' Transformer component to communicate with. ~~str~~                                 |
+| `grad_factor`   | Factor to multiply gradients with. ~~float~~                                                                           |
+| **CREATES**     | A model that returns the relevant vectors from an upstream transformer component. ~~Model[List[Doc], List[Floats2d]]~~ |
+
+### spacy-curated-transformers.LastTransformerLayerListener.v1
+
+Construct a listener layer that communicates with one or more upstream
+Transformer components. This layer extracts the output of the last transformer
+layer and performs pooling over the individual pieces of each Doc token,
+returning their corresponding representations. The upstream name should either
+be the wildcard string '\*', or the name of the Transformer component.
+
+In almost all cases, the wildcard string will suffice as there'll only be one
+upstream Transformer component. But in certain situations, e.g: you have
+disjoint datasets for certain tasks, or you'd like to use a pre-trained pipeline
+but a downstream task requires its own token representations, you could end up
+with more than one Transformer component in the pipeline.
+
+| Name            | Description                                                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `width`         | The width of the vectors produced by the upstream transformer component. ~~int~~                                       |
+| `pooling`       | Model that is used to perform pooling over the piece representations. ~~Model~~                                        |
+| `upstream_name` | A string to identify the 'upstream' Transformer component to communicate with. ~~str~~                                 |
+| `grad_factor`   | Factor to multiply gradients with. ~~float~~                                                                           |
+| **CREATES**     | A model that returns the relevant vectors from an upstream transformer component. ~~Model[List[Doc], List[Floats2d]]~~ |
+
+### spacy-curated-transformers.ScalarWeightingListener.v1
+
+Construct a listener layer that communicates with one or more upstream
+Transformer components. This layer calculates a weighted representation of all
+transformer layer outputs and performs pooling over the individual pieces of
+each Doc token, returning their corresponding representations.
+
+Requires its upstream Transformer components to return all layer outputs from
+their models. The upstream name should either be the wildcard string '\*', or
+the name of the Transformer component.
+
+In almost all cases, the wildcard string will suffice as there'll only be one
+upstream Transformer component. But in certain situations, e.g: you have
+disjoint datasets for certain tasks, or you'd like to use a pre-trained pipeline
+but a downstream task requires its own token representations, you could end up
+with more than one Transformer component in the pipeline.
+
+| Name            | Description                                                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `width`         | The width of the vectors produced by the upstream transformer component. ~~int~~                                       |
+| `weighting`     | Model that is used to perform the weighting of the different layer outputs. ~~Model~~                                  |
+| `pooling`       | Model that is used to perform pooling over the piece representations. ~~Model~~                                        |
+| `upstream_name` | A string to identify the 'upstream' Transformer component to communicate with. ~~str~~                                 |
+| `grad_factor`   | Factor to multiply gradients with. ~~float~~                                                                           |
+| **CREATES**     | A model that returns the relevant vectors from an upstream transformer component. ~~Model[List[Doc], List[Floats2d]]~~ |
+
+### spacy-curated-transformers.BertWordpieceEncoder.v1
+
+Construct a WordPiece piece encoder model that accepts a list of token sequences
+or documents and returns a corresponding list of piece identifiers. This encoder
+also splits each token on punctuation characters, as expected by most BERT
+models.
+
+This model must be separately initialized using an appropriate loader.
+
+### spacy-curated-transformers.ByteBpeEncoder.v1
+
+Construct a Byte-BPE piece encoder model that accepts a list of token sequences
+or documents and returns a corresponding list of piece identifiers.
+
+This model must be separately initialized using an appropriate loader.
+
+### spacy-curated-transformers.CamembertSentencepieceEncoder.v1
+
+Construct a SentencePiece piece encoder model that accepts a list of token
+sequences or documents and returns a corresponding list of piece identifiers
+with CamemBERT post-processing applied.
+
+This model must be separately initialized using an appropriate loader.
+
+### spacy-curated-transformers.CharEncoder.v1
+
+Construct a character piece encoder model that accepts a list of token sequences
+or documents and returns a corresponding list of piece identifiers.
+
+This model must be separately initialized using an appropriate loader.
+
+### spacy-curated-transformers.SentencepieceEncoder.v1
+
+Construct a SentencePiece piece encoder model that accepts a list of token
+sequences or documents and returns a corresponding list of piece identifiers.
+
+This model must be separately initialized using an appropriate loader.
+
+### spacy-curated-transformers.WordpieceEncoder.v1
+
+Construct a WordPiece piece encoder model that accepts a list of token sequences
+or documents and returns a corresponding list of piece identifiers. This encoder
+also splits each token on punctuation characters, as expected by most BERT
+models.
+
+This model must be separately initialized using an appropriate loader.
+
+### spacy-curated-transformers.XlmrSentencepieceEncoder.v1
+
+Construct a SentencePiece piece encoder model that accepts a list of token
+sequences or documents and returns a corresponding list of piece identifiers
+with XLM-RoBERTa post-processing applied.
+
+This model must be separately initialized using an appropriate loader.
 
 ## Pretraining architectures {id="pretrain",source="spacy/ml/models/multi_task.py"}
 
@@ -682,8 +962,9 @@ single-label use-cases where `exclusive_classes = true`, while the
 > nO = null
 >
 > [model.linear_model]
-> @architectures = "spacy.TextCatBOW.v2"
+> @architectures = "spacy.TextCatBOW.v3"
 > exclusive_classes = true
+> length = 262144
 > ngram_size = 1
 > no_output_layer = false
 >
@@ -737,54 +1018,15 @@ but used an internal `tok2vec` instead of taking it as argument:
 
 </Accordion>
 
-### spacy.TextCatCNN.v2 {id="TextCatCNN"}
+### spacy.TextCatBOW.v3 {id="TextCatBOW"}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.TextCatCNN.v2"
+> @architectures = "spacy.TextCatBOW.v3"
 > exclusive_classes = false
-> nO = null
->
-> [model.tok2vec]
-> @architectures = "spacy.HashEmbedCNN.v2"
-> pretrained_vectors = null
-> width = 96
-> depth = 4
-> embed_size = 2000
-> window_size = 1
-> maxout_pieces = 3
-> subword_features = true
-> ```
-
-A neural network model where token vectors are calculated using a CNN. The
-vectors are mean pooled and used as features in a feed-forward network. This
-architecture is usually less accurate than the ensemble, but runs faster.
-
-| Name                | Description                                                                                                                                                                                    |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
-| `tok2vec`           | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                        |
-| `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
-| **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
-
-<Accordion title="spacy.TextCatCNN.v1 definition" spaced>
-
-[TextCatCNN.v1](/api/legacy#TextCatCNN_v1) had the exact same signature, but was
-not yet resizable. Since v2, new labels can be added to this component, even
-after training.
-
-</Accordion>
-
-### spacy.TextCatBOW.v2 {id="TextCatBOW"}
-
-> #### Example Config
->
-> ```ini
-> [model]
-> @architectures = "spacy.TextCatBOW.v2"
-> exclusive_classes = false
+> length = 262144
 > ngram_size = 1
 > no_output_layer = false
 > nO = null
@@ -798,16 +1040,107 @@ the others, but may not be as accurate, especially if texts are short.
 | `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
 | `ngram_size`        | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3` would give unigram, trigram and bigram features. ~~int~~                                           |
 | `no_output_layer`   | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes` is `True`, else `Logistic`). ~~bool~~                                                          |
+| `length`            | The size of the weights vector. The length will be rounded up to the next power of two if it is not a power of two. Defaults to `262144`. ~~int~~                                              |
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
 
-<Accordion title="spacy.TextCatBOW.v1 definition" spaced>
+<Accordion title="Previous versions of spacy.TextCatBOW" spaced>
 
-[TextCatBOW.v1](/api/legacy#TextCatBOW_v1) had the exact same signature, but was
-not yet resizable. Since v2, new labels can be added to this component, even
-after training.
+- [TextCatBOW.v1](/api/legacy#TextCatBOW_v1) was not yet resizable. Since v2,
+  new labels can be added to this component, even after training.
+- [TextCatBOW.v1](/api/legacy#TextCatBOW_v1) and
+  [TextCatBOW.v2](/api/legacy#TextCatBOW_v2) used an erroneous sparse linear
+  layer that only used a small number of the allocated parameters.
+- [TextCatBOW.v1](/api/legacy#TextCatBOW_v1) and
+  [TextCatBOW.v2](/api/legacy#TextCatBOW_v2) did not have the `length` argument.
 
 </Accordion>
+
+### spacy.TextCatParametricAttention.v1 {id="TextCatParametricAttention"}
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.TextCatParametricAttention.v1"
+> exclusive_classes = true
+> nO = null
+>
+> [model.tok2vec]
+> @architectures = "spacy.Tok2Vec.v2"
+>
+> [model.tok2vec.embed]
+> @architectures = "spacy.MultiHashEmbed.v2"
+> width = 64
+> rows = [2000, 2000, 1000, 1000, 1000, 1000]
+> attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
+> include_static_vectors = false
+>
+> [model.tok2vec.encode]
+> @architectures = "spacy.MaxoutWindowEncoder.v2"
+> width = ${model.tok2vec.embed.width}
+> window_size = 1
+> maxout_pieces = 3
+> depth = 2
+> ```
+
+A neural network model that is built upon Tok2Vec and uses parametric attention
+to attend to tokens that are relevant to text classification.
+
+| Name                | Description                                                                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec`           | The `tok2vec` layer to build the neural network upon. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                     |
+| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
+| `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
+| **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
+
+### spacy.TextCatReduce.v1 {id="TextCatReduce"}
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.TextCatReduce.v1"
+> exclusive_classes = false
+> use_reduce_first = false
+> use_reduce_last = false
+> use_reduce_max = false
+> use_reduce_mean = true
+> nO = null
+>
+> [model.tok2vec]
+> @architectures = "spacy.HashEmbedCNN.v2"
+> pretrained_vectors = null
+> width = 96
+> depth = 4
+> embed_size = 2000
+> window_size = 1
+> maxout_pieces = 3
+> subword_features = true
+> ```
+
+A classifier that pools token hidden representations of each `Doc` using first,
+max or mean reduction and then applies a classification layer. Reductions are
+concatenated when multiple reductions are used.
+
+<Infobox variant="warning" title="Relation to TextCatCNN" id="TextCatCNN">
+
+`TextCatReduce` is a generalization of the older
+[`TextCatCNN`](/api/legacy#TextCatCNN_v2) model. `TextCatCNN` always uses a mean
+reduction, whereas `TextCatReduce` also supports first/max reductions.
+
+</Infobox>
+
+| Name                | Description                                                                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
+| `tok2vec`           | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                        |
+| `use_reduce_first`  | Pool by using the hidden representation of the first token of a `Doc`. ~~bool~~                                                                                                                |
+| `use_reduce_last`   | Pool by using the hidden representation of the last token of a `Doc`. ~~bool~~                                                                                                                 |
+| `use_reduce_max`    | Pool by taking the maximum values of the hidden representations of a `Doc`. ~~bool~~                                                                                                           |
+| `use_reduce_mean`   | Pool by taking the mean of all hidden representations of a `Doc`. ~~bool~~                                                                                                                     |
+| `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
+| **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
 
 ## Span classification architectures {id="spancat",source="spacy/ml/models/spancat.py"}
 

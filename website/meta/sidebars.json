@@ -9,11 +9,8 @@
                     { "text": "Models & Languages", "url": "/usage/models" },
                     { "text": "Facts & Figures", "url": "/usage/facts-figures" },
                     { "text": "spaCy 101", "url": "/usage/spacy-101" },
-                    { "text": "New in v3.0", "url": "/usage/v3" },
-                    { "text": "New in v3.1", "url": "/usage/v3-1" },
-                    { "text": "New in v3.2", "url": "/usage/v3-2" },
-                    { "text": "New in v3.3", "url": "/usage/v3-3" },
-                    { "text": "New in v3.4", "url": "/usage/v3-4" },
+                    { "text": "New in v3.7", "url": "/usage/v3-7" },
+                    { "text": "New in v3.6", "url": "/usage/v3-6" },
                     { "text": "New in v3.5", "url": "/usage/v3-5" }
                 ]
             },
@@ -25,16 +22,19 @@
                     { "text": "Processing Pipelines", "url": "/usage/processing-pipelines" },
                     {
                         "text": "Embeddings & Transformers",
-                        "url": "/usage/embeddings-transformers",
+                        "url": "/usage/embeddings-transformers"
+                    },
+                    {
+                        "text": "Large Language Models",
+                        "url": "/usage/large-language-models",
                         "tag": "new"
                     },
-                    { "text": "Training Models", "url": "/usage/training", "tag": "new" },
+                    { "text": "Training Models", "url": "/usage/training" },
                     {
                         "text": "Layers & Model Architectures",
-                        "url": "/usage/layers-architectures",
-                        "tag": "new"
+                        "url": "/usage/layers-architectures"
                     },
-                    { "text": "spaCy Projects", "url": "/usage/projects", "tag": "new" },
+                    { "text": "spaCy Projects", "url": "/usage/projects" },
                     { "text": "Saving & Loading", "url": "/usage/saving-loading" },
                     { "text": "Visualizers", "url": "/usage/visualizers" }
                 ]
@@ -96,11 +96,13 @@
                 "items": [
                     { "text": "AttributeRuler", "url": "/api/attributeruler" },
                     { "text": "CoreferenceResolver", "url": "/api/coref" },
+                    { "text": "CuratedTransformer", "url": "/api/curatedtransformer" },
                     { "text": "DependencyParser", "url": "/api/dependencyparser" },
                     { "text": "EditTreeLemmatizer", "url": "/api/edittreelemmatizer" },
                     { "text": "EntityLinker", "url": "/api/entitylinker" },
                     { "text": "EntityRecognizer", "url": "/api/entityrecognizer" },
                     { "text": "EntityRuler", "url": "/api/entityruler" },
+                    { "text": "Large Language Models", "url": "/api/large-language-models" },
                     { "text": "Lemmatizer", "url": "/api/lemmatizer" },
                     { "text": "Morphologizer", "url": "/api/morphologizer" },
                     { "text": "SentenceRecognizer", "url": "/api/sentencerecognizer" },
@@ -130,6 +132,7 @@
                 "label": "Other",
                 "items": [
                     { "text": "Attributes", "url": "/api/attributes" },
+                    { "text": "BaseVectors", "url": "/api/basevectors" },
                     { "text": "Corpus", "url": "/api/corpus" },
                     { "text": "InMemoryLookupKB", "url": "/api/inmemorylookupkb" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },

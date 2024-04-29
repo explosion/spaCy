@@ -104,6 +104,10 @@
             "models": ["fi_core_news_sm", "fi_core_news_md", "fi_core_news_lg"]
         },
         {
+            "code": "fo",
+            "name": "Faroese"
+        },
+        {
             "code": "fr",
             "name": "French",
             "models": ["fr_core_news_sm", "fr_core_news_md", "fr_core_news_lg", "fr_dep_news_trf"],
@@ -222,7 +226,9 @@
         },
         {
             "code": "la",
-            "name": "Latin"
+            "name": "Latin",
+	    "example": "In principio creavit Deus caelum et terram.",
+	    "has_examples": true
         },
         {
             "code": "lb",
@@ -289,6 +295,12 @@
             "has_examples": true
         },
         {
+            "code": "nn",
+            "name": "Norwegian Nynorsk",
+            "example": "Det er ein meir enn i same periode i fjor.",
+            "has_examples": true
+        },
+        {
             "code": "pl",
             "name": "Polish",
             "example": "To jest zdanie.",
@@ -339,7 +351,10 @@
         },
         {
             "code": "sl",
-            "name": "Slovenian"
+            "name": "Slovenian",
+	    "example": "France Prešeren je umrl 8. februarja 1849 v Kranju",
+	    "has_examples": true,
+            "models": ["sl_core_news_sm", "sl_core_news_md", "sl_core_news_lg", "sl_core_news_trf"]
         },
         {
             "code": "sq",

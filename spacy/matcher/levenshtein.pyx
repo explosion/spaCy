@@ -1,4 +1,4 @@
-# cython: profile=True, binding=True, infer_types=True
+# cython: binding=True, infer_types=True
 from cpython.object cimport PyObject
 from libc.stdint cimport int64_t
 

@@ -1,53 +1,46 @@
-import os
 import math
+import os
 from collections import Counter
-from typing import Tuple, List, Dict, Any
-import time
 from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
-import spacy
-import numpy
 import pytest
 import srsly
 from click import NoSuchOption
 from packaging.specifiers import SpecifierSet
-from thinc.api import Config, ConfigValidationError
-from spacy.tokens import DocBin
+from thinc.api import Config
 
+import spacy
 from spacy import about
-from spacy.cli import info
-from spacy.cli._util import is_subpath_of, load_project_config, walk_directory
-from spacy.cli._util import parse_config_overrides, string_to_list
-from spacy.cli._util import substitute_project_variables
-from spacy.cli._util import validate_project_commands
-from spacy.cli._util import upload_file, download_file
-from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
-from spacy.cli.debug_data import _get_labels_from_spancat
-from spacy.cli.debug_data import _get_distribution, _get_kl_divergence
-from spacy.cli.debug_data import _get_span_characteristics
-from spacy.cli.debug_data import _print_span_characteristics
-from spacy.cli.debug_data import _get_spans_length_freq_dist
+from spacy.cli import download_module, info
+from spacy.cli._util import parse_config_overrides, string_to_list, walk_directory
+from spacy.cli.apply import apply
+from spacy.cli.debug_data import (
+    _compile_gold,
+    _get_distribution,
+    _get_kl_divergence,
+    _get_labels_from_model,
+    _get_labels_from_spancat,
+    _get_span_characteristics,
+    _get_spans_length_freq_dist,
+    _print_span_characteristics,
+)
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.evaluate import render_parses
-from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
-from spacy.cli.init_pipeline import _init_labels
-from spacy.cli.package import get_third_party_dependencies
-from spacy.cli.package import _is_permitted_package_name
-from spacy.cli.project.remote_storage import RemoteStorage
-from spacy.cli.project.run import _check_requirements
-from spacy.cli.validate import get_model_pkgs
-from spacy.cli.apply import apply
 from spacy.cli.find_threshold import find_threshold
+from spacy.cli.init_config import RECOMMENDATIONS, fill_config, init_config
+from spacy.cli.init_pipeline import _init_labels
+from spacy.cli.package import _is_permitted_package_name, get_third_party_dependencies
+from spacy.cli.validate import get_model_pkgs
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import Language
-from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
+from spacy.schemas import RecommendationSchema
 from spacy.tokens import Doc, DocBin
 from spacy.tokens.span import Span
 from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
-from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
-from spacy.training.converters import iob_to_docs
-from spacy.util import ENV_VARS, get_minor_version, load_model_from_config, load_config
+from spacy.training.converters import conll_ner_to_docs, conllu_to_docs, iob_to_docs
+from spacy.util import ENV_VARS, get_minor_version, load_config, load_model_from_config
 
 from .util import make_tempdir
 
@@ -125,25 +118,6 @@ def test_issue7055():
     assert filled_cfg["components"]["tagger"]["source"] == str(source_path)
     assert filled_cfg["components"]["ner"]["factory"] == "ner"
     assert "model" in filled_cfg["components"]["ner"]
-
-
-@pytest.mark.issue(11235)
-def test_issue11235():
-    """
-    Test that the cli handles interpolation in the directory names correctly when loading project config.
-    """
-    lang_var = "en"
-    variables = {"lang": lang_var}
-    commands = [{"name": "x", "script": ["hello ${vars.lang}"]}]
-    directories = ["cfg", "${vars.lang}_model"]
-    project = {"commands": commands, "vars": variables, "directories": directories}
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d)
-        # Check that the directories are interpolated and created correctly
-        assert os.path.exists(d / "cfg")
-        assert os.path.exists(d / f"{lang_var}_model")
-    assert cfg["commands"][0]["script"][0] == f"hello {lang_var}"
 
 
 @pytest.mark.issue(12566)
@@ -436,136 +410,6 @@ def test_cli_converters_conll_ner_to_docs():
         assert ent.text in ["New York City", "London"]
 
 
-def test_project_config_validation_full():
-    config = {
-        "vars": {"some_var": 20},
-        "directories": ["assets", "configs", "corpus", "scripts", "training"],
-        "assets": [
-            {
-                "dest": "x",
-                "extra": True,
-                "url": "https://example.com",
-                "checksum": "63373dd656daa1fd3043ce166a59474c",
-            },
-            {
-                "dest": "y",
-                "git": {
-                    "repo": "https://github.com/example/repo",
-                    "branch": "develop",
-                    "path": "y",
-                },
-            },
-            {
-                "dest": "z",
-                "extra": False,
-                "url": "https://example.com",
-                "checksum": "63373dd656daa1fd3043ce166a59474c",
-            },
-        ],
-        "commands": [
-            {
-                "name": "train",
-                "help": "Train a model",
-                "script": ["python -m spacy train config.cfg -o training"],
-                "deps": ["config.cfg", "corpus/training.spcy"],
-                "outputs": ["training/model-best"],
-            },
-            {"name": "test", "script": ["pytest", "custom.py"], "no_skip": True},
-        ],
-        "workflows": {"all": ["train", "test"], "train": ["train"]},
-    }
-    errors = validate(ProjectConfigSchema, config)
-    assert not errors
-
-
-@pytest.mark.parametrize(
-    "config",
-    [
-        {"commands": [{"name": "a"}, {"name": "a"}]},
-        {"commands": [{"name": "a"}], "workflows": {"a": []}},
-        {"commands": [{"name": "a"}], "workflows": {"b": ["c"]}},
-    ],
-)
-def test_project_config_validation1(config):
-    with pytest.raises(SystemExit):
-        validate_project_commands(config)
-
-
-@pytest.mark.parametrize(
-    "config,n_errors",
-    [
-        ({"commands": {"a": []}}, 1),
-        ({"commands": [{"help": "..."}]}, 1),
-        ({"commands": [{"name": "a", "extra": "b"}]}, 1),
-        ({"commands": [{"extra": "b"}]}, 2),
-        ({"commands": [{"name": "a", "deps": [123]}]}, 1),
-    ],
-)
-def test_project_config_validation2(config, n_errors):
-    errors = validate(ProjectConfigSchema, config)
-    assert len(errors) == n_errors
-
-
-@pytest.mark.parametrize(
-    "int_value",
-    [10, pytest.param("10", marks=pytest.mark.xfail)],
-)
-def test_project_config_interpolation(int_value):
-    variables = {"a": int_value, "b": {"c": "foo", "d": True}}
-    commands = [
-        {"name": "x", "script": ["hello ${vars.a} ${vars.b.c}"]},
-        {"name": "y", "script": ["${vars.b.c} ${vars.b.d}"]},
-    ]
-    project = {"commands": commands, "vars": variables}
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d)
-    assert type(cfg) == dict
-    assert type(cfg["commands"]) == list
-    assert cfg["commands"][0]["script"][0] == "hello 10 foo"
-    assert cfg["commands"][1]["script"][0] == "foo true"
-    commands = [{"name": "x", "script": ["hello ${vars.a} ${vars.b.e}"]}]
-    project = {"commands": commands, "vars": variables}
-    with pytest.raises(ConfigValidationError):
-        substitute_project_variables(project)
-
-
-@pytest.mark.parametrize(
-    "greeting",
-    [342, "everyone", "tout le monde", pytest.param("42", marks=pytest.mark.xfail)],
-)
-def test_project_config_interpolation_override(greeting):
-    variables = {"a": "world"}
-    commands = [
-        {"name": "x", "script": ["hello ${vars.a}"]},
-    ]
-    overrides = {"vars.a": greeting}
-    project = {"commands": commands, "vars": variables}
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d, overrides=overrides)
-    assert type(cfg) == dict
-    assert type(cfg["commands"]) == list
-    assert cfg["commands"][0]["script"][0] == f"hello {greeting}"
-
-
-def test_project_config_interpolation_env():
-    variables = {"a": 10}
-    env_var = "SPACY_TEST_FOO"
-    env_vars = {"foo": env_var}
-    commands = [{"name": "x", "script": ["hello ${vars.a} ${env.foo}"]}]
-    project = {"commands": commands, "vars": variables, "env": env_vars}
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d)
-    assert cfg["commands"][0]["script"][0] == "hello 10 "
-    os.environ[env_var] = "123"
-    with make_tempdir() as d:
-        srsly.write_yaml(d / "project.yml", project)
-        cfg = load_project_config(d)
-    assert cfg["commands"][0]["script"][0] == "hello 10 123"
-
-
 @pytest.mark.parametrize(
     "args,expected",
     [
@@ -775,21 +619,6 @@ def test_get_third_party_dependencies():
     get_third_party_dependencies(nlp.config)
 
 
-@pytest.mark.parametrize(
-    "parent,child,expected",
-    [
-        ("/tmp", "/tmp", True),
-        ("/tmp", "/", False),
-        ("/tmp", "/tmp/subdir", True),
-        ("/tmp", "/tmpdir", False),
-        ("/tmp", "/tmp/subdir/..", True),
-        ("/tmp", "/tmp/..", False),
-    ],
-)
-def test_is_subpath_of(parent, child, expected):
-    assert is_subpath_of(parent, child) == expected
-
-
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "factory_name,pipe_name",
@@ -851,7 +680,8 @@ def test_debug_data_compile_gold():
     assert data["boundary_cross_ents"] == 1
 
 
-def test_debug_data_compile_gold_for_spans():
+@pytest.mark.parametrize("component_name", ["spancat", "spancat_singlelabel"])
+def test_debug_data_compile_gold_for_spans(component_name):
     nlp = English()
     spans_key = "sc"
 
@@ -861,7 +691,7 @@ def test_debug_data_compile_gold_for_spans():
     ref.spans[spans_key] = [Span(ref, 3, 6, "ORG"), Span(ref, 5, 6, "GPE")]
     eg = Example(pred, ref)
 
-    data = _compile_gold([eg], ["spancat"], nlp, True)
+    data = _compile_gold([eg], [component_name], nlp, True)
 
     assert data["spancat"][spans_key] == Counter({"ORG": 1, "GPE": 1})
     assert data["spans_length"][spans_key] == {"ORG": [3], "GPE": [1]}
@@ -1034,60 +864,6 @@ def test_applycli_user_data():
         assert result[0]._.ext == val
 
 
-def test_local_remote_storage():
-    with make_tempdir() as d:
-        filename = "a.txt"
-
-        content_hashes = ("aaaa", "cccc", "bbbb")
-        for i, content_hash in enumerate(content_hashes):
-            # make sure that each subsequent file has a later timestamp
-            if i > 0:
-                time.sleep(1)
-            content = f"{content_hash} content"
-            loc_file = d / "root" / filename
-            if not loc_file.parent.exists():
-                loc_file.parent.mkdir(parents=True)
-            with loc_file.open(mode="w") as file_:
-                file_.write(content)
-
-            # push first version to remote storage
-            remote = RemoteStorage(d / "root", str(d / "remote"))
-            remote.push(filename, "aaaa", content_hash)
-
-            # retrieve with full hashes
-            loc_file.unlink()
-            remote.pull(filename, command_hash="aaaa", content_hash=content_hash)
-            with loc_file.open(mode="r") as file_:
-                assert file_.read() == content
-
-            # retrieve with command hash
-            loc_file.unlink()
-            remote.pull(filename, command_hash="aaaa")
-            with loc_file.open(mode="r") as file_:
-                assert file_.read() == content
-
-            # retrieve with content hash
-            loc_file.unlink()
-            remote.pull(filename, content_hash=content_hash)
-            with loc_file.open(mode="r") as file_:
-                assert file_.read() == content
-
-            # retrieve with no hashes
-            loc_file.unlink()
-            remote.pull(filename)
-            with loc_file.open(mode="r") as file_:
-                assert file_.read() == content
-
-
-def test_local_remote_storage_pull_missing():
-    # pulling from a non-existent remote pulls nothing gracefully
-    with make_tempdir() as d:
-        filename = "a.txt"
-        remote = RemoteStorage(d / "root", str(d / "remote"))
-        assert remote.pull(filename, command_hash="aaaa") is None
-        assert remote.pull(filename) is None
-
-
 def test_cli_find_threshold(capsys):
     def make_examples(nlp: Language) -> List[Example]:
         docs: List[Example] = []
@@ -1198,63 +974,6 @@ def test_cli_find_threshold(capsys):
                 )
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
-@pytest.mark.parametrize(
-    "reqs,output",
-    [
-        [
-            """
-            spacy
-
-            # comment
-
-            thinc""",
-            (False, False),
-        ],
-        [
-            """# comment
-            --some-flag
-            spacy""",
-            (False, False),
-        ],
-        [
-            """# comment
-            --some-flag
-            spacy; python_version >= '3.6'""",
-            (False, False),
-        ],
-        [
-            """# comment
-             spacyunknowndoesnotexist12345""",
-            (True, False),
-        ],
-    ],
-)
-def test_project_check_requirements(reqs, output):
-    import pkg_resources
-
-    # excessive guard against unlikely package name
-    try:
-        pkg_resources.require("spacyunknowndoesnotexist12345")
-    except pkg_resources.DistributionNotFound:
-        assert output == _check_requirements([req.strip() for req in reqs.split("\n")])
-
-
-def test_upload_download_local_file():
-    with make_tempdir() as d1, make_tempdir() as d2:
-        filename = "f.txt"
-        content = "content"
-        local_file = d1 / filename
-        remote_file = d2 / filename
-        with local_file.open(mode="w") as file_:
-            file_.write(content)
-        upload_file(local_file, remote_file)
-        local_file.unlink()
-        download_file(remote_file, local_file)
-        with local_file.open(mode="r") as file_:
-            assert file_.read() == content
-
-
 def test_walk_directory():
     with make_tempdir() as d:
         files = [
@@ -1342,3 +1061,20 @@ def test_debug_data_trainable_lemmatizer_not_annotated():
 
     data = _compile_gold(train_examples, ["trainable_lemmatizer"], nlp, True)
     assert data["no_lemma_annotations"] == 2
+
+
+def test_project_api_imports():
+    from spacy.cli import project_run
+    from spacy.cli.project.run import project_run  # noqa: F401, F811
+
+
+def test_download_rejects_relative_urls(monkeypatch):
+    """Test that we can't tell spacy download to get an arbitrary model by using a
+    relative path in the filename"""
+
+    monkeypatch.setattr(download_module, "run_command", lambda cmd: None)
+
+    # Check that normal download works
+    download_module.download("en_core_web_sm-3.7.1", direct=True)
+    with pytest.raises(SystemExit):
+        download_module.download("../en_core_web_sm-3.7.1", direct=True)

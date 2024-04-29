@@ -1,24 +1,33 @@
-from typing import Union, Dict, Optional, Any, IO, TYPE_CHECKING
-from thinc.api import Config, fix_random_seed, set_gpu_allocator
-from thinc.api import ConfigValidationError
-from pathlib import Path
-import srsly
-import numpy
-import tarfile
 import gzip
-import zipfile
-import tqdm
-from itertools import islice
+import tarfile
 import warnings
+import zipfile
+from itertools import islice
+from pathlib import Path
+from typing import IO, TYPE_CHECKING, Any, Dict, Optional, Union
 
-from .pretrain import get_tok2vec_ref
-from ..lookups import Lookups
-from ..vectors import Vectors, Mode as VectorsMode
+import numpy
+import srsly
+import tqdm
+from thinc.api import Config, ConfigValidationError, fix_random_seed, set_gpu_allocator
+
 from ..errors import Errors, Warnings
+from ..lookups import Lookups
 from ..schemas import ConfigSchemaTraining
-from ..util import registry, load_model_from_config, resolve_dot_names, logger
-from ..util import load_model, ensure_path, get_sourced_components
-from ..util import OOV_RANK, DEFAULT_OOV_PROB
+from ..util import (
+    DEFAULT_OOV_PROB,
+    OOV_RANK,
+    ensure_path,
+    get_sourced_components,
+    load_model,
+    load_model_from_config,
+    logger,
+    registry,
+    resolve_dot_names,
+)
+from ..vectors import Mode as VectorsMode
+from ..vectors import Vectors
+from .pretrain import get_tok2vec_ref
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
@@ -67,7 +76,8 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
         with nlp.select_pipes(enable=resume_components):
             logger.info("Resuming training for: %s", resume_components)
             nlp.resume_training(sgd=optimizer)
-    # Make sure that listeners are defined before initializing further
+    # Make sure that internal component names are synced and listeners are
+    # defined before initializing further
     nlp._link_components()
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         if T["max_epochs"] == -1:
@@ -206,9 +216,14 @@ def convert_vectors(
     prune: int,
     name: Optional[str] = None,
     mode: str = VectorsMode.default,
+    attr: str = "ORTH",
 ) -> None:
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
+        if attr != "ORTH":
+            raise ValueError(
+                "ORTH is the only attribute supported for vectors in .npz format."
+            )
         nlp.vocab.vectors = Vectors(
             strings=nlp.vocab.strings, data=numpy.load(vectors_loc.open("rb"))
         )
@@ -236,11 +251,15 @@ def convert_vectors(
                 nlp.vocab.vectors = Vectors(
                     strings=nlp.vocab.strings,
                     data=vectors_data,
+                    attr=attr,
                     **floret_settings,
                 )
             else:
                 nlp.vocab.vectors = Vectors(
-                    strings=nlp.vocab.strings, data=vectors_data, keys=vector_keys
+                    strings=nlp.vocab.strings,
+                    data=vectors_data,
+                    keys=vector_keys,
+                    attr=attr,
                 )
                 nlp.vocab.deduplicate_vectors()
     if name is None:
@@ -283,7 +302,7 @@ def read_vectors(
             shape = (truncate_vectors, shape[1])
     vectors_data = numpy.zeros(shape=shape, dtype="f")
     vectors_keys = []
-    for i, line in enumerate(tqdm.tqdm(f)):
+    for i, line in enumerate(tqdm.tqdm(f, disable=None)):
         line = line.rstrip()
         pieces = line.rsplit(" ", vectors_data.shape[1])
         word = pieces.pop(0)

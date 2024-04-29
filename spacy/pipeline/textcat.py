@@ -1,18 +1,18 @@
-from typing import Iterable, Tuple, Optional, Dict, List, Callable, Any
-from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
-from thinc.types import Floats2d
-import numpy
 from itertools import islice
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
-from .trainable_pipe import TrainablePipe
-from ..language import Language
-from ..training import Example, validate_examples, validate_get_examples
+import numpy
+from thinc.api import Config, Model, Optimizer, get_array_module, set_dropout_rate
+from thinc.types import Floats2d
+
 from ..errors import Errors
+from ..language import Language
 from ..scorer import Scorer
 from ..tokens import Doc
+from ..training import Example, validate_examples, validate_get_examples
 from ..util import registry
 from ..vocab import Vocab
-
+from .trainable_pipe import TrainablePipe
 
 single_label_default_config = """
 [model]
@@ -36,8 +36,9 @@ maxout_pieces = 3
 depth = 2
 
 [model.linear_model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
+length = 262144
 ngram_size = 1
 no_output_layer = false
 """
@@ -45,16 +46,21 @@ DEFAULT_SINGLE_TEXTCAT_MODEL = Config().from_str(single_label_default_config)["m
 
 single_label_bow_config = """
 [model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = true
+length = 262144
 ngram_size = 1
 no_output_layer = false
 """
 
 single_label_cnn_config = """
 [model]
-@architectures = "spacy.TextCatCNN.v2"
+@architectures = "spacy.TextCatReduce.v1"
 exclusive_classes = true
+use_reduce_first = false
+use_reduce_last = false
+use_reduce_max = false
+use_reduce_mean = true
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v2"

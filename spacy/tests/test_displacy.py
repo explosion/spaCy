@@ -2,10 +2,10 @@ import numpy
 import pytest
 
 from spacy import displacy
-from spacy.displacy.render import DependencyRenderer, EntityRenderer
+from spacy.displacy.render import DependencyRenderer, EntityRenderer, SpanRenderer
 from spacy.lang.en import English
 from spacy.lang.fa import Persian
-from spacy.tokens import Span, Doc
+from spacy.tokens import Doc, Span
 
 
 @pytest.mark.issue(2361)
@@ -113,7 +113,7 @@ def test_issue5838():
     doc = nlp(sample_text)
     doc.ents = [Span(doc, 7, 8, label="test")]
     html = displacy.render(doc, style="ent")
-    found = html.count("</br>")
+    found = html.count("<br>")
     assert found == 4
 
 
@@ -350,6 +350,78 @@ def test_displacy_render_wrapper(en_vocab):
     displacy.set_render_wrapper(lambda html: html)
 
 
+def test_displacy_render_manual_dep():
+    """Test displacy.render with manual data for dep style"""
+    parsed_dep = {
+        "words": [
+            {"text": "This", "tag": "DT"},
+            {"text": "is", "tag": "VBZ"},
+            {"text": "a", "tag": "DT"},
+            {"text": "sentence", "tag": "NN"},
+        ],
+        "arcs": [
+            {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
+            {"start": 2, "end": 3, "label": "det", "dir": "left"},
+            {"start": 1, "end": 3, "label": "attr", "dir": "right"},
+        ],
+        "title": "Title",
+    }
+    html = displacy.render([parsed_dep], style="dep", manual=True)
+    for word in parsed_dep["words"]:
+        assert word["text"] in html
+        assert word["tag"] in html
+
+
+def test_displacy_render_manual_ent():
+    """Test displacy.render with manual data for ent style"""
+    parsed_ents = [
+        {
+            "text": "But Google is starting from behind.",
+            "ents": [{"start": 4, "end": 10, "label": "ORG"}],
+        },
+        {
+            "text": "But Google is starting from behind.",
+            "ents": [{"start": -100, "end": 100, "label": "COMPANY"}],
+            "title": "Title",
+        },
+    ]
+
+    html = displacy.render(parsed_ents, style="ent", manual=True)
+    for parsed_ent in parsed_ents:
+        assert parsed_ent["ents"][0]["label"] in html
+        if "title" in parsed_ent:
+            assert parsed_ent["title"] in html
+
+
+def test_displacy_render_manual_span():
+    """Test displacy.render with manual data for span style"""
+    parsed_spans = [
+        {
+            "text": "Welcome to the Bank of China.",
+            "spans": [
+                {"start_token": 3, "end_token": 6, "label": "ORG"},
+                {"start_token": 5, "end_token": 6, "label": "GPE"},
+            ],
+            "tokens": ["Welcome", "to", "the", "Bank", "of", "China", "."],
+        },
+        {
+            "text": "Welcome to the Bank of China.",
+            "spans": [
+                {"start_token": 3, "end_token": 6, "label": "ORG"},
+                {"start_token": 5, "end_token": 6, "label": "GPE"},
+            ],
+            "tokens": ["Welcome", "to", "the", "Bank", "of", "China", "."],
+            "title": "Title",
+        },
+    ]
+
+    html = displacy.render(parsed_spans, style="span", manual=True)
+    for parsed_span in parsed_spans:
+        assert parsed_span["spans"][0]["label"] in html
+        if "title" in parsed_span:
+            assert parsed_span["title"] in html
+
+
 def test_displacy_options_case():
     ents = ["foo", "BAR"]
     colors = {"FOO": "red", "bar": "green"}
@@ -377,3 +449,42 @@ def test_displacy_manual_sorted_entities():
 
     html = displacy.render(doc, style="ent", manual=True)
     assert html.find("FIRST") < html.find("SECOND")
+
+
+@pytest.mark.issue(12816)
+def test_issue12816(en_vocab) -> None:
+    """Test that displaCy's span visualizer escapes annotated HTML tags correctly."""
+    # Create a doc containing an annotated word and an unannotated HTML tag
+    doc = Doc(en_vocab, words=["test", "<TEST>"])
+    doc.spans["sc"] = [Span(doc, 0, 1, label="test")]
+
+    # Verify that the HTML tag is escaped when unannotated
+    html = displacy.render(doc, style="span")
+    assert "&lt;TEST&gt;" in html
+
+    # Annotate the HTML tag
+    doc.spans["sc"].append(Span(doc, 1, 2, label="test"))
+
+    # Verify that the HTML tag is still escaped
+    html = displacy.render(doc, style="span")
+    assert "&lt;TEST&gt;" in html
+
+
+@pytest.mark.issue(13056)
+def test_displacy_span_stacking():
+    """Test whether span stacking works properly for multiple overlapping spans."""
+    spans = [
+        {"start_token": 2, "end_token": 5, "label": "SkillNC"},
+        {"start_token": 0, "end_token": 2, "label": "Skill"},
+        {"start_token": 1, "end_token": 3, "label": "Skill"},
+    ]
+    tokens = ["Welcome", "to", "the", "Bank", "of", "China", "."]
+    per_token_info = SpanRenderer._assemble_per_token_info(spans=spans, tokens=tokens)
+
+    assert len(per_token_info) == len(tokens)
+    assert all([len(per_token_info[i]["entities"]) == 1 for i in (0, 3, 4)])
+    assert all([len(per_token_info[i]["entities"]) == 2 for i in (1, 2)])
+    assert per_token_info[1]["entities"][0]["render_slot"] == 1
+    assert per_token_info[1]["entities"][1]["render_slot"] == 2
+    assert per_token_info[2]["entities"][0]["render_slot"] == 2
+    assert per_token_info[2]["entities"][1]["render_slot"] == 3

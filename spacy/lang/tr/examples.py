@@ -15,4 +15,7 @@ sentences = [
     "Türkiye'nin başkenti neresi?",
     "Bakanlar Kurulu 180 günlük eylem planını açıkladı.",
     "Merkez Bankası, beklentiler doğrultusunda faizlerde değişikliğe gitmedi.",
+    "Cemal Sureya kimdir?",
+    "Bunlari Biliyor muydunuz?",
+    "Altinoluk Turkiye haritasinin neresinde yer alir?",
 ]

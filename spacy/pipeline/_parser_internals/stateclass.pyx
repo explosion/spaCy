@@ -1,9 +1,9 @@
 # cython: infer_types=True
-import numpy
+# cython: profile=False
 from libcpp.vector cimport vector
-from ._state cimport ArcC
 
 from ...tokens.doc cimport Doc
+from ._state cimport ArcC
 
 
 cdef class StateClass:
@@ -29,7 +29,7 @@ cdef class StateClass:
         return [self.B(i) for i in range(self.c.buffer_length())]
 
     @property
-    def token_vector_lenth(self):
+    def token_vector_length(self):
         return self.doc.tensor.shape[1]
 
     @property
@@ -37,11 +37,11 @@ cdef class StateClass:
         cdef vector[ArcC] arcs
         self.c.get_arcs(&arcs)
         return list(arcs)
-        #py_arcs = []
-        #for arc in arcs:
-        #    if arc.head != -1 and arc.child != -1:
-        #        py_arcs.append((arc.head, arc.child, arc.label))
-        #return arcs
+        # py_arcs = []
+        # for arc in arcs:
+        #     if arc.head != -1 and arc.child != -1:
+        #         py_arcs.append((arc.head, arc.child, arc.label))
+        # return arcs
 
     def add_arc(self, int head, int child, int label):
         self.c.add_arc(head, child, label)
@@ -51,10 +51,10 @@ cdef class StateClass:
 
     def H(self, int child):
         return self.c.H(child)
-    
+
     def L(self, int head, int idx):
         return self.c.L(head, idx)
-    
+
     def R(self, int head, int idx):
         return self.c.R(head, idx)
 
@@ -97,7 +97,7 @@ cdef class StateClass:
 
     def H(self, int i):
         return self.c.H(i)
-    
+
     def E(self, int i):
         return self.c.E(i)
 
@@ -115,7 +115,7 @@ cdef class StateClass:
 
     def H_(self, int i):
         return self.doc[self.c.H(i)]
-    
+
     def E_(self, int i):
         return self.doc[self.c.E(i)]
 
@@ -124,7 +124,7 @@ cdef class StateClass:
 
     def R_(self, int i, int idx):
         return self.doc[self.c.R(i, idx)]
- 
+
     def empty(self):
         return self.c.empty()
 
@@ -133,7 +133,7 @@ cdef class StateClass:
 
     def at_break(self):
         return False
-        #return self.c.at_break()
+        # return self.c.at_break()
 
     def has_head(self, int i):
         return self.c.has_head(i)

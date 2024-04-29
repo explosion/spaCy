@@ -1,18 +1,17 @@
-from typing import Iterable, Optional, Dict, List, Callable, Any
-from thinc.types import Floats2d
-from thinc.api import Model, Config
-
 from itertools import islice
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
-from ..language import Language
-from ..training import Example, validate_get_examples
+from thinc.api import Config, Model
+from thinc.types import Floats2d
+
 from ..errors import Errors
+from ..language import Language
 from ..scorer import Scorer
 from ..tokens import Doc
+from ..training import Example, validate_get_examples
 from ..util import registry
 from ..vocab import Vocab
 from .textcat import TextCategorizer
-
 
 multi_label_default_config = """
 [model]
@@ -36,8 +35,9 @@ maxout_pieces = 3
 depth = 2
 
 [model.linear_model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = false
+length = 262144
 ngram_size = 1
 no_output_layer = false
 """
@@ -45,7 +45,7 @@ DEFAULT_MULTI_TEXTCAT_MODEL = Config().from_str(multi_label_default_config)["mod
 
 multi_label_bow_config = """
 [model]
-@architectures = "spacy.TextCatBOW.v2"
+@architectures = "spacy.TextCatBOW.v3"
 exclusive_classes = false
 ngram_size = 1
 no_output_layer = false
@@ -53,8 +53,12 @@ no_output_layer = false
 
 multi_label_cnn_config = """
 [model]
-@architectures = "spacy.TextCatCNN.v2"
+@architectures = "spacy.TextCatReduce.v1"
 exclusive_classes = false
+use_reduce_first = false
+use_reduce_last = false
+use_reduce_max = false
+use_reduce_mean = true
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v2"

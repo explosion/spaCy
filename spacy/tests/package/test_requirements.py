@@ -4,15 +4,17 @@ from pathlib import Path
 
 def test_build_dependencies():
     # Check that library requirements are pinned exactly the same across different setup files.
-    # TODO: correct checks for numpy rather than ignoring
     libs_ignore_requirements = [
+        "numpy",
         "pytest",
         "pytest-timeout",
         "mock",
         "flake8",
         "hypothesis",
         "pre-commit",
+        "cython-lint",
         "black",
+        "isort",
         "mypy",
         "types-dataclasses",
         "types-mock",
@@ -21,6 +23,7 @@ def test_build_dependencies():
     ]
     # ignore language-specific packages that shouldn't be installed by all
     libs_ignore_setup = [
+        "numpy",
         "fugashi",
         "natto-py",
         "pythainlp",

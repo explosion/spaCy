@@ -1,16 +1,32 @@
 from typing import List
-import pytest
-from thinc.api import fix_random_seed, Adam, set_dropout_rate
-from thinc.api import Ragged, reduce_mean, Logistic, chain, Relu
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+
 import numpy
-from spacy.ml.models import build_Tok2Vec_model, MultiHashEmbed, MaxoutWindowEncoder
-from spacy.ml.models import build_bow_text_classifier, build_simple_cnn_text_classifier
-from spacy.ml.models import build_spancat_model
-from spacy.ml.staticvectors import StaticVectors
-from spacy.ml.extract_spans import extract_spans, _get_span_indices
+import pytest
+from numpy.testing import assert_array_almost_equal, assert_array_equal
+from thinc.api import (
+    Adam,
+    Logistic,
+    Ragged,
+    Relu,
+    chain,
+    fix_random_seed,
+    reduce_mean,
+    set_dropout_rate,
+)
+
 from spacy.lang.en import English
 from spacy.lang.en.examples import sentences as EN_SENTENCES
+from spacy.ml.extract_spans import _get_span_indices, extract_spans
+from spacy.ml.models import (
+    MaxoutWindowEncoder,
+    MultiHashEmbed,
+    build_bow_text_classifier,
+    build_simple_cnn_text_classifier,
+    build_spancat_model,
+    build_Tok2Vec_model,
+)
+from spacy.ml.staticvectors import StaticVectors
+from spacy.util import registry
 
 
 def get_textcat_bow_kwargs():
@@ -269,3 +285,17 @@ def test_spancat_model_forward_backward(nO=5):
     Y, backprop = model((docs, spans), is_train=True)
     assert Y.shape == (spans.dataXd.shape[0], nO)
     backprop(Y)
+
+
+def test_textcat_reduce_invalid_args():
+    textcat_reduce = registry.architectures.get("spacy.TextCatReduce.v1")
+    tok2vec = make_test_tok2vec()
+    with pytest.raises(ValueError, match=r"must be used with at least one reduction"):
+        textcat_reduce(
+            tok2vec=tok2vec,
+            exclusive_classes=False,
+            use_reduce_first=False,
+            use_reduce_last=False,
+            use_reduce_max=False,
+            use_reduce_mean=False,
+        )

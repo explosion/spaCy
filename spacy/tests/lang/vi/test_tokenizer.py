@@ -1,8 +1,8 @@
 import pytest
 
-from ...tokenizer.test_naughty_strings import NAUGHTY_STRINGS
 from spacy.lang.vi import Vietnamese
 
+from ...tokenizer.test_naughty_strings import NAUGHTY_STRINGS
 
 # fmt: off
 TOKENIZER_TESTS = [

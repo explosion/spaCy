@@ -1,10 +1,12 @@
+# cython: profile=False
 import warnings
+
 import srsly
+
 from .. import util
 from ..errors import Warnings
 from ..tokens import Doc
-from .iob_utils import offsets_to_biluo_tags, tags_to_entities
-import json
+from .iob_utils import offsets_to_biluo_tags
 
 
 def docs_to_json(docs, doc_id=0, ner_missing_tag="O"):
@@ -21,7 +23,13 @@ def docs_to_json(docs, doc_id=0, ner_missing_tag="O"):
     json_doc = {"id": doc_id, "paragraphs": []}
     for i, doc in enumerate(docs):
         raw = None if doc.has_unknown_spaces else doc.text
-        json_para = {'raw': raw, "sentences": [], "cats": [], "entities": [], "links": []}
+        json_para = {
+            'raw': raw,
+            "sentences": [],
+            "cats": [],
+            "entities": [],
+            "links": []
+        }
         for cat, val in doc.cats.items():
             json_cat = {"label": cat, "value": val}
             json_para["cats"].append(json_cat)
@@ -33,13 +41,17 @@ def docs_to_json(docs, doc_id=0, ner_missing_tag="O"):
             if ent.kb_id_:
                 link_dict = {(ent.start_char, ent.end_char): {ent.kb_id_: 1.0}}
                 json_para["links"].append(link_dict)
-        biluo_tags = offsets_to_biluo_tags(doc, json_para["entities"], missing=ner_missing_tag)
+        biluo_tags = offsets_to_biluo_tags(
+            doc, json_para["entities"], missing=ner_missing_tag
+        )
         attrs = ("TAG", "POS", "MORPH", "LEMMA", "DEP", "ENT_IOB")
         include_annotation = {attr: doc.has_annotation(attr) for attr in attrs}
         for j, sent in enumerate(doc.sents):
             json_sent = {"tokens": [], "brackets": []}
             for token in sent:
-                json_token = {"id": token.i, "orth": token.text, "space": token.whitespace_}
+                json_token = {
+                    "id": token.i, "orth": token.text, "space": token.whitespace_
+                }
                 if include_annotation["TAG"]:
                     json_token["tag"] = token.tag_
                 if include_annotation["POS"]:
@@ -123,9 +135,14 @@ def json_to_annotations(doc):
                 else:
                     sent_starts.append(-1)
             if "brackets" in sent:
-                brackets.extend((b["first"] + sent_start_i,
-                                 b["last"] + sent_start_i, b["label"])
-                                 for b in sent["brackets"])
+                brackets.extend(
+                    (
+                        b["first"] + sent_start_i,
+                        b["last"] + sent_start_i,
+                        b["label"]
+                    )
+                    for b in sent["brackets"]
+                )
 
         example["token_annotation"] = dict(
             ids=ids,
@@ -157,6 +174,7 @@ def json_to_annotations(doc):
             links=paragraph.get("links", [])
         )
         yield example
+
 
 def json_iterate(bytes utf8_str):
     # We should've made these files jsonl...But since we didn't, parse out

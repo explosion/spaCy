@@ -11,7 +11,6 @@ menu:
   - ['Custom Functions', 'custom-functions']
   - ['Initialization', 'initialization']
   - ['Data Utilities', 'data']
-  - ['Parallel Training', 'parallel-training']
   - ['Internal API', 'api']
 ---
 
@@ -181,7 +180,7 @@ Some of the main advantages and features of spaCy's training config are:
 
 Under the hood, the config is parsed into a dictionary. It's divided into
 sections and subsections, indicated by the square brackets and dot notation. For
-example, `[training]` is a section and `[training.batch_size]` a subsection.
+example, `[training]` is a section and `[training.batcher]` a subsection.
 Subsections can define values, just like a dictionary, or use the `@` syntax to
 refer to [registered functions](#config-functions). This allows the config to
 not just define static settings, but also construct objects like architectures,
@@ -255,7 +254,7 @@ For cases like this, you can set additional command-line options starting with
 block.
 
 ```bash
-$ python -m spacy train config.cfg --paths.train ./corpus/train.spacy --paths.dev ./corpus/dev.spacy --training.batch_size 128
+$ python -m spacy train config.cfg --paths.train ./corpus/train.spacy --paths.dev ./corpus/dev.spacy --training.max_epochs 3
 ```
 
 Only existing sections and values in the config can be overwritten. At the end
@@ -280,7 +279,7 @@ process. Environment variables **take precedence** over CLI overrides and values
 defined in the config file.
 
 ```bash
-$ SPACY_CONFIG_OVERRIDES="--system.gpu_allocator pytorch --training.batch_size 128" ./your_script.sh
+$ SPACY_CONFIG_OVERRIDES="--system.gpu_allocator pytorch --training.max_epochs 3" ./your_script.sh
 ```
 
 ### Reading from standard input {id="config-stdin"}
@@ -579,16 +578,17 @@ now-updated model to the predicted docs.
 
 The training configuration defined in the config file doesn't have to only
 consist of static values. Some settings can also be **functions**. For instance,
-the `batch_size` can be a number that doesn't change, or a schedule, like a
+the batch size can be a number that doesn't change, or a schedule, like a
 sequence of compounding values, which has shown to be an effective trick (see
 [Smith et al., 2017](https://arxiv.org/abs/1711.00489)).
 
 ```ini {title="With static value"}
-[training]
-batch_size = 128
+[training.batcher]
+@batchers = "spacy.batch_by_words.v1"
+size = 3000
 ```
 
-To refer to a function instead, you can make `[training.batch_size]` its own
+To refer to a function instead, you can make `[training.batcher.size]` its own
 section and use the `@` syntax to specify the function and its arguments – in
 this case [`compounding.v1`](https://thinc.ai/docs/api-schedules#compounding)
 defined in the [function registry](/api/top-level#registry). All other values
@@ -607,7 +607,7 @@ from your configs.
 > optimizer.
 
 ```ini {title="With registered function"}
-[training.batch_size]
+[training.batcher.size]
 @schedules = "compounding.v1"
 start = 100
 stop = 1000
@@ -1028,14 +1028,14 @@ def my_custom_schedule(start: int = 1, factor: float = 1.001):
 ```
 
 In your config, you can now reference the schedule in the
-`[training.batch_size]` block via `@schedules`. If a block contains a key
+`[training.batcher.size]` block via `@schedules`. If a block contains a key
 starting with an `@`, it's interpreted as a reference to a function. All other
 settings in the block will be passed to the function as keyword arguments. Keep
 in mind that the config shouldn't have any hidden defaults and all arguments on
 the functions need to be represented in the config.
 
 ```ini {title="config.cfg (excerpt)"}
-[training.batch_size]
+[training.batcher.size]
 @schedules = "my_custom_schedule.v1"
 start = 2
 factor = 1.005
@@ -1564,77 +1564,6 @@ Note that if your data augmentation strategy involves changing the tokenization
 token-based annotations like the dependency parse or entity labels, you'll need
 to take care to adjust the `Example` object so its annotations match and remain
 valid.
-
-## Parallel & distributed training with Ray {id="parallel-training"}
-
-> #### Installation
->
-> ```bash
-> $ pip install -U %%SPACY_PKG_NAME[ray]%%SPACY_PKG_FLAGS
-> # Check that the CLI is registered
-> $ python -m spacy ray --help
-> ```
-
-[Ray](https://ray.io/) is a fast and simple framework for building and running
-**distributed applications**. You can use Ray to train spaCy on one or more
-remote machines, potentially speeding up your training process. Parallel
-training won't always be faster though – it depends on your batch size, models,
-and hardware.
-
-<Infobox variant="warning">
-
-To use Ray with spaCy, you need the
-[`spacy-ray`](https://github.com/explosion/spacy-ray) package installed.
-Installing the package will automatically add the `ray` command to the spaCy
-CLI.
-
-</Infobox>
-
-The [`spacy ray train`](/api/cli#ray-train) command follows the same API as
-[`spacy train`](/api/cli#train), with a few extra options to configure the Ray
-setup. You can optionally set the `--address` option to point to your Ray
-cluster. If it's not set, Ray will run locally.
-
-```bash
-python -m spacy ray train config.cfg --n-workers 2
-```
-
-<Project id="integrations/ray">
-
-Get started with parallel training using our project template. It trains a
-simple model on a Universal Dependencies Treebank and lets you parallelize the
-training with Ray.
-
-</Project>
-
-### How parallel training works {id="parallel-training-details"}
-
-Each worker receives a shard of the **data** and builds a copy of the **model
-and optimizer** from the [`config.cfg`](#config). It also has a communication
-channel to **pass gradients and parameters** to the other workers. Additionally,
-each worker is given ownership of a subset of the parameter arrays. Every
-parameter array is owned by exactly one worker, and the workers are given a
-mapping so they know which worker owns which parameter.
-
-![Illustration of setup](/images/spacy-ray.svg)
-
-As training proceeds, every worker will be computing gradients for **all** of
-the model parameters. When they compute gradients for parameters they don't own,
-they'll **send them to the worker** that does own that parameter, along with a
-version identifier so that the owner can decide whether to discard the gradient.
-Workers use the gradients they receive and the ones they compute locally to
-update the parameters they own, and then broadcast the updated array and a new
-version ID to the other workers.
-
-This training procedure is **asynchronous** and **non-blocking**. Workers always
-push their gradient increments and parameter updates, they do not have to pull
-them and block on the result, so the transfers can happen in the background,
-overlapped with the actual training work. The workers also do not have to stop
-and wait for each other ("synchronize") at the start of each batch. This is very
-useful for spaCy, because spaCy is often trained on long documents, which means
-**batches can vary in size** significantly. Uneven workloads make synchronous
-gradient descent inefficient, because if one batch is slow, all of the other
-workers are stuck waiting for it to complete before they can continue.
 
 ## Internal training API {id="api"}
 

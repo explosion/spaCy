@@ -1,7 +1,12 @@
 import pytest
-from spacy.pipeline._parser_internals.nonproj import ancestors, contains_cycle
-from spacy.pipeline._parser_internals.nonproj import is_nonproj_tree, is_nonproj_arc
+
 from spacy.pipeline._parser_internals import nonproj
+from spacy.pipeline._parser_internals.nonproj import (
+    ancestors,
+    contains_cycle,
+    is_nonproj_arc,
+    is_nonproj_tree,
+)
 from spacy.tokens import Doc
 
 

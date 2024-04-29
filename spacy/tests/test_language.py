@@ -1,20 +1,22 @@
 import itertools
 import logging
+import warnings
 from unittest import mock
+
 import pytest
+from thinc.api import CupyOps, NumpyOps, get_current_ops
+
+import spacy
+from spacy.lang.de import German
+from spacy.lang.en import English
 from spacy.language import Language
 from spacy.scorer import Scorer
 from spacy.tokens import Doc, Span
-from spacy.vocab import Vocab
 from spacy.training import Example
-from spacy.lang.en import English
-from spacy.lang.de import German
-from spacy.util import registry, ignore_error, raise_error, find_matching_language
-import spacy
-from thinc.api import CupyOps, NumpyOps, get_current_ops
+from spacy.util import find_matching_language, ignore_error, raise_error, registry
+from spacy.vocab import Vocab
 
 from .util import add_vecs_to_vocab, assert_docs_equal
-
 
 try:
     import torch
@@ -737,9 +739,13 @@ def test_pass_doc_to_pipeline(nlp, n_process):
     assert doc.text == texts[0]
     assert len(doc.cats) > 0
     if isinstance(get_current_ops(), NumpyOps) or n_process < 2:
-        docs = nlp.pipe(docs, n_process=n_process)
-        assert [doc.text for doc in docs] == texts
-        assert all(len(doc.cats) for doc in docs)
+        # Catch warnings to ensure that all worker processes exited
+        # succesfully.
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            docs = nlp.pipe(docs, n_process=n_process)
+            assert [doc.text for doc in docs] == texts
+            assert all(len(doc.cats) for doc in docs)
 
 
 def test_invalid_arg_to_pipeline(nlp):

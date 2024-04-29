@@ -1,17 +1,16 @@
-from typing import Iterator, Any, Dict
+from typing import Any, Dict, Iterator
 
+from ...language import BaseDefaults, Language
+from ...scorer import Scorer
+from ...symbols import POS, X
+from ...tokens import Doc
+from ...training import validate_examples
+from ...util import DummyTokenizer, load_config_from_str, registry
+from ...vocab import Vocab
+from .lex_attrs import LEX_ATTRS
 from .punctuation import TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
-from .lex_attrs import LEX_ATTRS
-from ...language import Language, BaseDefaults
-from ...tokens import Doc
-from ...scorer import Scorer
-from ...symbols import POS, X
-from ...training import validate_examples
-from ...util import DummyTokenizer, registry, load_config_from_str
-from ...vocab import Vocab
-
 
 DEFAULT_CONFIG = """
 [nlp]

@@ -1,11 +1,11 @@
 """Knowledge-base for entity or concept linking."""
-from preshed.maps cimport PreshMap
-from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
 from libc.stdio cimport FILE
+from libcpp.vector cimport vector
+from preshed.maps cimport PreshMap
 
+from ..structs cimport AliasC, KBEntryC
 from ..typedefs cimport hash_t
-from ..structs cimport KBEntryC, AliasC
 from .kb cimport KnowledgeBase
 
 ctypedef vector[KBEntryC] entry_vec
@@ -55,23 +55,28 @@ cdef class InMemoryLookupKB(KnowledgeBase):
     # optional data, we can let users configure a DB as the backend for this.
     cdef object _features_table
 
-
     cdef inline int64_t c_add_vector(self, vector[float] entity_vector) nogil:
         """Add an entity vector to the vectors table."""
         cdef int64_t new_index = self._vectors_table.size()
         self._vectors_table.push_back(entity_vector)
         return new_index
 
-
-    cdef inline int64_t c_add_entity(self, hash_t entity_hash, float freq,
-                                     int32_t vector_index, int feats_row) nogil:
+    cdef inline int64_t c_add_entity(
+        self,
+        hash_t entity_hash,
+        float freq,
+        int32_t vector_index,
+        int feats_row
+    ) nogil:
         """Add an entry to the vector of entries.
-        After calling this method, make sure to update also the _entry_index using the return value"""
+        After calling this method, make sure to update also the _entry_index
+        using the return value"""
         # This is what we'll map the entity hash key to. It's where the entry will sit
         # in the vector of entries, so we can get it later.
         cdef int64_t new_index = self._entries.size()
 
-        # Avoid struct initializer to enable nogil, cf https://github.com/cython/cython/issues/1642
+        # Avoid struct initializer to enable nogil, cf.
+        # https://github.com/cython/cython/issues/1642
         cdef KBEntryC entry
         entry.entity_hash = entity_hash
         entry.vector_index = vector_index
@@ -81,11 +86,17 @@ cdef class InMemoryLookupKB(KnowledgeBase):
         self._entries.push_back(entry)
         return new_index
 
-    cdef inline int64_t c_add_aliases(self, hash_t alias_hash, vector[int64_t] entry_indices, vector[float] probs) nogil:
-        """Connect a mention to a list of potential entities with their prior probabilities .
-        After calling this method, make sure to update also the _alias_index using the return value"""
-        # This is what we'll map the alias hash key to. It's where the alias will be defined
-        # in the vector of aliases.
+    cdef inline int64_t c_add_aliases(
+        self,
+        hash_t alias_hash,
+        vector[int64_t] entry_indices,
+        vector[float] probs
+    ) nogil:
+        """Connect a mention to a list of potential entities with their prior
+        probabilities. After calling this method, make sure to update also the
+        _alias_index using the return value"""
+        # This is what we'll map the alias hash key to. It's where the alias will be
+        # defined in the vector of aliases.
         cdef int64_t new_index = self._aliases_table.size()
 
         # Avoid struct initializer to enable nogil
@@ -98,8 +109,9 @@ cdef class InMemoryLookupKB(KnowledgeBase):
 
     cdef inline void _create_empty_vectors(self, hash_t dummy_hash) nogil:
         """
-        Initializing the vectors and making sure the first element of each vector is a dummy,
-        because the PreshMap maps pointing to indices in these vectors can not contain 0 as value
+        Initializing the vectors and making sure the first element of each vector is a
+        dummy, because the PreshMap maps pointing to indices in these vectors can not
+        contain 0 as value.
         cf. https://github.com/explosion/preshed/issues/17
         """
         cdef int32_t dummy_value = 0
@@ -130,12 +142,18 @@ cdef class InMemoryLookupKB(KnowledgeBase):
 cdef class Writer:
     cdef FILE* _fp
 
-    cdef int write_header(self, int64_t nr_entries, int64_t entity_vector_length) except -1
+    cdef int write_header(
+        self, int64_t nr_entries, int64_t entity_vector_length
+    ) except -1
     cdef int write_vector_element(self, float element) except -1
-    cdef int write_entry(self, hash_t entry_hash, float entry_freq, int32_t vector_index) except -1
+    cdef int write_entry(
+        self, hash_t entry_hash, float entry_freq, int32_t vector_index
+    ) except -1
 
     cdef int write_alias_length(self, int64_t alias_length) except -1
-    cdef int write_alias_header(self, hash_t alias_hash, int64_t candidate_length) except -1
+    cdef int write_alias_header(
+        self, hash_t alias_hash, int64_t candidate_length
+    ) except -1
     cdef int write_alias(self, int64_t entry_index, float prob) except -1
 
     cdef int _write(self, void* value, size_t size) except -1
@@ -143,12 +161,18 @@ cdef class Writer:
 cdef class Reader:
     cdef FILE* _fp
 
-    cdef int read_header(self, int64_t* nr_entries, int64_t* entity_vector_length) except -1
+    cdef int read_header(
+        self, int64_t* nr_entries, int64_t* entity_vector_length
+    ) except -1
     cdef int read_vector_element(self, float* element) except -1
-    cdef int read_entry(self, hash_t* entity_hash, float* freq, int32_t* vector_index) except -1
+    cdef int read_entry(
+        self, hash_t* entity_hash, float* freq, int32_t* vector_index
+    ) except -1
 
     cdef int read_alias_length(self, int64_t* alias_length) except -1
-    cdef int read_alias_header(self, hash_t* alias_hash, int64_t* candidate_length) except -1
+    cdef int read_alias_header(
+        self, hash_t* alias_hash, int64_t* candidate_length
+    ) except -1
     cdef int read_alias(self, int64_t* entry_index, float* prob) except -1
 
     cdef int _read(self, void* value, size_t size) except -1

@@ -1,8 +1,8 @@
 cimport numpy as np
 
-from .doc cimport Doc
-from ..typedefs cimport attr_t
 from ..structs cimport SpanC
+from ..typedefs cimport attr_t
+from .doc cimport Doc
 
 
 cdef class Span:

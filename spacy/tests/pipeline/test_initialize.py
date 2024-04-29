@@ -1,9 +1,15 @@
 import pytest
-from spacy.language import Language
-from spacy.lang.en import English
-from spacy.training import Example
+
+try:
+    from pydantic.v1 import StrictBool
+except ImportError:
+    from pydantic import StrictBool  # type: ignore
+
 from thinc.api import ConfigValidationError
-from pydantic import StrictBool
+
+from spacy.lang.en import English
+from spacy.language import Language
+from spacy.training import Example
 
 
 def test_initialize_arguments():

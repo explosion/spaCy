@@ -1,24 +1,23 @@
-# cython: infer_types=True, bounds_check=False, profile=True
-from libc.string cimport memcpy, memset
-from libc.stdlib cimport malloc, free
+# cython: infer_types=True, bounds_check=False
 from cymem.cymem cimport Pool
+from libc.string cimport memset
 
-from thinc.api import get_array_module
 import numpy
+from thinc.api import get_array_module
 
-from .doc cimport Doc, set_children_from_heads, token_by_start, token_by_end
+from ..attrs cimport MORPH, NORM
+from ..lexeme cimport EMPTY_LEXEME, Lexeme
+from ..structs cimport LexemeC, TokenC
+from ..vocab cimport Vocab
+from .doc cimport Doc, set_children_from_heads, token_by_start
 from .span cimport Span
 from .token cimport Token
-from ..lexeme cimport Lexeme, EMPTY_LEXEME
-from ..structs cimport LexemeC, TokenC
-from ..attrs cimport MORPH, NORM
-from ..vocab cimport Vocab
 
-from .underscore import is_writable_attr
 from ..attrs import intify_attrs
-from ..util import SimpleFrozenDict
 from ..errors import Errors
 from ..strings import get_string_id
+from ..util import SimpleFrozenDict
+from .underscore import is_writable_attr
 
 
 cdef class Retokenizer:
@@ -147,7 +146,7 @@ def _merge(Doc doc, merges):
         syntactic root of the span.
     RETURNS (Token): The first newly merged token.
     """
-    cdef int i, merge_index, start, end, token_index, current_span_index, current_offset, offset, span_index
+    cdef int i, merge_index, start, token_index, current_span_index, current_offset, offset, span_index
     cdef Span span
     cdef const LexemeC* lex
     cdef TokenC* token
@@ -165,7 +164,6 @@ def _merge(Doc doc, merges):
     merges.sort(key=_get_start)
     for merge_index, (span, attributes) in enumerate(merges):
         start = span.start
-        end = span.end
         spans.append(span)
         # House the new merged token where it starts
         token = &doc.c[start]
@@ -203,8 +201,9 @@ def _merge(Doc doc, merges):
     # for the merged region. To do this, we create a boolean array indicating
     # whether the row is to be deleted, then use numpy.delete
     if doc.tensor is not None and doc.tensor.size != 0:
-        doc.tensor = _resize_tensor(doc.tensor,
-            [(m[0].start, m[0].end) for m in merges])
+        doc.tensor = _resize_tensor(
+            doc.tensor, [(m[0].start, m[0].end) for m in merges]
+        )
     # Memorize span roots and sets dependencies of the newly merged
     # tokens to the dependencies of their roots.
     span_roots = []
@@ -267,11 +266,11 @@ def _merge(Doc doc, merges):
             span_index += 1
         if span_index < len(spans) and i == spans[span_index].start:
             # First token in a span
-            doc.c[i - offset] = doc.c[i] # move token to its place
+            doc.c[i - offset] = doc.c[i]  # move token to its place
             offset += (spans[span_index].end - spans[span_index].start) - 1
             in_span = True
         if not in_span:
-            doc.c[i - offset] = doc.c[i] # move token to its place
+            doc.c[i - offset] = doc.c[i]  # move token to its place
 
     for i in range(doc.length - offset, doc.length):
         memset(&doc.c[i], 0, sizeof(TokenC))
@@ -345,7 +344,11 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     if to_process_tensor:
         xp = get_array_module(doc.tensor)
         if xp is numpy:
-            doc.tensor = xp.append(doc.tensor, xp.zeros((nb_subtokens,doc.tensor.shape[1]), dtype="float32"), axis=0)
+            doc.tensor = xp.append(
+                doc.tensor,
+                xp.zeros((nb_subtokens, doc.tensor.shape[1]), dtype="float32"),
+                axis=0
+            )
         else:
             shape = (doc.tensor.shape[0] + nb_subtokens, doc.tensor.shape[1])
             resized_array = xp.zeros(shape, dtype="float32")
@@ -367,7 +370,8 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
         token.norm = 0  # reset norm
         if to_process_tensor:
             # setting the tensors of the split tokens to array of zeros
-            doc.tensor[token_index + i:token_index + i + 1] = xp.zeros((1,doc.tensor.shape[1]), dtype="float32")
+            doc.tensor[token_index + i:token_index + i + 1] = \
+                xp.zeros((1, doc.tensor.shape[1]), dtype="float32")
         # Update the character offset of the subtokens
         if i != 0:
             token.idx = orig_token.idx + idx_offset
@@ -455,7 +459,6 @@ def normalize_token_attrs(Vocab vocab, attrs):
 def set_token_attrs(Token py_token, attrs):
     cdef TokenC* token = py_token.c
     cdef const LexemeC* lex = token.lex
-    cdef Doc doc = py_token.doc
     # Assign attributes
     for attr_name, attr_value in attrs.items():
         if attr_name == "_":  # Set extension attributes

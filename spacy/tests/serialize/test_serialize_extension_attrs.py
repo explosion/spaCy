@@ -1,4 +1,5 @@
 import pytest
+
 from spacy.tokens import Doc, Token
 from spacy.vocab import Vocab
 
@@ -14,7 +15,12 @@ def doc_w_attrs(en_tokenizer):
     Token.set_extension("_test_token", default="t0")
     doc[1]._._test_token = "t1"
 
-    return doc
+    yield doc
+
+    Doc.remove_extension("_test_attr")
+    Doc.remove_extension("_test_prop")
+    Doc.remove_extension("_test_method")
+    Token.remove_extension("_test_token")
 
 
 def test_serialize_ext_attrs_from_bytes(doc_w_attrs):

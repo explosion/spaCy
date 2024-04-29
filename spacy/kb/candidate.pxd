@@ -1,8 +1,11 @@
-from .kb cimport KnowledgeBase
 from libcpp.vector cimport vector
-from ..typedefs cimport hash_t
 
-# Object used by the Entity Linker that summarizes one entity-alias candidate combination.
+from ..typedefs cimport hash_t
+from .kb cimport KnowledgeBase
+
+
+# Object used by the Entity Linker that summarizes one entity-alias candidate
+# combination.
 cdef class Candidate:
     cdef readonly KnowledgeBase kb
     cdef hash_t entity_hash

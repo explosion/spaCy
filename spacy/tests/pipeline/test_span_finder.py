@@ -1,15 +1,13 @@
 import pytest
 from thinc.api import Config
 
-from spacy.language import Language
+from spacy import util
 from spacy.lang.en import English
+from spacy.language import Language
 from spacy.pipeline.span_finder import span_finder_default_config
 from spacy.tokens import Doc
 from spacy.training import Example
-from spacy import util
-from spacy.util import registry
-from spacy.util import fix_random_seed, make_tempdir
-
+from spacy.util import fix_random_seed, make_tempdir, registry
 
 SPANS_KEY = "pytest"
 TRAIN_DATA = [
@@ -232,10 +230,10 @@ def test_overfitting_IO():
 
     # Test scoring
     scores = nlp.evaluate(train_examples)
-    assert f"span_finder_{SPANS_KEY}_f" in scores
+    assert f"spans_{SPANS_KEY}_f" in scores
     # It's not perfect 1.0 F1 because it's designed to overgenerate for now.
-    assert scores[f"span_finder_{SPANS_KEY}_p"] == 0.75
-    assert scores[f"span_finder_{SPANS_KEY}_r"] == 1.0
+    assert scores[f"spans_{SPANS_KEY}_p"] == 0.75
+    assert scores[f"spans_{SPANS_KEY}_r"] == 1.0
 
     # also test that the spancat works for just a single entity in a sentence
     doc = nlp("London")

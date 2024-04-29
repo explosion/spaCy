@@ -1,9 +1,10 @@
-from typing import Optional, List
-from thinc.api import zero_init, with_array, Softmax_v2, chain, Model
+from typing import List, Optional
+
+from thinc.api import Model, Softmax_v2, chain, with_array, zero_init
 from thinc.types import Floats2d
 
-from ...util import registry
 from ...tokens import Doc
+from ...util import registry
 
 
 @registry.architectures("spacy.Tagger.v2")

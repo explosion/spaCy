@@ -1,7 +1,8 @@
 import pytest
-from spacy.pipeline.functions import merge_subtokens
+
 from spacy.language import Language
-from spacy.tokens import Span, Doc
+from spacy.pipeline.functions import merge_subtokens
+from spacy.tokens import Doc, Span
 
 from ..doc.test_underscore import clean_underscore  # noqa: F401
 

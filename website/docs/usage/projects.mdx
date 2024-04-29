@@ -656,9 +656,9 @@ locally.
 You can list one or more remotes in the `remotes` section of your
 [`project.yml`](#project-yml) by mapping a string name to the URL of the
 storage. Under the hood, spaCy uses
-[`Pathy`](https://github.com/justindujardin/pathy) to communicate with the
-remote storages, so you can use any protocol that `Pathy` supports, including
-[S3](https://aws.amazon.com/s3/),
+[`cloudpathlib`](https://cloudpathlib.drivendata.org) to communicate with the
+remote storages, so you can use any protocol that `cloudpathlib` supports,
+including [S3](https://aws.amazon.com/s3/),
 [Google Cloud Storage](https://cloud.google.com/storage), and the local
 filesystem, although you may need to install extra dependencies to use certain
 protocols.

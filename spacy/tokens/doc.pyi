@@ -1,16 +1,32 @@
-from typing import Callable, Protocol, Iterable, Iterator, Optional
-from typing import Union, Tuple, List, Dict, Any, overload
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Protocol,
+    Sequence,
+    Tuple,
+    Union,
+    overload,
+)
+
+import numpy as np
 from cymem.cymem import Pool
 from thinc.types import Floats1d, Floats2d, Ints2d
-from .span import Span
-from .token import Token
-from ._dict_proxies import SpanGroups
-from ._retokenize import Retokenizer
+
 from ..lexeme import Lexeme
 from ..vocab import Vocab
+from ._dict_proxies import SpanGroups
+from ._retokenize import Retokenizer
+from .span import Span
+from .token import Token
 from .underscore import Underscore
-from pathlib import Path
-import numpy as np
+
+DOCBIN_ALL_ATTRS: Tuple[str, ...]
 
 class DocMethod(Protocol):
     def __call__(self: Doc, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
@@ -26,7 +42,7 @@ class Doc:
     user_hooks: Dict[str, Callable[..., Any]]
     user_token_hooks: Dict[str, Callable[..., Any]]
     user_span_hooks: Dict[str, Callable[..., Any]]
-    tensor: np.ndarray[Any, np.dtype[np.float_]]
+    tensor: np.ndarray[Any, np.dtype[np.float64]]
     user_data: Dict[str, Any]
     has_unknown_spaces: bool
     _context: Any
@@ -109,7 +125,7 @@ class Doc:
         vector: Optional[Floats1d] = ...,
         alignment_mode: str = ...,
         span_id: Union[int, str] = ...,
-    ) -> Span: ...
+    ) -> Optional[Span]: ...
     def similarity(self, other: Union[Doc, Span, Token, Lexeme]) -> float: ...
     @property
     def has_vector(self) -> bool: ...
@@ -119,7 +135,12 @@ class Doc:
     def text(self) -> str: ...
     @property
     def text_with_ws(self) -> str: ...
-    ents: Tuple[Span]
+    # Ideally the getter would output Tuple[Span]
+    # see https://github.com/python/mypy/issues/3004
+    @property
+    def ents(self) -> Sequence[Span]: ...
+    @ents.setter
+    def ents(self, value: Sequence[Span]) -> None: ...
     def set_ents(
         self,
         entities: List[Span],
@@ -145,7 +166,7 @@ class Doc:
     ) -> Doc: ...
     def to_array(
         self, py_attr_ids: Union[int, str, List[Union[int, str]]]
-    ) -> np.ndarray[Any, np.dtype[np.float_]]: ...
+    ) -> np.ndarray[Any, np.dtype[np.float64]]: ...
     @staticmethod
     def from_docs(
         docs: List[Doc],
@@ -158,15 +179,13 @@ class Doc:
         self, path: Union[str, Path], *, exclude: Iterable[str] = ...
     ) -> None: ...
     def from_disk(
-        self, path: Union[str, Path], *, exclude: Union[List[str], Tuple[str]] = ...
+        self, path: Union[str, Path], *, exclude: Iterable[str] = ...
     ) -> Doc: ...
-    def to_bytes(self, *, exclude: Union[List[str], Tuple[str]] = ...) -> bytes: ...
-    def from_bytes(
-        self, bytes_data: bytes, *, exclude: Union[List[str], Tuple[str]] = ...
-    ) -> Doc: ...
-    def to_dict(self, *, exclude: Union[List[str], Tuple[str]] = ...) -> bytes: ...
+    def to_bytes(self, *, exclude: Iterable[str] = ...) -> bytes: ...
+    def from_bytes(self, bytes_data: bytes, *, exclude: Iterable[str] = ...) -> Doc: ...
+    def to_dict(self, *, exclude: Iterable[str] = ...) -> Dict[str, Any]: ...
     def from_dict(
-        self, msg: bytes, *, exclude: Union[List[str], Tuple[str]] = ...
+        self, msg: Dict[str, Any], *, exclude: Iterable[str] = ...
     ) -> Doc: ...
     def extend_tensor(self, tensor: Floats2d) -> None: ...
     def retokenize(self) -> Retokenizer: ...

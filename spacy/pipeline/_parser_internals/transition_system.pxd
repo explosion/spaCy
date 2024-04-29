@@ -1,11 +1,11 @@
 from cymem.cymem cimport Pool
 
-from ...typedefs cimport attr_t, weight_t
-from ...structs cimport TokenC
 from ...strings cimport StringStore
+from ...structs cimport TokenC
 from ...training.example cimport Example
-from .stateclass cimport StateClass
+from ...typedefs cimport attr_t, weight_t
 from ._state cimport StateC
+from .stateclass cimport StateClass
 
 
 cdef struct Transition:
@@ -20,11 +20,15 @@ cdef struct Transition:
     int (*do)(StateC* state, attr_t label) nogil
 
 
-ctypedef weight_t (*get_cost_func_t)(const StateC* state, const void* gold,
-        attr_tlabel) nogil
-ctypedef weight_t (*move_cost_func_t)(const StateC* state, const void* gold) nogil
-ctypedef weight_t (*label_cost_func_t)(const StateC* state, const void*
-        gold, attr_t label) nogil
+ctypedef weight_t (*get_cost_func_t)(
+    const StateC* state, const void* gold, attr_tlabel
+) nogil
+ctypedef weight_t (*move_cost_func_t)(
+        const StateC* state, const void* gold
+) nogil
+ctypedef weight_t (*label_cost_func_t)(
+    const StateC* state, const void* gold, attr_t label
+) nogil
 
 ctypedef int (*do_func_t)(StateC* state, attr_t label) nogil
 

@@ -1,6 +1,8 @@
-import pytest
 import pickle
-from spacy import util, registry
+
+import pytest
+
+from spacy import registry, util
 from spacy.lang.en import English
 from spacy.lookups import Lookups
 

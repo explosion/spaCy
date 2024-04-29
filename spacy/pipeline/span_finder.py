@@ -3,15 +3,14 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 from thinc.api import Config, Model, Optimizer, set_dropout_rate
 from thinc.types import Floats2d
 
+from ..errors import Errors
 from ..language import Language
-from .trainable_pipe import TrainablePipe
 from ..scorer import Scorer
 from ..tokens import Doc, Span
 from ..training import Example
-from ..errors import Errors
-
 from ..util import registry
 from .spancat import DEFAULT_SPANS_KEY
+from .trainable_pipe import TrainablePipe
 
 span_finder_default_config = """
 [model]
@@ -49,14 +48,14 @@ DEFAULT_SPAN_FINDER_MODEL = Config().from_str(span_finder_default_config)["model
         "threshold": 0.5,
         "model": DEFAULT_SPAN_FINDER_MODEL,
         "spans_key": DEFAULT_SPANS_KEY,
-        "max_length": None,
+        "max_length": 25,
         "min_length": None,
         "scorer": {"@scorers": "spacy.span_finder_scorer.v1"},
     },
     default_score_weights={
-        f"span_finder_{DEFAULT_SPANS_KEY}_f": 1.0,
-        f"span_finder_{DEFAULT_SPANS_KEY}_p": 0.0,
-        f"span_finder_{DEFAULT_SPANS_KEY}_r": 0.0,
+        f"spans_{DEFAULT_SPANS_KEY}_f": 1.0,
+        f"spans_{DEFAULT_SPANS_KEY}_p": 0.0,
+        f"spans_{DEFAULT_SPANS_KEY}_r": 0.0,
     },
 )
 def make_span_finder(
@@ -105,7 +104,7 @@ def make_span_finder_scorer():
 
 def span_finder_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     kwargs = dict(kwargs)
-    attr_prefix = "span_finder_"
+    attr_prefix = "spans_"
     key = kwargs["spans_key"]
     kwargs.setdefault("attr", f"{attr_prefix}{key}")
     kwargs.setdefault(

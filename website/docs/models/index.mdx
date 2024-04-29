@@ -108,12 +108,12 @@ In the `sm`/`md`/`lg` models:
 
 #### CNN/CPU pipelines with floret vectors
 
-The Finnish, Korean and Swedish `md` and `lg` pipelines use
-[floret vectors](/usage/v3-2#vectors) instead of default vectors. If you're
-running a trained pipeline on texts and working with [`Doc`](/api/doc) objects,
-you shouldn't notice any difference with floret vectors. With floret vectors no
-tokens are out-of-vocabulary, so [`Token.is_oov`](/api/token#attributes) will
-return `False` for all tokens.
+The Croatian, Finnish, Korean, Slovenian, Swedish and Ukrainian `md` and `lg`
+pipelines use [floret vectors](/usage/v3-2#vectors) instead of default vectors.
+If you're running a trained pipeline on texts and working with [`Doc`](/api/doc)
+objects, you shouldn't notice any difference with floret vectors. With floret
+vectors no tokens are out-of-vocabulary, so
+[`Token.is_oov`](/api/token#attributes) will return `False` for all tokens.
 
 If you access vectors directly for similarity comparisons, there are a few
 differences because floret vectors don't include a fixed word list like the
@@ -132,9 +132,19 @@ vector keys for default vectors.
 
 ### Transformer pipeline design {id="design-trf"}
 
-In the transformer (`trf`) models, the `tagger`, `parser` and `ner` (if present)
-all listen to the `transformer` component. The `attribute_ruler` and
+In the transformer (`trf`) pipelines, the `tagger`, `parser` and `ner` (if
+present) all listen to the `transformer` component. The `attribute_ruler` and
 `lemmatizer` have the same configuration as in the CNN models.
+
+For spaCy v3.0-v3.6, `trf` pipelines use
+[`spacy-transformers`](https://github.com/explosion/spacy-transformers) and the
+transformer output in `doc._.trf_data` is a
+[`TransformerData`](/api/transformer#transformerdata) object.
+
+For spaCy v3.7+, `trf` pipelines use
+[`spacy-curated-transformers`](https://github.com/explosion/spacy-curated-transformers)
+and `doc._.trf_data` is a
+[`DocTransformerOutput`](/api/curatedtransformer#doctransformeroutput) object.
 
 ### Modifying the default pipeline {id="design-modify"}
 
