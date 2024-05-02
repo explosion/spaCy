@@ -865,6 +865,31 @@ def test_ner_warns_no_lookups(caplog):
         assert "W033" not in caplog.text
 
 
+def test_train_sent_split_in_entity():
+    # Check that we can train on inputs when entities are sentence-split
+    # by an annotating component.
+    nlp = English()
+    ner = nlp.add_pipe("ner", config={"update_with_oracle_cut_size": 3})
+
+    eg = Example.from_dict(
+        nlp.make_doc("I like the Kinesis Advantage2 LF very much."),
+        {"entities": [(11, 32, "MISC")]},
+    )
+
+    # Go bezerk, put a boundary on every combination of tokens.
+    train_examples = []
+    for i in range(1, len(eg.predicted)):
+        for j in range(1, len(eg.predicted)):
+            eg_ij = eg.copy()
+            eg_ij.predicted[i].is_sent_start = True
+            eg_ij.predicted[j].is_sent_start = True
+            train_examples.append(eg_ij)
+
+    ner.add_label("MISC")
+    nlp.initialize()
+    nlp.update(train_examples, sgd=False, annotates=[])
+
+
 @Language.factory("blocker")
 class BlockerComponent1:
     def __init__(self, nlp, start, end, name="my_blocker"):

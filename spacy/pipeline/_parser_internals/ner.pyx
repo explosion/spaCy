@@ -119,6 +119,10 @@ cdef bint _entity_is_sunk(const StateC* state, Transition* golds) nogil:
         return False
 
 
+cdef bint _next_is_sent_start(const StateC* state) nogil:
+    return state.B(1) != -1 and state.B_(1).sent_start == 1
+
+
 cdef class BiluoPushDown(TransitionSystem):
     def __init__(self, *args, **kwargs):
         TransitionSystem.__init__(self, *args, **kwargs)
@@ -387,7 +391,7 @@ cdef class Begin:
         elif st.B_(1).ent_iob == 3:
             # If the next word is B, we can't B now
             return False
-        elif st.B_(1).sent_start == 1:
+        elif _next_is_sent_start(st):
             # Don't allow entities to extend across sentence boundaries
             return False
         # Don't allow entities to start on whitespace
@@ -467,7 +471,7 @@ cdef class In:
                 # Otherwise, force acceptance, even if we're across a sentence
                 # boundary or the token is whitespace.
                 return True
-        elif st.B(1) != -1 and st.B_(1).sent_start == 1:
+        elif _next_is_sent_start(st):
             # Don't allow entities to extend across sentence boundaries
             return False
         else:
@@ -555,8 +559,9 @@ cdef class Last:
             # L, Gold B --> True
             pass
         elif g_act == IN:
-            # L, Gold I --> True iff this entity sunk
-            cost += not _entity_is_sunk(s, gold.ner)
+            # L, Gold I --> True iff this entity sunk or there is sentence
+            #               break after the next buffer token.
+            cost += not (_entity_is_sunk(s, gold.ner) or _next_is_sent_start(s))
         elif g_act == LAST:
             # L, Gold L --> True
             pass
@@ -671,8 +676,9 @@ cdef class Out:
         if g_act == MISSING:
             pass
         elif g_act == BEGIN:
-            # O, Gold B --> False
-            cost += 1
+            # O, Gold B --> False, unless there is a sentence break after
+            #               the next buffer token.
+            cost += not _next_is_sent_start(s)
         elif g_act == IN:
             # O, Gold I --> True
             pass
