@@ -12,7 +12,7 @@ from thinc.api import Config
 
 import spacy
 from spacy import about
-from spacy.cli import info
+from spacy.cli import download_module, info
 from spacy.cli._util import parse_config_overrides, string_to_list, walk_directory
 from spacy.cli.apply import apply
 from spacy.cli.debug_data import (
@@ -1066,3 +1066,15 @@ def test_debug_data_trainable_lemmatizer_not_annotated():
 def test_project_api_imports():
     from spacy.cli import project_run
     from spacy.cli.project.run import project_run  # noqa: F401, F811
+
+
+def test_download_rejects_relative_urls(monkeypatch):
+    """Test that we can't tell spacy download to get an arbitrary model by using a
+    relative path in the filename"""
+
+    monkeypatch.setattr(download_module, "run_command", lambda cmd: None)
+
+    # Check that normal download works
+    download_module.download("en_core_web_sm-3.7.1", direct=True)
+    with pytest.raises(SystemExit):
+        download_module.download("../en_core_web_sm-3.7.1", direct=True)

@@ -32,6 +32,9 @@ const nextConfig = withPWA(
             ignoreBuildErrors: true,
         },
         images: { unoptimized: true },
+        env: {
+            DOCSEARCH_API_KEY: process.env.DOCSEARCH_API_KEY
+        }
     })
 )
 

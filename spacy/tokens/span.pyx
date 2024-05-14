@@ -786,110 +786,130 @@ cdef class Span:
         for word in self.rights:
             yield from word.subtree
 
-    property start:
-        def __get__(self):
-            return self.span_c().start
+    @property
+    def start(self):
+        return self.span_c().start
 
-        def __set__(self, int start):
-            if start < 0 or start > self.doc.length:
-                raise IndexError(Errors.E1032.format(var="start", obj="Doc", length=self.doc.length, value=start))
-            cdef SpanC* span_c = self.span_c()
-            if start > span_c.end:
-                raise ValueError(Errors.E4007.format(var="start", value=start, op="<=", existing_var="end", existing_value=span_c.end))
-            span_c.start = start
-            span_c.start_char = self.doc.c[start].idx
+    @start.setter
+    def start(self, int start):
+        if start < 0 or start > self.doc.length:
+            raise IndexError(Errors.E1032.format(var="start", obj="Doc", length=self.doc.length, value=start))
+        cdef SpanC * span_c = self.span_c()
+        if start > span_c.end:
+            raise ValueError(
+                Errors.E4007.format(var="start", value=start, op="<=", existing_var="end", existing_value=span_c.end))
+        span_c.start = start
+        span_c.start_char = self.doc.c[start].idx
 
-    property end:
-        def __get__(self):
-            return self.span_c().end
+    @property
+    def end(self):
+        return self.span_c().end
 
-        def __set__(self, int end):
-            if end < 0 or end > self.doc.length:
-                raise IndexError(Errors.E1032.format(var="end", obj="Doc", length=self.doc.length, value=end))
-            cdef SpanC* span_c = self.span_c()
-            if span_c.start > end:
-                raise ValueError(Errors.E4007.format(var="end", value=end, op=">=", existing_var="start", existing_value=span_c.start))
-            span_c.end = end
-            if end > 0:
-                span_c.end_char = self.doc.c[end-1].idx + self.doc.c[end-1].lex.length
-            else:
-                span_c.end_char = 0
+    @end.setter
+    def end(self, int end):
+        if end < 0 or end > self.doc.length:
+            raise IndexError(Errors.E1032.format(var="end", obj="Doc", length=self.doc.length, value=end))
+        cdef SpanC * span_c = self.span_c()
+        if span_c.start > end:
+            raise ValueError(
+                Errors.E4007.format(var="end", value=end, op=">=", existing_var="start", existing_value=span_c.start))
+        span_c.end = end
+        if end > 0:
+            span_c.end_char = self.doc.c[end - 1].idx + self.doc.c[end - 1].lex.length
+        else:
+            span_c.end_char = 0
 
-    property start_char:
-        def __get__(self):
-            return self.span_c().start_char
+    @property
+    def start_char(self):
+        return self.span_c().start_char
 
-        def __set__(self, int start_char):
-            if start_char < 0 or start_char > len(self.doc.text):
-                raise IndexError(Errors.E1032.format(var="start_char", obj="Doc text", length=len(self.doc.text), value=start_char))
-            cdef int start = token_by_start(self.doc.c, self.doc.length, start_char)
-            if start < 0:
-                raise ValueError(Errors.E4008.format(value=start_char, pos="start"))
-            cdef SpanC* span_c = self.span_c()
-            if start_char > span_c.end_char:
-                raise ValueError(Errors.E4007.format(var="start_char", value=start_char, op="<=", existing_var="end_char", existing_value=span_c.end_char))
-            span_c.start_char = start_char
-            span_c.start = start
+    @start_char.setter
+    def start_char(self, int start_char):
+        if start_char < 0 or start_char > len(self.doc.text):
+            raise IndexError(
+                Errors.E1032.format(var="start_char", obj="Doc text", length=len(self.doc.text), value=start_char))
+        cdef int start = token_by_start(self.doc.c, self.doc.length, start_char)
+        if start < 0:
+            raise ValueError(Errors.E4008.format(value=start_char, pos="start"))
+        cdef SpanC * span_c = self.span_c()
+        if start_char > span_c.end_char:
+            raise ValueError(Errors.E4007.format(var="start_char", value=start_char, op="<=", existing_var="end_char",
+                                                 existing_value=span_c.end_char))
+        span_c.start_char = start_char
+        span_c.start = start
 
-    property end_char:
-        def __get__(self):
-            return self.span_c().end_char
+    @property
+    def end_char(self):
+        return self.span_c().end_char
 
-        def __set__(self, int end_char):
-            if end_char < 0 or end_char > len(self.doc.text):
-                raise IndexError(Errors.E1032.format(var="end_char", obj="Doc text", length=len(self.doc.text), value=end_char))
-            cdef int end = token_by_end(self.doc.c, self.doc.length, end_char)
-            if end < 0:
-                raise ValueError(Errors.E4008.format(value=end_char, pos="end"))
-            cdef SpanC* span_c = self.span_c()
-            if span_c.start_char > end_char:
-                raise ValueError(Errors.E4007.format(var="end_char", value=end_char, op=">=", existing_var="start_char", existing_value=span_c.start_char))
-            span_c.end_char = end_char
-            span_c.end = end
+    @end_char.setter
+    def end_char(self, int end_char):
+        if end_char < 0 or end_char > len(self.doc.text):
+            raise IndexError(
+                Errors.E1032.format(var="end_char", obj="Doc text", length=len(self.doc.text), value=end_char))
+        cdef int end = token_by_end(self.doc.c, self.doc.length, end_char)
+        if end < 0:
+            raise ValueError(Errors.E4008.format(value=end_char, pos="end"))
+        cdef SpanC * span_c = self.span_c()
+        if span_c.start_char > end_char:
+            raise ValueError(Errors.E4007.format(var="end_char", value=end_char, op=">=", existing_var="start_char",
+                                                 existing_value=span_c.start_char))
+        span_c.end_char = end_char
+        span_c.end = end
 
-    property label:
-        def __get__(self):
-            return self.span_c().label
+    @property
+    def label(self):
+        return self.span_c().label
 
-        def __set__(self, attr_t label):
-            if label != self.span_c().label :
-                old_label = self.span_c().label
-                self.span_c().label = label
-                new = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
-                old = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=old_label, kb_id=self.kb_id, span_id=self.id)
-                Underscore._replace_keys(old, new)
+    @label.setter
+    def label(self, attr_t label):
+        if label != self.span_c().label:
+            old_label = self.span_c().label
+            self.span_c().label = label
+            new = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char,
+                             end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
+            old = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char,
+                             end=self.span_c().end_char, label=old_label, kb_id=self.kb_id, span_id=self.id)
+            Underscore._replace_keys(old, new)
 
-    property kb_id:
-        def __get__(self):
-            return self.span_c().kb_id
+    @property
+    def kb_id(self):
+        return self.span_c().kb_id
 
-        def __set__(self, attr_t kb_id):
-            if kb_id != self.span_c().kb_id :
-                old_kb_id = self.span_c().kb_id
-                self.span_c().kb_id = kb_id
-                new = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
-                old = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=old_kb_id, span_id=self.id)
-                Underscore._replace_keys(old, new)
+    @kb_id.setter
+    def kb_id(self, attr_t kb_id):
+        if kb_id != self.span_c().kb_id:
+            old_kb_id = self.span_c().kb_id
+            self.span_c().kb_id = kb_id
+            new = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char,
+                             end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
+            old = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char,
+                             end=self.span_c().end_char, label=self.label, kb_id=old_kb_id, span_id=self.id)
+            Underscore._replace_keys(old, new)
 
-    property id:
-        def __get__(self):
-            return self.span_c().id
+    @property
+    def id(self):
+        return self.span_c().id
 
-        def __set__(self, attr_t id):
-            if id != self.span_c().id :
-                old_id = self.span_c().id
-                self.span_c().id = id
-                new = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
-                old = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=old_id)
-                Underscore._replace_keys(old, new)
+    @id.setter
+    def id(self, attr_t id):
+        if id != self.span_c().id:
+            old_id = self.span_c().id
+            self.span_c().id = id
+            new = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char,
+                             end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
+            old = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char,
+                             end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=old_id)
+            Underscore._replace_keys(old, new)
 
-    property ent_id:
+    @property
+    def ent_id(self):
         """Alias for the span's ID."""
-        def __get__(self):
-            return self.id
+        return self.id
 
-        def __set__(self, attr_t ent_id):
-            self.id = ent_id
+    @ent_id.setter
+    def ent_id(self, attr_t ent_id):
+        self.id = ent_id
 
     @property
     def orth_(self):
@@ -904,29 +924,32 @@ cdef class Span:
         """RETURNS (str): The span's lemma."""
         return "".join([t.lemma_ + t.whitespace_ for t in self]).strip()
 
-    property label_:
+    @property
+    def label_(self):
         """The span's label."""
-        def __get__(self):
-            return self.doc.vocab.strings[self.label]
+        return self.doc.vocab.strings[self.label]
 
-        def __set__(self, str label_):
-            self.label = self.doc.vocab.strings.add(label_)
+    @label_.setter
+    def label_(self, str label_):
+        self.label = self.doc.vocab.strings.add(label_)
 
-    property kb_id_:
+    @property
+    def kb_id_(self):
         """The span's KB ID."""
-        def __get__(self):
-            return self.doc.vocab.strings[self.kb_id]
+        return self.doc.vocab.strings[self.kb_id]
 
-        def __set__(self, str kb_id_):
-            self.kb_id = self.doc.vocab.strings.add(kb_id_)
+    @kb_id_.setter
+    def kb_id_(self, str kb_id_):
+        self.kb_id = self.doc.vocab.strings.add(kb_id_)
 
-    property id_:
+    @property
+    def id_(self):
         """The span's ID."""
-        def __get__(self):
-            return self.doc.vocab.strings[self.id]
+        return self.doc.vocab.strings[self.id]
 
-        def __set__(self, str id_):
-            self.id = self.doc.vocab.strings.add(id_)
+    @id_.setter
+    def id_(self, str id_):
+        self.id = self.doc.vocab.strings.add(id_)
 
     property ent_id_:
         """Alias for the span's ID."""

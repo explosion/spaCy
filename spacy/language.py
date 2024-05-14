@@ -1844,6 +1844,9 @@ class Language:
             for proc in procs:
                 proc.join()
 
+            if not all(proc.exitcode == 0 for proc in procs):
+                warnings.warn(Warnings.W127)
+
     def _link_components(self) -> None:
         """Register 'listeners' within pipeline components, to allow them to
         effectively share weights.
@@ -2467,6 +2470,7 @@ def _apply_pipes(
             if isinstance(texts_with_ctx, _WorkDoneSentinel):
                 sender.close()
                 receiver.close()
+                return
 
             docs = (
                 ensure_doc(doc_like, context) for doc_like, context in texts_with_ctx
@@ -2492,6 +2496,7 @@ def _apply_pipes(
             # stop processing.
             sender.close()
             receiver.close()
+            return
 
 
 class _Sender:
