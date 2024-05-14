@@ -23,7 +23,6 @@
     },
     "docSearch": {
         "appId": "Y1LB128RON",
-        "apiKey": "bb601a1daab73e2dc66faf2b79564807",
         "indexName": "spacy"
     },
     "binderUrl": "explosion/spacy-io-binder",

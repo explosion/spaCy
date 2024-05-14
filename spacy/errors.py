@@ -215,6 +215,7 @@ class Warnings(metaclass=ErrorsWithCodes):
             "key attribute for vectors, configure it through Vectors(attr=) or "
             "'spacy init vectors --attr'")
     W126 = ("These keys are unsupported: {unsupported}")
+    W127 = ("Not all `Language.pipe` worker processes completed successfully")
 
     # v4 warning strings
     W401 = ("`incl_prior is True`, but the selected knowledge base type {kb_type} doesn't support prior probability "
