@@ -256,9 +256,9 @@ def _init_parametric_attention_with_residual_nonlinear(model, X, Y) -> Model:
 
     tok2vec_width = get_tok2vec_width(model)
     model.get_ref("attention_layer").set_dim("nO", tok2vec_width)
-    if model.get_ref("key_transform").has_dim("nI"):
+    if model.get_ref("key_transform").has_dim("nI") is None:
         model.get_ref("key_transform").set_dim("nI", tok2vec_width)
-    if model.get_ref("key_transform").has_dim("nO"):
+    if model.get_ref("key_transform").has_dim("nO") is None:
         model.get_ref("key_transform").set_dim("nO", tok2vec_width)
     model.get_ref("nonlinear_layer").set_dim("nI", tok2vec_width)
     model.get_ref("nonlinear_layer").set_dim("nO", tok2vec_width)
