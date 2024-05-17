@@ -25,7 +25,7 @@
                 "{'rank': 3, 'text': 'Great work', 'similarity-score': 0.773}",
                 "{'rank': 4, 'text': 'great work mate', 'similarity-score': 0.757}",
                 "{'rank': 1, 'text': 'valuable man', 'similarity-score': 0.719}]"
-            ]
+            ],
             "category": ["pipeline"],
             "tags": ["nlp", "embeddings"]
         },
