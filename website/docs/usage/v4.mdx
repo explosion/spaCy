@@ -107,7 +107,7 @@ these language codes should be adjusted accordingly.
 
 ### Removal of the `sentiment` attribute
 
-The `sentiment` attribute is removed the `Token`, `Span`, `Doc` and `Lexeme`
+The `sentiment` attribute is removed from the `Token`, `Span`, `Doc` and `Lexeme`
 classes. If you used this attribute in a `sentiment` analysis component, we
 recommend you to store the sentiment analysis in an
 [extension attribute](/usage/processing-pipelines#custom-components-attributes)
@@ -123,7 +123,7 @@ mention the candidates.
 spaCy v4 replaces both functions by a single function
 [`get_candidates`](/api/entitylinker#config) that does doc-wise batching. For an
 `Iterator[SpanGroup]` it returns for each mention in the spangroup the
-candidates. The batching is by doc since the [`Span`](/api/span)s in a
+candidates. The batching is by doc since the [`Span`](/api/span) objects in a
 [`SpanGroup`](/api/spangroup) belong to the same [`Doc`](/api/doc).
 
 ### Removal of pool argument from `Vocab.get` and `Vocab.get_by_orth`
