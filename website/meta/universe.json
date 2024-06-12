@@ -4517,7 +4517,42 @@
                 "website": "https://redfield.ai"
             },
             "category": ["standalone"]
-        }
+        },
+        {
+            "id": "date-spacy",
+            "title": "Date spaCy",
+            "slogan": "Effortless Date Recognition in Text with spaCy",
+            "description": "Date spaCy is a spaCy pipeline component designed to identify and parse date entities in text effortlessly. It uses Regular Expressions (RegEx) to detect a wide range of date formats and leverages the 'dateparser' library for accurate conversion into structured datetime objects. Particularly useful in NLP tasks involving date information extraction, this component seamlessly integrates into existing or new spaCy pipelines. The tool assumes the current year for dates without a specified year, ensuring sensible defaults while maintaining flexibility. The parsed dates are stored in a custom entity extension, providing easy access and manipulation within spaCy's ecosystem. This makes Date spaCy a go-to solution for developers and data scientists dealing with temporal data in natural language.",
+            "github": "wjbmattingly/date-spacy",
+            "pip": "date-spacy",
+            "code_example": [
+                "import spacy",
+                "from date_spacy import find_dates",
+                "",
+                "nlp = spacy.blank('en')",
+                "nlp.add_pipe('find_dates')",
+                "",
+                "doc = nlp(\"\"\"The event is scheduled for 25th August 2023.",
+                "          We also have a meeting on 10 September and another one on the twelfth of October and a",
+                "          final one on January fourth.\"\"\")",
+                "",
+                "for ent in doc.ents:",
+                "    if ent.label_ == 'DATE':",
+                "        print(f'Text: {ent.text} -> Parsed Date: {ent._.date}')"
+            ],
+            "code_language": "python",
+            "url": "https://github.com/wjbmattingly/date-spacy",
+            "thumb": "https://github.com/wjbmattingly/date-spacy/raw/main/images/date-spacy-logo.png?raw=true",
+            "image": "https://github.com/wjbmattingly/date-spacy/raw/main/images/date-spacy-logo.png?raw=true",
+            "author": "W.J.B. Mattingly",
+            "author_links": {
+                "twitter": "wjb_mattingly",
+                "github": "wjbmattingly",
+                "website": "https://wjbmattingly.com"
+            },
+            "category": ["pipeline"],
+            "tags": ["dates", "ner", "nlp", "spacy"]
+        }        
     ],
 
     "categories": [
