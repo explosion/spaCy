@@ -4517,6 +4517,39 @@
                 "website": "https://redfield.ai"
             },
             "category": ["standalone"]
+        },
+        {
+            "id": "number-spacy",
+            "title": "Number spaCy",
+            "slogan": "Enhancing Numeric Entity Recognition in Text with spaCy",
+            "description": "Number spaCy is a custom spaCy pipeline component that enhances the identification of number entities in text and fetches the parsed numeric values using spaCy's token extensions. It uses RegEx to identify number entities written in words and then leverages the [word2number](https://github.com/akshaynagpal/w2n) library to convert those words into structured numeric data. The output numeric value is stored in a custom entity extension: `._.number`. This lightweight component can be seamlessly added to an existing spaCy pipeline or integrated into a blank model. If using within an existing spaCy pipeline, ensure to insert it before the NER model.",
+            "github": "wjbmattingly/number-spacy",
+            "pip": "number-spacy",
+            "code_example": [
+                "import spacy",
+                "from number_spacy import find_numbers",
+                "",
+                "nlp = spacy.blank('en')",
+                "nlp.add_pipe('find_numbers')",
+                "",
+                "doc = nlp('I have three apples. She gave me twenty-two more, and now I have twenty-five apples in total.')",
+                "",
+                "for ent in doc.ents:",
+                "    if ent.label_ == 'NUMBER':",
+                "        print(f'Text: {ent.text} -> Parsed Number: {ent._.number}')"
+            ],
+            "code_language": "python",
+            "url": "https://github.com/wjbmattingly/number-spacy",
+            "thumb": "https://github.com/wjbmattingly/number-spacy/raw/main/images/number-spacy-logo.png?raw=true",
+            "image": "https://github.com/wjbmattingly/number-spacy/raw/main/images/number-spacy-logo.png?raw=true",
+            "author": "W.J.B. Mattingly",
+            "author_links": {
+                "twitter": "wjb_mattingly",
+                "github": "wjbmattingly",
+                "website": "https://www.wjbmattingly.com"
+            },
+            "category": ["pipeline"],
+            "tags": ["spacy", "number", "NLP", "entity recognition"]
         }
     ],
 
