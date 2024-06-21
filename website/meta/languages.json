@@ -32,6 +32,12 @@
             "has_examples": true
         },
         {
+            "code": "bo",
+            "name": "Tibetan",
+            "example": "འདི་ཚིག་གྲུབ་རེད།",
+            "has_examples": true
+        },
+        {
             "code": "ca",
             "name": "Catalan",
             "example": "Això és una frase.",

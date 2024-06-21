@@ -80,6 +80,9 @@ def bg_tokenizer():
 def bn_tokenizer():
     return get_lang_class("bn")().tokenizer
 
+@pytest.fixture(scope="session")
+def bo_tokenizer():
+    return get_lang_class("bo")().tokenizer
 
 @pytest.fixture(scope="session")
 def ca_tokenizer():
