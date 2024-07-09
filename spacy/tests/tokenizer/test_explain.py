@@ -57,6 +57,7 @@ LANGUAGES = [
     pytest.param("tr", marks=pytest.mark.slow()),
     pytest.param("tt", marks=pytest.mark.slow()),
     pytest.param("ur", marks=pytest.mark.slow()),
+    pytest.param("kmr", marks=pytest.mark.slow()),
 ]
 
 
