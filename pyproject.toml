@@ -22,12 +22,13 @@ archs = ["native"]
 build-frontend = "default"
 config-settings = {}
 dependency-versions = "pinned"
-environment = {}
+environment = { PIP_CONSTRAINT = "build-constraints.txt" }
+
 environment-pass = []
 build-verbosity = 0
 
-before-all = ""
-before-build = ""
+before-all = "curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain stable"
+before-build = "pip install -r requirements.txt && python setup.py clean"
 repair-wheel-command = ""
 
 test-command = ""
