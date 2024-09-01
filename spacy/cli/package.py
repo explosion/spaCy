@@ -352,7 +352,6 @@ def get_meta(
         "width": nlp.vocab.vectors_length,
         "vectors": len(nlp.vocab.vectors),
         "keys": nlp.vocab.vectors.n_keys,
-        "name": nlp.vocab.vectors.name,
     }
     if about.__title__ != "spacy":
         meta["parent_package"] = about.__title__
