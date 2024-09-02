@@ -1,2 +1,2 @@
 # build version constraints for use with wheelwright
-numpy>=1.25.0; python_version>='3.9'
+numpy>=2.0.0; python_version>='3.9'
