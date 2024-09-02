@@ -8,8 +8,12 @@ from .doc import Doc
 from .token import Token
 from .underscore import Underscore
 
-class SpanMethod(Protocol):
-    def __call__(self: Span, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
+SpanMethod = Union[
+ Callable[[Span], Any],
+ Callable[[Span, Any], Any],
+ Callable[[Span, Any, Any], Any],
+ Callable[[Span, Any, Any, Any], Any],
+]
 
 class Span:
     @classmethod

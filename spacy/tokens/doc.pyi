@@ -28,8 +28,12 @@ from .underscore import Underscore
 
 DOCBIN_ALL_ATTRS: Tuple[str, ...]
 
-class DocMethod(Protocol):
-    def __call__(self: Doc, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
+DocMethod = Union[
+ Callable[[Doc], Any],
+ Callable[[Doc, Any], Any],
+ Callable[[Doc, Any, Any], Any],
+ Callable[[Doc, Any, Any, Any], Any],
+]
 
 class Doc:
     vocab: Vocab

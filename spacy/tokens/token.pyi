@@ -9,8 +9,12 @@ from .morphanalysis import MorphAnalysis
 from .span import Span
 from .underscore import Underscore
 
-class TokenMethod(Protocol):
-    def __call__(self: Token, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
+TokenMethod = Union[
+ Callable[[Token], Any],
+ Callable[[Token, Any], Any],
+ Callable[[Token, Any, Any], Any],
+ Callable[[Token, Any, Any, Any], Any],
+]
 
 class Token:
     i: int
