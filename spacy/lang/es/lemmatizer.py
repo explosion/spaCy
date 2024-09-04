@@ -53,15 +53,12 @@ class SpanishLemmatizer(Lemmatizer):
             else:
                 rule_pos = pos
             rule = self.select_rule(rule_pos, list(features))
-            if rule is None:
-                lemmas = [string]
-            else:
-                index = self.lookups.get_table("lemma_index").get(rule_pos, [])
-                lemmas = getattr(self, "lemmatize_" + rule_pos)(
-                    string, features, rule, index
-                )
-                # Remove duplicates but preserve the ordering
-                lemmas = list(dict.fromkeys(lemmas))
+            index = self.lookups.get_table("lemma_index").get(rule_pos, [])
+            lemmas = getattr(self, "lemmatize_" + rule_pos)(
+                string, features, rule, index
+            )
+            # Remove duplicates but preserve the ordering
+            lemmas = list(dict.fromkeys(lemmas))
 
         self.cache[cache_key] = lemmas
         return lemmas
@@ -206,7 +203,6 @@ class SpanishLemmatizer(Lemmatizer):
         word (str): The word to lemmatize.
         features (List[str]): The morphological features as a list of Feat=Val
             pairs.
-        rule (str): The rule ID to use
         index (List[str]): The POS-specific lookup list.
 
         RETURNS (List[str]): The list of lemmas.
