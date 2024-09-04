@@ -63,13 +63,16 @@ class SpanishLemmatizer(Lemmatizer):
         self.cache[cache_key] = lemmas
         return lemmas
 
-    def select_rule(self, pos: str, features: List[str]) -> Optional[str]:
+    def select_rule(self, pos: str, features: List[str]) -> str:
         groups = self.lookups.get_table("lemma_rules_groups")
         if pos in groups:
             for group in groups[pos]:
                 if set(group[1]).issubset(features):
                     return group[0]
-        return None
+        # In v3, returning None here apparently took advantage of a bug in the string store
+        # that didn't raise an error on None as a value to decode. We emulate the previous
+        # behaviour by returning "" here, which should not match any lookups as before.
+        return ""
 
     def lemmatize_adj(
         self, word: str, features: List[str], rule: str, index: List[str]
