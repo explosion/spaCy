@@ -1,10 +1,10 @@
 import functools
+from contextlib import ExitStack, contextmanager
+from typing import Iterator, Optional
 
 import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
-from contextlib import contextmanager, ExitStack
-from typing import Iterator, Optional
 
 from .attrs cimport LANG, ORTH
 from .lexeme cimport EMPTY_LEXEME, OOV_RANK, Lexeme

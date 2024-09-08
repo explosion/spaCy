@@ -1,9 +1,9 @@
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Union
-from contextlib import contextmanager
 
-from thinc.types import Floats1d, FloatsXd
 from cymem.cymem import Pool
+from thinc.types import Floats1d, FloatsXd
 
 from . import Language
 from .lexeme import Lexeme
