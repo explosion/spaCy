@@ -3,7 +3,7 @@
 cimport cython
 
 from contextlib import contextmanager
-from typing import Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Iterator, List, Optional
 
 from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
@@ -35,7 +35,7 @@ def get_string_id(key):
     This function optimises for convenience over performance, so shouldn't be
     used in tight loops.
     """
-    cdef hash_t str_hash    
+    cdef hash_t str_hash
     if isinstance(key, str):
         if len(key) == 0:
             return 0
@@ -49,8 +49,8 @@ def get_string_id(key):
     elif _try_coerce_to_hash(key, &str_hash):
         # Coerce the integral key to the expected primitive hash type.
         # This ensures that custom/overloaded "primitive" data types
-        # such as those implemented by numpy are not inadvertently used 
-        # downsteam (as these are internally implemented as custom PyObjects 
+        # such as those implemented by numpy are not inadvertently used
+        # downsteam (as these are internally implemented as custom PyObjects
         # whose comparison operators can incur a significant overhead).
         return str_hash
     else:
@@ -196,7 +196,7 @@ cdef class StringStore:
         return self._keys.size() + self._transient_keys.size()
 
     @contextmanager
-    def memory_zone(self, mem: Optional[Pool]=None) -> Pool:
+    def memory_zone(self, mem: Optional[Pool] = None) -> Pool:
         """Begin a block where all resources allocated during the block will
         be freed at the end of it. If a resources was created within the
         memory zone block, accessing it outside the block is invalid.
