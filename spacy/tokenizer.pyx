@@ -401,7 +401,7 @@ cdef class Tokenizer:
                             with_special_cases)
         if len(self._cache) < self.max_cache_size:
             self._save_cached(&tokens.c[orig_size], orig_key, has_special,
-                tokens.length - orig_size)
+                              tokens.length - orig_size)
 
     cdef str _split_affixes(
         self,
