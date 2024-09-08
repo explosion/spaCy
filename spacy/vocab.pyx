@@ -3,6 +3,8 @@ import functools
 import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
+from contextlib import contextmanager, ExitStack
+from typing import Iterator, Optional
 
 from .attrs cimport LANG, ORTH
 from .lexeme cimport EMPTY_LEXEME, OOV_RANK, Lexeme
@@ -86,6 +88,12 @@ cdef class Vocab:
         else:
             self.writing_system = writing_system
         self.get_noun_chunks = get_noun_chunks
+        # During a memory_zone we replace our mem object with one
+        # that's passed to us. We keep a reference to our non-temporary
+        # memory here, in case we need to make an allocation we want to
+        # guarantee is not temporary. This is also how we check whether
+        # we're in a memory zone: we check whether self.mem is self._non_temp_mem
+        self._non_temp_mem = self.mem
 
     @property
     def vectors(self):
@@ -112,6 +120,33 @@ cdef class Vocab:
         RETURNS (int): The current number of lexemes stored.
         """
         return self.length
+
+    @contextmanager
+    def memory_zone(self, mem: Optional[Pool] = None) -> Iterator[Pool]:
+        """Begin a block where resources allocated during the block will
+        be freed at the end of it. If a resources was created within the
+        memory zone block, accessing it outside the block is invalid.
+        Behaviour of this invalid access is undefined. Memory zones should
+        not be nested.
+
+        The memory zone is helpful for services that need to process large
+        volumes of text with a defined memory budget.
+        """
+        if mem is None:
+            mem = Pool()
+        # The ExitStack allows programmatic nested context managers.
+        # We don't know how many we need, so it would be awkward to have
+        # them as nested blocks.
+        with ExitStack() as stack:
+            contexts = [stack.enter_context(self.strings.memory_zone(mem))]
+            if hasattr(self.morphology, "memory_zone"):
+                contexts.append(stack.enter_context(self.morphology.memory_zone(mem)))
+            if hasattr(self._vectors, "memory_zone"):
+                contexts.append(stack.enter_context(self._vectors.memory_zone(mem)))
+            self.mem = mem
+            yield mem
+        self._clear_transient_orths()
+        self.mem = self._non_temp_mem
 
     def add_flag(self, flag_getter, int flag_id=-1):
         """Set a new boolean flag to words in the vocabulary.
@@ -147,8 +182,7 @@ cdef class Vocab:
 
     cdef const LexemeC* get(self, str string) except NULL:
         """Get a pointer to a `LexemeC` from the lexicon, creating a new
-        `Lexeme` if necessary using memory acquired from the given pool. If the
-        pool is the lexicon's own memory, the lexeme is saved in the lexicon.
+        `Lexeme` if necessary.
         """
         if string == "":
             return &EMPTY_LEXEME
@@ -180,7 +214,7 @@ cdef class Vocab:
 
     cdef const LexemeC* _new_lexeme(self, str string) except NULL:
         lex = <LexemeC*>self.mem.alloc(1, sizeof(LexemeC))
-        lex.orth = self.strings.add(string)
+        lex.orth = self.strings.add(string, allow_transient=True)
         lex.length = len(string)
         if self.vectors is not None and hasattr(self.vectors, "key2row"):
             lex.id = self.vectors.key2row.get(lex.orth, OOV_RANK)
@@ -190,17 +224,25 @@ cdef class Vocab:
             for attr, func in self.lex_attr_getters.items():
                 value = func(string)
                 if isinstance(value, str):
-                    value = self.strings.add(value)
+                    value = self.strings.add(value, allow_transient=True)
                 if value is not None:
                     Lexeme.set_struct_attr(lex, attr, value)
-        self._add_lex_to_vocab(lex.orth, lex)
+        self._add_lex_to_vocab(lex.orth, lex, self.mem is not self._non_temp_mem)
         if lex == NULL:
             raise ValueError(Errors.E085.format(string=string))
         return lex
 
-    cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1:
+    cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex, bint is_transient) except -1:
         self._by_orth.set(lex.orth, <void*>lex)
         self.length += 1
+        if is_transient:
+            self._transient_orths.push_back(lex.orth)
+
+    def _clear_transient_orths(self):
+        """Remove transient lexemes from the index (generally at the end of the memory zone)"""
+        for orth in self._transient_orths:
+            self._by_orth.pop(orth)
+        self._transient_orths.clear()
 
     def __contains__(self, key):
         """Check whether the string or int key has an entry in the vocabulary.
@@ -252,7 +294,7 @@ cdef class Vocab:
         """
         cdef attr_t orth
         if isinstance(id_or_string, str):
-            orth = self.strings.add(id_or_string)
+            orth = self.strings.add(id_or_string, allow_transient=True)
         else:
             orth = id_or_string
         return Lexeme(self, orth)
@@ -403,7 +445,7 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#get_vector
         """
         if isinstance(orth, str):
-            orth = self.strings.add(orth)
+            orth = self.strings.add(orth, allow_transient=True)
         cdef Lexeme lex = self[orth]
         key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
         if self.has_vector(key):
@@ -422,7 +464,7 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#set_vector
         """
         if isinstance(orth, str):
-            orth = self.strings.add(orth)
+            orth = self.strings.add(orth, allow_transient=False)
         cdef Lexeme lex = self[orth]
         key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
         if self.vectors.is_full and key not in self.vectors:
@@ -446,7 +488,7 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#has_vector
         """
         if isinstance(orth, str):
-            orth = self.strings.add(orth)
+            orth = self.strings.add(orth, allow_transient=True)
         cdef Lexeme lex = self[orth]
         key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
         return key in self.vectors

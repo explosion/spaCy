@@ -23,6 +23,7 @@ cdef class Tokenizer:
     cdef object _rules
     cdef PhraseMatcher _special_matcher
     cdef bint _faster_heuristics
+    cdef public int max_cache_size
 
     cdef Doc _tokenize_affixes(self, str string, bint with_special_cases)
     cdef int _apply_special_cases(self, Doc doc) except -1
