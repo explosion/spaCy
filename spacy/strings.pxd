@@ -28,5 +28,4 @@ cdef class StringStore:
     cdef const Utf8Str* intern_unicode(self, str py_string, bint allow_transient)
     cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length, hash_t* precalculated_hash, bint allow_transient) 
     cdef vector[hash_t] _transient_keys
-    cdef PreshMap _transient_map
     cdef Pool _non_temp_mem

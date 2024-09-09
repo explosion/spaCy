@@ -5,6 +5,7 @@ from typing import Iterator, Optional
 import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
+from preshed.maps cimport map_clear
 
 from .attrs cimport LANG, ORTH
 from .lexeme cimport EMPTY_LEXEME, OOV_RANK, Lexeme
@@ -104,7 +105,7 @@ cdef class Vocab:
     def vectors(self, vectors):
         if hasattr(vectors, "strings"):
             for s in vectors.strings:
-                self.strings.add(s)
+                self.strings.add(s, allow_transient=False)
         self._vectors = vectors
         self._vectors.strings = self.strings
 
@@ -114,6 +115,10 @@ cdef class Vocab:
         if self.lex_attr_getters:
             langfunc = self.lex_attr_getters.get(LANG, None)
         return langfunc("_") if langfunc else ""
+
+    @property
+    def in_memory_zone(self) -> bool:
+        return self.mem is not self._non_temp_mem
 
     def __len__(self):
         """The current number of lexemes stored.
@@ -218,7 +223,7 @@ cdef class Vocab:
         # this size heuristic.
         mem = self.mem
         lex = <LexemeC*>mem.alloc(1, sizeof(LexemeC))
-        lex.orth = self.strings.add(string)
+        lex.orth = self.strings.add(string, allow_transient=True)
         lex.length = len(string)
         if self.vectors is not None and hasattr(self.vectors, "key2row"):
             lex.id = self.vectors.key2row.get(lex.orth, OOV_RANK)
@@ -239,13 +244,13 @@ cdef class Vocab:
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex, bint is_transient) except -1:
         self._by_orth.set(lex.orth, <void*>lex)
         self.length += 1
-        if is_transient:
+        if is_transient and self.in_memory_zone:
             self._transient_orths.push_back(lex.orth)
 
     def _clear_transient_orths(self):
         """Remove transient lexemes from the index (generally at the end of the memory zone)"""
         for orth in self._transient_orths:
-            self._by_orth.pop(orth)
+            map_clear(self._by_orth.c_map, orth)
         self._transient_orths.clear()
 
     def __contains__(self, key):

@@ -8,6 +8,7 @@ from typing import Iterator, List, Optional
 from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
 from murmurhash.mrmr cimport hash32, hash64
+from preshed.maps cimport map_clear
 
 import srsly
 
@@ -125,10 +126,9 @@ cdef class StringStore:
         self.mem = Pool()
         self._non_temp_mem = self.mem
         self._map = PreshMap()
-        self._transient_map = None
         if strings is not None:
             for string in strings:
-                self.add(string)
+                self.add(string, allow_transient=False)
 
     def __getitem__(self, object string_or_id):
         """Retrieve a string from a given hash, or vice versa.
@@ -158,17 +158,17 @@ cdef class StringStore:
                 return SYMBOLS_BY_INT[str_hash]
             else:
                 utf8str = <Utf8Str*>self._map.get(str_hash)
-                if utf8str is NULL and self._transient_map is not None:
-                    utf8str = <Utf8Str*>self._transient_map.get(str_hash)
+                if utf8str is NULL:
+                    raise KeyError(Errors.E018.format(hash_value=string_or_id))
+                else:
+                    return decode_Utf8Str(utf8str)
         else:
             # TODO: Raise an error instead
             utf8str = <Utf8Str*>self._map.get(string_or_id)
-            if utf8str is NULL and self._transient_map is not None:
-                utf8str = <Utf8Str*>self._transient_map.get(str_hash)
-        if utf8str is NULL:
-            raise KeyError(Errors.E018.format(hash_value=string_or_id))
-        else:
-            return decode_Utf8Str(utf8str)
+            if utf8str is NULL:
+                raise KeyError(Errors.E018.format(hash_value=string_or_id))
+            else:
+                return decode_Utf8Str(utf8str)
 
     def as_int(self, key):
         """If key is an int, return it; otherwise, get the int value."""
@@ -184,16 +184,12 @@ cdef class StringStore:
         else:
             return self[key]
 
-    def __reduce__(self):
-        strings = list(self.non_transient_keys())
-        return (StringStore, (strings,), None, None, None)
-
     def __len__(self) -> int:
         """The number of strings in the store.
 
         RETURNS (int): The number of strings in the store.
         """
-        return self._keys.size() + self._transient_keys.size()
+        return self.keys.size() + self._transient_keys.size()
 
     @contextmanager
     def memory_zone(self, mem: Optional[Pool] = None) -> Pool:
@@ -209,13 +205,13 @@ cdef class StringStore:
         if mem is None:
             mem = Pool()
         self.mem = mem
-        self._transient_map = PreshMap()
         yield mem
-        self.mem = self._non_temp_mem
-        self._transient_map = None
+        for key in self._transient_keys:
+            map_clear(self._map.c_map, key)
         self._transient_keys.clear()
+        self.mem = self._non_temp_mem
 
-    def add(self, string: str, allow_transient: bool = False) -> int:
+    def add(self, string: str, allow_transient: Optional[bool] = None) -> int:
         """Add a string to the StringStore.
 
         string (str): The string to add.
@@ -226,6 +222,8 @@ cdef class StringStore:
           internally should not.
         RETURNS (uint64): The string's hash value.
         """
+        if allow_transient is None:
+            allow_transient = self.mem is not self._non_temp_mem
         cdef hash_t str_hash
         if isinstance(string, str):
             if string in SYMBOLS_BY_STR:
@@ -273,16 +271,12 @@ cdef class StringStore:
             # TODO: Raise an error instead
             if self._map.get(string_or_id) is not NULL:
                 return True
-            elif self._transient_map is not None and self._transient_map.get(string_or_id) is not NULL:
-                return True
             else:
                 return False
         if str_hash < len(SYMBOLS_BY_INT):
             return True
         else:
             if self._map.get(str_hash) is not NULL:
-                return True
-            elif self._transient_map is not None and self._transient_map.get(string_or_id) is not NULL:
                 return True
             else:
                 return False
@@ -292,31 +286,20 @@ cdef class StringStore:
 
         YIELDS (str): A string in the store.
         """
-        yield from self.non_transient_keys()
-        yield from self.transient_keys()
-
-    def non_transient_keys(self) -> Iterator[str]:
-        """Iterate over the stored strings in insertion order.
-
-        RETURNS: A list of strings.
-        """
         cdef int i
         cdef hash_t key
         for i in range(self.keys.size()):
             key = self.keys[i]
             utf8str = <Utf8Str*>self._map.get(key)
             yield decode_Utf8Str(utf8str)
+        for i in range(self._transient_keys.size()):
+            key = self._transient_keys[i]
+            utf8str = <Utf8Str*>self._map.get(key)
+            yield decode_Utf8Str(utf8str)
 
     def __reduce__(self):
         strings = list(self)
         return (StringStore, (strings,), None, None, None)
-
-    def transient_keys(self) -> Iterator[str]:
-        if self._transient_map is None:
-            return []
-        for i in range(self._transient_keys.size()):
-            utf8str = <Utf8Str*>self._transient_map.get(self._transient_keys[i])
-            yield decode_Utf8Str(utf8str)
 
     def values(self) -> List[int]:
         """Iterate over the stored strings hashes in insertion order.
@@ -327,12 +310,9 @@ cdef class StringStore:
         hashes = [None] * self._keys.size()
         for i in range(self._keys.size()):
             hashes[i] = self._keys[i]
-        if self._transient_map is not None:
-            transient_hashes = [None] * self._transient_keys.size()
-            for i in range(self._transient_keys.size()):
-                transient_hashes[i] = self._transient_keys[i]
-        else:
-            transient_hashes = []
+        transient_hashes = [None] * self._transient_keys.size()
+        for i in range(self._transient_keys.size()):
+            transient_hashes[i] = self._transient_keys[i]
         return hashes + transient_hashes
 
     def to_disk(self, path):
@@ -383,8 +363,10 @@ cdef class StringStore:
 
     def _reset_and_load(self, strings):
         self.mem = Pool()
+        self._non_temp_mem = self.mem
         self._map = PreshMap()
         self.keys.clear()
+        self._transient_keys.clear()
         for string in strings:
             self.add(string, allow_transient=False)
 
@@ -401,19 +383,10 @@ cdef class StringStore:
         cdef Utf8Str* value = <Utf8Str*>self._map.get(key)
         if value is not NULL:
             return value
-        if allow_transient and self._transient_map is not None:
-            # If we've already allocated a transient string, and now we
-            # want to intern it permanently, we'll end up with the string
-            # in both places. That seems fine -- I don't see why we need
-            # to remove it from the transient map.
-            value = <Utf8Str*>self._transient_map.get(key)
-            if value is not NULL:
-                return value
         value = _allocate(self.mem, <unsigned char*>utf8_string, length)
-        if allow_transient and self._transient_map is not None:
-            self._transient_map.set(key, value)
+        self._map.set(key, value)
+        if allow_transient and self.mem is not self._non_temp_mem:
             self._transient_keys.push_back(key)
         else:
-            self._map.set(key, value)
             self.keys.push_back(key)
         return value

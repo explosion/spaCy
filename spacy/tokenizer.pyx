@@ -517,12 +517,8 @@ cdef class Tokenizer:
         if n <= 0:
             # avoid mem alloc of zero length
             return 0
-        # Historically this check was mostly used to avoid caching
-        # chunks that had tokens owned by the Doc. Now that that's
-        # not a thing, I don't think we need this?
-        for i in range(n):
-            if self.vocab._by_orth.get(tokens[i].lex.orth) == NULL:
-                return 0
+        if self.vocab.in_memory_zone:
+            return 0
         # See #1250
         if has_special[0]:
             return 0
