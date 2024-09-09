@@ -2093,7 +2093,7 @@ class Language:
                 tok2vec.remove_listener(listener, pipe_name)
 
     @contextmanager
-    def memory_zone(self, mem: Optional[Pool]=None) -> Iterator[Pool]:
+    def memory_zone(self, mem: Optional[Pool] = None) -> Iterator[Pool]:
         """Begin a block where all resources allocated during the block will
         be freed at the end of it. If a resources was created within the
         memory zone block, accessing it outside the block is invalid.
