@@ -12,4 +12,5 @@ class Kurmanji(Language):
     lang = "kmr"
     Defaults = KurmanjiDefaults
 
+
 __all__ = ["Kurmanji"]

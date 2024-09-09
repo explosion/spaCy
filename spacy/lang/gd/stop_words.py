@@ -382,5 +382,7 @@ urrainn
 ì
 ò
 ó
-""".split("\n")
+""".split(
+        "\n"
+    )
 )

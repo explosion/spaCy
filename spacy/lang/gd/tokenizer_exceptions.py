@@ -18,19 +18,18 @@ _exc = {
     "càil": [{ORTH: "cà", NORM: "càite"}, {ORTH: "il", NORM: "bheil"}],
     "sna": [{ORTH: "s", NORM: "anns"}, {ORTH: "na", NORM: "na"}],
     "orra": [{ORTH: "orr", NORM: "air"}, {ORTH: "a", NORM: "do"}],
-    "fiùs": [{ORTH: "fiù", NORM: "fiù"}, {ORTH: "s", NORM: "'s"}]
+    "fiùs": [{ORTH: "fiù", NORM: "fiù"}, {ORTH: "s", NORM: "'s"}],
 }
 
-    
+
 # Hyphenations that are alternative forms of words
 for exc_data in [
-    {ORTH: "fa-near",NORM: "fainear"},
-    {ORTH: "Fa-near",NORM: "Fainear"},
+    {ORTH: "fa-near", NORM: "fainear"},
+    {ORTH: "Fa-near", NORM: "Fainear"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
-    
-    
-    
+
+
 # Abreviations and shortened words
 for exc_data in [
     {ORTH: "'", NORM: "a"},
@@ -1529,7 +1528,7 @@ Weld-adh
 Òige-sa
 òrd-mhòr
 Òrd-mhòr""".split():
-   _exc[orth] = [{ORTH: orth}]
+    _exc[orth] = [{ORTH: orth}]
 
 # Multiple words that should remain as one token
 for orth in """'n diugh
@@ -1975,8 +1974,10 @@ Tron an
 tuilleadh 's a chòir
 Tuilleadh 's a chòir
 tuilleadh sa chòir
-Tuilleadh sa chòir""".split("\n"):
-  _exc[orth] = [{ORTH: orth}]
-    
+Tuilleadh sa chòir""".split(
+    "\n"
+):
+    _exc[orth] = [{ORTH: orth}]
+
 
 TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)
