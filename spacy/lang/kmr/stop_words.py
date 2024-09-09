@@ -1,0 +1,44 @@
+STOP_WORDS = set(
+    """
+û
+li
+bi
+di
+da
+de
+ji
+ku
+ew
+ez
+tu
+em
+hûn
+ew
+ev
+min
+te
+wî
+wê
+me
+we
+wan
+vê
+vî
+va
+çi
+kî
+kê
+çawa
+çima
+kengî
+li ku
+çend
+çiqas
+her
+hin
+gelek
+hemû
+kes
+tişt
+""".split()
+)

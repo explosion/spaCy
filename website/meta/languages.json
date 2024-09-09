@@ -480,6 +480,12 @@
             ],
             "example": "这是一个用于示例的句子。",
             "has_examples": true
+        },
+        {
+            "code": "kmr",
+            "name": "Kurdish Kurmanji",
+            "example": "Ev hevokek e",
+            "has_examples": true
         }
     ],
     "licenses": [
