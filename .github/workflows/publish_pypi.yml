@@ -1,0 +1,29 @@
+# The cibuildwheel action triggers on creation of a release, this
+# triggers on publication.
+# The expected workflow is to create a draft release and let the wheels
+# upload, and then hit 'publish', which uploads to PyPi.
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  upload_pypi:
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/spacy
+    permissions:
+      id-token: write
+      contents: read
+    if: github.event_name == 'release' && github.event.action == 'published'
+    # or, alternatively, upload to PyPI on every tag starting with 'v' (remove on: release above to use this)
+    # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: robinraju/release-downloader@v1
+        with:
+          tag: ${{ github.event.release.tag_name }}
+          fileName: '*'
+          out-file-path: 'dist'
+      - uses: pypa/gh-action-pypi-publish@release/v1
