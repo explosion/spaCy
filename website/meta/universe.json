@@ -4521,8 +4521,8 @@
         {
             "id": "presque",
             "title": "presque",
-            "slogan": "normalizer for contemporary french.",
-            "description": "normalizer for french with focus on online and informal communication, _peùUUUt-èTRE_ becomes _peut-être_, _voilaaaa_ becomes _voilà_. it also harmonizes inclusive language (the user can chose how): by default, _auteur-rice-s-x et relecteur.xrices_ becomes _auteur·ricexs et relecteur·ricexs_.",
+            "slogan": "Normalizer for contemporary French",
+            "description": "Normalizer for French with focus on online and informal communication, _peùUUUt-èTRE_ becomes _peut-être_, _voilaaaa_ becomes _voilà_. it also harmonizes inclusive language (the user can chose how): by default, _auteur-rice-s-x et relecteur.xrices_ becomes _auteur·ricexs et relecteur·ricexs_.",
             "github": "thjbdvlt/presque",
             "code_example": [
                 "import spacy",
