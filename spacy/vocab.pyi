@@ -1,6 +1,8 @@
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Union
 
+from cymem.cymem import Pool
 from thinc.types import Floats1d, FloatsXd
 
 from . import Language
@@ -67,6 +69,8 @@ class Vocab:
     def from_bytes(
         self, bytes_data: bytes, *, exclude: Iterable[str] = ...
     ) -> Vocab: ...
+    @contextmanager
+    def memory_zone(self, mem: Optional[Pool] = None) -> Iterator[Pool]: ...
 
 def pickle_vocab(vocab: Vocab) -> Any: ...
 def unpickle_vocab(

@@ -25,9 +25,7 @@ cdef class Tokenizer:
     cdef PhraseMatcher _special_matcher
     # TODO convert to bool in v4
     cdef int _faster_heuristics
-    # TODO next one is unused and should be removed in v4
-    # https://github.com/explosion/spaCy/pull/9150
-    cdef int _unused_int2
+    cdef public int max_cache_size
 
     cdef Doc _tokenize_affixes(self, str string, bint with_special_cases)
     cdef int _apply_special_cases(self, Doc doc) except -1

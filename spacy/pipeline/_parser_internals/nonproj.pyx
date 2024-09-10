@@ -183,7 +183,7 @@ cpdef deprojectivize(Doc doc):
             new_label, head_label = label.split(DELIMITER)
             new_head = _find_new_head(doc[i], head_label)
             doc.c[i].head = new_head.i - i
-            doc.c[i].dep = doc.vocab.strings.add(new_label)
+            doc.c[i].dep = doc.vocab.strings.add(new_label, allow_transient=False)
     set_children_from_heads(doc.c, 0, doc.length)
     return doc
 
