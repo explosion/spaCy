@@ -4521,8 +4521,8 @@
         {
             "id": "quelquhui",
             "title": "quelquhui",
-            "slogan": "tokenizer for contemporary french",
-            "description": "A tokenizer for french that handles inword parentheses like in _(b)rouille_, inclusive language (won't split _relecteur.rice.s_,but will split _mais.maintenant_), hyphens (split _peut-on_, or _pouvons-vous_ but not _tubulu-pimpant_), apostrophes (split _j'arrive_ or _j'arrivons_, but not _aujourd'hui_ or _r'garder_), emoticons, text-emoji (_:happy:_), urls, mails, ...",
+            "slogan": "Tokenizer for contemporary French",
+            "description": "A tokenizer for French that handles inword parentheses like in _(b)rouille_, inclusive language (won't split _relecteur.rice.s_,but will split _mais.maintenant_), hyphens (split _peut-on_, or _pouvons-vous_ but not _tubulu-pimpant_), apostrophes (split _j'arrive_ or _j'arrivons_, but not _aujourd'hui_ or _r'garder_), emoticons, text-emoji (_:happy:_), urls, mails and more.",
             "github": "thjbdvlt/quelquhui",
             "code_example": [
                 "import spacy",
