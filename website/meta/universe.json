@@ -5489,6 +5489,47 @@
                 "text analysis",
                 "semantic search"
             ]
+        },
+        {
+            "id": "spacy-whisper",
+            "title": "spaCy Whisper",
+            "slogan": "Seamless Integration of Whisper with spaCy NLP",
+            "description": "spaCy Whisper is a Python package designed for integrating Whisper transcriptions with spaCy's NLP capabilities. It provides users with the ability to process and analyze transcribed text using spaCy's features like tokenization, entity recognition, and part-of-speech tagging. Key features include word and segment level processing with custom attributes, as well as custom token, span, and document extensions, enriching the NLP analysis of transcribed texts.",
+            "github": "theirstory/spacy-whisper",
+            "pip": "spacy-whisper",
+            "code_example": [
+                "from spacy_whisper import SpacyWhisper",
+                "import json",
+                "",
+                "# Load a Whisper Output (see repo for sample file):",
+                "with open('whisper_output.json', 'r', encoding='utf-8') as f:",
+                "    whisper_output = json.load(f)",
+                "",
+                "# Initialize SpacyWhisper",
+                "sw = SpacyWhisper(lang='en', model='en_core_web_sm', segments_key='segments', word_level=True)",
+                "doc = sw.create_doc(whisper_output)",
+                "",
+                "# Access custom attributes",
+                "for token in doc:",
+                "    print(token.text, token._.start_time, token._.end_time, token._.probability)"
+            ],
+            "code_language": "python",
+            "url": "https://github.com/theirstory/spacy-whisper",
+            "thumb": "https://github.com/theirstory/spacy-whisper/raw/main/images/spacy_whisper.jpeg",
+            "image": "https://github.com/theirstory/spacy-whisper/raw/main/images/spacy_whisper.jpeg",
+            "author": "TheirStory",
+            "author_links": {
+                "website": "https://theirstory.io"
+            },
+            "category": [
+                "standalone"
+            ],
+            "tags": [
+                "spacy",
+                "whisper",
+                "transcription",
+                "nlp"
+            ]
         }
     ],
     "categories": [
