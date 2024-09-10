@@ -25,13 +25,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure Python version
         uses: actions/setup-python@v4
         with:
           python-version: "3.7"
-          architecture: x64
 
       - name: black
         run: |
@@ -75,13 +74,12 @@ jobs:
 
     steps:
       - name: Check out repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure Python version
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python_version }}
-          architecture: x64
 
       - name: Install dependencies
         run: |

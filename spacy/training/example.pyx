@@ -88,23 +88,25 @@ cdef class Example:
     def __len__(self):
         return len(self.predicted)
 
-    property predicted:
-        def __get__(self):
-            return self.x
+    @property
+    def predicted(self):
+        return self.x
 
-        def __set__(self, doc):
-            self.x = doc
-            self._cached_alignment = None
-            self._cached_words_x = [t.text for t in doc]
+    @predicted.setter
+    def predicted(self, doc):
+        self.x = doc
+        self._cached_alignment = None
+        self._cached_words_x = [t.text for t in doc]
 
-    property reference:
-        def __get__(self):
-            return self.y
+    @property
+    def reference(self):
+        return self.y
 
-        def __set__(self, doc):
-            self.y = doc
-            self._cached_alignment = None
-            self._cached_words_y = [t.text for t in doc]
+    @reference.setter
+    def reference(self, doc):
+        self.y = doc
+        self._cached_alignment = None
+        self._cached_words_y = [t.text for t in doc]
 
     def copy(self):
         return Example(
@@ -420,9 +422,9 @@ cdef class Example:
                 seen_indices.update(indices)
         return output
 
-    property text:
-        def __get__(self):
-            return self.x.text
+    @property
+    def text(self):
+        return self.x.text
 
     def __str__(self):
         return str(self.to_dict())

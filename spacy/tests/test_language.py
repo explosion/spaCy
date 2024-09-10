@@ -329,7 +329,7 @@ def test_language_pipe_error_handler(n_process):
         nlp.set_error_handler(raise_error)
         with pytest.raises(ValueError):
             list(nlp.pipe(texts, n_process=n_process))
-        # set explicitely to ignoring
+        # set explicitly to ignoring
         nlp.set_error_handler(ignore_error)
         docs = list(nlp.pipe(texts, n_process=n_process))
         assert len(docs) == 0

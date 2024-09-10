@@ -16,7 +16,7 @@ jobs:
     if: github.repository_owner == 'explosion'
     runs-on: ubuntu-latest
     steps:
-      - uses: dessant/lock-threads@v4
+      - uses: dessant/lock-threads@v5
         with:
           process-only: 'issues'
           issue-inactive-days: '30'
