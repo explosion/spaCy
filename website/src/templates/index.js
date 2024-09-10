@@ -58,8 +58,8 @@ const AlertSpace = ({ nightly, legacy }) => {
 }
 
 const navAlert = (
-    <Link to="https://form.typeform.com/to/WlflqP1b" noLinkLayout>
-        💥 Interested in <strong>Premium spaCy Models</strong>?
+    <Link to="https://explosion.ai/blog/sp-global-commodities" noLinkLayout>
+        💥 <strong>New:</strong> Case study with S&P Global
     </Link>
 )
 

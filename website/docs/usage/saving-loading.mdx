@@ -306,7 +306,9 @@ installed in the same environment – that's it.
 
 ### Loading probability tables into existing models
 
-You can load a probability table from [spacy-lookups-data](https://github.com/explosion/spacy-lookups-data) into an existing spaCy model like `en_core_web_sm`.
+You can load a probability table from
+[spacy-lookups-data](https://github.com/explosion/spacy-lookups-data) into an
+existing spaCy model like `en_core_web_sm`.
 
 ```python
 # Requirements: pip install spacy-lookups-data
@@ -317,7 +319,8 @@ lookups = load_lookups("en", ["lexeme_prob"])
 nlp.vocab.lookups.add_table("lexeme_prob", lookups.get_table("lexeme_prob"))
 ```
 
-When training a model from scratch you can also specify probability tables in the `config.cfg`.
+When training a model from scratch you can also specify probability tables in
+the `config.cfg`.
 
 ```ini {title="config.cfg (excerpt)"}
 [initialize.lookups]
@@ -346,8 +349,8 @@ them**!
 To stick with the theme of
 [this entry points blog post](https://amir.rachum.com/blog/2017/07/28/python-entry-points/),
 consider the following custom spaCy
-[pipeline component](/usage/processing-pipelines#custom-coponents) that prints a
-snake when it's called:
+[pipeline component](/usage/processing-pipelines#custom-components) that prints
+a snake when it's called:
 
 > #### Package directory structure
 >

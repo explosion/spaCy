@@ -11,7 +11,6 @@ from .. import util
 from ..errors import Errors
 from ..kb import Candidate, KnowledgeBase
 from ..language import Language
-from ..ml import empty_kb
 from ..scorer import Scorer
 from ..tokens import Doc, Span
 from ..training import Example, validate_examples, validate_get_examples
@@ -105,7 +104,7 @@ def make_entity_linker(
         ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
     generate_empty_kb (Callable[[Vocab, int], KnowledgeBase]): Callable returning empty KnowledgeBase.
     scorer (Optional[Callable]): The scoring method.
-    use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
+    use_gold_ents (bool): Whether to copy entities from gold docs during training or not. If false, another
         component must provide entity annotations.
     candidates_batch_size (int): Size of batches for entity candidate generation.
     threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the threshold,
@@ -235,13 +234,43 @@ class EntityLinker(TrainablePipe):
         self.cfg: Dict[str, Any] = {"overwrite": overwrite}
         self.distance = CosineDistance(normalize=False)
         self.kb = generate_empty_kb(self.vocab, entity_vector_length)
-        self.scorer = scorer
         self.use_gold_ents = use_gold_ents
         self.candidates_batch_size = candidates_batch_size
         self.threshold = threshold
 
         if candidates_batch_size < 1:
             raise ValueError(Errors.E1044)
+
+        def _score_with_ents_set(examples: Iterable[Example], **kwargs):
+            # Because of how spaCy works, we can't just score immediately, because Language.evaluate
+            # calls pipe() on the predicted docs, which won't have entities if there is no NER in the pipeline.
+            if not scorer:
+                return scorer
+            if not self.use_gold_ents:
+                return scorer(examples, **kwargs)
+            else:
+                examples = self._ensure_ents(examples)
+                docs = self.pipe(
+                    (eg.predicted for eg in examples),
+                )
+                for eg, doc in zip(examples, docs):
+                    eg.predicted = doc
+                return scorer(examples, **kwargs)
+
+        self.scorer = _score_with_ents_set
+
+    def _ensure_ents(self, examples: Iterable[Example]) -> Iterable[Example]:
+        """If use_gold_ents is true, set the gold entities to (a copy of) eg.predicted."""
+        if not self.use_gold_ents:
+            return examples
+
+        new_examples = []
+        for eg in examples:
+            ents, _ = eg.get_aligned_ents_and_ner()
+            new_eg = eg.copy()
+            new_eg.predicted.ents = ents
+            new_examples.append(new_eg)
+        return new_examples
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -284,11 +313,9 @@ class EntityLinker(TrainablePipe):
         nO = self.kb.entity_vector_length
         doc_sample = []
         vector_sample = []
-        for eg in islice(get_examples(), 10):
+        examples = self._ensure_ents(islice(get_examples(), 10))
+        for eg in examples:
             doc = eg.x
-            if self.use_gold_ents:
-                ents, _ = eg.get_aligned_ents_and_ner()
-                doc.ents = ents
             doc_sample.append(doc)
             vector_sample.append(self.model.ops.alloc1f(nO))
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
@@ -354,30 +381,16 @@ class EntityLinker(TrainablePipe):
         losses.setdefault(self.name, 0.0)
         if not examples:
             return losses
+        examples = self._ensure_ents(examples)
         validate_examples(examples, "EntityLinker.update")
-
-        set_dropout_rate(self.model, drop)
-        docs = [eg.predicted for eg in examples]
-        # save to restore later
-        old_ents = [doc.ents for doc in docs]
-
-        for doc, ex in zip(docs, examples):
-            if self.use_gold_ents:
-                ents, _ = ex.get_aligned_ents_and_ner()
-                doc.ents = ents
-            else:
-                # only keep matching ents
-                doc.ents = ex.get_matching_ents()
 
         # make sure we have something to learn from, if not, short-circuit
         if not self.batch_has_learnable_example(examples):
             return losses
 
+        set_dropout_rate(self.model, drop)
+        docs = [eg.predicted for eg in examples]
         sentence_encodings, bp_context = self.model.begin_update(docs)
-
-        # now restore the ents
-        for doc, old in zip(docs, old_ents):
-            doc.ents = old
 
         loss, d_scores = self.get_loss(
             sentence_encodings=sentence_encodings, examples=examples
@@ -386,11 +399,13 @@ class EntityLinker(TrainablePipe):
         if sgd is not None:
             self.finish_update(sgd)
         losses[self.name] += loss
+
         return losses
 
     def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
         validate_examples(examples, "EntityLinker.get_loss")
         entity_encodings = []
+        # We assume that get_loss is called with gold ents set in the examples if need be
         eidx = 0  # indices in gold entities to keep
         keep_ents = []  # indices in sentence_encodings to keep
 

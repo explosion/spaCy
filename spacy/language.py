@@ -5,7 +5,7 @@ import multiprocessing as mp
 import random
 import traceback
 import warnings
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from copy import deepcopy
 from dataclasses import dataclass
 from itertools import chain, cycle
@@ -31,6 +31,7 @@ from typing import (
 )
 
 import srsly
+from cymem.cymem import Pool
 from thinc.api import Config, CupyOps, Optimizer, get_current_ops
 
 from . import about, ty, util
@@ -2090,6 +2091,38 @@ class Language:
 
                 util.replace_model_node(pipe.model, listener, new_model)  # type: ignore[attr-defined]
                 tok2vec.remove_listener(listener, pipe_name)
+
+    @contextmanager
+    def memory_zone(self, mem: Optional[Pool] = None) -> Iterator[Pool]:
+        """Begin a block where all resources allocated during the block will
+        be freed at the end of it. If a resources was created within the
+        memory zone block, accessing it outside the block is invalid.
+        Behaviour of this invalid access is undefined. Memory zones should
+        not be nested.
+
+        The memory zone is helpful for services that need to process large
+        volumes of text with a defined memory budget.
+
+        Example
+        -------
+        >>> with nlp.memory_zone():
+        ...     for doc in nlp.pipe(texts):
+        ...        process_my_doc(doc)
+        >>> # use_doc(doc) <-- Invalid: doc was allocated in the memory zone
+        """
+        if mem is None:
+            mem = Pool()
+        # The ExitStack allows programmatic nested context managers.
+        # We don't know how many we need, so it would be awkward to have
+        # them as nested blocks.
+        with ExitStack() as stack:
+            contexts = [stack.enter_context(self.vocab.memory_zone(mem))]
+            if hasattr(self.tokenizer, "memory_zone"):
+                contexts.append(stack.enter_context(self.tokenizer.memory_zone(mem)))
+            for _, pipe in self.pipeline:
+                if hasattr(pipe, "memory_zone"):
+                    contexts.append(stack.enter_context(pipe.memory_zone(mem)))
+            yield mem
 
     def to_disk(
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()

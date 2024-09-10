@@ -249,15 +249,16 @@ cdef class Token:
         """
         return not self.c.morph == 0
 
-    property morph:
-        def __get__(self):
-            return MorphAnalysis.from_id(self.vocab, self.c.morph)
+    @property
+    def morph(self):
+        return MorphAnalysis.from_id(self.vocab, self.c.morph)
 
-        def __set__(self, MorphAnalysis morph):
-            # Check that the morph has the same vocab
-            if self.vocab != morph.vocab:
-                raise ValueError(Errors.E1013)
-            self.c.morph = morph.c.key
+    @morph.setter
+    def morph(self, MorphAnalysis morph):
+        # Check that the morph has the same vocab
+        if self.vocab != morph.vocab:
+            raise ValueError(Errors.E1013)
+        self.c.morph = morph.c.key
 
     def set_morph(self, features):
         cdef hash_t key
@@ -377,39 +378,43 @@ cdef class Token:
         """
         return self.c.lex.suffix
 
-    property lemma:
+    @property
+    def lemma(self):
         """RETURNS (uint64): ID of the base form of the word, with no
             inflectional suffixes.
         """
-        def __get__(self):
-            return self.c.lemma
+        return self.c.lemma
 
-        def __set__(self, attr_t lemma):
-            self.c.lemma = lemma
+    @lemma.setter
+    def lemma(self, attr_t lemma):
+        self.c.lemma = lemma
 
-    property pos:
+    @property
+    def pos(self):
         """RETURNS (uint64): ID of coarse-grained part-of-speech tag."""
-        def __get__(self):
-            return self.c.pos
+        return self.c.pos
 
-        def __set__(self, pos):
-            self.c.pos = pos
+    @pos.setter
+    def pos(self, pos):
+        self.c.pos = pos
 
-    property tag:
+    @property
+    def tag(self):
         """RETURNS (uint64): ID of fine-grained part-of-speech tag."""
-        def __get__(self):
-            return self.c.tag
+        return self.c.tag
 
-        def __set__(self, attr_t tag):
-            self.c.tag = tag
+    @tag.setter
+    def tag(self, attr_t tag):
+        self.c.tag = tag
 
-    property dep:
+    @property
+    def dep(self):
         """RETURNS (uint64): ID of syntactic dependency label."""
-        def __get__(self):
-            return self.c.dep
+        return self.c.dep
 
-        def __set__(self, attr_t label):
-            self.c.dep = label
+    @dep.setter
+    def dep(self, attr_t label):
+        self.c.dep = label
 
     @property
     def has_vector(self):
@@ -494,48 +499,51 @@ cdef class Token:
             return self.doc.user_token_hooks["sent"](self)
         return self.doc[self.i : self.i+1].sent
 
-    property sent_start:
-        def __get__(self):
-            """Deprecated: use Token.is_sent_start instead."""
-            # Raising a deprecation warning here causes errors for autocomplete
-            # Handle broken backwards compatibility case: doc[0].sent_start
-            # was False.
-            if self.i == 0:
-                return False
-            else:
-                return self.c.sent_start
+    @property
+    def sent_start(self):
+        """Deprecated: use Token.is_sent_start instead."""
+        # Raising a deprecation warning here causes errors for autocomplete
+        # Handle broken backwards compatibility case: doc[0].sent_start
+        # was False.
+        if self.i == 0:
+            return False
+        else:
+            return self.c.sent_start
 
-        def __set__(self, value):
-            self.is_sent_start = value
+    @sent_start.setter
+    def sent_start(self, value):
+        self.is_sent_start = value
 
-    property is_sent_start:
+    @property
+    def is_sent_start(self):
         """A boolean value indicating whether the token starts a sentence.
         `None` if unknown. Defaults to `True` for the first token in the `Doc`.
 
         RETURNS (bool / None): Whether the token starts a sentence.
             None if unknown.
         """
-        def __get__(self):
-            if self.c.sent_start == 0:
-                return None
-            elif self.c.sent_start < 0:
-                return False
-            else:
-                return True
+        if self.c.sent_start == 0:
+            return None
+        elif self.c.sent_start < 0:
+            return False
+        else:
+            return True
 
-        def __set__(self, value):
-            if self.doc.has_annotation("DEP"):
-                raise ValueError(Errors.E043)
-            if value is None:
-                self.c.sent_start = 0
-            elif value is True:
-                self.c.sent_start = 1
-            elif value is False:
-                self.c.sent_start = -1
-            else:
-                raise ValueError(Errors.E044.format(value=value))
+    @is_sent_start.setter
+    def is_sent_start(self, value):
+        if self.doc.has_annotation("DEP"):
+            raise ValueError(Errors.E043)
+        if value is None:
+            self.c.sent_start = 0
+        elif value is True:
+            self.c.sent_start = 1
+        elif value is False:
+            self.c.sent_start = -1
+        else:
+            raise ValueError(Errors.E044.format(value=value))
 
-    property is_sent_end:
+    @property
+    def is_sent_end(self):
         """A boolean value indicating whether the token ends a sentence.
         `None` if unknown. Defaults to `True` for the last token in the `Doc`.
 
@@ -544,18 +552,18 @@ cdef class Token:
 
         DOCS: https://spacy.io/api/token#is_sent_end
         """
-        def __get__(self):
-            if self.i + 1 == len(self.doc):
-                return True
-            elif self.doc[self.i+1].is_sent_start is None:
-                return None
-            elif self.doc[self.i+1].is_sent_start is True:
-                return True
-            else:
-                return False
+        if self.i + 1 == len(self.doc):
+            return True
+        elif self.doc[self.i+1].is_sent_start is None:
+            return None
+        elif self.doc[self.i+1].is_sent_start is True:
+            return True
+        else:
+            return False
 
-        def __set__(self, value):
-            raise ValueError(Errors.E196)
+    @is_sent_end.setter
+    def is_sent_end(self, value):
+        raise ValueError(Errors.E196)
 
     @property
     def lefts(self):
@@ -682,41 +690,42 @@ cdef class Token:
         """
         return not Token.missing_head(self.c)
 
-    property head:
+    @property
+    def head(self):
         """The syntactic parent, or "governor", of this token.
         If token.has_head() is `False`, this method will return itself.
 
         RETURNS (Token): The token predicted by the parser to be the head of
             the current token.
         """
-        def __get__(self):
-            if not self.has_head():
-                return self
-            else:
-                return self.doc[self.i + self.c.head]
+        if not self.has_head():
+            return self
+        else:
+            return self.doc[self.i + self.c.head]
 
-        def __set__(self, Token new_head):
-            # This function sets the head of self to new_head and updates the
-            # counters for left/right dependents and left/right corner for the
-            # new and the old head
-            # Check that token is from the same document
-            if self.doc != new_head.doc:
-                raise ValueError(Errors.E191)
-            # Do nothing if old head is new head
-            if self.i + self.c.head == new_head.i:
-                return
-            # Find the widest l/r_edges of the roots of the two tokens involved
-            # to limit the number of tokens for set_children_from_heads
-            cdef Token self_root, new_head_root
-            self_root = ([self] + list(self.ancestors))[-1]
-            new_head_ancestors = list(new_head.ancestors)
-            new_head_root = new_head_ancestors[-1] if new_head_ancestors else new_head
-            start = self_root.c.l_edge if self_root.c.l_edge < new_head_root.c.l_edge else new_head_root.c.l_edge
-            end = self_root.c.r_edge if self_root.c.r_edge > new_head_root.c.r_edge else new_head_root.c.r_edge
-            # Set new head
-            self.c.head = new_head.i - self.i
-            # Adjust parse properties and sentence starts
-            set_children_from_heads(self.doc.c, start, end + 1)
+    @head.setter
+    def head(self, Token new_head):
+        # This function sets the head of self to new_head and updates the
+        # counters for left/right dependents and left/right corner for the
+        # new and the old head
+        # Check that token is from the same document
+        if self.doc != new_head.doc:
+            raise ValueError(Errors.E191)
+        # Do nothing if old head is new head
+        if self.i + self.c.head == new_head.i:
+            return
+        # Find the widest l/r_edges of the roots of the two tokens involved
+        # to limit the number of tokens for set_children_from_heads
+        cdef Token self_root, new_head_root
+        self_root = ([self] + list(self.ancestors))[-1]
+        new_head_ancestors = list(new_head.ancestors)
+        new_head_root = new_head_ancestors[-1] if new_head_ancestors else new_head
+        start = self_root.c.l_edge if self_root.c.l_edge < new_head_root.c.l_edge else new_head_root.c.l_edge
+        end = self_root.c.r_edge if self_root.c.r_edge > new_head_root.c.r_edge else new_head_root.c.r_edge
+        # Set new head
+        self.c.head = new_head.i - self.i
+        # Adjust parse properties and sentence starts
+        set_children_from_heads(self.doc.c, start, end + 1)
 
     @property
     def conjuncts(self):
@@ -744,21 +753,23 @@ cdef class Token:
                     queue.append(child)
         return tuple([w for w in output if w.i != self.i])
 
-    property ent_type:
+    @property
+    def ent_type(self):
         """RETURNS (uint64): Named entity type."""
-        def __get__(self):
-            return self.c.ent_type
+        return self.c.ent_type
 
-        def __set__(self, ent_type):
-            self.c.ent_type = ent_type
+    @ent_type.setter
+    def ent_type(self, ent_type):
+        self.c.ent_type = ent_type
 
-    property ent_type_:
+    @property
+    def ent_type_(self):
         """RETURNS (str): Named entity type."""
-        def __get__(self):
-            return self.vocab.strings[self.c.ent_type]
+        return self.vocab.strings[self.c.ent_type]
 
-        def __set__(self, ent_type):
-            self.c.ent_type = self.vocab.strings.add(ent_type)
+    @ent_type_.setter
+    def ent_type_(self, ent_type):
+        self.c.ent_type = self.vocab.strings.add(ent_type)
 
     @property
     def ent_iob(self):
@@ -784,41 +795,45 @@ cdef class Token:
         """
         return self.iob_strings()[self.c.ent_iob]
 
-    property ent_id:
+    @property
+    def ent_id(self):
         """RETURNS (uint64): ID of the entity the token is an instance of,
             if any.
         """
-        def __get__(self):
-            return self.c.ent_id
+        return self.c.ent_id
 
-        def __set__(self, hash_t key):
-            self.c.ent_id = key
+    @ent_id.setter
+    def ent_id(self, hash_t key):
+        self.c.ent_id = key
 
-    property ent_id_:
+    @property
+    def ent_id_(self):
         """RETURNS (str): ID of the entity the token is an instance of,
             if any.
         """
-        def __get__(self):
-            return self.vocab.strings[self.c.ent_id]
+        return self.vocab.strings[self.c.ent_id]
 
-        def __set__(self, name):
-            self.c.ent_id = self.vocab.strings.add(name)
+    @ent_id_.setter
+    def ent_id_(self, name):
+        self.c.ent_id = self.vocab.strings.add(name)
 
-    property ent_kb_id:
+    @property
+    def ent_kb_id(self):
         """RETURNS (uint64): Named entity KB ID."""
-        def __get__(self):
-            return self.c.ent_kb_id
+        return self.c.ent_kb_id
 
-        def __set__(self, attr_t ent_kb_id):
-            self.c.ent_kb_id = ent_kb_id
+    @ent_kb_id.setter
+    def ent_kb_id(self, attr_t ent_kb_id):
+        self.c.ent_kb_id = ent_kb_id
 
-    property ent_kb_id_:
+    @property
+    def ent_kb_id_(self):
         """RETURNS (str): Named entity KB ID."""
-        def __get__(self):
-            return self.vocab.strings[self.c.ent_kb_id]
+        return self.vocab.strings[self.c.ent_kb_id]
 
-        def __set__(self, ent_kb_id):
-            self.c.ent_kb_id = self.vocab.strings.add(ent_kb_id)
+    @ent_kb_id_.setter
+    def ent_kb_id_(self, ent_kb_id):
+        self.c.ent_kb_id = self.vocab.strings.add(ent_kb_id)
 
     @property
     def whitespace_(self):
@@ -840,16 +855,17 @@ cdef class Token:
         """
         return self.vocab.strings[self.c.lex.lower]
 
-    property norm_:
+    @property
+    def norm_(self):
         """RETURNS (str): The token's norm, i.e. a normalised form of the
             token text. Usually set in the language's tokenizer exceptions or
             norm exceptions.
         """
-        def __get__(self):
-            return self.vocab.strings[self.norm]
+        return self.vocab.strings[self.norm]
 
-        def __set__(self, str norm_):
-            self.c.norm = self.vocab.strings.add(norm_)
+    @norm_.setter
+    def norm_(self, str norm_):
+        self.c.norm = self.vocab.strings.add(norm_)
 
     @property
     def shape_(self):
@@ -879,33 +895,36 @@ cdef class Token:
         """
         return self.vocab.strings[self.c.lex.lang]
 
-    property lemma_:
+    @property
+    def lemma_(self):
         """RETURNS (str): The token lemma, i.e. the base form of the word,
             with no inflectional suffixes.
         """
-        def __get__(self):
-            return self.vocab.strings[self.c.lemma]
+        return self.vocab.strings[self.c.lemma]
 
-        def __set__(self, str lemma_):
-            self.c.lemma = self.vocab.strings.add(lemma_)
+    @lemma_.setter
+    def lemma_(self, str lemma_):
+        self.c.lemma = self.vocab.strings.add(lemma_)
 
-    property pos_:
+    @property
+    def pos_(self):
         """RETURNS (str): Coarse-grained part-of-speech tag."""
-        def __get__(self):
-            return parts_of_speech.NAMES[self.c.pos]
+        return parts_of_speech.NAMES[self.c.pos]
 
-        def __set__(self, pos_name):
-            if pos_name not in parts_of_speech.IDS:
-                raise ValueError(Errors.E1021.format(pp=pos_name))
-            self.c.pos = parts_of_speech.IDS[pos_name]
+    @pos_.setter
+    def pos_(self, pos_name):
+        if pos_name not in parts_of_speech.IDS:
+            raise ValueError(Errors.E1021.format(pp=pos_name))
+        self.c.pos = parts_of_speech.IDS[pos_name]
 
-    property tag_:
+    @property
+    def tag_(self):
         """RETURNS (str): Fine-grained part-of-speech tag."""
-        def __get__(self):
-            return self.vocab.strings[self.c.tag]
+        return self.vocab.strings[self.c.tag]
 
-        def __set__(self, tag):
-            self.tag = self.vocab.strings.add(tag)
+    @tag_.setter
+    def tag_(self, tag):
+        self.tag = self.vocab.strings.add(tag)
 
     def has_dep(self):
         """Check whether the token has annotated dep information.
@@ -915,13 +934,14 @@ cdef class Token:
         """
         return not Token.missing_dep(self.c)
 
-    property dep_:
+    @property
+    def dep_(self):
         """RETURNS (str): The syntactic dependency label."""
-        def __get__(self):
-            return self.vocab.strings[self.c.dep]
+        return self.vocab.strings[self.c.dep]
 
-        def __set__(self, str label):
-            self.c.dep = self.vocab.strings.add(label)
+    @dep_.setter
+    def dep_(self, str label):
+        self.c.dep = self.vocab.strings.add(label)
 
     @property
     def is_oov(self):
