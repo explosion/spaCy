@@ -11,5 +11,58 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.cibuildwheel]
+build = "*"
+skip = "pp* cp36* cp37* cp38* *-win32"
+test-skip = ""
+free-threaded-support = false
+
+archs = ["native"]
+
+build-frontend = "default"
+config-settings = {}
+dependency-versions = "pinned"
+environment = { PIP_CONSTRAINT = "build-constraints.txt" }
+
+environment-pass = []
+build-verbosity = 0
+
+before-all = "curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain stable"
+before-build = "pip install -r requirements.txt && python setup.py clean"
+repair-wheel-command = ""
+
+test-command = ""
+before-test = ""
+test-requires = []
+test-extras = []
+
+container-engine = "docker"
+
+manylinux-x86_64-image = "manylinux2014"
+manylinux-i686-image = "manylinux2014"
+manylinux-aarch64-image = "manylinux2014"
+manylinux-ppc64le-image = "manylinux2014"
+manylinux-s390x-image = "manylinux2014"
+manylinux-pypy_x86_64-image = "manylinux2014"
+manylinux-pypy_i686-image = "manylinux2014"
+manylinux-pypy_aarch64-image = "manylinux2014"
+
+musllinux-x86_64-image = "musllinux_1_2"
+musllinux-i686-image = "musllinux_1_2"
+musllinux-aarch64-image = "musllinux_1_2"
+musllinux-ppc64le-image = "musllinux_1_2"
+musllinux-s390x-image = "musllinux_1_2"
+
+[tool.cibuildwheel.linux]
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
+
+[tool.cibuildwheel.macos]
+repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+
+[tool.cibuildwheel.windows]
+
+[tool.cibuildwheel.pyodide]
+
+
 [tool.isort]
 profile = "black"
