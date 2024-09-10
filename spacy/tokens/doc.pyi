@@ -28,13 +28,6 @@ from .underscore import Underscore
 
 DOCBIN_ALL_ATTRS: Tuple[str, ...]
 
-DocMethod = Union[
- Callable[[Doc], Any],
- Callable[[Doc, Any], Any],
- Callable[[Doc, Any, Any], Any],
- Callable[[Doc, Any, Any, Any], Any],
-]
-
 class Doc:
     vocab: Vocab
     mem: Pool
@@ -57,7 +50,7 @@ class Doc:
         default: Optional[Any] = ...,
         getter: Optional[Callable[[Doc], Any]] = ...,
         setter: Optional[Callable[[Doc, Any], None]] = ...,
-        method: Optional[DocMethod] = ...,
+        method: Optional[Callable[[Doc, Any]]] = ...,
         force: bool = ...,
     ) -> None: ...
     @classmethod
@@ -65,7 +58,7 @@ class Doc:
         cls, name: str
     ) -> Tuple[
         Optional[Any],
-        Optional[DocMethod],
+        Optional[Callable[[Doc, Any]]],
         Optional[Callable[[Doc], Any]],
         Optional[Callable[[Doc, Any], None]],
     ]: ...
@@ -76,7 +69,7 @@ class Doc:
         cls, name: str
     ) -> Tuple[
         Optional[Any],
-        Optional[DocMethod],
+        Optional[Callable[[Doc, Any]]],
         Optional[Callable[[Doc], Any]],
         Optional[Callable[[Doc, Any], None]],
     ]: ...
