@@ -58,7 +58,7 @@ how the component should be configured. You can override its settings via the
 | Setting                                              | Description                                                                                                                                                                                   |
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `phrase_matcher_attr`                                | Optional attribute name match on for the internal [`PhraseMatcher`](/api/phrasematcher), e.g. `LOWER` to match on the lowercase token text. Defaults to `None`. ~~Optional[Union[int, str]]~~ |
-| `matcher_fuzzy_compare` <Tag variant="new">3.5</Tag> | The fuzzy comparison method, passed on to the internal `Matcher`. Defaults to `spacy.matcher.levenshtein.levenshtein_compare`. ~~Callable~~                                                             |
+| `matcher_fuzzy_compare` <Tag variant="new">3.5</Tag> | The fuzzy comparison method, passed on to the internal `Matcher`. Defaults to `spacy.matcher.levenshtein.levenshtein_compare`. ~~Callable~~                                                   |
 | `validate`                                           | Whether patterns should be validated (passed to the `Matcher` and `PhraseMatcher`). Defaults to `False`. ~~bool~~                                                                             |
 | `overwrite_ents`                                     | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`. ~~bool~~                                                     |
 | `ent_id_sep`                                         | Separator used internally for entity IDs. Defaults to `"\|\|"`. ~~str~~                                                                                                                       |
@@ -92,7 +92,7 @@ be a token pattern (list) or a phrase pattern (string). For example:
 | `name` <Tag variant="new">3</Tag>                    | Instance name of the current pipeline component. Typically passed in automatically from the factory when the component is added. Used to disable the current entity ruler while creating phrase patterns with the nlp object. ~~str~~ |
 | _keyword-only_                                       |                                                                                                                                                                                                                                       |
 | `phrase_matcher_attr`                                | Optional attribute name match on for the internal [`PhraseMatcher`](/api/phrasematcher), e.g. `LOWER` to match on the lowercase token text. Defaults to `None`. ~~Optional[Union[int, str]]~~                                         |
-| `matcher_fuzzy_compare` <Tag variant="new">3.5</Tag> | The fuzzy comparison method, passed on to the internal `Matcher`. Defaults to `spacy.matcher.levenshtein.levenshtein_compare`. ~~Callable~~                                                                                                     |
+| `matcher_fuzzy_compare` <Tag variant="new">3.5</Tag> | The fuzzy comparison method, passed on to the internal `Matcher`. Defaults to `spacy.matcher.levenshtein.levenshtein_compare`. ~~Callable~~                                                                                           |
 | `validate`                                           | Whether patterns should be validated, passed to Matcher and PhraseMatcher as `validate`. Defaults to `False`. ~~bool~~                                                                                                                |
 | `overwrite_ents`                                     | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`. ~~bool~~                                                                                             |
 | `ent_id_sep`                                         | Separator used internally for entity IDs. Defaults to `"\|\|"`. ~~str~~                                                                                                                                                               |
@@ -173,7 +173,7 @@ happens automatically after the component has been added to the pipeline using
 [`nlp.add_pipe`](/api/language#add_pipe). If the entity ruler was initialized
 with `overwrite_ents=True`, existing entities will be replaced if they overlap
 with the matches. When matches overlap in a Doc, the entity ruler prioritizes
-longer patterns over shorter, and if equal the match occuring first in the Doc
+longer patterns over shorter, and if equal the match occurring first in the Doc
 is chosen.
 
 > #### Example

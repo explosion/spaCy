@@ -757,78 +757,87 @@ cdef class Span:
         for word in self.rights:
             yield from word.subtree
 
-    property start:
-        def __get__(self):
-            return self.c.start
+    @property
+    def start(self):
+        return self.c.start
 
-        def __set__(self, int start):
-            if start < 0:
-                raise IndexError(Errors.E1032.format(var="start", forbidden="< 0", value=start))
-            self.c.start = start
+    @start.setter
+    def start(self, int start):
+        if start < 0:
+            raise IndexError(Errors.E1032.format(var="start", forbidden="< 0", value=start))
+        self.c.start = start
 
-    property end:
-        def __get__(self):
-            return self.c.end
+    @property
+    def end(self):
+        return self.c.end
 
-        def __set__(self, int end):
-            if end < 0:
-                raise IndexError(Errors.E1032.format(var="end", forbidden="< 0", value=end))
-            self.c.end = end
+    @end.setter
+    def end(self, int end):
+        if end < 0:
+            raise IndexError(Errors.E1032.format(var="end", forbidden="< 0", value=end))
+        self.c.end = end
 
-    property start_char:
-        def __get__(self):
-            return self.c.start_char
+    @property
+    def start_char(self):
+        return self.c.start_char
 
-        def __set__(self, int start_char):
-            if start_char < 0:
-                raise IndexError(Errors.E1032.format(var="start_char", forbidden="< 0", value=start_char))
-            self.c.start_char = start_char
+    @start_char.setter
+    def start_char(self, int start_char):
+        if start_char < 0:
+            raise IndexError(Errors.E1032.format(var="start_char", forbidden="< 0", value=start_char))
+        self.c.start_char = start_char
 
-    property end_char:
-        def __get__(self):
-            return self.c.end_char
+    @property
+    def end_char(self):
+        return self.c.end_char
 
-        def __set__(self, int end_char):
-            if end_char < 0:
-                raise IndexError(Errors.E1032.format(var="end_char", forbidden="< 0", value=end_char))
-            self.c.end_char = end_char
+    @end_char.setter
+    def end_char(self, int end_char):
+        if end_char < 0:
+            raise IndexError(Errors.E1032.format(var="end_char", forbidden="< 0", value=end_char))
+        self.c.end_char = end_char
 
-    property label:
-        def __get__(self):
-            return self.c.label
+    @property
+    def label(self):
+        return self.c.label
 
-        def __set__(self, attr_t label):
-            self.c.label = label
+    @label.setter
+    def label(self, attr_t label):
+        self.c.label = label
 
-    property kb_id:
-        def __get__(self):
-            return self.c.kb_id
+    @property
+    def kb_id(self):
+        return self.c.kb_id
 
-        def __set__(self, attr_t kb_id):
-            self.c.kb_id = kb_id
+    @kb_id.setter
+    def kb_id(self, attr_t kb_id):
+        self.c.kb_id = kb_id
 
-    property id:
-        def __get__(self):
-            return self.c.id
+    @property
+    def id(self):
+        return self.c.id
 
-        def __set__(self, attr_t id):
-            self.c.id = id
+    @id.setter
+    def id(self, attr_t id):
+        self.c.id = id
 
-    property ent_id:
+    @property
+    def ent_id(self):
         """RETURNS (uint64): The entity ID."""
-        def __get__(self):
-            return self.root.ent_id
+        return self.root.ent_id
 
-        def __set__(self, hash_t key):
-            raise NotImplementedError(Errors.E200.format(attr="ent_id"))
+    @ent_id.setter
+    def ent_id(self, hash_t key):
+        raise NotImplementedError(Errors.E200.format(attr="ent_id"))
 
-    property ent_id_:
+    @property
+    def ent_id_(self):
         """RETURNS (str): The (string) entity ID."""
-        def __get__(self):
-            return self.root.ent_id_
+        return self.root.ent_id_
 
-        def __set__(self, str key):
-            raise NotImplementedError(Errors.E200.format(attr="ent_id_"))
+    @ent_id_.setter
+    def ent_id_(self, str key):
+        raise NotImplementedError(Errors.E200.format(attr="ent_id_"))
 
     @property
     def orth_(self):
@@ -843,29 +852,32 @@ cdef class Span:
         """RETURNS (str): The span's lemma."""
         return "".join([t.lemma_ + t.whitespace_ for t in self]).strip()
 
-    property label_:
+    @property
+    def label_(self):
         """RETURNS (str): The span's label."""
-        def __get__(self):
-            return self.doc.vocab.strings[self.label]
+        return self.doc.vocab.strings[self.label]
 
-        def __set__(self, str label_):
-            self.label = self.doc.vocab.strings.add(label_)
+    @label_.setter
+    def label_(self, str label_):
+        self.label = self.doc.vocab.strings.add(label_)
 
-    property kb_id_:
+    @property
+    def kb_id_(self):
         """RETURNS (str): The span's KB ID."""
-        def __get__(self):
-            return self.doc.vocab.strings[self.kb_id]
+        return self.doc.vocab.strings[self.kb_id]
 
-        def __set__(self, str kb_id_):
-            self.kb_id = self.doc.vocab.strings.add(kb_id_)
+    @kb_id_.setter
+    def kb_id_(self, str kb_id_):
+        self.kb_id = self.doc.vocab.strings.add(kb_id_)
 
-    property id_:
+    @property
+    def id_(self):
         """RETURNS (str): The span's ID."""
-        def __get__(self):
-            return self.doc.vocab.strings[self.id]
+        return self.doc.vocab.strings[self.id]
 
-        def __set__(self, str id_):
-            self.id = self.doc.vocab.strings.add(id_)
+    @id_.setter
+    def id_(self, str id_):
+        self.id = self.doc.vocab.strings.add(id_)
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
