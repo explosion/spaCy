@@ -1,8 +1,11 @@
 import functools
+from contextlib import ExitStack, contextmanager
+from typing import Iterator, Optional
 
 import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
+from preshed.maps cimport map_clear
 
 from .attrs cimport LANG, ORTH
 from .lexeme cimport EMPTY_LEXEME, OOV_RANK, Lexeme
@@ -87,17 +90,24 @@ cdef class Vocab:
         self.lookups = lookups
         self.writing_system = writing_system
         self.get_noun_chunks = get_noun_chunks
+        # During a memory_zone we replace our mem object with one
+        # that's passed to us. We keep a reference to our non-temporary
+        # memory here, in case we need to make an allocation we want to
+        # guarantee is not temporary. This is also how we check whether
+        # we're in a memory zone: we check whether self.mem is self._non_temp_mem
+        self._non_temp_mem = self.mem
 
-    property vectors:
-        def __get__(self):
-            return self._vectors
+    @property
+    def vectors(self):
+        return self._vectors
 
-        def __set__(self, vectors):
-            if hasattr(vectors, "strings"):
-                for s in vectors.strings:
-                    self.strings.add(s)
-            self._vectors = vectors
-            self._vectors.strings = self.strings
+    @vectors.setter
+    def vectors(self, vectors):
+        if hasattr(vectors, "strings"):
+            for s in vectors.strings:
+                self.strings.add(s, allow_transient=False)
+        self._vectors = vectors
+        self._vectors.strings = self.strings
 
     @property
     def lang(self):
@@ -106,12 +116,43 @@ cdef class Vocab:
             langfunc = self.lex_attr_getters.get(LANG, None)
         return langfunc("_") if langfunc else ""
 
+    @property
+    def in_memory_zone(self) -> bool:
+        return self.mem is not self._non_temp_mem
+
     def __len__(self):
         """The current number of lexemes stored.
 
         RETURNS (int): The current number of lexemes stored.
         """
         return self.length
+
+    @contextmanager
+    def memory_zone(self, mem: Optional[Pool] = None) -> Iterator[Pool]:
+        """Begin a block where resources allocated during the block will
+        be freed at the end of it. If a resources was created within the
+        memory zone block, accessing it outside the block is invalid.
+        Behaviour of this invalid access is undefined. Memory zones should
+        not be nested.
+
+        The memory zone is helpful for services that need to process large
+        volumes of text with a defined memory budget.
+        """
+        if mem is None:
+            mem = Pool()
+        # The ExitStack allows programmatic nested context managers.
+        # We don't know how many we need, so it would be awkward to have
+        # them as nested blocks.
+        with ExitStack() as stack:
+            contexts = [stack.enter_context(self.strings.memory_zone(mem))]
+            if hasattr(self.morphology, "memory_zone"):
+                contexts.append(stack.enter_context(self.morphology.memory_zone(mem)))
+            if hasattr(self._vectors, "memory_zone"):
+                contexts.append(stack.enter_context(self._vectors.memory_zone(mem)))
+            self.mem = mem
+            yield mem
+        self._clear_transient_orths()
+        self.mem = self._non_temp_mem
 
     def add_flag(self, flag_getter, int flag_id=-1):
         """Set a new boolean flag to words in the vocabulary.
@@ -147,8 +188,7 @@ cdef class Vocab:
 
     cdef const LexemeC* get(self, Pool mem, str string) except NULL:
         """Get a pointer to a `LexemeC` from the lexicon, creating a new
-        `Lexeme` if necessary using memory acquired from the given pool. If the
-        pool is the lexicon's own memory, the lexeme is saved in the lexicon.
+        `Lexeme` if necessary.
         """
         if string == "":
             return &EMPTY_LEXEME
@@ -179,19 +219,11 @@ cdef class Vocab:
             return self._new_lexeme(mem, self.strings[orth])
 
     cdef const LexemeC* _new_lexeme(self, Pool mem, str string) except NULL:
-        # I think this heuristic is bad, and the Vocab should always
-        # own the lexemes. It avoids weird bugs this way, as it's how the thing
-        # was originally supposed to work. The best solution to the growing
-        # memory use is to periodically reset the vocab, which is an action
-        # that should be up to the user to do (so we don't need to keep track
-        # of the doc ownership).
-        # TODO: Change the C API so that the mem isn't passed in here.
+        # The mem argument is deprecated, replaced by memory zones. Same with
+        # this size heuristic.
         mem = self.mem
-        # if len(string) < 3 or self.length < 10000:
-        #    mem = self.mem
-        cdef bint is_oov = mem is not self.mem
         lex = <LexemeC*>mem.alloc(1, sizeof(LexemeC))
-        lex.orth = self.strings.add(string)
+        lex.orth = self.strings.add(string, allow_transient=True)
         lex.length = len(string)
         if self.vectors is not None and hasattr(self.vectors, "key2row"):
             lex.id = self.vectors.key2row.get(lex.orth, OOV_RANK)
@@ -201,18 +233,25 @@ cdef class Vocab:
             for attr, func in self.lex_attr_getters.items():
                 value = func(string)
                 if isinstance(value, str):
-                    value = self.strings.add(value)
+                    value = self.strings.add(value, allow_transient=True)
                 if value is not None:
                     Lexeme.set_struct_attr(lex, attr, value)
-        if not is_oov:
-            self._add_lex_to_vocab(lex.orth, lex)
+        self._add_lex_to_vocab(lex.orth, lex, self.mem is not self._non_temp_mem)
         if lex == NULL:
             raise ValueError(Errors.E085.format(string=string))
         return lex
 
-    cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1:
+    cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex, bint is_transient) except -1:
         self._by_orth.set(lex.orth, <void*>lex)
         self.length += 1
+        if is_transient and self.in_memory_zone:
+            self._transient_orths.push_back(lex.orth)
+
+    def _clear_transient_orths(self):
+        """Remove transient lexemes from the index (generally at the end of the memory zone)"""
+        for orth in self._transient_orths:
+            map_clear(self._by_orth.c_map, orth)
+        self._transient_orths.clear()
 
     def __contains__(self, key):
         """Check whether the string or int key has an entry in the vocabulary.
@@ -264,7 +303,7 @@ cdef class Vocab:
         """
         cdef attr_t orth
         if isinstance(id_or_string, str):
-            orth = self.strings.add(id_or_string)
+            orth = self.strings.add(id_or_string, allow_transient=True)
         else:
             orth = id_or_string
         return Lexeme(self, orth)
@@ -416,7 +455,7 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#get_vector
         """
         if isinstance(orth, str):
-            orth = self.strings.add(orth)
+            orth = self.strings.add(orth, allow_transient=True)
         cdef Lexeme lex = self[orth]
         key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
         if self.has_vector(key):
@@ -435,7 +474,7 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#set_vector
         """
         if isinstance(orth, str):
-            orth = self.strings.add(orth)
+            orth = self.strings.add(orth, allow_transient=False)
         cdef Lexeme lex = self[orth]
         key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
         if self.vectors.is_full and key not in self.vectors:
@@ -459,22 +498,23 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#has_vector
         """
         if isinstance(orth, str):
-            orth = self.strings.add(orth)
+            orth = self.strings.add(orth, allow_transient=True)
         cdef Lexeme lex = self[orth]
         key = Lexeme.get_struct_attr(lex.c, self.vectors.attr)
         return key in self.vectors
 
-    property lookups:
-        def __get__(self):
-            return self._lookups
+    @property
+    def lookups(self):
+        return self._lookups
 
-        def __set__(self, lookups):
-            self._lookups = lookups
-            if lookups.has_table("lexeme_norm"):
-                self.lex_attr_getters[NORM] = util.add_lookups(
-                    self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
-                    self.lookups.get_table("lexeme_norm"),
-                )
+    @lookups.setter
+    def lookups(self, lookups):
+        self._lookups = lookups
+        if lookups.has_table("lexeme_norm"):
+            self.lex_attr_getters[NORM] = util.add_lookups(
+                self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
+                self.lookups.get_table("lexeme_norm"),
+            )
 
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.

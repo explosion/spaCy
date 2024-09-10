@@ -10,7 +10,7 @@ LANGUAGES = ["af", "am", "ar", "az", "bg", "bn", "ca", "cs", "da", "de", "el",
              "hr", "hu", "hy", "id", "is", "it", "kn", "ky", "lb", "lt", "lv",
              "mk", "ml", "mr", "nb", "ne", "nl", "pl", "pt", "ro", "ru", "sa",
              "si", "sk", "sl", "sq", "sr", "sv", "ta", "te", "ti", "tl", "tn",
-             "tr", "tt", "uk", "ur", "xx", "yo"]
+             "tr", "tt", "uk", "ur", "xx", "yo", "kmr"]
 # fmt: on
 
 

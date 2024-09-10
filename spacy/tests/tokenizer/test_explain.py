@@ -18,6 +18,7 @@ LANGUAGES = [
     pytest.param("ar", marks=pytest.mark.slow()),
     pytest.param("bg", marks=pytest.mark.slow()),
     "bn",
+    pytest.param("bo", marks=pytest.mark.slow()),
     pytest.param("ca", marks=pytest.mark.slow()),
     pytest.param("cs", marks=pytest.mark.slow()),
     pytest.param("da", marks=pytest.mark.slow()),
@@ -57,6 +58,7 @@ LANGUAGES = [
     pytest.param("tr", marks=pytest.mark.slow()),
     pytest.param("tt", marks=pytest.mark.slow()),
     pytest.param("ur", marks=pytest.mark.slow()),
+    pytest.param("kmr", marks=pytest.mark.slow()),
 ]
 
 

@@ -30,7 +30,7 @@ cdef class Tokenizer:
     """
     def __init__(self, Vocab vocab, rules=None, prefix_search=None,
                  suffix_search=None, infix_finditer=None, token_match=None,
-                 url_match=None, faster_heuristics=True):
+                 url_match=None, faster_heuristics=True, max_cache_size=10000):
         """Create a `Tokenizer`, to create `Doc` objects given unicode text.
 
         vocab (Vocab): A storage container for lexical types.
@@ -50,6 +50,7 @@ cdef class Tokenizer:
         faster_heuristics (bool): Whether to restrict the final
             Matcher-based pass for rules to those containing affixes or space.
             Defaults to True.
+        max_cache_size (int): Maximum number of tokenization chunks to cache.
 
         EXAMPLE:
             >>> tokenizer = Tokenizer(nlp.vocab)
@@ -69,66 +70,74 @@ cdef class Tokenizer:
         self._rules = {}
         self._special_matcher = PhraseMatcher(self.vocab)
         self._load_special_cases(rules)
+        self.max_cache_size = max_cache_size
 
-    property token_match:
-        def __get__(self):
-            return self._token_match
+    @property
+    def token_match(self):
+        return self._token_match
 
-        def __set__(self, token_match):
-            self._token_match = token_match
-            self._reload_special_cases()
+    @token_match.setter
+    def token_match(self, token_match):
+        self._token_match = token_match
+        self._reload_special_cases()
 
-    property url_match:
-        def __get__(self):
-            return self._url_match
+    @property
+    def url_match(self):
+        return self._url_match
 
-        def __set__(self, url_match):
-            self._url_match = url_match
-            self._reload_special_cases()
+    @url_match.setter
+    def url_match(self, url_match):
+        self._url_match = url_match
+        self._reload_special_cases()
 
-    property prefix_search:
-        def __get__(self):
-            return self._prefix_search
+    @property
+    def prefix_search(self):
+        return self._prefix_search
 
-        def __set__(self, prefix_search):
-            self._prefix_search = prefix_search
-            self._reload_special_cases()
+    @prefix_search.setter
+    def prefix_search(self, prefix_search):
+        self._prefix_search = prefix_search
+        self._reload_special_cases()
 
-    property suffix_search:
-        def __get__(self):
-            return self._suffix_search
+    @property
+    def suffix_search(self):
+        return self._suffix_search
 
-        def __set__(self, suffix_search):
-            self._suffix_search = suffix_search
-            self._reload_special_cases()
+    @suffix_search.setter
+    def suffix_search(self, suffix_search):
+        self._suffix_search = suffix_search
+        self._reload_special_cases()
 
-    property infix_finditer:
-        def __get__(self):
-            return self._infix_finditer
+    @property
+    def infix_finditer(self):
+        return self._infix_finditer
 
-        def __set__(self, infix_finditer):
-            self._infix_finditer = infix_finditer
-            self._reload_special_cases()
+    @infix_finditer.setter
+    def infix_finditer(self, infix_finditer):
+        self._infix_finditer = infix_finditer
+        self._reload_special_cases()
 
-    property rules:
-        def __get__(self):
-            return self._rules
+    @property
+    def rules(self):
+        return self._rules
 
-        def __set__(self, rules):
-            self._rules = {}
-            self._flush_cache()
-            self._flush_specials()
-            self._cache = PreshMap()
-            self._specials = PreshMap()
-            self._load_special_cases(rules)
+    @rules.setter
+    def rules(self, rules):
+        self._rules = {}
+        self._flush_cache()
+        self._flush_specials()
+        self._cache = PreshMap()
+        self._specials = PreshMap()
+        self._load_special_cases(rules)
 
-    property faster_heuristics:
-        def __get__(self):
-            return bool(self._faster_heuristics)
+    @property
+    def faster_heuristics(self):
+        return bool(self._faster_heuristics)
 
-        def __set__(self, faster_heuristics):
-            self._faster_heuristics = bool(faster_heuristics)
-            self._reload_special_cases()
+    @faster_heuristics.setter
+    def faster_heuristics(self, faster_heuristics):
+        self._faster_heuristics = bool(faster_heuristics)
+        self._reload_special_cases()
 
     def __reduce__(self):
         args = (self.vocab,
@@ -390,8 +399,9 @@ cdef class Tokenizer:
                                    has_special, with_special_cases)
         self._attach_tokens(tokens, span, &prefixes, &suffixes, has_special,
                             with_special_cases)
-        self._save_cached(&tokens.c[orig_size], orig_key, has_special,
-                          tokens.length - orig_size)
+        if len(self._cache) < self.max_cache_size:
+            self._save_cached(&tokens.c[orig_size], orig_key, has_special,
+                              tokens.length - orig_size)
 
     cdef str _split_affixes(
         self,
@@ -507,9 +517,8 @@ cdef class Tokenizer:
         if n <= 0:
             # avoid mem alloc of zero length
             return 0
-        for i in range(n):
-            if self.vocab._by_orth.get(tokens[i].lex.orth) == NULL:
-                return 0
+        if self.vocab.in_memory_zone:
+            return 0
         # See #1250
         if has_special[0]:
             return 0

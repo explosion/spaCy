@@ -717,7 +717,7 @@ GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 # fmt: on
 
 
-def test_overfitting_IO():
+def test_overfitting_IO_gold_entities():
     # Simple test to try and quickly overfit the NEL component - ensuring the ML models work correctly
     nlp = English()
     vector_length = 3
@@ -744,7 +744,9 @@ def test_overfitting_IO():
         return mykb
 
     # Create the Entity Linker component and add it to the pipeline
-    entity_linker = nlp.add_pipe("entity_linker", last=True)
+    entity_linker = nlp.add_pipe(
+        "entity_linker", last=True, config={"use_gold_ents": True}
+    )
     assert isinstance(entity_linker, EntityLinker)
     entity_linker.set_kb(create_kb)
     assert "Q2146908" in entity_linker.vocab.strings
@@ -806,6 +808,107 @@ def test_overfitting_IO():
     no_batch_deps = [doc.to_array([ENT_KB_ID]) for doc in [nlp(text) for text in texts]]
     assert_equal(batch_deps_1, batch_deps_2)
     assert_equal(batch_deps_1, no_batch_deps)
+
+    eval = nlp.evaluate(train_examples)
+    assert "nel_macro_p" in eval
+    assert "nel_macro_r" in eval
+    assert "nel_macro_f" in eval
+    assert "nel_micro_p" in eval
+    assert "nel_micro_r" in eval
+    assert "nel_micro_f" in eval
+    assert "nel_f_per_type" in eval
+    assert "PERSON" in eval["nel_f_per_type"]
+
+    assert eval["nel_macro_f"] > 0
+    assert eval["nel_micro_f"] > 0
+
+
+def test_overfitting_IO_with_ner():
+    # Simple test to try and overfit the NER and NEL component in combination - ensuring the ML models work correctly
+    nlp = English()
+    vector_length = 3
+    assert "Q2146908" not in nlp.vocab.strings
+
+    # Convert the texts to docs to make sure we have doc.ents set for the training examples
+    train_examples = []
+    for text, annotation in TRAIN_DATA:
+        doc = nlp(text)
+        train_examples.append(Example.from_dict(doc, annotation))
+
+    def create_kb(vocab):
+        # create artificial KB - assign same prior weight to the two russ cochran's
+        # Q2146908 (Russ Cochran): American golfer
+        # Q7381115 (Russ Cochran): publisher
+        mykb = InMemoryLookupKB(vocab, entity_vector_length=vector_length)
+        mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
+        mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
+        mykb.add_alias(
+            alias="Russ Cochran",
+            entities=["Q2146908", "Q7381115"],
+            probabilities=[0.5, 0.5],
+        )
+        return mykb
+
+    # Create the NER and EL components and add them to the pipeline
+    ner = nlp.add_pipe("ner", first=True)
+    entity_linker = nlp.add_pipe(
+        "entity_linker", last=True, config={"use_gold_ents": False}
+    )
+    entity_linker.set_kb(create_kb)
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for ent in annotations.get("entities"):
+            ner.add_label(ent[2])
+    optimizer = nlp.initialize()
+
+    # train the NER and NEL pipes
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["ner"] < 0.001
+    assert losses["entity_linker"] < 0.001
+
+    # adding additional components that are required for the entity_linker
+    nlp.add_pipe("sentencizer", first=True)
+
+    # test the trained model
+    test_text = "Russ Cochran captured his first major title with his son as caddie."
+    doc = nlp(test_text)
+    ents = doc.ents
+    assert len(ents) == 1
+    assert ents[0].text == "Russ Cochran"
+    assert ents[0].label_ == "PERSON"
+    assert ents[0].kb_id_ != "NIL"
+
+    # TODO: below assert is still flaky - EL doesn't properly overfit quite yet
+    # assert ents[0].kb_id_ == "Q2146908"
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        assert nlp2.pipe_names == nlp.pipe_names
+        doc2 = nlp2(test_text)
+        ents2 = doc2.ents
+        assert len(ents2) == 1
+        assert ents2[0].text == "Russ Cochran"
+        assert ents2[0].label_ == "PERSON"
+        assert ents2[0].kb_id_ != "NIL"
+
+    eval = nlp.evaluate(train_examples)
+    assert "nel_macro_f" in eval
+    assert "nel_micro_f" in eval
+    assert "ents_f" in eval
+    assert "nel_f_per_type" in eval
+    assert "ents_per_type" in eval
+    assert "PERSON" in eval["nel_f_per_type"]
+    assert "PERSON" in eval["ents_per_type"]
+
+    assert eval["nel_macro_f"] > 0
+    assert eval["nel_micro_f"] > 0
+    assert eval["ents_f"] > 0
 
 
 def test_kb_serialization():
