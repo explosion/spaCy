@@ -4553,6 +4553,26 @@
             "category": ["standalone"]
         },
         {
+            "id": "quelquhui",
+            "title": "quelquhui",
+            "slogan": "Tokenizer for contemporary French",
+            "description": "A tokenizer for French that handles inword parentheses like in _(b)rouille_, inclusive language (won't split _relecteur.rice.s_,but will split _mais.maintenant_), hyphens (split _peut-on_, or _pouvons-vous_ but not _tubulu-pimpant_), apostrophes (split _j'arrive_ or _j'arrivons_, but not _aujourd'hui_ or _r'garder_), emoticons, text-emoji (_:happy:_), urls, mails and more.",
+            "github": "thjbdvlt/quelquhui",
+            "code_example": [
+                "import spacy",
+                "import quelquhui",
+                "nlp = spacy.load('fr_core_news_lg')",
+                "nlp.tokenizer = quelquhui.Toquenizer(nlp.vocab)"
+            ],
+            "code_language": "python",
+            "author": "thjbdvlt",
+            "author_links": {
+                "github": "thjbdvlt"
+            },
+            "category": ["pipeline"],
+            "tags": ["tokenizer", "french"]
+        },
+        {
             "id": "gliner-spacy",
             "title": "GLiNER spaCy Wrapper",
             "slogan": "Integrating GLiNER's Advanced NER with spaCy",
@@ -4579,7 +4599,6 @@
             "category": ["pipeline"],
             "tags": ["NER"]
         }
-        
     ],
 
     "categories": [
