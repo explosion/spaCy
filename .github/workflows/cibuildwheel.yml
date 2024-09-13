@@ -28,7 +28,7 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.19.1
         env:
-          CIBW_ARCHS_LINUX: auto aarch64
+          CIBW_ARCHS_LINUX: auto
         with:
           package-dir: .
           output-dir: wheelhouse
