@@ -1329,8 +1329,7 @@ class Language:
                 and sgd not in (None, False)
             ):
                 proc.finish_update(sgd)
-
-        return losses
+        return _replace_numpy_floats(losses)
 
     def rehearse(
         self,
@@ -1578,7 +1577,7 @@ class Language:
         results = scorer.score(examples, per_component=per_component)
         n_words = sum(len(eg.predicted) for eg in examples)
         results["speed"] = n_words / (end_time - start_time)
-        return results
+        return _replace_numpy_floats(results)
 
     def create_optimizer(self):
         """Create an optimizer, usually using the [training.optimizer] config."""
