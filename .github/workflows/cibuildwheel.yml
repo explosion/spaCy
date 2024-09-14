@@ -14,14 +14,21 @@ jobs:
     strategy:
       matrix:
         # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ubuntu-latest, windows-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
 
     steps:
       - uses: actions/checkout@v4
+      # aarch64 (arm) is built via qemu emulation
+      # QEMU is sadly too slow. We need to wait for public ARM support
+      #- name: Set up QEMU
+      #  if: runner.os == 'Linux'
+      #  uses: docker/setup-qemu-action@v3
+      #  with:
+      #    platforms: all
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.19.1
         env:
-          CIBW_SOME_OPTION: value
+          CIBW_ARCHS_LINUX: auto
         with:
           package-dir: .
           output-dir: wheelhouse
