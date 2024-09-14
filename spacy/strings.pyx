@@ -3,7 +3,7 @@
 cimport cython
 
 from contextlib import contextmanager
-from typing import Iterator, List, Optional
+from typing import List, Optional
 
 from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
