@@ -2309,7 +2309,7 @@ class Language:
 
 
 def _replace_numpy_floats(meta_dict: dict) -> dict:
-    return convert_recursive(lambda v: isinstance(v, numpy.floaty), lambda v: float(v), dict(meta_dict))
+    return convert_recursive(lambda v: isinstance(v, numpy.floating), lambda v: float(v), dict(meta_dict))
 
 
 @dataclass
