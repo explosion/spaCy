@@ -24,13 +24,6 @@ class MacedonianDefaults(BaseDefaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
 
-    @classmethod
-    def create_lemmatizer(cls, nlp=None, lookups=None):
-        if lookups is None:
-            lookups = Lookups()
-        return MacedonianLemmatizer(lookups)
-
-
 class Macedonian(Language):
     lang = "mk"
     Defaults = MacedonianDefaults
