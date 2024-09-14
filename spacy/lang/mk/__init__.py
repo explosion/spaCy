@@ -24,6 +24,7 @@ class MacedonianDefaults(BaseDefaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
 
+
 class Macedonian(Language):
     lang = "mk"
     Defaults = MacedonianDefaults
