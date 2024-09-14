@@ -2,6 +2,8 @@ name: tests
 
 on:
   push:
+    tags-ignore:
+      - '**'
     branches-ignore:
       - "spacy.io"
       - "nightly.spacy.io"
