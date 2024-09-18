@@ -277,6 +277,47 @@
             ]
         },
         {
+            "id": "solipcysme",
+            "title": "solipCysme",
+            "slogan": "spaCy pipeline for french fictions and first person point of view texts.",
+            "description": "__solipCysme__ is a pipeline for french language, designed for the analysis of fictions and first person point of view texts, with a focus on personal pronouns.",
+            "github": "thjbdvlt/solipCysme",
+            "code_example": [
+                "pip install https://huggingface.co/thjbdvlt/fr_solipcysme/resolve/main/fr_solipcysme-any-py3-none-any.whl",
+                "",
+                "import spacy",
+                "",
+                "nlp = spacy.load('fr_solipcysme')",
+                "for i in nlp(",
+                "'la MACHINE à (b)rouiller le temps s'est peut-être déraillée..?'",
+                "):",
+                "    print(",
+                "        i, ",
+                "        i.norm_, ",
+                "        i.pos_, ",
+                "        i.morph, ",
+                "        i.lemma_, ",
+                "        i.dep_, ",
+                "        i._.tokentype,",
+                "        i._.vv_pos,",
+                "        i._.vv_morph",
+                "    )"
+            ],
+            "code_language": "python",
+            "author": "thjbdvlt",
+            "author_links": {
+                "github": "thjbdvlt"
+            },
+            "category": [
+                "pipeline",
+                "research",
+                "models"
+            ],
+            "tags": [
+                "french"
+            ]
+        },
+        {
             "id": "spacy-cleaner",
             "title": "spacy-cleaner",
             "slogan": "Easily clean text with spaCy!",
