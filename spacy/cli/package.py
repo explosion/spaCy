@@ -116,9 +116,7 @@ def package(
     if not meta_path.exists() or not meta_path.is_file():
         msg.fail("Can't load pipeline meta.json", meta_path, exits=1)
     meta = srsly.read_json(meta_path)
-    meta = get_meta(input_dir, meta)
-    if no_require_parent:
-        msg.info("Excluding parent package {about.__title__} from requirements")
+    meta = get_meta(input_dir, meta, require_parent=not no_require_parent)
     if meta["requirements"]:
         msg.good(
             f"Including {len(meta['requirements'])} package requirement(s) from "
@@ -192,7 +190,7 @@ def package(
         shutil.copy(str(code_path), str(package_path))
     create_file(main_path / "meta.json", srsly.json_dumps(meta, indent=2))
 
-    create_file(main_path / "setup.py", TEMPLATE_SETUP % ("False" if no_require_parent else "True"))
+    create_file(main_path / "setup.py", TEMPLATE_SETUP)
     create_file(main_path / "MANIFEST.in", TEMPLATE_MANIFEST)
     init_py = TEMPLATE_INIT.format(
         imports="\n".join(f"from . import {m}" for m in imports)
@@ -340,7 +338,9 @@ def create_file(file_path: Path, contents: str) -> None:
 
 
 def get_meta(
-    model_path: Union[str, Path], existing_meta: Dict[str, Any]
+    model_path: Union[str, Path],
+    existing_meta: Dict[str, Any],
+    require_parent: bool = False,
 ) -> Dict[str, Any]:
     meta: Dict[str, Any] = {
         "lang": "en",
@@ -369,6 +369,8 @@ def get_meta(
     existing_reqs = [util.split_requirement(req)[0] for req in meta["requirements"]]
     reqs = get_third_party_dependencies(nlp.config, exclude=existing_reqs)
     meta["requirements"].extend(reqs)
+    if require_parent and about.__title__ not in meta["requirements"]:
+        meta["requirements"].append(about.__title__)
     return meta
 
 
@@ -519,9 +521,6 @@ from shutil import copy
 from setuptools import setup
 
 
-REQUIRE_PARENT_PACKAGE = %s
-
-
 def load_meta(fp):
     with io.open(fp, encoding='utf8') as f:
         return json.load(f)
@@ -546,11 +545,11 @@ def list_files(data_dir):
 
 
 def list_requirements(meta):
-    parent_package = meta.get('parent_package', 'spacy')
-    if REQUIRE_PARENT_PACKAGE:
-        requirements = [parent_package]
-    else:
-        requirements = []
+    # Up to version 3.7, we included the parent package
+    # in requirements by default. This behaviour is removed
+    # in 3.8, with a setting to include the parent package in
+    # the requirements list in the meta if desired.
+    requirements = []
     if 'setup_requires' in meta:
         requirements += meta['setup_requires']
     if 'requirements' in meta:
