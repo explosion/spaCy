@@ -30,7 +30,7 @@ def package_cli(
     version: Optional[str] = Opt(None, "--version", "-v", help="Package version to override meta"),
     build: str = Opt("sdist", "--build", "-b", help="Comma-separated formats to build: sdist and/or wheel, or none."),
     force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing data in output directory"),
-    no_require_parent: bool = Opt(False, "--require-parent/--no-require-parent", "-R", "-R", help="Don't include the parent package (e.g. spacy) in the requirements"),
+    require_parent: bool = Opt(False, "--require-parent/--no-require-parent", "-R", "-R", help="Include the parent package (e.g. spacy) in the requirements"),
     # fmt: on
 ):
     """
@@ -61,7 +61,7 @@ def package_cli(
         create_sdist=create_sdist,
         create_wheel=create_wheel,
         force=force,
-        no_require_parent=no_require_parent,
+        require_parent=require_parent,
         silent=False,
     )
 
@@ -76,7 +76,7 @@ def package(
     create_meta: bool = False,
     create_sdist: bool = True,
     create_wheel: bool = False,
-    no_require_parent: bool = False,
+    require_parent: bool = False,
     force: bool = False,
     silent: bool = True,
 ) -> None:
@@ -116,7 +116,7 @@ def package(
     if not meta_path.exists() or not meta_path.is_file():
         msg.fail("Can't load pipeline meta.json", meta_path, exits=1)
     meta = srsly.read_json(meta_path)
-    meta = get_meta(input_dir, meta, require_parent=not no_require_parent)
+    meta = get_meta(input_dir, meta, require_parent=require_parent)
     if meta["requirements"]:
         msg.good(
             f"Including {len(meta['requirements'])} package requirement(s) from "
