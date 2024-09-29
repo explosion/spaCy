@@ -370,7 +370,7 @@ def get_meta(
     reqs = get_third_party_dependencies(nlp.config, exclude=existing_reqs)
     meta["requirements"].extend(reqs)
     if require_parent and about.__title__ not in meta["requirements"]:
-        meta["requirements"].append(about.__title__)
+        meta["requirements"].append(about.__title__ + meta["spacy_version"])
     return meta
 
 
