@@ -192,7 +192,7 @@ def package(
         shutil.copy(str(code_path), str(package_path))
     create_file(main_path / "meta.json", srsly.json_dumps(meta, indent=2))
 
-    create_file(main_path / "setup.py", TEMPLATE_SETUP.format(require_parent="False" if no_require_parent else "True"))
+    create_file(main_path / "setup.py", TEMPLATE_SETUP % ("False" if no_require_parent else "True"))
     create_file(main_path / "MANIFEST.in", TEMPLATE_MANIFEST)
     init_py = TEMPLATE_INIT.format(
         imports="\n".join(f"from . import {m}" for m in imports)
@@ -308,7 +308,7 @@ def get_third_party_dependencies(
                 modules.add(func_info["module"].split(".")[0])  # type: ignore[union-attr]
     dependencies = []
     for module_name in modules:
-        if no_depend_on_spacy and module_name == "spacy":
+        if module_name == about.__title__:
             continue
         if module_name in distributions:
             dist = distributions.get(module_name)
@@ -519,7 +519,7 @@ from shutil import copy
 from setuptools import setup
 
 
-REQUIRE_PARENT_PACKAGE = {require_parent}
+REQUIRE_PARENT_PACKAGE = %s
 
 
 def load_meta(fp):
