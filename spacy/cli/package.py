@@ -30,7 +30,7 @@ def package_cli(
     version: Optional[str] = Opt(None, "--version", "-v", help="Package version to override meta"),
     build: str = Opt("sdist", "--build", "-b", help="Comma-separated formats to build: sdist and/or wheel, or none."),
     force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing data in output directory"),
-    no_require_parent: bool = Opt(False, "--no-require-parent", "-R", "-R", help="Don't include the parent package (e.g. spacy) in the requirements"),
+    no_require_parent: bool = Opt(False, "--require-parent/--no-require-parent", "-R", "-R", help="Don't include the parent package (e.g. spacy) in the requirements"),
     # fmt: on
 ):
     """
