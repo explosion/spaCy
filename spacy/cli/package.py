@@ -61,7 +61,7 @@ def package_cli(
         create_sdist=create_sdist,
         create_wheel=create_wheel,
         force=force,
-        no_require_parent=no_require_parent
+        no_require_parent=no_require_parent,
         silent=False,
     )
 
