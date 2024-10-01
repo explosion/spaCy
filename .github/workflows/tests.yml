@@ -147,7 +147,9 @@ jobs:
       - name: "Test assemble CLI"
         run: |
           python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_sm'}; config.to_disk('ner_source_sm.cfg')"
-          PYTHONWARNINGS="error,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
+          python -m spacy assemble ner_source_sm.cfg output_dir
+        env:
+          PYTHONWARNINGS: "error,ignore::DeprecationWarning" 
         if: matrix.python_version == '3.9'
 
       - name: "Test assemble CLI vectors warning"
