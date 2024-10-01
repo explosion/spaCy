@@ -9,7 +9,6 @@ from contextlib import ExitStack, contextmanager
 from copy import deepcopy
 from dataclasses import dataclass
 from itertools import chain, cycle
-import numpy
 from pathlib import Path
 from timeit import default_timer as timer
 from typing import (
@@ -31,6 +30,7 @@ from typing import (
     overload,
 )
 
+import numpy
 import srsly
 from cymem.cymem import Pool
 from thinc.api import Config, CupyOps, Optimizer, get_current_ops
