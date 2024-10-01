@@ -12,7 +12,6 @@ on:
       - "*.md"
       - "*.mdx"
       - "website/**"
-      - ".github/workflows/**"
   pull_request:
     types: [opened, synchronize, reopened, edited]
     paths-ignore:
