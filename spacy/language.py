@@ -30,6 +30,7 @@ from typing import (
     overload,
 )
 
+import numpy
 import srsly
 from cymem.cymem import Pool
 from thinc.api import Config, CupyOps, Optimizer, get_current_ops
