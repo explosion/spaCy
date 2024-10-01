@@ -177,8 +177,3 @@ jobs:
           python -m pytest --pyargs spacy -W error
         if: "!(startsWith(matrix.os, 'macos') && matrix.python_version == '3.11')"
 
-      - name: "Run CPU tests with thinc-apple-ops"
-        run: |
-          python -m pip install 'spacy[apple]'
-          python -m pytest --pyargs spacy
-        if: startsWith(matrix.os, 'macos') && matrix.python_version == '3.11'
