@@ -12,7 +12,6 @@ on:
       - "*.md"
       - "*.mdx"
       - "website/**"
-      - ".github/workflows/**"
   pull_request:
     types: [opened, synchronize, reopened, edited]
     paths-ignore:
@@ -58,9 +57,17 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python_version: ["3.10"]
-
+        os: [ubuntu-latest, windows-latest, macos-13]
+        python_version: ["3.12"]
+        include:
+          - os: windows-latest
+            python_version: "3.9"
+          - os: macos-13
+            python_version: "3.10"
+          - os: ubuntu-latest
+            python_version: "3.11"
+          - os: windows-latest
+            python_version: "3.11"
     runs-on: ${{ matrix.os }}
 
     steps:
