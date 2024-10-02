@@ -1,0 +1,191 @@
+---
+title: What's New in v4.0
+teaser: New features and how to upgrade
+menu:
+  - ['New Features', 'features']
+  - ['Upgrading Notes', 'upgrading']
+---
+
+## New features {id="features",hidden="true"}
+
+spaCy v4.0 supports more flexible learning rates and adds experimental support
+for model distillation. This release also fixes some long-standing issues that
+require minor API changes.
+
+spaCy v4.0 drops support for Python 3.7 and 3.8.
+
+### Flexible learning rates {id="learn-rate"}
+
+Thinc 9 adds support for more flexible learning rates that can use the step,
+parameter names, and results from prior evaluations. spaCy v4 makes use of these
+flexible learning rates by passing the aggregate score of the most recent
+evaluation to the learning rate schedule. This makes it possible for schedules
+like [`plateau`](https://thinc.ai/docs/api-schedules#plateau) to adjust the
+learning rate when training is stagnant.
+
+### Experimental support for model distillation {id="distillation"}
+
+spaCy v4 lays the groundwork for model distillation. Distillation trains a
+_student_ model on the predictions of a _teacher_ model using an unannotated
+corpus. One of the more exciting applications of distillation is extracting
+small, task-focused models from large, pretrained transformer models.
+
+Support for distillation support consists of several parts:
+
+- [`TrainablePipe`](/api/pipe) now provides a [`distill`](/api/pipe#distill)
+  method. This can be used to perform a distillation step, where a student is
+  updated to mimick the outputs of the teacher.
+- A configuration section called `distilation` for configuring various
+  distillation settings.
+- The distillation loop.
+- The [`distill`](/api/cli#distill) subcommand to run distillation from the
+  command-line.
+
+Most of the trainable pipeline components are updated to support distillation.
+
+### Saving activations {id="save-activation"}
+
+Trainable pipes can now save the pipe's model activations for a document in the
+[`Doc.activations`](/api/doc#attributes) dictionary. You can use this
+functionality to get programmatic access to e.g. the probability distibution of
+a pipe's classifier.
+
+The following activations are currently available:
+
+- `EditTreeLemmatizer`: `probabilities` and `tree_ids`
+- `EntityLinker`: `ents` and `scores`
+- `Morphologizer`: `probabilities` and `label_ids`
+- `SentenceRecognizer`: `probabilities` and `label_ids`
+- `SpanCategorizer`: `indices` and `scores`
+- `Tagger`: `probabilities` and `label_ids`
+- `TextCategorizer`: `probabilities`
+
+> #### Example
+>
+> ```python
+> import spacy
+> nlp = spacy.load("de_core_news_lg")
+> nlp.get_pipe("tagger").save_activations = True
+> doc = nlp("Hallo Welt!")
+> assert "tagger" in doc.activations
+> assert "probabilities" in doc.activations["tagger"]
+> ```
+
+### Additional features and improvements {id="additional-features-and-improvements"}
+
+- The `--code` option that is used by several CLI subcommands now accepts
+  multiple files to load by separating them with a comma.
+- `spacy download` does not redownload models that are already installed.
+- When modifying a `Span` that was retrieved through a `SpanGroup`, the change
+  is now reflected in the `SpanGroup`.
+- Lookups can now be downloaded from a URL using
+  `spacy.LookupsDataLoaderFromURL.v1`.
+
+## Notes about upgrading from v3.7 {id="upgrading"}
+
+This release drops support for Python 3.7 and 3.8. Most configuration files from
+spaCy 3.7 can be used with spaCy 4.0 without any modifications (excepting
+configurations that use `EntityLinker.v1`, see below). However, spaCy 4.0
+introduces some (minor) API changes that are discussed in the remainder of this
+section.
+
+### Removal of the `EntityRuler` class
+
+The `EntityRuler` class is removed. The entity ruler is implemented as a special
+case of the `SpanRuler` component.
+
+See the [migration guide](/api/entityruler#migrating) for differences between
+the v3 `EntityRuler` and v4 `SpanRuler` implementations of the `entity_ruler`
+component.
+
+### Renamed language codes: `is` -> `isl` and `xx` to `mul`
+
+The language code for Icelandic has been changed from `is` to `isl` to avoid
+incompatibilities with the Python `is` keyword. The language code for
+multilingual models has been changed from `xx` to `mul`. Existing code that uses
+these language codes should be adjusted accordingly.
+
+### Removal of the `sentiment` attribute
+
+The `sentiment` attribute is removed from the `Token`, `Span`, `Doc` and `Lexeme`
+classes. If you used this attribute in a `sentiment` analysis component, we
+recommend you to store the sentiment analysis in an
+[extension attribute](/usage/processing-pipelines#custom-components-attributes)
+instead.
+
+### Removal of `get_candidates_batch`
+
+Prior to spaCy v4, `get_candidates()` returned an `Iterable` of candidates for a
+specific mention. spaCy >= 3.5 provides `get_candidates_batch()` for looking up
+multiple mentions — given an `Iterable[Span]` of mentions, it returns for each
+mention the candidates.
+
+spaCy v4 replaces both functions by a single function
+[`get_candidates`](/api/entitylinker#config) that does doc-wise batching. For an
+`Iterator[SpanGroup]` it returns for each mention in the spangroup the
+candidates. The batching is by doc since the [`Span`](/api/span) objects in a
+[`SpanGroup`](/api/spangroup) belong to the same [`Doc`](/api/doc).
+
+### Removal of pool argument from `Vocab.get` and `Vocab.get_by_orth`
+
+The memory pool argument was removed from the `Vocab.get` and
+`Vocab.get_by_orth` Cython cdef methods. These methods can now be called without
+providing the memory pool as an argument.
+
+### Optional arguments of `Span.char_span` are now keyword-only
+
+> #### Example
+>
+> ```python
+> doc = nlp("I like New York")
+> # Permitted in spaCy 3
+> span = doc[1:4].char_span(5, 13, "GPE", 42)
+> # spaCy 4
+> span = doc[1:4].char_span(5, 13, "GPE", kb_id=42)
+> ```
+
+The optional arguments for [`Span.char_span`](/api/span#char_span) are now
+keyword-only. Existing code that uses a positional argument to pass an optional
+argument to `char_span` needs to be updated to pass a keyword argument.
+
+### Remove backoff from `Doc.vector` to `Doc.tensor`
+
+In spaCy v3 and earlier, small (`sm`) pipeline packages supported
+[`Doc.vector`](/api/doc#vector) and [`Token.vector`](/api/token#vector) by
+backing off to context-sensitive tensors from the `tok2vec` component. These
+tensors do not work well for this purpose and this backoff has been removed in
+spaCy v4.
+
+### Multiple spans returned as `Tuple[Span]`
+
+In spaCy v3 some methods that returned multiple `Span` objects would return an
+`Iterator[Span]`, while others would return `Tuple[Span]`. In spaCy v4 such
+methods always return `Tuple[Span]`.
+
+### Support for `EntityLinker.v1` is dropped
+
+Support for `EntityLinker.v1` is dropped, migrate to `EntityLinker.v2`.
+
+### `spacy[apple]` removed from extras
+
+The `thinc-apple-ops` package has been merged into Thinc v9. spaCy v4 always
+uses Apple ops on Macs, so the `apple` extra is not needed anymore.
+
+### Pipeline package version compatibility {id="version-compat"}
+
+spaCy v3.x pipelines are not compatible with spaCy v4.0 and need to be
+retrained.
+
+### Updating v3.7 configs
+
+To update a config from spaCy v3.7 with the new v4.0 settings, run
+[`init fill-config`](/api/cli#init-fill-config):
+
+```cli
+$ python -m spacy init fill-config config-v3.7.cfg config-v4.0.cfg
+```
+
+In many cases ([`spacy train`](/api/cli#train),
+[`spacy.load`](/api/top-level#spacy.load)), the new defaults will be filled in
+automatically, but you'll need to fill in the new settings to run
+[`debug config`](/api/cli#debug) and [`debug data`](/api/cli#debug-data).
