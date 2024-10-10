@@ -227,6 +227,28 @@ nlp = en_core_web_sm.load()
 doc = nlp("This is a sentence.")
 ```
 
+## 📊 Custom Sentiment Analysis with Logistic Regression (spaCy-based)
+This repository also includes a custom **Logistic Regression** sentiment analysis model built using spaCy, without using scikit-learn. The model classifies text as positive or negative based on a dataset such as IMDb reviews.
+
+### Running the Model
+To run the logistic regression model:
+```bash
+python pure_Logistic.py
+```This script processes the dataset using spaCy, trains the logistic regression model, and outputs the results. 
+
+### Testing and Evaluation
+To run tests and evaluate the model's performance, use:
+```bash
+python test_pure_logistic.py
+```
+
+In your test script, import the PureLogisticTextCategorizer class for evaluation:
+```bash
+from pure_Logistic import PureLogisticTextCategorizer
+```
+This enables you to evaluate the logistic regression classifier on your test cases.
+
+
 📖 **For more info and examples, check out the
 [models documentation](https://spacy.io/docs/usage/models).**
 
