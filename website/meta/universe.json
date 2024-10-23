@@ -277,6 +277,47 @@
             ]
         },
         {
+            "id": "solipcysme",
+            "title": "solipCysme",
+            "slogan": "spaCy pipeline for french fictions and first person point of view texts.",
+            "description": "__solipCysme__ is a pipeline for french language, designed for the analysis of fictions and first person point of view texts, with a focus on personal pronouns.",
+            "github": "thjbdvlt/solipCysme",
+            "code_example": [
+                "pip install https://huggingface.co/thjbdvlt/fr_solipcysme/resolve/main/fr_solipcysme-any-py3-none-any.whl",
+                "",
+                "import spacy",
+                "",
+                "nlp = spacy.load('fr_solipcysme')",
+                "for i in nlp(",
+                "'la MACHINE à (b)rouiller le temps s'est peut-être déraillée..?'",
+                "):",
+                "    print(",
+                "        i, ",
+                "        i.norm_, ",
+                "        i.pos_, ",
+                "        i.morph, ",
+                "        i.lemma_, ",
+                "        i.dep_, ",
+                "        i._.tokentype,",
+                "        i._.vv_pos,",
+                "        i._.vv_morph",
+                "    )"
+            ],
+            "code_language": "python",
+            "author": "thjbdvlt",
+            "author_links": {
+                "github": "thjbdvlt"
+            },
+            "category": [
+                "pipeline",
+                "research",
+                "models"
+            ],
+            "tags": [
+                "french"
+            ]
+        },
+        {
             "id": "spacy-cleaner",
             "title": "spacy-cleaner",
             "slogan": "Easily clean text with spaCy!",
@@ -2583,6 +2624,20 @@
                 "github": "thiippal",
                 "website": "https://www.mv.helsinki.fi/home/thiippal/"
             },
+            "category": [
+                "courses"
+            ]
+        },
+        {
+            "type": "education",
+            "id": "spacy-quickstart",
+            "title": "spaCy Quickstart",
+            "slogan": "Learn spaCy basics quickly by visualizing various Doc objects",
+            "description": "In this course, I use the itables Python library inside a Jupyter notebook so that you can visualize the different spaCy document objects. This will provide a solid foundation for people who wish to learn the spaCy NLP library.",
+            "url": "https://learnspacy.com/courses/spacy-quickstart/",
+            "image": "https://learnspacy.com/wp-content/uploads/2024/09/custom_search_builder_spacy-2048x1202.png",
+            "thumb": "https://learnspacy.com/wp-content/uploads/2024/09/learnspacy_logo.png",
+            "author": "Aravind Mohanoor",
             "category": [
                 "courses"
             ]

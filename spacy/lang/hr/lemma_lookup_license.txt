@@ -1,5 +1,5 @@
 The list of Croatian lemmas was extracted from the reldi-tagger repository (https://github.com/clarinsi/reldi-tagger).
-Reldi-tagger is licesned under the Apache 2.0 licence.
+Reldi-tagger is licensed under the Apache 2.0 licence.
 
 @InProceedings{ljubesic16-new,
   author = {Nikola Ljubešić and Filip Klubička and Željko Agić and Ivo-Pavao Jazbec},
