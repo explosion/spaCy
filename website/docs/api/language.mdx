@@ -890,6 +890,28 @@ when loading a config with
 | `pipe_name`    | Name of pipeline component to replace listeners for. ~~str~~                                                                                                                                                                                                                                                                                                                                                                           |
 | `listeners`    | The paths to the listeners, relative to the component config, e.g. `["model.tok2vec"]`. Typically, implementations will only connect to one tok2vec component, `model.tok2vec`, but in theory, custom models can use multiple listeners. The value here can either be an empty list to not replace any listeners, or a _complete_ list of the paths to all listener layers used by the model that should be replaced.~~Iterable[str]~~ |
 
+## Language.memory_zone {id="memory_zone",tag="contextmanager",version="3.8"}
+
+Begin a block where all resources allocated during the block will be freed at
+the end of it. If a resources was created within the memory zone block,
+accessing it outside the block is invalid. Behavior of this invalid access is
+undefined. Memory zones should not be nested. The memory zone is helpful for
+services that need to process large volumes of text with a defined memory budget.
+
+> ```python
+> ### Example
+> counts = Counter()
+> with nlp.memory_zone():
+>     for doc in nlp.pipe(texts):
+>         for token in doc:
+>             counts[token.text] += 1
+> ```
+
+| Name | Description |
+| --- | --- |
+| `mem` | Optional `cymem.Pool` object to own allocations (created if not provided). This argument is not required for ordinary usage. Defaults to `None`. ~~Optional[cymem.Pool]~~ |
+| **RETURNS** | The memory pool that owns the allocations. This object is not required for ordinary usage. ~~Iterator[cymem.Pool]~~ |
+
 ## Language.meta {id="meta",tag="property"}
 
 Meta data for the `Language` class, including name, version, data sources,
