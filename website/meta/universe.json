@@ -1395,6 +1395,48 @@
             }
         },
         {
+            "id": "spacy-layout",
+            "slogan": "Process PDFs, Word documents and more with spaCy",
+            "github": "explosion/spacy-layout",
+            "description": "This plugin integrates with [Docling](https://ds4sd.github.io/docling/) to bring structured processing of PDFs, Word documents and other input formats to your spaCy pipeline. It outputs clean, structured data in a text-based format and outputs spaCy's familiar `Doc` objects that let you access labelled text spans like sections, headings, or footnotes.\n\nThis workflow makes it easy to apply powerful NLP techniques to your documents, including linguistic analysis, named entity recognition, text classification and more. It's also great for implementing chunking for RAG pipelines.",
+            "pip": "spacy-layout",
+            "category": [
+                "pipeline"
+            ],
+            "code_example": [
+                "import spacy",
+                "from spacy_layout import spaCyLayout",
+                "",
+                "nlp = spacy.blank(\"en\")",
+                "layout = spaCyLayout(nlp)",
+                "",
+                "# Process a document and create a spaCy Doc object",
+                "doc = layout(\"./starcraft.pdf\")",
+                "",
+                "# The text-based contents of the document",
+                "print(doc.text)",
+                "# Document layout including pages and page sizes",
+                "print(doc._.layout)",
+                "",
+                "# Layout spans for different sections",
+                "for span in doc.spans[\"layout\"]:",
+                "    # Document section and token and character offsets into the text",
+                "    print(span.text, span.start, span.end, span.start_char, span.end_char)",
+                "    # Section type, e.g. \"text\", \"title\", \"section_header\" etc.",
+                "    print(span.label_)",
+                "    # Layout features of the section, including bounding box",
+                "    print(span._.layout)",
+                "    # Closest heading to the span (accuracy depends on document structure)",
+                "    print(span._.heading)"
+            ],
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines",
+                "website": "https://ines.io"
+            }
+        },
+        {
             "id": "spacyopentapioca",
             "title": "spaCyOpenTapioca",
             "slogan": "Named entity linking on Wikidata in spaCy via OpenTapioca",
