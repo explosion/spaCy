@@ -58,8 +58,8 @@ const AlertSpace = ({ nightly, legacy }) => {
 }
 
 const navAlert = (
-    <Link to="https://explosion.ai/blog/sp-global-commodities" noLinkLayout>
-        💥 <strong>New:</strong> Case study with S&P Global
+    <Link to="https://github.com/explosion/spacy-layout" noLinkLayout>
+        💥 <strong>New:</strong> spaCy for PDFs and Word docs
     </Link>
 )
 
