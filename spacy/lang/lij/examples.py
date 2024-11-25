@@ -9,6 +9,6 @@ Example sentences to test spaCy and its language models.
 sentences = [
     "Sciusciâ e sciorbî no se peu.",
     "Graçie di çetroin, che me son arrivæ.",
-    "Vegnime apreuvo, che ve fasso pescâ di òmmi.",
+    "Vegnîme apreuvo, che ve fasso pescâ di òmmi.",
     "Bella pe sempre l'ægua inta conchetta quande unn'agoggia d'ægua a se â trapaña.",
 ]
