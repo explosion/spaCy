@@ -133,7 +133,7 @@ cdef void predict_states(
         )
         # Add bias
         for i in range(n.states):
-            saxpy(cblas)(n.classes, 1., W.hidden_bias, 1, &scores[i*n.classes], 1)
+            saxpy(cblas)(n.classes, 1., W.hidden_bias, 1, &A.scores[i*n.classes], 1)
     # Set unseen classes to minimum value
     i = 0
     min_ = A.scores[0]
