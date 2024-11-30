@@ -5,7 +5,6 @@ from libc.math cimport exp
 from libc.stdlib cimport calloc, free, realloc
 from libc.string cimport memcpy, memset
 from thinc.backends.cblas cimport saxpy, sgemm
-from thinc.backends.linalg cimport Vec, VecVec
 
 import numpy
 import numpy.random
@@ -116,14 +115,10 @@ cdef void predict_states(
         n.hiddens * n.pieces
     )
     for i in range(n.states):
-        VecVec.add_i(
-            &A.unmaxed[i*n.hiddens*n.pieces],
-            W.feat_bias, 1.,
-            n.hiddens * n.pieces
-        )
+        saxpy(cblas)(n.hiddens * n.pieces, 1., W.feat_bias, 1, &A.unmaxed[i*n.hiddens*n.pieces], 1)
         for j in range(n.hiddens):
             index = i * n.hiddens * n.pieces + j * n.pieces
-            which = Vec.arg_max(&A.unmaxed[index], n.pieces)
+            which = _arg_max(&A.unmaxed[index], n.pieces)
             A.hiddens[i*n.hiddens + j] = A.unmaxed[index + which]
     memset(A.scores, 0, n.states * n.classes * sizeof(float))
     if W.hidden_weights == NULL:
@@ -138,7 +133,7 @@ cdef void predict_states(
         )
         # Add bias
         for i in range(n.states):
-            VecVec.add_i(&A.scores[i*n.classes], W.hidden_bias, 1., n.classes)
+            saxpy(cblas)(n.classes, 1., W.hidden_bias, 1, &scores[i*n.classes], 1)
     # Set unseen classes to minimum value
     i = 0
     min_ = A.scores[0]
@@ -187,7 +182,7 @@ cdef void cpu_log_loss(
     """Do multi-label log loss"""
     cdef double max_, gmax, Z, gZ
     best = arg_max_if_gold(scores, costs, is_valid, O)
-    guess = Vec.arg_max(scores, O)
+    guess = _arg_max(scores, O)
     if best == -1 or guess == -1:
         # These shouldn't happen, but if they do, we want to make sure we don't
         # cause an OOB access.
