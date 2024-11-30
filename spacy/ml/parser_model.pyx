@@ -227,6 +227,17 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
                 best = i
     return best
 
+cdef inline int _arg_max(float[:] scores, const int n_classes) nogil:
+    if n_classes == 2:
+        return 0 if scores[0] > scores[1] else 1
+    cdef int i
+    cdef int best = 0
+    cdef float mode = scores[0]
+    for i in range(1, n_classes):
+        if scores[i] > mode:
+            mode = scores[i]
+            best = i
+    return best
 
 class ParserStepModel(Model):
     def __init__(
@@ -527,16 +538,5 @@ cdef class precompute_hiddens:
 
         return state_vector, backprop_relu
 
-    cdef inline int _arg_max(float[:] scores, const int n_classes):
-        if n_classes == 2:
-            return 0 if scores[0] > scores[1] else 1
-        cdef int i
-        cdef int best = 0
-        cdef float mode = scores[0]
-        for i in range(1, n_classes):
-            if scores[i] > mode:
-                mode = scores[i]
-                best = i
-        return best
         
             
