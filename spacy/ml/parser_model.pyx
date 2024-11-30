@@ -527,7 +527,7 @@ cdef class precompute_hiddens:
 
         return state_vector, backprop_relu
 
-    cdef inline int _arg_max(const float* scores, const int n_classes) nogil:
+    cdef inline int _arg_max(float[:] scores, const int n_classes) nogil:
         if n_classes == 2:
             return 0 if scores[0] > scores[1] else 1
         cdef int i
@@ -537,4 +537,5 @@ cdef class precompute_hiddens:
             if scores[i] > mode:
                 mode = scores[i]
                 best = i
-        return best    
+        return best
+        
