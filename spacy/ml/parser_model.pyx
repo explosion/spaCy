@@ -526,3 +526,5 @@ cdef class precompute_hiddens:
             return d_best.reshape((d_best.shape + (1,)))
 
         return state_vector, backprop_relu
+
+cdef inline int _arg_max(const float* scores, const int n_classes) nogil:
