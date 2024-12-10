@@ -35,7 +35,7 @@ so that more people can benefit from it.
 
 When opening an issue, use a **descriptive title** and include your
 **environment** (operating system, Python version, spaCy version). Our
-[issue template](https://github.com/explosion/spaCy/issues/new) helps you
+[issue templates](https://github.com/explosion/spaCy/issues/new/choose) help you
 remember the most important details to include. If you've discovered a bug, you
 can also submit a [regression test](#fixing-bugs) straight away. When you're
 opening an issue to report the bug, simply refer to your pull request in the

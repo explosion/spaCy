@@ -277,6 +277,47 @@
             ]
         },
         {
+            "id": "solipcysme",
+            "title": "solipCysme",
+            "slogan": "spaCy pipeline for french fictions and first person point of view texts.",
+            "description": "__solipCysme__ is a pipeline for french language, designed for the analysis of fictions and first person point of view texts, with a focus on personal pronouns.",
+            "github": "thjbdvlt/solipCysme",
+            "code_example": [
+                "pip install https://huggingface.co/thjbdvlt/fr_solipcysme/resolve/main/fr_solipcysme-any-py3-none-any.whl",
+                "",
+                "import spacy",
+                "",
+                "nlp = spacy.load('fr_solipcysme')",
+                "for i in nlp(",
+                "'la MACHINE à (b)rouiller le temps s'est peut-être déraillée..?'",
+                "):",
+                "    print(",
+                "        i, ",
+                "        i.norm_, ",
+                "        i.pos_, ",
+                "        i.morph, ",
+                "        i.lemma_, ",
+                "        i.dep_, ",
+                "        i._.tokentype,",
+                "        i._.vv_pos,",
+                "        i._.vv_morph",
+                "    )"
+            ],
+            "code_language": "python",
+            "author": "thjbdvlt",
+            "author_links": {
+                "github": "thjbdvlt"
+            },
+            "category": [
+                "pipeline",
+                "research",
+                "models"
+            ],
+            "tags": [
+                "french"
+            ]
+        },
+        {
             "id": "spacy-cleaner",
             "title": "spacy-cleaner",
             "slogan": "Easily clean text with spaCy!",
@@ -1345,6 +1386,48 @@
                 "assert doc[5]._.emoji_desc == \"thumbs up dark skin tone\"",
                 "assert len(doc._.emoji) == 2",
                 "assert doc._.emoji[1] == (\"👍🏿\", 5, \"thumbs up dark skin tone\")"
+            ],
+            "author": "Ines Montani",
+            "author_links": {
+                "twitter": "_inesmontani",
+                "github": "ines",
+                "website": "https://ines.io"
+            }
+        },
+        {
+            "id": "spacy-layout",
+            "slogan": "Process PDFs, Word documents and more with spaCy",
+            "github": "explosion/spacy-layout",
+            "description": "This plugin integrates with [Docling](https://ds4sd.github.io/docling/) to bring structured processing of PDFs, Word documents and other input formats to your spaCy pipeline. It outputs clean, structured data in a text-based format and outputs spaCy's familiar `Doc` objects that let you access labelled text spans like sections, headings, or footnotes.\n\nThis workflow makes it easy to apply powerful NLP techniques to your documents, including linguistic analysis, named entity recognition, text classification and more. It's also great for implementing chunking for RAG pipelines.",
+            "pip": "spacy-layout",
+            "category": [
+                "pipeline"
+            ],
+            "code_example": [
+                "import spacy",
+                "from spacy_layout import spaCyLayout",
+                "",
+                "nlp = spacy.blank(\"en\")",
+                "layout = spaCyLayout(nlp)",
+                "",
+                "# Process a document and create a spaCy Doc object",
+                "doc = layout(\"./starcraft.pdf\")",
+                "",
+                "# The text-based contents of the document",
+                "print(doc.text)",
+                "# Document layout including pages and page sizes",
+                "print(doc._.layout)",
+                "",
+                "# Layout spans for different sections",
+                "for span in doc.spans[\"layout\"]:",
+                "    # Document section and token and character offsets into the text",
+                "    print(span.text, span.start, span.end, span.start_char, span.end_char)",
+                "    # Section type, e.g. \"text\", \"title\", \"section_header\" etc.",
+                "    print(span.label_)",
+                "    # Layout features of the section, including bounding box",
+                "    print(span._.layout)",
+                "    # Closest heading to the span (accuracy depends on document structure)",
+                "    print(span._.heading)"
             ],
             "author": "Ines Montani",
             "author_links": {
@@ -2583,6 +2666,20 @@
                 "github": "thiippal",
                 "website": "https://www.mv.helsinki.fi/home/thiippal/"
             },
+            "category": [
+                "courses"
+            ]
+        },
+        {
+            "type": "education",
+            "id": "spacy-quickstart",
+            "title": "spaCy Quickstart",
+            "slogan": "Learn spaCy basics quickly by visualizing various Doc objects",
+            "description": "In this course, I use the itables Python library inside a Jupyter notebook so that you can visualize the different spaCy document objects. This will provide a solid foundation for people who wish to learn the spaCy NLP library.",
+            "url": "https://learnspacy.com/courses/spacy-quickstart/",
+            "image": "https://learnspacy.com/wp-content/uploads/2024/09/custom_search_builder_spacy-2048x1202.png",
+            "thumb": "https://learnspacy.com/wp-content/uploads/2024/09/learnspacy_logo.png",
+            "author": "Aravind Mohanoor",
             "category": [
                 "courses"
             ]

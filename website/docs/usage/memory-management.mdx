@@ -1,0 +1,131 @@
+---
+title: Memory Management
+teaser: Managing Memory for persistent services
+version: 3.8
+menu:
+  - ['Memory Zones', 'memoryzones']
+  - ['Clearing Doc attributes', 'doc-attrs']
+---
+
+spaCy maintains a few internal caches that improve speed,
+but cause memory to increase slightly over time. If you're
+running a batch process that you don't need to be long-lived,
+the increase in memory usage generally isn't a problem.
+However, if you're running spaCy inside a web service, you'll
+often want spaCy's memory usage to stay consistent. Transformer
+models can also run into memory problems sometimes, especially when
+used on a GPU.
+
+## Memory zones {id="memoryzones"}
+
+You can tell spaCy to free data from its internal caches (especially the
+[`Vocab`](/api/vocab)) using the [`Language.memory_zone`](/api/language#memory_zone) context manager. Enter
+the contextmanager and process your text within it, and spaCy will
+**reset its internal caches** (freeing up the associated memory) at the
+end of the block. spaCy objects created inside the memory zone must
+not be accessed once the memory zone is finished.
+
+```python
+### Using memory zones
+from collections import Counter
+
+def count_words(nlp, texts):
+    counts = Counter()
+    with nlp.memory_zone():
+        for doc in nlp.pipe(texts):
+            for token in doc:
+                counts[token.text] += 1
+    return counts
+```
+
+<Infobox title="Important note" variant="warning">
+
+Exiting the memory-zone invalidates all `Doc`, `Token`, `Span` and `Lexeme`
+objects that were created within it. If you access these objects
+after the memory zone exits, you may encounter a segmentation fault
+due to invalid memory access.
+
+</Infobox>
+
+spaCy needs the memory zone contextmanager because the processing pipeline
+can't keep track of which [`Doc`](/api/doc) objects are referring to data in the shared
+[`Vocab`](/api/vocab) cache. For instance, when spaCy encounters a new word, a new [`Lexeme`](/api/lexeme)
+entry is stored in the `Vocab`, and the `Doc` object points to this shared
+data. When the `Doc` goes out of scope, the `Vocab` has no way of knowing that
+this `Lexeme` is no longer in use.
+
+The memory zone solves this problem by
+allowing you to tell the processing pipeline that all data created
+between two points is no longer in use. It is up to the you to honor
+this agreement. If you access objects that are supposed to no longer be in
+use, you may encounter a segmentation fault due to invalid memory access.
+
+A common use case for memory zones will be **within a web service**. The processing
+pipeline can be loaded once, either as a context variable or a global, and each
+request can be handled within a memory zone:
+
+```python
+### Memory zones with FastAPI {highlight="10,23"}
+from fastapi import FastAPI, APIRouter, Depends, Request
+import spacy
+from spacy.language import Language
+
+router = APIRouter()
+
+
+def make_app():
+    app = FastAPI()
+    app.state.NLP = spacy.load("en_core_web_sm")
+    app.include_router(router)
+    return app
+
+
+def get_nlp(request: Request) -> Language:
+    return request.app.state.NLP
+
+
+@router.post("/parse")
+def parse_texts(
+    *, text_batch: list[str], nlp: Language = Depends(get_nlp)
+) -> list[dict]:
+    with nlp.memory_zone():
+        # Put the spaCy call within a separate function, so we can't
+        # leak the Doc objects outside the scope of the memory zone.
+        output = _process_text(nlp, text_batch)
+    return output
+
+
+def _process_text(nlp: Language, texts: list[str]) -> list[dict]:
+    # Call spaCy, and transform the output into our own data
+    # structures. This function is called from inside a memory
+    # zone, so must not return the spaCy objects.
+    docs = list(nlp.pipe(texts))
+    return [
+        {
+            "tokens": [{"text": t.text} for t in doc],
+            "entities": [
+                {"start": e.start, "end": e.end, "label": e.label_} for e in doc.ents
+            ],
+        }
+        for doc in docs
+    ]
+
+
+app = make_app()
+```
+
+## Clearing transformer tensors and other Doc attributes {id="doc-attrs"}
+
+The [`Transformer`](/api/transformer) and [`Tok2Vec`](/api/tok2vec) components set intermediate values onto the `Doc`
+object during parsing. This can cause GPU memory to be exhausted if many `Doc`
+objects are kept in memory together.
+
+To resolve this, you can add the [`doc_cleaner`](/api/pipeline-functions#doc_cleaner) component to your pipeline. By default
+this will clean up the [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute and the [`Doc.tensor`](/api/doc#attributes) attribute.
+You can have it clean up other intermediate extension attributes you use in custom
+pipeline components as well.
+
+```python
+### Adding the doc_cleaner
+nlp.add_pipe("doc_cleaner", config={"attrs": {"tensor": None}})
+```
