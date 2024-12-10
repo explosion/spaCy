@@ -222,6 +222,8 @@ cdef class StringStore:
           internally should not.
         RETURNS (uint64): The string's hash value.
         """
+        if not string:
+            return 0
         if allow_transient is None:
             allow_transient = self.mem is not self._non_temp_mem
         cdef hash_t str_hash
@@ -383,7 +385,10 @@ cdef class StringStore:
         cdef Utf8Str* value = <Utf8Str*>self._map.get(key)
         if value is not NULL:
             return value
-        value = _allocate(self.mem, <unsigned char*>utf8_string, length)
+        if allow_transient:
+            value = _allocate(self.mem, <unsigned char*>utf8_string, length)
+        else:
+            value = _allocate(self._non_temp_mem, <unsigned char*>utf8_string, length)
         self._map.set(key, value)
         if allow_transient and self.mem is not self._non_temp_mem:
             self._transient_keys.push_back(key)
