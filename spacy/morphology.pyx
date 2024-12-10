@@ -57,16 +57,20 @@ cdef class Morphology:
         field_feature_pairs = []
         for field in sorted(string_features):
             values = string_features[field]
+            self.strings.add(field, allow_transient=False),
+            field_id = self.strings[field]
             for value in values.split(self.VALUE_SEP):
+                field_sep_value = field + self.FIELD_SEP + value
+                self.strings.add(field_sep_value, allow_transient=False),
                 field_feature_pairs.append((
-                    self.strings.add(field),
-                    self.strings.add(field + self.FIELD_SEP + value),
+                    field_id,
+                    self.strings[field_sep_value]
                 ))
         cdef MorphAnalysisC tag = self.create_morph_tag(field_feature_pairs)
         # the hash key for the tag is either the hash of the normalized UFEATS
         # string or the hash of an empty placeholder
         norm_feats_string = self.normalize_features(features)
-        tag.key = self.strings.add(norm_feats_string)
+        tag.key = self.strings.add(norm_feats_string, allow_transient=False)
         self.insert(tag)
         return tag.key
 
