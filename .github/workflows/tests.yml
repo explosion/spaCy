@@ -166,7 +166,7 @@ jobs:
         run: |
           # Hack this in to test whether blis matters for this windows bug
           pip install blis==1.1.0a0 --no-deps --ignore-installed
-          export OPENBLAS_NUM_THREADS=1
+          set OPENBLAS_NUM_THREADS=1
           python -m pytest --pyargs spacy -W error
         if: "!(startsWith(matrix.os, 'macos') && matrix.python_version == '3.11')"
       - name: "Run CPU tests with thinc-apple-ops"
