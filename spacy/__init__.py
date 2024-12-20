@@ -5,23 +5,40 @@ from typing import Any, Dict, Iterable, Union
 # set library-specific custom warning handling before doing anything else
 from .errors import setup_default_warnings
 
-setup_default_warnings()  # noqa: E402
+setup_default_warnings()
 
 # These are imported as part of the API
-from thinc.api import Config, prefer_gpu, require_cpu, require_gpu  # noqa: F401
+from thinc.api import Config, prefer_gpu, require_cpu, require_gpu
 
-from . import pipeline  # noqa: F401
-from . import util
-from .about import __version__  # noqa: F401
-from .cli.info import info  # noqa: F401
+from . import pipeline, util
+from .about import __version__
 from .errors import Errors
-from .glossary import explain  # noqa: F401
+from .glossary import explain
 from .language import Language
-from .util import logger, registry  # noqa: F401
+from .util import logger, registry
 from .vocab import Vocab
 
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)
+
+__all__ = [
+    "__version__",
+    "blank",
+    "Config",
+    "Errors",
+    "explain",
+    "info",
+    "Language",
+    "load",
+    "logger",
+    "pipeline",
+    "prefer_gpu",
+    "registry",
+    "require_cpu",
+    "require_gpu",
+    "util",
+    "Vocab",
+]
 
 
 def load(
@@ -77,3 +94,12 @@ def blank(
     # We should accept both dot notation and nested dict here for consistency
     config = util.dot_to_dict(config)
     return LangClass.from_config(config, vocab=vocab, meta=meta)
+
+def __getattr__(name):
+    if name == "info":
+        from .cli.info import info
+        return info
+    if name == "cli":
+        from . import cli
+        return cli
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
