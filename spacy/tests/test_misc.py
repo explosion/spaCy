@@ -495,3 +495,27 @@ def test_find_available_port():
         with pytest.warns(UserWarning, match="already in use"):
             found_port = find_available_port(port, host, auto_select=True)
         assert found_port == port + 1, "Didn't find next port"
+
+
+def test_lazy_load_cli():
+    import subprocess
+    import sys
+    from textwrap import dedent
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            dedent(
+                """\
+            import sys
+            import spacy
+            assert "spacy" in sys.modules
+            assert "spacy.cli" not in sys.modules
+            spacy.cli
+            assert "spacy.cli" in sys.modules
+            """
+            ),
+        ],
+        check=True,
+    )

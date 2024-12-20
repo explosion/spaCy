@@ -95,11 +95,14 @@ def blank(
     config = util.dot_to_dict(config)
     return LangClass.from_config(config, vocab=vocab, meta=meta)
 
+
 def __getattr__(name):
+    if name == "cli":
+        import importlib
+
+        return importlib.import_module("." + name, __name__)
     if name == "info":
         from .cli.info import info
+
         return info
-    if name == "cli":
-        from . import cli
-        return cli
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
