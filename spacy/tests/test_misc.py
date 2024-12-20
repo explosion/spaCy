@@ -508,13 +508,13 @@ def test_lazy_load_cli():
             "-c",
             dedent(
                 """\
-            import sys
-            import spacy
-            assert "spacy" in sys.modules
-            assert "spacy.cli" not in sys.modules
-            spacy.cli
-            assert "spacy.cli" in sys.modules
-            """
+                import sys
+                import spacy
+                assert "spacy" in sys.modules
+                assert "spacy.cli" not in sys.modules
+                spacy.cli
+                assert "spacy.cli" in sys.modules
+                """
             ),
         ],
         check=True,
