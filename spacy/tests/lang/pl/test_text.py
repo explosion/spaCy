@@ -1,4 +1,5 @@
 """Words like numbers are recognized correctly."""
+
 import pytest
 
 
