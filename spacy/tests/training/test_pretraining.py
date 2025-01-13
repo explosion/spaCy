@@ -265,7 +265,7 @@ def test_pretraining_tagger():
 
 
 # Try to debug segfault on windows
-#def test_pretraining_training():
+# def test_pretraining_training():
 #    """Test that training can use a pretrained Tok2Vec model"""
 #    config = Config().from_str(pretrain_string_internal)
 #    nlp = util.load_model_from_config(config, auto_fill=True, validate=False)
