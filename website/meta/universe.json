@@ -5669,7 +5669,46 @@
                 "nlp",
                 "spacy"
             ]
-        }
+        },
+        {
+            "id": "calamanCy",
+            "slogan": "NLP Pipelines for Tagalog",
+            "description": "calamanCy is a Tagalog natural language preprocessing framework made with spaCy. Its goal is to provide pipelines and datasets for downstream NLP tasks.",
+            "github": "ljvmiranda921/calamanCy",
+            "pip": "calamanCy",
+            "code_example": [
+                "import calamancy",
+                "nlp = calamancy.load('tl_calamancy_md-0.1.0')",
+                "doc = nlp('Ako si Juan de la Cruz')",
+                "",
+                "for ent in doc.ents:",
+                "    print(f'Text: {ent.text} -> Entity: {ent.label_}')",
+            ],
+            "code_language": "python",
+            "url": "https://github.com/ljvmiranda921/calamanCy",
+            "thumb": "https://github.com/ljvmiranda921/calamanCy/raw/master/logo.png?raw=True",
+            "image": "https://github.com/ljvmiranda921/calamanCy/raw/master/logo.png?raw=True",
+            "author": "Lester James V. Miranda",
+            "author_links": {
+                "twitter": "ljvmiranda",
+                "github": "ljvmiranda921",
+                "website": "https://ljvmiranda921.github.io",
+            },
+            "category": [
+              "pipeline",
+              "training",
+              "research",
+              "standalone",
+              "models"
+            ],
+            "tags": [
+              "nlp",
+              "spacy",
+              "multilingual",
+              "filipino",
+              "tagalog"
+            ]
+        },
     ],
     "categories": [
         {
