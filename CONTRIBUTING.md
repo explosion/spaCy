@@ -449,8 +449,8 @@ and plugins in spaCy v3.0, and we can't wait to see what you build with it!
   [`spacy`](https://github.com/topics/spacy?o=desc&s=stars) and
   [`spacy-extensions`](https://github.com/topics/spacy-extension?o=desc&s=stars)
   to make it easier to find. Those are also the topics we're linking to from the
-  spaCy website. If you're sharing your project on Twitter, feel free to tag
-  [@spacy_io](https://twitter.com/spacy_io) so we can check it out.
+  spaCy website. If you're sharing your project on X, feel free to tag
+  [@spacy_io](https://x.com/spacy_io) so we can check it out.
 
 - Once your extension is published, you can open a
   [PR](https://github.com/explosion/spaCy/pulls) to suggest it for the
