@@ -46,6 +46,7 @@ open-source software, released under the
 | 👩‍🏫 **[Online Course]**                                                                                                                                                                                                    | Learn spaCy in this free and interactive online course.                                                                                                                                                                                                                                                                                      |
 | 📰 **[Blog]**                                                                                                                                                                                                             | Read about current spaCy and Prodigy development, releases, talks and more from Explosion.                                                                                                                                                                                                                 |
 | 📺 **[Videos]**                                                                                                                                                                                                           | Our YouTube channel with video tutorials, talks and more.                                                                                                                                                                                                                                                                                    |
+| 🔴 **[Live Stream]**                                                                                                                                                                                                       | Join Matt as he works on spaCy and chat about NLP, live every week.                                                                                                                                                                                                                                                                         |
 | 🛠 **[Changelog]**                                                                                                                                                                                                         | Changes and version history.                                                                                                                                                                                                                                                                                                                 |
 | 💝 **[Contribute]**                                                                                                                                                                                                       | How to contribute to the spaCy project and code base.                                                                                                                                                                                                                                                                                        |
 | 👕 **[Swag]**                                                                                                                                                                                                             | Support us and our work with unique, custom-designed swag!                                                                                                                                                                                                                                                                                   |
@@ -61,6 +62,7 @@ open-source software, released under the
 [universe]: https://spacy.io/universe
 [spacy vs code extension]: https://github.com/explosion/spacy-vscode
 [videos]: https://www.youtube.com/c/ExplosionAI
+[live stream]: https://www.youtube.com/playlist?list=PLBmcuObd5An5_iAxNYLJa_xWmNzsYce8c
 [online course]: https://course.spacy.io
 [blog]: https://explosion.ai
 [project templates]: https://github.com/explosion/projects
@@ -78,13 +80,14 @@ more people can benefit from it.
 | Type                            | Platforms                               |
 | ------------------------------- | --------------------------------------- |
 | 🚨 **Bug Reports**              | [GitHub Issue Tracker]                  |
-| 🎁 **Feature Requests & Ideas** | [GitHub Discussions]                    |
+| 🎁 **Feature Requests & Ideas** | [GitHub Discussions] · [Live Stream]    |
 | 👩‍💻 **Usage Questions**          | [GitHub Discussions] · [Stack Overflow] |
-| 🗯 **General Discussion**        | [GitHub Discussions]                    |
+| 🗯 **General Discussion**        | [GitHub Discussions] · [Live Stream]   |
 
 [github issue tracker]: https://github.com/explosion/spaCy/issues
 [github discussions]: https://github.com/explosion/spaCy/discussions
 [stack overflow]: https://stackoverflow.com/questions/tagged/spacy
+[live stream]: https://www.youtube.com/playlist?list=PLBmcuObd5An5_iAxNYLJa_xWmNzsYce8c
 
 ## Features
 
