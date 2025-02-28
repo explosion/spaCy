@@ -5,7 +5,6 @@ import inspect
 import itertools
 import logging
 import os
-import pkgutil
 import re
 import shlex
 import shutil
@@ -40,7 +39,6 @@ from typing import (
 )
 
 import catalogue
-import langcodes
 import numpy
 import srsly
 import thinc
@@ -89,6 +87,83 @@ LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "grc", "id", "lb", "mk", "pt"
 # Default order of sections in the config file. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
 CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "corpora", "training", "pretraining", "initialize"]
+
+LANG_ALIASES = {
+    "af": ["afr"],
+    "am": ["amh"],
+    "ar": ["ara"],
+    "az": ["aze"],
+    "bg": ["bul"],
+    "bn": ["ben"],
+    "bo": ["bod", "tib"],
+    "ca": ["cat"],
+    "cs": ["ces", "cze"],
+    "da": ["dan"],
+    "de": ["deu", "ger"],
+    "el": ["ell", "gre"],
+    "en": ["eng"],
+    "es": ["spa"],
+    "et": ["est"],
+    "eu": ["eus", "baq"],
+    "fa": ["fas", "per"],
+    "fi": ["fin"],
+    "fo": ["fao"],
+    "fr": ["fra", "fre"],
+    "ga": ["gle"],
+    "gd": ["gla"],
+    "gu": ["guj"],
+    "he": ["heb", "iw"], # "iw" is the obsolete ISO 639-1 code for Hebrew
+    "hi": ["hin"],
+    "hr": ["hrv", "scr"], # "scr" is the deprecated ISO 639-2/B for Croatian
+    "hu": ["hun"],
+    "hy": ["hye"],
+    "id": ["ind", "in"], # "in" is the obsolete ISO 639-1 code for Hebrew
+    "is": ["isl", "ice"],
+    "it": ["ita"],
+    "ja": ["jpn"],
+    "kn": ["kan"],
+    "ko": ["kor"],
+    "ky": ["kir"],
+    "la": ["lat"],
+    "lb": ["ltz"],
+    "lg": ["lug"],
+    "lt": ["lit"],
+    "lv": ["lav"],
+    "mk": ["mkd", "mac"],
+    "ml": ["mal"],
+    "mr": ["mar"],
+    "ms": ["msa", "may"],
+    "nb": ["nob"],
+    "ne": ["nep"],
+    "nl": ["nld", "dut"],
+    "nn": ["nno"],
+    "pl": ["pol"],
+    "pt": ["por"],
+    "ro": ["ron", "rom", "mo", "mol"], # "mo" and "mol" are deprecated codes for Moldavian
+    "ru": ["rus"],
+    "sa": ["san"],
+    "si": ["sin"],
+    "sk": ["slk", "slo"],
+    "sl": ["slv"],
+    "sq": ["sqi", "alb"],
+    "sr": ["srp", "scc"], # "scc" is the deprecated ISO 639-2/B code for Serbian
+    "sv": ["swe"],
+    "ta": ["tam"],
+    "te": ["tel"],
+    "th": ["tha"],
+    "ti": ["tir"],
+    "tl": ["tgl"],
+    "tn": ["tsn"],
+    "tr": ["tur"],
+    "tt": ["tat"],
+    "uk": ["ukr"],
+    "ur": ["urd"],
+    "vi": ["viw"],
+    "yo": ["yor"],
+    "zh": ["zho", "chi"],
+
+    "xx": ["mul"],
+}
 # fmt: on
 
 logger = logging.getLogger("spacy")
@@ -293,63 +368,39 @@ def lang_class_is_loaded(lang: str) -> bool:
 
 def find_matching_language(lang: str) -> Optional[str]:
     """
-    Given an IETF language code, find a supported spaCy language that is a
-    close match for it (according to Unicode CLDR language-matching rules).
-    This allows for language aliases, ISO 639-2 codes, more detailed language
-    tags, and close matches.
+    Given a two-letter ISO 639-1 or three-letter ISO 639-3 language code,
+    find a supported spaCy language.
 
     Returns the language code if a matching language is available, or None
     if there is no matching language.
 
-    >>> find_matching_language('en')
-    'en'
-    >>> find_matching_language('pt-BR')  # Brazilian Portuguese
-    'pt'
-    >>> find_matching_language('fra')  # an ISO 639-2 code for French
+    >>> find_matching_language('fra')  # ISO 639-3 code for French
     'fr'
-    >>> find_matching_language('iw')  # obsolete alias for Hebrew
+    >>> find_matching_language('fre')  # ISO 639-2/B code for French
+    'fr'
+    >>> find_matching_language('iw')  # Obsolete ISO 639-1 code for Hebrew
     'he'
-    >>> find_matching_language('no')  # Norwegian
-    'nb'
-    >>> find_matching_language('mo')  # old code for ro-MD
+    >>> find_matching_language('mo')  # Deprecated code for Moldavian
     'ro'
-    >>> find_matching_language('zh-Hans')  # Simplified Chinese
-    'zh'
+    >>> find_matching_language('scc')  # Deprecated ISO 639-2/B code for Serbian
+    'sr'
     >>> find_matching_language('zxx')
     None
     """
     import spacy.lang  # noqa: F401
 
-    if lang == "xx":
-        return "xx"
+    # Check aliases
+    for lang_code, aliases in LANG_ALIASES.items():
+        if lang in aliases:
+            return lang_code
 
-    # Find out which language modules we have
-    possible_languages = []
-    for modinfo in pkgutil.iter_modules(spacy.lang.__path__):  # type: ignore[attr-defined]
-        code = modinfo.name
-        if code == "xx":
-            # Temporarily make 'xx' into a valid language code
-            possible_languages.append("mul")
-        elif langcodes.tag_is_valid(code):
-            possible_languages.append(code)
-
-    # Distances from 1-9 allow near misses like Bosnian -> Croatian and
-    # Norwegian -> Norwegian Bokmål. A distance of 10 would include several
-    # more possibilities, like variants of Chinese like 'wuu', but text that
-    # is labeled that way is probably trying to be distinct from 'zh' and
-    # shouldn't automatically match.
-    match = langcodes.closest_supported_match(lang, possible_languages, max_distance=9)
-    if match == "mul":
-        # Convert 'mul' back to spaCy's 'xx'
-        return "xx"
-    else:
-        return match
+    return None
 
 
 def get_lang_class(lang: str) -> Type["Language"]:
     """Import and load a Language class.
 
-    lang (str): IETF language code, such as 'en'.
+    lang (str): Two-letter ISO 639-1 or three-letter ISO 639-3 language code, such as 'en' and 'eng'.
     RETURNS (Language): Language class.
     """
     # Check if language is registered / entry point is available
@@ -360,13 +411,9 @@ def get_lang_class(lang: str) -> Type["Language"]:
         try:
             module = importlib.import_module(f".lang.{lang}", "spacy")
         except ImportError as err:
-            # Find a matching language. For example, if the language 'no' is
-            # requested, we can use language-matching to load `spacy.lang.nb`.
-            try:
-                match = find_matching_language(lang)
-            except langcodes.tag_parser.LanguageTagError:
-                # proceed to raising an import error
-                match = None
+            # Find a matching language. For example, if the language 'eng' is
+            # requested, we can use language-matching to load `spacy.lang.en`.
+            match = find_matching_language(lang)
 
             if match:
                 lang = match

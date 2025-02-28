@@ -656,17 +656,12 @@ def test_spacy_blank():
 @pytest.mark.parametrize(
     "lang,target",
     [
-        ("en", "en"),
         ("fra", "fr"),
         ("fre", "fr"),
         ("iw", "he"),
         ("mo", "ro"),
+        ("scc", "sr"),
         ("mul", "xx"),
-        ("no", "nb"),
-        ("pt-BR", "pt"),
-        ("xx", "xx"),
-        ("zh-Hans", "zh"),
-        ("zh-Hant", None),
         ("zxx", None),
     ],
 )
@@ -686,11 +681,9 @@ def test_language_matching(lang, target):
         ("fre", "fr"),
         ("iw", "he"),
         ("mo", "ro"),
+        ("scc", "sr"),
         ("mul", "xx"),
-        ("no", "nb"),
-        ("pt-BR", "pt"),
         ("xx", "xx"),
-        ("zh-Hans", "zh"),
     ],
 )
 def test_blank_languages(lang, target):
