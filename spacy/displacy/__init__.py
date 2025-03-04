@@ -66,7 +66,12 @@ def render(
     if jupyter or (jupyter is None and is_in_jupyter()):
         # return HTML rendered by IPython display()
         # See #4840 for details on span wrapper to disable mathjax
-        from IPython.core.display import HTML, display
+        try:
+            # import path was changed in IPython 8.0.0 43a01a21101ea65dbd52cf760c1e4f149bfab588
+            # and the path shim was finally removed in 9.0.1 8a0533f31abcc4cb4341858bdeee86e2061c4fd9
+            from IPython.display import HTML, display
+        except ImportError:
+            from IPython.core.display import HTML, display
 
         return display(HTML('<span class="tex2jax_ignore">{}</span>'.format(html)))
     return html
