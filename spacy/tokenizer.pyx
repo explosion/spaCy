@@ -871,11 +871,11 @@ cdef extern from "<algorithm>" namespace "std" nogil:
                         bint (*)(SpanC, SpanC))
 
 
-cdef bint len_start_cmp(SpanC a, SpanC b) nogil:
+cdef bint len_start_cmp(SpanC a, SpanC b) noexcept nogil:
     if a.end - a.start == b.end - b.start:
         return b.start < a.start
     return a.end - a.start < b.end - b.start
 
 
-cdef bint start_cmp(SpanC a, SpanC b) nogil:
+cdef bint start_cmp(SpanC a, SpanC b) noexcept nogil:
     return a.start < b.start
