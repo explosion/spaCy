@@ -12,7 +12,7 @@ cdef cppclass Feature:
     hash_t field
     hash_t value
 
-    __init__():
+    inline __init__():
         this.field = 0
         this.value = 0
 
@@ -21,7 +21,7 @@ cdef cppclass MorphAnalysisC:
     hash_t key  
     vector[Feature] features
 
-    __init__():
+    inline __init__():
         this.key = 0
 
 cdef class Morphology:
