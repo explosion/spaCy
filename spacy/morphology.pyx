@@ -36,7 +36,7 @@ cdef class Morphology:
 
     cdef shared_ptr[MorphAnalysisC] _lookup_tag(self, hash_t tag_hash):
         match = self.tags.find(tag_hash)
-        if match != self.tags.const_end():
+        if match != self.tags.end():
             return deref(match).second
         else:
             return shared_ptr[MorphAnalysisC]()
