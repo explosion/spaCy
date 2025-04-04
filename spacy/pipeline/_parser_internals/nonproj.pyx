@@ -94,7 +94,7 @@ cdef bool _has_head_as_ancestor(int tokenid, int head, const vector[int]& heads)
     return False
 
 
-cdef string heads_to_string(const vector[int]& heads) nogil:
+cdef string heads_to_string(const vector[int]& heads) noexcept nogil:
     cdef vector[int].const_iterator citer
     cdef string cycle_str
 

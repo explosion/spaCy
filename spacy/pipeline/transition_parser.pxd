@@ -19,7 +19,7 @@ cdef class Parser(TrainablePipe):
         StateC** states,
         WeightsC weights,
         SizesC sizes
-    ) nogil
+    ) noexcept nogil
 
     cdef void c_transition_batch(
         self,
@@ -27,4 +27,4 @@ cdef class Parser(TrainablePipe):
         const float* scores,
         int nr_class,
         int batch_size
-    ) nogil
+    ) noexcept nogil

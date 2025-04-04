@@ -52,14 +52,14 @@ cdef SizesC get_c_sizes(model, int batch_size) except *:
     return output
 
 
-cdef ActivationsC alloc_activations(SizesC n) nogil:
+cdef ActivationsC alloc_activations(SizesC n) noexcept nogil:
     cdef ActivationsC A
     memset(&A, 0, sizeof(A))
     resize_activations(&A, n)
     return A
 
 
-cdef void free_activations(const ActivationsC* A) nogil:
+cdef void free_activations(const ActivationsC* A) noexcept nogil:
     free(A.token_ids)
     free(A.scores)
     free(A.unmaxed)
@@ -67,7 +67,7 @@ cdef void free_activations(const ActivationsC* A) nogil:
     free(A.is_valid)
 
 
-cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
+cdef void resize_activations(ActivationsC* A, SizesC n) noexcept nogil:
     if n.states <= A._max_size:
         A._curr_size = n.states
         return
@@ -100,7 +100,7 @@ cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
 
 cdef void predict_states(
     CBlas cblas, ActivationsC* A, StateC** states, const WeightsC* W, SizesC n
-) nogil:
+) noexcept nogil:
     resize_activations(A, n)
     for i in range(n.states):
         states[i].set_context_tokens(&A.token_ids[i*n.feats], n.feats)
@@ -159,7 +159,7 @@ cdef void sum_state_features(
     int B,
     int F,
     int O
-) nogil:
+) noexcept nogil:
     cdef int idx, b, f
     cdef const float* feature
     padding = cached
@@ -183,7 +183,7 @@ cdef void cpu_log_loss(
     const int* is_valid,
     const float* scores,
     int O
-) nogil:
+) noexcept nogil:
     """Do multi-label log loss"""
     cdef double max_, gmax, Z, gZ
     best = arg_max_if_gold(scores, costs, is_valid, O)
@@ -209,7 +209,7 @@ cdef void cpu_log_loss(
 
 cdef int arg_max_if_gold(
     const weight_t* scores, const weight_t* costs, const int* is_valid, int n
-) nogil:
+) noexcept nogil:
     # Find minimum cost
     cdef float cost = 1
     for i in range(n):
@@ -224,7 +224,7 @@ cdef int arg_max_if_gold(
     return best
 
 
-cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) nogil:
+cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) noexcept nogil:
     cdef int best = -1
     for i in range(n):
         if is_valid[i] >= 1:
