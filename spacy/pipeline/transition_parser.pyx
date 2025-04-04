@@ -316,7 +316,7 @@ cdef class Parser(TrainablePipe):
 
     cdef void _parseC(
         self, CBlas cblas, StateC** states, WeightsC weights, SizesC sizes
-    ) nogil:
+    ) noexcept nogil:
         cdef int i
         cdef vector[StateC*] unfinished
         cdef ActivationsC activations = alloc_activations(sizes)
@@ -359,7 +359,7 @@ cdef class Parser(TrainablePipe):
         const float* scores,
         int nr_class,
         int batch_size
-    ) nogil:
+    ) noexcept nogil:
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         with gil:
             assert self.moves.n_moves > 0, Errors.E924.format(name=self.name)
