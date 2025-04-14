@@ -1307,7 +1307,7 @@
         },
         {
             "id": "Chatterbot",
-            "title": "Chatterbot",
+            "title": "ChatterBot",
             "slogan": "A machine-learning based conversational dialog engine for creating chat bots",
             "github": "gunthercox/ChatterBot",
             "pip": "chatterbot",
