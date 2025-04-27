@@ -13,7 +13,6 @@ class HaitianCreoleLemmatizer(Lemmatizer):
     """
 
     def is_base_form(self, token: Token) -> bool:
-        # Treat tokens as base if they're uninflected (most Creole words)
         morph = token.morph.to_dict()
         upos = token.pos_.lower()
 
@@ -40,10 +39,6 @@ class HaitianCreoleLemmatizer(Lemmatizer):
 
         # fallback rule: just return lowercased form
         forms.append(string)
-
-        # optionally: plug in basic rules
-        # e.g. 'te manje' or 'pral fè' may need rule-based stems
-        # You could add more logic here later.
 
         self.cache[cache_key] = forms
         return forms
