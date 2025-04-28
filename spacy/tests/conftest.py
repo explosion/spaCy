@@ -212,6 +212,16 @@ def hr_tokenizer():
     return get_lang_class("hr")().tokenizer
 
 
+@pytest.fixture(scope="session")
+def ht_tokenizer():
+    return get_lang_class("ht")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def ht_vocab():
+    return get_lang_class("ht")().vocab
+
+
 @pytest.fixture
 def hu_tokenizer():
     return get_lang_class("hu")().tokenizer
