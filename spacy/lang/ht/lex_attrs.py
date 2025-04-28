@@ -31,6 +31,22 @@ NORM_MAP = {
     "’l": "li",
     "’n": "nou",
     "’y": "yo",
+    "m": "mwen",
+    "n": "nou",
+    "l": "li",
+    "y": "yo",
+    "w": "ou",
+    "t": "te",
+    "k": "ki",
+    "p": "pa",
+    "M": "Mwen",
+    "N": "Nou",
+    "L": "Li",
+    "Y": "Yo",
+    "W": "Ou",
+    "T": "Te",
+    "K": "Ki",
+    "P": "Pa",
 }
 
 def like_num(text):
