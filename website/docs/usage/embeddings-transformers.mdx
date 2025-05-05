@@ -268,7 +268,12 @@ require_gpu(0)
 
 nlp = spacy.load("en_core_web_trf")
 for doc in nlp.pipe(["some text", "some other text"]):
-    tokvecs = doc._.trf_data.tensors[-1]
+    # For spaCy v3.0-v3.6, trf pipelines use spacy-transformers and the transformer output in doc._.trf_data is a TransformerData object.
+    try:
+        tokvecs = doc._.trf_data.tensors[-1]
+    # For spaCy v3.7+, trf pipelines use spacy-curated-transformers and doc._.trf_data is a DocTransformerOutput object.
+    except AttributeError as e:
+        tokvecs = doc._.trf_data.last_hidden_layer_state  # or doc._.trf_data.all_outputs[-1]
 ```
 
 You can also customize how the [`Transformer`](/api/transformer) component sets
