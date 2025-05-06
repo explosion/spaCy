@@ -740,7 +740,7 @@ def test_pass_doc_to_pipeline(nlp, n_process):
     assert len(doc.cats) > 0
     if isinstance(get_current_ops(), NumpyOps) or n_process < 2:
         # Catch warnings to ensure that all worker processes exited
-        # succesfully.
+        # successfully.
         with warnings.catch_warnings():
             warnings.simplefilter("error")
             docs = nlp.pipe(docs, n_process=n_process)
