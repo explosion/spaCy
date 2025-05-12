@@ -71,7 +71,7 @@ cdef int bounds_check(int i, int length, int padding) except -1:
         raise IndexError(Errors.E026.format(i=i, length=length))
 
 
-cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
+cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) noexcept nogil:
     if feat_name == LEMMA:
         return token.lemma
     elif feat_name == NORM:
@@ -106,7 +106,7 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return Lexeme.get_struct_attr(token.lex, feat_name)
 
 
-cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil:
+cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) noexcept nogil:
     if feat_name == SENT_START:
         if token.sent_start == 1:
             return True
