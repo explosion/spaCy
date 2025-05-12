@@ -241,7 +241,10 @@ class Lemmatizer(Pipe):
                 if not form:
                     pass
                 elif form in index or not form.isalpha():
-                    forms.append(form)
+                    if form in index:
+                        forms.insert(0, form)
+                    else:
+                        forms.append(form)
                 else:
                     oov_forms.append(form)
         # Remove duplicates but preserve the ordering of applied "rules"
