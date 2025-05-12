@@ -32,7 +32,7 @@ we use all four in different places, as they all have different utility:
 
 The most important classes in spaCy are defined as `cdef class` objects. The
 underlying data for these objects is usually gathered into a struct, which is
-usually named `c`. For instance, the [`Lexeme`](/api/cython-classses#lexeme)
+usually named `c`. For instance, the [`Lexeme`](/api/cython-classes#lexeme)
 class holds a [`LexemeC`](/api/cython-structs#lexemec) struct, at `Lexeme.c`.
 This lets you shed the Python container, and pass a pointer to the underlying
 data into C-level functions.
