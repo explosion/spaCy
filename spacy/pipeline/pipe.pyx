@@ -21,13 +21,6 @@ cdef class Pipe:
     DOCS: https://spacy.io/api/pipe
     """
 
-    @classmethod
-    def __init_subclass__(cls, **kwargs):
-        """Raise a warning if an inheriting class implements 'begin_training'
-         (from v2) instead of the new 'initialize' method (from v3)"""
-        if hasattr(cls, "begin_training"):
-            warnings.warn(Warnings.W088.format(name=cls.__name__))
-
     def __call__(self, Doc doc) -> Doc:
         """Apply the pipe to one document. The document is modified in place,
         and returned. This usually happens under the hood when the nlp object

@@ -47,7 +47,7 @@ cdef class PhraseMatcher:
         self._terminal_hash = 826361138722620965
         map_init(self.mem, self.c_map, 8)
 
-        if isinstance(attr, (int, long)):
+        if isinstance(attr, int):
             self.attr = attr
         else:
             if attr is None:

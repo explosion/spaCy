@@ -155,7 +155,7 @@ cdef GoldParseStateC create_gold_state(
     return gs
 
 
-cdef void update_gold_state(GoldParseStateC* gs, const StateC* s) nogil:
+cdef void update_gold_state(GoldParseStateC* gs, const StateC* s) noexcept nogil:
     for i in range(gs.length):
         gs.state_bits[i] = set_state_flag(
             gs.state_bits[i],
@@ -239,12 +239,12 @@ def _get_aligned_sent_starts(example):
         return [None] * len(example.x)
 
 
-cdef int check_state_gold(char state_bits, char flag) nogil:
+cdef int check_state_gold(char state_bits, char flag) noexcept nogil:
     cdef char one = 1
     return 1 if (state_bits & (one << flag)) else 0
 
 
-cdef int set_state_flag(char state_bits, char flag, int value) nogil:
+cdef int set_state_flag(char state_bits, char flag, int value) noexcept nogil:
     cdef char one = 1
     if value:
         return state_bits | (one << flag)
@@ -252,27 +252,27 @@ cdef int set_state_flag(char state_bits, char flag, int value) nogil:
         return state_bits & ~(one << flag)
 
 
-cdef int is_head_in_stack(const GoldParseStateC* gold, int i) nogil:
+cdef int is_head_in_stack(const GoldParseStateC* gold, int i) noexcept nogil:
     return check_state_gold(gold.state_bits[i], HEAD_IN_STACK)
 
 
-cdef int is_head_in_buffer(const GoldParseStateC* gold, int i) nogil:
+cdef int is_head_in_buffer(const GoldParseStateC* gold, int i) noexcept nogil:
     return check_state_gold(gold.state_bits[i], HEAD_IN_BUFFER)
 
 
-cdef int is_head_unknown(const GoldParseStateC* gold, int i) nogil:
+cdef int is_head_unknown(const GoldParseStateC* gold, int i) noexcept nogil:
     return check_state_gold(gold.state_bits[i], HEAD_UNKNOWN)
 
-cdef int is_sent_start(const GoldParseStateC* gold, int i) nogil:
+cdef int is_sent_start(const GoldParseStateC* gold, int i) noexcept nogil:
     return check_state_gold(gold.state_bits[i], IS_SENT_START)
 
-cdef int is_sent_start_unknown(const GoldParseStateC* gold, int i) nogil:
+cdef int is_sent_start_unknown(const GoldParseStateC* gold, int i) noexcept nogil:
     return check_state_gold(gold.state_bits[i], SENT_START_UNKNOWN)
 
 
 # Helper functions for the arc-eager oracle
 
-cdef weight_t push_cost(const StateC* state, const GoldParseStateC* gold) nogil:
+cdef weight_t push_cost(const StateC* state, const GoldParseStateC* gold) noexcept nogil:
     cdef weight_t cost = 0
     b0 = state.B(0)
     if b0 < 0:
@@ -285,7 +285,7 @@ cdef weight_t push_cost(const StateC* state, const GoldParseStateC* gold) nogil:
     return cost
 
 
-cdef weight_t pop_cost(const StateC* state, const GoldParseStateC* gold) nogil:
+cdef weight_t pop_cost(const StateC* state, const GoldParseStateC* gold) noexcept nogil:
     cdef weight_t cost = 0
     s0 = state.S(0)
     if s0 < 0:
@@ -296,7 +296,7 @@ cdef weight_t pop_cost(const StateC* state, const GoldParseStateC* gold) nogil:
     return cost
 
 
-cdef bint arc_is_gold(const GoldParseStateC* gold, int head, int child) nogil:
+cdef bint arc_is_gold(const GoldParseStateC* gold, int head, int child) noexcept nogil:
     if is_head_unknown(gold, child):
         return True
     elif gold.heads[child] == head:
@@ -305,7 +305,7 @@ cdef bint arc_is_gold(const GoldParseStateC* gold, int head, int child) nogil:
         return False
 
 
-cdef bint label_is_gold(const GoldParseStateC* gold, int child, attr_t label) nogil:
+cdef bint label_is_gold(const GoldParseStateC* gold, int child, attr_t label) noexcept nogil:
     if is_head_unknown(gold, child):
         return True
     elif label == 0:
@@ -316,7 +316,7 @@ cdef bint label_is_gold(const GoldParseStateC* gold, int child, attr_t label) no
         return False
 
 
-cdef bint _is_gold_root(const GoldParseStateC* gold, int word) nogil:
+cdef bint _is_gold_root(const GoldParseStateC* gold, int word) noexcept nogil:
     return gold.heads[word] == word or is_head_unknown(gold, word)
 
 
@@ -336,7 +336,7 @@ cdef class Shift:
     * Advance buffer
     """
     @staticmethod
-    cdef bint is_valid(const StateC* st, attr_t label) nogil:
+    cdef bint is_valid(const StateC* st, attr_t label) noexcept nogil:
         if st.stack_depth() == 0:
             return 1
         elif st.buffer_length() < 2:
@@ -349,11 +349,11 @@ cdef class Shift:
             return 1
 
     @staticmethod
-    cdef int transition(StateC* st, attr_t label) nogil:
+    cdef int transition(StateC* st, attr_t label) noexcept nogil:
         st.push()
 
     @staticmethod
-    cdef weight_t cost(const StateC* state, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* state, const void* _gold, attr_t label) noexcept nogil:
         gold = <const GoldParseStateC*>_gold
         return gold.push_cost
 
@@ -375,7 +375,7 @@ cdef class Reduce:
         cost by those arcs.
     """
     @staticmethod
-    cdef bint is_valid(const StateC* st, attr_t label) nogil:
+    cdef bint is_valid(const StateC* st, attr_t label) noexcept nogil:
         if st.stack_depth() == 0:
             return False
         elif st.buffer_length() == 0:
@@ -386,14 +386,14 @@ cdef class Reduce:
             return True
 
     @staticmethod
-    cdef int transition(StateC* st, attr_t label) nogil:
+    cdef int transition(StateC* st, attr_t label) noexcept nogil:
         if st.has_head(st.S(0)) or st.stack_depth() == 1:
             st.pop()
         else:
             st.unshift()
 
     @staticmethod
-    cdef weight_t cost(const StateC* state, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* state, const void* _gold, attr_t label) noexcept nogil:
         gold = <const GoldParseStateC*>_gold
         if state.is_sent_start(state.B(0)):
             return 0
@@ -421,7 +421,7 @@ cdef class LeftArc:
         pop_cost - Arc(B[0], S[0], label) + (Arc(S[1], S[0]) if H(S[0]) else Arcs(S, S[0]))
     """
     @staticmethod
-    cdef bint is_valid(const StateC* st, attr_t label) nogil:
+    cdef bint is_valid(const StateC* st, attr_t label) noexcept nogil:
         if st.stack_depth() == 0:
             return 0
         elif st.buffer_length() == 0:
@@ -434,7 +434,7 @@ cdef class LeftArc:
             return 1
 
     @staticmethod
-    cdef int transition(StateC* st, attr_t label) nogil:
+    cdef int transition(StateC* st, attr_t label) noexcept nogil:
         st.add_arc(st.B(0), st.S(0), label)
         # If we change the stack, it's okay to remove the shifted mark, as
         # we can't get in an infinite loop this way.
@@ -442,7 +442,7 @@ cdef class LeftArc:
         st.pop()
 
     @staticmethod
-    cdef inline weight_t cost(const StateC* state, const void* _gold, attr_t label) nogil:
+    cdef inline weight_t cost(const StateC* state, const void* _gold, attr_t label) noexcept nogil:
         gold = <const GoldParseStateC*>_gold
         cdef weight_t cost = gold.pop_cost
         s0 = state.S(0)
@@ -474,7 +474,7 @@ cdef class RightArc:
         push_cost + (not shifted[b0] and Arc(B[1:], B[0])) - Arc(S[0], B[0], label)
     """
     @staticmethod
-    cdef bint is_valid(const StateC* st, attr_t label) nogil:
+    cdef bint is_valid(const StateC* st, attr_t label) noexcept nogil:
         if st.stack_depth() == 0:
             return 0
         elif st.buffer_length() == 0:
@@ -488,12 +488,12 @@ cdef class RightArc:
             return 1
 
     @staticmethod
-    cdef int transition(StateC* st, attr_t label) nogil:
+    cdef int transition(StateC* st, attr_t label) noexcept nogil:
         st.add_arc(st.S(0), st.B(0), label)
         st.push()
 
     @staticmethod
-    cdef inline weight_t cost(const StateC* state, const void* _gold, attr_t label) nogil:
+    cdef inline weight_t cost(const StateC* state, const void* _gold, attr_t label) noexcept nogil:
         gold = <const GoldParseStateC*>_gold
         cost = gold.push_cost
         s0 = state.S(0)
@@ -525,7 +525,7 @@ cdef class Break:
     * Arcs between S and B[1]
     """
     @staticmethod
-    cdef bint is_valid(const StateC* st, attr_t label) nogil:
+    cdef bint is_valid(const StateC* st, attr_t label) noexcept nogil:
         if st.buffer_length() < 2:
             return False
         elif st.B(1) != st.B(0) + 1:
@@ -538,11 +538,11 @@ cdef class Break:
             return True
 
     @staticmethod
-    cdef int transition(StateC* st, attr_t label) nogil:
+    cdef int transition(StateC* st, attr_t label) noexcept nogil:
         st.set_sent_start(st.B(1), 1)
 
     @staticmethod
-    cdef weight_t cost(const StateC* state, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* state, const void* _gold, attr_t label) noexcept nogil:
         gold = <const GoldParseStateC*>_gold
         cdef int b0 = state.B(0)
         cdef int cost = 0
@@ -785,7 +785,7 @@ cdef class ArcEager(TransitionSystem):
         else:
             return False
 
-    cdef int set_valid(self, int* output, const StateC* st) nogil:
+    cdef int set_valid(self, int* output, const StateC* st) noexcept nogil:
         cdef int[N_MOVES] is_valid
         is_valid[SHIFT] = Shift.is_valid(st, 0)
         is_valid[REDUCE] = Reduce.is_valid(st, 0)

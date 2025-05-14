@@ -177,7 +177,7 @@ cdef class Vectors(BaseVectors):
         self.hash_seed = hash_seed
         self.bow = bow
         self.eow = eow
-        if isinstance(attr, (int, long)):
+        if isinstance(attr, int):
             self.attr = attr
         else:
             attr = attr.upper()
