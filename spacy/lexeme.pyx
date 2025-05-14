@@ -70,7 +70,7 @@ cdef class Lexeme:
         if isinstance(other, Lexeme):
             a = self.orth
             b = other.orth
-        elif isinstance(other, long):
+        elif isinstance(other, int):
             a = self.orth
             b = other
         elif isinstance(other, str):
@@ -104,7 +104,7 @@ cdef class Lexeme:
             # skip PROB, e.g. from lexemes.jsonl
             if isinstance(value, float):
                 continue
-            elif isinstance(value, (int, long)):
+            elif isinstance(value, int):
                 Lexeme.set_struct_attr(self.c, attr, value)
             else:
                 Lexeme.set_struct_attr(self.c, attr, self.vocab.strings.add(value))

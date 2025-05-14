@@ -191,8 +191,7 @@ cdef class TransitionSystem:
 
     def add_action(self, int action, label_name):
         cdef attr_t label_id
-        if not isinstance(label_name, int) and \
-           not isinstance(label_name, long):
+        if not isinstance(label_name, int):
             label_id = self.strings.add(label_name)
         else:
             label_id = label_name

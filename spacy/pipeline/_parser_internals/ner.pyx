@@ -238,7 +238,7 @@ cdef class BiluoPushDown(TransitionSystem):
 
     def add_action(self, int action, label_name, freq=None):
         cdef attr_t label_id
-        if not isinstance(label_name, (int, long)):
+        if not isinstance(label_name, int):
             label_id = self.strings.add(label_name)
         else:
             label_id = label_name
