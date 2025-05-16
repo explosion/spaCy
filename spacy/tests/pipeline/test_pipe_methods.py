@@ -167,8 +167,6 @@ def test_add_pipe_no_name(nlp):
     assert "new_pipe" in nlp.pipe_names
 
 
-# Pydantic validation
-@pytest.mark.xfail
 def test_add_pipe_duplicate_name(nlp):
     nlp.add_pipe("new_pipe", name="duplicate_name")
     with pytest.raises(ValueError):
@@ -190,8 +188,6 @@ def test_add_pipe_last(nlp, name1, name2):
     assert nlp.pipeline[-1][0] == name1
 
 
-# Pydantic validation
-@pytest.mark.xfail
 def test_cant_add_pipe_first_and_last(nlp):
     with pytest.raises(ValueError):
         nlp.add_pipe("new_pipe", first=True, last=True)
@@ -205,7 +201,6 @@ def test_get_pipe(nlp, name):
     assert nlp.get_pipe(name) == new_pipe
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize(
     "name,replacement,invalid_replacement",
     [("test_replace_pipe", "other_pipe", lambda doc: doc)],
@@ -236,7 +231,6 @@ def test_replace_pipe_config(nlp):
     assert nlp.get_pipe("entity_linker").incl_prior is False
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("old_name,new_name", [("old_pipe", "new_pipe")])
 def test_rename_pipe(nlp, old_name, new_name):
     with pytest.raises(ValueError):
@@ -246,7 +240,6 @@ def test_rename_pipe(nlp, old_name, new_name):
     assert nlp.pipeline[0][0] == new_name
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("name", ["my_component"])
 def test_remove_pipe(nlp, name):
     with pytest.raises(ValueError):
@@ -277,7 +270,6 @@ def test_enable_pipes_method(nlp, name):
     disabled.restore()
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("name", ["my_component"])
 def test_disable_pipes_context(nlp, name):
     """Test that an enabled component stays enabled after running the context manager."""
@@ -330,7 +322,6 @@ def test_select_pipes_list_arg(nlp):
         assert not nlp.has_pipe("c3")
 
 
-@pytest.mark.xfail
 def test_select_pipes_errors(nlp):
     for name in ["c1", "c2", "c3"]:
         nlp.add_pipe("new_pipe", name=name)
@@ -362,7 +353,6 @@ def test_add_lots_of_pipes(nlp, n_pipes):
     assert len(nlp.pipe_names) == n_pipes
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("component", [lambda doc: doc, {"hello": "world"}])
 def test_raise_for_invalid_components(nlp, component):
     with pytest.raises(ValueError):
@@ -539,7 +529,6 @@ def test_pipe_label_data_no_labels(pipe):
         assert "labels" not in get_arg_names(initialize)
 
 
-@pytest.mark.xfail
 def test_warning_pipe_begin_training():
     with pytest.warns(UserWarning, match="begin_training"):
 
