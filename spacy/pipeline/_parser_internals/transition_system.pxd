@@ -15,22 +15,22 @@ cdef struct Transition:
 
     weight_t score
 
-    bint (*is_valid)(const StateC* state, attr_t label) nogil
-    weight_t (*get_cost)(const StateC* state, const void* gold, attr_t label) nogil
-    int (*do)(StateC* state, attr_t label) nogil
+    bint (*is_valid)(const StateC* state, attr_t label) noexcept nogil
+    weight_t (*get_cost)(const StateC* state, const void* gold, attr_t label) noexcept nogil
+    int (*do)(StateC* state, attr_t label) noexcept nogil
 
 
 ctypedef weight_t (*get_cost_func_t)(
     const StateC* state, const void* gold, attr_tlabel
-) nogil
+) noexcept nogil
 ctypedef weight_t (*move_cost_func_t)(
         const StateC* state, const void* gold
-) nogil
+) noexcept nogil
 ctypedef weight_t (*label_cost_func_t)(
     const StateC* state, const void* gold, attr_t label
-) nogil
+) noexcept nogil
 
-ctypedef int (*do_func_t)(StateC* state, attr_t label) nogil
+ctypedef int (*do_func_t)(StateC* state, attr_t label) noexcept nogil
 
 ctypedef void* (*init_state_t)(Pool mem, int length, void* tokens) except NULL
 
@@ -53,7 +53,7 @@ cdef class TransitionSystem:
 
     cdef Transition init_transition(self, int clas, int move, attr_t label) except *
 
-    cdef int set_valid(self, int* output, const StateC* st) nogil
+    cdef int set_valid(self, int* output, const StateC* st) noexcept nogil
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
                        const StateC* state, gold) except -1

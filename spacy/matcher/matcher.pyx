@@ -625,7 +625,7 @@ cdef action_t get_action(
     const TokenC * token,
     const attr_t * extra_attrs,
     const int8_t * predicate_matches
-) nogil:
+) noexcept nogil:
     """We need to consider:
     a) Does the token match the specification? [Yes, No]
     b) What's the quantifier? [1, 0+, ?]
@@ -740,7 +740,7 @@ cdef int8_t get_is_match(
     const TokenC* token,
     const attr_t* extra_attrs,
     const int8_t* predicate_matches
-) nogil:
+) noexcept nogil:
     for i in range(state.pattern.nr_py):
         if predicate_matches[state.pattern.py_predicates[i]] == -1:
             return 0
@@ -755,14 +755,14 @@ cdef int8_t get_is_match(
     return True
 
 
-cdef inline int8_t get_is_final(PatternStateC state) nogil:
+cdef inline int8_t get_is_final(PatternStateC state) noexcept nogil:
     if state.pattern[1].quantifier == FINAL_ID:
         return 1
     else:
         return 0
 
 
-cdef inline int8_t get_quantifier(PatternStateC state) nogil:
+cdef inline int8_t get_quantifier(PatternStateC state) noexcept nogil:
     return state.pattern.quantifier
 
 
@@ -805,7 +805,7 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
     return pattern
 
 
-cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
+cdef attr_t get_ent_id(const TokenPatternC* pattern) noexcept nogil:
     while pattern.quantifier != FINAL_ID:
         pattern += 1
     id_attr = pattern[0].attrs[0]

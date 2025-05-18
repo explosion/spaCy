@@ -676,6 +676,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#create_pipe
         """
+        validate = False
         name = name if name is not None else factory_name
         if not isinstance(config, dict):
             err = Errors.E962.format(style="config", name=name, cfg_type=type(config))
