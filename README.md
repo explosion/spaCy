@@ -117,7 +117,7 @@ For detailed installation instructions, see the
 
 - **Operating system**: macOS / OS X · Linux · Windows (Cygwin, MinGW, Visual
   Studio)
-- **Python version**: Python >=3.7, <=3.12 (only 64 bit)
+- **Python version**: Python >=3.7, <3.13 (only 64 bit)
 - **Package managers**: [pip] · [conda] (via `conda-forge`)
 
 [pip]: https://pypi.org/project/spacy/
