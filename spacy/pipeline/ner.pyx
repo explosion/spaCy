@@ -183,7 +183,6 @@ def ner_score(examples, **kwargs):
     return get_ner_prf(examples, **kwargs)
 
 
-@registry.scorers("spacy.ner_scorer.v1")
 def make_ner_scorer():
     return ner_score
 

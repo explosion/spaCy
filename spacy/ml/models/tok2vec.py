@@ -29,7 +29,6 @@ from ..featureextractor import FeatureExtractor
 from ..staticvectors import StaticVectors
 
 
-@registry.architectures("spacy.Tok2VecListener.v1")
 def tok2vec_listener_v1(width: int, upstream: str = "*"):
     tok2vec = Tok2VecListener(upstream_name=upstream, width=width)
     return tok2vec
@@ -46,7 +45,6 @@ def get_tok2vec_width(model: Model):
     return nO
 
 
-@registry.architectures("spacy.HashEmbedCNN.v2")
 def build_hash_embed_cnn_tok2vec(
     *,
     width: int,

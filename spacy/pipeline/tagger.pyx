@@ -64,7 +64,6 @@ def tagger_score(examples, **kwargs):
     return Scorer.score_token_attr(examples, "tag", **kwargs)
 
 
-@registry.scorers("spacy.tagger_scorer.v1")
 def make_tagger_scorer():
     return tagger_score
 
