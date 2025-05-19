@@ -1,4 +1,4 @@
-# cython: binding=True, infer_types=True
+# cython: binding=True, infer_types=True, language_level=3
 from cpython.object cimport PyObject
 from libc.stdint cimport int64_t
 

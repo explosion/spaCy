@@ -33,7 +33,7 @@ cdef class Token:
     cpdef bint check_flag(self, attr_id_t flag_id) except -1
 
     @staticmethod
-    cdef inline attr_t get_struct_attr(const TokenC* token, attr_id_t feat_name) nogil:
+    cdef inline attr_t get_struct_attr(const TokenC* token, attr_id_t feat_name) noexcept nogil:
         if feat_name < (sizeof(flags_t) * 8):
             return Lexeme.c_check_flag(token.lex, feat_name)
         elif feat_name == LEMMA:
@@ -70,7 +70,7 @@ cdef class Token:
 
     @staticmethod
     cdef inline attr_t set_struct_attr(TokenC* token, attr_id_t feat_name,
-                                       attr_t value) nogil:
+                                       attr_t value) noexcept nogil:
         if feat_name == LEMMA:
             token.lemma = value
         elif feat_name == NORM:
@@ -99,9 +99,9 @@ cdef class Token:
             token.sent_start = value
 
     @staticmethod
-    cdef inline int missing_dep(const TokenC* token) nogil:
+    cdef inline int missing_dep(const TokenC* token) noexcept nogil:
         return token.dep == MISSING_DEP
 
     @staticmethod
-    cdef inline int missing_head(const TokenC* token) nogil:
+    cdef inline int missing_head(const TokenC* token) noexcept nogil:
         return Token.missing_dep(token)
