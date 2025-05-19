@@ -1,0 +1,132 @@
+{
+  "attribute_ruler": {
+    "name": "attribute_ruler",
+    "module": "spacy.pipeline.attributeruler",
+    "function": "make_attribute_ruler"
+  },
+  "beam_ner": {
+    "name": "beam_ner",
+    "module": "spacy.pipeline.ner",
+    "function": "make_beam_ner"
+  },
+  "beam_parser": {
+    "name": "beam_parser",
+    "module": "spacy.pipeline.dep_parser",
+    "function": "make_beam_parser"
+  },
+  "doc_cleaner": {
+    "name": "doc_cleaner",
+    "module": "spacy.pipeline.functions",
+    "function": "make_doc_cleaner"
+  },
+  "entity_linker": {
+    "name": "entity_linker",
+    "module": "spacy.pipeline.entity_linker",
+    "function": "make_entity_linker"
+  },
+  "entity_ruler": {
+    "name": "entity_ruler",
+    "module": "spacy.pipeline.entityruler",
+    "function": "make_entity_ruler"
+  },
+  "future_entity_ruler": {
+    "name": "future_entity_ruler",
+    "module": "spacy.pipeline.span_ruler",
+    "function": "make_entity_ruler"
+  },
+  "lemmatizer": {
+    "name": "lemmatizer",
+    "module": "spacy.pipeline.lemmatizer",
+    "function": "make_lemmatizer"
+  },
+  "merge_entities": {
+    "name": "merge_entities",
+    "module": "spacy.language",
+    "function": "Language.component.<locals>.add_component.<locals>.factory_func"
+  },
+  "merge_noun_chunks": {
+    "name": "merge_noun_chunks",
+    "module": "spacy.language",
+    "function": "Language.component.<locals>.add_component.<locals>.factory_func"
+  },
+  "merge_subtokens": {
+    "name": "merge_subtokens",
+    "module": "spacy.language",
+    "function": "Language.component.<locals>.add_component.<locals>.factory_func"
+  },
+  "morphologizer": {
+    "name": "morphologizer",
+    "module": "spacy.pipeline.morphologizer",
+    "function": "make_morphologizer"
+  },
+  "ner": {
+    "name": "ner",
+    "module": "spacy.pipeline.ner",
+    "function": "make_ner"
+  },
+  "parser": {
+    "name": "parser",
+    "module": "spacy.pipeline.dep_parser",
+    "function": "make_parser"
+  },
+  "sentencizer": {
+    "name": "sentencizer",
+    "module": "spacy.pipeline.sentencizer",
+    "function": "make_sentencizer"
+  },
+  "senter": {
+    "name": "senter",
+    "module": "spacy.pipeline.senter",
+    "function": "make_senter"
+  },
+  "span_finder": {
+    "name": "span_finder",
+    "module": "spacy.pipeline.span_finder",
+    "function": "make_span_finder"
+  },
+  "span_ruler": {
+    "name": "span_ruler",
+    "module": "spacy.pipeline.span_ruler",
+    "function": "make_span_ruler"
+  },
+  "spancat": {
+    "name": "spancat",
+    "module": "spacy.pipeline.spancat",
+    "function": "make_spancat"
+  },
+  "spancat_singlelabel": {
+    "name": "spancat_singlelabel",
+    "module": "spacy.pipeline.spancat",
+    "function": "make_spancat_singlelabel"
+  },
+  "tagger": {
+    "name": "tagger",
+    "module": "spacy.pipeline.tagger",
+    "function": "make_tagger"
+  },
+  "textcat": {
+    "name": "textcat",
+    "module": "spacy.pipeline.textcat",
+    "function": "make_textcat"
+  },
+  "textcat_multilabel": {
+    "name": "textcat_multilabel",
+    "module": "spacy.pipeline.textcat_multilabel",
+    "function": "make_multilabel_textcat"
+  },
+  "tok2vec": {
+    "name": "tok2vec",
+    "module": "spacy.pipeline.tok2vec",
+    "function": "make_tok2vec"
+  },
+  "token_splitter": {
+    "name": "token_splitter",
+    "module": "spacy.pipeline.functions",
+    "function": "make_token_splitter"
+  },
+  "trainable_lemmatizer": {
+    "name": "trainable_lemmatizer",
+    "module": "spacy.pipeline.edit_tree_lemmatizer",
+    "function": "make_edit_tree_lemmatizer"
+  }
+}

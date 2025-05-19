@@ -19,6 +19,7 @@ from .glossary import explain  # noqa: F401
 from .language import Language
 from .util import logger, registry  # noqa: F401
 from .vocab import Vocab
+from .registrations import populate_registry, REGISTRY_POPULATED
 
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)

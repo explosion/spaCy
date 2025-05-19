@@ -41,23 +41,6 @@ depth = 4
 DEFAULT_SPAN_FINDER_MODEL = Config().from_str(span_finder_default_config)["model"]
 
 
-@Language.factory(
-    "span_finder",
-    assigns=["doc.spans"],
-    default_config={
-        "threshold": 0.5,
-        "model": DEFAULT_SPAN_FINDER_MODEL,
-        "spans_key": DEFAULT_SPANS_KEY,
-        "max_length": 25,
-        "min_length": None,
-        "scorer": {"@scorers": "spacy.span_finder_scorer.v1"},
-    },
-    default_score_weights={
-        f"spans_{DEFAULT_SPANS_KEY}_f": 1.0,
-        f"spans_{DEFAULT_SPANS_KEY}_p": 0.0,
-        f"spans_{DEFAULT_SPANS_KEY}_r": 0.0,
-    },
-)
 def make_span_finder(
     nlp: Language,
     name: str,
@@ -97,7 +80,6 @@ def make_span_finder(
     )
 
 
-@registry.scorers("spacy.span_finder_scorer.v1")
 def make_span_finder_scorer():
     return span_finder_score
 

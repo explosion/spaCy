@@ -35,12 +35,6 @@ subword_features = true
 DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 
 
-@Language.factory(
-    "tagger",
-    assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL, "overwrite": False, "scorer": {"@scorers": "spacy.tagger_scorer.v1"}, "neg_prefix": "!", "label_smoothing": 0.0},
-    default_score_weights={"tag_acc": 1.0},
-)
 def make_tagger(
     nlp: Language,
     name: str,
@@ -64,7 +58,6 @@ def tagger_score(examples, **kwargs):
     return Scorer.score_token_attr(examples, "tag", **kwargs)
 
 
-@registry.scorers("spacy.tagger_scorer.v1")
 def make_tagger_scorer():
     return tagger_score
 

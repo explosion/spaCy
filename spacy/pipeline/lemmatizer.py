@@ -16,17 +16,6 @@ from ..vocab import Vocab
 from .pipe import Pipe
 
 
-@Language.factory(
-    "lemmatizer",
-    assigns=["token.lemma"],
-    default_config={
-        "model": None,
-        "mode": "lookup",
-        "overwrite": False,
-        "scorer": {"@scorers": "spacy.lemmatizer_scorer.v1"},
-    },
-    default_score_weights={"lemma_acc": 1.0},
-)
 def make_lemmatizer(
     nlp: Language,
     model: Optional[Model],
@@ -44,7 +33,6 @@ def lemmatizer_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     return Scorer.score_token_attr(examples, "lemma", **kwargs)
 
 
-@registry.scorers("spacy.lemmatizer_scorer.v1")
 def make_lemmatizer_scorer():
     return lemmatizer_score
 

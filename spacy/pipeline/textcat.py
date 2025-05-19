@@ -74,27 +74,6 @@ subword_features = true
 """
 
 
-@Language.factory(
-    "textcat",
-    assigns=["doc.cats"],
-    default_config={
-        "threshold": 0.0,
-        "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
-        "scorer": {"@scorers": "spacy.textcat_scorer.v2"},
-    },
-    default_score_weights={
-        "cats_score": 1.0,
-        "cats_score_desc": None,
-        "cats_micro_p": None,
-        "cats_micro_r": None,
-        "cats_micro_f": None,
-        "cats_macro_p": None,
-        "cats_macro_r": None,
-        "cats_macro_f": None,
-        "cats_macro_auc": None,
-        "cats_f_per_type": None,
-    },
-)
 def make_textcat(
     nlp: Language,
     name: str,
@@ -123,7 +102,6 @@ def textcat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     )
 
 
-@registry.scorers("spacy.textcat_scorer.v2")
 def make_textcat_scorer():
     return textcat_score
 
