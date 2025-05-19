@@ -22,12 +22,23 @@ def populate_registry() -> None:
     # Import all necessary modules
     from .util import registry, make_first_longest_spans_filter
     
-    # Register miscellaneous components 
-    registry.misc("spacy.first_longest_spans_filter.v1")(make_first_longest_spans_filter)
-    
     # Import all pipeline components that were using registry decorators
     from .pipeline.tagger import make_tagger_scorer
     from .pipeline.ner import make_ner_scorer
+    from .pipeline.lemmatizer import make_lemmatizer_scorer
+    from .pipeline.span_finder import make_span_finder_scorer
+    from .pipeline.spancat import make_spancat_scorer, build_ngram_suggester, build_ngram_range_suggester, build_preset_spans_suggester
+    from .pipeline.entityruler import make_entity_ruler_scorer as make_entityruler_scorer
+    from .pipeline.sentencizer import senter_score as make_sentencizer_scorer
+    from .pipeline.senter import make_senter_scorer
+    from .pipeline.textcat import make_textcat_scorer
+    from .pipeline.textcat_multilabel import make_textcat_multilabel_scorer
+    
+    # Register miscellaneous components 
+    registry.misc("spacy.first_longest_spans_filter.v1")(make_first_longest_spans_filter)
+    registry.misc("spacy.ngram_suggester.v1")(build_ngram_suggester)
+    registry.misc("spacy.ngram_range_suggester.v1")(build_ngram_range_suggester)
+    registry.misc("spacy.preset_spans_suggester.v1")(build_preset_spans_suggester)
     
     # Need to get references to the existing functions in registry by importing the function that is there
     # For the registry that was previously decorated
@@ -36,7 +47,7 @@ def populate_registry() -> None:
     from .scorer import get_ner_prf  # Used for entity_ruler_scorer
     
     # Import ML components that use registry
-    from .ml.models.tok2vec import tok2vec_listener_v1, build_hash_embed_cnn_tok2vec
+    from .ml.models.tok2vec import tok2vec_listener_v1, build_hash_embed_cnn_tok2vec, build_Tok2Vec_model, MultiHashEmbed, CharacterEmbed, MaxoutWindowEncoder, MishWindowEncoder, BiLSTMEncoder
     
     # Register scorers
     registry.scorers("spacy.tagger_scorer.v1")(make_tagger_scorer)
@@ -46,13 +57,22 @@ def populate_registry() -> None:
     registry.scorers("spacy.sentencizer_scorer.v1")(make_sentencizer_scorer)
     registry.scorers("spacy.senter_scorer.v1")(make_senter_scorer)
     registry.scorers("spacy.textcat_scorer.v1")(make_textcat_scorer)
+    registry.scorers("spacy.textcat_scorer.v2")(make_textcat_scorer)
     registry.scorers("spacy.textcat_multilabel_scorer.v1")(make_textcat_multilabel_scorer)
+    registry.scorers("spacy.textcat_multilabel_scorer.v2")(make_textcat_multilabel_scorer)
+    registry.scorers("spacy.lemmatizer_scorer.v1")(make_lemmatizer_scorer)
     registry.scorers("spacy.span_finder_scorer.v1")(make_span_finder_scorer)
     registry.scorers("spacy.spancat_scorer.v1")(make_spancat_scorer)
     
     # Register tok2vec architectures we've modified
     registry.architectures("spacy.Tok2VecListener.v1")(tok2vec_listener_v1)
     registry.architectures("spacy.HashEmbedCNN.v2")(build_hash_embed_cnn_tok2vec)
+    registry.architectures("spacy.Tok2Vec.v2")(build_Tok2Vec_model)
+    registry.architectures("spacy.MultiHashEmbed.v2")(MultiHashEmbed)
+    registry.architectures("spacy.CharacterEmbed.v2")(CharacterEmbed)
+    registry.architectures("spacy.MaxoutWindowEncoder.v2")(MaxoutWindowEncoder)
+    registry.architectures("spacy.MishWindowEncoder.v2")(MishWindowEncoder)
+    registry.architectures("spacy.TorchBiLSTMEncoder.v1")(BiLSTMEncoder)
     
     # Set the flag to indicate that the registry has been populated
     REGISTRY_POPULATED = True

@@ -134,7 +134,6 @@ def preset_spans_suggester(
     return output
 
 
-@registry.misc("spacy.ngram_suggester.v1")
 def build_ngram_suggester(sizes: List[int]) -> Suggester:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
     array of integers. The array has two columns, indicating the start and end
@@ -143,7 +142,6 @@ def build_ngram_suggester(sizes: List[int]) -> Suggester:
     return partial(ngram_suggester, sizes=sizes)
 
 
-@registry.misc("spacy.ngram_range_suggester.v1")
 def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
     """Suggest all spans of the given lengths between a given min and max value - both inclusive.
     Spans are returned as a ragged array of integers. The array has two columns,
@@ -152,7 +150,6 @@ def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
     return build_ngram_suggester(sizes)
 
 
-@registry.misc("spacy.preset_spans_suggester.v1")
 def build_preset_spans_suggester(spans_key: str) -> Suggester:
     """Suggest all spans that are already stored in doc.spans[spans_key].
     This is useful when an upstream component is used to set the spans
@@ -303,7 +300,6 @@ def spancat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     return Scorer.score_spans(examples, **kwargs)
 
 
-@registry.scorers("spacy.spancat_scorer.v1")
 def make_spancat_scorer():
     return spancat_score
 

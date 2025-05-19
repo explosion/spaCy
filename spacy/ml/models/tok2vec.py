@@ -100,7 +100,6 @@ def build_hash_embed_cnn_tok2vec(
     )
 
 
-@registry.architectures("spacy.Tok2Vec.v2")
 def build_Tok2Vec_model(
     embed: Model[List[Doc], List[Floats2d]],
     encode: Model[List[Floats2d], List[Floats2d]],
@@ -121,7 +120,6 @@ def build_Tok2Vec_model(
     return tok2vec
 
 
-@registry.architectures("spacy.MultiHashEmbed.v2")
 def MultiHashEmbed(
     width: int,
     attrs: List[Union[str, int]],
@@ -199,7 +197,6 @@ def MultiHashEmbed(
     return model
 
 
-@registry.architectures("spacy.CharacterEmbed.v2")
 def CharacterEmbed(
     width: int,
     rows: int,
@@ -276,7 +273,6 @@ def CharacterEmbed(
     return model
 
 
-@registry.architectures("spacy.MaxoutWindowEncoder.v2")
 def MaxoutWindowEncoder(
     width: int, window_size: int, maxout_pieces: int, depth: int
 ) -> Model[List[Floats2d], List[Floats2d]]:
@@ -308,7 +304,6 @@ def MaxoutWindowEncoder(
     return with_array(model, pad=receptive_field)
 
 
-@registry.architectures("spacy.MishWindowEncoder.v2")
 def MishWindowEncoder(
     width: int, window_size: int, depth: int
 ) -> Model[List[Floats2d], List[Floats2d]]:
@@ -331,7 +326,6 @@ def MishWindowEncoder(
     return with_array(model)
 
 
-@registry.architectures("spacy.TorchBiLSTMEncoder.v1")
 def BiLSTMEncoder(
     width: int, depth: int, dropout: float
 ) -> Model[List[Floats2d], List[Floats2d]]:

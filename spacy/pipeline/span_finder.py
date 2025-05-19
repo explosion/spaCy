@@ -97,7 +97,6 @@ def make_span_finder(
     )
 
 
-@registry.scorers("spacy.span_finder_scorer.v1")
 def make_span_finder_scorer():
     return span_finder_score
 

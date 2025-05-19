@@ -124,7 +124,6 @@ def textcat_multilabel_score(examples: Iterable[Example], **kwargs) -> Dict[str,
     )
 
 
-@registry.scorers("spacy.textcat_multilabel_scorer.v2")
 def make_textcat_multilabel_scorer():
     return textcat_multilabel_score
 

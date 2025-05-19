@@ -53,7 +53,6 @@ def senter_score(examples, **kwargs):
     return results
 
 
-@registry.scorers("spacy.senter_scorer.v1")
 def make_senter_scorer():
     return senter_score
 
