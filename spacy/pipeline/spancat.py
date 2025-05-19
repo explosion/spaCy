@@ -157,19 +157,6 @@ def build_preset_spans_suggester(spans_key: str) -> Suggester:
     return partial(preset_spans_suggester, spans_key=spans_key)
 
 
-@Language.factory(
-    "spancat",
-    assigns=["doc.spans"],
-    default_config={
-        "threshold": 0.5,
-        "spans_key": DEFAULT_SPANS_KEY,
-        "max_positive": None,
-        "model": DEFAULT_SPANCAT_MODEL,
-        "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
-        "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
-    },
-    default_score_weights={"spans_sc_f": 1.0, "spans_sc_p": 0.0, "spans_sc_r": 0.0},
-)
 def make_spancat(
     nlp: Language,
     name: str,
@@ -222,19 +209,6 @@ def make_spancat(
     )
 
 
-@Language.factory(
-    "spancat_singlelabel",
-    assigns=["doc.spans"],
-    default_config={
-        "spans_key": DEFAULT_SPANS_KEY,
-        "model": DEFAULT_SPANCAT_SINGLELABEL_MODEL,
-        "negative_weight": 1.0,
-        "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
-        "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
-        "allow_overlap": True,
-    },
-    default_score_weights={"spans_sc_f": 1.0, "spans_sc_p": 0.0, "spans_sc_r": 0.0},
-)
 def make_spancat_singlelabel(
     nlp: Language,
     name: str,

@@ -73,11 +73,6 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     return doc
 
 
-@Language.factory(
-    "token_splitter",
-    default_config={"min_length": 25, "split_length": 10},
-    retokenizes=True,
-)
 def make_token_splitter(
     nlp: Language, name: str, *, min_length: int = 0, split_length: int = 0
 ):
@@ -141,10 +136,6 @@ class TokenSplitter:
         util.from_disk(path, serializers, [])
 
 
-@Language.factory(
-    "doc_cleaner",
-    default_config={"attrs": {"tensor": None, "_.trf_data": None}, "silent": True},
-)
 def make_doc_cleaner(nlp: Language, name: str, *, attrs: Dict[str, Any], silent: bool):
     return DocCleaner(attrs, silent=silent)
 

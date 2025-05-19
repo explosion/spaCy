@@ -40,32 +40,6 @@ subword_features = true
 DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
 
 
-@Language.factory(
-    "entity_linker",
-    requires=["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
-    assigns=["token.ent_kb_id"],
-    default_config={
-        "model": DEFAULT_NEL_MODEL,
-        "labels_discard": [],
-        "n_sents": 0,
-        "incl_prior": True,
-        "incl_context": True,
-        "entity_vector_length": 64,
-        "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
-        "get_candidates_batch": {"@misc": "spacy.CandidateBatchGenerator.v1"},
-        "generate_empty_kb": {"@misc": "spacy.EmptyKB.v2"},
-        "overwrite": True,
-        "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
-        "use_gold_ents": True,
-        "candidates_batch_size": 1,
-        "threshold": None,
-    },
-    default_score_weights={
-        "nel_micro_f": 1.0,
-        "nel_micro_r": None,
-        "nel_micro_p": None,
-    },
-)
 def make_entity_linker(
     nlp: Language,
     name: str,

@@ -19,24 +19,6 @@ DEFAULT_ENT_ID_SEP = "||"
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 
 
-@Language.factory(
-    "entity_ruler",
-    assigns=["doc.ents", "token.ent_type", "token.ent_iob"],
-    default_config={
-        "phrase_matcher_attr": None,
-        "matcher_fuzzy_compare": {"@misc": "spacy.levenshtein_compare.v1"},
-        "validate": False,
-        "overwrite_ents": False,
-        "ent_id_sep": DEFAULT_ENT_ID_SEP,
-        "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
-    },
-    default_score_weights={
-        "ents_f": 1.0,
-        "ents_p": 0.0,
-        "ents_r": 0.0,
-        "ents_per_type": None,
-    },
-)
 def make_entity_ruler(
     nlp: Language,
     name: str,

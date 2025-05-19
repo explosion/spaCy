@@ -30,10 +30,6 @@ subword_features = true
 DEFAULT_MT_MODEL = Config().from_str(default_model_config)["model"]
 
 
-@Language.factory(
-    "nn_labeller",
-    default_config={"labels": None, "target": "dep_tag_offset", "model": DEFAULT_MT_MODEL}
-)
 def make_nn_labeller(nlp: Language, name: str, model: Model, labels: Optional[dict], target: str):
     return MultitaskObjective(nlp.vocab, model, name)
 
