@@ -26,7 +26,6 @@ IDS = {
 
 NAMES = {value: key for key, value in IDS.items()}
 
-
 # As of Cython 3.1, the global Python namespace no longer has the enum
 # contents by default.
 globals().update(IDS)
