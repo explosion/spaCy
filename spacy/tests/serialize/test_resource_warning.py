@@ -87,7 +87,7 @@ def entity_linker():
 
 
 objects_to_test = (
-    [nlp(), vectors(), custom_pipe(), tagger(), entity_linker()],
+    [nlp, vectors, custom_pipe, tagger, entity_linker],
     ["nlp", "vectors", "custom_pipe", "tagger", "entity_linker"],
 )
 
@@ -101,8 +101,9 @@ def write_obj_and_catch_warnings(obj):
             return list(filter(lambda x: isinstance(x, ResourceWarning), warnings_list))
 
 
-@pytest.mark.parametrize("obj", objects_to_test[0], ids=objects_to_test[1])
-def test_to_disk_resource_warning(obj):
+@pytest.mark.parametrize("obj_factory", objects_to_test[0], ids=objects_to_test[1])
+def test_to_disk_resource_warning(obj_factory):
+    obj = obj_factory()
     warnings_list = write_obj_and_catch_warnings(obj)
     assert len(warnings_list) == 0
 
@@ -139,7 +140,7 @@ def test_save_and_load_knowledge_base():
 
 class TestToDiskResourceWarningUnittest(TestCase):
     def test_resource_warning(self):
-        scenarios = zip(*objects_to_test)
+        scenarios = zip(*[x() for x in objects_to_test])  # type: ignore
 
         for scenario in scenarios:
             with self.subTest(msg=scenario[1]):
