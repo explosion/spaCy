@@ -25,6 +25,40 @@ from .pipeline.dep_parser import DependencyParser
 from .pipeline.tagger import Tagger
 from .pipeline.multitask import MultitaskObjective
 from .pipeline.senter import SentenceRecognizer
+from .language import Language
+from .pipeline.sentencizer import Sentencizer
+
+# Import factory default configurations
+from .pipeline.entity_linker import DEFAULT_NEL_MODEL
+from .pipeline.entityruler import DEFAULT_ENT_ID_SEP
+from .pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
+from .pipeline.senter import DEFAULT_SENTER_MODEL
+from .pipeline.morphologizer import DEFAULT_MORPH_MODEL
+from .pipeline.spancat import (
+    DEFAULT_SPANCAT_MODEL,
+    DEFAULT_SPANCAT_SINGLELABEL_MODEL,
+    DEFAULT_SPANS_KEY,
+)
+from .pipeline.span_ruler import DEFAULT_SPANS_KEY as SPAN_RULER_DEFAULT_SPANS_KEY
+from .pipeline.edit_tree_lemmatizer import DEFAULT_EDIT_TREE_LEMMATIZER_MODEL
+from .pipeline.textcat_multilabel import DEFAULT_MULTI_TEXTCAT_MODEL
+from .pipeline.span_finder import DEFAULT_SPAN_FINDER_MODEL
+from .pipeline.ner import DEFAULT_NER_MODEL
+from .pipeline.dep_parser import DEFAULT_PARSER_MODEL
+from .pipeline.tagger import DEFAULT_TAGGER_MODEL
+from .pipeline.multitask import DEFAULT_MT_MODEL
+from .pipeline.textcat import DEFAULT_SINGLE_TEXTCAT_MODEL
+from .pipeline.entity_linker import EntityLinker, EntityLinker_v1
+from .pipeline.attributeruler import AttributeRuler
+from .pipeline.spancat import SpanCategorizer
+from .pipeline.lemmatizer import Lemmatizer
+from .pipeline.functions import TokenSplitter
+from .pipeline.functions import DocCleaner
+from .pipeline.span_ruler import SpanRuler, prioritize_new_ents_filter, prioritize_existing_ents_filter
+from .pipeline.span_ruler import SpanRuler
+from .pipeline.edit_tree_lemmatizer import EditTreeLemmatizer
+from .pipeline.morphologizer import Morphologizer
+
 
 # Global flag to track if registry has been populated
 REGISTRY_POPULATED = False
@@ -135,30 +169,6 @@ def register_factories() -> None:
     if FACTORIES_REGISTERED:
         return
 
-    from .language import Language
-    from .pipeline.sentencizer import Sentencizer
-
-    # Import factory default configurations
-    from .pipeline.entity_linker import DEFAULT_NEL_MODEL
-    from .pipeline.entityruler import DEFAULT_ENT_ID_SEP
-    from .pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
-    from .pipeline.senter import DEFAULT_SENTER_MODEL
-    from .pipeline.morphologizer import DEFAULT_MORPH_MODEL
-    from .pipeline.spancat import (
-        DEFAULT_SPANCAT_MODEL,
-        DEFAULT_SPANCAT_SINGLELABEL_MODEL,
-        DEFAULT_SPANS_KEY,
-    )
-    from .pipeline.span_ruler import DEFAULT_SPANS_KEY as SPAN_RULER_DEFAULT_SPANS_KEY
-    from .pipeline.edit_tree_lemmatizer import DEFAULT_EDIT_TREE_LEMMATIZER_MODEL
-    from .pipeline.textcat_multilabel import DEFAULT_MULTI_TEXTCAT_MODEL
-    from .pipeline.span_finder import DEFAULT_SPAN_FINDER_MODEL
-    from .pipeline.ner import DEFAULT_NER_MODEL
-    from .pipeline.dep_parser import DEFAULT_PARSER_MODEL
-    from .pipeline.tagger import DEFAULT_TAGGER_MODEL
-    from .pipeline.multitask import DEFAULT_MT_MODEL
-    from .pipeline.textcat import DEFAULT_SINGLE_TEXTCAT_MODEL
-
     # We can't have function implementations for these factories in Cython, because
     # we need to build a Pydantic model for them dynamically, reading their argument
     # structure from the signature. In Cython 3, this doesn't work because the 
@@ -178,7 +188,6 @@ def register_factories() -> None:
     def make_attribute_ruler(
         nlp: Language, name: str, validate: bool, scorer: Optional[Callable]
     ):
-        from .pipeline.attributeruler import AttributeRuler
         return AttributeRuler(nlp.vocab, name, validate=validate, scorer=scorer)
 
     def make_entity_linker(
@@ -202,7 +211,6 @@ def register_factories() -> None:
         candidates_batch_size: int,
         threshold: Optional[float] = None,
     ):
-        from .pipeline.entity_linker import EntityLinker, EntityLinker_v1
         
         if not model.attrs.get("include_span_maker", False):
             # The only difference in arguments here is that use_gold_ents and threshold aren't available.
@@ -246,7 +254,6 @@ def register_factories() -> None:
         overwrite: bool,
         scorer: Optional[Callable],
     ):
-        from .pipeline.lemmatizer import Lemmatizer
         return Lemmatizer(
             nlp.vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
         )
@@ -263,11 +270,9 @@ def register_factories() -> None:
     def make_token_splitter(
         nlp: Language, name: str, *, min_length: int = 0, split_length: int = 0
     ):
-        from .pipeline.functions import TokenSplitter
         return TokenSplitter(min_length=min_length, split_length=split_length)
     
     def make_doc_cleaner(nlp: Language, name: str, *, attrs: Dict[str, Any], silent: bool):
-        from .pipeline.functions import DocCleaner
         return DocCleaner(attrs, silent=silent)
     
     def make_tok2vec(nlp: Language, name: str, model: Model) -> Tok2Vec:
@@ -306,8 +311,7 @@ def register_factories() -> None:
         negative_weight: float,
         allow_overlap: bool,
         scorer: Optional[Callable],
-    ) -> "SpanCategorizer":
-        from .pipeline.spancat import SpanCategorizer
+    ) -> SpanCategorizer:
         return SpanCategorizer(
             nlp.vocab,
             model=model,
@@ -332,8 +336,7 @@ def register_factories() -> None:
         scorer: Optional[Callable],
         ent_id_sep: str,
     ):
-        from .pipeline.span_ruler import SpanRuler, prioritize_new_ents_filter, prioritize_existing_ents_filter
-        if overwrite_ents:
+       if overwrite_ents:
             ents_filter = prioritize_new_ents_filter
         else:
             ents_filter = prioritize_existing_ents_filter
@@ -385,7 +388,6 @@ def register_factories() -> None:
         overwrite: bool,
         scorer: Optional[Callable],
     ):
-        from .pipeline.span_ruler import SpanRuler
         return SpanRuler(
             nlp,
             name,
@@ -410,7 +412,6 @@ def register_factories() -> None:
         top_k: int,
         scorer: Optional[Callable],
     ):
-        from .pipeline.edit_tree_lemmatizer import EditTreeLemmatizer
         return EditTreeLemmatizer(
             nlp.vocab,
             model,
@@ -583,7 +584,6 @@ def register_factories() -> None:
         label_smoothing: float,
         scorer: Optional[Callable],
     ):
-        from .pipeline.morphologizer import Morphologizer
         return Morphologizer(
             nlp.vocab, model, name, 
             overwrite=overwrite,
