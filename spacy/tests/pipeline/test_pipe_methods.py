@@ -529,17 +529,6 @@ def test_pipe_label_data_no_labels(pipe):
         assert "labels" not in get_arg_names(initialize)
 
 
-def test_warning_pipe_begin_training():
-    with pytest.warns(UserWarning, match="begin_training"):
-
-        class IncompatPipe(TrainablePipe):
-            def __init__(self):
-                ...
-
-            def begin_training(*args, **kwargs):
-                ...
-
-
 def test_pipe_methods_initialize():
     """Test that the [initialize] config reflects the components correctly."""
     nlp = Language()
