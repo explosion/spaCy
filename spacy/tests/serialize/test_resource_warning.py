@@ -140,9 +140,11 @@ def test_save_and_load_knowledge_base():
 
 class TestToDiskResourceWarningUnittest(TestCase):
     def test_resource_warning(self):
-        scenarios = zip(*[x() for x in objects_to_test])  # type: ignore
+        items = [x() for x in objects_to_test[0]]
+        names = objects_to_test[1]
+        scenarios = zip(items, names)
 
-        for scenario in scenarios:
-            with self.subTest(msg=scenario[1]):
-                warnings_list = write_obj_and_catch_warnings(scenario[0])
+        for item, name in scenarios:
+            with self.subTest(msg=name):
+                warnings_list = write_obj_and_catch_warnings(item)
                 self.assertEqual(len(warnings_list), 0)
