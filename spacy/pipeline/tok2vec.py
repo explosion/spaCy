@@ -24,8 +24,6 @@ subword_features = true
 DEFAULT_TOK2VEC_MODEL = Config().from_str(default_model_config)["model"]
 
 
-def make_tok2vec(nlp: Language, name: str, model: Model) -> "Tok2Vec":
-    return Tok2Vec(nlp.vocab, model, name)
 
 
 class Tok2Vec(TrainablePipe):

@@ -41,43 +41,6 @@ depth = 4
 DEFAULT_SPAN_FINDER_MODEL = Config().from_str(span_finder_default_config)["model"]
 
 
-def make_span_finder(
-    nlp: Language,
-    name: str,
-    model: Model[Iterable[Doc], Floats2d],
-    spans_key: str,
-    threshold: float,
-    max_length: Optional[int],
-    min_length: Optional[int],
-    scorer: Optional[Callable],
-) -> "SpanFinder":
-    """Create a SpanFinder component. The component predicts whether a token is
-    the start or the end of a potential span.
-
-    model (Model[List[Doc], Floats2d]): A model instance that
-        is given a list of documents and predicts a probability for each token.
-    spans_key (str): Key of the doc.spans dict to save the spans under. During
-        initialization and training, the component will look for spans on the
-        reference document under the same key.
-    threshold (float): Minimum probability to consider a prediction positive.
-    max_length (Optional[int]): Maximum length of the produced spans, defaults
-        to None meaning unlimited length.
-    min_length (Optional[int]): Minimum length of the produced spans, defaults
-        to None meaning shortest span length is 1.
-    scorer (Optional[Callable]): The scoring method. Defaults to
-        Scorer.score_spans for the Doc.spans[spans_key] with overlapping
-        spans allowed.
-    """
-    return SpanFinder(
-        nlp,
-        model=model,
-        threshold=threshold,
-        name=name,
-        scorer=scorer,
-        max_length=max_length,
-        min_length=min_length,
-        spans_key=spans_key,
-    )
 
 
 def make_span_finder_scorer():

@@ -47,18 +47,6 @@ maxout_pieces = 3
 DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
 
 
-def make_morphologizer(
-    nlp: Language,
-    model: Model,
-    name: str,
-    overwrite: bool,
-    extend: bool,
-    label_smoothing: float,
-    scorer: Optional[Callable],
-):
-    return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, label_smoothing=label_smoothing, scorer=scorer)
-
-
 def morphologizer_score(examples, **kwargs):
     def morph_key_getter(token, attr):
         return getattr(token, attr).key

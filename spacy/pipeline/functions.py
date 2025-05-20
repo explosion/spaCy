@@ -73,10 +73,6 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     return doc
 
 
-def make_token_splitter(
-    nlp: Language, name: str, *, min_length: int = 0, split_length: int = 0
-):
-    return TokenSplitter(min_length=min_length, split_length=split_length)
 
 
 class TokenSplitter:
@@ -136,8 +132,6 @@ class TokenSplitter:
         util.from_disk(path, serializers, [])
 
 
-def make_doc_cleaner(nlp: Language, name: str, *, attrs: Dict[str, Any], silent: bool):
-    return DocCleaner(attrs, silent=silent)
 
 
 class DocCleaner:

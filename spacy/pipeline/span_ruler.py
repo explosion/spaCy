@@ -32,61 +32,8 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 DEFAULT_SPANS_KEY = "ruler"
 
 
-def make_entity_ruler(
-    nlp: Language,
-    name: str,
-    phrase_matcher_attr: Optional[Union[int, str]],
-    matcher_fuzzy_compare: Callable,
-    validate: bool,
-    overwrite_ents: bool,
-    scorer: Optional[Callable],
-    ent_id_sep: str,
-):
-    if overwrite_ents:
-        ents_filter = prioritize_new_ents_filter
-    else:
-        ents_filter = prioritize_existing_ents_filter
-    return SpanRuler(
-        nlp,
-        name,
-        spans_key=None,
-        spans_filter=None,
-        annotate_ents=True,
-        ents_filter=ents_filter,
-        phrase_matcher_attr=phrase_matcher_attr,
-        matcher_fuzzy_compare=matcher_fuzzy_compare,
-        validate=validate,
-        overwrite=False,
-        scorer=scorer,
-    )
 
 
-def make_span_ruler(
-    nlp: Language,
-    name: str,
-    spans_key: Optional[str],
-    spans_filter: Optional[Callable[[Iterable[Span], Iterable[Span]], Iterable[Span]]],
-    annotate_ents: bool,
-    ents_filter: Callable[[Iterable[Span], Iterable[Span]], Iterable[Span]],
-    phrase_matcher_attr: Optional[Union[int, str]],
-    matcher_fuzzy_compare: Callable,
-    validate: bool,
-    overwrite: bool,
-    scorer: Optional[Callable],
-):
-    return SpanRuler(
-        nlp,
-        name,
-        spans_key=spans_key,
-        spans_filter=spans_filter,
-        annotate_ents=annotate_ents,
-        ents_filter=ents_filter,
-        phrase_matcher_attr=phrase_matcher_attr,
-        matcher_fuzzy_compare=matcher_fuzzy_compare,
-        validate=validate,
-        overwrite=overwrite,
-        scorer=scorer,
-    )
 
 
 def prioritize_new_ents_filter(

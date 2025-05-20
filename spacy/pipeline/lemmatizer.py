@@ -16,17 +16,6 @@ from ..vocab import Vocab
 from .pipe import Pipe
 
 
-def make_lemmatizer(
-    nlp: Language,
-    model: Optional[Model],
-    name: str,
-    mode: str,
-    overwrite: bool,
-    scorer: Optional[Callable],
-):
-    return Lemmatizer(
-        nlp.vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
-    )
 
 
 def lemmatizer_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:

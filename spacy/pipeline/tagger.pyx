@@ -35,25 +35,6 @@ subword_features = true
 DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 
 
-def make_tagger(
-    nlp: Language,
-    name: str,
-    model: Model,
-    overwrite: bool,
-    scorer: Optional[Callable],
-    neg_prefix: str,
-    label_smoothing: float,
-):
-    """Construct a part-of-speech tagger component.
-
-    model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
-        the tag probabilities. The output vectors should match the number of tags
-        in size, and be normalized as probabilities (all scores between 0 and 1,
-        with the rows summing to 1).
-    """
-    return Tagger(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, neg_prefix=neg_prefix, label_smoothing=label_smoothing)
-
-
 def tagger_score(examples, **kwargs):
     return Scorer.score_token_attr(examples, "tag", **kwargs)
 

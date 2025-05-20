@@ -19,26 +19,6 @@ DEFAULT_ENT_ID_SEP = "||"
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 
 
-def make_entity_ruler(
-    nlp: Language,
-    name: str,
-    phrase_matcher_attr: Optional[Union[int, str]],
-    matcher_fuzzy_compare: Callable,
-    validate: bool,
-    overwrite_ents: bool,
-    ent_id_sep: str,
-    scorer: Optional[Callable],
-):
-    return EntityRuler(
-        nlp,
-        name,
-        phrase_matcher_attr=phrase_matcher_attr,
-        matcher_fuzzy_compare=matcher_fuzzy_compare,
-        validate=validate,
-        overwrite_ents=overwrite_ents,
-        ent_id_sep=ent_id_sep,
-        scorer=scorer,
-    )
 
 
 def entity_ruler_score(examples, **kwargs):

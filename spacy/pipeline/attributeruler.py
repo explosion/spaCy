@@ -22,10 +22,6 @@ TagMapType = Dict[str, Dict[Union[int, str], Union[int, str]]]
 MorphRulesType = Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
 
 
-def make_attribute_ruler(
-    nlp: Language, name: str, validate: bool, scorer: Optional[Callable]
-):
-    return AttributeRuler(nlp.vocab, name, validate=validate, scorer=scorer)
 
 
 def attribute_ruler_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
