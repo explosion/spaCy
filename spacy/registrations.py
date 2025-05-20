@@ -336,7 +336,7 @@ def register_factories() -> None:
         scorer: Optional[Callable],
         ent_id_sep: str,
     ):
-       if overwrite_ents:
+        if overwrite_ents:
             ents_filter = prioritize_new_ents_filter
         else:
             ents_filter = prioritize_existing_ents_filter
