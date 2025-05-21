@@ -509,7 +509,7 @@ def __getattr__(name):
     if name == "make_span_ruler":
         module = importlib.import_module("spacy.registrations")
         return module.make_span_ruler
-    elif name == "make_future_span_ruler":
+    elif name == "make_entity_ruler":
         module = importlib.import_module("spacy.registrations")
         return module.make_future_span_ruler
     raise AttributeError(f"module {__name__} has no attribute {name}")
