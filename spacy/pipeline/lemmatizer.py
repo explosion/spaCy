@@ -1,7 +1,7 @@
-import warnings
-from pathlib import Path
 import importlib
 import sys
+import warnings
+from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 from thinc.api import Model

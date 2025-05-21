@@ -1,11 +1,11 @@
+import importlib
+import sys
 from itertools import islice
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 import numpy
 from thinc.api import Config, Model, Optimizer, get_array_module, set_dropout_rate
 from thinc.types import Floats2d
-import sys
-import importlib
 
 from ..errors import Errors
 from ..language import Language

@@ -21,26 +21,26 @@ def populate_registry() -> None:
         return
 
     # Import all necessary modules
-    from .util import registry, make_first_longest_spans_filter
-
-    # Import all pipeline components that were using registry decorators
-    from .pipeline.tagger import make_tagger_scorer
-    from .pipeline.ner import make_ner_scorer
-    from .pipeline.lemmatizer import make_lemmatizer_scorer
-    from .pipeline.span_finder import make_span_finder_scorer
-    from .pipeline.spancat import (
-        make_spancat_scorer,
-        build_ngram_suggester,
-        build_ngram_range_suggester,
-        build_preset_spans_suggester,
-    )
     from .pipeline.entityruler import (
         make_entity_ruler_scorer as make_entityruler_scorer,
     )
+    from .pipeline.lemmatizer import make_lemmatizer_scorer
+    from .pipeline.ner import make_ner_scorer
     from .pipeline.sentencizer import senter_score as make_sentencizer_scorer
     from .pipeline.senter import make_senter_scorer
+    from .pipeline.span_finder import make_span_finder_scorer
+    from .pipeline.spancat import (
+        build_ngram_range_suggester,
+        build_ngram_suggester,
+        build_preset_spans_suggester,
+        make_spancat_scorer,
+    )
+
+    # Import all pipeline components that were using registry decorators
+    from .pipeline.tagger import make_tagger_scorer
     from .pipeline.textcat import make_textcat_scorer
     from .pipeline.textcat_multilabel import make_textcat_multilabel_scorer
+    from .util import make_first_longest_spans_filter, registry
 
     # Register miscellaneous components
     registry.misc("spacy.first_longest_spans_filter.v1")(
@@ -55,14 +55,14 @@ def populate_registry() -> None:
 
     # Import ML components that use registry
     from .ml.models.tok2vec import (
-        tok2vec_listener_v1,
-        build_hash_embed_cnn_tok2vec,
-        build_Tok2Vec_model,
-        MultiHashEmbed,
+        BiLSTMEncoder,
         CharacterEmbed,
         MaxoutWindowEncoder,
         MishWindowEncoder,
-        BiLSTMEncoder,
+        MultiHashEmbed,
+        build_hash_embed_cnn_tok2vec,
+        build_Tok2Vec_model,
+        tok2vec_listener_v1,
     )
 
     # Register scorers

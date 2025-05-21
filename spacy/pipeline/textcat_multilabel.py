@@ -1,7 +1,7 @@
+import importlib
+import sys
 from itertools import islice
 from typing import Any, Callable, Dict, Iterable, List, Optional
-import sys
-import importlib
 
 from thinc.api import Config, Model
 from thinc.types import Floats2d

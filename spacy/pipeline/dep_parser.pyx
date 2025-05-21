@@ -1,8 +1,8 @@
 # cython: infer_types=True, binding=True
-from collections import defaultdict
-from typing import Callable, Optional
 import importlib
 import sys
+from collections import defaultdict
+from typing import Callable, Optional
 
 from thinc.api import Config, Model
 

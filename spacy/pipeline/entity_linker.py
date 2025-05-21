@@ -1,9 +1,9 @@
+import importlib
 import random
+import sys
 from itertools import islice
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
-import sys
-import importlib
 
 import srsly
 from thinc.api import Config, CosineDistance, Model, Optimizer, set_dropout_rate

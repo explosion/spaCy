@@ -1,7 +1,9 @@
 import json
 import os
-import pytest
 from pathlib import Path
+
+import pytest
+
 from spacy.util import registry
 
 # Path to the reference registry contents, relative to this file

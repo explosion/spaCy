@@ -17,9 +17,9 @@ from .cli.info import info  # noqa: F401
 from .errors import Errors
 from .glossary import explain  # noqa: F401
 from .language import Language
+from .registrations import REGISTRY_POPULATED, populate_registry
 from .util import logger, registry  # noqa: F401
 from .vocab import Vocab
-from .registrations import populate_registry, REGISTRY_POPULATED
 
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)

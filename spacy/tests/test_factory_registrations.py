@@ -1,7 +1,9 @@
-import json
 import inspect
-import pytest
+import json
 from pathlib import Path
+
+import pytest
+
 from spacy.language import Language
 from spacy.util import registry
 
@@ -10,6 +12,7 @@ REFERENCE_FILE = Path(__file__).parent / "factory_registrations.json"
 
 # Monkey patch the util.is_same_func to handle Cython functions
 import inspect
+
 from spacy import util
 
 original_is_same_func = util.is_same_func

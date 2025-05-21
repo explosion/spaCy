@@ -1,8 +1,9 @@
 # coding: utf-8
 """Test factory import compatibility from original and new locations."""
 
-import pytest
 import importlib
+
+import pytest
 
 
 @pytest.mark.parametrize(

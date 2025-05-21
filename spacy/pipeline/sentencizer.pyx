@@ -1,7 +1,7 @@
 # cython: infer_types=True, binding=True
-from typing import Callable, List, Optional
 import importlib
 import sys
+from typing import Callable, List, Optional
 
 import srsly
 

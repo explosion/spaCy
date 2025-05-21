@@ -1,8 +1,8 @@
+import importlib
+import sys
 import warnings
 from collections import defaultdict
 from pathlib import Path
-import importlib
-import sys
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import srsly

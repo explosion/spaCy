@@ -1,58 +1,52 @@
-from typing import Dict, Any, Callable, Iterable, List, Optional, Union, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+
 from thinc.api import Model
 from thinc.types import Floats2d, Ragged
-from ..tokens.doc import Doc
-from ..tokens.span import Span
-from ..kb import KnowledgeBase, Candidate
-from ..vocab import Vocab
-from ..pipeline.textcat import TextCategorizer
-from ..pipeline.tok2vec import Tok2Vec
-from ..pipeline.spancat import SpanCategorizer, Suggester
-from ..pipeline.textcat_multilabel import MultiLabel_TextCategorizer
-from ..pipeline.entityruler import EntityRuler
-from ..pipeline.span_finder import SpanFinder
-from ..pipeline.ner import EntityRecognizer
-from ..pipeline._parser_internals.transition_system import TransitionSystem
-from ..pipeline.dep_parser import DependencyParser
-from ..pipeline.tagger import Tagger
-from ..pipeline.multitask import MultitaskObjective
-from ..pipeline.senter import SentenceRecognizer
+
+from ..kb import Candidate, KnowledgeBase
 from ..language import Language
-from ..pipeline.sentencizer import Sentencizer
+from ..pipeline._parser_internals.transition_system import TransitionSystem
+from ..pipeline.attributeruler import AttributeRuler
+from ..pipeline.dep_parser import DEFAULT_PARSER_MODEL, DependencyParser
+from ..pipeline.edit_tree_lemmatizer import (
+    DEFAULT_EDIT_TREE_LEMMATIZER_MODEL,
+    EditTreeLemmatizer,
+)
 
 # Import factory default configurations
-from ..pipeline.entity_linker import DEFAULT_NEL_MODEL
-from ..pipeline.entityruler import DEFAULT_ENT_ID_SEP
-from ..pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
-from ..pipeline.senter import DEFAULT_SENTER_MODEL
-from ..pipeline.morphologizer import DEFAULT_MORPH_MODEL
+from ..pipeline.entity_linker import DEFAULT_NEL_MODEL, EntityLinker, EntityLinker_v1
+from ..pipeline.entityruler import DEFAULT_ENT_ID_SEP, EntityRuler
+from ..pipeline.functions import DocCleaner, TokenSplitter
+from ..pipeline.lemmatizer import Lemmatizer
+from ..pipeline.morphologizer import DEFAULT_MORPH_MODEL, Morphologizer
+from ..pipeline.multitask import DEFAULT_MT_MODEL, MultitaskObjective
+from ..pipeline.ner import DEFAULT_NER_MODEL, EntityRecognizer
+from ..pipeline.sentencizer import Sentencizer
+from ..pipeline.senter import DEFAULT_SENTER_MODEL, SentenceRecognizer
+from ..pipeline.span_finder import DEFAULT_SPAN_FINDER_MODEL, SpanFinder
+from ..pipeline.span_ruler import DEFAULT_SPANS_KEY as SPAN_RULER_DEFAULT_SPANS_KEY
+from ..pipeline.span_ruler import (
+    SpanRuler,
+    prioritize_existing_ents_filter,
+    prioritize_new_ents_filter,
+)
 from ..pipeline.spancat import (
     DEFAULT_SPANCAT_MODEL,
     DEFAULT_SPANCAT_SINGLELABEL_MODEL,
     DEFAULT_SPANS_KEY,
+    SpanCategorizer,
+    Suggester,
 )
-from ..pipeline.span_ruler import DEFAULT_SPANS_KEY as SPAN_RULER_DEFAULT_SPANS_KEY
-from ..pipeline.edit_tree_lemmatizer import DEFAULT_EDIT_TREE_LEMMATIZER_MODEL
-from ..pipeline.textcat_multilabel import DEFAULT_MULTI_TEXTCAT_MODEL
-from ..pipeline.span_finder import DEFAULT_SPAN_FINDER_MODEL
-from ..pipeline.ner import DEFAULT_NER_MODEL
-from ..pipeline.dep_parser import DEFAULT_PARSER_MODEL
-from ..pipeline.tagger import DEFAULT_TAGGER_MODEL
-from ..pipeline.multitask import DEFAULT_MT_MODEL
-from ..pipeline.textcat import DEFAULT_SINGLE_TEXTCAT_MODEL
-from ..pipeline.entity_linker import EntityLinker, EntityLinker_v1
-from ..pipeline.attributeruler import AttributeRuler
-from ..pipeline.lemmatizer import Lemmatizer
-from ..pipeline.functions import TokenSplitter
-from ..pipeline.functions import DocCleaner
-from ..pipeline.span_ruler import (
-    SpanRuler,
-    prioritize_new_ents_filter,
-    prioritize_existing_ents_filter,
+from ..pipeline.tagger import DEFAULT_TAGGER_MODEL, Tagger
+from ..pipeline.textcat import DEFAULT_SINGLE_TEXTCAT_MODEL, TextCategorizer
+from ..pipeline.textcat_multilabel import (
+    DEFAULT_MULTI_TEXTCAT_MODEL,
+    MultiLabel_TextCategorizer,
 )
-from ..pipeline.edit_tree_lemmatizer import EditTreeLemmatizer
-from ..pipeline.morphologizer import Morphologizer
-
+from ..pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL, Tok2Vec
+from ..tokens.doc import Doc
+from ..tokens.span import Span
+from ..vocab import Vocab
 
 # Global flag to track if factories have been registered
 FACTORIES_REGISTERED = False

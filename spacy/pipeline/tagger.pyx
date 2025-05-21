@@ -1,8 +1,8 @@
 # cython: infer_types=True, binding=True
-from itertools import islice
-from typing import Callable, Optional
 import importlib
 import sys
+from itertools import islice
+from typing import Callable, Optional
 
 import numpy
 from thinc.api import Config, Model, SequenceCategoricalCrossentropy, set_dropout_rate

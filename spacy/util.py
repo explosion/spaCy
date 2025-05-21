@@ -135,7 +135,7 @@ class registry(thinc.registry):
     @classmethod
     def ensure_populated(cls) -> None:
         """Ensure the registry is populated with all necessary components."""
-        from .registrations import populate_registry, REGISTRY_POPULATED
+        from .registrations import REGISTRY_POPULATED, populate_registry
 
         if not REGISTRY_POPULATED:
             populate_registry()

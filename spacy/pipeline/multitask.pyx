@@ -1,7 +1,7 @@
 # cython: infer_types=True, binding=True
-from typing import Optional
-import sys
 import importlib
+import sys
+from typing import Optional
 
 import numpy
 from thinc.api import Config, CosineDistance, Model, set_dropout_rate, to_categorical

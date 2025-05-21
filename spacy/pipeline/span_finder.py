@@ -1,6 +1,6 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
-import sys
 import importlib
+import sys
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 from thinc.api import Config, Model, Optimizer, set_dropout_rate
 from thinc.types import Floats2d

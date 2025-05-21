@@ -1,7 +1,7 @@
-from dataclasses import dataclass
-from functools import partial
 import importlib
 import sys
+from dataclasses import dataclass
+from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy

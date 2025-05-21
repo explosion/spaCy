@@ -1,7 +1,7 @@
+import importlib
+import sys
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
-import sys
-import importlib
 
 import srsly
 
