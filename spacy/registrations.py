@@ -21,13 +21,38 @@ def populate_registry() -> None:
         return
 
     # Import all necessary modules
+    from .lang.ja import create_tokenizer as create_japanese_tokenizer
+    from .lang.ko import create_tokenizer as create_korean_tokenizer
+    from .lang.th import create_thai_tokenizer
+    from .lang.vi import create_vietnamese_tokenizer
+    from .lang.zh import create_chinese_tokenizer
+    from .language import load_lookups_data
+    from .matcher.levenshtein import make_levenshtein_compare
+    from .ml.models.entity_linker import (
+        create_candidates,
+        create_candidates_batch,
+        empty_kb,
+        empty_kb_for_config,
+        load_kb,
+    )
+    from .pipeline.attributeruler import make_attribute_ruler_scorer
+    from .pipeline.dep_parser import make_parser_scorer
+
+    # Import the functions we refactored by removing direct registry decorators
+    from .pipeline.entity_linker import make_entity_linker_scorer
     from .pipeline.entityruler import (
         make_entity_ruler_scorer as make_entityruler_scorer,
     )
     from .pipeline.lemmatizer import make_lemmatizer_scorer
+    from .pipeline.morphologizer import make_morphologizer_scorer
     from .pipeline.ner import make_ner_scorer
     from .pipeline.senter import make_senter_scorer
     from .pipeline.span_finder import make_span_finder_scorer
+    from .pipeline.span_ruler import (
+        make_overlapping_labeled_spans_scorer,
+        make_preserve_existing_ents_filter,
+        make_prioritize_new_ents_filter,
+    )
     from .pipeline.spancat import (
         build_ngram_range_suggester,
         build_ngram_suggester,
@@ -35,32 +60,11 @@ def populate_registry() -> None:
         make_spancat_scorer,
     )
 
-    # Import the functions we refactored by removing direct registry decorators
-    from .pipeline.entity_linker import make_entity_linker_scorer
-    from .pipeline.span_ruler import (
-        make_overlapping_labeled_spans_scorer,
-        make_prioritize_new_ents_filter,
-        make_preserve_existing_ents_filter,
-    )
-    from .pipeline.attributeruler import make_attribute_ruler_scorer
-    from .pipeline.dep_parser import make_parser_scorer
-    from .pipeline.morphologizer import make_morphologizer_scorer
-    from .ml.models.entity_linker import load_kb, empty_kb_for_config, empty_kb
-    from .ml.models.entity_linker import create_candidates
-    from .ml.models.entity_linker import create_candidates_batch
-    from .language import load_lookups_data
-    from .lang.ja import create_tokenizer as create_japanese_tokenizer
-    from .lang.zh import create_chinese_tokenizer
-    from .lang.ko import create_tokenizer as create_korean_tokenizer
-    from .lang.vi import create_vietnamese_tokenizer
-    from .lang.th import create_thai_tokenizer
-
     # Import all pipeline components that were using registry decorators
     from .pipeline.tagger import make_tagger_scorer
     from .pipeline.textcat import make_textcat_scorer
     from .pipeline.textcat_multilabel import make_textcat_multilabel_scorer
     from .util import make_first_longest_spans_filter, registry
-    from .matcher.levenshtein import make_levenshtein_compare
 
     # Register miscellaneous components
     registry.misc("spacy.first_longest_spans_filter.v1")(
@@ -88,6 +92,39 @@ def populate_registry() -> None:
     # For the registry that was previously decorated
 
     # Import ML components that use registry
+    from .language import create_tokenizer
+    from .ml._precomputable_affine import PrecomputableAffine
+    from .ml.callbacks import (
+        create_models_and_pipes_with_nvtx_range,
+        create_models_with_nvtx_range,
+    )
+    from .ml.extract_ngrams import extract_ngrams
+    from .ml.extract_spans import extract_spans
+
+    # Import decorator-removed ML components
+    from .ml.featureextractor import FeatureExtractor
+    from .ml.models.entity_linker import build_nel_encoder
+    from .ml.models.multi_task import (
+        create_pretrain_characters,
+        create_pretrain_vectors,
+    )
+    from .ml.models.parser import build_tb_parser_model
+    from .ml.models.span_finder import build_finder_model
+    from .ml.models.spancat import (
+        build_linear_logistic,
+        build_mean_max_reducer,
+        build_spancat_model,
+    )
+    from .ml.models.tagger import build_tagger_model
+    from .ml.models.textcat import (
+        build_bow_text_classifier,
+        build_bow_text_classifier_v3,
+        build_reduce_text_classifier,
+        build_simple_cnn_text_classifier,
+        build_text_classifier_lowdata,
+        build_text_classifier_v2,
+        build_textcat_parametric_attention_v1,
+    )
     from .ml.models.tok2vec import (
         BiLSTMEncoder,
         CharacterEmbed,
@@ -98,53 +135,20 @@ def populate_registry() -> None:
         build_Tok2Vec_model,
         tok2vec_listener_v1,
     )
-
-    # Import decorator-removed ML components
-    from .ml.featureextractor import FeatureExtractor
-    from .ml.extract_spans import extract_spans
-    from .ml.extract_ngrams import extract_ngrams
-    from .ml.models.entity_linker import build_nel_encoder
-    from .ml.models.textcat import (
-        build_simple_cnn_text_classifier,
-        build_bow_text_classifier,
-        build_bow_text_classifier_v3,
-        build_text_classifier_v2,
-        build_text_classifier_lowdata,
-        build_textcat_parametric_attention_v1,
-        build_reduce_text_classifier,
-    )
-    from .ml.models.spancat import (
-        build_linear_logistic,
-        build_mean_max_reducer,
-        build_spancat_model,
-    )
-    from .ml.models.span_finder import build_finder_model
-    from .ml.models.parser import build_tb_parser_model
-    from .ml.models.multi_task import (
-        create_pretrain_vectors,
-        create_pretrain_characters,
-    )
-    from .ml.models.tagger import build_tagger_model
     from .ml.staticvectors import StaticVectors
-    from .ml._precomputable_affine import PrecomputableAffine
     from .ml.tb_framework import TransitionModel
-    from .language import create_tokenizer
-    from .training.callbacks import create_copy_from_base_model
-    from .ml.callbacks import (
-        create_models_with_nvtx_range,
-        create_models_and_pipes_with_nvtx_range,
-    )
-    from .training.loggers import console_logger, console_logger_v3
-    from .training.batchers import (
-        configure_minibatch_by_padded_size,
-        configure_minibatch_by_words,
-        configure_minibatch,
-    )
     from .training.augment import (
         create_combined_augmenter,
         create_lower_casing_augmenter,
         create_orth_variants_augmenter,
     )
+    from .training.batchers import (
+        configure_minibatch,
+        configure_minibatch_by_padded_size,
+        configure_minibatch_by_words,
+    )
+    from .training.callbacks import create_copy_from_base_model
+    from .training.loggers import console_logger, console_logger_v3
 
     # Register scorers
     registry.scorers("spacy.tagger_scorer.v1")(make_tagger_scorer)

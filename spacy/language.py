@@ -184,6 +184,7 @@ class Language:
         DOCS: https://spacy.io/api/language#init
         """
         from .pipeline.factories import register_factories
+
         register_factories()
         # We're only calling this to import all factories provided via entry
         # points. The factory decorator applied to these functions takes care
