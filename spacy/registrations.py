@@ -59,6 +59,12 @@ def populate_registry() -> None:
     registry.misc("spacy.preset_spans_suggester.v1")(build_preset_spans_suggester)
     registry.misc("spacy.prioritize_new_ents_filter.v1")(make_prioritize_new_ents_filter)
     registry.misc("spacy.prioritize_existing_ents_filter.v1")(make_preserve_existing_ents_filter)
+    registry.misc("spacy.levenshtein_compare.v1")(make_levenshtein_compare)
+    registry.misc("spacy.KBFromFile.v1")(load_kb)
+    registry.misc("spacy.EmptyKB.v2")(empty_kb_for_config)
+    registry.misc("spacy.EmptyKB.v1")(empty_kb)
+    registry.misc("spacy.CandidateGenerator.v1")(create_candidates)
+    registry.misc("spacy.CandidateBatchGenerator.v1")(create_candidates_batch)
 
     # Need to get references to the existing functions in registry by importing the function that is there
     # For the registry that was previously decorated
@@ -74,6 +80,20 @@ def populate_registry() -> None:
         build_Tok2Vec_model,
         tok2vec_listener_v1,
     )
+    
+    # Import decorator-removed ML components
+    from .ml.featureextractor import FeatureExtractor
+    from .ml.extract_spans import extract_spans
+    from .ml.extract_ngrams import extract_ngrams
+    from .ml.models.entity_linker import (
+        build_nel_encoder, 
+        load_kb, 
+        empty_kb_for_config, 
+        empty_kb, 
+        create_candidates, 
+        create_candidates_batch
+    )
+    from .matcher.levenshtein import make_levenshtein_compare
 
     # Register scorers
     registry.scorers("spacy.tagger_scorer.v1")(make_tagger_scorer)
@@ -106,6 +126,12 @@ def populate_registry() -> None:
     registry.architectures("spacy.MaxoutWindowEncoder.v2")(MaxoutWindowEncoder)
     registry.architectures("spacy.MishWindowEncoder.v2")(MishWindowEncoder)
     registry.architectures("spacy.TorchBiLSTMEncoder.v1")(BiLSTMEncoder)
+    registry.architectures("spacy.EntityLinker.v2")(build_nel_encoder)
+    
+    # Register layers
+    registry.layers("spacy.FeatureExtractor.v1")(FeatureExtractor)
+    registry.layers("spacy.extract_spans.v1")(extract_spans)
+    registry.layers("spacy.extract_ngrams.v1")(extract_ngrams)
 
     # Set the flag to indicate that the registry has been populated
     REGISTRY_POPULATED = True
