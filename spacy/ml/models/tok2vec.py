@@ -122,7 +122,7 @@ def build_Tok2Vec_model(
 
 def MultiHashEmbed(
     width: int,
-    attrs: List[Union[str, int]],
+    attrs: Union[List[str], List[int], List[Union[str, int]]],
     rows: List[int],
     include_static_vectors: bool,
 ) -> Model[List[Doc], List[Floats2d]]:
@@ -188,7 +188,7 @@ def MultiHashEmbed(
         )
     else:
         model = chain(
-            FeatureExtractor(list(attrs)),
+            FeatureExtractor(attrs),
             cast(Model[List[Ints2d], Ragged], list2ragged()),
             with_array(concatenate(*embeddings)),
             max_out,
