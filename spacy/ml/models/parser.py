@@ -11,7 +11,6 @@ from .._precomputable_affine import PrecomputableAffine
 from ..tb_framework import TransitionModel
 
 
-@registry.architectures("spacy.TransitionBasedParser.v2")
 def build_tb_parser_model(
     tok2vec: Model[List[Doc], List[Floats2d]],
     state_type: Literal["parser", "ner"],

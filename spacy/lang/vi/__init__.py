@@ -22,7 +22,6 @@ use_pyvi = true
 """
 
 
-@registry.tokenizers("spacy.vi.VietnameseTokenizer")
 def create_vietnamese_tokenizer(use_pyvi: bool = True):
     def vietnamese_tokenizer_factory(nlp):
         return VietnameseTokenizer(nlp.vocab, use_pyvi=use_pyvi)

@@ -43,6 +43,13 @@ def populate_registry() -> None:
         make_preserve_existing_ents_filter,
     )
     from .pipeline.attributeruler import make_attribute_ruler_scorer
+    from .pipeline.dep_parser import make_parser_scorer
+    from .pipeline.morphologizer import make_morphologizer_scorer
+    from .lang.ja import create_tokenizer as create_japanese_tokenizer
+    from .lang.zh import create_chinese_tokenizer
+    from .lang.ko import create_tokenizer as create_korean_tokenizer
+    from .lang.vi import create_vietnamese_tokenizer
+    from .lang.th import create_thai_tokenizer
 
     # Import all pipeline components that were using registry decorators
     from .pipeline.tagger import make_tagger_scorer
@@ -65,6 +72,7 @@ def populate_registry() -> None:
     registry.misc("spacy.EmptyKB.v1")(empty_kb)
     registry.misc("spacy.CandidateGenerator.v1")(create_candidates)
     registry.misc("spacy.CandidateBatchGenerator.v1")(create_candidates_batch)
+    registry.misc("spacy.LookupsDataLoader.v1")(load_lookups_data)
 
     # Need to get references to the existing functions in registry by importing the function that is there
     # For the registry that was previously decorated
@@ -109,11 +117,13 @@ def populate_registry() -> None:
     )
     from .ml.models.span_finder import build_finder_model
     from .ml.models.parser import build_tb_parser_model
-    from .ml.models.multi_task import create_pretrain_vectors
+    from .ml.models.multi_task import create_pretrain_vectors, create_pretrain_characters
     from .ml.models.tagger import build_tagger_model
     from .ml.staticvectors import StaticVectors
     from .ml._precomputable_affine import PrecomputableAffine
     from .ml._character_embed import CharacterEmbed
+    from .ml.tb_framework import TransitionModel
+    from .language import create_tokenizer, load_lookups_data
     from .matcher.levenshtein import make_levenshtein_compare
     from .training.callbacks import create_copy_from_base_model
     from .ml.callbacks import create_models_with_nvtx_range, create_models_and_pipes_with_nvtx_range
@@ -150,6 +160,15 @@ def populate_registry() -> None:
     registry.scorers("spacy.entity_linker_scorer.v1")(make_entity_linker_scorer)
     registry.scorers("spacy.overlapping_labeled_spans_scorer.v1")(make_overlapping_labeled_spans_scorer)
     registry.scorers("spacy.attribute_ruler_scorer.v1")(make_attribute_ruler_scorer)
+    registry.scorers("spacy.parser_scorer.v1")(make_parser_scorer)
+    registry.scorers("spacy.morphologizer_scorer.v1")(make_morphologizer_scorer)
+    
+    # Register tokenizers
+    registry.tokenizers("spacy.ja.JapaneseTokenizer")(create_japanese_tokenizer)
+    registry.tokenizers("spacy.zh.ChineseTokenizer")(create_chinese_tokenizer)
+    registry.tokenizers("spacy.ko.KoreanTokenizer")(create_korean_tokenizer)
+    registry.tokenizers("spacy.vi.VietnameseTokenizer")(create_vietnamese_tokenizer)
+    registry.tokenizers("spacy.th.ThaiTokenizer")(create_thai_tokenizer)
 
     # Register tok2vec architectures we've modified
     registry.architectures("spacy.Tok2VecListener.v1")(tok2vec_listener_v1)
@@ -172,6 +191,7 @@ def populate_registry() -> None:
     registry.architectures("spacy.SpanFinder.v1")(build_finder_model) 
     registry.architectures("spacy.TransitionBasedParser.v2")(build_tb_parser_model)
     registry.architectures("spacy.PretrainVectors.v1")(create_pretrain_vectors)
+    registry.architectures("spacy.PretrainCharacters.v1")(create_pretrain_characters)
     registry.architectures("spacy.Tagger.v2")(build_tagger_model)
     
     # Register layers
@@ -183,6 +203,7 @@ def populate_registry() -> None:
     registry.layers("spacy.StaticVectors.v2")(StaticVectors)
     registry.layers("spacy.PrecomputableAffine.v1")(PrecomputableAffine)
     registry.layers("spacy.CharEmbed.v1")(CharacterEmbed)
+    registry.layers("spacy.TransitionModel.v1")(TransitionModel)
 
     # Register callbacks
     registry.callbacks("spacy.copy_from_base_model.v1")(create_copy_from_base_model)

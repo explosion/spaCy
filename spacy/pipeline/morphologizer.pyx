@@ -64,7 +64,6 @@ def morphologizer_score(examples, **kwargs):
     return results
 
 
-@registry.scorers("spacy.morphologizer_scorer.v1")
 def make_morphologizer_scorer():
     return morphologizer_score
 

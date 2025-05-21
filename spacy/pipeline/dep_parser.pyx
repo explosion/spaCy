@@ -66,7 +66,6 @@ def parser_score(examples, **kwargs):
     return results
 
 
-@registry.scorers("spacy.parser_scorer.v1")
 def make_parser_scorer():
     return parser_score
 

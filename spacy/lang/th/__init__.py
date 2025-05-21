@@ -13,7 +13,6 @@ DEFAULT_CONFIG = """
 """
 
 
-@registry.tokenizers("spacy.th.ThaiTokenizer")
 def create_thai_tokenizer():
     def thai_tokenizer_factory(nlp):
         return ThaiTokenizer(nlp.vocab)

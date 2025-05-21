@@ -4,7 +4,6 @@ from ..util import registry
 from .parser_model import ParserStepModel
 
 
-@registry.layers("spacy.TransitionModel.v1")
 def TransitionModel(
     tok2vec, lower, upper, resize_output, dropout=0.2, unseen_classes=set()
 ):
