@@ -1,6 +1,8 @@
 import warnings
 from collections import defaultdict
 from pathlib import Path
+import importlib
+import sys
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import srsly
@@ -500,3 +502,11 @@ class EntityRuler(Pipe):
             srsly.write_jsonl(path, self.patterns)
         else:
             to_disk(path, serializers, {})
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_entity_ruler":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_entity_ruler
+    raise AttributeError(f"module {__name__} has no attribute {name}")

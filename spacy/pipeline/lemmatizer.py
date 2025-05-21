@@ -1,5 +1,7 @@
 import warnings
 from pathlib import Path
+import importlib
+import sys
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 from thinc.api import Model
@@ -311,3 +313,11 @@ class Lemmatizer(Pipe):
         util.from_bytes(bytes_data, deserialize, exclude)
         self._validate_tables()
         return self
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_lemmatizer":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_lemmatizer
+    raise AttributeError(f"module {__name__} has no attribute {name}")

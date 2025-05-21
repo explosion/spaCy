@@ -1,6 +1,8 @@
 import warnings
 from functools import partial
 from pathlib import Path
+import importlib
+import sys
 from typing import (
     Any,
     Callable,
@@ -500,3 +502,14 @@ class SpanRuler(Pipe):
             "patterns": lambda p: srsly.write_jsonl(p, self.patterns),
         }
         util.to_disk(path, serializers, {})
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_span_ruler":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_span_ruler
+    elif name == "make_future_span_ruler":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_future_span_ruler
+    raise AttributeError(f"module {__name__} has no attribute {name}")

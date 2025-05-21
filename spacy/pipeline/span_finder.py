@@ -1,4 +1,6 @@
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
+import sys
+import importlib
 
 from thinc.api import Config, Model, Optimizer, set_dropout_rate
 from thinc.types import Floats2d
@@ -39,8 +41,6 @@ depth = 4
 """
 
 DEFAULT_SPAN_FINDER_MODEL = Config().from_str(span_finder_default_config)["model"]
-
-
 
 
 def make_span_finder_scorer():
@@ -278,3 +278,11 @@ class SpanFinder(TrainablePipe):
             self.model.initialize(X=docs, Y=Y)
         else:
             self.model.initialize()
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_span_finder":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_span_finder
+    raise AttributeError(f"module {__name__} has no attribute {name}")

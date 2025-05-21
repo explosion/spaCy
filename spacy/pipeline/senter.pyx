@@ -1,6 +1,8 @@
 # cython: infer_types=True, binding=True
 from itertools import islice
 from typing import Callable, Optional
+import sys
+import importlib
 
 from thinc.api import Config, Model, SequenceCategoricalCrossentropy
 
@@ -174,3 +176,11 @@ class SentenceRecognizer(Tagger):
 
     def add_label(self, label, values=None):
         raise NotImplementedError
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_senter":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_senter
+    raise AttributeError(f"module {__name__} has no attribute {name}")

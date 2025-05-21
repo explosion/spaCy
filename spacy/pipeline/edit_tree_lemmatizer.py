@@ -1,5 +1,7 @@
 from collections import Counter
 from itertools import islice
+import importlib
+import sys
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
 
 import numpy as np
@@ -386,3 +388,11 @@ class EditTreeLemmatizer(TrainablePipe):
             self.tree2label[tree_id] = len(self.cfg["labels"])
             self.cfg["labels"].append(tree_id)
         return self.tree2label[tree_id]
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_edit_tree_lemmatizer":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_edit_tree_lemmatizer
+    raise AttributeError(f"module {__name__} has no attribute {name}")

@@ -2,6 +2,8 @@ import random
 from itertools import islice
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
+import sys
+import importlib
 
 import srsly
 from thinc.api import Config, CosineDistance, Model, Optimizer, set_dropout_rate
@@ -572,3 +574,11 @@ class EntityLinker(TrainablePipe):
 
     def add_label(self, label):
         raise NotImplementedError
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_entity_linker":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_entity_linker
+    raise AttributeError(f"module {__name__} has no attribute {name}")

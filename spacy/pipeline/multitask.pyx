@@ -1,5 +1,7 @@
 # cython: infer_types=True, binding=True
 from typing import Optional
+import sys
+import importlib
 
 import numpy
 from thinc.api import Config, CosineDistance, Model, set_dropout_rate, to_categorical
@@ -205,3 +207,11 @@ class ClozeMultitask(TrainablePipe):
 
     def add_label(self, label):
         raise NotImplementedError
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_nn_labeller":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_nn_labeller
+    raise AttributeError(f"module {__name__} has no attribute {name}")

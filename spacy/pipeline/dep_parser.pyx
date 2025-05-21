@@ -1,6 +1,8 @@
 # cython: infer_types=True, binding=True
 from collections import defaultdict
 from typing import Callable, Optional
+import importlib
+import sys
 
 from thinc.api import Config, Model
 
@@ -164,3 +166,14 @@ cdef class DependencyParser(Parser):
         # because we instead have a label frequency cut-off and back off rare
         # labels to 'dep'.
         pass
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_parser":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_parser
+    elif name == "make_beam_parser":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_beam_parser
+    raise AttributeError(f"module {__name__} has no attribute {name}")

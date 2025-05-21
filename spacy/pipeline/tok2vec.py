@@ -1,4 +1,6 @@
 from itertools import islice
+import importlib
+import sys
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 from thinc.api import Config, Model, Optimizer, set_dropout_rate
@@ -315,3 +317,11 @@ def forward(model: Tok2VecListener, inputs, is_train: bool):
 
 def _empty_backprop(dX):  # for pickling
     return []
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_tok2vec":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_tok2vec
+    raise AttributeError(f"module {__name__} has no attribute {name}")

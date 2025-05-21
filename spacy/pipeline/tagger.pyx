@@ -1,6 +1,8 @@
 # cython: infer_types=True, binding=True
 from itertools import islice
 from typing import Callable, Optional
+import importlib
+import sys
 
 import numpy
 from thinc.api import Config, Model, SequenceCategoricalCrossentropy, set_dropout_rate
@@ -291,3 +293,11 @@ class Tagger(TrainablePipe):
         self.cfg["labels"].append(label)
         self.vocab.strings.add(label)
         return 1
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_tagger":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_tagger
+    raise AttributeError(f"module {__name__} has no attribute {name}")

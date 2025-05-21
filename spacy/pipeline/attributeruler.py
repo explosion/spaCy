@@ -1,5 +1,7 @@
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+import sys
+import importlib
 
 import srsly
 
@@ -344,3 +346,11 @@ def _split_morph_attrs(attrs: dict) -> Tuple[dict, dict]:
         else:
             morph_attrs[k] = v
     return other_attrs, morph_attrs
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_attribute_ruler":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_attribute_ruler
+    raise AttributeError(f"module {__name__} has no attribute {name}")

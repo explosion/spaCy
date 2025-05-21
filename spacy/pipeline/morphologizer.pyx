@@ -1,6 +1,8 @@
 # cython: infer_types=True, binding=True
 from itertools import islice
 from typing import Callable, Dict, Optional, Union
+import sys
+import importlib
 
 from thinc.api import Config, Model, SequenceCategoricalCrossentropy
 
@@ -290,3 +292,11 @@ class Morphologizer(Tagger):
         if self.model.ops.xp.isnan(loss):
             raise ValueError(Errors.E910.format(name=self.name))
         return float(loss), d_scores
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_morphologizer":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_morphologizer
+    raise AttributeError(f"module {__name__} has no attribute {name}")

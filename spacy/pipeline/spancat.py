@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from functools import partial
+import importlib
+import sys
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy
@@ -655,3 +657,14 @@ class SpanCategorizer(TrainablePipe):
 
         spans.attrs["scores"] = numpy.array(attrs_scores)
         return spans
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_spancat":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_spancat
+    elif name == "make_spancat_singlelabel":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_spancat_singlelabel
+    raise AttributeError(f"module {__name__} has no attribute {name}")

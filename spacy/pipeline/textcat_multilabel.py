@@ -1,5 +1,7 @@
 from itertools import islice
 from typing import Any, Callable, Dict, Iterable, List, Optional
+import sys
+import importlib
 
 from thinc.api import Config, Model
 from thinc.types import Floats2d
@@ -70,8 +72,6 @@ window_size = 1
 maxout_pieces = 3
 subword_features = true
 """
-
-
 
 
 def textcat_multilabel_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
@@ -170,3 +170,11 @@ class MultiLabel_TextCategorizer(TextCategorizer):
             for val in ex.reference.cats.values():
                 if not (val == 1.0 or val == 0.0):
                     raise ValueError(Errors.E851.format(val=val))
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_multilabel_textcat":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_multilabel_textcat
+    raise AttributeError(f"module {__name__} has no attribute {name}")

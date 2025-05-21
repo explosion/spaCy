@@ -4,6 +4,8 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 import numpy
 from thinc.api import Config, Model, Optimizer, get_array_module, set_dropout_rate
 from thinc.types import Floats2d
+import sys
+import importlib
 
 from ..errors import Errors
 from ..language import Language
@@ -72,8 +74,6 @@ window_size = 1
 maxout_pieces = 3
 subword_features = true
 """
-
-
 
 
 def textcat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
@@ -373,3 +373,11 @@ class TextCategorizer(TrainablePipe):
             for val in vals:
                 if not (val == 1.0 or val == 0.0):
                     raise ValueError(Errors.E851.format(val=val))
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_textcat":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_textcat
+    raise AttributeError(f"module {__name__} has no attribute {name}")

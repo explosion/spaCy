@@ -1,6 +1,8 @@
 # cython: infer_types=True, binding=True
 from collections import defaultdict
 from typing import Callable, Optional
+import importlib
+import sys
 
 from thinc.api import Config, Model
 
@@ -117,3 +119,14 @@ cdef class EntityRecognizer(Parser):
                     score_dict[(start, end, label)] += score
             entity_scores.append(score_dict)
         return entity_scores
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_ner":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_ner
+    elif name == "make_beam_ner":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_beam_ner
+    raise AttributeError(f"module {__name__} has no attribute {name}")

@@ -1,5 +1,7 @@
 import warnings
 from typing import Any, Dict
+import sys
+import importlib
 
 import srsly
 
@@ -73,8 +75,6 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     return doc
 
 
-
-
 class TokenSplitter:
     def __init__(self, min_length: int = 0, split_length: int = 0):
         self.min_length = min_length
@@ -132,8 +132,6 @@ class TokenSplitter:
         util.from_disk(path, serializers, [])
 
 
-
-
 class DocCleaner:
     def __init__(self, attrs: Dict[str, Any], *, silent: bool = True):
         self.cfg: Dict[str, Any] = {"attrs": dict(attrs), "silent": silent}
@@ -186,3 +184,14 @@ class DocCleaner:
             "cfg": lambda p: self.cfg.update(srsly.read_json(p)),
         }
         util.from_disk(path, serializers, [])
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_doc_cleaner":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_doc_cleaner
+    elif name == "make_token_splitter":
+        module = importlib.import_module("spacy.registrations")
+        return module.make_token_splitter
+    raise AttributeError(f"module {__name__} has no attribute {name}")
