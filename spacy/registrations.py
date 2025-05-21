@@ -107,13 +107,26 @@ def populate_registry() -> None:
         build_mean_max_reducer,
         build_spancat_model
     )
+    from .ml.models.span_finder import build_finder_model
+    from .ml.models.parser import build_tb_parser_model
+    from .ml.models.multi_task import create_pretrain_vectors
+    from .ml.models.tagger import build_tagger_model
+    from .ml.staticvectors import StaticVectors
+    from .ml._precomputable_affine import PrecomputableAffine
+    from .ml._character_embed import CharacterEmbed
     from .matcher.levenshtein import make_levenshtein_compare
     from .training.callbacks import create_copy_from_base_model
+    from .ml.callbacks import create_models_with_nvtx_range, create_models_and_pipes_with_nvtx_range
     from .training.loggers import console_logger, console_logger_v3
     from .training.batchers import (
         configure_minibatch_by_padded_size,
         configure_minibatch_by_words,
         configure_minibatch
+    )
+    from .training.augment import (
+        create_combined_augmenter,
+        create_lower_casing_augmenter,
+        create_orth_variants_augmenter
     )
 
     # Register scorers
@@ -156,6 +169,10 @@ def populate_registry() -> None:
     registry.architectures("spacy.TextCatParametricAttention.v1")(build_textcat_parametric_attention_v1)
     registry.architectures("spacy.TextCatReduce.v1")(build_reduce_text_classifier)
     registry.architectures("spacy.SpanCategorizer.v1")(build_spancat_model)
+    registry.architectures("spacy.SpanFinder.v1")(build_finder_model) 
+    registry.architectures("spacy.TransitionBasedParser.v2")(build_tb_parser_model)
+    registry.architectures("spacy.PretrainVectors.v1")(create_pretrain_vectors)
+    registry.architectures("spacy.Tagger.v2")(build_tagger_model)
     
     # Register layers
     registry.layers("spacy.FeatureExtractor.v1")(FeatureExtractor)
@@ -163,9 +180,14 @@ def populate_registry() -> None:
     registry.layers("spacy.extract_ngrams.v1")(extract_ngrams)
     registry.layers("spacy.LinearLogistic.v1")(build_linear_logistic)
     registry.layers("spacy.mean_max_reducer.v1")(build_mean_max_reducer)
+    registry.layers("spacy.StaticVectors.v2")(StaticVectors)
+    registry.layers("spacy.PrecomputableAffine.v1")(PrecomputableAffine)
+    registry.layers("spacy.CharEmbed.v1")(CharacterEmbed)
 
     # Register callbacks
     registry.callbacks("spacy.copy_from_base_model.v1")(create_copy_from_base_model)
+    registry.callbacks("spacy.models_with_nvtx_range.v1")(create_models_with_nvtx_range)
+    registry.callbacks("spacy.models_and_pipes_with_nvtx_range.v1")(create_models_and_pipes_with_nvtx_range)
     
     # Register loggers
     registry.loggers("spacy.ConsoleLogger.v2")(console_logger)
@@ -175,6 +197,11 @@ def populate_registry() -> None:
     registry.batchers("spacy.batch_by_padded.v1")(configure_minibatch_by_padded_size)
     registry.batchers("spacy.batch_by_words.v1")(configure_minibatch_by_words)
     registry.batchers("spacy.batch_by_sequence.v1")(configure_minibatch)
+    
+    # Register augmenters
+    registry.augmenters("spacy.combined_augmenter.v1")(create_combined_augmenter)
+    registry.augmenters("spacy.lower_case.v1")(create_lower_casing_augmenter)
+    registry.augmenters("spacy.orth_variants.v1")(create_orth_variants_augmenter)
     
     # Set the flag to indicate that the registry has been populated
     REGISTRY_POPULATED = True

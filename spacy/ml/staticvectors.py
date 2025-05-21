@@ -13,7 +13,6 @@ from ..vectors import Mode, Vectors
 from ..vocab import Vocab
 
 
-@registry.layers("spacy.StaticVectors.v2")
 def StaticVectors(
     nO: Optional[int] = None,
     nM: Optional[int] = None,
