@@ -93,7 +93,28 @@ def populate_registry() -> None:
         create_candidates, 
         create_candidates_batch
     )
+    from .ml.models.textcat import (
+        build_simple_cnn_text_classifier,
+        build_bow_text_classifier,
+        build_bow_text_classifier_v3,
+        build_text_classifier_v2,
+        build_text_classifier_lowdata,
+        build_textcat_parametric_attention_v1,
+        build_reduce_text_classifier
+    )
+    from .ml.models.spancat import (
+        build_linear_logistic,
+        build_mean_max_reducer,
+        build_spancat_model
+    )
     from .matcher.levenshtein import make_levenshtein_compare
+    from .training.callbacks import create_copy_from_base_model
+    from .training.loggers import console_logger, console_logger_v3
+    from .training.batchers import (
+        configure_minibatch_by_padded_size,
+        configure_minibatch_by_words,
+        configure_minibatch
+    )
 
     # Register scorers
     registry.scorers("spacy.tagger_scorer.v1")(make_tagger_scorer)
@@ -127,11 +148,33 @@ def populate_registry() -> None:
     registry.architectures("spacy.MishWindowEncoder.v2")(MishWindowEncoder)
     registry.architectures("spacy.TorchBiLSTMEncoder.v1")(BiLSTMEncoder)
     registry.architectures("spacy.EntityLinker.v2")(build_nel_encoder)
+    registry.architectures("spacy.TextCatCNN.v2")(build_simple_cnn_text_classifier)
+    registry.architectures("spacy.TextCatBOW.v2")(build_bow_text_classifier)
+    registry.architectures("spacy.TextCatBOW.v3")(build_bow_text_classifier_v3)
+    registry.architectures("spacy.TextCatEnsemble.v2")(build_text_classifier_v2)
+    registry.architectures("spacy.TextCatLowData.v1")(build_text_classifier_lowdata)
+    registry.architectures("spacy.TextCatParametricAttention.v1")(build_textcat_parametric_attention_v1)
+    registry.architectures("spacy.TextCatReduce.v1")(build_reduce_text_classifier)
+    registry.architectures("spacy.SpanCategorizer.v1")(build_spancat_model)
     
     # Register layers
     registry.layers("spacy.FeatureExtractor.v1")(FeatureExtractor)
     registry.layers("spacy.extract_spans.v1")(extract_spans)
     registry.layers("spacy.extract_ngrams.v1")(extract_ngrams)
+    registry.layers("spacy.LinearLogistic.v1")(build_linear_logistic)
+    registry.layers("spacy.mean_max_reducer.v1")(build_mean_max_reducer)
 
+    # Register callbacks
+    registry.callbacks("spacy.copy_from_base_model.v1")(create_copy_from_base_model)
+    
+    # Register loggers
+    registry.loggers("spacy.ConsoleLogger.v2")(console_logger)
+    registry.loggers("spacy.ConsoleLogger.v3")(console_logger_v3)
+    
+    # Register batchers
+    registry.batchers("spacy.batch_by_padded.v1")(configure_minibatch_by_padded_size)
+    registry.batchers("spacy.batch_by_words.v1")(configure_minibatch_by_words)
+    registry.batchers("spacy.batch_by_sequence.v1")(configure_minibatch)
+    
     # Set the flag to indicate that the registry has been populated
     REGISTRY_POPULATED = True

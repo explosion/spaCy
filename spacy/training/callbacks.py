@@ -7,7 +7,6 @@ if TYPE_CHECKING:
     from ..language import Language
 
 
-@registry.callbacks("spacy.copy_from_base_model.v1")
 def create_copy_from_base_model(
     tokenizer: Optional[str] = None,
     vocab: Optional[str] = None,
