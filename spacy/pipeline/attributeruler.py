@@ -43,7 +43,6 @@ def attribute_ruler_score(examples: Iterable[Example], **kwargs) -> Dict[str, An
     return results
 
 
-@registry.scorers("spacy.attribute_ruler_scorer.v1")
 def make_attribute_ruler_scorer():
     return attribute_ruler_score
 

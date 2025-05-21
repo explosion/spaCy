@@ -60,7 +60,6 @@ def prioritize_new_ents_filter(
     return entities + new_entities
 
 
-@registry.misc("spacy.prioritize_new_ents_filter.v1")
 def make_prioritize_new_ents_filter():
     return prioritize_new_ents_filter
 
@@ -91,7 +90,6 @@ def prioritize_existing_ents_filter(
     return entities + new_entities
 
 
-@registry.misc("spacy.prioritize_existing_ents_filter.v1")
 def make_preserve_existing_ents_filter():
     return prioritize_existing_ents_filter
 
@@ -111,7 +109,6 @@ def overlapping_labeled_spans_score(
     return Scorer.score_spans(examples, **kwargs)
 
 
-@registry.scorers("spacy.overlapping_labeled_spans_scorer.v1")
 def make_overlapping_labeled_spans_scorer(spans_key: str = DEFAULT_SPANS_KEY):
     return partial(overlapping_labeled_spans_score, spans_key=spans_key)
 

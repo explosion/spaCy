@@ -35,6 +35,14 @@ def populate_registry() -> None:
         build_preset_spans_suggester,
         make_spancat_scorer,
     )
+    # Import the functions we refactored by removing direct registry decorators
+    from .pipeline.entity_linker import make_entity_linker_scorer
+    from .pipeline.span_ruler import (
+        make_overlapping_labeled_spans_scorer,
+        make_prioritize_new_ents_filter,
+        make_preserve_existing_ents_filter,
+    )
+    from .pipeline.attributeruler import make_attribute_ruler_scorer
 
     # Import all pipeline components that were using registry decorators
     from .pipeline.tagger import make_tagger_scorer
@@ -49,6 +57,8 @@ def populate_registry() -> None:
     registry.misc("spacy.ngram_suggester.v1")(build_ngram_suggester)
     registry.misc("spacy.ngram_range_suggester.v1")(build_ngram_range_suggester)
     registry.misc("spacy.preset_spans_suggester.v1")(build_preset_spans_suggester)
+    registry.misc("spacy.prioritize_new_ents_filter.v1")(make_prioritize_new_ents_filter)
+    registry.misc("spacy.prioritize_existing_ents_filter.v1")(make_preserve_existing_ents_filter)
 
     # Need to get references to the existing functions in registry by importing the function that is there
     # For the registry that was previously decorated
@@ -83,6 +93,9 @@ def populate_registry() -> None:
     registry.scorers("spacy.lemmatizer_scorer.v1")(make_lemmatizer_scorer)
     registry.scorers("spacy.span_finder_scorer.v1")(make_span_finder_scorer)
     registry.scorers("spacy.spancat_scorer.v1")(make_spancat_scorer)
+    registry.scorers("spacy.entity_linker_scorer.v1")(make_entity_linker_scorer)
+    registry.scorers("spacy.overlapping_labeled_spans_scorer.v1")(make_overlapping_labeled_spans_scorer)
+    registry.scorers("spacy.attribute_ruler_scorer.v1")(make_attribute_ruler_scorer)
 
     # Register tok2vec architectures we've modified
     registry.architectures("spacy.Tok2VecListener.v1")(tok2vec_listener_v1)
