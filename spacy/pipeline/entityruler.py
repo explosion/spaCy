@@ -21,8 +21,6 @@ DEFAULT_ENT_ID_SEP = "||"
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 
 
-
-
 def entity_ruler_score(examples, **kwargs):
     return get_ner_prf(examples)
 

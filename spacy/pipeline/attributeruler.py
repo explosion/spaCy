@@ -24,8 +24,6 @@ TagMapType = Dict[str, Dict[Union[int, str], Union[int, str]]]
 MorphRulesType = Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
 
 
-
-
 def attribute_ruler_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     def morph_key_getter(token, attr):
         return getattr(token, attr).key

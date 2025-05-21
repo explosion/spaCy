@@ -41,8 +41,6 @@ subword_features = true
 DEFAULT_EDIT_TREE_LEMMATIZER_MODEL = Config().from_str(default_model_config)["model"]
 
 
-
-
 class EditTreeLemmatizer(TrainablePipe):
     """
     Lemmatizer that lemmatizes each word using a predicted edit tree.

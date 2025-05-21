@@ -34,10 +34,6 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 DEFAULT_SPANS_KEY = "ruler"
 
 
-
-
-
-
 def prioritize_new_ents_filter(
     entities: Iterable[Span], spans: Iterable[Span]
 ) -> List[Span]:

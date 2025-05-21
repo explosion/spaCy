@@ -42,8 +42,6 @@ subword_features = true
 DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
 
 
-
-
 def entity_linker_score(examples, **kwargs):
     return Scorer.score_links(examples, negative_labels=[EntityLinker.NIL], **kwargs)
 

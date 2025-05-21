@@ -159,10 +159,6 @@ def build_preset_spans_suggester(spans_key: str) -> Suggester:
     return partial(preset_spans_suggester, spans_key=spans_key)
 
 
-
-
-
-
 def spancat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     kwargs = dict(kwargs)
     attr_prefix = "spans_"

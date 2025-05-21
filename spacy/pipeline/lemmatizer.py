@@ -18,8 +18,6 @@ from ..vocab import Vocab
 from .pipe import Pipe
 
 
-
-
 def lemmatizer_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     return Scorer.score_token_attr(examples, "lemma", **kwargs)
 
