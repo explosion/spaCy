@@ -124,9 +124,9 @@ cdef class EntityRecognizer(Parser):
 # Setup backwards compatibility hook for factories
 def __getattr__(name):
     if name == "make_ner":
-        module = importlib.import_module("spacy.registrations")
+        module = importlib.import_module("spacy.pipeline.factories")
         return module.make_ner
     elif name == "make_beam_ner":
-        module = importlib.import_module("spacy.registrations")
+        module = importlib.import_module("spacy.pipeline.factories")
         return module.make_beam_ner
     raise AttributeError(f"module {__name__} has no attribute {name}")

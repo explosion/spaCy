@@ -507,6 +507,6 @@ class EntityRuler(Pipe):
 # Setup backwards compatibility hook for factories
 def __getattr__(name):
     if name == "make_entity_ruler":
-        module = importlib.import_module("spacy.registrations")
+        module = importlib.import_module("spacy.pipeline.factories")
         return module.make_entity_ruler
     raise AttributeError(f"module {__name__} has no attribute {name}")

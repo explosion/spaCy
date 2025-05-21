@@ -378,6 +378,6 @@ class TextCategorizer(TrainablePipe):
 # Setup backwards compatibility hook for factories
 def __getattr__(name):
     if name == "make_textcat":
-        module = importlib.import_module("spacy.registrations")
+        module = importlib.import_module("spacy.pipeline.factories")
         return module.make_textcat
     raise AttributeError(f"module {__name__} has no attribute {name}")

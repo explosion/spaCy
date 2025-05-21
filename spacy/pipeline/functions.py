@@ -189,9 +189,9 @@ class DocCleaner:
 # Setup backwards compatibility hook for factories
 def __getattr__(name):
     if name == "make_doc_cleaner":
-        module = importlib.import_module("spacy.registrations")
+        module = importlib.import_module("spacy.pipeline.factories")
         return module.make_doc_cleaner
     elif name == "make_token_splitter":
-        module = importlib.import_module("spacy.registrations")
+        module = importlib.import_module("spacy.pipeline.factories")
         return module.make_token_splitter
     raise AttributeError(f"module {__name__} has no attribute {name}")

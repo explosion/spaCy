@@ -171,9 +171,9 @@ cdef class DependencyParser(Parser):
 # Setup backwards compatibility hook for factories
 def __getattr__(name):
     if name == "make_parser":
-        module = importlib.import_module("spacy.registrations")
+        module = importlib.import_module("spacy.pipeline.factories")
         return module.make_parser
     elif name == "make_beam_parser":
-        module = importlib.import_module("spacy.registrations")
+        module = importlib.import_module("spacy.pipeline.factories")
         return module.make_beam_parser
     raise AttributeError(f"module {__name__} has no attribute {name}")
