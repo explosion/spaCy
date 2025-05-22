@@ -1,4 +1,6 @@
 # cython: infer_types=True, binding=True
+import importlib
+import sys
 from typing import Callable, List, Optional
 
 import srsly
@@ -12,22 +14,6 @@ from .senter import senter_score
 
 # see #9050
 BACKWARD_OVERWRITE = False
-
-
-@Language.factory(
-    "sentencizer",
-    assigns=["token.is_sent_start", "doc.sents"],
-    default_config={"punct_chars": None, "overwrite": False, "scorer": {"@scorers": "spacy.senter_scorer.v1"}},
-    default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
-)
-def make_sentencizer(
-    nlp: Language,
-    name: str,
-    punct_chars: Optional[List[str]],
-    overwrite: bool,
-    scorer: Optional[Callable],
-):
-    return Sentencizer(name, punct_chars=punct_chars, overwrite=overwrite, scorer=scorer)
 
 
 class Sentencizer(Pipe):
@@ -181,3 +167,11 @@ class Sentencizer(Pipe):
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         self.overwrite = cfg.get("overwrite", self.overwrite)
         return self
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_sentencizer":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_sentencizer
+    raise AttributeError(f"module {__name__} has no attribute {name}")

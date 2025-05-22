@@ -1,3 +1,5 @@
+import importlib
+import sys
 from collections import Counter
 from itertools import islice
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
@@ -37,43 +39,6 @@ maxout_pieces = 3
 subword_features = true
 """
 DEFAULT_EDIT_TREE_LEMMATIZER_MODEL = Config().from_str(default_model_config)["model"]
-
-
-@Language.factory(
-    "trainable_lemmatizer",
-    assigns=["token.lemma"],
-    requires=[],
-    default_config={
-        "model": DEFAULT_EDIT_TREE_LEMMATIZER_MODEL,
-        "backoff": "orth",
-        "min_tree_freq": 3,
-        "overwrite": False,
-        "top_k": 1,
-        "scorer": {"@scorers": "spacy.lemmatizer_scorer.v1"},
-    },
-    default_score_weights={"lemma_acc": 1.0},
-)
-def make_edit_tree_lemmatizer(
-    nlp: Language,
-    name: str,
-    model: Model,
-    backoff: Optional[str],
-    min_tree_freq: int,
-    overwrite: bool,
-    top_k: int,
-    scorer: Optional[Callable],
-):
-    """Construct an EditTreeLemmatizer component."""
-    return EditTreeLemmatizer(
-        nlp.vocab,
-        model,
-        name,
-        backoff=backoff,
-        min_tree_freq=min_tree_freq,
-        overwrite=overwrite,
-        top_k=top_k,
-        scorer=scorer,
-    )
 
 
 class EditTreeLemmatizer(TrainablePipe):
@@ -421,3 +386,11 @@ class EditTreeLemmatizer(TrainablePipe):
             self.tree2label[tree_id] = len(self.cfg["labels"])
             self.cfg["labels"].append(tree_id)
         return self.tree2label[tree_id]
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_edit_tree_lemmatizer":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_edit_tree_lemmatizer
+    raise AttributeError(f"module {__name__} has no attribute {name}")

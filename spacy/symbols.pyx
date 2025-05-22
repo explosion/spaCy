@@ -479,3 +479,4 @@ NAMES = [it[0] for it in sorted(IDS.items(), key=sort_nums)]
 # (which is generating an enormous amount of C++ in Cython 0.24+)
 # We keep the enum cdef, and just make sure the names are available to Python
 locals().update(IDS)
+

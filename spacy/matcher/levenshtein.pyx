@@ -1,4 +1,4 @@
-# cython: binding=True, infer_types=True
+# cython: binding=True, infer_types=True, language_level=3
 from cpython.object cimport PyObject
 from libc.stdint cimport int64_t
 
@@ -27,6 +27,5 @@ cpdef bint levenshtein_compare(input_text: str, pattern_text: str, fuzzy: int = 
     return levenshtein(input_text, pattern_text, max_edits) <= max_edits
 
 
-@registry.misc("spacy.levenshtein_compare.v1")
 def make_levenshtein_compare():
     return levenshtein_compare

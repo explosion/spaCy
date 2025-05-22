@@ -1,3 +1,5 @@
+import importlib
+import sys
 from itertools import islice
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
@@ -74,46 +76,6 @@ subword_features = true
 """
 
 
-@Language.factory(
-    "textcat",
-    assigns=["doc.cats"],
-    default_config={
-        "threshold": 0.0,
-        "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
-        "scorer": {"@scorers": "spacy.textcat_scorer.v2"},
-    },
-    default_score_weights={
-        "cats_score": 1.0,
-        "cats_score_desc": None,
-        "cats_micro_p": None,
-        "cats_micro_r": None,
-        "cats_micro_f": None,
-        "cats_macro_p": None,
-        "cats_macro_r": None,
-        "cats_macro_f": None,
-        "cats_macro_auc": None,
-        "cats_f_per_type": None,
-    },
-)
-def make_textcat(
-    nlp: Language,
-    name: str,
-    model: Model[List[Doc], List[Floats2d]],
-    threshold: float,
-    scorer: Optional[Callable],
-) -> "TextCategorizer":
-    """Create a TextCategorizer component. The text categorizer predicts categories
-    over a whole document. It can learn one or more labels, and the labels are considered
-    to be mutually exclusive (i.e. one true label per doc).
-
-    model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
-        scores for each category.
-    threshold (float): Cutoff to consider a prediction "positive".
-    scorer (Optional[Callable]): The scoring method.
-    """
-    return TextCategorizer(nlp.vocab, model, name, threshold=threshold, scorer=scorer)
-
-
 def textcat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     return Scorer.score_cats(
         examples,
@@ -123,7 +85,6 @@ def textcat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     )
 
 
-@registry.scorers("spacy.textcat_scorer.v2")
 def make_textcat_scorer():
     return textcat_score
 
@@ -412,3 +373,11 @@ class TextCategorizer(TrainablePipe):
             for val in vals:
                 if not (val == 1.0 or val == 0.0):
                     raise ValueError(Errors.E851.format(val=val))
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_textcat":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_textcat
+    raise AttributeError(f"module {__name__} has no attribute {name}")

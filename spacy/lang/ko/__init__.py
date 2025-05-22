@@ -20,7 +20,6 @@ DEFAULT_CONFIG = """
 """
 
 
-@registry.tokenizers("spacy.ko.KoreanTokenizer")
 def create_tokenizer():
     def korean_tokenizer_factory(nlp):
         return KoreanTokenizer(nlp.vocab)

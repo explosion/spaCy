@@ -1,3 +1,5 @@
+import importlib
+import sys
 from itertools import islice
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
@@ -22,13 +24,6 @@ maxout_pieces = 3
 subword_features = true
 """
 DEFAULT_TOK2VEC_MODEL = Config().from_str(default_model_config)["model"]
-
-
-@Language.factory(
-    "tok2vec", assigns=["doc.tensor"], default_config={"model": DEFAULT_TOK2VEC_MODEL}
-)
-def make_tok2vec(nlp: Language, name: str, model: Model) -> "Tok2Vec":
-    return Tok2Vec(nlp.vocab, model, name)
 
 
 class Tok2Vec(TrainablePipe):
@@ -320,3 +315,11 @@ def forward(model: Tok2VecListener, inputs, is_train: bool):
 
 def _empty_backprop(dX):  # for pickling
     return []
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_tok2vec":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_tok2vec
+    raise AttributeError(f"module {__name__} has no attribute {name}")

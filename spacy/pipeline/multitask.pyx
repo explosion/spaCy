@@ -1,4 +1,6 @@
 # cython: infer_types=True, binding=True
+import importlib
+import sys
 from typing import Optional
 
 import numpy
@@ -28,14 +30,6 @@ maxout_pieces = 2
 subword_features = true
 """
 DEFAULT_MT_MODEL = Config().from_str(default_model_config)["model"]
-
-
-@Language.factory(
-    "nn_labeller",
-    default_config={"labels": None, "target": "dep_tag_offset", "model": DEFAULT_MT_MODEL}
-)
-def make_nn_labeller(nlp: Language, name: str, model: Model, labels: Optional[dict], target: str):
-    return MultitaskObjective(nlp.vocab, model, name)
 
 
 class MultitaskObjective(Tagger):
@@ -213,3 +207,11 @@ class ClozeMultitask(TrainablePipe):
 
     def add_label(self, label):
         raise NotImplementedError
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_nn_labeller":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_nn_labeller
+    raise AttributeError(f"module {__name__} has no attribute {name}")

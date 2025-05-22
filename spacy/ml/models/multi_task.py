@@ -30,7 +30,6 @@ if TYPE_CHECKING:
     from ...vocab import Vocab  # noqa: F401
 
 
-@registry.architectures("spacy.PretrainVectors.v1")
 def create_pretrain_vectors(
     maxout_pieces: int, hidden_size: int, loss: str
 ) -> Callable[["Vocab", Model], Model]:
@@ -57,7 +56,6 @@ def create_pretrain_vectors(
     return create_vectors_objective
 
 
-@registry.architectures("spacy.PretrainCharacters.v1")
 def create_pretrain_characters(
     maxout_pieces: int, hidden_size: int, n_characters: int
 ) -> Callable[["Vocab", Model], Model]:

@@ -1,3 +1,5 @@
+import importlib
+import sys
 import warnings
 from functools import partial
 from pathlib import Path
@@ -32,105 +34,6 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 DEFAULT_SPANS_KEY = "ruler"
 
 
-@Language.factory(
-    "future_entity_ruler",
-    assigns=["doc.ents"],
-    default_config={
-        "phrase_matcher_attr": None,
-        "validate": False,
-        "overwrite_ents": False,
-        "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
-        "ent_id_sep": "__unused__",
-        "matcher_fuzzy_compare": {"@misc": "spacy.levenshtein_compare.v1"},
-    },
-    default_score_weights={
-        "ents_f": 1.0,
-        "ents_p": 0.0,
-        "ents_r": 0.0,
-        "ents_per_type": None,
-    },
-)
-def make_entity_ruler(
-    nlp: Language,
-    name: str,
-    phrase_matcher_attr: Optional[Union[int, str]],
-    matcher_fuzzy_compare: Callable,
-    validate: bool,
-    overwrite_ents: bool,
-    scorer: Optional[Callable],
-    ent_id_sep: str,
-):
-    if overwrite_ents:
-        ents_filter = prioritize_new_ents_filter
-    else:
-        ents_filter = prioritize_existing_ents_filter
-    return SpanRuler(
-        nlp,
-        name,
-        spans_key=None,
-        spans_filter=None,
-        annotate_ents=True,
-        ents_filter=ents_filter,
-        phrase_matcher_attr=phrase_matcher_attr,
-        matcher_fuzzy_compare=matcher_fuzzy_compare,
-        validate=validate,
-        overwrite=False,
-        scorer=scorer,
-    )
-
-
-@Language.factory(
-    "span_ruler",
-    assigns=["doc.spans"],
-    default_config={
-        "spans_key": DEFAULT_SPANS_KEY,
-        "spans_filter": None,
-        "annotate_ents": False,
-        "ents_filter": {"@misc": "spacy.first_longest_spans_filter.v1"},
-        "phrase_matcher_attr": None,
-        "matcher_fuzzy_compare": {"@misc": "spacy.levenshtein_compare.v1"},
-        "validate": False,
-        "overwrite": True,
-        "scorer": {
-            "@scorers": "spacy.overlapping_labeled_spans_scorer.v1",
-            "spans_key": DEFAULT_SPANS_KEY,
-        },
-    },
-    default_score_weights={
-        f"spans_{DEFAULT_SPANS_KEY}_f": 1.0,
-        f"spans_{DEFAULT_SPANS_KEY}_p": 0.0,
-        f"spans_{DEFAULT_SPANS_KEY}_r": 0.0,
-        f"spans_{DEFAULT_SPANS_KEY}_per_type": None,
-    },
-)
-def make_span_ruler(
-    nlp: Language,
-    name: str,
-    spans_key: Optional[str],
-    spans_filter: Optional[Callable[[Iterable[Span], Iterable[Span]], Iterable[Span]]],
-    annotate_ents: bool,
-    ents_filter: Callable[[Iterable[Span], Iterable[Span]], Iterable[Span]],
-    phrase_matcher_attr: Optional[Union[int, str]],
-    matcher_fuzzy_compare: Callable,
-    validate: bool,
-    overwrite: bool,
-    scorer: Optional[Callable],
-):
-    return SpanRuler(
-        nlp,
-        name,
-        spans_key=spans_key,
-        spans_filter=spans_filter,
-        annotate_ents=annotate_ents,
-        ents_filter=ents_filter,
-        phrase_matcher_attr=phrase_matcher_attr,
-        matcher_fuzzy_compare=matcher_fuzzy_compare,
-        validate=validate,
-        overwrite=overwrite,
-        scorer=scorer,
-    )
-
-
 def prioritize_new_ents_filter(
     entities: Iterable[Span], spans: Iterable[Span]
 ) -> List[Span]:
@@ -157,7 +60,6 @@ def prioritize_new_ents_filter(
     return entities + new_entities
 
 
-@registry.misc("spacy.prioritize_new_ents_filter.v1")
 def make_prioritize_new_ents_filter():
     return prioritize_new_ents_filter
 
@@ -188,7 +90,6 @@ def prioritize_existing_ents_filter(
     return entities + new_entities
 
 
-@registry.misc("spacy.prioritize_existing_ents_filter.v1")
 def make_preserve_existing_ents_filter():
     return prioritize_existing_ents_filter
 
@@ -208,7 +109,6 @@ def overlapping_labeled_spans_score(
     return Scorer.score_spans(examples, **kwargs)
 
 
-@registry.scorers("spacy.overlapping_labeled_spans_scorer.v1")
 def make_overlapping_labeled_spans_scorer(spans_key: str = DEFAULT_SPANS_KEY):
     return partial(overlapping_labeled_spans_score, spans_key=spans_key)
 
@@ -595,3 +495,14 @@ class SpanRuler(Pipe):
             "patterns": lambda p: srsly.write_jsonl(p, self.patterns),
         }
         util.to_disk(path, serializers, {})
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_span_ruler":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_span_ruler
+    elif name == "make_entity_ruler":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_future_entity_ruler
+    raise AttributeError(f"module {__name__} has no attribute {name}")

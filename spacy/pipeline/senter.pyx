@@ -1,4 +1,6 @@
 # cython: infer_types=True, binding=True
+import importlib
+import sys
 from itertools import islice
 from typing import Callable, Optional
 
@@ -34,16 +36,6 @@ subword_features = true
 DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
 
 
-@Language.factory(
-    "senter",
-    assigns=["token.is_sent_start"],
-    default_config={"model": DEFAULT_SENTER_MODEL, "overwrite": False, "scorer": {"@scorers": "spacy.senter_scorer.v1"}},
-    default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
-)
-def make_senter(nlp: Language, name: str, model: Model, overwrite: bool, scorer: Optional[Callable]):
-    return SentenceRecognizer(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer)
-
-
 def senter_score(examples, **kwargs):
     def has_sents(doc):
         return doc.has_annotation("SENT_START")
@@ -53,7 +45,6 @@ def senter_score(examples, **kwargs):
     return results
 
 
-@registry.scorers("spacy.senter_scorer.v1")
 def make_senter_scorer():
     return senter_score
 
@@ -185,3 +176,11 @@ class SentenceRecognizer(Tagger):
 
     def add_label(self, label, values=None):
         raise NotImplementedError
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_senter":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_senter
+    raise AttributeError(f"module {__name__} has no attribute {name}")

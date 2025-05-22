@@ -1,3 +1,5 @@
+import importlib
+import sys
 import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
@@ -16,35 +18,10 @@ from ..vocab import Vocab
 from .pipe import Pipe
 
 
-@Language.factory(
-    "lemmatizer",
-    assigns=["token.lemma"],
-    default_config={
-        "model": None,
-        "mode": "lookup",
-        "overwrite": False,
-        "scorer": {"@scorers": "spacy.lemmatizer_scorer.v1"},
-    },
-    default_score_weights={"lemma_acc": 1.0},
-)
-def make_lemmatizer(
-    nlp: Language,
-    model: Optional[Model],
-    name: str,
-    mode: str,
-    overwrite: bool,
-    scorer: Optional[Callable],
-):
-    return Lemmatizer(
-        nlp.vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
-    )
-
-
 def lemmatizer_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     return Scorer.score_token_attr(examples, "lemma", **kwargs)
 
 
-@registry.scorers("spacy.lemmatizer_scorer.v1")
 def make_lemmatizer_scorer():
     return lemmatizer_score
 
@@ -334,3 +311,11 @@ class Lemmatizer(Pipe):
         util.from_bytes(bytes_data, deserialize, exclude)
         self._validate_tables()
         return self
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_lemmatizer":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_lemmatizer
+    raise AttributeError(f"module {__name__} has no attribute {name}")

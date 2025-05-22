@@ -6,8 +6,9 @@ from thinc.types import Ints2d
 from ..tokens import Doc
 
 
-@registry.layers("spacy.FeatureExtractor.v1")
-def FeatureExtractor(columns: List[Union[int, str]]) -> Model[List[Doc], List[Ints2d]]:
+def FeatureExtractor(
+    columns: Union[List[str], List[int], List[Union[int, str]]]
+) -> Model[List[Doc], List[Ints2d]]:
     return Model("extract_features", forward, attrs={"columns": columns})
 
 

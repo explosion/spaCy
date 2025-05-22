@@ -1,4 +1,6 @@
 # cython: infer_types=True, binding=True
+import importlib
+import sys
 from itertools import islice
 from typing import Callable, Optional
 
@@ -35,36 +37,10 @@ subword_features = true
 DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 
 
-@Language.factory(
-    "tagger",
-    assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL, "overwrite": False, "scorer": {"@scorers": "spacy.tagger_scorer.v1"}, "neg_prefix": "!", "label_smoothing": 0.0},
-    default_score_weights={"tag_acc": 1.0},
-)
-def make_tagger(
-    nlp: Language,
-    name: str,
-    model: Model,
-    overwrite: bool,
-    scorer: Optional[Callable],
-    neg_prefix: str,
-    label_smoothing: float,
-):
-    """Construct a part-of-speech tagger component.
-
-    model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
-        the tag probabilities. The output vectors should match the number of tags
-        in size, and be normalized as probabilities (all scores between 0 and 1,
-        with the rows summing to 1).
-    """
-    return Tagger(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, neg_prefix=neg_prefix, label_smoothing=label_smoothing)
-
-
 def tagger_score(examples, **kwargs):
     return Scorer.score_token_attr(examples, "tag", **kwargs)
 
 
-@registry.scorers("spacy.tagger_scorer.v1")
 def make_tagger_scorer():
     return tagger_score
 
@@ -317,3 +293,11 @@ class Tagger(TrainablePipe):
         self.cfg["labels"].append(label)
         self.vocab.strings.add(label)
         return 1
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_tagger":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_tagger
+    raise AttributeError(f"module {__name__} has no attribute {name}")

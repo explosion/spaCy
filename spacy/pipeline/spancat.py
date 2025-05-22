@@ -1,3 +1,5 @@
+import importlib
+import sys
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, cast
@@ -134,7 +136,6 @@ def preset_spans_suggester(
     return output
 
 
-@registry.misc("spacy.ngram_suggester.v1")
 def build_ngram_suggester(sizes: List[int]) -> Suggester:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
     array of integers. The array has two columns, indicating the start and end
@@ -143,7 +144,6 @@ def build_ngram_suggester(sizes: List[int]) -> Suggester:
     return partial(ngram_suggester, sizes=sizes)
 
 
-@registry.misc("spacy.ngram_range_suggester.v1")
 def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
     """Suggest all spans of the given lengths between a given min and max value - both inclusive.
     Spans are returned as a ragged array of integers. The array has two columns,
@@ -152,142 +152,11 @@ def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
     return build_ngram_suggester(sizes)
 
 
-@registry.misc("spacy.preset_spans_suggester.v1")
 def build_preset_spans_suggester(spans_key: str) -> Suggester:
     """Suggest all spans that are already stored in doc.spans[spans_key].
     This is useful when an upstream component is used to set the spans
     on the Doc such as a SpanRuler or SpanFinder."""
     return partial(preset_spans_suggester, spans_key=spans_key)
-
-
-@Language.factory(
-    "spancat",
-    assigns=["doc.spans"],
-    default_config={
-        "threshold": 0.5,
-        "spans_key": DEFAULT_SPANS_KEY,
-        "max_positive": None,
-        "model": DEFAULT_SPANCAT_MODEL,
-        "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
-        "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
-    },
-    default_score_weights={"spans_sc_f": 1.0, "spans_sc_p": 0.0, "spans_sc_r": 0.0},
-)
-def make_spancat(
-    nlp: Language,
-    name: str,
-    suggester: Suggester,
-    model: Model[Tuple[List[Doc], Ragged], Floats2d],
-    spans_key: str,
-    scorer: Optional[Callable],
-    threshold: float,
-    max_positive: Optional[int],
-) -> "SpanCategorizer":
-    """Create a SpanCategorizer component and configure it for multi-label
-    classification to be able to assign multiple labels for each span.
-    The span categorizer consists of two
-    parts: a suggester function that proposes candidate spans, and a labeller
-    model that predicts one or more labels for each span.
-
-    name (str): The component instance name, used to add entries to the
-        losses during training.
-    suggester (Callable[[Iterable[Doc], Optional[Ops]], Ragged]): A function that suggests spans.
-        Spans are returned as a ragged array with two integer columns, for the
-        start and end positions.
-    model (Model[Tuple[List[Doc], Ragged], Floats2d]): A model instance that
-        is given a list of documents and (start, end) indices representing
-        candidate span offsets. The model predicts a probability for each category
-        for each span.
-    spans_key (str): Key of the doc.spans dict to save the spans under. During
-        initialization and training, the component will look for spans on the
-        reference document under the same key.
-    scorer (Optional[Callable]): The scoring method. Defaults to
-        Scorer.score_spans for the Doc.spans[spans_key] with overlapping
-        spans allowed.
-    threshold (float): Minimum probability to consider a prediction positive.
-        Spans with a positive prediction will be saved on the Doc. Defaults to
-        0.5.
-    max_positive (Optional[int]): Maximum number of labels to consider positive
-        per span. Defaults to None, indicating no limit.
-    """
-    return SpanCategorizer(
-        nlp.vocab,
-        model=model,
-        suggester=suggester,
-        name=name,
-        spans_key=spans_key,
-        negative_weight=None,
-        allow_overlap=True,
-        max_positive=max_positive,
-        threshold=threshold,
-        scorer=scorer,
-        add_negative_label=False,
-    )
-
-
-@Language.factory(
-    "spancat_singlelabel",
-    assigns=["doc.spans"],
-    default_config={
-        "spans_key": DEFAULT_SPANS_KEY,
-        "model": DEFAULT_SPANCAT_SINGLELABEL_MODEL,
-        "negative_weight": 1.0,
-        "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
-        "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
-        "allow_overlap": True,
-    },
-    default_score_weights={"spans_sc_f": 1.0, "spans_sc_p": 0.0, "spans_sc_r": 0.0},
-)
-def make_spancat_singlelabel(
-    nlp: Language,
-    name: str,
-    suggester: Suggester,
-    model: Model[Tuple[List[Doc], Ragged], Floats2d],
-    spans_key: str,
-    negative_weight: float,
-    allow_overlap: bool,
-    scorer: Optional[Callable],
-) -> "SpanCategorizer":
-    """Create a SpanCategorizer component and configure it for multi-class
-    classification. With this configuration each span can get at most one
-    label. The span categorizer consists of two
-    parts: a suggester function that proposes candidate spans, and a labeller
-    model that predicts one or more labels for each span.
-
-    name (str): The component instance name, used to add entries to the
-        losses during training.
-    suggester (Callable[[Iterable[Doc], Optional[Ops]], Ragged]): A function that suggests spans.
-        Spans are returned as a ragged array with two integer columns, for the
-        start and end positions.
-    model (Model[Tuple[List[Doc], Ragged], Floats2d]): A model instance that
-        is given a list of documents and (start, end) indices representing
-        candidate span offsets. The model predicts a probability for each category
-        for each span.
-    spans_key (str): Key of the doc.spans dict to save the spans under. During
-        initialization and training, the component will look for spans on the
-        reference document under the same key.
-    scorer (Optional[Callable]): The scoring method. Defaults to
-        Scorer.score_spans for the Doc.spans[spans_key] with overlapping
-        spans allowed.
-    negative_weight (float): Multiplier for the loss terms.
-        Can be used to downweight the negative samples if there are too many.
-    allow_overlap (bool): If True the data is assumed to contain overlapping spans.
-        Otherwise it produces non-overlapping spans greedily prioritizing
-        higher assigned label scores.
-    """
-    return SpanCategorizer(
-        nlp.vocab,
-        model=model,
-        suggester=suggester,
-        name=name,
-        spans_key=spans_key,
-        negative_weight=negative_weight,
-        allow_overlap=allow_overlap,
-        max_positive=1,
-        add_negative_label=True,
-        threshold=None,
-        scorer=scorer,
-    )
 
 
 def spancat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
@@ -303,7 +172,6 @@ def spancat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     return Scorer.score_spans(examples, **kwargs)
 
 
-@registry.scorers("spacy.spancat_scorer.v1")
 def make_spancat_scorer():
     return spancat_score
 
@@ -785,3 +653,14 @@ class SpanCategorizer(TrainablePipe):
 
         spans.attrs["scores"] = numpy.array(attrs_scores)
         return spans
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_spancat":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_spancat
+    elif name == "make_spancat_singlelabel":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_spancat_singlelabel
+    raise AttributeError(f"module {__name__} has no attribute {name}")

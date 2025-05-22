@@ -29,7 +29,6 @@ def setup_table(
 
 # We cannot rename this method as it's directly imported
 # and used by external packages such as spacy-loggers.
-@registry.loggers("spacy.ConsoleLogger.v2")
 def console_logger(
     progress_bar: bool = False,
     console_output: bool = True,
@@ -47,7 +46,6 @@ def console_logger(
     )
 
 
-@registry.loggers("spacy.ConsoleLogger.v3")
 def console_logger_v3(
     progress_bar: Optional[str] = None,
     console_output: bool = True,

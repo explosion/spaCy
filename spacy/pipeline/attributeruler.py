@@ -1,3 +1,5 @@
+import importlib
+import sys
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
@@ -22,19 +24,6 @@ TagMapType = Dict[str, Dict[Union[int, str], Union[int, str]]]
 MorphRulesType = Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
 
 
-@Language.factory(
-    "attribute_ruler",
-    default_config={
-        "validate": False,
-        "scorer": {"@scorers": "spacy.attribute_ruler_scorer.v1"},
-    },
-)
-def make_attribute_ruler(
-    nlp: Language, name: str, validate: bool, scorer: Optional[Callable]
-):
-    return AttributeRuler(nlp.vocab, name, validate=validate, scorer=scorer)
-
-
 def attribute_ruler_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     def morph_key_getter(token, attr):
         return getattr(token, attr).key
@@ -54,7 +43,6 @@ def attribute_ruler_score(examples: Iterable[Example], **kwargs) -> Dict[str, An
     return results
 
 
-@registry.scorers("spacy.attribute_ruler_scorer.v1")
 def make_attribute_ruler_scorer():
     return attribute_ruler_score
 
@@ -355,3 +343,11 @@ def _split_morph_attrs(attrs: dict) -> Tuple[dict, dict]:
         else:
             morph_attrs[k] = v
     return other_attrs, morph_attrs
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_attribute_ruler":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_attribute_ruler
+    raise AttributeError(f"module {__name__} has no attribute {name}")

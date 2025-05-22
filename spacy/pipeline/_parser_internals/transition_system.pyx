@@ -149,7 +149,7 @@ cdef class TransitionSystem:
         action = self.lookup_transition(move_name)
         return action.is_valid(stcls.c, action.label)
 
-    cdef int set_valid(self, int* is_valid, const StateC* st) nogil:
+    cdef int set_valid(self, int* is_valid, const StateC* st) noexcept nogil:
         cdef int i
         for i in range(self.n_moves):
             is_valid[i] = self.c[i].is_valid(st, self.c[i].label)
@@ -191,8 +191,7 @@ cdef class TransitionSystem:
 
     def add_action(self, int action, label_name):
         cdef attr_t label_id
-        if not isinstance(label_name, int) and \
-           not isinstance(label_name, long):
+        if not isinstance(label_name, int):
             label_id = self.strings.add(label_name)
         else:
             label_id = label_name

@@ -4,5 +4,6 @@ include README.md
 include pyproject.toml
 include spacy/py.typed
 recursive-include spacy/cli *.yml
+recursive-include spacy/tests *.json
 recursive-include licenses *
 recursive-exclude spacy *.cpp

@@ -7,8 +7,8 @@ from ..typedefs cimport attr_t
 from ..vocab cimport Vocab
 
 
-cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil
-cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil
+cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) noexcept nogil
+cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) noexcept nogil
 
 
 ctypedef const LexemeC* const_Lexeme_ptr

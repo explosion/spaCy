@@ -1,4 +1,6 @@
 # cython: infer_types=True, binding=True
+import importlib
+import sys
 from itertools import islice
 from typing import Callable, Dict, Optional, Union
 
@@ -47,25 +49,6 @@ maxout_pieces = 3
 DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
 
 
-@Language.factory(
-    "morphologizer",
-    assigns=["token.morph", "token.pos"],
-    default_config={"model": DEFAULT_MORPH_MODEL, "overwrite": True, "extend": False,
-                    "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"}, "label_smoothing": 0.0},
-    default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
-)
-def make_morphologizer(
-    nlp: Language,
-    model: Model,
-    name: str,
-    overwrite: bool,
-    extend: bool,
-    label_smoothing: float,
-    scorer: Optional[Callable],
-):
-    return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, label_smoothing=label_smoothing, scorer=scorer)
-
-
 def morphologizer_score(examples, **kwargs):
     def morph_key_getter(token, attr):
         return getattr(token, attr).key
@@ -81,7 +64,6 @@ def morphologizer_score(examples, **kwargs):
     return results
 
 
-@registry.scorers("spacy.morphologizer_scorer.v1")
 def make_morphologizer_scorer():
     return morphologizer_score
 
@@ -309,3 +291,11 @@ class Morphologizer(Tagger):
         if self.model.ops.xp.isnan(loss):
             raise ValueError(Errors.E910.format(name=self.name))
         return float(loss), d_scores
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_morphologizer":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_morphologizer
+    raise AttributeError(f"module {__name__} has no attribute {name}")

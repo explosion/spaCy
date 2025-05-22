@@ -10,7 +10,6 @@ InT = List[Doc]
 OutT = Floats2d
 
 
-@registry.architectures("spacy.SpanFinder.v1")
 def build_finder_model(
     tok2vec: Model[InT, List[Floats2d]], scorer: Model[OutT, OutT]
 ) -> Model[InT, OutT]:

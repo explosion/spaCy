@@ -133,8 +133,17 @@ class registry(thinc.registry):
     cli = catalogue.create("spacy", "cli", entry_points=True)
 
     @classmethod
+    def ensure_populated(cls) -> None:
+        """Ensure the registry is populated with all necessary components."""
+        from .registrations import REGISTRY_POPULATED, populate_registry
+
+        if not REGISTRY_POPULATED:
+            populate_registry()
+
+    @classmethod
     def get_registry_names(cls) -> List[str]:
         """List all available registries."""
+        cls.ensure_populated()
         names = []
         for name, value in inspect.getmembers(cls):
             if not name.startswith("_") and isinstance(value, Registry):
@@ -144,6 +153,7 @@ class registry(thinc.registry):
     @classmethod
     def get(cls, registry_name: str, func_name: str) -> Callable:
         """Get a registered function from the registry."""
+        cls.ensure_populated()
         # We're overwriting this classmethod so we're able to provide more
         # specific error messages and implement a fallback to spacy-legacy.
         if not hasattr(cls, registry_name):
@@ -179,6 +189,7 @@ class registry(thinc.registry):
         func_name (str): Name of the registered function.
         RETURNS (Dict[str, Optional[Union[str, int]]]): The function info.
         """
+        cls.ensure_populated()
         # We're overwriting this classmethod so we're able to provide more
         # specific error messages and implement a fallback to spacy-legacy.
         if not hasattr(cls, registry_name):
@@ -205,6 +216,7 @@ class registry(thinc.registry):
     @classmethod
     def has(cls, registry_name: str, func_name: str) -> bool:
         """Check whether a function is available in a registry."""
+        cls.ensure_populated()
         if not hasattr(cls, registry_name):
             return False
         reg = getattr(cls, registry_name)
@@ -1323,7 +1335,6 @@ def filter_chain_spans(*spans: Iterable["Span"]) -> List["Span"]:
     return filter_spans(itertools.chain(*spans))
 
 
-@registry.misc("spacy.first_longest_spans_filter.v1")
 def make_first_longest_spans_filter():
     return filter_chain_spans
 

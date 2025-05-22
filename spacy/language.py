@@ -104,7 +104,6 @@ class BaseDefaults:
     writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
 
 
-@registry.tokenizers("spacy.Tokenizer.v1")
 def create_tokenizer() -> Callable[["Language"], Tokenizer]:
     """Registered function to create a tokenizer. Returns a factory that takes
     the nlp object and returns a Tokenizer instance using the language detaults.
@@ -130,7 +129,6 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
     return tokenizer_factory
 
 
-@registry.misc("spacy.LookupsDataLoader.v1")
 def load_lookups_data(lang, tables):
     util.logger.debug("Loading lookups from spacy-lookups-data: %s", tables)
     lookups = load_lookups(lang=lang, tables=tables)
@@ -185,6 +183,9 @@ class Language:
 
         DOCS: https://spacy.io/api/language#init
         """
+        from .pipeline.factories import register_factories
+
+        register_factories()
         # We're only calling this to import all factories provided via entry
         # points. The factory decorator applied to these functions takes care
         # of the rest.

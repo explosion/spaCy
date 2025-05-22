@@ -1,3 +1,5 @@
+import importlib
+import sys
 import warnings
 from collections import defaultdict
 from pathlib import Path
@@ -19,51 +21,10 @@ DEFAULT_ENT_ID_SEP = "||"
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 
 
-@Language.factory(
-    "entity_ruler",
-    assigns=["doc.ents", "token.ent_type", "token.ent_iob"],
-    default_config={
-        "phrase_matcher_attr": None,
-        "matcher_fuzzy_compare": {"@misc": "spacy.levenshtein_compare.v1"},
-        "validate": False,
-        "overwrite_ents": False,
-        "ent_id_sep": DEFAULT_ENT_ID_SEP,
-        "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
-    },
-    default_score_weights={
-        "ents_f": 1.0,
-        "ents_p": 0.0,
-        "ents_r": 0.0,
-        "ents_per_type": None,
-    },
-)
-def make_entity_ruler(
-    nlp: Language,
-    name: str,
-    phrase_matcher_attr: Optional[Union[int, str]],
-    matcher_fuzzy_compare: Callable,
-    validate: bool,
-    overwrite_ents: bool,
-    ent_id_sep: str,
-    scorer: Optional[Callable],
-):
-    return EntityRuler(
-        nlp,
-        name,
-        phrase_matcher_attr=phrase_matcher_attr,
-        matcher_fuzzy_compare=matcher_fuzzy_compare,
-        validate=validate,
-        overwrite_ents=overwrite_ents,
-        ent_id_sep=ent_id_sep,
-        scorer=scorer,
-    )
-
-
 def entity_ruler_score(examples, **kwargs):
     return get_ner_prf(examples)
 
 
-@registry.scorers("spacy.entity_ruler_scorer.v1")
 def make_entity_ruler_scorer():
     return entity_ruler_score
 
@@ -539,3 +500,11 @@ class EntityRuler(Pipe):
             srsly.write_jsonl(path, self.patterns)
         else:
             to_disk(path, serializers, {})
+
+
+# Setup backwards compatibility hook for factories
+def __getattr__(name):
+    if name == "make_entity_ruler":
+        module = importlib.import_module("spacy.pipeline.factories")
+        return module.make_entity_ruler
+    raise AttributeError(f"module {__name__} has no attribute {name}")
