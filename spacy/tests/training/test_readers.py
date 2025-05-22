@@ -101,11 +101,7 @@ def test_cat_readers(reader, additional_config):
     nlp = load_model_from_config(config, auto_fill=True)
     T = registry.resolve(nlp.config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"]]
-    print("T", T)
-    print("dot names", dot_names)
     train_corpus, dev_corpus = resolve_dot_names(nlp.config, dot_names)
-    data = list(train_corpus(nlp))
-    print(len(data))
     optimizer = T["optimizer"]
     # simulate a training loop
     nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
