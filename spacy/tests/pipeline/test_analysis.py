@@ -1,5 +1,5 @@
 import pytest
-from mock import Mock
+from unittest.mock import Mock
 
 from spacy.language import Language
 from spacy.pipe_analysis import get_attr_info, validate_attrs
