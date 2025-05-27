@@ -260,7 +260,7 @@ labels = ['label1', 'label2']
 )
 @pytest.mark.issue(6908)
 def test_issue6908(component_name):
-    """Test intializing textcat with labels in a list"""
+    """Test initializing textcat with labels in a list"""
 
     def create_data(out_file):
         nlp = spacy.blank("en")

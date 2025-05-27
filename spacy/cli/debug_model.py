@@ -170,7 +170,7 @@ def debug_model(
         msg.divider(f"STEP 3 - prediction")
         msg.info(str(prediction))
 
-    msg.good(f"Succesfully ended analysis - model looks good.")
+    msg.good(f"Successfully ended analysis - model looks good.")
 
 
 def _sentences():
