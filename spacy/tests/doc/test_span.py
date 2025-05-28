@@ -227,11 +227,14 @@ def test_spans_span_sent(doc, doc_not_parsed):
 
 def test_issue13769():
     # Test issue 13769: Incorrect output of span.sents when final token is a sentence outside of the span.
-    doc = Doc(Vocab(), words=list("This is a sentence . This is another sentence . Third".split()))
+    doc = Doc(
+        Vocab(),
+        words=list("This is a sentence . This is another sentence . Third".split()),
+    )
     doc[0].is_sent_start = True
     doc[5].is_sent_start = True
     doc[10].is_sent_start = True
-    doc.ents = [('ENTITY', 7, 9)] # "another sentence" phrase in the second sentence
+    doc.ents = [("ENTITY", 7, 9)]  # "another sentence" phrase in the second sentence
     entity = doc.ents[0]
     ent_sents = list(entity.sents)
     assert len(ent_sents) == 1
