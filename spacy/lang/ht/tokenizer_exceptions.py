@@ -1,4 +1,4 @@
-from spacy.symbols import ORTH, NORM
+from spacy.symbols import NORM, ORTH
 
 
 def make_variants(base, first_norm, second_orth, second_norm):

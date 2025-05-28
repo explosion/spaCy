@@ -4,10 +4,10 @@ from ..char_classes import (
     ALPHA_UPPER,
     CONCAT_QUOTES,
     HYPHENS,
-    LIST_PUNCT,
-    LIST_QUOTES,
     LIST_ELLIPSES,
     LIST_ICONS,
+    LIST_PUNCT,
+    LIST_QUOTES,
     merge_chars,
 )
 
