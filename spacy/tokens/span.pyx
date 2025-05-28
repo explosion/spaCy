@@ -479,10 +479,11 @@ cdef class Span:
                         break
                 elif i == self.doc.length - 1:
                     yield Span(self.doc, start, self.doc.length)
-
-            # Ensure that trailing parts of the Span instance are included in last element of .sents.
-            if start == self.doc.length - 1:
-                yield Span(self.doc, start, self.doc.length)
+            else:
+                # Ensure that trailing parts of the Span instance are included in last element of .sents.
+                # We only want to do this if we didn't break above
+                if start == self.doc.length - 1:
+                    yield Span(self.doc, start, self.doc.length)
 
     @property
     def ents(self):
