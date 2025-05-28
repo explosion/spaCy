@@ -49,7 +49,7 @@ def doc_not_parsed(en_tokenizer):
 def test_issue1537():
     """Test that Span.as_doc() doesn't segfault."""
     string = "The sky is blue . The man is pink . The dog is purple ."
-    doc = Doc(Vocab(), words=string.split())
+    doc = Doc(Vocab(), words=list(string.split()))
     doc[0].sent_start = True
     for word in doc[1:]:
         if word.nbor(-1).text == ".":
@@ -223,6 +223,21 @@ def test_spans_span_sent(doc, doc_not_parsed):
     doc_not_parsed[5].is_sent_start = True
     assert doc_not_parsed[1:3].sent == doc_not_parsed[0:5]
     assert doc_not_parsed[10:14].sent == doc_not_parsed[5:]
+
+
+def test_issue13769():
+    # Test issue 13769: Incorrect output of span.sents when final token is a sentence outside of the span.
+    doc = Doc(
+        Vocab(),
+        words=list("This is a sentence . This is another sentence . Third".split()),
+    )
+    doc[0].is_sent_start = True
+    doc[5].is_sent_start = True
+    doc[10].is_sent_start = True
+    doc.ents = [("ENTITY", 7, 9)]  # "another sentence" phrase in the second sentence
+    entity = doc.ents[0]
+    ent_sents = list(entity.sents)
+    assert len(ent_sents) == 1
 
 
 @pytest.mark.parametrize(
