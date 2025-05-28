@@ -29,4 +29,16 @@ def test_ht_tokenizer_handles_basic_abbreviation(ht_tokenizer, text):
 def test_ht_tokenizer_full_sentence(ht_tokenizer):
     text = "Si'm ka vini, m'ap pale ak li."
     tokens = [t.text for t in ht_tokenizer(text)]
-    assert tokens == ["Si", "'m", "ka", "vini", ",", "m'", "ap", "pale", "ak", "li", "."]
+    assert tokens == [
+        "Si",
+        "'m",
+        "ka",
+        "vini",
+        ",",
+        "m'",
+        "ap",
+        "pale",
+        "ak",
+        "li",
+        ".",
+    ]
