@@ -254,12 +254,12 @@ rendering if auto-detection fails.
 
 ![displaCy visualizer in a Jupyter notebook](/images/displacy_jupyter.jpg)
 
-Internally, displaCy imports `display` and `HTML` from `IPython.core.display`
+Internally, displaCy imports `display` and `HTML` from `IPython.display`
 and returns a Jupyter HTML object. If you were doing it manually, it'd look like
 this:
 
 ```python
-from IPython.core.display import display, HTML
+from IPython.display import display, HTML
 
 html = displacy.render(doc, style="dep")
 display(HTML(html))
