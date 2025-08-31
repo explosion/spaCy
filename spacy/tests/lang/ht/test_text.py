@@ -16,7 +16,6 @@ Nan Washington, Depatman Deta Etazini pibliye yon deklarasyon ki eksprime "regre
     assert len(tokens) == 84
 
 
-
 @pytest.mark.parametrize(
     "text,length",
     [
@@ -66,14 +65,14 @@ def test_ht_lex_attrs_capitals(word):
 
 
 @pytest.mark.parametrize(
-    "word, expected", [
+    "word, expected",
+    [
         ("'m", "mwen"),
         ("'n", "nou"),
         ("'l", "li"),
         ("'y", "yo"),
         ("'w", "ou"),
-    ]
+    ],
 )
 def test_ht_lex_attrs_norm_custom(word, expected):
     assert norm_custom(word) == expected
-
