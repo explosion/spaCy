@@ -37,7 +37,9 @@ def test_ht_tokenizer_splits_uneven_wrap(ht_tokenizer, text):
     assert len(tokens) == 5
 
 
-@pytest.mark.parametrize("text,length", [("Ozetazini.", 2), ("Frans.", 2), ("(Ozetazini.", 3)])
+@pytest.mark.parametrize(
+    "text,length", [("Ozetazini.", 2), ("Frans.", 2), ("(Ozetazini.", 3)]
+)
 def test_ht_tokenizer_splits_prefix_interact(ht_tokenizer, text, length):
     tokens = ht_tokenizer(text)
     assert len(tokens) == length
