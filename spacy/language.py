@@ -106,7 +106,7 @@ class BaseDefaults:
 
 def create_tokenizer() -> Callable[["Language"], Tokenizer]:
     """Registered function to create a tokenizer. Returns a factory that takes
-    the nlp object and returns a Tokenizer instance using the language detaults.
+    the nlp object and returns a Tokenizer instance using the language defaults.
     """
 
     def tokenizer_factory(nlp: "Language") -> Tokenizer:
@@ -173,7 +173,7 @@ class Language:
             current models may run out memory on extremely long texts, due to
             large internal allocations. You should segment these texts into
             meaningful units, e.g. paragraphs, subsections etc, before passing
-            them to spaCy. Default maximum length is 1,000,000 charas (1mb). As
+            them to spaCy. Default maximum length is 1,000,000 chars (1mb). As
             a rule of thumb, if all pipeline components are enabled, spaCy's
             default models currently requires roughly 1GB of temporary memory per
             100,000 characters in one text.
@@ -2448,7 +2448,7 @@ class _Sender:
             q.put(item)
 
     def step(self) -> None:
-        """Tell sender that comsumed one item. Data is sent to the workers after
+        """Tell sender that consumed one item. Data is sent to the workers after
         every chunk_size calls.
         """
         self.count += 1

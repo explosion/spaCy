@@ -1,8 +1,8 @@
 from typing import List, Tuple
 
+from ...lookups import Lookups
 from ...pipeline import Lemmatizer
 from ...tokens import Token
-from ...lookups import Lookups
 
 
 class HaitianCreoleLemmatizer(Lemmatizer):

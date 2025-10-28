@@ -187,7 +187,7 @@ class Lemmatizer(Pipe):
             if univ_pos == "":
                 warnings.warn(Warnings.W108)
             return [string.lower()]
-        # See Issue #435 for example of where this logic is requied.
+        # See Issue #435 for example of where this logic is required.
         if self.is_base_form(token):
             return [string.lower()]
         index_table = self.lookups.get_table("lemma_index", {})
@@ -210,7 +210,7 @@ class Lemmatizer(Pipe):
         rules = rules_table.get(univ_pos, {})
         orig = string
         string = string.lower()
-        forms = []
+        forms: List[str] = []
         oov_forms = []
         for old, new in rules:
             if string.endswith(old):
