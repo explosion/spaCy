@@ -5,11 +5,11 @@ from thinc.api import Model
 from ...language import BaseDefaults, Language
 from .lemmatizer import HaitianCreoleLemmatizer
 from .lex_attrs import LEX_ATTRS
-from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
+from .punctuation import TOKENIZER_INFIXES, TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
-from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .tag_map import TAG_MAP
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 
 
 class HaitianCreoleDefaults(BaseDefaults):
@@ -22,9 +22,11 @@ class HaitianCreoleDefaults(BaseDefaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
 
+
 class HaitianCreole(Language):
     lang = "ht"
     Defaults = HaitianCreoleDefaults
+
 
 @HaitianCreole.factory(
     "lemmatizer",
@@ -48,5 +50,6 @@ def make_lemmatizer(
     return HaitianCreoleLemmatizer(
         nlp.vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
     )
+
 
 __all__ = ["HaitianCreole"]

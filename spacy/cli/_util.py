@@ -99,7 +99,7 @@ def parse_config_overrides(
     RETURNS (Dict[str, Any]): The parsed dict, keyed by nested config setting.
     """
     env_string = os.environ.get(env_var, "") if env_var else ""
-    env_overrides = _parse_overrides(split_arg_string(env_string))
+    env_overrides = _parse_overrides(split_arg_string(env_string))  # type: ignore[operator]
     cli_overrides = _parse_overrides(args, is_cli=True)
     if cli_overrides:
         keys = [k for k in cli_overrides if k not in env_overrides]

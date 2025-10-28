@@ -1,4 +1,22 @@
-from spacy.symbols import NOUN, VERB, AUX, ADJ, ADV, PRON, DET, ADP, SCONJ, CCONJ, PART, INTJ, NUM, PROPN, PUNCT, SYM, X
+from spacy.symbols import (
+    ADJ,
+    ADP,
+    ADV,
+    AUX,
+    CCONJ,
+    DET,
+    INTJ,
+    NOUN,
+    NUM,
+    PART,
+    PRON,
+    PROPN,
+    PUNCT,
+    SCONJ,
+    SYM,
+    VERB,
+    X,
+)
 
 TAG_MAP = {
     "NOUN": {"pos": NOUN},

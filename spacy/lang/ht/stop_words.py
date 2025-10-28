@@ -39,8 +39,7 @@ sa san si swa si
 
 men mèsi oswa osinon
 
-"""
-.split()
+""".split()
 )
 
 # Add common contractions, with and without apostrophe variants
