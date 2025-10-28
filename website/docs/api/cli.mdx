@@ -47,7 +47,7 @@ pipeline name to be specified with its version (e.g. `en_core_web_sm-3.0.0`).
 > project.
 
 ```bash
-$ python -m spacy download [model] [--direct] [--sdist] [pip_args]
+$ python -m spacy download [model] [--direct] [--sdist] [pip_args] [--url url]
 ```
 
 | Name                                       | Description                                                                                                                                                                                                                               |
@@ -58,6 +58,7 @@ $ python -m spacy download [model] [--direct] [--sdist] [pip_args]
 | `--help`, `-h`                             | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                |
 | pip args                                   | Additional installation options to be passed to `pip install` when installing the pipeline package. For example, `--user` to install to the user home directory or `--no-deps` to not install package dependencies. ~~Any (option/flag)~~ |
 | **CREATES**                                | The installed pipeline package in your `site-packages` directory.                                                                                                                                                                         |
+| `--url`, `-U`                              | Download from a mirror repository at the given url |
 
 ## info {id="info",tag="command"}
 
