@@ -49,6 +49,7 @@ NORM_MAP = {
     "P": "Pa",
 }
 
+
 def like_num(text):
     text = text.strip().lower()
     if text.startswith(("+", "-", "±", "~")):
@@ -69,8 +70,10 @@ def like_num(text):
         return True
     return False
 
+
 def norm_custom(text):
     return NORM_MAP.get(text, text.lower())
+
 
 LEX_ATTRS = {
     LIKE_NUM: like_num,
