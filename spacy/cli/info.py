@@ -84,7 +84,7 @@ def info(
 
 
 def info_spacy() -> Dict[str, Any]:
-    """Generate info about the current spaCy intallation.
+    """Generate info about the current spaCy installation.
 
     RETURNS (dict): The spaCy info.
     """
