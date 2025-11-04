@@ -1,4 +1,5 @@
 """Helpers for Python and platform compatibility."""
+
 import sys
 
 from thinc.util import copy_array

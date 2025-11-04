@@ -7,7 +7,7 @@ from ..tokens import Doc
 
 
 def FeatureExtractor(
-    columns: Union[List[str], List[int], List[Union[int, str]]]
+    columns: Union[List[str], List[int], List[Union[int, str]]],
 ) -> Model[List[Doc], List[Ints2d]]:
     return Model("extract_features", forward, attrs={"columns": columns})
 

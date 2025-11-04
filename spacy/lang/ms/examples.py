@@ -5,7 +5,6 @@ Example sentences to test spaCy and its language models.
 >>> docs = nlp.pipe(sentences)
 """
 
-
 sentences = [
     "Malaysia ialah sebuah negara yang terletak di Asia Tenggara.",
     "Berapa banyak pelajar yang akan menghadiri majlis perpisahan sekolah?",

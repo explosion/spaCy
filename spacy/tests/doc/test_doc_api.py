@@ -141,7 +141,8 @@ def test_issue3869(sentence):
 @pytest.mark.issue(3962)
 def test_issue3962(en_vocab):
     """Ensure that as_doc does not result in out-of-bound access of tokens.
-    This is achieved by setting the head to itself if it would lie out of the span otherwise."""
+    This is achieved by setting the head to itself if it would lie out of the span otherwise.
+    """
     # fmt: off
     words = ["He", "jests", "at", "scars", ",", "that", "never", "felt", "a", "wound", "."]
     heads = [1, 7, 1, 2, 7, 7, 7, 7, 9, 7, 7]
@@ -180,7 +181,8 @@ def test_issue3962(en_vocab):
 @pytest.mark.issue(3962)
 def test_issue3962_long(en_vocab):
     """Ensure that as_doc does not result in out-of-bound access of tokens.
-    This is achieved by setting the head to itself if it would lie out of the span otherwise."""
+    This is achieved by setting the head to itself if it would lie out of the span otherwise.
+    """
     # fmt: off
     words = ["He", "jests", "at", "scars", ".", "They", "never", "felt", "a", "wound", "."]
     heads = [1, 1, 1, 2, 1, 7, 7, 7, 9, 7, 7]

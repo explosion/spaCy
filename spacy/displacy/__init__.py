@@ -4,6 +4,7 @@ spaCy's built in visualization suite for dependencies and named entities.
 DOCS: https://spacy.io/api/top-level#displacy
 USAGE: https://spacy.io/usage/visualizers
 """
+
 import warnings
 from typing import Any, Callable, Dict, Iterable, Optional, Union
 

@@ -354,7 +354,7 @@ def update_meta(
 
 
 def create_before_to_disk_callback(
-    callback: Optional[Callable[["Language"], "Language"]]
+    callback: Optional[Callable[["Language"], "Language"]],
 ) -> Callable[["Language"], "Language"]:
     from ..language import Language  # noqa: F811
 

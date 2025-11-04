@@ -5,7 +5,6 @@ Example sentences to test spaCy and its language models.
 >>> docs = nlp.pipe(sentences)
 """
 
-
 sentences = [
     "ἐρᾷ μὲν ἁγνὸς οὐρανὸς τρῶσαι χθόνα, ἔρως δὲ γαῖαν λαμβάνει γάμου τυχεῖν·",
     "εὐδαίμων Χαρίτων καὶ Μελάνιππος ἔφυ, θείας ἁγητῆρες ἐφαμερίοις φιλότατος.",

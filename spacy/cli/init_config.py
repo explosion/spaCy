@@ -195,9 +195,11 @@ def init_config(
         "Pipeline": ", ".join(pipeline),
         "Optimize for": optimize,
         "Hardware": variables["hardware"].upper(),
-        "Transformer": template_vars.transformer.get("name")  # type: ignore[attr-defined]
-        if template_vars.use_transformer  # type: ignore[attr-defined]
-        else None,
+        "Transformer": (
+            template_vars.transformer.get("name")  # type: ignore[attr-defined]
+            if template_vars.use_transformer  # type: ignore[attr-defined]
+            else None
+        ),
     }
     msg.info("Generated config template specific for your use case")
     for label, value in use_case.items():

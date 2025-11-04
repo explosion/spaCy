@@ -225,13 +225,11 @@ def get_git_version(
 
 
 @overload
-def string_to_list(value: str, intify: Literal[False] = ...) -> List[str]:
-    ...
+def string_to_list(value: str, intify: Literal[False] = ...) -> List[str]: ...
 
 
 @overload
-def string_to_list(value: str, intify: Literal[True]) -> List[int]:
-    ...
+def string_to_list(value: str, intify: Literal[True]) -> List[int]: ...
 
 
 def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[int]]:

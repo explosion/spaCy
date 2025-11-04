@@ -22,9 +22,11 @@ class HaitianCreoleDefaults(BaseDefaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
 
+
 class HaitianCreole(Language):
     lang = "ht"
     Defaults = HaitianCreoleDefaults
+
 
 @HaitianCreole.factory(
     "lemmatizer",
@@ -48,5 +50,6 @@ def make_lemmatizer(
     return HaitianCreoleLemmatizer(
         nlp.vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
     )
+
 
 __all__ = ["HaitianCreole"]

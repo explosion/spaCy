@@ -890,7 +890,7 @@ def test_cli_find_threshold(capsys):
         return docs
 
     def init_nlp(
-        components: Tuple[Tuple[str, Dict[str, Any]], ...] = ()
+        components: Tuple[Tuple[str, Dict[str, Any]], ...] = (),
     ) -> Tuple[Language, List[Example]]:
         new_nlp = English()
         new_nlp.add_pipe(  # type: ignore

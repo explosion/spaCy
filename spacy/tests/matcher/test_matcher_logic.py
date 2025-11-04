@@ -544,7 +544,7 @@ def test_greedy_matching_longest(doc, text, pattern, longest):
     matcher = Matcher(doc.vocab)
     matcher.add("RULE", [pattern], greedy="LONGEST")
     matches = matcher(doc)
-    for (key, s, e) in matches:
+    for key, s, e in matches:
         assert doc[s:e].text == longest
 
 

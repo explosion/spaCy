@@ -5,7 +5,6 @@ Example sentences to test spaCy and its language models.
 >>> docs = nlp.pipe(sentences)
 """
 
-
 # sentences taken from Omsetjingsminne frå Nynorsk pressekontor 2022 (https://www.nb.no/sprakbanken/en/resource-catalogue/oai-nb-no-sbr-80/)
 sentences = [
     "Konseptet går ut på at alle tre omgangar tel, alle hopparar må stille i kvalifiseringa og poengsummen skal telje.",

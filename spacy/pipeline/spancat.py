@@ -80,8 +80,7 @@ DEFAULT_SPANCAT_SINGLELABEL_MODEL = Config().from_str(
 
 @runtime_checkable
 class Suggester(Protocol):
-    def __call__(self, docs: Iterable[Doc], *, ops: Optional[Ops] = None) -> Ragged:
-        ...
+    def __call__(self, docs: Iterable[Doc], *, ops: Optional[Ops] = None) -> Ragged: ...
 
 
 def ngram_suggester(

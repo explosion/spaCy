@@ -93,7 +93,7 @@ class EditTreeLemmatizer(TrainablePipe):
         truths = []
         for eg in examples:
             eg_truths = []
-            for (predicted, gold_lemma) in zip(
+            for predicted, gold_lemma in zip(
                 eg.predicted, eg.get_aligned("LEMMA", as_string=True)
             ):
                 if gold_lemma is None or gold_lemma == "":

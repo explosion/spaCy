@@ -25,7 +25,9 @@ TAG_MAP = {
     # Universal Dependencies Mapping: (Some of the entries in this mapping are updated to v2.6 in the list below)
     # http://universaldependencies.org/ja/overview/morphology.html
     # http://universaldependencies.org/ja/pos/all.html
-    "記号-一般": {POS: NOUN},  # this includes characters used to represent sounds like ドレミ
+    "記号-一般": {
+        POS: NOUN
+    },  # this includes characters used to represent sounds like ドレミ
     "記号-文字": {
         POS: NOUN
     },  # this is for Greek and Latin characters having some meanings, or used as symbols, as in math
@@ -72,7 +74,9 @@ TAG_MAP = {
     "名詞-固有名詞-地名-国": {POS: PROPN},  # country name
     "名詞-助動詞語幹": {POS: AUX},
     "名詞-数詞": {POS: NUM},  # includes Chinese numerals
-    "名詞-普通名詞-サ変可能": {POS: NOUN},  # XXX: sometimes VERB in UDv2; suru-verb noun
+    "名詞-普通名詞-サ変可能": {
+        POS: NOUN
+    },  # XXX: sometimes VERB in UDv2; suru-verb noun
     "名詞-普通名詞-サ変形状詞可能": {POS: NOUN},
     "名詞-普通名詞-一般": {POS: NOUN},
     "名詞-普通名詞-形状詞可能": {POS: NOUN},  # XXX: sometimes ADJ in UDv2
