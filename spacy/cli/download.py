@@ -42,7 +42,7 @@ def download_cli(
     DOCS: https://spacy.io/api/cli#download
     AVAILABLE PACKAGES: https://spacy.io/models
     """
-    download(model, direct, sdist, custom_url=url, *ctx.args)
+    download(model, direct, sdist, url, *ctx.args)
 
 
 def download(
