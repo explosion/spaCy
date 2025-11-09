@@ -28,9 +28,6 @@ from .underscore import Underscore
 
 DOCBIN_ALL_ATTRS: Tuple[str, ...]
 
-class DocMethod(Protocol):
-    def __call__(self: Doc, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
-
 class Doc:
     vocab: Vocab
     mem: Pool
@@ -53,13 +50,13 @@ class Doc:
         default: Optional[Any] = ...,
         getter: Optional[Callable[[Doc], Any]] = ...,
         setter: Optional[Callable[[Doc, Any], None]] = ...,
-        method: Optional[DocMethod] = ...,
+        method: Optional[Callable[[Doc, Any]]] = ...,
         force: bool = ...,
     ) -> None: ...
     @classmethod
     def get_extension(cls, name: str) -> Tuple[
         Optional[Any],
-        Optional[DocMethod],
+        Optional[Callable[[Doc, Any]]],
         Optional[Callable[[Doc], Any]],
         Optional[Callable[[Doc, Any], None]],
     ]: ...
@@ -68,7 +65,7 @@ class Doc:
     @classmethod
     def remove_extension(cls, name: str) -> Tuple[
         Optional[Any],
-        Optional[DocMethod],
+        Optional[Callable[[Doc, Any]]],
         Optional[Callable[[Doc], Any]],
         Optional[Callable[[Doc, Any], None]],
     ]: ...

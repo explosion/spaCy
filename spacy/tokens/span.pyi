@@ -8,9 +8,6 @@ from .doc import Doc
 from .token import Token
 from .underscore import Underscore
 
-class SpanMethod(Protocol):
-    def __call__(self: Span, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
-
 class Span:
     @classmethod
     def set_extension(
@@ -19,13 +16,13 @@ class Span:
         default: Optional[Any] = ...,
         getter: Optional[Callable[[Span], Any]] = ...,
         setter: Optional[Callable[[Span, Any], None]] = ...,
-        method: Optional[SpanMethod] = ...,
+        method: Optional[Callable[[Span, Any]]] = ...,
         force: bool = ...,
     ) -> None: ...
     @classmethod
     def get_extension(cls, name: str) -> Tuple[
         Optional[Any],
-        Optional[SpanMethod],
+        Optional[Callable[[Span, Any]]],
         Optional[Callable[[Span], Any]],
         Optional[Callable[[Span, Any], None]],
     ]: ...
@@ -34,7 +31,7 @@ class Span:
     @classmethod
     def remove_extension(cls, name: str) -> Tuple[
         Optional[Any],
-        Optional[SpanMethod],
+        Optional[Callable[[Span, Any]]],
         Optional[Callable[[Span], Any]],
         Optional[Callable[[Span, Any], None]],
     ]: ...
