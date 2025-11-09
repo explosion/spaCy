@@ -1,5 +1,5 @@
 import pytest
-from mock import Mock
+from unittest.mock import Mock
 
 from spacy.matcher import Matcher
 from spacy.tokens import Doc, Span, Token
