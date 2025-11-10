@@ -14,7 +14,6 @@ build-backend = "setuptools.build_meta"
 build = "*"
 skip = "pp* cp38* cp39* *-win32 *i686*"
 test-skip = ""
-free-threaded-support = false
 
 archs = ["native"]
 
