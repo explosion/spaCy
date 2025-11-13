@@ -11,7 +11,7 @@ from .doc cimport Doc
 from ..errors import Errors
 
 
-cdef int MISSING_DEP = 0
+cdef const int MISSING_DEP = 0
 
 cdef class Token:
     cdef readonly Vocab vocab
