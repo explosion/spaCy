@@ -8,7 +8,7 @@ from .lex_attrs import LEX_ATTRS
 from .punctuation import TOKENIZER_INFIXES, TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
-from .tokenizer_exceptions import TOKEN_MATCH, TOKENIZER_EXCEPTIONS
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 
 
 class FrenchDefaults(BaseDefaults):
@@ -16,7 +16,6 @@ class FrenchDefaults(BaseDefaults):
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
-    token_match = TOKEN_MATCH
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = SYNTAX_ITERATORS
     stop_words = STOP_WORDS
@@ -47,7 +46,12 @@ def make_lemmatizer(
     scorer: Optional[Callable],
 ):
     return FrenchLemmatizer(
-        nlp.vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
+        nlp.vocab,
+        model,
+        name,
+        mode=mode,
+        overwrite=overwrite,
+        scorer=scorer,
     )
 
 
