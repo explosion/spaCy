@@ -2739,20 +2739,7 @@
                 "courses"
             ]
         },
-        {
-            "type": "education",
-            "id": "spacy-quickstart",
-            "title": "spaCy Quickstart",
-            "slogan": "Learn spaCy basics quickly by visualizing various Doc objects",
-            "description": "In this course, I use the itables Python library inside a Jupyter notebook so that you can visualize the different spaCy document objects. This will provide a solid foundation for people who wish to learn the spaCy NLP library.",
-            "url": "https://learnspacy.com/courses/spacy-quickstart/",
-            "image": "https://learnspacy.com/wp-content/uploads/2024/09/custom_search_builder_spacy-2048x1202.png",
-            "thumb": "https://learnspacy.com/wp-content/uploads/2024/09/learnspacy_logo.png",
-            "author": "Aravind Mohanoor",
-            "category": [
-                "courses"
-            ]
-        },
+        
         {
             "type": "education",
             "id": "video-spacys-ner-model",

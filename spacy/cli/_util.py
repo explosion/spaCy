@@ -20,7 +20,7 @@ from typing import (
 import srsly
 import typer
 from click import NoSuchOption
-from click.parser import split_arg_string
+from click.shell_completion import split_arg_string
 from thinc.api import Config, ConfigValidationError, require_gpu
 from thinc.util import gpu_is_available
 from typer.main import get_command
@@ -225,13 +225,11 @@ def get_git_version(
 
 
 @overload
-def string_to_list(value: str, intify: Literal[False] = ...) -> List[str]:
-    ...
+def string_to_list(value: str, intify: Literal[False] = ...) -> List[str]: ...
 
 
 @overload
-def string_to_list(value: str, intify: Literal[True]) -> List[int]:
-    ...
+def string_to_list(value: str, intify: Literal[True]) -> List[int]: ...
 
 
 def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[int]]:

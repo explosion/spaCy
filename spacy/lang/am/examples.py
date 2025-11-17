@@ -5,7 +5,6 @@ Example sentences to test spaCy and its language models.
 >>> docs = nlp.pipe(sentences)
 """
 
-
 sentences = [
     "አፕል የዩኬን ጅምር ድርጅት በ 1 ቢሊዮን ዶላር ለመግዛት አስቧል።",
     "የራስ ገዝ መኪኖች የኢንሹራንስ ኃላፊነትን ወደ አምራቾች ያዛውራሉ",

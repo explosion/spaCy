@@ -4,7 +4,6 @@ Example sentences to test spaCy and its language models.
 >>> docs = nlp.pipe(sentences)
 """
 
-
 sentences = [
     "Լոնդոնը Միացյալ Թագավորության մեծ քաղաք է։",
     "Ո՞վ է Ֆրանսիայի նախագահը։",

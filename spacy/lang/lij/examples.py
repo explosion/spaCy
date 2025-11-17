@@ -5,7 +5,6 @@ Example sentences to test spaCy and its language models.
 >>> docs = nlp.pipe(sentences)
 """
 
-
 sentences = [
     "Sciusciâ e sciorbî no se peu.",
     "Graçie di çetroin, che me son arrivæ.",

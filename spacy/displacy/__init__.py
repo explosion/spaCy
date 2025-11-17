@@ -4,6 +4,7 @@ spaCy's built in visualization suite for dependencies and named entities.
 DOCS: https://spacy.io/api/top-level#displacy
 USAGE: https://spacy.io/usage/visualizers
 """
+
 import warnings
 from typing import Any, Callable, Dict, Iterable, Optional, Union
 
@@ -66,7 +67,8 @@ def render(
     if jupyter or (jupyter is None and is_in_jupyter()):
         # return HTML rendered by IPython display()
         # See #4840 for details on span wrapper to disable mathjax
-        from IPython.core.display import HTML, display
+        from IPython.core.display import HTML
+        from IPython.display import display
 
         return display(HTML('<span class="tex2jax_ignore">{}</span>'.format(html)))
     return html

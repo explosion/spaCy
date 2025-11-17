@@ -6,6 +6,7 @@ remain in their original locations, but decoration is moved here.
 
 Component definitions and registrations are in spacy/pipeline/factories.py
 """
+
 # Global flag to track if registry has been populated
 REGISTRY_POPULATED = False
 

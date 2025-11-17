@@ -874,7 +874,8 @@ def test_textcat_eval_missing(multi_label: bool, spring_p: float):
 def test_textcat_loss(multi_label: bool, expected_loss: float):
     """
     multi-label: the missing 'spring' in gold_doc_2 doesn't incur an increase in loss
-    exclusive labels: the missing 'spring' in gold_doc_2 is interpreted as 0.0 and adds to the loss"""
+    exclusive labels: the missing 'spring' in gold_doc_2 is interpreted as 0.0 and adds to the loss
+    """
     train_examples = []
     nlp = English()
 

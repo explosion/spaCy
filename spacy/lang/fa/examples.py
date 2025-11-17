@@ -5,7 +5,6 @@ Example sentences to test spaCy and its language models.
 >>> docs = nlp.pipe(sentences)
 """
 
-
 sentences = [
     "این یک جمله نمونه می باشد.",
     "قرار ما، امروز ساعت ۲:۳۰ بعدازظهر هست!",

@@ -5,7 +5,6 @@ Example sentences to test spaCy and its language models.
 >>> docs = nlp.pipe(sentences)
 """
 
-
 sentences = [
     "To běšo wjelgin raźone a jo se wót luźi derje pśiwzeło. Tak som dožywiła wjelgin",
     "Jogo pśewóźowarce stej groniłej, až how w serbskich stronach njama Santa Claus nic pytaś.",

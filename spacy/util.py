@@ -657,7 +657,7 @@ def load_model_from_config(
 
 
 def get_sourced_components(
-    config: Union[Dict[str, Any], Config]
+    config: Union[Dict[str, Any], Config],
 ) -> Dict[str, Dict[str, Any]]:
     """RETURNS (List[str]): All sourced components in the original config,
     e.g. {"source": "en_core_web_sm"}. If the config contains a key

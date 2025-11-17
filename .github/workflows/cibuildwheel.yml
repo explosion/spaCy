@@ -9,91 +9,13 @@ on:
       - 'prerelease-v[0-9]+.[0-9]+.[0-9]+**'
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14, ubuntu-24.04-arm]
-
-    steps:
-      - uses: actions/checkout@v4
-      # aarch64 (arm) is built via qemu emulation
-      # QEMU is sadly too slow. We need to wait for public ARM support
-      #- name: Set up QEMU
-      #  if: runner.os == 'Linux'
-      #  uses: docker/setup-qemu-action@v3
-      #  with:
-      #    platforms: all
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
-        env:
-          CIBW_ARCHS_LINUX: auto
-        with:
-          package-dir: .
-          output-dir: wheelhouse
-          config-file: "{package}/pyproject.toml"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
-
-  build_sdist:
-    name: Build source distribution
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build sdist
-        run: pipx run build --sdist
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-sdist
-          path: dist/*.tar.gz
-  create_release:
-    needs: [build_wheels, build_sdist]
-    runs-on: ubuntu-latest
+    uses: explosion/gha-cibuildwheel/.github/workflows/cibuildwheel.yml@main
     permissions:
       contents: write
-      checks: write
       actions: read
-      issues: read
-      packages: write
-      pull-requests: read
-      repository-projects: read
-      statuses: read
-    steps:
-      - name: Get the tag name and determine if it's a prerelease
-        id: get_tag_info
-        run: |
-          FULL_TAG=${GITHUB_REF#refs/tags/}
-          if [[ $FULL_TAG == release-* ]]; then
-            TAG_NAME=${FULL_TAG#release-}
-            IS_PRERELEASE=false
-          elif [[ $FULL_TAG == prerelease-* ]]; then
-            TAG_NAME=${FULL_TAG#prerelease-}
-            IS_PRERELEASE=true
-          else
-            echo "Tag does not match expected patterns" >&2
-            exit 1
-          fi
-          echo "FULL_TAG=$TAG_NAME" >> $GITHUB_ENV
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-          echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
-      - uses: actions/download-artifact@v4
-        with:
-          # unpacks all CIBW artifacts into dist/
-          pattern: cibw-*
-          path: dist
-          merge-multiple: true
-      - name: Create Draft Release
-        id: create_release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          name: ${{ env.TAG_NAME }}
-          draft: true
-          prerelease: ${{ env.IS_PRERELEASE }}
-          files: "./dist/*" 
+    with:
+      wheel-name-pattern: "spacy-*.whl"
+      pure-python: false
+    secrets:
+      gh-token: ${{ secrets.GITHUB_TOKEN }}
+

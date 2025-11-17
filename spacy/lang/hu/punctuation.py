@@ -11,7 +11,7 @@ from ..char_classes import (
 )
 
 # removing ° from the special icons to keep e.g. 99° as one token
-_concat_icons = CONCAT_ICONS.replace("\u00B0", "")
+_concat_icons = CONCAT_ICONS.replace("\u00b0", "")
 
 _currency = r"\$¢£€¥฿"
 _quotes = CONCAT_QUOTES.replace("'", "")

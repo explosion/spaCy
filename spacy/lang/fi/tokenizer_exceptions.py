@@ -100,9 +100,9 @@ conj_contraction_negations = [
     ("eivat", "eivät"),
     ("eivät", "eivät"),
 ]
-for (base_lower, base_norm) in conj_contraction_bases:
+for base_lower, base_norm in conj_contraction_bases:
     for base in [base_lower, base_lower.title()]:
-        for (suffix, suffix_norm) in conj_contraction_negations:
+        for suffix, suffix_norm in conj_contraction_negations:
             _exc[base + suffix] = [
                 {ORTH: base, NORM: base_norm},
                 {ORTH: suffix, NORM: suffix_norm},

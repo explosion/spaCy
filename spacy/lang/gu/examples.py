@@ -5,7 +5,6 @@ Example sentences to test spaCy and its language models.
 >>> docs = nlp.pipe(sentences)
 """
 
-
 sentences = [
     "લોકશાહી એ સરકારનું એક એવું તંત્ર છે જ્યાં નાગરિકો મત દ્વારા સત્તાનો ઉપયોગ કરે છે.",
     "તે ગુજરાત રાજ્યના ધરમપુર શહેરમાં આવેલું હતું",

@@ -968,16 +968,14 @@ def _compile_gold(
 
 
 @overload
-def _format_labels(labels: Iterable[str], counts: Literal[False] = False) -> str:
-    ...
+def _format_labels(labels: Iterable[str], counts: Literal[False] = False) -> str: ...
 
 
 @overload
 def _format_labels(
     labels: Iterable[Tuple[str, int]],
     counts: Literal[True],
-) -> str:
-    ...
+) -> str: ...
 
 
 def _format_labels(
