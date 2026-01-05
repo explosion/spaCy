@@ -216,7 +216,7 @@ def CharacterEmbed(
     ensures that the final character is always in the last position, instead
     of being in an arbitrary position depending on the word length.
 
-    The characters are embedded in a embedding table with a given number of rows,
+    The characters are embedded in an embedding table with a given number of rows,
     and the vectors concatenated. A hash-embedded vector of the LOWER of the word is
     also concatenated on, and the result is then passed through a feed-forward
     network to construct a single vector to represent the information.

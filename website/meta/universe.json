@@ -1192,7 +1192,7 @@
             "tags": [
                 "AWS"
             ],
-            "slogan": "spaCy as a AWS Lambda Layer",
+            "slogan": "spaCy as an AWS Lambda Layer",
             "description": "A collection of Python Packages as AWS Lambda(λ) Layers",
             "github": "keithrozario/Klayers",
             "pip": "",
@@ -3647,7 +3647,7 @@
             "id": "spacysetfit",
             "title": "spaCy-SetFit",
             "slogan": "An an easy and intuitive approach to use SetFit in combination with spaCy.",
-            "description": "spaCy-SetFit is a Python library that extends spaCy's text categorization capabilities by incorporating SetFit for few-shot classification. It allows you to train a text categorizer using a intuitive dictionary. \n\nThe library integrates with spaCy's pipeline architecture, enabling easy integration and configuration of the text categorizer component. You can provide a training dataset containing inlier and outlier examples, and spaCy-SetFit will use the paraphrase-MiniLM-L3-v2 model for training the text categorizer with SetFit. Once trained, you can use the categorizer to classify new text and obtain category probabilities.",
+            "description": "spaCy-SetFit is a Python library that extends spaCy's text categorization capabilities by incorporating SetFit for few-shot classification. It allows you to train a text categorizer using an intuitive dictionary. \n\nThe library integrates with spaCy's pipeline architecture, enabling easy integration and configuration of the text categorizer component. You can provide a training dataset containing inlier and outlier examples, and spaCy-SetFit will use the paraphrase-MiniLM-L3-v2 model for training the text categorizer with SetFit. Once trained, you can use the categorizer to classify new text and obtain category probabilities.",
             "github": "davidberenstein1957/spacy-setfit",
             "pip": "spacy-setfit",
             "thumb": "https://raw.githubusercontent.com/davidberenstein1957/spacy-setfit/main/logo.png",
