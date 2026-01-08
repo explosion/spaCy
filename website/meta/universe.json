@@ -75,7 +75,7 @@
             "slogan": "Word segmentation with transformers and beam search",
             "description": "Hashformers uses transformers and beam search to segment text without spaces into words. It fills the gap between heuristic-based splitters and LLM prompt-based segmentation, supporting any Hugging Face model. Recognized as state-of-the-art for hashtag segmentation at LREC 2022.",
             "github": "ruanchaves/hashformers",
-            "pip": "hashformers",
+            "pip": "hashformers[spacy]",
             "code_example": [
                 "import spacy",
                 "import hashformers.spacy  # registers the 'hashformers' component",
