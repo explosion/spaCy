@@ -70,6 +70,40 @@
             ]
         },
         {
+            "id": "hashformers",
+            "title": "Hashformers",
+            "slogan": "Word segmentation with transformers and beam search",
+            "description": "Hashformers uses transformers and beam search to segment text without spaces into words. It fills the gap between heuristic-based splitters and LLM prompt-based segmentation, supporting any Hugging Face model. Recognized as state-of-the-art for hashtag segmentation at LREC 2022.",
+            "github": "ruanchaves/hashformers",
+            "pip": "hashformers",
+            "code_example": [
+                "import spacy",
+                "import hashformers.spacy  # registers the 'hashformers' component",
+                "",
+                "nlp = spacy.blank('en')",
+                "nlp.add_pipe('hashformers', config={'model': 'distilgpt2'})",
+                "",
+                "doc = nlp('#weneedanationalpark')",
+                "print(doc._.segmented)  # 'we need a national park'"
+            ],
+            "code_language": "python",
+            "url": "https://github.com/ruanchaves/hashformers",
+            "author": "Ruan Chaves Rodrigues",
+            "author_links": {
+                "github": "ruanchaves"
+            },
+            "category": [
+                "pipeline",
+                "standalone"
+            ],
+            "tags": [
+                "word-segmentation",
+                "hashtags",
+                "transformers",
+                "beam-search"
+            ]
+        },
+        {
             "id": "spacy-vscode",
             "title": "spaCy Visual Studio Code Extension",
             "thumb": "https://raw.githubusercontent.com/explosion/spacy-vscode/main/icon.png",
@@ -2739,7 +2773,6 @@
                 "courses"
             ]
         },
-        
         {
             "type": "education",
             "id": "video-spacys-ner-model",
