@@ -111,8 +111,7 @@ for orth in [
     BASE_EXCEPTIONS[orth] = [{ORTH: orth}]
 
 
-emoticons = set(
-    r"""
+emoticons = set(r"""
 :)
 :-)
 :))
@@ -243,8 +242,7 @@ o.0
 ¯\(ツ)/¯
 (╯°□°）╯︵┻━┻
 ><(((*>
-""".split()
-)
+""".split())
 
 
 for orth in emoticons:

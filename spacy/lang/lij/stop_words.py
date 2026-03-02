@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 a à â a-a a-e a-i a-o aiva aloa an ancheu ancon apreuvo ascì atra atre atri atro avanti avei
 
 bella belle belli bello ben
@@ -35,5 +34,4 @@ tanta tante tanti tanto te ti torna tra tròppo tutta tutte tutti tutto
 un uña unn' unna
 
 za zu
-""".split()
-)
+""".split())

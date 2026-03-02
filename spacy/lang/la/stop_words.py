@@ -1,7 +1,6 @@
 # Corrected Perseus list, cf. https://wiki.digitalclassicist.org/Stopwords_for_Greek_and_Latin
 
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 ab ac ad adhuc aliqui aliquis an ante apud at atque aut autem 
 
 cum cur 
@@ -33,5 +32,4 @@ tam tamen trans tu tum
 ubi uel uero
 
 vel vero
-""".split()
-)
+""".split())

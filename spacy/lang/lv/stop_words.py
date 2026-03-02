@@ -1,7 +1,6 @@
 # Source: https://github.com/stopwords-iso/stopwords-lv
 
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 aiz
 ap
 apakš
@@ -163,5 +162,4 @@ viņpus
 zem
 ārpus
 šaipus
-""".split()
-)
+""".split())

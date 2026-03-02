@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 a à â abord afin ah ai aie ainsi ait allaient allons
 alors anterieur anterieure anterieures antérieur antérieure antérieures
 apres après as assez attendu au
@@ -80,5 +79,4 @@ votre votres vous vous-mêmes vu vé vôtre vôtres
 
 y
 
-""".split()
-)
+""".split())

@@ -1,7 +1,6 @@
 # Source: Handpicked by Jens Dahl Møllerhøj.
 
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 af aldrig alene alle allerede alligevel alt altid anden andet andre at
 
 bag begge blandt blev blive bliver burde bør
@@ -41,5 +40,4 @@ ud uden udover under undtagen
 var ved vi via vil ville vore vores vær være været
 
 øvrigt
-""".split()
-)
+""".split())

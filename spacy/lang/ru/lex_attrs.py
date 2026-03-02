@@ -1,8 +1,6 @@
 from ...attrs import LIKE_NUM
 
-_num_words = list(
-    set(
-        """
+_num_words = list(set("""
 ноль ноля нолю нолём ноле нулевой нулевого нулевому нулевым нулевом нулевая нулевую нулевое нулевые нулевых нулевыми 
 
 четверть четверти четвертью четвертей четвертям четвертями четвертях 
@@ -203,9 +201,7 @@ _num_words = list(
 квинтиллиону квинтиллионов квинтлн 
 
 i ii iii iv v vi vii viii ix x xi xii xiii xiv xv xvi xvii xviii xix xx xxi xxii xxiii xxiv xxv xxvi xxvii xxvii xxix
-""".split()
-    )
-)
+""".split()))
 
 
 def like_num(text):

@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 a acuerdo adelante ademas además afirmó agregó ahi ahora ahí al algo alguna
 algunas alguno algunos algún alli allí alrededor ambos ante anterior antes
 apenas aproximadamente aquel aquella aquellas aquello aquellos aqui aquél
@@ -76,5 +75,4 @@ va vais vamos van varias varios vaya veces ver verdad verdadera verdadero vez
 vosotras vosotros voy vuestra vuestras vuestro vuestros
 
 y ya yo
-""".split()
-)
+""".split())

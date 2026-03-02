@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 abadde abalala abamu abangi abava ajja ali alina ani anti ateekeddwa atewamu
 atya awamu aweebwa ayinza ba baali babadde babalina bajja
 bajjanewankubade bali balina bandi bangi bano bateekeddwa baweebwa bayina bebombi beera bibye
@@ -15,5 +14,4 @@ oyina oyo seetaaga si sinakindi singa talina tayina tebaali tebaalina tebayina t
 tetuteekeddwa tewali teyalina teyayina tolina tu tuyina tulina tuyina twafuna twetaaga wa wabula
 wabweru wadde waggulunnina wakati waliwobangi waliyo wandi wange wano wansi weebwa yabadde yaffe
 ye yenna yennyini yina yonna ziba zijja zonna
-""".split()
-)
+""".split())

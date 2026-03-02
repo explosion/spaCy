@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 એમ
 આ
 એ
@@ -84,5 +83,4 @@ STOP_WORDS = set(
 દર
 એટલો
 પરંતુ
-""".split()
-)
+""".split())

@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 a abo ale ani
 
 dokelž
@@ -15,5 +14,4 @@ pak potom
 tež tohodla
 
 zo zoby
-""".split()
-)
+""".split())

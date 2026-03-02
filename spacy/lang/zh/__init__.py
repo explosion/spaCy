@@ -91,13 +91,13 @@ class ChineseTokenizer(DummyTokenizer):
     def __call__(self, text: str) -> Doc:
         if self.segmenter == Segmenter.jieba:
             words = list([x for x in self.jieba_seg.cut(text, cut_all=False) if x])  # type: ignore[union-attr]
-            (words, spaces) = util.get_words_and_spaces(words, text)
+            words, spaces = util.get_words_and_spaces(words, text)
             return Doc(self.vocab, words=words, spaces=spaces)
         elif self.segmenter == Segmenter.pkuseg:
             if self.pkuseg_seg is None:
                 raise ValueError(Errors.E1000)
             words = self.pkuseg_seg.cut(text)
-            (words, spaces) = util.get_words_and_spaces(words, text)
+            words, spaces = util.get_words_and_spaces(words, text)
             return Doc(self.vocab, words=words, spaces=spaces)
 
         # warn if segmenter setting is not the only remaining option "char"
@@ -112,7 +112,7 @@ class ChineseTokenizer(DummyTokenizer):
 
         # split into individual characters
         words = list(text)
-        (words, spaces) = util.get_words_and_spaces(words, text)
+        words, spaces = util.get_words_and_spaces(words, text)
         return Doc(self.vocab, words=words, spaces=spaces)
 
     def pkuseg_update_user_dict(self, words: List[str], reset: bool = False):
@@ -210,7 +210,7 @@ class ChineseTokenizer(DummyTokenizer):
                 self.pkuseg_seg = spacy_pkuseg.pkuseg(str(tempdir))
             if pkuseg_data["processors_data"]:
                 processors_data = pkuseg_data["processors_data"]
-                (user_dict, do_process, common_words, other_words) = processors_data
+                user_dict, do_process, common_words, other_words = processors_data
                 self.pkuseg_seg.preprocesser = spacy_pkuseg.Preprocesser(user_dict)
                 self.pkuseg_seg.postprocesser.do_process = do_process
                 self.pkuseg_seg.postprocesser.common_words = set(common_words)
@@ -268,7 +268,7 @@ class ChineseTokenizer(DummyTokenizer):
                     raise ImportError(self._pkuseg_install_msg) from None
             if self.segmenter == Segmenter.pkuseg:
                 data = srsly.read_msgpack(path)
-                (user_dict, do_process, common_words, other_words) = data
+                user_dict, do_process, common_words, other_words = data
                 self.pkuseg_seg.preprocesser = spacy_pkuseg.Preprocesser(user_dict)
                 self.pkuseg_seg.postprocesser.do_process = do_process
                 self.pkuseg_seg.postprocesser.common_words = set(common_words)

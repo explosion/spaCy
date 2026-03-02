@@ -1,7 +1,6 @@
 # Source: https://zenodo.org/records/10148636
 
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 འི་
 །
 དུ་
@@ -194,5 +193,4 @@ STOP_WORDS = set(
 གིང་
 ཚ་
 ཀྱང
-""".split()
-)
+""".split())

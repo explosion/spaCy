@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 û
 li
 bi
@@ -40,5 +39,4 @@ gelek
 hemû
 kes
 tişt
-""".split()
-)
+""".split())

@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 a à às área acerca ademais adeus agora ainda algo algumas alguns ali além ambas ambos antes
 ao aos apenas apoia apoio apontar após aquela aquelas aquele aqueles aqui aquilo
 as assim através atrás até aí
@@ -62,5 +61,4 @@ vai vais valor veja vem vens ver vez vezes vinda vindo vinte você vocês vos vo
 vossas vosso vossos vários vão vêm vós
 
 zero
-""".split()
-)
+""".split())

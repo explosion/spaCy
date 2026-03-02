@@ -1,7 +1,6 @@
 # Source: https://github.com/Ardevop-sk/stopwords-sk
 
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 a
 aby
 aj
@@ -420,5 +419,4 @@ zo
 ňou
 ňu
 že
-""".split()
-)
+""".split())

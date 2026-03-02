@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 а
 авај
 ако
@@ -389,5 +388,4 @@ STOP_WORDS = set(
 ћете
 ћеш
 ћу
-""".split()
-)
+""".split())

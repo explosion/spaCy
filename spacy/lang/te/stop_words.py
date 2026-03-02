@@ -1,7 +1,6 @@
 # Source: https://github.com/Xangis/extra-stopwords (MIT License)
 
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 అందరూ
 అందుబాటులో
 అడగండి
@@ -52,5 +51,4 @@ STOP_WORDS = set(
 వేరుగా
 వ్యతిరేకంగా
 సంబంధం
-""".split()
-)
+""".split())

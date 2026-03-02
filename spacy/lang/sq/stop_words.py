@@ -1,7 +1,6 @@
 # Source: https://github.com/andrixh/index-albanian
 
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 a
 afert
 ai
@@ -225,5 +224,4 @@ vetes
 vjen
 yne
 zakonisht
-""".split()
-)
+""".split())

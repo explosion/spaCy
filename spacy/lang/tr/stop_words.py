@@ -1,6 +1,5 @@
 # Source: https://github.com/stopwords-iso/stopwords-tr
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 acaba
 acep
 adamakıllı
@@ -553,5 +552,4 @@ zarfında
 zaten
 zati
 zira
-""".split()
-)
+""".split())
