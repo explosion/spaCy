@@ -13,8 +13,7 @@
 # should have a Dutch counterpart here.
 
 
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 aan af al alle alles allebei alleen allen als altijd ander anders andere anderen aangaande aangezien achter achterna
 afgelopen aldus alhoewel anderzijds
 
@@ -68,5 +67,4 @@ welk welke welken werd werden wiens wier wilde wordt
 
 zal ze zei zelf zich zij zijn zo zonder zou zeer zeker zekere zelfde zelfs zichzelf zijnde zijne zo’n zoals zodra zouden
  zoveel zowat zulk zulke zulks zullen zult
-""".split()
-)
+""".split())

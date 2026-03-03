@@ -4,8 +4,7 @@ References:
     https://postvai.com/books/stop-dumi.pdf - Additions to the original list in order to improve it.
 """
 
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 а автентичен аз ако ала
 
 бе без беше би бивш бивша бившо бивши бил била били било благодаря близо бъдат
@@ -76,5 +75,4 @@ STOP_WORDS = set(
 юмрук
 
 я як
-""".split()
-)
+""".split())

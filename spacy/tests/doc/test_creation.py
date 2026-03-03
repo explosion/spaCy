@@ -26,7 +26,7 @@ def test_create_from_words_and_text(vocab):
     # no whitespace in words
     words = ["'", "dogs", "'", "run"]
     text = "  'dogs'\n\nrun  "
-    (words, spaces) = util.get_words_and_spaces(words, text)
+    words, spaces = util.get_words_and_spaces(words, text)
     doc = Doc(vocab, words=words, spaces=spaces)
     assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]
     assert [t.whitespace_ for t in doc] == ["", "", "", "", "", " ", ""]
@@ -38,7 +38,7 @@ def test_create_from_words_and_text(vocab):
     # partial whitespace in words
     words = ["  ", "'", "dogs", "'", "\n\n", "run", " "]
     text = "  'dogs'\n\nrun  "
-    (words, spaces) = util.get_words_and_spaces(words, text)
+    words, spaces = util.get_words_and_spaces(words, text)
     doc = Doc(vocab, words=words, spaces=spaces)
     assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]
     assert [t.whitespace_ for t in doc] == ["", "", "", "", "", " ", ""]
@@ -50,7 +50,7 @@ def test_create_from_words_and_text(vocab):
     # non-standard whitespace tokens
     words = [" ", " ", "'", "dogs", "'", "\n\n", "run"]
     text = "  'dogs'\n\nrun  "
-    (words, spaces) = util.get_words_and_spaces(words, text)
+    words, spaces = util.get_words_and_spaces(words, text)
     doc = Doc(vocab, words=words, spaces=spaces)
     assert [t.text for t in doc] == ["  ", "'", "dogs", "'", "\n\n", "run", " "]
     assert [t.whitespace_ for t in doc] == ["", "", "", "", "", " ", ""]
@@ -63,7 +63,7 @@ def test_create_from_words_and_text(vocab):
     with pytest.raises(ValueError):
         words = [" ", " ", "'", "dogs", "'", "\n\n", "run"]
         text = "  'dogs'\n\nrun  "
-        (words, spaces) = util.get_words_and_spaces(words + ["away"], text)
+        words, spaces = util.get_words_and_spaces(words + ["away"], text)
 
 
 def test_create_with_heads_and_no_deps(vocab):

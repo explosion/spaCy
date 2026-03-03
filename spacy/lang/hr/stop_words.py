@@ -1,6 +1,5 @@
 # Source: https://github.com/stopwords-iso/stopwords-hr
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 a
 ah
 aha
@@ -340,5 +339,4 @@ zbog
 željeo
 zimus
 zum
-""".split()
-)
+""".split())

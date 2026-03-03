@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 aderton adertonde adjö aldrig alla allas allt alltid alltså än andra andras
 annan annat ännu artonde arton åtminstone att åtta åttio åttionde åttonde av
 även
@@ -62,5 +61,4 @@ under upp ur ursäkt ut utan utanför ute
 vad vänster vänstra var vår vara våra varför varifrån varit varken värre
 varsågod vart vårt vem vems verkligen vi vid vidare viktig viktigare viktigast
 viktigt vilka vilken vilket vill
-""".split()
-)
+""".split())

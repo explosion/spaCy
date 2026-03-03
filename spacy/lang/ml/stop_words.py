@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 അത്
 ഇത്
 ആയിരുന്നു
@@ -9,5 +8,4 @@ STOP_WORDS = set(
 അന്ന്
 ഇന്ന്
 ആണ്
-""".split()
-)
+""".split())

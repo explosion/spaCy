@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 a abo aby ako ale až
 
 daniž dokulaž
@@ -11,5 +10,4 @@ jolic
 pak pótom
 
 teke togodla
-""".split()
-)
+""".split())

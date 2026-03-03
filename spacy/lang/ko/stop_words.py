@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 이
 있
 하
@@ -63,5 +62,4 @@ STOP_WORDS = set(
 원
 잘
 놓
-""".split()
-)
+""".split())

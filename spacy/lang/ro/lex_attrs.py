@@ -1,16 +1,13 @@
 from ...attrs import LIKE_NUM
 
-_num_words = set(
-    """
+_num_words = set("""
 zero unu doi două trei patru cinci șase șapte opt nouă zece
 unsprezece doisprezece douăsprezece treisprezece patrusprezece cincisprezece șaisprezece șaptesprezece optsprezece nouăsprezece
 douăzeci treizeci patruzeci cincizeci șaizeci șaptezeci optzeci nouăzeci
 sută mie milion miliard bilion trilion cvadrilion catralion cvintilion sextilion septilion enșpemii
-""".split()
-)
+""".split())
 
-_ordinal_words = set(
-    """
+_ordinal_words = set("""
 primul doilea treilea patrulea cincilea șaselea șaptelea optulea nouălea zecelea
 prima doua treia patra cincia șasea șaptea opta noua zecea
 unsprezecelea doisprezecelea treisprezecelea patrusprezecelea cincisprezecelea șaisprezecelea șaptesprezecelea optsprezecelea nouăsprezecelea
@@ -18,8 +15,7 @@ unsprezecea douăsprezecea treisprezecea patrusprezecea cincisprezecea șaisprez
 douăzecilea treizecilea patruzecilea cincizecilea șaizecilea șaptezecilea optzecilea nouăzecilea sutălea
 douăzecea treizecea patruzecea cincizecea șaizecea șaptezecea optzecea nouăzecea suta
 miilea mielea mia milionulea milioana miliardulea miliardelea miliarda enșpemia
-""".split()
-)
+""".split())
 
 
 def like_num(text):

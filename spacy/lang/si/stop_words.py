@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 සහ
 සමග
 සමඟ
@@ -191,5 +190,4 @@ STOP_WORDS = set(
 ලෙස
 පරිදි
 එහෙත්
-""".split()
-)
+""".split())

@@ -1,7 +1,6 @@
 # Source: https://github.com/stopwords-iso/stopwords-af
 
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 'n
 aan
 af
@@ -53,5 +52,4 @@ vir
 was
 wat
 ŉ
-""".split()
-)
+""".split())

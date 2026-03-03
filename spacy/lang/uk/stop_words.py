@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """а
+STOP_WORDS = set("""а
 або
 адже
 аж
@@ -465,5 +464,4 @@ STOP_WORDS = set(
 якій
 якого
 якої
-якщо""".split()
-)
+якщо""".split())

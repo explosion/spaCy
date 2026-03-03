@@ -437,7 +437,7 @@ def test_phrase_matcher_pickle(en_vocab):
     assert matches == matches_unpickled
 
     # clunky way to vaguely check that callback is unpickled
-    (vocab, docs, callbacks, attr) = matcher_unpickled.__reduce__()[1]
+    vocab, docs, callbacks, attr = matcher_unpickled.__reduce__()[1]
     assert isinstance(callbacks.get("TEST2"), Mock)
 
 

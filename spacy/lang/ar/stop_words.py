@@ -1,5 +1,4 @@
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 من
 نحو
 لعل
@@ -386,5 +385,4 @@ STOP_WORDS = set(
 وإن
 ولو
 يا
-""".split()
-)
+""".split())

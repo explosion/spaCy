@@ -1,7 +1,6 @@
 from ...attrs import LIKE_NUM
 
-_num_words = set(
-    """
+_num_words = set("""
 صفر
 واحد
 إثنان
@@ -51,11 +50,9 @@ _num_words = set(
 مليون
 مليار
 مليارات
-""".split()
-)
+""".split())
 
-_ordinal_words = set(
-    """
+_ordinal_words = set("""
 اول
 أول
 حاد
@@ -70,8 +67,7 @@ _ordinal_words = set(
 ثامن
 تاسع
 عاشر
-""".split()
-)
+""".split())
 
 
 def like_num(text):

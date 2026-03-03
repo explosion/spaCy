@@ -1,6 +1,5 @@
 # Source: collected from different resource on internet
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 ثھی
 خو
 گی
@@ -509,5 +508,4 @@ STOP_WORDS = set(
 ہورہی
 ثبعث
 ضت
-""".split()
-)
+""".split())

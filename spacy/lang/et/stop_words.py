@@ -1,7 +1,6 @@
 # Source: https://github.com/stopwords-iso/stopwords-et
 
-STOP_WORDS = set(
-    """
+STOP_WORDS = set("""
 aga
 ei
 et
@@ -37,5 +36,4 @@ siis
 ta
 te
 ära
-""".split()
-)
+""".split())

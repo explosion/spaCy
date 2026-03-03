@@ -1,24 +1,20 @@
 from ...attrs import LIKE_NUM, NORM
 
 # Cardinal numbers in Creole
-_num_words = set(
-    """
+_num_words = set("""
 zewo youn en de twa kat senk sis sèt uit nèf dis
 onz douz trèz katoz kenz sèz disèt dizwit diznèf
 vent trant karant sinkant swasant swasann-dis
 san mil milyon milya
-""".split()
-)
+""".split())
 
 # Ordinal numbers in Creole (some are French-influenced, some simplified)
-_ordinal_words = set(
-    """
+_ordinal_words = set("""
 premye dezyèm twazyèm katryèm senkyèm sizyèm sètvyèm uitvyèm nèvyèm dizyèm
 onzèm douzyèm trèzyèm katozyèm kenzèm sèzyèm disetyèm dizwityèm diznèvyèm
 ventyèm trantyèm karantyèm sinkantyèm swasantyèm
 swasann-disyèm santyèm milyèm milyonnyèm milyadyèm
-""".split()
-)
+""".split())
 
 NORM_MAP = {
     "'m": "mwen",
