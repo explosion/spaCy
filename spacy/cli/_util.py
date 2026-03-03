@@ -68,7 +68,7 @@ INIT_HELP = """Commands for initializing configs and pipeline packages."""
 Arg = typer.Argument
 Opt = typer.Option
 
-app = typer.Typer(name=NAME, help=HELP)
+app = typer.Typer(name=NAME, help=HELP, rich_markup_mode=None)
 benchmark_cli = typer.Typer(name="benchmark", help=BENCHMARK_HELP, no_args_is_help=True)
 debug_cli = typer.Typer(name="debug", help=DEBUG_HELP, no_args_is_help=True)
 init_cli = typer.Typer(name="init", help=INIT_HELP, no_args_is_help=True)
