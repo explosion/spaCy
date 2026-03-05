@@ -249,9 +249,15 @@ cdef class Vocab:
 
     def _clear_transient_orths(self):
         """Remove transient lexemes from the index (generally at the end of the memory zone)"""
+        cdef hash_t orth
+        cdef int num_cleared = 0
+        
         for orth in self._transient_orths:
-            map_clear(self._by_orth.c_map, orth)
+            if self._by_orth.get(orth) is not NULL:
+                map_clear(self._by_orth.c_map, orth)
+                num_cleared += 1
         self._transient_orths.clear()
+        self.length -= num_cleared
 
     def __contains__(self, key):
         """Check whether the string or int key has an entry in the vocabulary.
