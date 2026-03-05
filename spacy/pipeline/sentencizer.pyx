@@ -93,15 +93,49 @@ class Sentencizer(Pipe):
             if len(doc) > 0:
                 start = 0
                 seen_period = False
+                # Track quote nesting depth to defer sentence boundary detection when
+                # sentence-ending punctuation appears within quoted text
+                quote_depth = 0
+                pending_split_after_quote = False
                 doc_guesses[0] = True
                 for i, token in enumerate(doc):
                     is_in_punct_chars = token.text in self.punct_chars
-                    if seen_period and not token.is_punct and not is_in_punct_chars:
-                        doc_guesses[start] = True
-                        start = token.i
-                        seen_period = False
-                    elif is_in_punct_chars:
+                    
+                    # Update quote depth to track whether the current position is within quoted text.
+                    # This prevents premature sentence splitting when punctuation appears inside quotes.
+                    if token.is_quote:
+                        if token.is_left_punct and token.is_right_punct:
+                            # Symmetric quotes toggle quote state based on current depth.
+                            # If currently outside quotes, the quote acts as an opening quote.
+                            # If currently inside quotes, the quote acts as a closing quote.
+                            quote_depth = 1 if quote_depth == 0 else quote_depth - 1
+                        elif token.is_left_punct:
+                            # Asymmetric opening quote (e.g., «, ", ').
+                            quote_depth += 1
+                        elif token.is_right_punct:
+                            # Asymmetric closing quote (e.g., », ", ').
+                            quote_depth -= 1
+                            # Ensure quote_depth does not go negative to handle unopened quotes gracefully.
+                            if quote_depth < 0:
+                                quote_depth = 0
+                    
+                    # Handle sentence-ending punctuation.
+                    if is_in_punct_chars:
                         seen_period = True
+                        # Defer sentence boundary until after closing quote when punctuation
+                        # appears within quoted text. This ensures quoted dialogue is not split
+                        # at punctuation marks that appear inside the quotes.
+                        if quote_depth > 0:
+                            pending_split_after_quote = True
+                    elif seen_period and not token.is_punct and not is_in_punct_chars:
+                        # Create sentence boundary when outside quoted text.
+                        # Only split when quote_depth is zero to avoid splitting within quoted dialogue.
+                        if quote_depth == 0:
+                            if pending_split_after_quote:
+                                pending_split_after_quote = False
+                            doc_guesses[start] = True
+                            start = token.i
+                            seen_period = False
                 if start < len(doc):
                     doc_guesses[start] = True
             guesses.append(doc_guesses)
