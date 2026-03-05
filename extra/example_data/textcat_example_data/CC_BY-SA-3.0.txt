@@ -230,7 +230,7 @@ subject to and limited by the following restrictions:
     (e.g., "French translation of the Work by Original Author," or
     "Screenplay based on original Work by Original Author"). The credit
     required by this Section 4(c) may be implemented in any reasonable
-    manner; provided, however, that in the case of a Adaptation or
+    manner; provided, however, that in the case of an Adaptation or
     Collection, at a minimum such credit will appear, if a credit for all
     contributing authors of the Adaptation or Collection appears, then as
     part of these credits and in a manner at least as prominent as the
