@@ -12,7 +12,7 @@ cdef extern from "<algorithm>" namespace "std" nogil:
 # An edit tree (Müller et al., 2015) is a tree structure that consists of
 # edit operations. The two types of operations are string matches
 # and string substitutions. Given an input string s and an output string t,
-# subsitution and match nodes should be interpreted as follows:
+# substitution and match nodes should be interpreted as follows:
 #
 # * Substitution node: consists of an original string and substitute string.
 #   If s matches the original string, then t is the substitute. Otherwise,

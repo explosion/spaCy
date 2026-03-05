@@ -247,7 +247,7 @@ def test_issue13769():
         (1, 4, "This is"),  # Overlapping with 2 sentences
         (0, 2, "This is"),  # Beginning of the Doc. Full sentence
         (0, 1, "This is"),  # Beginning of the Doc. Part of a sentence
-        (10, 14, "And a"),  # End of the Doc. Overlapping with 2 senteces
+        (10, 14, "And a"),  # End of the Doc. Overlapping with 2 sentences
         (12, 14, "third."),  # End of the Doc. Full sentence
         (1, 1, "This is"),  # Empty Span
     ],
@@ -676,7 +676,7 @@ def test_span_comparison(doc):
         (3, 6, 2, 2),  # Overlapping with 2 sentences
         (0, 4, 1, 2),  # Beginning of the Doc. Full sentence
         (0, 3, 1, 2),  # Beginning of the Doc. Part of a sentence
-        (9, 14, 2, 3),  # End of the Doc. Overlapping with 2 senteces
+        (9, 14, 2, 3),  # End of the Doc. Overlapping with 2 sentences
         (10, 14, 1, 2),  # End of the Doc. Full sentence
         (11, 14, 1, 2),  # End of the Doc. Partial sentence
         (0, 0, 1, 1),  # Empty Span

@@ -351,7 +351,7 @@ def test_oracle_moves_whitespace(en_vocab):
 
 
 def test_accept_blocked_token():
-    """Test succesful blocking of tokens to be in an entity."""
+    """Test successful blocking of tokens to be in an entity."""
     # 1. test normal behaviour
     nlp1 = English()
     doc1 = nlp1("I live in New York")
