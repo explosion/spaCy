@@ -9,9 +9,6 @@ from .morphanalysis import MorphAnalysis
 from .span import Span
 from .underscore import Underscore
 
-class TokenMethod(Protocol):
-    def __call__(self: Token, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
-
 class Token:
     i: int
     doc: Doc
@@ -23,13 +20,13 @@ class Token:
         default: Optional[Any] = ...,
         getter: Optional[Callable[[Token], Any]] = ...,
         setter: Optional[Callable[[Token, Any], None]] = ...,
-        method: Optional[TokenMethod] = ...,
+        method: Optional[Callable[[Token, Any]]] = ...,
         force: bool = ...,
     ) -> None: ...
     @classmethod
     def get_extension(cls, name: str) -> Tuple[
         Optional[Any],
-        Optional[TokenMethod],
+        Optional[Callable[[Token, Any]]],
         Optional[Callable[[Token], Any]],
         Optional[Callable[[Token, Any], None]],
     ]: ...
@@ -38,7 +35,7 @@ class Token:
     @classmethod
     def remove_extension(cls, name: str) -> Tuple[
         Optional[Any],
-        Optional[TokenMethod],
+        Optional[Callable[[Token, Any]]],
         Optional[Callable[[Token], Any]],
         Optional[Callable[[Token, Any], None]],
     ]: ...
