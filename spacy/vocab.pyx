@@ -150,9 +150,11 @@ cdef class Vocab:
             if hasattr(self._vectors, "memory_zone"):
                 contexts.append(stack.enter_context(self._vectors.memory_zone(mem)))
             self.mem = mem
-            yield mem
-        self._clear_transient_orths()
-        self.mem = self._non_temp_mem
+            try:
+                yield mem
+            finally:
+                self._clear_transient_orths()
+                self.mem = self._non_temp_mem
 
     def add_flag(self, flag_getter, int flag_id=-1):
         """Set a new boolean flag to words in the vocabulary.
