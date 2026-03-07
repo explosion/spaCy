@@ -34,3 +34,26 @@ def test_memory_zone_redundant_insertion():
         _ = vocab["dog"]
     assert "dog" in vocab
     assert "horse" not in vocab
+
+
+def test_memory_zone_exception_cleanup():
+    """Test that if an exception occurs inside a memory zone, the vocab
+    is properly cleaned up and remains usable afterward."""
+    vocab = Vocab()
+    _ = vocab["dog"]
+    assert "dog" in vocab
+    try:
+        with vocab.memory_zone():
+            _ = vocab["horse"]
+            raise ValueError("simulated error")
+    except ValueError:
+        pass
+    # Vocab should not be stuck in memory zone state
+    assert not vocab.in_memory_zone
+    # Pre-existing words should still work
+    assert "dog" in vocab
+    # Transient word from failed zone should be cleaned up
+    assert "horse" not in vocab
+    # Vocab should be fully usable for new operations
+    lex = vocab["cat"]
+    assert lex.text == "cat"

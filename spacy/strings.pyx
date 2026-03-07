@@ -205,11 +205,13 @@ cdef class StringStore:
         if mem is None:
             mem = Pool()
         self.mem = mem
-        yield mem
-        for key in self._transient_keys:
-            map_clear(self._map.c_map, key)
-        self._transient_keys.clear()
-        self.mem = self._non_temp_mem
+        try:
+            yield mem
+        finally:
+            for key in self._transient_keys:
+                map_clear(self._map.c_map, key)
+            self._transient_keys.clear()
+            self.mem = self._non_temp_mem
 
     def add(self, string: str, allow_transient: Optional[bool] = None) -> int:
         """Add a string to the StringStore.
