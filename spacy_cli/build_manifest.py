@@ -58,7 +58,7 @@ def build_manifest() -> Dict[str, object]:
             group_help[name] = _get_help(runner, app, [name])
             unknown_subcommand[name] = _invoke(
                 runner, app, [name, UNKNOWN_SUBCOMMAND_TOKEN]
-            ).stdout
+            ).output
             for sub_name in subcommands:
                 help_text = _maybe_get_help(runner, app, [name, sub_name])
                 if help_text is not None:
@@ -76,8 +76,8 @@ def build_manifest() -> Dict[str, object]:
         "group_help": group_help,
         "command_help": command_help,
         "errors": {
-            "missing_command": _invoke(runner, app, []).stdout,
-            "unknown_command": _invoke(runner, app, [UNKNOWN_COMMAND_TOKEN]).stdout,
+            "missing_command": _invoke(runner, app, []).output,
+            "unknown_command": _invoke(runner, app, [UNKNOWN_COMMAND_TOKEN]).output,
             "unknown_subcommand": unknown_subcommand,
         },
     }
