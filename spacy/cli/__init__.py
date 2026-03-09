@@ -1,4 +1,5 @@
 import sys
+import types
 from importlib import import_module
 from typing import Iterable
 
@@ -77,6 +78,19 @@ def __getattr__(name: str):
 
 def __dir__():
     return sorted(set(globals()) | set(PUBLIC_ATTRS))
+
+
+class _CLIModule(types.ModuleType):
+    def __setattr__(self, name, value):
+        if isinstance(value, types.ModuleType) and name in PUBLIC_ATTRS:
+            _, attr_name = PUBLIC_ATTRS[name]
+            if attr_name is not None:
+                super().__setattr__(name, getattr(value, attr_name))
+                return
+        super().__setattr__(name, value)
+
+
+sys.modules[__name__].__class__ = _CLIModule
 
 
 @app.command("link", no_args_is_help=True, deprecated=True, hidden=True)
