@@ -19,9 +19,7 @@ from click import NoSuchOption
 from click.shell_completion import split_arg_string
 from thinc.api import ConfigValidationError, require_gpu
 from thinc.util import gpu_is_available
-from typer.main import get_command
 from wasabi import Printer, msg
-from weasel import app as project_cli
 
 from ..compat import Literal
 from ..util import (
@@ -63,19 +61,21 @@ app = typer.Typer(name=NAME, help=HELP, rich_markup_mode=None)
 benchmark_cli = typer.Typer(name="benchmark", help=BENCHMARK_HELP, no_args_is_help=True)
 debug_cli = typer.Typer(name="debug", help=DEBUG_HELP, no_args_is_help=True)
 init_cli = typer.Typer(name="init", help=INIT_HELP, no_args_is_help=True)
+_PROJECT_CLI_ADDED = False
 
-app.add_typer(project_cli, name="project", help=PROJECT_HELP, no_args_is_help=True)
 app.add_typer(debug_cli)
 app.add_typer(benchmark_cli)
 app.add_typer(init_cli)
 
 
-def setup_cli() -> None:
-    # Make sure the entry-point for CLI runs, so that they get imported.
-    registry.cli.get_all()
-    # Ensure that the help messages always display the correct prompt
-    command = get_command(app)
-    command(prog_name=COMMAND)
+def add_project_cli() -> None:
+    global _PROJECT_CLI_ADDED
+    if _PROJECT_CLI_ADDED:
+        return
+    from weasel import app as project_cli
+
+    app.add_typer(project_cli, name="project", help=PROJECT_HELP, no_args_is_help=True)
+    _PROJECT_CLI_ADDED = True
 
 
 def parse_config_overrides(
