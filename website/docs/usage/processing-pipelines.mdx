@@ -960,7 +960,7 @@ print(doc._.acronyms)
 Many stateful components depend on **data resources** like dictionaries and
 lookup tables that should ideally be **configurable**. For example, it makes
 sense to make the `DICTIONARY` in the above example an argument of the
-registered function, so the `AcronymComponent` can be re-used with different
+registered function, so the `AcronymComponent` can be reused with different
 data. One logical solution would be to make it an argument of the component
 factory, and allow it to be initialized with different dictionaries.
 
@@ -1316,7 +1316,7 @@ means that the config can express very complex, nested trees of objects – but
 the objects don't have to pass the model settings all the way down to the
 components. It also makes the components more **modular** and lets you
 [swap](/usage/layers-architectures#swap-architectures) different architectures
-in your config, and re-use model definitions.
+in your config, and reuse model definitions.
 
 ```ini {title="config.cfg (excerpt)"}
 [components]
