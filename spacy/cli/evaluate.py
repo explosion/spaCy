@@ -38,7 +38,7 @@ def evaluate_cli(
     predictions. Gold preprocessing helps the annotations align to the
     tokenization, and may result in sequences of more consistent length. However,
     it may reduce runtime accuracy due to train/test skew. To render a sample of
-    dependency parses in a HTML file, set as output directory as the
+    dependency parses in an HTML file, set as output directory as the
     displacy_path argument.
 
     DOCS: https://spacy.io/api/cli#benchmark-accuracy
