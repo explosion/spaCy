@@ -21,6 +21,27 @@ from .registrations import REGISTRY_POPULATED, populate_registry
 from .util import logger, registry  # noqa: F401
 from .vocab import Vocab
 
+# Rebuild pydantic v2 schemas that use forward references to Language/Vocab
+from .schemas import (  # noqa: F401
+    ConfigSchema,
+    ConfigSchemaInit,
+    ConfigSchemaNlp,
+    ConfigSchemaPretrain,
+    ConfigSchemaTraining,
+)
+
+from .training import Example  # noqa: F401
+
+_rebuild_ns = {"Language": Language, "Vocab": Vocab, "Example": Example}
+for _schema in (
+    ConfigSchemaTraining,
+    ConfigSchemaNlp,
+    ConfigSchemaPretrain,
+    ConfigSchemaInit,
+    ConfigSchema,
+):
+    _schema.model_rebuild(_types_namespace=_rebuild_ns)
+
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)
 
