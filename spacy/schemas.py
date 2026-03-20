@@ -4,7 +4,6 @@ from collections import defaultdict
 from enum import Enum
 from typing import (
     TYPE_CHECKING,
-    Annotated,
     Any,
     Callable,
     Dict,
@@ -17,20 +16,34 @@ from typing import (
     Union,
 )
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    RootModel,
-    StrictBool,
-    StrictFloat,
-    StrictInt,
-    StrictStr,
-    StringConstraints,
-    ValidationError,
-    create_model,
-    field_validator,
-)
+try:
+    from pydantic.v1 import (
+        BaseModel,
+        ConstrainedStr,
+        Field,
+        StrictBool,
+        StrictFloat,
+        StrictInt,
+        StrictStr,
+        ValidationError,
+        create_model,
+        validator,
+    )
+    from pydantic.v1.main import ModelMetaclass
+except ImportError:
+    from pydantic import (  # type: ignore
+        BaseModel,
+        ConstrainedStr,
+        Field,
+        StrictBool,
+        StrictFloat,
+        StrictInt,
+        StrictStr,
+        ValidationError,
+        create_model,
+        validator,
+    )
+    from pydantic.main import ModelMetaclass  # type: ignore
 from thinc.api import ConfigValidationError, Model, Optimizer
 from thinc.config import Promise
 
@@ -76,8 +89,14 @@ def validate(schema: Type[BaseModel], obj: Dict[str, Any]) -> List[str]:
 # Initialization
 
 
-_ARG_SCHEMA_CONFIG = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
-_ARG_SCHEMA_CONFIG_EXTRA = ConfigDict(extra="allow", arbitrary_types_allowed=True)
+class ArgSchemaConfig:
+    extra = "forbid"
+    arbitrary_types_allowed = True
+
+
+class ArgSchemaConfigExtra:
+    extra = "forbid"
+    arbitrary_types_allowed = True
 
 
 def get_arg_model(
@@ -86,7 +105,7 @@ def get_arg_model(
     exclude: Iterable[str] = tuple(),
     name: str = "ArgModel",
     strict: bool = True,
-) -> Type[BaseModel]:
+) -> ModelMetaclass:
     """Generate a pydantic model for function arguments.
 
     func (Callable): The function to generate the schema for.
@@ -94,15 +113,15 @@ def get_arg_model(
     name (str): Name of created model class.
     strict (bool): Don't allow extra arguments if no variable keyword arguments
         are allowed on the function.
-    RETURNS (Type[BaseModel]): A pydantic model.
+    RETURNS (ModelMetaclass): A pydantic model.
     """
-    sig_args: Dict[str, Any] = {}
+    sig_args = {}
     try:
         sig = inspect.signature(func)
     except ValueError:
         # Typically happens if the method is part of a Cython module without
         # binding=True. Here we just use an empty model that allows everything.
-        return create_model(name, __config__=_ARG_SCHEMA_CONFIG_EXTRA)  # type: ignore[call-overload]
+        return create_model(name, __config__=ArgSchemaConfigExtra)  # type: ignore[arg-type, return-value]
     has_variable = False
     for param in sig.parameters.values():
         if param.name in exclude:
@@ -122,8 +141,8 @@ def get_arg_model(
         default = param.default if param.default != param.empty else default_empty
         sig_args[param.name] = (annotation, default)
     is_strict = strict and not has_variable
-    config = _ARG_SCHEMA_CONFIG if is_strict else _ARG_SCHEMA_CONFIG_EXTRA
-    return create_model(name, __config__=config, **sig_args)  # type: ignore[call-overload]
+    sig_args["__config__"] = ArgSchemaConfig if is_strict else ArgSchemaConfigExtra  # type: ignore[assignment]
+    return create_model(name, **sig_args)  # type: ignore[call-overload, arg-type, return-value]
 
 
 def validate_init_settings(
@@ -148,7 +167,7 @@ def validate_init_settings(
     """
     schema = get_arg_model(func, exclude=exclude, name="InitArgModel")
     try:
-        return schema(**settings).model_dump()
+        return schema(**settings).dict()
     except ValidationError as e:
         block = "initialize" if not section else f"initialize.{section}"
         title = f"Error validating initialization settings in [{block}]"
@@ -174,8 +193,6 @@ def validate_token_pattern(obj: list) -> List[str]:
 
 
 class TokenPatternString(BaseModel):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
-
     REGEX: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="regex")
     IN: Optional[List[StrictStr]] = Field(None, alias="in")
     NOT_IN: Optional[List[StrictStr]] = Field(None, alias="not_in")
@@ -211,17 +228,18 @@ class TokenPatternString(BaseModel):
         None, alias="fuzzy9"
     )
 
-    @field_validator("*", mode="before")
-    @classmethod
-    def raise_for_none(cls, v: Any) -> Any:
+    class Config:
+        extra = "forbid"
+        allow_population_by_field_name = True  # allow alias and field name
+
+    @validator("*", pre=True, each_item=True, allow_reuse=True)
+    def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
         return v
 
 
 class TokenPatternNumber(BaseModel):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
-
     REGEX: Optional[StrictStr] = Field(None, alias="regex")
     IN: Optional[List[StrictInt]] = Field(None, alias="in")
     NOT_IN: Optional[List[StrictInt]] = Field(None, alias="not_in")
@@ -235,24 +253,26 @@ class TokenPatternNumber(BaseModel):
     GT: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias=">")
     LT: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias="<")
 
-    @field_validator("*", mode="before")
-    @classmethod
-    def raise_for_none(cls, v: Any) -> Any:
+    class Config:
+        extra = "forbid"
+        allow_population_by_field_name = True  # allow alias and field name
+
+    @validator("*", pre=True, each_item=True, allow_reuse=True)
+    def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
         return v
 
 
 class TokenPatternOperatorSimple(str, Enum):
-    plus = "+"
-    star = "*"
-    question = "?"
-    exclamation = "!"
+    plus: StrictStr = StrictStr("+")
+    star: StrictStr = StrictStr("*")
+    question: StrictStr = StrictStr("?")
+    exclamation: StrictStr = StrictStr("!")
 
 
-TokenPatternOperatorMinMax = Annotated[
-    str, StringConstraints(pattern=r"^(\{\d+\}|\{\d+,\d*\}|\{\d*,\d+\})$")
-]
+class TokenPatternOperatorMinMax(ConstrainedStr):
+    regex = re.compile(r"^({\d+}|{\d+,\d*}|{\d*,\d+})$")
 
 
 TokenPatternOperator = Union[TokenPatternOperatorSimple, TokenPatternOperatorMinMax]
@@ -265,12 +285,6 @@ IobValue = Literal["", "I", "O", "B", 0, 1, 2, 3]
 
 
 class TokenPattern(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-        alias_generator=lambda value: value.upper(),
-    )
-
     orth: Optional[StringValue] = None
     text: Optional[StringValue] = None
     lower: Optional[StringValue] = None
@@ -309,18 +323,23 @@ class TokenPattern(BaseModel):
     op: Optional[TokenPatternOperator] = None
     underscore: Optional[Dict[StrictStr, UnderscoreValue]] = Field(None, alias="_")
 
-    @field_validator("*", mode="before")
-    @classmethod
-    def raise_for_none(cls, v: Any) -> Any:
+    class Config:
+        extra = "forbid"
+        allow_population_by_field_name = True
+        alias_generator = lambda value: value.upper()
+
+    @validator("*", pre=True, allow_reuse=True)
+    def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
         return v
 
 
 class TokenPatternSchema(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    pattern: List[TokenPattern] = Field(..., min_items=1)
 
-    pattern: List[TokenPattern] = Field(..., min_length=1)
+    class Config:
+        extra = "forbid"
 
 
 # Model meta
@@ -357,7 +376,6 @@ class ModelMetaSchema(BaseModel):
 
 
 class ConfigSchemaTraining(BaseModel):
-    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
     # fmt: off
     dev_corpus: StrictStr = Field(..., title="Path in the config to the dev data")
     train_corpus: StrictStr = Field(..., title="Path in the config to the training data")
@@ -379,9 +397,12 @@ class ConfigSchemaTraining(BaseModel):
     before_update: Optional[Callable[["Language", Dict[str, Any]], None]] = Field(..., title="Optional callback that is invoked at the start of each training step")
     # fmt: on
 
+    class Config:
+        extra = "forbid"
+        arbitrary_types_allowed = True
+
 
 class ConfigSchemaNlp(BaseModel):
-    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
     # fmt: off
     lang: StrictStr = Field(..., title="The base language to use")
     pipeline: List[StrictStr] = Field(..., title="The pipeline component names in order")
@@ -394,13 +415,17 @@ class ConfigSchemaNlp(BaseModel):
     vectors: Callable = Field(..., title="Vectors implementation")
     # fmt: on
 
+    class Config:
+        extra = "forbid"
+        arbitrary_types_allowed = True
+
 
 class ConfigSchemaPretrainEmpty(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    class Config:
+        extra = "forbid"
 
 
 class ConfigSchemaPretrain(BaseModel):
-    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
     # fmt: off
     max_epochs: StrictInt = Field(..., title="Maximum number of epochs to train for")
     dropout: StrictFloat = Field(..., title="Dropout rate")
@@ -414,29 +439,39 @@ class ConfigSchemaPretrain(BaseModel):
     objective: Callable[["Vocab", Model], Model] = Field(..., title="A function that creates the pretraining objective.")
     # fmt: on
 
+    class Config:
+        extra = "forbid"
+        arbitrary_types_allowed = True
+
 
 class ConfigSchemaInit(BaseModel):
-    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
     # fmt: off
     vocab_data: Optional[StrictStr] = Field(..., title="Path to JSON-formatted vocabulary file")
     lookups: Optional[Lookups] = Field(..., title="Vocabulary lookups, e.g. lexeme normalization")
     vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
-    tokenizer: Dict[StrictStr, Any] = Field(..., description="Arguments to be passed into Tokenizer.initialize")
-    components: Dict[StrictStr, Dict[StrictStr, Any]] = Field(..., description="Arguments for TrainablePipe.initialize methods of pipeline components, keyed by component")
+    tokenizer: Dict[StrictStr, Any] = Field(..., help="Arguments to be passed into Tokenizer.initialize")
+    components: Dict[StrictStr, Dict[StrictStr, Any]] = Field(..., help="Arguments for TrainablePipe.initialize methods of pipeline components, keyed by component")
     before_init: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object before initialization")
     after_init: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after initialization")
     # fmt: on
 
+    class Config:
+        extra = "forbid"
+        arbitrary_types_allowed = True
+
 
 class ConfigSchema(BaseModel):
-    model_config = ConfigDict(extra="allow", arbitrary_types_allowed=True)
     training: ConfigSchemaTraining
     nlp: ConfigSchemaNlp
     pretraining: Union[ConfigSchemaPretrain, ConfigSchemaPretrainEmpty] = {}  # type: ignore[assignment]
     components: Dict[str, Dict[str, Any]]
     corpora: Dict[str, Reader]
     initialize: ConfigSchemaInit
+
+    class Config:
+        extra = "allow"
+        arbitrary_types_allowed = True
 
 
 CONFIG_SCHEMAS = {
