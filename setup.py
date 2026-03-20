@@ -82,9 +82,9 @@ COMPILER_DIRECTIVES = {
 }
 # Files to copy into the package that are otherwise not included
 COPY_FILES = {
-    ROOT / "setup.cfg": PACKAGE_ROOT / "tests" / "package",
-    ROOT / "pyproject.toml": PACKAGE_ROOT / "tests" / "package",
-    ROOT / "requirements.txt": PACKAGE_ROOT / "tests" / "package",
+    ROOT / "setup.cfg": PACKAGE_ROOT / "tests" / "package" / "test.cfg",
+    ROOT / "pyproject.toml": PACKAGE_ROOT / "tests" / "package" / "test.toml",
+    ROOT / "requirements.txt": PACKAGE_ROOT / "tests" / "package" / "test.txt",
 }
 
 
@@ -173,10 +173,10 @@ def setup_package():
         about = {}
         exec(f.read(), about)
 
-    for copy_file, target_dir in COPY_FILES.items():
+    for copy_file, target_file in COPY_FILES.items():
         if copy_file.exists():
-            shutil.copy(str(copy_file), str(target_dir))
-            print(f"Copied {copy_file} -> {target_dir}")
+            shutil.copyfile(str(copy_file), str(target_file))
+            print(f"Copied {copy_file} -> {target_file}")
 
     include_dirs = [
         numpy.get_include(),
