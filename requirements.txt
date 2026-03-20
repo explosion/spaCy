@@ -36,3 +36,4 @@ types-setuptools>=57.0.0
 black>=25.0.0
 cython-lint>=0.15.0
 isort>=5.0,<6.0
+confection>=1.0.0,<2.0.0
