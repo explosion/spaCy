@@ -1,9 +1,6 @@
 import pytest
 
-try:
-    from pydantic.v1 import StrictInt, StrictStr
-except ImportError:
-    from pydantic import StrictInt, StrictStr  # type: ignore
+from pydantic import StrictInt, StrictStr
 
 from thinc.api import ConfigValidationError, Linear, Model
 

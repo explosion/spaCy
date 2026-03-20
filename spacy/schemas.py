@@ -1,5 +1,4 @@
 import inspect
-import re
 from collections import defaultdict
 from enum import Enum
 from typing import (
@@ -16,34 +15,19 @@ from typing import (
     Union,
 )
 
-try:
-    from pydantic.v1 import (
-        BaseModel,
-        ConstrainedStr,
-        Field,
-        StrictBool,
-        StrictFloat,
-        StrictInt,
-        StrictStr,
-        ValidationError,
-        create_model,
-        validator,
-    )
-    from pydantic.v1.main import ModelMetaclass
-except ImportError:
-    from pydantic import (  # type: ignore
-        BaseModel,
-        ConstrainedStr,
-        Field,
-        StrictBool,
-        StrictFloat,
-        StrictInt,
-        StrictStr,
-        ValidationError,
-        create_model,
-        validator,
-    )
-    from pydantic.main import ModelMetaclass  # type: ignore
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictBool,
+    StrictFloat,
+    StrictInt,
+    StrictStr,
+    ValidationError,
+    constr,
+    create_model,
+    field_validator,
+)
 from thinc.api import ConfigValidationError, Model, Optimizer
 from thinc.config import Promise
 
@@ -89,14 +73,9 @@ def validate(schema: Type[BaseModel], obj: Dict[str, Any]) -> List[str]:
 # Initialization
 
 
-class ArgSchemaConfig:
-    extra = "forbid"
-    arbitrary_types_allowed = True
+ArgSchemaConfig = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
-
-class ArgSchemaConfigExtra:
-    extra = "forbid"
-    arbitrary_types_allowed = True
+ArgSchemaConfigExtra = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
 
 def get_arg_model(
@@ -105,7 +84,7 @@ def get_arg_model(
     exclude: Iterable[str] = tuple(),
     name: str = "ArgModel",
     strict: bool = True,
-) -> ModelMetaclass:
+) -> type[BaseModel]:
     """Generate a pydantic model for function arguments.
 
     func (Callable): The function to generate the schema for.
@@ -113,7 +92,7 @@ def get_arg_model(
     name (str): Name of created model class.
     strict (bool): Don't allow extra arguments if no variable keyword arguments
         are allowed on the function.
-    RETURNS (ModelMetaclass): A pydantic model.
+    RETURNS (type[BaseModel]): A pydantic model.
     """
     sig_args = {}
     try:
@@ -167,7 +146,7 @@ def validate_init_settings(
     """
     schema = get_arg_model(func, exclude=exclude, name="InitArgModel")
     try:
-        return schema(**settings).dict()
+        return schema.model_validate(settings).model_dump()
     except ValidationError as e:
         block = "initialize" if not section else f"initialize.{section}"
         title = f"Error validating initialization settings in [{block}]"
@@ -228,11 +207,10 @@ class TokenPatternString(BaseModel):
         None, alias="fuzzy9"
     )
 
-    class Config:
-        extra = "forbid"
-        allow_population_by_field_name = True  # allow alias and field name
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    @validator("*", pre=True, each_item=True, allow_reuse=True)
+    @field_validator("*", mode="before")
+    @classmethod
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
@@ -253,11 +231,10 @@ class TokenPatternNumber(BaseModel):
     GT: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias=">")
     LT: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias="<")
 
-    class Config:
-        extra = "forbid"
-        allow_population_by_field_name = True  # allow alias and field name
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    @validator("*", pre=True, each_item=True, allow_reuse=True)
+    @field_validator("*", mode="before")
+    @classmethod
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
@@ -271,8 +248,7 @@ class TokenPatternOperatorSimple(str, Enum):
     exclamation: StrictStr = StrictStr("!")
 
 
-class TokenPatternOperatorMinMax(ConstrainedStr):
-    regex = re.compile(r"^({\d+}|{\d+,\d*}|{\d*,\d+})$")
+TokenPatternOperatorMinMax = constr(pattern=r"^(\{\d+\}|\{\d+,\d*\}|\{\d*,\d+\})$")
 
 
 TokenPatternOperator = Union[TokenPatternOperatorSimple, TokenPatternOperatorMinMax]
@@ -323,12 +299,10 @@ class TokenPattern(BaseModel):
     op: Optional[TokenPatternOperator] = None
     underscore: Optional[Dict[StrictStr, UnderscoreValue]] = Field(None, alias="_")
 
-    class Config:
-        extra = "forbid"
-        allow_population_by_field_name = True
-        alias_generator = lambda value: value.upper()
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, alias_generator=lambda value: value.upper())
 
-    @validator("*", pre=True, allow_reuse=True)
+    @field_validator("*", mode="before")
+    @classmethod
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
@@ -336,10 +310,9 @@ class TokenPattern(BaseModel):
 
 
 class TokenPatternSchema(BaseModel):
-    pattern: List[TokenPattern] = Field(..., min_items=1)
+    pattern: List[TokenPattern] = Field(..., min_length=1)
 
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")
 
 
 # Model meta
@@ -397,9 +370,7 @@ class ConfigSchemaTraining(BaseModel):
     before_update: Optional[Callable[["Language", Dict[str, Any]], None]] = Field(..., title="Optional callback that is invoked at the start of each training step")
     # fmt: on
 
-    class Config:
-        extra = "forbid"
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
 
 class ConfigSchemaNlp(BaseModel):
@@ -415,14 +386,11 @@ class ConfigSchemaNlp(BaseModel):
     vectors: Callable = Field(..., title="Vectors implementation")
     # fmt: on
 
-    class Config:
-        extra = "forbid"
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
 
 class ConfigSchemaPretrainEmpty(BaseModel):
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")
 
 
 class ConfigSchemaPretrain(BaseModel):
@@ -439,9 +407,7 @@ class ConfigSchemaPretrain(BaseModel):
     objective: Callable[["Vocab", Model], Model] = Field(..., title="A function that creates the pretraining objective.")
     # fmt: on
 
-    class Config:
-        extra = "forbid"
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
 
 class ConfigSchemaInit(BaseModel):
@@ -456,9 +422,7 @@ class ConfigSchemaInit(BaseModel):
     after_init: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after initialization")
     # fmt: on
 
-    class Config:
-        extra = "forbid"
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
 
 class ConfigSchema(BaseModel):
@@ -469,9 +433,7 @@ class ConfigSchema(BaseModel):
     corpora: Dict[str, Reader]
     initialize: ConfigSchemaInit
 
-    class Config:
-        extra = "allow"
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(extra="allow", arbitrary_types_allowed=True)
 
 
 CONFIG_SCHEMAS = {
