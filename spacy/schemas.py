@@ -251,7 +251,7 @@ class TokenPatternOperatorSimple(str, Enum):
 
 
 TokenPatternOperatorMinMax = Annotated[
-    str, StringConstraints(pattern=r"^({\d+}|{\d+,\d*}|{\d*,\d+})$")
+    str, StringConstraints(pattern=r"^(\{\d+\}|\{\d+,\d*\}|\{\d*,\d+\})$")
 ]
 
 
