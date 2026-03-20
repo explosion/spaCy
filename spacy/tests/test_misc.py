@@ -4,10 +4,7 @@ from pathlib import Path
 
 import pytest
 
-try:
-    from pydantic.v1 import ValidationError
-except ImportError:
-    from pydantic import ValidationError  # type: ignore
+from pydantic import ValidationError
 
 from thinc.api import (
     Config,
