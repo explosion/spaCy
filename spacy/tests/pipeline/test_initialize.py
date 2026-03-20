@@ -1,7 +1,5 @@
 import pytest
-
 from pydantic import StrictBool
-
 from thinc.api import ConfigValidationError
 
 from spacy.lang.en import English
