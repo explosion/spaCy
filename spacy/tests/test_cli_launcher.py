@@ -4,7 +4,6 @@ import sys
 
 import pytest
 
-from spacy_cli.build_manifest import build_manifest
 from spacy_cli.static import load_manifest
 
 launcher_module = importlib.import_module("spacy_cli.main")
@@ -46,7 +45,21 @@ def test_load_for_argv_imports_project_on_demand():
 
 
 def test_manifest_is_current():
-    assert build_manifest() == load_manifest()
+    # Run in a subprocess to avoid command registration order being affected
+    # by other test modules importing CLI submodules (which register commands
+    # as a side effect of import).
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from spacy_cli.build_manifest import build_manifest; "
+            "from spacy_cli.static import load_manifest; "
+            "assert build_manifest() == load_manifest()",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_launcher_root_help_uses_static(capsys, monkeypatch):
