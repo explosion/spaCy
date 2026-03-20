@@ -1,3 +1,4 @@
+import shutil
 import sys
 from typing import Optional, Sequence
 from urllib.parse import urljoin
@@ -176,5 +177,19 @@ def download_model(
     if not download_url.startswith(about.__download_url__):
         raise ValueError(f"Download from {filename} rejected. Was it a relative path?")
     pip_args = list(user_pip_args) if user_pip_args is not None else []
-    cmd = [sys.executable, "-m", "pip", "install"] + pip_args + [download_url]
+    cmd = _get_pip_install_cmd() + pip_args + [download_url]
     run_command(cmd)
+
+
+def _get_pip_install_cmd() -> list:
+    if shutil.which("pip"):
+        return [sys.executable, "-m", "pip", "install"]
+    elif shutil.which("uv"):
+        return ["uv", "pip", "install"]
+    else:
+        msg.fail(
+            "No package installer found",
+            "spaCy requires either pip or uv to download models. "
+            "Please install one of them and try again.",
+            exits=1,
+        )
