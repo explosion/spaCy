@@ -19,7 +19,7 @@ from ..vocab import Vocab
 from .pipe import Pipe
 
 MatcherPatternType = List[Dict[Union[int, str], Any]]
-AttributeRulerPatternType = Dict[str, Union[MatcherPatternType, Dict, int]]
+AttributeRulerPatternType = Dict[str, Union[List[MatcherPatternType], MatcherPatternType, Dict, int]]
 TagMapType = Dict[str, Dict[Union[int, str], Union[int, str]]]
 MorphRulesType = Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
 

@@ -10,30 +10,30 @@ TEST_PATTERNS = [
     # Bad patterns flagged in all cases
     ([{"XX": "foo"}], 1, 1),
     ([{"IS_ALPHA": {"==": True}}, {"LIKE_NUM": None}], 2, 1),
-    ([{"IS_PUNCT": True, "OP": "$"}], 1, 1),
+    ([{"IS_PUNCT": True, "OP": "$"}], 2, 1),  # v2: union reports 2 errors (enum + pattern)
     ([{"_": "foo"}], 1, 1),
     ('[{"TEXT": "foo"}, {"LOWER": "bar"}]', 1, 1),
     ([{"ENT_IOB": "foo"}], 1, 1),
     ([1, 2, 3], 3, 1),
-    ([{"TEXT": "foo", "OP": "{,}"}], 1, 1),
-    ([{"TEXT": "foo", "OP": "{,4}4"}], 1, 1),
-    ([{"TEXT": "foo", "OP": "{a,3}"}], 1, 1),
-    ([{"TEXT": "foo", "OP": "{a}"}], 1, 1),
-    ([{"TEXT": "foo", "OP": "{,a}"}], 1, 1),
-    ([{"TEXT": "foo", "OP": "{1,2,3}"}], 1, 1),
-    ([{"TEXT": "foo", "OP": "{1, 3}"}], 1, 1),
-    ([{"TEXT": "foo", "OP": "{-2}"}], 1, 1),
+    ([{"TEXT": "foo", "OP": "{,}"}], 2, 1),  # v2: union reports 2 errors
+    ([{"TEXT": "foo", "OP": "{,4}4"}], 2, 1),  # v2: union reports 2 errors
+    ([{"TEXT": "foo", "OP": "{a,3}"}], 2, 1),  # v2: union reports 2 errors
+    ([{"TEXT": "foo", "OP": "{a}"}], 2, 1),  # v2: union reports 2 errors
+    ([{"TEXT": "foo", "OP": "{,a}"}], 2, 1),  # v2: union reports 2 errors
+    ([{"TEXT": "foo", "OP": "{1,2,3}"}], 2, 1),  # v2: union reports 2 errors
+    ([{"TEXT": "foo", "OP": "{1, 3}"}], 2, 1),  # v2: union reports 2 errors
+    ([{"TEXT": "foo", "OP": "{-2}"}], 2, 1),  # v2: union reports 2 errors
     # Bad patterns flagged outside of Matcher
-    ([{"_": {"foo": "bar", "baz": {"IN": "foo"}}}], 2, 0),  # prev: (1, 0)
+    ([{"_": {"foo": "bar", "baz": {"IN": "foo"}}}], 7, 0),  # v2: more detailed union errors
     # Bad patterns not flagged with minimal checks
-    ([{"LENGTH": "2", "TEXT": 2}, {"LOWER": "test"}], 2, 0),
-    ([{"LENGTH": {"IN": [1, 2, "3"]}}, {"POS": {"IN": "VERB"}}], 4, 0),  # prev: (2, 0)
-    ([{"LENGTH": {"VALUE": 5}}], 2, 0),  # prev: (1, 0)
-    ([{"TEXT": {"VALUE": "foo"}}], 2, 0),  # prev: (1, 0)
+    ([{"LENGTH": "2", "TEXT": 2}, {"LOWER": "test"}], 5, 0),  # v2: more detailed union errors
+    ([{"LENGTH": {"IN": [1, 2, "3"]}}, {"POS": {"IN": "VERB"}}], 5, 0),  # v2: more detailed union errors
+    ([{"LENGTH": {"VALUE": 5}}], 3, 0),  # v2: more detailed union errors
+    ([{"TEXT": {"VALUE": "foo"}}], 2, 0),
     ([{"IS_DIGIT": -1}], 1, 0),
-    ([{"ORTH": -1}], 1, 0),
-    ([{"ENT_ID": -1}], 1, 0),
-    ([{"ENT_KB_ID": -1}], 1, 0),
+    ([{"ORTH": -1}], 2, 0),  # v2: union reports 2 errors
+    ([{"ENT_ID": -1}], 2, 0),  # v2: union reports 2 errors
+    ([{"ENT_KB_ID": -1}], 2, 0),  # v2: union reports 2 errors
     # Good patterns
     ([{"TEXT": "foo"}, {"LOWER": "bar"}], 0, 0),
     ([{"LEMMA": {"IN": ["love", "like"]}}, {"POS": "DET", "OP": "?"}], 0, 0),
