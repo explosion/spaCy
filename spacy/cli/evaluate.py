@@ -20,15 +20,42 @@ from ._util import Arg, Opt, app, benchmark_cli, import_code, setup_gpu
 def evaluate_cli(
     # fmt: off
     model: str = Arg(..., help="Model name or path"),
-    data_path: Path = Arg(..., help="Location of binary evaluation data in .spacy format", exists=True),
-    output: Optional[Path] = Opt(None, "--output", "-o", help="Output JSON file for metrics", dir_okay=False),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    data_path: Path = Arg(
+        ..., help="Location of binary evaluation data in .spacy format", exists=True
+    ),
+    output: Optional[Path] = Opt(
+        None, "--output", "-o", help="Output JSON file for metrics", dir_okay=False
+    ),
+    code_path: Optional[Path] = Opt(
+        None,
+        "--code",
+        "-c",
+        help="Path to Python file with additional code (registered functions) to be imported",
+    ),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
-    gold_preproc: bool = Opt(False, "--gold-preproc", "-G", help="Use gold preprocessing"),
-    displacy_path: Optional[Path] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML", exists=True, file_okay=False),
-    displacy_limit: int = Opt(25, "--displacy-limit", "-dl", help="Limit of parses to render as HTML"),
-    per_component: bool = Opt(False, "--per-component", "-P", help="Return scores per component, only applicable when an output JSON file is specified."),
-    spans_key: str = Opt("sc", "--spans-key", "-sk", help="Spans key to use when evaluating Doc.spans"),
+    gold_preproc: bool = Opt(
+        False, "--gold-preproc", "-G", help="Use gold preprocessing"
+    ),
+    displacy_path: Optional[Path] = Opt(
+        None,
+        "--displacy-path",
+        "-dp",
+        help="Directory to output rendered parses as HTML",
+        exists=True,
+        file_okay=False,
+    ),
+    displacy_limit: int = Opt(
+        25, "--displacy-limit", "-dl", help="Limit of parses to render as HTML"
+    ),
+    per_component: bool = Opt(
+        False,
+        "--per-component",
+        "-P",
+        help="Return scores per component, only applicable when an output JSON file is specified.",
+    ),
+    spans_key: str = Opt(
+        "sc", "--spans-key", "-sk", help="Spans key to use when evaluating Doc.spans"
+    ),
     # fmt: on
 ):
     """
@@ -123,7 +150,7 @@ def evaluate(
                     if key == "speed":
                         results[metric] = f"{scores[key]:.0f}"
                     else:
-                        results[metric] = f"{scores[key]*100:.2f}"
+                        results[metric] = f"{scores[key] * 100:.2f}"
                 else:
                     results[metric] = "-"
                 data[re.sub(r"[\s/]", "_", key.lower())] = scores[key]

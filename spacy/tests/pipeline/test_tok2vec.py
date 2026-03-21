@@ -65,10 +65,30 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     "embed_arch,embed_config",
     # fmt: off
     [
-        ("spacy.MultiHashEmbed.v1", {"rows": [100, 100], "attrs": ["SHAPE", "LOWER"], "include_static_vectors": False}),
-        ("spacy.MultiHashEmbed.v1", {"rows": [100, 20], "attrs": ["ORTH", "PREFIX"], "include_static_vectors": False}),
-        ("spacy.CharacterEmbed.v1", {"rows": 100, "nM": 64, "nC": 8, "include_static_vectors": False}),
-        ("spacy.CharacterEmbed.v1", {"rows": 100, "nM": 16, "nC": 2, "include_static_vectors": False}),
+        (
+            "spacy.MultiHashEmbed.v1",
+            {
+                "rows": [100, 100],
+                "attrs": ["SHAPE", "LOWER"],
+                "include_static_vectors": False,
+            },
+        ),
+        (
+            "spacy.MultiHashEmbed.v1",
+            {
+                "rows": [100, 20],
+                "attrs": ["ORTH", "PREFIX"],
+                "include_static_vectors": False,
+            },
+        ),
+        (
+            "spacy.CharacterEmbed.v1",
+            {"rows": 100, "nM": 64, "nC": 8, "include_static_vectors": False},
+        ),
+        (
+            "spacy.CharacterEmbed.v1",
+            {"rows": 100, "nM": 16, "nC": 2, "include_static_vectors": False},
+        ),
     ],
     # fmt: on
 )
@@ -76,10 +96,26 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     "tok2vec_arch,encode_arch,encode_config",
     # fmt: off
     [
-        ("spacy.Tok2Vec.v1", "spacy.MaxoutWindowEncoder.v1", {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
-        ("spacy.Tok2Vec.v2", "spacy.MaxoutWindowEncoder.v2", {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
-        ("spacy.Tok2Vec.v1", "spacy.MishWindowEncoder.v1", {"window_size": 1, "depth": 6}),
-        ("spacy.Tok2Vec.v2", "spacy.MishWindowEncoder.v2", {"window_size": 1, "depth": 6}),
+        (
+            "spacy.Tok2Vec.v1",
+            "spacy.MaxoutWindowEncoder.v1",
+            {"window_size": 1, "maxout_pieces": 3, "depth": 2},
+        ),
+        (
+            "spacy.Tok2Vec.v2",
+            "spacy.MaxoutWindowEncoder.v2",
+            {"window_size": 1, "maxout_pieces": 3, "depth": 2},
+        ),
+        (
+            "spacy.Tok2Vec.v1",
+            "spacy.MishWindowEncoder.v1",
+            {"window_size": 1, "depth": 6},
+        ),
+        (
+            "spacy.Tok2Vec.v2",
+            "spacy.MishWindowEncoder.v2",
+            {"window_size": 1, "depth": 6},
+        ),
     ],
     # fmt: on
 )
@@ -164,9 +200,9 @@ TRAIN_DATA = [
 @pytest.mark.parametrize("with_vectors", (False, True))
 def test_tok2vec_listener(with_vectors):
     orig_config = Config().from_str(cfg_string)
-    orig_config["components"]["tok2vec"]["model"]["embed"][
-        "include_static_vectors"
-    ] = with_vectors
+    orig_config["components"]["tok2vec"]["model"]["embed"]["include_static_vectors"] = (
+        with_vectors
+    )
     nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
 
     if with_vectors:

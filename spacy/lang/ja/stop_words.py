@@ -2,7 +2,8 @@
 # filtering out everything that wasn't hiragana. ー (one) was also added.
 # Considered keeping some non-hiragana words but too many place names were
 # present.
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 あ あっ あまり あり ある あるいは あれ
 い いい いう いく いずれ いっ いつ いる いわ
 うち
@@ -43,4 +44,5 @@ STOP_WORDS = set("""
 を
 ん
 一
-""".split())
+""".split()
+)

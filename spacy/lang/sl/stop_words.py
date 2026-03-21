@@ -1,6 +1,7 @@
 # Source: https://github.com/stopwords-iso/stopwords-sl
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a ali 
 
 b bi bil bila bile bili bilo biti blizu bo bodo bojo bolj bom bomo 
@@ -79,4 +80,5 @@ x
 z za zadaj zadnji zakaj zaprta zaprti zaprto zdaj zelo zunaj
 
 ž že
-""".split())
+""".split()
+)

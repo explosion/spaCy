@@ -2,7 +2,8 @@ import unicodedata
 
 from ...attrs import IS_CURRENCY, LIKE_NUM
 
-_num_words = set("""
+_num_words = set(
+    """
 	nula ničla nič ena dva tri štiri pet šest sedem osem
 	devet deset enajst dvanajst trinajst štirinajst petnajst
 	šestnajst sedemnajst osemnajst devetnajst dvajset trideset štirideset
@@ -17,9 +18,11 @@ _num_words = set("""
 	šestnajstih šestnajstim šestnajstimi petnajstih petnajstim petnajstimi
 	sedemnajstih sedemnajstim sedemnajstimi osemnajstih osemnajstim osemnajstimi
 	devetnajstih devetnajstim devetnajstimi dvajsetih dvajsetim dvajsetimi  
-	""".split())
+	""".split()
+)
 
-_ordinal_words = set("""
+_ordinal_words = set(
+    """
 	prvi drugi tretji četrti peti šesti sedmi osmi
 	deveti deseti enajsti dvanajsti trinajsti štirinajsti
 	petnajsti šestnajsti sedemnajsti osemnajsti devetnajsti
@@ -89,9 +92,11 @@ _ordinal_words = set("""
 	osemnajstimi devetnajstimi dvajsetimi tridesetimi štiridesetimi petdesetimi šestdesetimi
 	sedemdesetimi osemdesetimi devetdesetimi stotimi tisočimi milijontimi bilijontimi
 	trilijontimi kvadrilijontimi neštetimi
-	""".split())
+	""".split()
+)
 
-_currency_words = set("""
+_currency_words = set(
+    """
 	evro evra evru evrom evrov evroma evrih evrom evre evri evr eur
 	cent centa centu cenom centov centoma centih centom cente centi
 	dolar dolarja dolarji dolarju dolarjem dolarjev dolarjema dolarjih dolarje usd
@@ -104,7 +109,8 @@ _currency_words = set("""
 	jen jena jeni jenu jenom jenov jenoma jenih jene
 	kuna kuni kune kuno kun kunama kunah kunam kunami
 	marka marki marke markama markah markami 
-	""".split())
+	""".split()
+)
 
 
 def like_num(text):

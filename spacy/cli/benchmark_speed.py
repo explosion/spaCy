@@ -24,13 +24,29 @@ def benchmark_speed_cli(
     # fmt: off
     ctx: typer.Context,
     model: str = Arg(..., help="Model name or path"),
-    data_path: Path = Arg(..., help="Location of binary evaluation data in .spacy format", exists=True),
-    batch_size: Optional[int] = Opt(None, "--batch-size", "-b", min=1, help="Override the pipeline batch size"),
+    data_path: Path = Arg(
+        ..., help="Location of binary evaluation data in .spacy format", exists=True
+    ),
+    batch_size: Optional[int] = Opt(
+        None, "--batch-size", "-b", min=1, help="Override the pipeline batch size"
+    ),
     no_shuffle: bool = Opt(False, "--no-shuffle", help="Do not shuffle benchmark data"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
-    n_batches: int = Opt(50, "--batches", help="Minimum number of batches to benchmark", min=30,),
-    warmup_epochs: int = Opt(3, "--warmup", "-w", min=0, help="Number of iterations over the data for warmup"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    n_batches: int = Opt(
+        50,
+        "--batches",
+        help="Minimum number of batches to benchmark",
+        min=30,
+    ),
+    warmup_epochs: int = Opt(
+        3, "--warmup", "-w", min=0, help="Number of iterations over the data for warmup"
+    ),
+    code_path: Optional[Path] = Opt(
+        None,
+        "--code",
+        "-c",
+        help="Path to Python file with additional code (registered functions) to be imported",
+    ),
     # fmt: on
 ):
     """
@@ -151,7 +167,7 @@ def print_mean_with_ci(sample: numpy.ndarray):
     low = bootstrap_means[int(len(bootstrap_means) * 0.025)]
     high = bootstrap_means[int(len(bootstrap_means) * 0.975)]
 
-    print(f"Mean: {mean:.1f} words/s (95% CI: {low-mean:.1f} +{high-mean:.1f})")
+    print(f"Mean: {mean:.1f} words/s (95% CI: {low - mean:.1f} +{high - mean:.1f})")
 
 
 def print_outliers(sample: numpy.ndarray):

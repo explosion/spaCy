@@ -1,4 +1,5 @@
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 նա
 ողջը
 այստեղ
@@ -102,4 +103,5 @@ STOP_WORDS = set("""
 այս
 մեջ
 թ
-""".split())
+""".split()
+)

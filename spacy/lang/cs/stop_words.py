@@ -1,7 +1,8 @@
 # Source: https://github.com/Alir3z4/stop-words
 # Source: https://github.com/stopwords-iso/stopwords-cs/blob/master/stopwords-cs.txt
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a
 aby
 ahoj
@@ -360,4 +361,5 @@ zač
 zatímco
 ze
 že
-""".split())
+""".split()
+)

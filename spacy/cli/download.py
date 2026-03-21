@@ -28,9 +28,16 @@ def download_cli(
     # fmt: off
     ctx: typer.Context,
     model: str = Arg(..., help="Name of pipeline package to download"),
-    direct: bool = Opt(False, "--direct", "-d", "-D", help="Force direct download of name + version"),
-    sdist: bool = Opt(False, "--sdist", "-S", help="Download sdist (.tar.gz) archive instead of pre-built binary wheel"),
-    url: str = Opt(None, "--url", "-U", help="Download from given url")
+    direct: bool = Opt(
+        False, "--direct", "-d", "-D", help="Force direct download of name + version"
+    ),
+    sdist: bool = Opt(
+        False,
+        "--sdist",
+        "-S",
+        help="Download sdist (.tar.gz) archive instead of pre-built binary wheel",
+    ),
+    url: str = Opt(None, "--url", "-U", help="Download from given url"),
     # fmt: on
 ):
     """

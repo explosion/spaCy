@@ -1,7 +1,8 @@
 # Stop words by Teshome Kassie http://etd.aau.edu.et/bitstream/handle/123456789/3315/Teshome%20Kassie.pdf?sequence=1&isAllowed=y
 # Stop words by Tihitina Petros http://etd.aau.edu.et/bitstream/handle/123456789/3384/Tihitina%20Petros.pdf?sequence=1&isAllowed=y
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 ግን አንቺ አንተ እናንተ ያንተ ያንቺ የናንተ ራስህን ራስሽን ራሳችሁን
 ሁሉ ኋላ በሰሞኑ አሉ በኋላ ሁኔታ በኩል አስታውቀዋል ሆነ በውስጥ
 አስታውሰዋል ሆኑ ባጣም እስካሁን ሆኖም በተለይ አሳሰበ ሁል በተመለከተ
@@ -28,4 +29,5 @@ STOP_WORDS = set("""
 በዚህም መሆን ምንጊዜም እነዚህም በዚህና ያለ ስም
 ሲኖር ከዚህም መሆኑን በሁኔታው የማያንስ እነዚህኑ ማንም ከነዚሁ
 ያላቸውን እጅግ ሲሆኑ ለሆኑ ሊሆን  ለማናቸውም
-""".split())
+""".split()
+)

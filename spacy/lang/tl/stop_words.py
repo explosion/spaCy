@@ -1,4 +1,5 @@
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 akin
 aking
 ako
@@ -146,4 +147,5 @@ tulad
 tungkol
 una
 walang
-""".split())
+""".split()
+)

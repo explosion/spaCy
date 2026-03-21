@@ -299,7 +299,11 @@ class TokenPattern(BaseModel):
     op: Optional[TokenPatternOperator] = None
     underscore: Optional[Dict[StrictStr, UnderscoreValue]] = Field(None, alias="_")
 
-    model_config = ConfigDict(extra="forbid", populate_by_name=True, alias_generator=lambda value: value.upper())
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+        alias_generator=lambda value: value.upper(),
+    )
 
     @field_validator("*", mode="before")
     @classmethod

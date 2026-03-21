@@ -1,6 +1,7 @@
 # sources: https://github.com/bieli/stopwords/blob/master/polish.stopwords.txt and https://github.com/stopwords-iso/stopwords-pl
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a aby ach acz aczkolwiek aj albo ale alez
 ależ ani az aż
 
@@ -73,4 +74,5 @@ xi xii xiii xiv xv
 z za zaden zadna zadne zadnych zapewne zawsze zaś
 ze zeby znow znowu znów zostal został
 
-żaden żadna żadne żadnych że żeby""".split())
+żaden żadna żadne żadnych że żeby""".split()
+)

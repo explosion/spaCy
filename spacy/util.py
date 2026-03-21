@@ -557,7 +557,9 @@ def load_model_from_package(
     RETURNS (Language): The loaded nlp object.
     """
     cls = importlib.import_module(name)
-    return cls.load(vocab=vocab, disable=disable, enable=enable, exclude=exclude, config=config)  # type: ignore[attr-defined]
+    return cls.load(
+        vocab=vocab, disable=disable, enable=enable, exclude=exclude, config=config
+    )  # type: ignore[attr-defined]
 
 
 def load_model_from_path(

@@ -1,6 +1,7 @@
 # Source: https://github.com/sanjaalcorps/NepaliStopWords/blob/master/NepaliStopWords.txt
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 अक्सर
 अगाडि
 अगाडी
@@ -489,4 +490,5 @@ STOP_WORDS = set("""
 होइन
 होकि
 होला
-""".split())
+""".split()
+)

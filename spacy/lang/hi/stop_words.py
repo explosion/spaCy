@@ -1,6 +1,7 @@
 # Source: https://github.com/taranjeet/hindi-tokenizer/blob/master/stopwords.txt, https://data.mendeley.com/datasets/bsr3frvvjc/1#file-a21d5092-99d7-45d8-b044-3ae9edd391c6
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 अंदर
 अत
 अदि
@@ -234,4 +235,5 @@ STOP_WORDS = set("""
 होते
 होना
 होने
-""".split())
+""".split()
+)

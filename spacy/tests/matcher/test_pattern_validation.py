@@ -10,7 +10,11 @@ TEST_PATTERNS = [
     # Bad patterns flagged in all cases
     ([{"XX": "foo"}], 1, 1),
     ([{"IS_ALPHA": {"==": True}}, {"LIKE_NUM": None}], 2, 1),
-    ([{"IS_PUNCT": True, "OP": "$"}], 2, 1),  # v2: union reports 2 errors (enum + pattern)
+    (
+        [{"IS_PUNCT": True, "OP": "$"}],
+        2,
+        1,
+    ),  # v2: union reports 2 errors (enum + pattern)
     ([{"_": "foo"}], 1, 1),
     ('[{"TEXT": "foo"}, {"LOWER": "bar"}]', 1, 1),
     ([{"ENT_IOB": "foo"}], 1, 1),
@@ -24,10 +28,22 @@ TEST_PATTERNS = [
     ([{"TEXT": "foo", "OP": "{1, 3}"}], 2, 1),  # v2: union reports 2 errors
     ([{"TEXT": "foo", "OP": "{-2}"}], 2, 1),  # v2: union reports 2 errors
     # Bad patterns flagged outside of Matcher
-    ([{"_": {"foo": "bar", "baz": {"IN": "foo"}}}], 7, 0),  # v2: more detailed union errors
+    (
+        [{"_": {"foo": "bar", "baz": {"IN": "foo"}}}],
+        7,
+        0,
+    ),  # v2: more detailed union errors
     # Bad patterns not flagged with minimal checks
-    ([{"LENGTH": "2", "TEXT": 2}, {"LOWER": "test"}], 5, 0),  # v2: more detailed union errors
-    ([{"LENGTH": {"IN": [1, 2, "3"]}}, {"POS": {"IN": "VERB"}}], 5, 0),  # v2: more detailed union errors
+    (
+        [{"LENGTH": "2", "TEXT": 2}, {"LOWER": "test"}],
+        5,
+        0,
+    ),  # v2: more detailed union errors
+    (
+        [{"LENGTH": {"IN": [1, 2, "3"]}}, {"POS": {"IN": "VERB"}}],
+        5,
+        0,
+    ),  # v2: more detailed union errors
     ([{"LENGTH": {"VALUE": 5}}], 3, 0),  # v2: more detailed union errors
     ([{"TEXT": {"VALUE": "foo"}}], 2, 0),
     ([{"IS_DIGIT": -1}], 1, 0),

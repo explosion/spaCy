@@ -1,5 +1,6 @@
 # Source: https://github.com/stopwords/vietnamese-stopwords
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a_lô
 a_ha
 ai
@@ -1942,4 +1943,5 @@ yêu_cầu
 ừ_ào
 ừ_ừ
 ử
-""".split("\n"))
+""".split("\n")
+)

@@ -15,7 +15,7 @@ def conllu_to_docs(
     ner_map=None,
     merge_subtokens=False,
     no_print=False,
-    **_
+    **_,
 ):
     """
     Convert conllu files into JSON format for use with train cli.

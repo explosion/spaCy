@@ -1,6 +1,7 @@
 # Stop words
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 ஒரு
 என்று
 மற்றும்
@@ -126,4 +127,5 @@ STOP_WORDS = set("""
 வரையில்
 சற்று
 எனக்
-""".split())
+""".split()
+)

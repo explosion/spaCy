@@ -74,8 +74,7 @@ def conll_ner_to_docs(
     # provide warnings for problematic data
     if "\n\n" not in input_data:
         msg.warn(
-            "No sentence boundaries found. Use `-s` to automatically segment "
-            "sentences."
+            "No sentence boundaries found. Use `-s` to automatically segment sentences."
         )
     if doc_delimiter not in input_data:
         msg.warn(

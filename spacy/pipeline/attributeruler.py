@@ -19,7 +19,9 @@ from ..vocab import Vocab
 from .pipe import Pipe
 
 MatcherPatternType = List[Dict[Union[int, str], Any]]
-AttributeRulerPatternType = Dict[str, Union[List[MatcherPatternType], MatcherPatternType, Dict, int]]
+AttributeRulerPatternType = Dict[
+    str, Union[List[MatcherPatternType], MatcherPatternType, Dict, int]
+]
 TagMapType = Dict[str, Dict[Union[int, str], Union[int, str]]]
 MorphRulesType = Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
 
@@ -137,7 +139,8 @@ class AttributeRuler(Pipe):
         matches = self.matcher(doc, allow_missing=True, as_spans=False)
         # Sort by the attribute ID, so that later rules have precedence
         matches = [
-            (int(self.vocab.strings[m_id]), m_id, s, e) for m_id, s, e in matches  # type: ignore
+            (int(self.vocab.strings[m_id]), m_id, s, e)
+            for m_id, s, e in matches  # type: ignore
         ]
         matches.sort()
         return matches

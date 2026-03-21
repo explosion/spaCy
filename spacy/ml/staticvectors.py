@@ -19,7 +19,7 @@ def StaticVectors(
     *,
     dropout: Optional[float] = None,
     init_W: Callable = glorot_uniform_init,
-    key_attr: str = "ORTH"
+    key_attr: str = "ORTH",
 ) -> Model[List[Doc], Ragged]:
     """Embed Doc objects with their vocab's vectors table, applying a learned
     linear projection to control the dimensionality. If a dropout rate is

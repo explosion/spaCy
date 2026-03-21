@@ -1,6 +1,7 @@
 # Source: https://github.com/Xangis/extra-stopwords
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 afhverju
 aftan
 aftur
@@ -153,4 +154,5 @@ ykkar
 því
 þær
 ætti
-""".split())
+""".split()
+)

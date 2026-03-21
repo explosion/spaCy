@@ -1,5 +1,6 @@
 # Stop words
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 ke gareng ga selekanyo tlhwatlhwa yo mongwe se
 sengwe fa go le jalo gongwe ba na mo tikologong
 jaaka kwa morago nna gonne ka sa pele nako teng
@@ -15,4 +16,5 @@ tsa mmatota tota sale thoko supa dira tshwanetse di mmalwa masisi
 bonala e tshwanang bogolo tsenya tsweetswee karolo
 sepe tlhalosa dirwa robedi robongwe lesomenngwe gaisa
 tlhano lesometlhano botlalo lekgolo
-""".split())
+""".split()
+)

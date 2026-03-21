@@ -29,7 +29,7 @@ class TrainableComponent(Protocol):
         *,
         drop: float = 0.0,
         sgd: Optional[Optimizer] = None,
-        losses: Optional[Dict[str, float]] = None
+        losses: Optional[Dict[str, float]] = None,
     ) -> Dict[str, float]: ...
 
     def finish_update(self, sgd: Optimizer) -> None: ...
@@ -41,7 +41,7 @@ class InitializableComponent(Protocol):
         self,
         get_examples: Callable[[], Iterable["Example"]],
         nlp: "Language",
-        **kwargs: Any
+        **kwargs: Any,
     ): ...
 
 

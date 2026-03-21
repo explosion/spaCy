@@ -1589,9 +1589,7 @@ class Language:
         if batch_size is None:
             batch_size = self.batch_size
 
-        pipes = (
-            []
-        )  # contains functools.partial objects to easily create multiprocess worker.
+        pipes = []  # contains functools.partial objects to easily create multiprocess worker.
         for name, proc in self.pipeline:
             if name in disable:
                 continue
@@ -1626,7 +1624,11 @@ class Language:
             if name in disable or not is_trainable:
                 continue
 
-            if hasattr(proc, "model") and hasattr(proc.model, "ops") and isinstance(proc.model.ops, CupyOps):  # type: ignore
+            if (
+                hasattr(proc, "model")
+                and hasattr(proc.model, "ops")
+                and isinstance(proc.model.ops, CupyOps)
+            ):  # type: ignore
                 return True
 
         return False

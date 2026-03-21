@@ -67,16 +67,16 @@ def test_factory_import_compatibility(factory_name, original_module, compat_modu
     # Import from the original module (registrations.py)
     original_module_obj = importlib.import_module(original_module)
     original_factory = getattr(original_module_obj, factory_name)
-    assert (
-        original_factory is not None
-    ), f"Could not import {factory_name} from {original_module}"
+    assert original_factory is not None, (
+        f"Could not import {factory_name} from {original_module}"
+    )
 
     # Import from the compatibility module (component file)
     compat_module_obj = importlib.import_module(compat_module)
     compat_factory = getattr(compat_module_obj, factory_name)
-    assert (
-        compat_factory is not None
-    ), f"Could not import {factory_name} from {compat_module}"
+    assert compat_factory is not None, (
+        f"Could not import {factory_name} from {compat_module}"
+    )
 
     # Test that they're the same function (identity)
     assert original_factory is compat_factory, (

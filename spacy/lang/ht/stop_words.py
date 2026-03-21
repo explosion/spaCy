@@ -1,4 +1,5 @@
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 a ak an ankò ant apre ap atò avan avanlè
 byen bò byenke
 
@@ -38,7 +39,8 @@ sa san si swa si
 
 men mèsi oswa osinon
 
-""".split())
+""".split()
+)
 
 # Add common contractions, with and without apostrophe variants
 contractions = ["m'", "n'", "w'", "y'", "l'", "t'", "k'"]

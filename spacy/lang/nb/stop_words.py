@@ -1,4 +1,5 @@
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 alle allerede alt and andre annen annet at av
 
 bak bare bedre beste blant ble bli blir blitt bris by både
@@ -45,4 +46,5 @@ vant var ved veldig vi videre viktig vil ville viser vår være vært
 å år
 
 ønsker
-""".split())
+""".split()
+)

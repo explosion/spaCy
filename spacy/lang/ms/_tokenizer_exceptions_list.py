@@ -1,6 +1,7 @@
 # from https://prpm.dbp.gov.my/cari1?keyword=
 # dbp https://en.wikipedia.org/wiki/Dewan_Bahasa_dan_Pustaka
-MS_BASE_EXCEPTIONS = set("""
+MS_BASE_EXCEPTIONS = set(
+    """
 aba-aba
 abah-abah
 abar-abar
@@ -1938,4 +1939,5 @@ warna-warni
 water-cooled
 world-class
 yang-yang
-""".split())
+""".split()
+)

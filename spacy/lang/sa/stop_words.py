@@ -1,6 +1,7 @@
 # Source: https://gist.github.com/Akhilesh28/fe8b8e180f64b72e64751bc31cb6d323
 
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 अहम्
 आवाम्
 वयम्
@@ -510,4 +511,5 @@ STOP_WORDS = set("""
 ह
 हन्त
 हि
-""".split())
+""".split()
+)
