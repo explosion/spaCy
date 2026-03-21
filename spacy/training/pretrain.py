@@ -42,7 +42,7 @@ def pretrain(
     config["initialize"]["init_tok2vec"] = None
     nlp = load_model_from_config(config)
     _config = nlp.config.interpolate()
-    P = registry.resolve(_config["pretraining"], schema=ConfigSchemaPretrain)
+    P = registry.resolve(_config["pretraining"], schema=ConfigSchemaPretrain)  # type: ignore[arg-type]
     corpus = dot_to_object(_config, P["corpus"])
     corpus = registry.resolve({"corpus": corpus})["corpus"]
     batcher = P["batcher"]

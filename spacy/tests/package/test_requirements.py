@@ -15,6 +15,7 @@ def test_build_dependencies():
         "cython-lint",
         "black",
         "isort",
+        "ruff",
         "mypy",
         "types-dataclasses",
         "types-mock",

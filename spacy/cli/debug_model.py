@@ -89,7 +89,7 @@ def debug_model_cli(
     with show_validation_error(config_path):
         nlp = util.load_model_from_config(raw_config)
         config = nlp.config.interpolate()
-        T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
+        T = registry.resolve(config["training"], schema=ConfigSchemaTraining)  # type: ignore[arg-type]
     seed = T["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")

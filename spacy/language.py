@@ -1323,7 +1323,7 @@ class Language:
         # Make sure the config is interpolated so we can resolve subsections
         config = self.config.interpolate()
         # These are the settings provided in the [initialize] block in the config
-        I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
+        I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)  # type: ignore[arg-type]
         before_init = I["before_init"]
         if before_init is not None:
             before_init(self)
@@ -1353,7 +1353,7 @@ class Language:
                 proc.initialize(get_examples, nlp=self, **p_settings)
         pretrain_cfg = config.get("pretraining")
         if pretrain_cfg:
-            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
+            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)  # type: ignore[arg-type]
             init_tok2vec(self, P, I)
         self._link_components()
         self._optimizer = sgd
@@ -1823,7 +1823,7 @@ class Language:
         orig_pretraining = config.pop("pretraining", None)
         config["components"] = {}
         if auto_fill:
-            filled = registry.fill(config, validate=validate, schema=ConfigSchema)
+            filled = registry.fill(config, validate=validate, schema=ConfigSchema)  # type: ignore[arg-type]
         else:
             filled = config
         filled["components"] = orig_pipeline
@@ -1832,7 +1832,9 @@ class Language:
             filled["pretraining"] = orig_pretraining
             config["pretraining"] = orig_pretraining
         resolved_nlp = registry.resolve(
-            filled["nlp"], validate=validate, schema=ConfigSchemaNlp
+            filled["nlp"],
+            validate=validate,
+            schema=ConfigSchemaNlp,  # type: ignore[arg-type]
         )
         create_tokenizer = resolved_nlp["tokenizer"]
         create_vectors = resolved_nlp["vectors"]

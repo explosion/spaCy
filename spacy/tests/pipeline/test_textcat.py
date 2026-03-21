@@ -24,6 +24,7 @@ from spacy.pipeline.textcat_multilabel import (
 )
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
+from spacy.tests.tok2vec import build_lazy_init_tok2vec as _  # noqa: F401
 from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 from spacy.training.initialize import init_nlp

@@ -6,6 +6,7 @@ from pydantic import (
     ConfigDict,
     Field,
     RootModel,
+    StrictBool,
     StrictInt,
     StrictStr,
     ValidationError,

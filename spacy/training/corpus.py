@@ -50,9 +50,10 @@ def create_jsonl_reader(
 
 
 @util.registry.readers("spacy.read_labels.v1")
-def read_labels(path: Path, *, require: bool = False):
+def read_labels(path: Union[str, Path], *, require: bool = False):
     # I decided not to give this a generic name, because I don't want people to
     # use it for arbitrary stuff, as I want this require arg with default False.
+    path = Path(path)
     if not require and not path.exists():
         return None
     return srsly.read_json(path)
