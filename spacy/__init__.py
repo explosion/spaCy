@@ -41,7 +41,7 @@ for _schema in (
     ConfigSchemaInit,
     ConfigSchema,
 ):
-    _schema.model_rebuild(_types_namespace=_rebuild_ns)
+    _schema.model_rebuild(_types_namespace=_rebuild_ns)  # type: ignore[attr-defined]
 
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)

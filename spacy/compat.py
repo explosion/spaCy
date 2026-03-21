@@ -35,8 +35,8 @@ else:
 try:  # Python 3.8+
     import importlib.metadata as importlib_metadata
 except ImportError:
-    from catalogue import (
-        _importlib_metadata as importlib_metadata,  # type: ignore[no-redef]    # noqa: F401
+    from catalogue import (  # type: ignore[no-redef]
+        _importlib_metadata as importlib_metadata,  # noqa: F401
     )
 
 from thinc.api import Optimizer  # noqa: F401

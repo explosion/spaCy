@@ -82,10 +82,10 @@ def debug_config(
         config = nlp.config.interpolate()
     msg.divider("Config validation for [initialize]")
     with show_validation_error(config_path):
-        T = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
+        T = registry.resolve(config["initialize"], schema=ConfigSchemaInit)  # type: ignore[arg-type]
     msg.divider("Config validation for [training]")
     with show_validation_error(config_path):
-        T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
+        T = registry.resolve(config["training"], schema=ConfigSchemaTraining)  # type: ignore[arg-type]
         dot_names = [T["train_corpus"], T["dev_corpus"]]
         util.resolve_dot_names(config, dot_names)
     msg.good("Config is valid")

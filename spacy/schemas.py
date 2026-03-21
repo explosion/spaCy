@@ -251,7 +251,7 @@ class TokenPatternOperatorSimple(str, Enum):
 TokenPatternOperatorMinMax = constr(pattern=r"^(\{\d+\}|\{\d+,\d*\}|\{\d*,\d+\})$")
 
 
-TokenPatternOperator = Union[TokenPatternOperatorSimple, TokenPatternOperatorMinMax]
+TokenPatternOperator = Union[TokenPatternOperatorSimple, TokenPatternOperatorMinMax]  # type: ignore[valid-type]
 StringValue = Union[TokenPatternString, StrictStr]
 NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
 UnderscoreValue = Union[

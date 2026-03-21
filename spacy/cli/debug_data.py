@@ -137,7 +137,7 @@ def debug_data(
         cfg = util.load_config(config_path, overrides=config_overrides)
         nlp = util.load_model_from_config(cfg)
         config = nlp.config.interpolate()
-        T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
+        T = registry.resolve(config["training"], schema=ConfigSchemaTraining)  # type: ignore[arg-type]
     # Use original config here, not resolved version
     sourced_components = get_sourced_components(cfg)
     frozen_components = T["frozen_components"]

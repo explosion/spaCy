@@ -416,7 +416,7 @@ class SpanishLemmatizer(Lemmatizer):
             rule = self.select_rule("verb", features)
             verb_lemma = self.lemmatize_verb(
                 verb,
-                features - {"PronType=Prs"},
+                features - {"PronType=Prs"},  # type: ignore[operator]
                 rule,
                 index,  # type: ignore[operator]
             )[0]

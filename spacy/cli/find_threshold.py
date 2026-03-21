@@ -207,8 +207,8 @@ def find_threshold(
             ),
         )
         if hasattr(pipe, "cfg"):
-            nlp.get_pipe(pipe_name).cfg = set_nested_item(
-                pipe.cfg, config_keys, threshold
+            nlp.get_pipe(pipe_name).cfg = set_nested_item(  # type: ignore[attr-defined]
+                pipe.cfg, config_keys, threshold  # type: ignore[attr-defined]
             )
 
         eval_scores = nlp.evaluate(dev_dataset)

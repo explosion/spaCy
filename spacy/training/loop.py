@@ -62,7 +62,7 @@ def train(
     allocator = config["training"]["gpu_allocator"]
     if use_gpu >= 0 and allocator:
         set_gpu_allocator(allocator)
-    T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
+    T = registry.resolve(config["training"], schema=ConfigSchemaTraining)  # type: ignore[arg-type]
     dot_names = [T["train_corpus"], T["dev_corpus"]]
     train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
     optimizer = T["optimizer"]
