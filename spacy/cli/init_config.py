@@ -216,7 +216,7 @@ def init_config(
     # Filter out duplicates since tok2vec and transformer are added by template
     pipeline = [pipe for pipe in pipeline if pipe not in ("tok2vec", "transformer")]
     defaults = RECOMMENDATIONS["__default__"]
-    reco = RecommendationSchema(**RECOMMENDATIONS.get(lang, defaults)).dict()
+    reco = RecommendationSchema(**RECOMMENDATIONS.get(lang, defaults)).model_dump()
     variables = {
         "lang": lang,
         "components": pipeline,

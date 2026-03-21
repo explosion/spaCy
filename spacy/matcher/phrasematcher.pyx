@@ -57,7 +57,7 @@ cdef class PhraseMatcher:
                 attr = "ORTH"
             if attr == "IS_SENT_START":
                 attr = "SENT_START"
-            if attr.lower() not in TokenPattern().dict():
+            if attr.lower() not in TokenPattern().model_dump():
                 raise ValueError(Errors.E152.format(attr=attr))
             self.attr = IDS.get(attr)
 
