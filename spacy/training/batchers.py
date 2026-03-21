@@ -4,7 +4,6 @@ from typing import (
     Any,
     Callable,
     Iterable,
-    Iterator,
     List,
     Optional,
     Sequence,
@@ -12,7 +11,7 @@ from typing import (
     Union,
 )
 
-from ..util import minibatch, registry
+from ..util import minibatch
 
 Sizing = Union[Sequence[int], int]
 ItemT = TypeVar("ItemT")
@@ -232,6 +231,6 @@ def _batch_by_length(
         batches.append(batch)
     # Check lengths match
     assert sum(len(b) for b in batches) == len(seqs)
-    batches = [list(sorted(batch)) for batch in batches]
+    batches = [sorted(batch) for batch in batches]
     batches.reverse()
     return batches

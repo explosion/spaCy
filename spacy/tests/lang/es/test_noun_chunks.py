@@ -48,13 +48,13 @@ from spacy.tokens import Doc
             [(0,4)]
         ),
         # Tengo un gato y un perro -> un gato, un perro
-        ( 
+        (
             ["Tengo", "un", "gato", "y", "un", "perro"],
             [0, 2, 0, 5, 5, 0],
             ["ROOT", "det", "obj", "cc", "det", "conj"],
             ["VERB", "DET", "NOUN", "CCONJ", "DET", "NOUN"],
             [(1,3), (4,6)]
-         
+
         ),
         # Dom Pedro II -> Dom Pedro II
         (
@@ -101,11 +101,11 @@ from spacy.tokens import Doc
             [1, 1, 3, 1, 5, 1],
             ['det', 'ROOT', 'case', 'nmod', 'case', 'nmod'],
             ['DET', 'NOUN', 'ADP', 'PROPN', 'ADP', 'NOUN'],
-            [(0,2), (3,4), (5,6)]  
-       
+            [(0,2), (3,4), (5,6)]
+
         ),
         # El gato regordete de Susana y su amigo -> el gato regordete, Susana, su amigo
-        (  
+        (
             ['El', 'gato', 'regordete', 'de', 'Susana', 'y', 'su', 'amigo'],
             [1, 1, 1, 4, 1, 7, 7, 1],
             ['det', 'ROOT', 'amod', 'case', 'nmod', 'cc', 'det', 'conj'],

@@ -1,4 +1,3 @@
-import pytest
 
 
 def test_bg_tokenizer_handles_final_diacritics(bg_tokenizer):

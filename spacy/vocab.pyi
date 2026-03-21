@@ -5,7 +5,6 @@ from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Unio
 from cymem.cymem import Pool
 from thinc.types import Floats1d, FloatsXd
 
-from . import Language
 from .lexeme import Lexeme
 from .lookups import Lookups
 from .morphology import Morphology

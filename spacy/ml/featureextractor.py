@@ -1,6 +1,6 @@
 from typing import Callable, List, Tuple, Union
 
-from thinc.api import Model, registry
+from thinc.api import Model
 from thinc.types import Ints2d
 
 from ..tokens import Doc

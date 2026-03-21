@@ -611,8 +611,8 @@ narrative_ends = ["ه‌ام", "ه‌ای", "ه", "ه‌ایم", "ه‌اید", 
 present_ends = ["م", "ی", "د", "یم", "ید", "ند"]
 
 # special case of '#هست':
-VERBS_EXC.update({conj: "هست" for conj in ["هست" + end for end in simple_ends]})
-VERBS_EXC.update({conj: "هست" for conj in ["نیست" + end for end in simple_ends]})
+VERBS_EXC.update(dict.fromkeys(["هست" + end for end in simple_ends], "هست"))
+VERBS_EXC.update(dict.fromkeys(["نیست" + end for end in simple_ends], "هست"))
 
 for verb_root in verb_roots:
     conjugations = []
@@ -648,4 +648,4 @@ for verb_root in verb_roots:
             )
         )
 
-    VERBS_EXC.update({conj: (past,) if past else present for conj in conjugations})
+    VERBS_EXC.update(dict.fromkeys(conjugations, (past,) if past else present))

@@ -1,5 +1,4 @@
 import importlib
-import sys
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
@@ -14,7 +13,7 @@ from ..symbols import IDS
 from ..tokens import Doc, Span
 from ..tokens._retokenize import normalize_token_attrs, set_token_attrs
 from ..training import Example
-from ..util import SimpleFrozenList, registry
+from ..util import SimpleFrozenList
 from ..vocab import Vocab
 from .pipe import Pipe
 

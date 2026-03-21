@@ -1,17 +1,14 @@
-import inspect
 import json
 from pathlib import Path
 
 import pytest
 
-from spacy.language import Language
 from spacy.util import registry
 
 # Path to the reference factory registrations, relative to this file
 REFERENCE_FILE = Path(__file__).parent / "factory_registrations.json"
 
 # Monkey patch the util.is_same_func to handle Cython functions
-import inspect
 
 from spacy import util
 

@@ -1,4 +1,3 @@
-import pytest
 
 
 def test_long_text(xx_tokenizer):

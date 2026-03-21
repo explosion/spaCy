@@ -2,11 +2,10 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-from thinc.api import Config
 from wasabi import MarkdownRenderer, Printer, diff_strings
 
 from ..util import load_config
-from ._util import Arg, Opt, debug_cli, parse_config_overrides, show_validation_error
+from ._util import Arg, Opt, debug_cli, show_validation_error
 from .init_config import Optimizations, init_config
 
 

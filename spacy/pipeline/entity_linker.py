@@ -1,6 +1,5 @@
 import importlib
 import random
-import sys
 from itertools import islice
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
@@ -16,9 +15,8 @@ from ..language import Language
 from ..scorer import Scorer
 from ..tokens import Doc, Span
 from ..training import Example, validate_examples, validate_get_examples
-from ..util import SimpleFrozenList, registry
+from ..util import SimpleFrozenList
 from ..vocab import Vocab
-from .legacy.entity_linker import EntityLinker_v1
 from .pipe import deserialize_config
 from .trainable_pipe import TrainablePipe
 

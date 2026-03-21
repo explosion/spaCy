@@ -23,7 +23,6 @@ from ...kb import (
     get_candidates_batch,
 )
 from ...tokens import Doc, Span
-from ...util import registry
 from ...vocab import Vocab
 from ..extract_spans import extract_spans
 

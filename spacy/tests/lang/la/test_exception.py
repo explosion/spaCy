@@ -1,4 +1,3 @@
-import pytest
 
 
 def test_la_tokenizer_handles_exc_in_text(la_tokenizer):

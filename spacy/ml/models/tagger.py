@@ -4,7 +4,6 @@ from thinc.api import Model, Softmax_v2, chain, with_array, zero_init
 from thinc.types import Floats2d
 
 from ...tokens import Doc
-from ...util import registry
 
 
 def build_tagger_model(

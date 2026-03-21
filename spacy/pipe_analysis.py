@@ -23,7 +23,7 @@ def validate_attrs(values: Iterable[str]) -> Iterable[str]:
     values (Iterable[str]): The string attributes to check, e.g. `["token.pos"]`.
     RETURNS (Iterable[str]): The checked attributes.
     """
-    data = dot_to_dict({value: True for value in values})
+    data = dot_to_dict(dict.fromkeys(values, True))
     objs = {"doc": Doc, "token": Token, "span": Span}
     for obj_key, attrs in data.items():
         if obj_key == "span":
@@ -100,7 +100,7 @@ def analyze_pipes(
         all_attrs.update(meta.requires)
         result["summary"][name] = {key: getattr(meta, key, None) for key in keys}
         prev_pipes = nlp.pipeline[:i]
-        requires = {annot: False for annot in meta.requires}
+        requires = dict.fromkeys(meta.requires, False)
         if requires:
             for prev_name, prev_pipe in prev_pipes:
                 prev_meta = nlp.get_pipe_meta(prev_name)

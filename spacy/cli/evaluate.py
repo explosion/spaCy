@@ -1,13 +1,12 @@
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import srsly
 from thinc.api import fix_random_seed
 from wasabi import Printer
 
 from .. import displacy, util
-from ..scorer import Scorer
 from ..tokens import Doc
 from ..training import Corpus
 from ._util import Arg, Opt, app, benchmark_cli, import_code, setup_gpu

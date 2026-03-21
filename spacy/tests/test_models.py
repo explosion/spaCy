@@ -95,7 +95,7 @@ def test_multi_hash_embed():
     hash_embeds = [node for node in embed.walk() if node.name == "hashembed"]
     assert len(hash_embeds) == 3
     # Check they look at different columns.
-    assert list(sorted(he.attrs["column"] for he in hash_embeds)) == [0, 1, 2]
+    assert sorted(he.attrs["column"] for he in hash_embeds) == [0, 1, 2]
     # Check they use different seeds
     assert len(set(he.attrs["seed"] for he in hash_embeds)) == 3
     # Check they all have the same number of rows

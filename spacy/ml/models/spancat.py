@@ -18,7 +18,6 @@ from thinc.api import (
 from thinc.types import Floats2d, Ragged
 
 from ...tokens import Doc
-from ...util import registry
 from ..extract_spans import extract_spans
 
 

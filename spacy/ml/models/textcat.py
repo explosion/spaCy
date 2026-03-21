@@ -36,7 +36,6 @@ from thinc.types import ArrayXd, Floats2d
 from ...attrs import ORTH
 from ...errors import Errors
 from ...tokens import Doc
-from ...util import registry
 from ..extract_ngrams import extract_ngrams
 from ..staticvectors import StaticVectors
 from .tok2vec import get_tok2vec_width

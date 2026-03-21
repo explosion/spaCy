@@ -1,5 +1,4 @@
 import importlib
-import sys
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, cast
@@ -14,7 +13,6 @@ from ..language import Language
 from ..scorer import Scorer
 from ..tokens import Doc, Span, SpanGroup
 from ..training import Example, validate_examples
-from ..util import registry
 from ..vocab import Vocab
 from .trainable_pipe import TrainablePipe
 

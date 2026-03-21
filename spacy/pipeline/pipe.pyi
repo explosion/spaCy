@@ -7,7 +7,6 @@ from typing import (
     Iterator,
     List,
     NoReturn,
-    Optional,
     Tuple,
     Union,
 )

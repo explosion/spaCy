@@ -60,12 +60,12 @@ def test_issue1757():
     """Test comparison against None doesn't cause segfault."""
     doc = Doc(Vocab(), words=["a", "b", "c"])
     assert not doc[0] < None
-    assert not doc[0] is None
+    assert doc[0] is not None
     assert doc[0] >= None
     assert not doc[:2] < None
-    assert not doc[:2] is None
+    assert doc[:2] is not None
     assert doc[:2] >= None
-    assert not doc.vocab["a"] is None
+    assert doc.vocab["a"] is not None
     assert not doc.vocab["a"] < None
 
 
