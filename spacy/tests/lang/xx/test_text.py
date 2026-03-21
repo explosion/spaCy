@@ -1,5 +1,3 @@
-
-
 def test_long_text(xx_tokenizer):
     # Excerpt: Text in Skolt Sami taken from https://www.samediggi.fi
     text = """

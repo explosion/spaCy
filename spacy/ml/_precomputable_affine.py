@@ -1,7 +1,6 @@
 from thinc.api import Model, normal_init
 
 
-
 def PrecomputableAffine(nO, nI, nF, nP, dropout=0.1):
     model = Model(
         "precomputable_affine",

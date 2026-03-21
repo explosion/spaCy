@@ -4,7 +4,6 @@ from thinc.api import Model, to_numpy
 from thinc.types import Ints1d, Ragged
 
 
-
 def extract_spans() -> Model[Tuple[Ragged, Ragged], Ragged]:
     """Extract spans from a sequence of source arrays, as specified by an array
     of (start, end) indices. The output is a ragged array of the
