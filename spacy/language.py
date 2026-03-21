@@ -1832,7 +1832,9 @@ class Language:
             filled["pretraining"] = orig_pretraining
             config["pretraining"] = orig_pretraining
         resolved_nlp = registry.resolve(
-            filled["nlp"], validate=validate, schema=ConfigSchemaNlp  # type: ignore[arg-type]
+            filled["nlp"],
+            validate=validate,
+            schema=ConfigSchemaNlp,  # type: ignore[arg-type]
         )
         create_tokenizer = resolved_nlp["tokenizer"]
         create_vectors = resolved_nlp["vectors"]
