@@ -1229,6 +1229,9 @@ def test_download_rejects_relative_urls(monkeypatch):
     relative path in the filename"""
 
     monkeypatch.setattr(download_module, "run_command", lambda cmd: None)
+    monkeypatch.setattr(
+        download_module, "_get_pip_install_cmd", lambda: ["pip", "install"]
+    )
 
     # Check that normal download works
     download_module.download("en_core_web_sm-3.7.1", direct=True)
