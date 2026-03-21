@@ -15,9 +15,9 @@ from ..pipeline.edit_tree_lemmatizer import (
 
 # Import factory default configurations
 from ..pipeline.entity_linker import DEFAULT_NEL_MODEL, EntityLinker
-from ..pipeline.legacy import EntityLinker_v1
 from ..pipeline.entityruler import DEFAULT_ENT_ID_SEP, EntityRuler
 from ..pipeline.functions import DocCleaner, TokenSplitter
+from ..pipeline.legacy import EntityLinker_v1
 from ..pipeline.lemmatizer import Lemmatizer
 from ..pipeline.morphologizer import DEFAULT_MORPH_MODEL, Morphologizer
 from ..pipeline.multitask import DEFAULT_MT_MODEL, MultitaskObjective
