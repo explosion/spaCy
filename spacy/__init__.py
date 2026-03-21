@@ -10,16 +10,16 @@ setup_default_warnings()  # noqa: E402
 # These are imported as part of the API
 from thinc.api import Config, prefer_gpu, require_cpu, require_gpu  # noqa: F401
 
-from . import pipeline  # noqa: F401
-from . import util
+from . import (
+    pipeline,  # noqa: F401
+    util,
+)
 from .about import __version__  # noqa: F401
 from .cli.info import info  # noqa: F401
 from .errors import Errors
 from .glossary import explain  # noqa: F401
 from .language import Language
 from .registrations import REGISTRY_POPULATED, populate_registry
-from .util import logger, registry  # noqa: F401
-from .vocab import Vocab
 
 # Rebuild pydantic v2 schemas that use forward references to Language/Vocab
 from .schemas import (  # noqa: F401
@@ -29,8 +29,9 @@ from .schemas import (  # noqa: F401
     ConfigSchemaPretrain,
     ConfigSchemaTraining,
 )
-
 from .training import Example  # noqa: F401
+from .util import logger, registry  # noqa: F401
+from .vocab import Vocab
 
 _rebuild_ns = {"Language": Language, "Vocab": Vocab, "Example": Example}
 for _schema in (

@@ -25,8 +25,7 @@ from ..util import (
     registry,
     resolve_dot_names,
 )
-from ..vectors import Mode as VectorsMode
-from ..vectors import Vectors
+from ..vectors import Mode as VectorsMode, Vectors
 from .pretrain import get_tok2vec_ref
 
 if TYPE_CHECKING:

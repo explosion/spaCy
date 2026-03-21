@@ -3,9 +3,7 @@ import os
 from pathlib import Path
 
 import pytest
-
 from pydantic import ValidationError
-
 from thinc.api import (
     Config,
     ConfigValidationError,
