@@ -23,7 +23,9 @@ class Span:
         force: bool = ...,
     ) -> None: ...
     @classmethod
-    def get_extension(cls, name: str) -> Tuple[
+    def get_extension(
+        cls, name: str
+    ) -> Tuple[
         Optional[Any],
         Optional[SpanMethod],
         Optional[Callable[[Span], Any]],
@@ -32,7 +34,9 @@ class Span:
     @classmethod
     def has_extension(cls, name: str) -> bool: ...
     @classmethod
-    def remove_extension(cls, name: str) -> Tuple[
+    def remove_extension(
+        cls, name: str
+    ) -> Tuple[
         Optional[Any],
         Optional[SpanMethod],
         Optional[Callable[[Span], Any]],

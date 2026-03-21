@@ -176,7 +176,7 @@ def console_logger_v3(
                         initial = info["step"]
                     else:
                         total = eval_frequency
-                        desc = f"Epoch {info['epoch']+1}"
+                        desc = f"Epoch {info['epoch'] + 1}"
                         initial = 0
                     # Set disable=None, so that it disables on non-TTY
                     progress = tqdm.tqdm(

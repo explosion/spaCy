@@ -11,7 +11,9 @@ from ._util import Arg, Opt, app
 def find_function_cli(
     # fmt: off
     func_name: str = Arg(..., help="Name of the registered function."),
-    registry_name: Optional[str] = Opt(None, "--registry", "-r", help="Name of the catalogue registry."),
+    registry_name: Optional[str] = Opt(
+        None, "--registry", "-r", help="Name of the catalogue registry."
+    ),
     # fmt: on
 ):
     """

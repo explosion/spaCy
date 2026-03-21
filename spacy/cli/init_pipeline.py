@@ -26,13 +26,42 @@ def init_vectors_cli(
     lang: str = Arg(..., help="The language of the nlp object to create"),
     vectors_loc: Path = Arg(..., help="Vectors file in Word2Vec format", exists=True),
     output_dir: Path = Arg(..., help="Pipeline output directory"),
-    prune: int = Opt(-1, "--prune", "-p", help="Optional number of vectors to prune to"),
-    truncate: int = Opt(0, "--truncate", "-t", help="Optional number of vectors to truncate to when reading in vectors file"),
+    prune: int = Opt(
+        -1, "--prune", "-p", help="Optional number of vectors to prune to"
+    ),
+    truncate: int = Opt(
+        0,
+        "--truncate",
+        "-t",
+        help="Optional number of vectors to truncate to when reading in vectors file",
+    ),
     mode: str = Opt("default", "--mode", "-m", help="Vectors mode: default or floret"),
-    name: Optional[str] = Opt(None, "--name", "-n", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
-    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
-    jsonl_loc: Optional[Path] = Opt(None, "--lexemes-jsonl", "-j", help="Location of JSONL-formatted attributes file", hidden=True),
-    attr: str = Opt("ORTH", "--attr", "-a", help="Optional token attribute to use for vectors, e.g. LOWER or NORM"),
+    name: Optional[str] = Opt(
+        None,
+        "--name",
+        "-n",
+        help="Optional name for the word vectors, e.g. en_core_web_lg.vectors",
+    ),
+    verbose: bool = Opt(
+        False,
+        "--verbose",
+        "-V",
+        "-VV",
+        help="Display more information for debugging purposes",
+    ),
+    jsonl_loc: Optional[Path] = Opt(
+        None,
+        "--lexemes-jsonl",
+        "-j",
+        help="Location of JSONL-formatted attributes file",
+        hidden=True,
+    ),
+    attr: str = Opt(
+        "ORTH",
+        "--attr",
+        "-a",
+        help="Optional token attribute to use for vectors, e.g. LOWER or NORM",
+    ),
     # fmt: on
 ):
     """Convert word vectors for use with spaCy. Will export an nlp object that
@@ -81,11 +110,24 @@ def update_lexemes(nlp: Language, jsonl_loc: Path) -> None:
 def init_pipeline_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
+    config_path: Path = Arg(
+        ..., help="Path to config file", exists=True, allow_dash=True
+    ),
     output_path: Path = Arg(..., help="Output directory for the prepared data"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
+    code_path: Optional[Path] = Opt(
+        None,
+        "--code",
+        "-c",
+        help="Path to Python file with additional code (registered functions) to be imported",
+    ),
+    verbose: bool = Opt(
+        False,
+        "--verbose",
+        "-V",
+        "-VV",
+        help="Display more information for debugging purposes",
+    ),
+    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     # fmt: on
 ):
     if verbose:
@@ -108,11 +150,24 @@ def init_pipeline_cli(
 def init_labels_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
+    config_path: Path = Arg(
+        ..., help="Path to config file", exists=True, allow_dash=True
+    ),
     output_path: Path = Arg(..., help="Output directory for the labels"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
+    code_path: Optional[Path] = Opt(
+        None,
+        "--code",
+        "-c",
+        help="Path to Python file with additional code (registered functions) to be imported",
+    ),
+    verbose: bool = Opt(
+        False,
+        "--verbose",
+        "-V",
+        "-VV",
+        help="Display more information for debugging purposes",
+    ),
+    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     # fmt: on
 ):
     """Generate JSON files for the labels in the data. This helps speed up the

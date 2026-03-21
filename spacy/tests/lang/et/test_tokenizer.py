@@ -2,8 +2,7 @@ import pytest
 
 ET_BASIC_TOKENIZATION_TESTS = [
     (
-        "Kedagi ei või piinata ega ebainimlikult või alandavalt kohelda "
-        "ega karistada.",
+        "Kedagi ei või piinata ega ebainimlikult või alandavalt kohelda ega karistada.",
         [
             "Kedagi",
             "ei",

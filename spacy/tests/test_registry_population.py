@@ -50,6 +50,6 @@ def test_registry_entries(reference_registry):
         # Check for missing entries - these would indicate our new registry population
         # mechanism is missing something
         missing_entries = expected_set - current_set
-        assert (
-            not missing_entries
-        ), f"Registry '{registry_name}' missing entries: {', '.join(missing_entries)}"
+        assert not missing_entries, (
+            f"Registry '{registry_name}' missing entries: {', '.join(missing_entries)}"
+        )

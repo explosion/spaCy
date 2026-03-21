@@ -24,7 +24,7 @@ def configure_minibatch_by_padded_size(
     size: Sizing,
     buffer: int,
     discard_oversize: bool,
-    get_length: Optional[Callable[[ItemT], int]] = None
+    get_length: Optional[Callable[[ItemT], int]] = None,
 ) -> BatcherT:
     """Create a batcher that uses the `batch_by_padded_size` strategy.
 
@@ -49,7 +49,7 @@ def configure_minibatch_by_padded_size(
         size=size,
         buffer=buffer,
         discard_oversize=discard_oversize,
-        **optionals
+        **optionals,
     )
 
 
@@ -58,7 +58,7 @@ def configure_minibatch_by_words(
     size: Sizing,
     tolerance: float,
     discard_oversize: bool,
-    get_length: Optional[Callable[[ItemT], int]] = None
+    get_length: Optional[Callable[[ItemT], int]] = None,
 ) -> BatcherT:
     """Create a batcher that uses the "minibatch by words" strategy.
 
@@ -76,7 +76,7 @@ def configure_minibatch_by_words(
         size=size,
         tolerance=tolerance,
         discard_oversize=discard_oversize,
-        **optionals
+        **optionals,
     )
 
 

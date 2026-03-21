@@ -139,7 +139,8 @@ class AttributeRuler(Pipe):
         matches = self.matcher(doc, allow_missing=True, as_spans=False)
         # Sort by the attribute ID, so that later rules have precedence
         matches = [
-            (int(self.vocab.strings[m_id]), m_id, s, e) for m_id, s, e in matches  # type: ignore
+            (int(self.vocab.strings[m_id]), m_id, s, e)
+            for m_id, s, e in matches  # type: ignore
         ]
         matches.sort()
         return matches

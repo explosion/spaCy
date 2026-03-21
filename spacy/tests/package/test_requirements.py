@@ -59,9 +59,9 @@ def test_build_dependencies():
             lib, v = _parse_req(line)
             if lib and not lib.startswith("cupy") and lib not in libs_ignore_setup:
                 req_v = req_dict.get(lib, None)
-                assert (
-                    req_v is not None
-                ), "{} in setup.cfg but not in requirements.txt".format(lib)
+                assert req_v is not None, (
+                    "{} in setup.cfg but not in requirements.txt".format(lib)
+                )
                 assert (lib + v) == (lib + req_v), (
                     "{} has different version in setup.cfg and in requirements.txt: "
                     "{} and {} respectively".format(lib, v, req_v)

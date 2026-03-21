@@ -57,7 +57,9 @@ class Doc:
         force: bool = ...,
     ) -> None: ...
     @classmethod
-    def get_extension(cls, name: str) -> Tuple[
+    def get_extension(
+        cls, name: str
+    ) -> Tuple[
         Optional[Any],
         Optional[DocMethod],
         Optional[Callable[[Doc], Any]],
@@ -66,7 +68,9 @@ class Doc:
     @classmethod
     def has_extension(cls, name: str) -> bool: ...
     @classmethod
-    def remove_extension(cls, name: str) -> Tuple[
+    def remove_extension(
+        cls, name: str
+    ) -> Tuple[
         Optional[Any],
         Optional[DocMethod],
         Optional[Callable[[Doc], Any]],
@@ -144,7 +148,7 @@ class Doc:
         blocked: Optional[List[Span]] = ...,
         missing: Optional[List[Span]] = ...,
         outside: Optional[List[Span]] = ...,
-        default: str = ...
+        default: str = ...,
     ) -> None: ...
     @property
     def noun_chunks(self) -> Iterator[Span]: ...

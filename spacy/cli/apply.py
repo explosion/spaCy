@@ -22,7 +22,7 @@ to be grabbed ("text" by default)."""
 
 out_help = "Path to save the resulting .spacy file"
 code_help = (
-    "Path to Python file with additional " "code (registered functions) to be imported"
+    "Path to Python file with additional code (registered functions) to be imported"
 )
 gold_help = "Use gold preprocessing provided in the .spacy files"
 force_msg = (
@@ -72,11 +72,15 @@ def apply_cli(
     data_path: Path = Arg(..., help=path_help, exists=True),
     output_file: Path = Arg(..., help=out_help, dir_okay=False),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help=code_help),
-    text_key: str = Opt("text", "--text-key", "-tk", help="Key containing text string for JSONL"),
-    force_overwrite: bool = Opt(False, "--force", "-F", help="Force overwriting the output file"),
+    text_key: str = Opt(
+        "text", "--text-key", "-tk", help="Key containing text string for JSONL"
+    ),
+    force_overwrite: bool = Opt(
+        False, "--force", "-F", help="Force overwriting the output file"
+    ),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU."),
     batch_size: int = Opt(1, "--batch-size", "-b", help="Batch size."),
-    n_process: int = Opt(1, "--n-process", "-n", help="number of processors to use.")
+    n_process: int = Opt(1, "--n-process", "-n", help="number of processors to use."),
 ):
     """
     Apply a trained pipeline to documents to get predictions.
@@ -114,8 +118,7 @@ def apply(
     if len(paths) == 0:
         docbin.to_disk(output_file)
         msg.warn(
-            "Did not find data to process,"
-            f" {data_path} seems to be an empty directory."
+            f"Did not find data to process, {data_path} seems to be an empty directory."
         )
         return
     nlp = load_model(model)

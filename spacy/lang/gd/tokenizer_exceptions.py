@@ -1974,9 +1974,7 @@ Tron an
 tuilleadh 's a chòir
 Tuilleadh 's a chòir
 tuilleadh sa chòir
-Tuilleadh sa chòir""".split(
-    "\n"
-):
+Tuilleadh sa chòir""".split("\n"):
     _exc[orth] = [{ORTH: orth}]
 
 

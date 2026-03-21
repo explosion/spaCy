@@ -48,10 +48,12 @@ class DependencyMatcher:
         *,
         on_match: Optional[
             Callable[[DependencyMatcher, Doc, int, List[Tuple[int, List[int]]]], Any]
-        ] = ...
+        ] = ...,
     ) -> None: ...
     def has_key(self, key: Union[str, int]) -> bool: ...
-    def get(self, key: Union[str, int], default: Optional[Any] = ...) -> Tuple[
+    def get(
+        self, key: Union[str, int], default: Optional[Any] = ...
+    ) -> Tuple[
         Optional[
             Callable[[DependencyMatcher, Doc, int, List[Tuple[int, List[int]]]], Any]
         ],

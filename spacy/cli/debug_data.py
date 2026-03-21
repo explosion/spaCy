@@ -71,11 +71,28 @@ SPAN_LENGTH_THRESHOLD_PERCENTAGE = 90
 def debug_data_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
-    code_path: Optional[Path] = Opt(None, "--code-path", "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    ignore_warnings: bool = Opt(False, "--ignore-warnings", "-IW", help="Ignore warnings, only show stats and errors"),
-    verbose: bool = Opt(False, "--verbose", "-V", help="Print additional information and explanations"),
-    no_format: bool = Opt(False, "--no-format", "-NF", help="Don't pretty-print the results"),
+    config_path: Path = Arg(
+        ..., help="Path to config file", exists=True, allow_dash=True
+    ),
+    code_path: Optional[Path] = Opt(
+        None,
+        "--code-path",
+        "--code",
+        "-c",
+        help="Path to Python file with additional code (registered functions) to be imported",
+    ),
+    ignore_warnings: bool = Opt(
+        False,
+        "--ignore-warnings",
+        "-IW",
+        help="Ignore warnings, only show stats and errors",
+    ),
+    verbose: bool = Opt(
+        False, "--verbose", "-V", help="Print additional information and explanations"
+    ),
+    no_format: bool = Opt(
+        False, "--no-format", "-NF", help="Don't pretty-print the results"
+    ),
     # fmt: on
 ):
     """
@@ -708,7 +725,7 @@ def debug_data(
         if len(dev_not_train) != 0:
             pct = len(dev_not_train) / len(trees_dev)
             msg.info(
-                f"{len(dev_not_train)} lemmatizer trees ({pct*100:.1f}% of dev trees)"
+                f"{len(dev_not_train)} lemmatizer trees ({pct * 100:.1f}% of dev trees)"
                 " were found exclusively in the dev data."
             )
         else:
