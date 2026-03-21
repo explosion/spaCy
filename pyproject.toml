@@ -70,4 +70,5 @@ select = ["E", "F", "W", "C", "B", "B9"]
 ignore = ["E203", "E266", "E501", "E731", "E741", "F541"]
 
 [tool.ruff.lint.isort]
-profile = "black"
+combine-as-imports = true
+split-on-trailing-comma = true
