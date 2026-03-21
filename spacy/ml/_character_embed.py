@@ -4,7 +4,6 @@ from thinc.api import Model
 from thinc.types import Floats2d
 
 from ..tokens import Doc
-from ..util import registry
 
 
 def CharacterEmbed(nM: int, nC: int) -> Model[List[Doc], List[Floats2d]]:

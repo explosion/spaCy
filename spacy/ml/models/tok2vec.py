@@ -17,14 +17,13 @@ from thinc.api import (
     with_array,
     with_padded,
 )
-from thinc.types import Floats2d, Ints1d, Ints2d, Ragged
+from thinc.types import Floats2d, Ints2d, Ragged
 
 from ...attrs import intify_attr
 from ...errors import Errors
 from ...ml import _character_embed
 from ...pipeline.tok2vec import Tok2VecListener
 from ...tokens import Doc
-from ...util import registry
 from ..featureextractor import FeatureExtractor
 from ..staticvectors import StaticVectors
 

@@ -24,8 +24,8 @@ from ..pipeline.ner import DEFAULT_NER_MODEL, EntityRecognizer
 from ..pipeline.sentencizer import Sentencizer
 from ..pipeline.senter import DEFAULT_SENTER_MODEL, SentenceRecognizer
 from ..pipeline.span_finder import DEFAULT_SPAN_FINDER_MODEL, SpanFinder
-from ..pipeline.span_ruler import DEFAULT_SPANS_KEY as SPAN_RULER_DEFAULT_SPANS_KEY
 from ..pipeline.span_ruler import (
+    DEFAULT_SPANS_KEY as SPAN_RULER_DEFAULT_SPANS_KEY,
     SpanRuler,
     prioritize_existing_ents_filter,
     prioritize_new_ents_filter,

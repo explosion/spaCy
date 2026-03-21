@@ -3,8 +3,6 @@ from typing import Callable, List, Tuple
 from thinc.api import Model, to_numpy
 from thinc.types import Ints1d, Ragged
 
-from ..util import registry
-
 
 def extract_spans() -> Model[Tuple[Ragged, Ragged], Ragged]:
     """Extract spans from a sequence of source arrays, as specified by an array

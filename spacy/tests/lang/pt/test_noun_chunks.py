@@ -126,13 +126,13 @@ from spacy.tokens import Doc
         ),
         # Two NPs conjuncted
         # Eu tenho um cachorro e um gato -> Eu, um cacharo, um gato
-        ( 
+        (
             ["Eu", "tenho", "um", "cachorro", "e", "um", "gato"],
             [1, 1, 3, 1, 6, 6, 3],
             ['nsubj', 'ROOT', 'det', 'obj', 'cc', 'det', 'conj'],
             ['PRON', 'VERB', 'DET', 'NOUN', 'CCONJ', 'DET', 'NOUN'],
             [(0,1), (2,4), (5,7)]
-         
+
         ),
         # Two NPs together
         # o escritor brasileiro Aníbal Machado -> o escritor brasileiro, Aníbal Machado
@@ -186,12 +186,12 @@ from spacy.tokens import Doc
             [0, 2, 0, 4, 2],
             ['ROOT', 'case', 'nmod', 'case', 'nmod'],
             ['NOUN', 'ADP', 'NOUN', 'ADP', 'PROPN'],
-            [(0,1), (2,3), (4,5)]  
-       
+            [(0,1), (2,3), (4,5)]
+
         ),
         # Several NPs
         # O gato gordo da Susana e seu amigo -> O gato gordo, Susana, seu amigo
-        (  
+        (
             ['O', 'gato', 'gordo', 'da', 'Susana', 'e', 'seu', 'amigo'],
             [1, 1, 1, 4, 1, 7, 7, 1],
             ['det', 'ROOT', 'amod', 'case', 'nmod', 'cc', 'det', 'conj'],

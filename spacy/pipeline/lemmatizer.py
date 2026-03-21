@@ -1,5 +1,4 @@
 import importlib
-import sys
 import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
@@ -13,7 +12,7 @@ from ..lookups import Lookups, load_lookups
 from ..scorer import Scorer
 from ..tokens import Doc, Token
 from ..training import Example
-from ..util import SimpleFrozenList, logger, registry
+from ..util import SimpleFrozenList, logger
 from ..vocab import Vocab
 from .pipe import Pipe
 

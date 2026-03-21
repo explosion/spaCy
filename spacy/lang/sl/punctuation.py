@@ -5,14 +5,12 @@ from ..char_classes import (
     CONCAT_QUOTES,
     CURRENCY,
     HYPHENS,
-    LIST_CURRENCY,
     LIST_ELLIPSES,
     LIST_ICONS,
     LIST_PUNCT,
     LIST_QUOTES,
     PUNCT,
     UNITS,
-    merge_chars,
 )
 from ..punctuation import TOKENIZER_PREFIXES as BASE_TOKENIZER_PREFIXES
 

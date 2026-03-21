@@ -8,7 +8,6 @@ from wasabi import Printer
 
 from .. import util
 from ..errors import Errors
-from ..util import registry
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401

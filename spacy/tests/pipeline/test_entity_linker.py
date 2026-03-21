@@ -1,9 +1,9 @@
-from typing import Any, Callable, Dict, Iterable, Tuple
+from typing import Any, Callable, Dict, Iterable
 
 import pytest
 from numpy.testing import assert_equal
 
-from spacy import Language, registry, util
+from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
 from spacy.kb import Candidate, InMemoryLookupKB, KnowledgeBase, get_candidates

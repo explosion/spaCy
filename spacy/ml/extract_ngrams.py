@@ -1,7 +1,6 @@
 from thinc.api import Model
 
 from ..attrs import LOWER
-from ..util import registry
 
 
 def extract_ngrams(ngram_size: int, attr: int = LOWER) -> Model:

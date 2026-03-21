@@ -35,7 +35,7 @@ from spacy.tokens import Doc
             [(0, 2)],
         ),
         # det + adj + noun
-        # Le vieux Londres  -> Le vieux Londres 
+        # Le vieux Londres  -> Le vieux Londres
         (
             ['Les', 'vieux', 'Londres'],
             [2, 2, 2],
@@ -144,13 +144,13 @@ from spacy.tokens import Doc
         ),
         # Two NPs conjuncted
         # Il a un chien et un chat -> Il, un chien, un chat
-        ( 
+        (
             ['Il', 'a', 'un', 'chien', 'et', 'un', 'chat'],
             [1, 1, 3, 1, 6, 6, 3],
             ['nsubj', 'ROOT', 'det', 'obj', 'cc', 'det', 'conj'],
             ['PRON', 'VERB', 'DET', 'NOUN', 'CCONJ', 'DET', 'NOUN'],
             [(0,1), (2,4), (5,7)]
-         
+
         ),
         # Two NPs together
         # l'écrivain brésilien Aníbal Machado -> l'écrivain brésilien, Aníbal Machado
@@ -195,12 +195,12 @@ from spacy.tokens import Doc
             [0, 2, 0, 4, 2],
             ['ROOT', 'case', 'nmod', 'case', 'nmod'],
             ['NOUN', 'ADP', 'NOUN', 'ADP', 'PROPN'],
-            [(0,1), (2,3), (4,5)]  
-       
+            [(0,1), (2,3), (4,5)]
+
         ),
         # Several NPs
         # Le gros chat de Susana et son amie -> Le gros chat, Susana, son amie
-        (  
+        (
             ['Le', 'gros', 'chat', 'de', 'Susana', 'et', 'son', 'amie'],
             [2, 2, 2, 4, 2, 7, 7, 2],
             ['det', 'amod', 'ROOT', 'case', 'nmod', 'cc', 'det', 'conj'],

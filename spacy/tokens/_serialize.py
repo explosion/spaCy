@@ -13,8 +13,7 @@ from ..errors import Errors
 from ..util import SimpleFrozenList, ensure_path
 from ..vocab import Vocab
 from ._dict_proxies import SpanGroups
-from .doc import DOCBIN_ALL_ATTRS as ALL_ATTRS
-from .doc import Doc
+from .doc import DOCBIN_ALL_ATTRS as ALL_ATTRS, Doc
 
 
 class DocBin:
@@ -207,7 +206,7 @@ class DocBin:
             "tokens": tokens.tobytes("C"),
             "spaces": spaces.tobytes("C"),
             "lengths": numpy.asarray(lengths, dtype="int32").tobytes("C"),
-            "strings": list(sorted(self.strings)),
+            "strings": sorted(self.strings),
             "cats": self.cats,
             "flags": self.flags,
             "span_groups": self.span_groups,

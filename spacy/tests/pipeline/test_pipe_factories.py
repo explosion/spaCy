@@ -1,7 +1,5 @@
 import pytest
-
 from pydantic import StrictInt, StrictStr
-
 from thinc.api import ConfigValidationError, Linear, Model
 
 import spacy

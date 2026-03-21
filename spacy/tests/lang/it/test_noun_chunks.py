@@ -62,7 +62,7 @@ from spacy.tokens import Doc
             [(0,3)],
         ),
         # noun + adj plural
-        # mucche bianche 
+        # mucche bianche
         (
             ["mucche", "bianche"],
             [0, 0],
@@ -117,13 +117,13 @@ from spacy.tokens import Doc
         ),
         # Two NPs conjuncted
         # Ho un cane e un gatto -> un cane, un gatto
-        ( 
+        (
             ['Ho', 'un', 'cane', 'e', 'un', 'gatto'],
             [0, 2, 0, 5, 5, 0],
             ['ROOT', 'det', 'obj', 'cc', 'det', 'conj'],
             ['VERB', 'DET', 'NOUN', 'CCONJ', 'DET', 'NOUN'],
             [(1,3), (4,6)]
-         
+
         ),
         # Two NPs together
         # lo scrittore brasiliano Aníbal Machado -> lo scrittore brasiliano, Aníbal Machado
@@ -177,12 +177,12 @@ from spacy.tokens import Doc
             [0, 2, 0, 4, 2],
             ['ROOT', 'case', 'nmod', 'case', 'nmod'],
             ['NOUN', 'ADP', 'NOUN', 'ADP', 'PROPN'],
-            [(0,1), (2,3), (4,5)]  
-       
+            [(0,1), (2,3), (4,5)]
+
         ),
         # Several NPs
         # Il gatto grasso di Susana e la sua amica -> Il gatto grasso, Susana, sua amica
-        (  
+        (
             ['Il', 'gatto', 'grasso', 'di', 'Susana', 'e', 'la', 'sua', 'amica'],
             [1, 1, 1, 4, 1, 8, 8, 8, 1],
             ['det', 'ROOT', 'amod', 'case', 'nmod', 'cc', 'det', 'det:poss', 'conj'],

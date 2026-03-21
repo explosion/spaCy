@@ -1,5 +1,4 @@
 import importlib
-import sys
 import warnings
 from functools import partial
 from pathlib import Path
@@ -27,7 +26,7 @@ from ..matcher.levenshtein import levenshtein_compare
 from ..scorer import Scorer
 from ..tokens import Doc, Span
 from ..training import Example
-from ..util import SimpleFrozenList, ensure_path, registry
+from ..util import SimpleFrozenList, ensure_path
 from .pipe import Pipe
 
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]

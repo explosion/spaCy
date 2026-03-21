@@ -2,14 +2,12 @@ import functools
 import inspect
 import types
 import warnings
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Type
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set
 
 from thinc.layers import with_nvtx_range
-from thinc.model import Model, wrap_model_recursive
 from thinc.util import use_nvtx_range
 
 from ..errors import Warnings
-from ..util import registry
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports

@@ -1,5 +1,4 @@
 import importlib
-import sys
 import warnings
 from collections import defaultdict
 from pathlib import Path
@@ -14,7 +13,7 @@ from ..matcher.levenshtein import levenshtein_compare
 from ..scorer import get_ner_prf
 from ..tokens import Doc, Span
 from ..training import Example
-from ..util import SimpleFrozenList, ensure_path, from_disk, registry, to_disk
+from ..util import SimpleFrozenList, ensure_path, from_disk, to_disk
 from .pipe import Pipe
 
 DEFAULT_ENT_ID_SEP = "||"

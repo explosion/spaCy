@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_la_tokenizer_handles_exc_in_text(la_tokenizer):
     text = "scio te omnia facturum, ut nobiscum quam primum sis"
     tokens = la_tokenizer(text)
