@@ -37,9 +37,9 @@ jobs:
         run: |
           python -m pip install ruff -c requirements.txt
           python -m ruff format spacy --check
-      - name: ruff lint
+      - name: ruff isort
         run: |
-          python -m ruff check spacy
+          python -m ruff check spacy --select I
 
   tests:
     name: Test
