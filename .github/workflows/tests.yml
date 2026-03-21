@@ -93,7 +93,7 @@ jobs:
         shell: bash
 
       - name: Test import
-        run: python -W error -c "import spacy"
+        run: python -W error -W 'ignore:Core Pydantic V1:UserWarning:pydantic' -c "import spacy"
 
       - name: "Test download CLI"
         run: |
@@ -154,7 +154,7 @@ jobs:
 
       - name: "Run CPU tests"
         run: |
-          python -m pytest --pyargs spacy -W error
+          python -m pytest --pyargs spacy -W error -W 'ignore:Core Pydantic V1:UserWarning:pydantic'
         if: "!(startsWith(matrix.os, 'macos') && matrix.python_version == '3.11')"
 
       - name: "Run CPU tests with thinc-apple-ops"
