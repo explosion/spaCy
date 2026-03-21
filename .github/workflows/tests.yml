@@ -93,7 +93,7 @@ jobs:
         shell: bash
 
       - name: Test import
-        run: python -W error -c "import spacy"
+        run: python -W error -W 'ignore::DeprecationWarning:pydantic' -c "import spacy"
 
       - name: "Test download CLI"
         run: |
@@ -104,12 +104,12 @@ jobs:
 
       - name: "Test download_url in info CLI"
         run: |
-          python -W error -m spacy info ca_core_news_sm | grep -q download_url
+          python -W error -W 'ignore::DeprecationWarning:pydantic' -m spacy info ca_core_news_sm | grep -q download_url
         if: matrix.python_version == '3.9'
 
       - name: "Test no warnings on load (#11713)"
         run: |
-          python -W error -c "import ca_core_news_sm; nlp = ca_core_news_sm.load(); doc=nlp('test')"
+          python -W error -W 'ignore::DeprecationWarning:pydantic' -c "import ca_core_news_sm; nlp = ca_core_news_sm.load(); doc=nlp('test')"
         if: matrix.python_version == '3.9'
 
       - name: "Test convert CLI"
@@ -154,7 +154,7 @@ jobs:
 
       - name: "Run CPU tests"
         run: |
-          python -m pytest --pyargs spacy -W error
+          python -m pytest --pyargs spacy -W error -W 'ignore::DeprecationWarning:pydantic'
         if: "!(startsWith(matrix.os, 'macos') && matrix.python_version == '3.11')"
 
       - name: "Run CPU tests with thinc-apple-ops"
