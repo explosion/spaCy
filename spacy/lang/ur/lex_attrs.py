@@ -5,8 +5,7 @@ from ...attrs import LIKE_NUM
 # https://en.wikibooks.org/wiki/Urdu/Vocabulary/Numbers
 # https://www.urdu-english.com/lessons/beginner/numbers
 
-_num_words = (
-    """ایک دو تین چار پانچ چھ سات آٹھ نو دس گیارہ بارہ تیرہ چودہ پندرہ سولہ سترہ
+_num_words = """ایک دو تین چار پانچ چھ سات آٹھ نو دس گیارہ بارہ تیرہ چودہ پندرہ سولہ سترہ
  اٹهارا انیس بیس اکیس بائیس تئیس چوبیس پچیس چھببیس
 ستایس اٹھائس انتيس تیس اکتیس بتیس تینتیس چونتیس پینتیس
  چھتیس سینتیس ارتیس انتالیس چالیس اکتالیس بیالیس تیتالیس
@@ -18,7 +17,6 @@ _num_words = (
  سٹیاسی اٹھیاسی نواسی نوے اکانوے بانوے ترانوے
 چورانوے پچانوے چھیانوے ستانوے اٹھانوے ننانوے سو
 """.split()
-)
 
 # source https://www.google.com/intl/ur/inputtools/try/
 

@@ -1,5 +1,6 @@
 # Source: https://github.com/eliasdabbas/advertools/blob/master/advertools/stopwords.py
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 amma
 arasında
 artıq
@@ -140,4 +141,5 @@ zaman
 əlbəttə
 ən
 əslində
-""".split())
+""".split()
+)

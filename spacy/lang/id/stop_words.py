@@ -1,4 +1,5 @@
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 ada adalah adanya adapun agak agaknya agar akan akankah akhir akhiri akhirnya
 aku akulah amat amatlah anda andalah antar antara antaranya apa apaan apabila
 apakah apalagi apatah artinya asal asalkan atas atau ataukah ataupun awal
@@ -113,4 +114,5 @@ ucap ucapnya ujar ujarnya umum umumnya ungkap ungkapnya untuk usah usai
 waduh wah wahai waktu waktunya walau walaupun wong
 
 yaitu yakin yakni yang
-""".split())
+""".split()
+)

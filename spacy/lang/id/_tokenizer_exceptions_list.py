@@ -1,4 +1,5 @@
-ID_BASE_EXCEPTIONS = set("""
+ID_BASE_EXCEPTIONS = set(
+    """
 aba-aba
 abah-abah
 abal-abal
@@ -3897,4 +3898,5 @@ yel-yel
 yo-yo
 zam-zam
 zig-zag
-""".split())
+""".split()
+)

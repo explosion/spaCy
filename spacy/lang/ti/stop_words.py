@@ -1,7 +1,8 @@
 # Stop words from Tigrinya Wordcount: https://github.com/fgaim/Tigrinya-WordCount/blob/main/ti_stop_words.txt
 
 # Stop words
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 'ምበር 'ሞ 'ቲ 'ታ 'ኳ 'ውን 'ዚ 'የ 'ዩ 'ያ 'ዮም 'ዮን
 ልዕሊ ሒዙ ሒዛ ሕጂ መበል መን መንጎ መጠን ማለት ምስ ምባል
 ምእንቲ ምኽንያቱ ምኽንያት ምዃኑ ምዃንና ምዃኖም
@@ -22,4 +23,5 @@ STOP_WORDS = set("""
 ዝነበረ ዝነበረት ዝነበሩ ዝካየድ ዝኸውን ዝኽእል ዝኾነ ዝዀነ
 የለን ይቕረብ ይብል ይኸውን ይኹን ይኽእል ደኣ ድሕሪ ድማ
 ገለ ገሊጹ ገና ገይሩ ግና ግን ጥራይ
-""".split())
+""".split()
+)

@@ -5,7 +5,8 @@ ZWNJ_O_MIM = "‌ام"
 YE_NUN = "ین"
 
 
-_num_words = set("""
+_num_words = set(
+    """
 صفر
 یک
 دو
@@ -62,12 +63,15 @@ _num_words = set("""
 کوادریلیون
 کادریلیارد
 کوینتیلیون
-""".split())
+""".split()
+)
 
-_ordinal_words = set("""
+_ordinal_words = set(
+    """
 اول
 سوم
-سی‌ام""".split())
+سی‌ام""".split()
+)
 
 _ordinal_words.update({num + MIM for num in _num_words})
 _ordinal_words.update({num + ZWNJ_O_MIM for num in _num_words})

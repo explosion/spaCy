@@ -1,7 +1,8 @@
 # Source: https://github.com/stopwords-iso/stopwords-eu
 # https://www.ranks.nl/stopwords/basque
 # https://www.mustgo.com/worldlanguages/basque/
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 al
 anitz
 arabera
@@ -100,4 +101,5 @@ zu
 zuek
 zuen
 zuten
-""".split())
+""".split()
+)

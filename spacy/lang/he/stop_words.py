@@ -1,4 +1,5 @@
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 אני
 את
 אתה
@@ -217,4 +218,5 @@ STOP_WORDS = set("""
 אחרות
 אשר
 או
-""".split())
+""".split()
+)

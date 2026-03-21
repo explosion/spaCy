@@ -1,5 +1,6 @@
 # Stop words from HAZM package
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 و
 در
 به
@@ -388,4 +389,5 @@ STOP_WORDS = set("""
 لذا
 زاده
 گردد
-اینجا""".split())
+اینجا""".split()
+)

@@ -1,4 +1,5 @@
-STOP_WORDS = set("""
+STOP_WORDS = set(
+    """
 'ad
 'ar
 'd # iad
@@ -381,4 +382,7 @@ urrainn
 ì
 ò
 ó
-""".split("\n"))
+""".split(
+        "\n"
+    )
+)

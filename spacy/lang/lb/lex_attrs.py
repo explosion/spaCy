@@ -1,18 +1,22 @@
 from ...attrs import LIKE_NUM
 
-_num_words = set("""
+_num_words = set(
+    """
 null eent zwee dräi véier fënnef sechs ziwen aacht néng zéng eelef zwielef dräizéng
 véierzéng foffzéng siechzéng siwwenzéng uechtzeng uechzeng nonnzéng nongzéng zwanzeg drësseg véierzeg foffzeg sechzeg siechzeg siwenzeg achtzeg achzeg uechtzeg uechzeg nonnzeg
 honnert dausend millioun milliard billioun billiard trillioun triliard
-""".split())
+""".split()
+)
 
-_ordinal_words = set("""
+_ordinal_words = set(
+    """
 éischten zweeten drëtten véierten fënneften sechsten siwenten aachten néngten zéngten eeleften
 zwieleften dräizéngten véierzéngten foffzéngten siechzéngten uechtzéngen uechzéngten nonnzéngten nongzéngten zwanzegsten
 drëssegsten véierzegsten foffzegsten siechzegsten siwenzegsten uechzegsten nonnzegsten
 honnertsten dausendsten milliounsten
 milliardsten billiounsten billiardsten trilliounsten trilliardsten
-""".split())
+""".split()
+)
 
 
 def like_num(text):
