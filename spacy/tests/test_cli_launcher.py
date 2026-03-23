@@ -52,9 +52,12 @@ def test_manifest_is_current():
         [
             sys.executable,
             "-c",
+            "import json; "
             "from spacy_cli.build_manifest import build_manifest; "
             "from spacy_cli.static import load_manifest; "
-            "assert build_manifest() == load_manifest()",
+            "b, l = build_manifest(), load_manifest(); "
+            "diffs = {k: (str(b[k])[:80], str(l[k])[:80]) for k in b if b[k] != l[k]}; "
+            "assert b == l, json.dumps(diffs, indent=2)",
         ],
         capture_output=True,
         text=True,
