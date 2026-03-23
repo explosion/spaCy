@@ -7,9 +7,12 @@ on:
       # ** matches 'zero or more of any character'
       - 'release-v[0-9]+.[0-9]+.[0-9]+**'
       - 'prerelease-v[0-9]+.[0-9]+.[0-9]+**'
+
+permissions: {}
+
 jobs:
   build_wheels:
-    uses: explosion/gha-cibuildwheel/.github/workflows/cibuildwheel.yml@main
+    uses: explosion/gha-cibuildwheel/.github/workflows/cibuildwheel.yml@2c98f757f13d112cf73fcf4b627249f1fffb5aae  # main
     permissions:
       contents: write
       actions: read

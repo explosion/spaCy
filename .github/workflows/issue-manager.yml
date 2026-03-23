@@ -11,12 +11,16 @@ on:
     types:
       - labeled
 
+permissions: {}
+
 jobs:
   issue-manager:
+    permissions:
+      issues: write
     if: github.repository_owner == 'explosion'
     runs-on: ubuntu-latest
     steps:
-      - uses: tiangolo/issue-manager@0.4.0
+      - uses: tiangolo/issue-manager@4d1b7e05935a404dc8337d30bd23be46be8bb8e5  # 0.4.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config: >

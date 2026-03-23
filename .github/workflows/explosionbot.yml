@@ -6,6 +6,8 @@ on:
       - created
       - edited
 
+permissions: {}
+
 jobs:
   explosion-bot:
     if: github.repository_owner == 'explosion'
@@ -15,8 +17,8 @@ jobs:
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6
       - name: Install and run explosion-bot
         run: |
           git config --global url."https://x-access-token:${EXPLOSIONBOT_TOKEN}@github.com/".insteadOf "https://github.com/"
