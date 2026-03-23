@@ -56,7 +56,12 @@ def test_manifest_is_current():
             "from spacy_cli.build_manifest import build_manifest; "
             "from spacy_cli.static import load_manifest; "
             "b, l = build_manifest(), load_manifest(); "
-            "diffs = {k: (str(b[k])[:80], str(l[k])[:80]) for k in b if b[k] != l[k]}; "
+            "diffs = {}; "
+            "[diffs.update({f'{k}.{sk}': (repr(b[k][sk])[:120], repr(l[k][sk])[:120])}) "
+            "for k in b if isinstance(b[k], dict) and b[k] != l[k] "
+            "for sk in b[k] if b[k].get(sk) != l[k].get(sk)]; "
+            "[diffs.update({k: (repr(b[k])[:120], repr(l[k])[:120])}) "
+            "for k in b if not isinstance(b[k], dict) and b[k] != l[k]]; "
             "assert b == l, json.dumps(diffs, indent=2)",
         ],
         capture_output=True,
