@@ -11,7 +11,6 @@ from spacy.tokens import Doc, DocBin, Span
 
 from .util import make_tempdir, normalize_whitespace
 
-
 load_all_commands()
 
 

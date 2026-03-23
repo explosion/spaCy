@@ -12,8 +12,8 @@ from ._dispatch import (
     PUBLIC_ATTRS,
     SUBCOMMAND_MODULES,
     TOP_LEVEL_MODULES,
+    iter_builtin_modules,
 )
-from ._dispatch import iter_builtin_modules
 from ._util import COMMAND, add_project_cli, app
 
 HELP_OPTIONS = {"--help", "-h"}

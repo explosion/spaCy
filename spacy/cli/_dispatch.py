@@ -1,6 +1,5 @@
 from typing import Dict, Iterable, Optional, Tuple
 
-
 CommandPath = Tuple[str, ...]
 
 
