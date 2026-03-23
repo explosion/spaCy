@@ -288,30 +288,30 @@ example_pos = ["PRON", "VERB", "NOUN"]
 example_ents = ["O", "O", "I-ANIMAL"]
 example_spans = [(2, 3, "ANIMAL")]
 
-TRAIN_EXAMPLE_1 = dict(
-    words=example_words_1,
-    lemmas=example_lemmas_1,
-    tags=example_tags,
-    morphs=example_morphs,
-    deps=example_deps,
-    heads=[1, 1, 1],
-    pos=example_pos,
-    ents=example_ents,
-    spans=example_spans,
-    cats={"CAT": 1.0, "DOG": 0.0},
-)
-TRAIN_EXAMPLE_2 = dict(
-    words=example_words_2,
-    lemmas=example_lemmas_2,
-    tags=example_tags,
-    morphs=example_morphs,
-    deps=example_deps,
-    heads=[1, 1, 1],
-    pos=example_pos,
-    ents=example_ents,
-    spans=example_spans,
-    cats={"CAT": 0.0, "DOG": 1.0},
-)
+TRAIN_EXAMPLE_1 = {
+    "words": example_words_1,
+    "lemmas": example_lemmas_1,
+    "tags": example_tags,
+    "morphs": example_morphs,
+    "deps": example_deps,
+    "heads": [1, 1, 1],
+    "pos": example_pos,
+    "ents": example_ents,
+    "spans": example_spans,
+    "cats": {"CAT": 1.0, "DOG": 0.0},
+}
+TRAIN_EXAMPLE_2 = {
+    "words": example_words_2,
+    "lemmas": example_lemmas_2,
+    "tags": example_tags,
+    "morphs": example_morphs,
+    "deps": example_deps,
+    "heads": [1, 1, 1],
+    "pos": example_pos,
+    "ents": example_ents,
+    "spans": example_spans,
+    "cats": {"CAT": 0.0, "DOG": 1.0},
+}
 
 
 @pytest.mark.slow

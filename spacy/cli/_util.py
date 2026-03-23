@@ -26,7 +26,6 @@ from ..util import (
     ENV_VARS,
     import_file,
     logger,
-    registry,
     run_command,
 )
 
@@ -206,8 +205,8 @@ def get_git_version(
     """
     try:
         ret = run_command("git --version", capture=True)
-    except:
-        raise RuntimeError(error)
+    except Exception as err:
+        raise RuntimeError(error) from err
     stdout = ret.stdout.strip()
     if not stdout or not stdout.startswith("git version"):
         return 0, 0

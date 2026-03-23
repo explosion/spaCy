@@ -38,21 +38,25 @@ def _try_static(argv: Iterable[str]):
         template = manifest["errors"]["unknown_command"]
         return template.replace(UNKNOWN_COMMAND_TOKEN, first), 2
     if first in known_groups:
-        if len(args) == 1 or args[1] in HELP_OPTIONS:
-            if plugin_command_names:
-                return None
-            return manifest["group_help"][first], 0
-        second = args[1]
-        if second not in known_groups[first]:
-            if plugin_command_names:
-                return None
-            template = manifest["errors"]["unknown_subcommand"][first]
-            return template.replace(UNKNOWN_SUBCOMMAND_TOKEN, second), 2
-        if any(arg in HELP_OPTIONS for arg in args[2:]):
-            return manifest["command_help"][f"{first} {second}"], 0
-        return None
+        return _try_static_group(args, first, manifest, known_groups, plugin_command_names)
     if any(arg in HELP_OPTIONS for arg in args[1:]):
         return manifest["command_help"][first], 0
+    return None
+
+
+def _try_static_group(args, first, manifest, known_groups, plugin_command_names):
+    if len(args) == 1 or args[1] in HELP_OPTIONS:
+        if plugin_command_names:
+            return None
+        return manifest["group_help"][first], 0
+    second = args[1]
+    if second not in known_groups[first]:
+        if plugin_command_names:
+            return None
+        template = manifest["errors"]["unknown_subcommand"][first]
+        return template.replace(UNKNOWN_SUBCOMMAND_TOKEN, second), 2
+    if any(arg in HELP_OPTIONS for arg in args[2:]):
+        return manifest["command_help"][f"{first} {second}"], 0
     return None
 
 
