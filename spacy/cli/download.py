@@ -1,3 +1,4 @@
+import importlib.util
 import shutil
 import sys
 from typing import Optional, Sequence
@@ -189,7 +190,7 @@ def download_model(
 
 
 def _get_pip_install_cmd() -> list:
-    if shutil.which("pip"):
+    if importlib.util.find_spec("pip") is not None:
         return [sys.executable, "-m", "pip", "install"]
     elif shutil.which("uv"):
         return ["uv", "pip", "install"]
