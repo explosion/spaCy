@@ -12,7 +12,7 @@ from .vocab cimport LexemesOrTokens, Vocab, _Cached
 
 cdef class Tokenizer:
     cdef Pool mem
-    cdef PreshMap _cache
+    cdef readonly PreshMap _cache  # readonly so tests can check state
     cdef PreshMap _specials
     cdef readonly Vocab vocab
 
