@@ -1254,7 +1254,10 @@ def test_download_uses_custom_url(monkeypatch):
         download_module, "_get_pip_install_cmd", lambda: ["pip", "install"]
     )
 
-    for base in ("https://my-mirror.example.com/models", "https://my-mirror.example.com/models/"):
+    for base in (
+        "https://my-mirror.example.com/models",
+        "https://my-mirror.example.com/models/",
+    ):
         captured.clear()
         download_module.download_model("foo-1.0.tar.gz", custom_url=base)
         assert captured["url"].startswith("https://my-mirror.example.com/models/"), (
