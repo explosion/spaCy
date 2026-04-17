@@ -1237,3 +1237,34 @@ def test_download_rejects_relative_urls(monkeypatch):
     download_module.download("en_core_web_sm-3.7.1", direct=True)
     with pytest.raises(SystemExit):
         download_module.download("../en_core_web_sm-3.7.1", direct=True)
+
+
+def test_download_uses_custom_url(monkeypatch):
+    """`download_model(custom_url=...)` must actually use the user-supplied URL,
+    both with and without a trailing slash, instead of falling back to the
+    default GitHub URL or being rejected by the origin guard."""
+
+    captured = {}
+
+    def fake_run(cmd):
+        captured["url"] = next(arg for arg in cmd if arg.startswith("http"))
+
+    monkeypatch.setattr(download_module, "run_command", fake_run)
+    monkeypatch.setattr(
+        download_module, "_get_pip_install_cmd", lambda: ["pip", "install"]
+    )
+
+    for base in ("https://my-mirror.example.com/models", "https://my-mirror.example.com/models/"):
+        captured.clear()
+        download_module.download_model("foo-1.0.tar.gz", custom_url=base)
+        assert captured["url"].startswith("https://my-mirror.example.com/models/"), (
+            f"custom_url={base!r} produced {captured['url']!r}"
+        )
+
+    # Without --url, the default GitHub URL is still used and the relative-path
+    # guard remains in effect.
+    captured.clear()
+    download_module.download_model("foo-1.0.tar.gz")
+    assert captured["url"].startswith(about.__download_url__)
+    with pytest.raises(ValueError):
+        download_module.download_model("../foo-1.0.tar.gz")
