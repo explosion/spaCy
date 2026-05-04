@@ -15,11 +15,11 @@ cdef struct SizesC:
 
 
 cdef struct WeightsC:
-    const float* feat_weights
-    const float* feat_bias
-    const float* hidden_bias
-    const float* hidden_weights
-    const float* seen_classes
+    float* feat_weights
+    float* feat_bias
+    float* hidden_bias
+    float* hidden_weights
+    float* seen_classes
 
 
 cdef struct ActivationsC:
@@ -40,9 +40,7 @@ cdef ActivationsC alloc_activations(SizesC n) nogil
 
 cdef void free_activations(const ActivationsC* A) nogil
 
-cdef void predict_states(
-    CBlas cblas, ActivationsC* A, StateC** states, const WeightsC* W, SizesC n
-) nogil
+cdef void predict_states(CBlas cblas, ActivationsC* A, StateC** states, WeightsC* W, SizesC n) nogil
 
 cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) nogil
 

@@ -73,8 +73,8 @@ COMPILE_OPTIONS = {
     "mingw32": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function"],
     "other": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function"],
 }
-LINK_OPTIONS = {"msvc": ["-std=c++11"], "mingw32": ["-std=c++11"], "other": []}
-COMPILER_DIRECTIVES = {
+LINK_OPTIONS: dict[str, list[str]] = {"msvc": ["-std=c++11"], "mingw32": ["-std=c++11"], "other": []}
+COMPILER_DIRECTIVES: dict[str, int | bool] = {
     "language_level": -3,
     "embedsignature": True,
     "annotation_typing": False,

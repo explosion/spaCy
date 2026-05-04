@@ -22,7 +22,7 @@ cdef WeightsC get_c_weights(model) except *:
     cdef WeightsC output
     cdef precompute_hiddens state2vec = model.state2vec
     output.feat_weights = state2vec.get_feat_weights()
-    output.feat_bias = <const float*>state2vec.bias.data
+    output.feat_bias = <float*>state2vec.bias.data
     cdef np.ndarray vec2scores_W
     cdef np.ndarray vec2scores_b
     if model.vec2scores is None:
@@ -31,10 +31,10 @@ cdef WeightsC get_c_weights(model) except *:
     else:
         vec2scores_W = model.vec2scores.get_param("W")
         vec2scores_b = model.vec2scores.get_param("b")
-        output.hidden_weights = <const float*>vec2scores_W.data
-        output.hidden_bias = <const float*>vec2scores_b.data
+        output.hidden_weights = <float*>vec2scores_W.data
+        output.hidden_bias = <float*>vec2scores_b.data
     cdef np.ndarray class_mask = model._class_mask
-    output.seen_classes = <const float*>class_mask.data
+    output.seen_classes = <float*>class_mask.data
     return output
 
 
@@ -98,9 +98,7 @@ cdef void resize_activations(ActivationsC* A, SizesC n) noexcept nogil:
     A._curr_size = n.states
 
 
-cdef void predict_states(
-    CBlas cblas, ActivationsC* A, StateC** states, const WeightsC* W, SizesC n
-) noexcept nogil:
+cdef void predict_states(CBlas cblas, ActivationsC* A, StateC** states, WeightsC* W, SizesC n) noexcept nogil:
     resize_activations(A, n)
     for i in range(n.states):
         states[i].set_context_tokens(&A.token_ids[i*n.feats], n.feats)
@@ -132,8 +130,8 @@ cdef void predict_states(
         # Compute hidden-to-output
         sgemm(cblas)(
             False, True, n.states, n.classes, n.hiddens,
-            1.0, <const float *>A.hiddens, n.hiddens,
-            <const float *>W.hidden_weights, n.hiddens,
+            1.0, <float *>A.hiddens, n.hiddens,
+            <float *>W.hidden_weights, n.hiddens,
             0.0, A.scores, n.classes
         )
         # Add bias
@@ -173,7 +171,7 @@ cdef void sum_state_features(
             else:
                 idx = token_ids[f] * id_stride + f*O
                 feature = &cached[idx]
-            saxpy(cblas)(O, one, <const float*>feature, 1, &output[b*O], 1)
+            saxpy(cblas)(O, one, <float*>feature, 1, &output[b*O], 1)
         token_ids += F
 
 
@@ -338,6 +336,14 @@ class ParserStepModel(Model):
 NUMPY_OPS = NumpyOps()
 
 
+def _backprop_parser_step(d_scores, model, token_ids, get_d_vector, get_d_tokvecs, mask):
+    d_scores *= model._class_mask
+    d_vector = get_d_vector(d_scores)
+    if mask is not None:
+        d_vector *= mask
+    model.backprop_step(token_ids, d_vector, get_d_tokvecs)
+    return None
+
 def step_forward(model: ParserStepModel, states, is_train):
     token_ids = model.get_token_ids(states)
     vector, get_d_tokvecs = model.state2vec(token_ids, is_train)
@@ -350,19 +356,18 @@ def step_forward(model: ParserStepModel, states, is_train):
         scores, get_d_vector = model.vec2scores(vector, is_train)
     else:
         scores = NumpyOps().asarray(vector)
-        get_d_vector = lambda d_scores: d_scores  # no-cython-lint: E731
-    # If the class is unseen, make sure its score is minimum
+        get_d_vector = lambda d_scores: d_scores
     scores[:, model._class_mask == 0] = numpy.nanmin(scores)
 
-    def backprop_parser_step(d_scores):
-        # Zero vectors for unseen classes
-        d_scores *= model._class_mask
-        d_vector = get_d_vector(d_scores)
-        if mask is not None:
-            d_vector *= mask
-        model.backprop_step(token_ids, d_vector, get_d_tokvecs)
-        return None
-    return scores, backprop_parser_step
+    # Возвращаем частично применённую функцию
+    from functools import partial
+    backprop = partial(_backprop_parser_step, 
+                       model=model, 
+                       token_ids=token_ids, 
+                       get_d_vector=get_d_vector, 
+                       get_d_tokvecs=get_d_tokvecs, 
+                       mask=mask)
+    return scores, backprop
 
 
 cdef class precompute_hiddens:
@@ -423,7 +428,7 @@ cdef class precompute_hiddens:
         self._cached = cached
         self._bp_hiddens = bp_features
 
-    cdef const float* get_feat_weights(self) except NULL:
+    cdef float* get_feat_weights(self) except NULL:
         if not self._is_synchronized and self._cuda_stream is not None:
             self._cuda_stream.synchronize()
             self._is_synchronized = True
