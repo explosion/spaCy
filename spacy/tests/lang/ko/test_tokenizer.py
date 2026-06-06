@@ -26,6 +26,19 @@ def test_ko_tokenizer(ko_tokenizer, text, expected_tokens):
     assert tokens == expected_tokens.split()
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        "보험금을  지급한다.\n\n면책기간\t특약",  # runs of spaces, newlines, a tab
+        "  앞뒤 공백 있음  ",                       # leading / trailing whitespace
+        "서울 타워 근처에 살고 있습니다.",            # single spaces (unchanged)
+        "보험약관",                                 # no whitespace
+    ],
+)
+def test_ko_tokenizer_preserves_whitespace(ko_tokenizer, text):
+    assert ko_tokenizer(text).text == text
+
+
 @pytest.mark.parametrize("text,expected_tags", TAG_TESTS)
 def test_ko_tokenizer_tags(ko_tokenizer, text, expected_tags):
     tags = [token.tag_ for token in ko_tokenizer(text)]
