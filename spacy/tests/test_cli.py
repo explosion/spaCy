@@ -6,9 +6,9 @@ from typing import Any, Dict, List, Tuple
 
 import pytest
 import srsly
-from click import NoSuchOption
 from packaging.specifiers import SpecifierSet
 from thinc.api import Config
+from typer._click.exceptions import NoSuchOption
 
 import spacy
 from spacy import about

@@ -15,10 +15,10 @@ from typing import (
 
 import srsly
 import typer
-from click import NoSuchOption
-from click.shell_completion import split_arg_string
 from thinc.api import ConfigValidationError, require_gpu
 from thinc.util import gpu_is_available
+from typer._click.exceptions import NoSuchOption
+from typer._click.shell_completion import split_arg_string
 from typer.main import get_command
 from wasabi import Printer, msg
 from weasel import app as project_cli
