@@ -442,15 +442,17 @@ class DependencyRenderer:
             y_curve = -self.distance
         arrowhead = self.get_arrowhead(direction, x_start, y, x_end)
         arc = self.get_arc(x_start, y, y_curve, x_end)
-        label_side = "right" if self.direction == "rtl" else "left"
+        label_arc = arc
+        if self.direction == "rtl":
+            label_arc = self.get_arc(x_end, y, y_curve, x_start)
         return TPL_DEP_ARCS.format(
             id=self.id,
             i=i,
             stroke=self.arrow_stroke,
             head=arrowhead,
             label=label,
-            label_side=label_side,
             arc=arc,
+            label_arc=label_arc,
         )
 
     def get_arc(self, x_start: int, y: int, y_curve: int, x_end: int) -> str:

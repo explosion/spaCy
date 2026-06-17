@@ -329,6 +329,9 @@ def test_displacy_rtl():
     assert "direction: rtl" in html
     assert 'direction="rtl"' in html
     assert f'lang="{nlp.lang}"' in html
+    assert 'class="displacy-label-arc"' in html
+    assert 'xlink:href="#label-' in html
+    assert " side=" not in html
     html = displacy.render(doc, page=True, style="ent")
     assert "direction: rtl" in html
     assert f'lang="{nlp.lang}"' in html
