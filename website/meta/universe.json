@@ -5725,6 +5725,52 @@
                 "nlp",
                 "spacy"
             ]
+        },
+        {
+            "id": "yasbd-lib",
+            "title": "yasbd-lib - Yet Another Sentence Boundary Detector",
+            "slogan": "High-accuracy rule-based sentence segmentation for 39 languages.",
+            "description": "A high-accuracy, rule-based Sentence Boundary Detector (SBD) with a drop-in adapter for pysbd, delivering faster and more accurate sentence splitting.",
+            "github": "speedyk-005/yasbd-lib",
+            "pip": "yasbd-lib",
+            "category": ["standalone", "pipeline"],
+            "tags": ["sentence-segmentation", "sentence-boundary-detector", "multilingual", "nlp", "text-processing"],
+            "code_example": [
+                "from yasbd import BoundaryDetector",
+                "",
+                "detector = BoundaryDetector(lang=\"en\")",
+                "res = list(detector.detect(\"She turned to him, \\\"This is great.\\\" She held the book out to show him.\"))",
+                "print(res)",
+                "# [35, 70]",
+                "",
+                "detector.lang = \"es\"",
+                "res = list(detector.detect(\"El Sr. García llegó ayer. La Sra. López también.\\n\\nVéase la pág. 55 del libro.\", relative=True))",
+                "print(res)",
+                "# [25, 48, ParagraphEOF, 27]",
+                "",
+                "# spaCy integration",
+                "from yasbd import register_spacy_component",
+                "import spacy",
+                "",
+                "register_spacy_component()",
+                "nlp = spacy.blank(\"en\")",
+                "nlp.add_pipe(\"yasbd\", first=True, config={lang: \"en\"})",
+                "",
+                "doc = nlp(\"Dr. Smith arrived. He was late.\")",
+                "for sent in doc.sents:",
+                "    print(sent.text)",
+                "# Dr. Smith arrived.",
+                "# He was late."
+            ],
+            "code_language": "python",
+            "thumb": "https://raw.githubusercontent.com/speedyk-005/yasbd-lib/main/thumb.jpeg",
+            "url": "https://github.com/speedyk-005/yasbd-lib",
+            "image": "https://raw.githubusercontent.com/speedyk-005/yasbd-lib/main/yasbd_logo.png",
+            "spacy_version": "3",
+            "author": "Speed K",
+            "author_links": {
+                "github": "speedyk-005"
+            }
         }
     ],
     "categories": [
