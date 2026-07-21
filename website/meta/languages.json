@@ -47,7 +47,8 @@
         {
             "code": "cs",
             "name": "Czech",
-            "has_examples": true
+            "has_examples": true,
+            "models": ["cs_core_news_sm"]
         },
         {
             "code": "da",
