@@ -34,9 +34,15 @@ _abbr_period_exc = [
     {ORTH: "bştbp.", NORM: "baştabip"},
     {ORTH: "Bul.", NORM: "bulvarı"},
     {ORTH: "bul.", NORM: "bulvarı"},
+    #--------------------------------------
     {ORTH: "Cad.", NORM: "caddesi"},
     {ORTH: "cad.", NORM: "caddesi"},
+    {ORTH: "Cm.", NORM: "santimetre"},
+    {ORTH: "cm.", NORM: "santimetre"},
+    {ORTH: "Da.", NORM: "daire"},
+    {ORTH: "da.", NORM: "daire"},
     {ORTH: "çev.", NORM: "çeviren"},
+    #--------------------------------
     {ORTH: "Çvş.", NORM: "çavuş"},
     {ORTH: "çvş.", NORM: "çavuş"},
     {ORTH: "dak.", NORM: "dakika"},
@@ -57,8 +63,12 @@ _abbr_period_exc = [
     {ORTH: "Fak.", NORM: "fakültesi"},
     {ORTH: "Gn.", NORM: "genel"},
     {ORTH: "Gnkur.", NORM: "Genelkurmay"},
+    #-------------------------------------
     {ORTH: "Gn.Kur.", NORM: "Genelkurmay"},
+    {ORTH: "Gb.", NORM: "gigabayt"},
+    {ORTH: "gb.", NORM: "gigabayt"},
     {ORTH: "gr.", NORM: "gram"},
+    #------------------
     {ORTH: "Hst.", NORM: "hastanesi"},
     {ORTH: "hst.", NORM: "hastanesi"},
     {ORTH: "Hs.Uzm."},
@@ -74,20 +84,36 @@ _abbr_period_exc = [
     {ORTH: "Jeol.", NORM: "jeoloji"},
     {ORTH: "jeol.", NORM: "jeoloji"},
     {ORTH: "Korg.", NORM: "korgeneral"},
+    #---------------------------------
+    {ORTH: "Kat.", NORM: "kat"},
+    {ORTH: "kat.", NORM: "kat"},
+    {ORTH: "Kg.", NORM: "kilogram"},
+    {ORTH: "kg.", NORM: "kilogram"},
+    {ORTH: "Km.", NORM: "kilometre"},
+    {ORTH: "km.", NORM: "kilometre"},
     {ORTH: "Kur.", NORM: "kurmay"},
     {ORTH: "Kur.Bşk."},
+    #-------------------------------
     {ORTH: "Kuv.", NORM: "kuvvetleri"},
     {ORTH: "Ltd.", NORM: "limited"},
     {ORTH: "ltd.", NORM: "limited"},
+    #---------------------------------
     {ORTH: "Mah.", NORM: "mahallesi"},
     {ORTH: "mah.", NORM: "mahallesi"},
+    {ORTH: "Mb.", NORM: "megabayt"},
+    {ORTH: "mb.", NORM: "megabayt"},
     {ORTH: "max.", NORM: "maksimum"},
+    #--------------------------------
     {ORTH: "min.", NORM: "minimum"},
     {ORTH: "Müh.", NORM: "mühendisliği"},
     {ORTH: "müh.", NORM: "mühendisliği"},
     {ORTH: "M.Ö."},
+    #-------------------
     {ORTH: "M.S."},
+    {ORTH: "No.", NORM: "numara"},
+    {ORTH: "no.", NORM: "numara"},
     {ORTH: "Onb.", NORM: "onbaşı"},
+    #------------------------------
     {ORTH: "Ord.", NORM: "ordinaryüs"},
     {ORTH: "Org.", NORM: "orgeneral"},
     {ORTH: "Ped.", NORM: "pedagoji"},
