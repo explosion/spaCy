@@ -10,6 +10,7 @@ wasabi>=0.9.1,<1.2.0
 srsly>=2.5.3,<3.0.0
 catalogue>=2.0.6,<2.1.0
 typer>=0.3.0,<1.0.0
+click>=8.2.1,<9.0.0
 weasel>=1.0.0,<2.0.0
 # Third party dependencies
 numpy>=2.0.0,<3.0.0
