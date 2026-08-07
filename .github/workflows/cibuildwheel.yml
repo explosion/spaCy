@@ -24,22 +24,24 @@ jobs:
 
   smoke_test:
     name: Smoke test
+    # No checkout here: the jobs below must import the installed wheel, and a
+    # checked-out source tree in the working directory would shadow it.
     needs: build_wheels
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
 
-      - uses: robinraju/release-downloader@daf26c55d821e836577a15f77d86ddc078948b05  # v1
+      # The release created by build_wheels is a draft, which can't be looked
+      # up by tag, so pull the wheel from this run's artifacts instead
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
-          tag: ${{ github.ref_name }}
-          fileName: "spacy-*cp312*manylinux*x86_64*.whl"
-          out-file-path: "dist"
+          pattern: "cibw-wheels-ubuntu-latest-*"
+          merge-multiple: true
+          path: "dist"
 
       - name: Install from wheel
         run: |
@@ -63,20 +65,21 @@ jobs:
 
   upgrade_test:
     name: Upgrade test
+    # No checkout here: the jobs below must import the installed wheel, and a
+    # checked-out source tree in the working directory would shadow it.
     needs: build_wheels
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
 
       - name: Install previous spaCy version
         run: |
-          pip install "spacy>=3.8.0,<${{ github.ref_name }}" || pip install "spacy<4"
+          # strip the release-v/prerelease-v prefix to get a version specifier
+          pip install "spacy>=3.8.0,<${GITHUB_REF_NAME##*-v}" || pip install "spacy<4"
           python -m spacy download en_core_web_sm
           python -c "
           import spacy
@@ -84,11 +87,13 @@ jobs:
           print('Pre-upgrade:', spacy.__version__, nlp.meta['name'], '@', nlp.meta['version'])
           "
 
-      - uses: robinraju/release-downloader@daf26c55d821e836577a15f77d86ddc078948b05  # v1
+      # The release created by build_wheels is a draft, which can't be looked
+      # up by tag, so pull the wheel from this run's artifacts instead
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
-          tag: ${{ github.ref_name }}
-          fileName: "spacy-*cp312*manylinux*x86_64*.whl"
-          out-file-path: "dist"
+          pattern: "cibw-wheels-ubuntu-latest-*"
+          merge-multiple: true
+          path: "dist"
 
       - name: Upgrade to new version
         run: |
