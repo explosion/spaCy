@@ -250,7 +250,7 @@ class SpanCategorizer(TrainablePipe):
 
         DOCS: https://spacy.io/api/spancategorizer#init
         """
-        self.cfg = {
+        self.cfg: Dict[str, Any] = {
             "labels": [],
             "spans_key": spans_key,
             "threshold": threshold,

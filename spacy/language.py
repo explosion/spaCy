@@ -605,7 +605,7 @@ class Language:
                 existing_func = registry.factories.get(internal_name)
                 closure = existing_func.__closure__
                 wrapped = [c.cell_contents for c in closure][0] if closure else None
-                if util.is_same_func(wrapped, component_func):
+                if wrapped is not None and util.is_same_func(wrapped, component_func):
                     factory_func = existing_func  # noqa: F811
 
             cls.factory(

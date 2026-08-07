@@ -242,10 +242,10 @@ class TokenPatternNumber(BaseModel):
 
 
 class TokenPatternOperatorSimple(str, Enum):
-    plus: StrictStr = StrictStr("+")
-    star: StrictStr = StrictStr("*")
-    question: StrictStr = StrictStr("?")
-    exclamation: StrictStr = StrictStr("!")
+    plus = StrictStr("+")
+    star = StrictStr("*")
+    question = StrictStr("?")
+    exclamation = StrictStr("!")
 
 
 TokenPatternOperatorMinMax = constr(pattern=r"^(\{\d+\}|\{\d+,\d*\}|\{\d*,\d+\})$")

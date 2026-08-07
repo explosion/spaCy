@@ -388,7 +388,7 @@ class DependencyRenderer:
             lang=self.lang,
         )
 
-    def render_word(self, text: str, tag: str, lemma: str, i: int) -> str:
+    def render_word(self, text: str, tag: str, lemma: Optional[str], i: int) -> str:
         """Render individual word.
 
         text (str): Word text.

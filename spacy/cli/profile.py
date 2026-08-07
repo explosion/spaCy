@@ -66,7 +66,7 @@ def profile(model: str, inputs: Optional[Path] = None, n_texts: int = 10000) -> 
 
         with msg.loading("Loading IMDB dataset via ml_datasets..."):
             imdb_train, _ = ml_datasets.imdb(train_limit=n_texts, dev_limit=0)
-            texts, _ = zip(*imdb_train)
+            texts = [text for text, _ in imdb_train]
         msg.info(f"Loaded IMDB dataset and using {n_texts} examples")
     with msg.loading(f"Loading pipeline '{model}'..."):
         nlp = load_model(model)

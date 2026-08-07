@@ -61,7 +61,7 @@ class JapaneseTokenizer(DummyTokenizer):
             zip(*dtokens) if dtokens else [[]] * 7
         )
         sub_tokens_list = list(sub_tokens_list)
-        doc = Doc(self.vocab, words=words, spaces=spaces)
+        doc = Doc(self.vocab, words=list(words), spaces=spaces)
         next_pos = None  # for bi-gram rules
         for idx, (token, dtoken) in enumerate(zip(doc, dtokens)):
             token.tag_ = dtoken.tag

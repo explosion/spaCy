@@ -579,7 +579,7 @@ def debug_data(
 
     if "morphologizer" in factory_names:
         msg.divider("Morphologizer (POS+Morph)")
-        label_list = [label for label in gold_train_data["morphs"]]
+        label_list = tuple(gold_train_data["morphs"])
         model_labels = _get_labels_from_model(nlp, "morphologizer")
         msg.info(f"{len(label_list)} label(s) in train data")
         labels = set(label_list)
