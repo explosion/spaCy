@@ -78,8 +78,10 @@ jobs:
 
       - name: Install previous spaCy version
         run: |
-          # strip the release-v/prerelease-v prefix to get a version specifier
-          pip install "spacy>=3.8.0,<${GITHUB_REF_NAME##*-v}" || pip install "spacy<4"
+          # strip the release-v/prerelease-v prefix to get a version specifier;
+          # click is needed because spacy <=3.8.14 imports it without
+          # declaring it (#13971) and modern typer no longer pulls it in
+          pip install "spacy>=3.8.0,<${GITHUB_REF_NAME##*-v}" click || pip install "spacy<4" click
           python -m spacy download en_core_web_sm
           python -c "
           import spacy
