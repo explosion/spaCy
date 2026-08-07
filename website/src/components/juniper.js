@@ -88,7 +88,7 @@ export default class Juniper extends React.Component {
     }
 
     /**
-     * Request kernel and estabish a server connection via the JupyerLab service
+     * Request kernel and establish a server connection via the JupyerLab service
      * @param {object} settings - The server settings.
      * @returns {Promise} - A promise that's resolved with the kernel.
      */

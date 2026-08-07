@@ -1,5 +1,5 @@
 # This file is present to provide a prior version of the EntityLinker component
-# for backwards compatability. For details see #9669.
+# for backwards compatibility. For details see #9669.
 
 import random
 import warnings

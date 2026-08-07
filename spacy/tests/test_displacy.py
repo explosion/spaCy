@@ -34,7 +34,7 @@ def test_issue2728(en_vocab):
 @pytest.mark.issue(3288)
 def test_issue3288(en_vocab):
     """Test that retokenization works correctly via displaCy when punctuation
-    is merged onto the preceeding token and tensor is resized."""
+    is merged onto the preceding token and tensor is resized."""
     words = ["Hello", "World", "!", "When", "is", "this", "breaking", "?"]
     heads = [1, 1, 1, 4, 4, 6, 4, 4]
     deps = ["intj", "ROOT", "punct", "advmod", "ROOT", "det", "nsubj", "punct"]

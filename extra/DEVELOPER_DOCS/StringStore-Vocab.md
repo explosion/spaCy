@@ -145,7 +145,7 @@ These are things stored in the vocab:
 - `get_noun_chunks`: a syntax iterator
 - lex attribute getters: functions like `is_punct`, set in language defaults
 - `cfg`: **not** the pipeline config, this is mostly unused
-- `_unused_object`: Formerly an unused object, kept around until v4 for compatability
+- `_unused_object`: Formerly an unused object, kept around until v4 for compatibility
 
 Some of these, like the Morphology and Vectors, are complex enough that they
 need their own explanations. Here we'll just look at Vocab-specific items.

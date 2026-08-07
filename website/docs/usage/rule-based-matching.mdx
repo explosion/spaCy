@@ -703,7 +703,7 @@ def collect_sents(matcher, doc, i, matches):
     span = doc[start:end]  # Matched span
     sent = span.sent  # Sentence containing matched span
     # Append mock entity for match in displaCy style to matched_sents
-    # get the match span by ofsetting the start and end of the span with the
+    # get the match span by offsetting the start and end of the span with the
     # start and end of the sentence in the doc
     match_ents = [{
         "start": span.start_char - sent.start_char,
