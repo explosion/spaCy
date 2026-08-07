@@ -6,7 +6,7 @@ This is a list of all the active repos relevant to spaCy besides the main one, w
 
 These packages are always pulled in when you install spaCy. Most of them are direct dependencies, but some are transitive dependencies through other packages.
 
-- [spacy-legacy](https://github.com/explosion/spacy-legacy): When an architecture in spaCy changes enough to get a new version, the old version is frozen and moved to spacy-legacy. This allows us to keep the core library slim while also preserving backwards compatability.
+- [spacy-legacy](https://github.com/explosion/spacy-legacy): When an architecture in spaCy changes enough to get a new version, the old version is frozen and moved to spacy-legacy. This allows us to keep the core library slim while also preserving backwards compatibility.
 - [thinc](https://github.com/explosion/thinc): Thinc is the machine learning library that powers trainable components in spaCy. It wraps backends like Numpy, PyTorch, and Tensorflow to provide a functional interface for specifying architectures.
 - [catalogue](https://github.com/explosion/catalogue): Small library for adding function registries, like those used for model architectures in spaCy.
 - [confection](https://github.com/explosion/confection): This library contains the functionality for config parsing that was formerly contained directly in Thinc.
@@ -67,7 +67,7 @@ These repos are used to support the spaCy docs or otherwise present information 
 
 These repos are used for organizing data around spaCy, but are not something an end user would need to install as part of using the library.
 
-- [spacy-models](https://github.com/explosion/spacy-models): This repo contains metadata (but not training data) for all the spaCy models. This includes information about where their training data came from, version compatability, and performance information. It also includes tests for the model packages, and the built models are hosted as releases of this repo.
+- [spacy-models](https://github.com/explosion/spacy-models): This repo contains metadata (but not training data) for all the spaCy models. This includes information about where their training data came from, version compatibility, and performance information. It also includes tests for the model packages, and the built models are hosted as releases of this repo.
 - [wheelwright](https://github.com/explosion/wheelwright): A tool for automating our PyPI builds and releases.
 - [ec2buildwheel](https://github.com/explosion/ec2buildwheel): A small project that allows you to build Python packages in the manner of cibuildwheel, but on any EC2 image. Used by wheelwright.
 
