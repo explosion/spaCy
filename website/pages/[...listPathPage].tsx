@@ -106,15 +106,18 @@ export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (
             : null
     const section = mdx.frontmatter.section ?? parentFolder
     const sectionMeta = section ? recordSection[section] ?? null : null
-    const baseClass = null
+
+    // Determine base class details from frontmatter, if provided
+    const baseClass = mdx.frontmatter.api_base_class
+        ? {
+              title: mdx.frontmatter.api_base_class_title ?? mdx.frontmatter.title,
+              slug: mdx.frontmatter.api_base_class,
+          }
+        : null
+
     const apiDetails: ApiDetails = {
         stringName: mdx.frontmatter.api_string_name ?? null,
-        baseClass: baseClass
-            ? {
-                  title: mdx.frontmatter.title,
-                  slug: mdx.frontmatter.api_base_class,
-              }
-            : null,
+        baseClass,
         trainable: mdx.frontmatter.api_trainable ?? null,
     }
 
