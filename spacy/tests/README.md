@@ -55,7 +55,7 @@ To keep the behavior of the tests consistent and predictable, we try to follow a
 If the test cases can be extracted from the test, always `parametrize` them instead of hard-coding them into the test:
 
 ```python
-@pytest.mark.parametrize('text', ["google.com", "spacy.io"])
+@pytest.mark.parametrize("text", ["google.com", "spacy.io"])
 def test_tokenizer_keep_urls(tokenizer, text):
     tokens = tokenizer(text)
     assert len(tokens) == 1
@@ -110,15 +110,15 @@ Loading the models is expensive and not necessary if you're not actually testing
 ```python
 def test_doc_token_api_strings(en_vocab):
     words = ["Give", "it", "back", "!", "He", "pleaded", "."]
-    pos = ['VERB', 'PRON', 'PART', 'PUNCT', 'PRON', 'VERB', 'PUNCT']
+    pos = ["VERB", "PRON", "PART", "PUNCT", "PRON", "VERB", "PUNCT"]
     heads = [0, 0, 0, 0, 5, 5, 5]
-    deps = ['ROOT', 'dobj', 'prt', 'punct', 'nsubj', 'ROOT', 'punct']
+    deps = ["ROOT", "dobj", "prt", "punct", "nsubj", "ROOT", "punct"]
 
     doc = Doc(en_vocab, words=words, pos=pos, heads=heads, deps=deps)
-    assert doc[0].text == 'Give'
-    assert doc[0].lower_ == 'give'
-    assert doc[0].pos_ == 'VERB'
-    assert doc[0].dep_ == 'ROOT'
+    assert doc[0].text == "Give"
+    assert doc[0].lower_ == "give"
+    assert doc[0].pos_ == "VERB"
+    assert doc[0].dep_ == "ROOT"
 ```
 
 ### Other utilities
