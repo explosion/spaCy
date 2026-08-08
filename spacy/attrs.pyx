@@ -91,6 +91,9 @@ IDS = {
     "MORPH": MORPH,
     "IDX": IDX,
 }
+# Make these ints in Python, so that we don't get this unexpected 'flag' type
+# This will match the behaviour before Cython 3
+IDS = {name: int(value) for name, value in IDS.items()}
 
 
 # ATTR IDs, in order of the symbol
