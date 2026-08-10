@@ -842,6 +842,13 @@ def is_compatible_version(
 def is_unconstrained_version(
     constraint: str, prereleases: bool = True
 ) -> Optional[bool]:
+    """Check whether a version constraint string has no upper bound.
+
+    constraint (str): The version constraint, e.g. ">=3.0.0,<4.0.0".
+    prereleases (bool): Whether to allow prerelease versions.
+    RETURNS (Optional[bool]): True if unconstrained (no upper bound), False if
+        constrained, or None if the constraint string is invalid.
+    """
     # We have an exact version, this is the ultimate constrained version
     if constraint[0].isdigit():
         return False
@@ -1693,6 +1700,10 @@ class DummyTokenizer:
 
 
 def create_default_optimizer() -> Optimizer:
+    """Create and return the default optimizer (Adam with default settings).
+
+    RETURNS (Optimizer): The default Adam optimizer.
+    """
     return Adam()
 
 
@@ -1779,10 +1790,24 @@ def _pipe(
 
 
 def raise_error(proc_name, proc, docs, e):
+    """Re-raise an error that occurred during pipeline component processing.
+
+    proc_name (str): The name of the pipeline component.
+    proc (Callable): The pipeline component callable.
+    docs (List[Doc]): The batch of docs being processed.
+    e (Exception): The exception to re-raise.
+    """
     raise e
 
 
 def ignore_error(proc_name, proc, docs, e):
+    """Silently ignore an error that occurred during pipeline component processing.
+
+    proc_name (str): The name of the pipeline component.
+    proc (Callable): The pipeline component callable.
+    docs (List[Doc]): The batch of docs being processed.
+    e (Exception): The exception to ignore.
+    """
     pass
 
 
@@ -1801,6 +1826,11 @@ def warn_if_jupyter_cupy():
 
 
 def check_lexeme_norms(vocab, component_name):
+    """Log a debug warning if lexeme norm data is missing for a supported language.
+
+    vocab (Vocab): The vocab object to check.
+    component_name (str): The name of the pipeline component, used in the warning.
+    """
     lexeme_norms = vocab.lookups.get_table("lexeme_norm", {})
     if len(lexeme_norms) == 0 and vocab.lang in LEXEME_NORM_LANGS:
         langs = ", ".join(LEXEME_NORM_LANGS)

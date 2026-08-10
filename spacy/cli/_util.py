@@ -71,6 +71,11 @@ app.add_typer(init_cli)
 
 
 def setup_cli() -> None:
+    """Set up and run the spaCy CLI entry point.
+
+    Ensures all CLI commands registered via the entry-point are imported, then
+    runs the top-level Typer command with the correct program name.
+    """
     # Make sure the entry-point for CLI runs, so that they get imported.
     registry.cli.get_all()
     # Ensure that the help messages always display the correct prompt
