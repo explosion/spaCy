@@ -90,7 +90,7 @@ def pipes_with_nvtx_range(
             # the original parameters are passed to pydantic for validation downstream.
             try:
                 wrapped_func.__signature__ = inspect.signature(func)  # type: ignore
-            except:
+            except Exception:
                 # Can fail for Cython methods that do not have bindings.
                 warnings.warn(Warnings.W122.format(method=name, pipe=pipe.name))
                 continue
