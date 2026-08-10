@@ -14,6 +14,7 @@ from .templates import (
     TPL_FIGURE,
     TPL_KB_LINK,
     TPL_PAGE,
+    TPL_SCORE,
     TPL_SPAN,
     TPL_SPAN_RTL,
     TPL_SPAN_SLICE,
@@ -579,6 +580,7 @@ class EntityRenderer:
             label = span["label"]
             start = span["start"]
             end = span["end"]
+            score = TPL_SCORE.format(score=span["score"]) if "score" in span else ""
             kb_id = span.get("kb_id", "")
             kb_url = span.get("kb_url", "#")
             kb_link = TPL_KB_LINK.format(kb_id=kb_id, kb_url=kb_url) if kb_id else ""
@@ -596,6 +598,7 @@ class EntityRenderer:
                     "text": entity,
                     "bg": color,
                     "kb_link": kb_link,
+                    "score": score,
                 }
                 ent_settings.update(additional_params)
                 markup += self.ent_template.format(**ent_settings)
