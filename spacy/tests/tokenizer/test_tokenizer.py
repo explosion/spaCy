@@ -5,6 +5,7 @@ import pytest
 
 from spacy.lang.de import German
 from spacy.lang.en import English
+from spacy.strings import hash_string
 from spacy.symbols import ORTH
 from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
@@ -555,3 +556,14 @@ def test_tokenizer_initial_special_case_explain(en_vocab):
     tokens = [t.text for t in tokenizer("id")]
     explain_tokens = [t[1] for t in tokenizer.explain("id")]
     assert tokens == explain_tokens
+
+
+@pytest.mark.issue(13950)
+def test_issue13950(en_tokenizer):
+    # Special contraction occurs before regular words
+    en_tokenizer("I can't believe you have done this")
+
+    # "believe" and "this" appear after the special case "can't".
+    # They should still be cached.
+    assert hash_string("believe") in en_tokenizer._cache
+    assert hash_string("this") in en_tokenizer._cache
