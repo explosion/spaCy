@@ -1,6 +1,56 @@
 {
     "resources": [
         {
+            "id": "MorphSeg",
+            "title": "MorphSeg",
+            "thumb": "https://raw.githubusercontent.com/TheWelcomer/MorphSeg/master/library/logo.png",
+            "url": "https://pypi.org/project/morphseg/",
+            "slogan": "Morpheme Segmentation for Several Languages using SpaCy",
+            "description": "[MorphSeg](https://github.com/TheWelcomer/MorphSeg) is a morpheme segmentation library and SpaCy pipeline which supports segmentation for 8 languages (english, spanish, russian, french, italian, czech, hungarian, and latin). The pretrained models are high-accuracy, small (~3M Params), and efficient (~500 words/second on a Macbook GPU) neural nets. The interface is designed to be simple, just use spacy as usual and add the morpheme_segmenter pipeline to get segmentations!\n- [Demo Website](https://huggingface.co/spaces/Morphological-Segmentation/Morpheme_Segmentation_Demo)\n- [Demo Colab Notebook](https://colab.research.google.com/drive/1alisdnbCQCRhvdT9DhMnRNRuDLIZLZho#scrollTo=QB6uAXxWoffA)\n- [GitHub](https://github.com/TheWelcomer/MorphSeg)\n- [PyPI Package](https://pypi.org/project/morphseg/)\n- [Hugging Face Repository](https://huggingface.co/MorphSeg)",
+            "github": "TheWelcomer/MorphSeg",
+            "pip": "morphseg",
+            "code_example": [
+                "import morphseg",
+                "import spacy",
+                "",
+                "# Load your existing spaCy model or a blank NLP object",
+                "nlp = spacy.blank('en')",
+                "",
+                "# Add the morpheme segmenter to the pipeline",
+                "nlp.add_pipe('morpheme_segmenter')",
+                "",
+                "# Process the text",
+                "doc = nlp('The unbelievably disagreeable preprocessor unsuccessfully reprocessed the unquestionably irreversible decontextualization')",
+                "",
+                "# Access morphemes for each token",
+                "for token in doc:",
+                "    print(f'{token.text}: {token._.morphemes}')",
+                "",
+                "# Access morphemes for spans",
+                "span = doc[1:3]",
+                "print(f'Span morphemes: {span._.morphemes}')",
+                "",
+                "# Access morphemes for the entire document",
+                "print(f'All morphemes: {doc._.morphemes}') # [['the'], ['un', 'believe', 'able', 'ly'], ['dis', 'agree', 'able'], ['pre', 'process', 'or'], ['un', 'success', 'ful', 'ly'], ['re', 'process', 'ed'], ['the'], ['un', 'question', 'able', 'ly'], ['in', 'reverse', 'ible'], ['decontextual', 'ization']]"
+            ],
+            "code_language": "python",
+            "author": "Donald Winkelman",
+            "author_links": {
+                "github": "TheWelcomer",
+                "website": "https://dwink.dev"
+            },
+            "category": [
+                "pipeline",
+                "standalone"
+            ],
+            "tags": [
+                "morphology",
+                "segmentation",
+                "linguistics",
+                "multilingual"
+            ]
+        },
+        {
             "id": "TeNs",
             "title": "Temporal Expressions Normalization spaCy",
             "thumb": "https://github-production-user-asset-6210df.s3.amazonaws.com/40547052/433595900-fae3c9d9-7181-4d8b-8b49-e6dc4fca930b.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250414%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250414T235545Z&X-Amz-Expires=300&X-Amz-Signature=e21d3c06300ceb15fa1dadd7cb60081cc9f1b35e5a7bfd07f6e8b90dd7fad9d0&X-Amz-SignedHeaders=host",
