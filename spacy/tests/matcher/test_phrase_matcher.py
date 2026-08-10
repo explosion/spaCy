@@ -2,7 +2,7 @@ import warnings
 
 import pytest
 import srsly
-from mock import Mock
+from unittest.mock import Mock
 
 from spacy.lang.en import English
 from spacy.matcher import Matcher, PhraseMatcher
