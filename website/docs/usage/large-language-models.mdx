@@ -88,6 +88,13 @@ Create a new API key from openai.com or fetch an existing one, and ensure the
 keys are set as environmental variables. For more background information, see
 the [OpenAI](/api/large-language-models#gpt-3-5) section.
 
+The OpenAI model config also accepts an optional `endpoint` (full chat-completions
+URL) so you can point `spacy-llm` at any OpenAI-compatible multi-model gateway —
+for example DaoXE at `https://api.daoxe.com/v1/chat/completions` — using a key
+and model id issued by that endpoint. See the
+[spacy-llm OpenAI usage example](https://github.com/explosion/spacy-llm/tree/main/usage_examples/textcat_openai)
+for a concrete config snippet.
+
 Create a config file `config.cfg` containing at least the following (or see the
 full example
 [here](https://github.com/explosion/spacy-llm/tree/main/usage_examples/textcat_openai)):
