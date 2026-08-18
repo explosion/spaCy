@@ -23,9 +23,30 @@ jobs:
     # or, alternatively, upload to PyPI on every tag starting with 'v' (remove on: release above to use this)
     # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
-      - uses: robinraju/release-downloader@daf26c55d821e836577a15f77d86ddc078948b05  # v1
-        with:
-          tag: ${{ github.event.release.tag_name }}
-          fileName: '*'
-          out-file-path: 'dist'
+      # Use `gh release download` rather than a third-party downloader action:
+      # GitHub paginates release assets at 30 per page, and a downloader that
+      # only reads the first page silently drops the tail. That's how the
+      # cp314 wheels + sdist went missing from PyPI for v3.8.14/v3.8.15 while
+      # being present on the GitHub release (#13949). `gh` paginates correctly.
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          mkdir -p dist
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dist --pattern '*'
+      # Guard against a partial download ever reaching PyPI again: compare the
+      # number of files fetched to the asset count on the release.
+      - name: Verify all assets were downloaded
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          expected=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets | length')
+          actual=$(find dist -type f | wc -l | tr -d ' ')
+          echo "Release assets: $expected, downloaded files: $actual"
+          if [ "$expected" -ne "$actual" ]; then
+            echo "::error::Downloaded $actual files but release has $expected assets; aborting to avoid a partial PyPI upload."
+            exit 1
+          fi
       - uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # release/v1
