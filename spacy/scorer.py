@@ -238,6 +238,8 @@ class Scorer:
             gold_tags = set()
             missing_indices = set()
             for gold_i, token in enumerate(gold_doc):
+                if token.orth_.isspace():
+                    continue
                 value = getter(token, attr)
                 if value not in missing_values:
                     gold_tags.add((gold_i, getter(token, attr)))
@@ -290,6 +292,8 @@ class Scorer:
             gold_per_feat: Dict[str, Set] = {}
             missing_indices = set()
             for gold_i, token in enumerate(gold_doc):
+                if token.orth_.isspace():
+                    continue
                 value = getter(token, attr)
                 morph = gold_doc.vocab.strings[value]
                 if value not in missing_values and morph != Morphology.EMPTY_MORPH:
@@ -692,6 +696,8 @@ class Scorer:
             gold_deps = set()
             gold_deps_per_dep: Dict[str, Set] = {}
             for gold_i, token in enumerate(gold_doc):
+                if token.orth_.isspace():
+                    continue
                 dep = getter(token, attr)
                 head = head_getter(token, head_attr)
                 if dep not in missing_values:
