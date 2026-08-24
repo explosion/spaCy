@@ -194,7 +194,7 @@ model = chain(
 )
 ```
 
-but the standalone `Tok2VecTransformer` has an additional `split_trf_batch` chained inbetween the model
+but the standalone `Tok2VecTransformer` has an additional `split_trf_batch` chained in between the model
 and `trfs2arrays`:
 
 ```

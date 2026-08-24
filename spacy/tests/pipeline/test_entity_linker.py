@@ -1288,7 +1288,7 @@ def test_threshold(meet_threshold: bool, config: Dict[str, Any]):
     entity_linker.set_kb(create_kb)  # type: ignore
     nlp.initialize(get_examples=lambda: train_examples)
 
-    # Add a custom rule-based component to mimick NER
+    # Add a custom rule-based component to mimic NER
     ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
     ruler.add_patterns([{"label": "PERSON", "pattern": [{"LOWER": "mahler"}]}])  # type: ignore
     doc = nlp(text)

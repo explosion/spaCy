@@ -242,7 +242,7 @@ class JinjaToJS(object):
         )
 
         # It is assumed that this will be the absolute path to the template. It is used to work out
-        # related paths for inclues.
+        # related paths for includes.
         self.template_path = template_path
 
         if self.js_module_format not in JS_MODULE_FORMATS.keys():
@@ -283,7 +283,7 @@ class JinjaToJS(object):
         not yet been registered.
 
         Args:
-            dependency (str): Thet dependency that needs to be imported.
+            dependency (str): The dependency that needs to be imported.
 
         Returns:
             str or None

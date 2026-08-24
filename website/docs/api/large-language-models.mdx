@@ -590,7 +590,7 @@ candidate.
 protocol required by [`spacy.EntityLinker.v1`](#el-v1). The built-in candidate
 selector method allows loading existing knowledge bases in several ways, e. g.
 loading from a spaCy pipeline with a (not necessarily trained) entity linking
-component, and loading from a file describing the knowlege base as a .yaml file.
+component, and loading from a file describing the knowledge base as a .yaml file.
 Either way the loaded data will be converted to a spaCy `InMemoryLookupKB`
 instance. The KB's selection capabilities are used to select the most likely
 entity candidates for the specified mentions.
@@ -1103,7 +1103,7 @@ prompting.
 
 | Argument                    | Description                                                                                                                                                                   |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`                  | Optional function that generates examples for few-shot learning. Deafults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                |
+| `examples`                  | Optional function that generates examples for few-shot learning. Defaults to `None`. ~~Optional[Callable[[], Iterable[Any]]]~~                                                |
 | `parse_responses` (NEW)     | Callable for parsing LLM responses for this task. Defaults to the internal parsing method for this task. ~~Optional[TaskResponseParser[SpanCatTask]]~~                        |
 | `prompt_example_type` (NEW) | Type to use for fewshot examples. Defaults to `TextCatExample`. ~~Optional[Type[FewshotExample]]~~                                                                            |
 | `scorer` (NEW)              | Scorer function that evaluates the task performance on provided examples. Defaults to the metric used by spaCy. ~~Optional[Scorer]~~                                          |
@@ -1624,7 +1624,7 @@ the same documents at each run that keeps batches of documents stored on disk.
 | Argument             | Description                                                                                                                                      |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `path`               | Cache directory. If `None`, no caching is performed, and this component will act as a NoOp. Defaults to `None`. ~~Optional[Union[str, Path]]~~   |
-| `batch_size`         | Number of docs in one batch (file). Once a batch is full, it will be peristed to disk. Defaults to 64. ~~int~~                                   |
+| `batch_size`         | Number of docs in one batch (file). Once a batch is full, it will be persisted to disk. Defaults to 64. ~~int~~                                   |
 | `max_batches_in_mem` | Max. number of batches to hold in memory. Allows you to limit the effect on your memory if you're handling a lot of docs. Defaults to 4. ~~int~~ |
 
 When retrieving a document, the `BatchCache` will first figure out what batch
