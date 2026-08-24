@@ -377,7 +377,7 @@ cdef class DependencyMatcher:
 
     def _resolve_node_operator(self, cache, doc, node, operator): 
         """
-        Given a doc, a node (as a index in the doc) and a REL_OP operator
+        Given a doc, a node (as an index in the doc) and a REL_OP operator
         returns the list of nodes from the doc that belong to node+operator. 
         """
         key = (node, operator)
