@@ -1,15 +1,13 @@
 import pytest
 
-from spacy.lang.es import Spanish
 from spacy.lang.es.lex_attrs import like_num
 
 
 @pytest.mark.issue(3803)
-def test_issue3803():
+@pytest.mark.parametrize("text", ["2 dos 1000 mil 12 doce"])
+def test_issue3803(es_tokenizer, text):
     """Test that spanish num-like tokens have True for like_num attribute."""
-    nlp = Spanish()
-    text = "2 dos 1000 mil 12 doce"
-    doc = nlp(text)
+    doc = es_tokenizer(text)
 
     assert [t.like_num for t in doc] == [True, True, True, True, True, True]
 
@@ -62,10 +60,17 @@ def test_es_tokenizer_handles_cnts(es_tokenizer, text, length):
         ("1/2", True),
     ],
 )
-def test_lex_attrs_like_number(es_tokenizer, text, match):
+def test_es_lex_attrs_like_number(es_tokenizer, text, match):
     tokens = es_tokenizer(text)
     assert len(tokens) == 1
     assert tokens[0].like_num == match
+
+
+@pytest.mark.parametrize(
+    "word", ["tercero", "décimos", "Millonésimo", "100.º", "Centésima", "9ª", "primer"]
+)
+def test_es_lex_attrs_like_number_for_ordinal(word):
+    assert like_num(word)
 
 
 @pytest.mark.parametrize("word", ["once"])

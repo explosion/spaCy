@@ -3,7 +3,9 @@ from ...attrs import LIKE_NUM
 _num_words = [
     "zero",
     "um",
+    "uma",
     "dois",
+    "duas",
     "três",
     "tres",
     "quatro",
@@ -37,13 +39,21 @@ _num_words = [
     "cem",
     "cento",
     "duzentos",
+    "duzentas",
     "trezentos",
+    "trezentas",
     "quatrocentos",
+    "quatrocentas",
     "quinhentos",
-    "seicentos",
+    "quinhentas",
+    "seiscentos",
+    "seiscentas",
     "setecentos",
+    "setecentas",
     "oitocentos",
+    "oitocentas",
     "novecentos",
+    "novecentas",
     "mil",
     "milhão",
     "milhao",
@@ -63,38 +73,68 @@ _num_words = [
     "quadrilhoes",
 ]
 
-
+# Masculine and feminine forms
 _ordinal_words = [
     "primeiro",
+    "primeira",
     "segundo",
+    "segunda",
     "terceiro",
+    "terceira",
     "quarto",
+    "quarta",
     "quinto",
+    "quinta",
     "sexto",
+    "sexta",
     "sétimo",
+    "séptima",
     "oitavo",
+    "oitava",
     "nono",
+    "nona",
     "décimo",
+    "décima",
     "vigésimo",
+    "vigésima",
     "trigésimo",
+    "trigésima",
     "quadragésimo",
+    "quadragésima",
     "quinquagésimo",
+    "quinquagésima",
     "sexagésimo",
+    "sexagésima",
     "septuagésimo",
+    "septuagésima",
     "octogésimo",
+    "octogésima",
     "nonagésimo",
+    "nonagésima",
     "centésimo",
+    "centésima",
     "ducentésimo",
+    "ducentésima",
     "trecentésimo",
+    "trecentésima",
     "quadringentésimo",
+    "quadringentésima",
     "quingentésimo",
+    "quingentésima",
     "sexcentésimo",
+    "sexcentésima",
     "septingentésimo",
+    "septingentésima",
     "octingentésimo",
+    "octingentésima",
     "nongentésimo",
+    "nongentésima",
     "milésimo",
+    "milésima",
     "milionésimo",
+    "milionésima",
     "bilionésimo",
+    "bilionésima",
 ]
 
 
@@ -108,9 +148,14 @@ def like_num(text):
         num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
-    if text.lower() in _num_words:
+    text_lower = text.lower()
+    if text_lower in _num_words:
         return True
-    if text.lower() in _ordinal_words:
+    # Check ordinal number
+    if text_lower in _ordinal_words:
+        return True
+    # Check plural ordinal number
+    if text_lower[:-1] in _ordinal_words and text_lower.endswith("s"):
         return True
     return False
 

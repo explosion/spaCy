@@ -45,38 +45,71 @@ _num_words = [
     "trillón",
 ]
 
-
+# Masculine, feminine, and apocopation forms
 _ordinal_words = [
+    "primer",
     "primero",
+    "primera",
     "segundo",
+    "segunda",
+    "tercer",
     "tercero",
+    "tercera",
     "cuarto",
+    "cuarta",
     "quinto",
+    "quinta",
     "sexto",
+    "sexta",
     "séptimo",
+    "séptima",
     "octavo",
+    "octava",
     "noveno",
+    "novena",
     "décimo",
+    "décima",
     "undécimo",
+    "undécima",
     "duodécimo",
+    "duodécima",
     "decimotercero",
+    "decimotercera",
     "decimocuarto",
+    "decimocuarta",
     "decimoquinto",
+    "decimoquinta",
     "decimosexto",
+    "decimosexta",
     "decimoséptimo",
+    "decimoséptima",
     "decimoctavo",
+    "decimoctava",
     "decimonoveno",
+    "decimonovena",
     "vigésimo",
+    "vigésima",
     "trigésimo",
+    "trigésima",
     "cuadragésimo",
+    "cuadragésima",
     "quincuagésimo",
+    "quincuagésima",
     "sexagésimo",
+    "sexagésima",
     "septuagésimo",
+    "septuagésima",
+    "octogésimo",
     "octogésima",
+    "nonagésimo",
     "nonagésima",
+    "centésimo",
     "centésima",
+    "milésimo",
     "milésima",
+    "millonésimo",
     "millonésima",
+    "billonésimo",
     "billonésima",
 ]
 
@@ -84,7 +117,7 @@ _ordinal_words = [
 def like_num(text):
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
-    text = text.replace(",", "").replace(".", "")
+    text = text.replace(",", "").replace(".", "").replace("º", "").replace("ª", "")
     if text.isdigit():
         return True
     if text.count("/") == 1:
@@ -96,6 +129,9 @@ def like_num(text):
         return True
     # Check ordinal number
     if text_lower in _ordinal_words:
+        return True
+    # Check plural ordinal number
+    if text_lower[:-1] in _ordinal_words and text_lower.endswith("s"):
         return True
     return False
 
