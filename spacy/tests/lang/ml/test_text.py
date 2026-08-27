@@ -20,3 +20,10 @@ def test_ml_tokenizer_handles_long_text(ml_tokenizer):
 def test_ml_tokenizer_handles_cnts(ml_tokenizer, text, length):
     tokens = ml_tokenizer(text)
     assert len(tokens) == length
+
+
+def test_ml_tokenizer_splits_trailing_period(ml_tokenizer):
+    # Regression test for #12898: a sentence-terminal period must be split off the
+    # final Malayalam word instead of staying attached to it.
+    tokens = ml_tokenizer("ഭാഷയാണ് മലയാളം.")
+    assert [t.text for t in tokens] == ["ഭാഷയാണ്", "മലയാളം", "."]
