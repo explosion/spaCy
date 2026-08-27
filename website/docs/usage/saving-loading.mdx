@@ -14,11 +14,23 @@ menu:
 
 ### Serializing the pipeline {id="pipeline"}
 
-When serializing the pipeline, keep in mind that this will only save out the
-**binary data for the individual components** to allow spaCy to restore them –
-not the entire objects. This is a good thing, because it makes serialization
-safe. But it also means that you have to take care of storing the config, which
-contains the pipeline configuration and all the relevant settings.
+The simplest way to save a pipeline is [`nlp.to_disk`](/api/language#to_disk),
+which stores its config, metadata and component data in a directory. You can
+then pass that directory to [`spacy.load`](/api/top-level#spacy.load) to restore
+the pipeline:
+
+```python {title="Save to disk"}
+nlp.to_disk("/path/to/pipeline")
+```
+
+```python {title="Load from disk"}
+nlp = spacy.load("/path/to/pipeline")
+```
+
+For in-memory serialization, [`nlp.to_bytes`](/api/language#to_bytes) only saves
+the **binary data for the individual components**, not the entire objects. You
+therefore need to store the config separately so spaCy can recreate the pipeline
+before loading the binary data.
 
 > #### Saving the meta and config
 >
