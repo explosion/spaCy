@@ -242,6 +242,39 @@ def test_minor_version(a1, a2, b1, b2, is_match):
 
 
 @pytest.mark.parametrize(
+    "version,expected",
+    [
+        ("1.2.3", ">=1.2.3,<1.3.0"),
+        ("3.2.1", ">=3.2.1,<3.3.0"),
+    ],
+)
+def test_get_minor_version_range(version, expected):
+    assert util.get_minor_version_range(version) == expected
+
+
+@pytest.mark.parametrize(
+    "version,expected",
+    [
+        ("3.0.0.dev1", "3.0.0"),
+        ("2.1.0", "2.1.0"),
+    ],
+)
+def test_get_base_version(version, expected):
+    assert util.get_base_version(version) == expected
+
+
+@pytest.mark.parametrize(
+    "requirement,expected",
+    [
+        ("spacy>=1.2.3", ("spacy", ">=1.2.3")),
+        ("numpy", ("numpy", "")),
+    ],
+)
+def test_split_requirement(requirement, expected):
+    assert util.split_requirement(requirement) == expected
+
+
+@pytest.mark.parametrize(
     "dot_notation,expected",
     [
         (
