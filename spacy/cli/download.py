@@ -180,9 +180,11 @@ def download_model(
     base_url = custom_url if custom_url else about.__download_url__
     # urljoin requires that the path ends with /, or the last path part will be dropped
     if not base_url.endswith("/"):
-        base_url = about.__download_url__ + "/"
+        base_url = base_url + "/"
     download_url = urljoin(base_url, filename)
-    if not download_url.startswith(about.__download_url__):
+    # Only enforce the GitHub-origin guard when the user did not opt into a
+    # custom URL. When --url is passed the user has explicitly chosen a source.
+    if custom_url is None and not download_url.startswith(about.__download_url__):
         raise ValueError(f"Download from {filename} rejected. Was it a relative path?")
     pip_args = list(user_pip_args) if user_pip_args is not None else []
     cmd = _get_pip_install_cmd() + pip_args + [download_url]
