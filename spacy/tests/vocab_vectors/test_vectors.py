@@ -376,6 +376,48 @@ def test_vocab_prune_vectors():
     assert_allclose(float(similarity), cosine, atol=1e-4, rtol=1e-3)
 
 
+def test_vocab_prune_vectors_duplicate_rows():
+    # Real vector tables sometimes alias one key onto another key's row
+    # (e.g. for spelling or casing variants) instead of duplicating the
+    # vector data. Pruning must not waste a kept slot duplicating such a
+    # shared row, and the aliased keys must still resolve to their
+    # partner's vector afterwards, rather than being lost or sent through
+    # the nearest-neighbour remap on their own.
+    vocab = Vocab(vectors_name="test_vocab_prune_vectors_duplicate_rows")
+    _ = vocab["cat"]  # noqa: F841
+    _ = vocab["kitty"]  # noqa: F841
+    _ = vocab["dog"]  # noqa: F841
+    _ = vocab["puppy"]  # noqa: F841
+    _ = vocab["extra"]  # noqa: F841
+    data = OPS.xp.ndarray((3, 3), dtype="f")
+    data[0] = OPS.asarray([1.0, 1.2, 1.1])
+    data[1] = OPS.asarray([0.3, 1.3, 1.0])
+    data[2] = OPS.asarray([0.9, 1.22, 1.05])
+    vocab.set_vector("cat", data[0])
+    vocab.set_vector("dog", data[1])
+    vocab.set_vector("extra", data[2])
+    vocab.vectors.add(
+        vocab.strings["kitty"], row=vocab.vectors.key2row[vocab.strings["cat"]]
+    )
+    vocab.vectors.add(
+        vocab.strings["puppy"], row=vocab.vectors.key2row[vocab.strings["dog"]]
+    )
+    assert len(set(vocab.vectors.key2row.values())) == 3
+
+    remap = vocab.prune_vectors(2, batch_size=2)
+
+    # Only "extra" lacked a partner sharing its row, so it's the only one
+    # without a surviving row of its own once pruned down to 2.
+    assert vocab.vectors.shape[0] == 2
+    assert list(remap.keys()) == ["extra"]
+    neighbour, similarity = remap["extra"]
+    assert neighbour in ("cat", "kitty"), remap
+    cosine = get_cosine(data[0], data[2])
+    assert_allclose(float(similarity), cosine, atol=1e-4, rtol=1e-3)
+    assert list(vocab["kitty"].vector) == list(vocab["cat"].vector)
+    assert list(vocab["puppy"].vector) == list(vocab["dog"].vector)
+
+
 def test_vectors_serialize():
     data = OPS.asarray([[4, 2, 2, 2], [4, 2, 2, 2], [1, 1, 1, 1]], dtype="f")
     v = Vectors(data=data, keys=["A", "B", "C"])
