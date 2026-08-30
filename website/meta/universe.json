@@ -4530,16 +4530,17 @@
             "code_example": [
                 "import medspacy",
                 "from medspacy.ner import TargetRule",
+                "from medspacy.visualization import visualize_ent",
                 "",
                 "nlp = medspacy.load()",
                 "print(nlp.pipe_names)",
                 "",
-                "nlp.get_pipe('target_matcher').add([TargetRule('stroke', 'CONDITION'), TargetRule('diabetes', 'CONDITION'), TargetRule('pna', 'CONDITION')])",
+                "nlp.get_pipe('medspacy_target_matcher').add([TargetRule('stroke', 'CONDITION'), TargetRule('diabetes', 'CONDITION'), TargetRule('pna', 'CONDITION')])",
                 "doc = nlp('Patient has hx of stroke. Mother diagnosed with diabetes. No evidence of pna.')",
                 "",
                 "for ent in doc.ents:",
                 "    print(ent, ent._.is_negated, ent._.is_family, ent._.is_historical)",
-                "medspacy.visualization.visualize_ent(doc)"
+                "visualize_ent(doc)"
             ],
             "category": [
                 "biomedical",
