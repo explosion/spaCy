@@ -427,20 +427,49 @@ cdef class Vocab:
             if value in self.vectors.key2row:
                 priority.append((-lex.prob, self.vectors.key2row[value], value))
         priority.sort()
-        indices = xp.asarray([i for (prob, i, key) in priority], dtype="uint64")
-        keys = xp.asarray([key for (prob, i, key) in priority], dtype="uint64")
+        # A single row can be shared by more than one key, for example when
+        # Vectors.add(key, row=...) has aliased one key to another's vector.
+        # Collapse the priority list down to one entry per row (keeping the
+        # highest-priority key as that row's representative) before deciding
+        # what to keep or discard. Without this, a shared row can either end
+        # up duplicated into `keep`, wasting a slot that could have held a
+        # distinct vector, or be split across `keep` and `toss`, sending a
+        # key through the nearest-neighbour search below even though its
+        # exact vector is still present among the kept rows.
+        seen_rows = set()
+        deduped = []
+        aliases = []  # (row, alias_key) pairs to restore after pruning
+        for prob, row, key in priority:
+            if row in seen_rows:
+                aliases.append((row, key))
+                continue
+            seen_rows.add(row)
+            deduped.append((prob, row, key))
+        indices = xp.asarray([i for (prob, i, key) in deduped], dtype="uint64")
+        keys = xp.asarray([key for (prob, i, key) in deduped], dtype="uint64")
         keep = xp.ascontiguousarray(self.vectors.data[indices[:nr_row]])
         toss = xp.ascontiguousarray(self.vectors.data[indices[nr_row:]])
         self.vectors = Vectors(strings=self.strings, data=keep, keys=keys[:nr_row], name=self.vectors.name)
         syn_keys, syn_rows, scores = self.vectors.most_similar(toss, batch_size=batch_size)
         syn_keys = ops.to_numpy(syn_keys)
         remap = {}
+        tossed_keys = set()
         for i, key in enumerate(ops.to_numpy(keys[nr_row:])):
             self.vectors.add(key, row=syn_rows[i][0])
             word = self.strings[key]
             synonym = self.strings[syn_keys[i][0]]
             score = scores[i][0]
             remap[word] = (synonym, score)
+            tossed_keys.add(int(key))
+        # Every alias key shares its row's representative key's fate exactly,
+        # whether that row was kept in place or remapped to a synonym above,
+        # so just point it at wherever the representative key ended up.
+        row_to_key = {row: key for (_prob, row, key) in deduped}
+        for row, alias_key in aliases:
+            rep_key = int(row_to_key[row])
+            self.vectors.add(int(alias_key), row=self.vectors.key2row[rep_key])
+            if rep_key in tossed_keys:
+                remap[self.strings[int(alias_key)]] = remap[self.strings[rep_key]]
         return remap
 
     def get_vector(self, orth):
