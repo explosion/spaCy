@@ -98,6 +98,26 @@ def test_ja_tokenizer_extra_spaces(ja_tokenizer):
     assert tokens[1].orth_ == "  "
 
 
+@pytest.mark.issue(13928)
+def test_ja_tokenizer_keeps_urls(ja_tokenizer):
+    text = "詳細はこちらのサイトをご覧ください：https://example.com/jp"
+    doc = ja_tokenizer(text)
+    assert [token.text for token in doc] == [
+        "詳細",
+        "は",
+        "こちら",
+        "の",
+        "サイト",
+        "を",
+        "ご覧",
+        "ください",
+        "：",
+        "https://example.com/jp",
+    ]
+    assert doc.text_with_ws == text
+    assert doc[-1].like_url
+
+
 @pytest.mark.parametrize("text", NAUGHTY_STRINGS)
 def test_ja_tokenizer_naughty_strings(ja_tokenizer, text):
     tokens = ja_tokenizer(text)
