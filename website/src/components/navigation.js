@@ -67,7 +67,6 @@ export default function Navigation({ title, items = [], section, search, alert, 
                         <GitHubButton
                             href={github()}
                             data-size="large"
-                            data-show-count="true"
                             aria-label="Star spaCy on GitHub"
                         />
                     </li>
