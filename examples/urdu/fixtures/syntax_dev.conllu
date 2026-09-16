@@ -1,0 +1,7 @@
+# sent_id = syntax-dev-001
+# text = وہ کتاب پڑھتا ہے۔
+1	وہ	وہ	PRON	PRP	Case=Nom|Number=Sing|Person=3	3	nsubj	_	_
+2	کتاب	کتاب	NOUN	NN	Case=Nom|Gender=Fem|Number=Sing	3	obj	_	_
+3	پڑھتا	پڑھنا	VERB	VM	Aspect=Imp|Gender=Masc|Number=Sing|Person=3|VerbForm=Part	0	root	_	_
+4	ہے	ہے	AUX	VAUX	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	3	aux	_	SpaceAfter=No
+5	۔	۔	PUNCT	SYM	_	3	punct	_	_

@@ -1,0 +1,2 @@
+{"id": "news-004", "source_id": "article-d", "text": "وزیر اعظم نے اقوام متحدہ میں تقریر کی۔", "entities": [{"start": 0, "end": 9, "label": "PER"}, {"start": 13, "end": 24, "label": "ORG"}]}
+{"id": "news-005", "source_id": "article-e", "text": "کراچی پاکستان کا سب سے بڑا شہر ہے۔", "entities": [{"start": 0, "end": 5, "label": "LOC"}, {"start": 6, "end": 13, "label": "LOC"}]}
