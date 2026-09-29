@@ -52,6 +52,14 @@ cdef class Morphology:
         if not isinstance(features, dict):
             warnings.warn(Warnings.W100.format(feature=features))
             features = {}
+        # the hash key for the tag is either the hash of the normalized UFEATS
+        # string or the hash of an empty placeholder; look it up before
+        # allocating so that adding an existing analysis doesn't leak memory
+        norm_feats_string = self.normalize_features(features)
+        cdef hash_t tag_key = self.strings.add(norm_feats_string, allow_transient=False)
+        tag_ptr = <MorphAnalysisC*>self.tags.get(tag_key)
+        if tag_ptr != NULL:
+            return tag_ptr.key
         string_features = {self.strings.as_string(field): self.strings.as_string(values) for field, values in features.items()}
         # intified ("Field", "Field=Value") pairs
         field_feature_pairs = []
@@ -67,10 +75,7 @@ cdef class Morphology:
                     self.strings[field_sep_value]
                 ))
         cdef MorphAnalysisC tag = self.create_morph_tag(field_feature_pairs)
-        # the hash key for the tag is either the hash of the normalized UFEATS
-        # string or the hash of an empty placeholder
-        norm_feats_string = self.normalize_features(features)
-        tag.key = self.strings.add(norm_feats_string, allow_transient=False)
+        tag.key = tag_key
         self.insert(tag)
         return tag.key
 
