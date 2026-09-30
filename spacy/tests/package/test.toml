@@ -37,11 +37,9 @@ test-extras = []
 
 container-engine = "docker"
 
-# numpy >=2.3 only ships manylinux_2_28 wheels, so the build container must
-# be at least that; i686 keeps manylinux2014 (no 2_28 image) but isn't built
-manylinux-x86_64-image = "manylinux_2_28"
+manylinux-x86_64-image = "manylinux2014"
 manylinux-i686-image = "manylinux2014"
-manylinux-aarch64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux2014"
 manylinux-ppc64le-image = "manylinux2014"
 manylinux-s390x-image = "manylinux2014"
 manylinux-pypy_x86_64-image = "manylinux2014"
