@@ -1,6 +1,8 @@
+import time
+
 import pytest
 
-from spacy.lang.tokenizer_exceptions import BASE_EXCEPTIONS
+from spacy.lang.tokenizer_exceptions import BASE_EXCEPTIONS, URL_MATCH
 
 URLS_BASIC = [
     "http://www.nytimes.com/2016/04/20/us/politics/new-york-primary-preview.html?hp&action=click&pgtype=Homepage&clickSource=story-heading&module=a-lede-package-region&region=top-news&WT.nav=top-news&_r=0",
@@ -203,3 +205,19 @@ def test_tokenizer_handles_two_suffix_url(tokenizer, suffix1, suffix2, url):
         assert tokens[0].text == url
         assert tokens[1].text == suffix1
         assert tokens[2].text == suffix2
+
+
+@pytest.mark.parametrize(
+    "pathological_url",
+    [
+        "a:" * 20000 + "!",
+        ("aa://" * 20000) + "!",
+    ],
+    ids=["colon-runs", "scheme-runs"],
+)
+def test_url_match_auth_group_is_linear(pathological_url):
+    # regression test to prevent O(n**2) regex matches
+    start = time.perf_counter()
+    assert URL_MATCH(pathological_url) is None
+    elapsed = time.perf_counter() - start
+    assert elapsed < 0.3
