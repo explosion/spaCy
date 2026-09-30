@@ -48,3 +48,21 @@ def test_morphology_tags_hash_independent_of_order(morphology):
     tag1 = morphology.add({"Case": "gen", "Number": "sing"})
     tag2 = morphology.add({"Number": "sing", "Case": "gen"})
     assert tag1 == tag2
+
+
+@pytest.mark.issue(13684)
+@pytest.mark.parametrize(
+    "features",
+    [
+        {"Case": "gen", "Number": "sing"},
+        {"Number": "sing,plur"},
+        {},
+    ],
+)
+def test_issue13684(morphology, features):
+    """Adding an existing analysis from a dict should not allocate memory."""
+    key = morphology.add(features)
+    mem_size = morphology.mem.size
+    for _ in range(10):
+        assert morphology.add(features) == key
+    assert morphology.mem.size == mem_size
