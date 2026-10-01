@@ -50,9 +50,51 @@ class KoreanTokenizer(DummyTokenizer):
 
     def __call__(self, text: str) -> Doc:
         dtokens = list(self.detailed_tokens(text))
-        surfaces = [dt["surface"] for dt in dtokens]
-        doc = Doc(self.vocab, words=surfaces, spaces=list(check_spaces(text, surfaces)))
-        for token, dtoken in zip(doc, dtokens):
+        # Reconstruct the document while preserving the original whitespace
+        # (runs of spaces, newlines, tabs and leading/trailing whitespace).
+        # mecab only returns morpheme surfaces, so any whitespace between them
+        # is re-attached here instead of being collapsed to a single space.
+        words: list = []
+        spaces: list = []
+        full_tags: list = []
+        token_dtokens: list = []
+        offset = 0
+        for dtoken in dtokens:
+            surface = dtoken["surface"]
+            idx = text.find(surface, offset)
+            if idx < 0:
+                idx = offset
+            if idx > offset:
+                gap = text[offset:idx]
+                if gap == " " and words:
+                    # a single space is represented with the space flag
+                    spaces[-1] = True
+                else:
+                    # any other whitespace is kept as its own token so that
+                    # doc.text == text and character offsets stay aligned
+                    words.append(gap)
+                    spaces.append(False)
+                    full_tags.append("")
+                    token_dtokens.append(None)
+            words.append(surface)
+            spaces.append(False)
+            full_tags.append(dtoken["tag"])
+            token_dtokens.append(dtoken)
+            offset = idx + len(surface)
+        if offset < len(text):
+            tail = text[offset:]
+            if tail == " " and words:
+                spaces[-1] = True
+            else:
+                words.append(tail)
+                spaces.append(False)
+                full_tags.append("")
+                token_dtokens.append(None)
+
+        doc = Doc(self.vocab, words=words, spaces=spaces)
+        for token, dtoken in zip(doc, token_dtokens):
+            if dtoken is None:
+                continue  # whitespace token: keep the default tag/pos/lemma
             first_tag, sep, eomi_tags = dtoken["tag"].partition("+")
             token.tag_ = first_tag  # stem(어간) or pre-final(선어말 어미)
             if token.tag_ in TAG_MAP:
@@ -60,7 +102,7 @@ class KoreanTokenizer(DummyTokenizer):
             else:
                 token.pos = X
             token.lemma_ = dtoken["lemma"]
-        doc.user_data["full_tags"] = [dt["tag"] for dt in dtokens]
+        doc.user_data["full_tags"] = full_tags
         return doc
 
     def detailed_tokens(self, text: str) -> Iterator[Dict[str, Any]]:
@@ -107,19 +149,6 @@ def try_mecab_import() -> None:
             "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
             "and [natto-py](https://github.com/buruzaemon/natto-py)"
         ) from None
-
-
-def check_spaces(text, tokens):
-    prev_end = -1
-    start = 0
-    for token in tokens:
-        idx = text.find(token, start)
-        if prev_end > 0:
-            yield prev_end != idx
-        prev_end = idx + len(token)
-        start = prev_end
-    if start > 0:
-        yield False
 
 
 __all__ = ["Korean"]

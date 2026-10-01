@@ -1,4 +1,9 @@
+import re
+
 import pytest
+
+from spacy.lang.ko import KoreanTokenizer
+from spacy.vocab import Vocab
 
 # fmt: off
 TOKENIZER_TESTS = [("서울 타워 근처에 살고 있습니다.", "서울 타워 근처 에 살 고 있 습니다 ."),
@@ -24,6 +29,29 @@ POS_TESTS = [("서울 타워 근처에 살고 있습니다.",
 def test_ko_tokenizer(ko_tokenizer, text, expected_tokens):
     tokens = [token.text for token in ko_tokenizer(text)]
     assert tokens == expected_tokens.split()
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "보험금을  지급한다.\n\n면책기간\t특약",  # runs of spaces, newlines, a tab
+        "  앞뒤 공백 있음  ",  # leading / trailing whitespace
+        "서울 타워 근처에 살고 있습니다.",  # single spaces (unchanged)
+        "보험약관",  # no whitespace
+    ],
+)
+def test_ko_tokenizer_preserves_whitespace(text):
+    def detailed_tokens(value):
+        return (
+            {"surface": match.group(), "lemma": match.group(), "tag": "NNG"}
+            for match in re.finditer(r"\S+", value)
+        )
+
+    tokenizer = KoreanTokenizer.__new__(KoreanTokenizer)
+    tokenizer.vocab = Vocab()
+    tokenizer.detailed_tokens = detailed_tokens
+
+    assert tokenizer(text).text == text
 
 
 @pytest.mark.parametrize("text,expected_tags", TAG_TESTS)
