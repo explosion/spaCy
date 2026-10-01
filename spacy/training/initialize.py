@@ -79,8 +79,15 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     # defined before initializing further
     nlp._link_components()
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
+        init_max_examples = T.get("init_max_examples")
+        if init_max_examples is None and "initialize" in config:
+            init_max_examples = config.get("initialize", {}).get("init_max_examples")
         if T["max_epochs"] == -1:
-            sample_size = 100
+            sample_size = (
+                init_max_examples
+                if init_max_examples is not None and init_max_examples > 0
+                else 100
+            )
             logger.debug(
                 "Due to streamed train corpus, using only first %s examples for initialization. "
                 "If necessary, provide all labels in [initialize]. "
@@ -89,6 +96,14 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
             )
             nlp.initialize(
                 lambda: islice(train_corpus(nlp), sample_size), sgd=optimizer
+            )
+        elif init_max_examples is not None and init_max_examples > 0:
+            logger.info(
+                "Using first %s examples of train corpus for initialization.",
+                init_max_examples,
+            )
+            nlp.initialize(
+                lambda: islice(train_corpus(nlp), init_max_examples), sgd=optimizer
             )
         else:
             nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
