@@ -293,6 +293,11 @@ def lg_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def lij_tokenizer():
+    return get_lang_class("lij")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def lt_tokenizer():
     return get_lang_class("lt")().tokenizer
 
