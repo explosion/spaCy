@@ -293,6 +293,36 @@ def test_tag_score(tagged_doc):
     assert results["morphologizer"]["morph_acc"] == approx(0.8)
 
 
+@pytest.mark.issue(13739)
+def test_issue13739(en_vocab):
+    reference = Doc(
+        en_vocab,
+        words=["hello", " ", "world"],
+        spaces=[False, False, False],
+        tags=["A", "SPACE", "B"],
+        pos=["NOUN", "SPACE", "NOUN"],
+        morphs=["Number=Sing", "Space=Yes", "Number=Sing"],
+        heads=[0, 0, 0],
+        deps=["ROOT", "dep", "dep"],
+    )
+    predicted = reference.copy()
+    predicted[1].tag_ = "WRONG"
+    predicted[1].pos_ = "VERB"
+    predicted[1].set_morph("Number=Plur")
+    predicted[1].dep_ = "WRONG"
+    scores = Scorer().score([Example(predicted, reference)])
+
+    for key in [
+        "tag_acc",
+        "pos_acc",
+        "morph_acc",
+        "morph_micro_f",
+        "dep_uas",
+        "dep_las",
+    ]:
+        assert scores[key] == 1.0
+
+
 def test_partial_annotation(en_tokenizer):
     pred_doc = en_tokenizer("a b c d e")
     pred_doc[0].tag_ = "A"
