@@ -192,6 +192,7 @@ cdef class Tokenizer:
                     # we don't have to create the slice when we hit the cache.
                     span = string[start:i]
                     key = hash_string(span)
+                    has_special = 0
                     if not self._try_specials_and_cache(key, doc, &has_special, with_special_cases):
                         self._tokenize(doc, span, key, &has_special, with_special_cases)
                 if uc == ' ':
@@ -204,6 +205,7 @@ cdef class Tokenizer:
         if start < i:
             span = string[start:]
             key = hash_string(span)
+            has_special = 0
             if not self._try_specials_and_cache(key, doc, &has_special, with_special_cases):
                 self._tokenize(doc, span, key, &has_special, with_special_cases)
             doc.c[doc.length - 1].spacy = string[-1] == " " and not in_ws
