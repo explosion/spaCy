@@ -158,18 +158,20 @@ def test_init_nlp_default_unbounded_sample():
 
 
 @pytest.mark.issue(13804)
-def test_init_nlp_initialize_section_override():
-    """Verify that init_max_examples configured under [initialize] is respected."""
+@pytest.mark.parametrize("training_val", ["null", "0"])
+def test_init_nlp_initialize_section_override(training_val):
+    """Verify that init_max_examples under [initialize] is respected when [training] is null or 0."""
     train_corpus = CountingCorpus(total_examples=40)
 
-    @spacy.registry.readers("test_counting_train_corpus_init_section")
+    @spacy.registry.readers(f"test_counting_train_corpus_init_section_{training_val}")
     def create_train_corpus(total_examples: int = 40):
         return train_corpus
 
     config_str = SAMPLE_LIMIT_CONFIG.replace(
-        "test_counting_train_corpus", "test_counting_train_corpus_init_section"
+        "test_counting_train_corpus",
+        f"test_counting_train_corpus_init_section_{training_val}",
     ).replace(
-        "init_max_examples = 5", "init_max_examples = null"
+        "init_max_examples = 5", f"init_max_examples = {training_val}"
     ).replace(
         "[initialize]\nvectors = ${paths.vectors}",
         "[initialize]\ninit_max_examples = 7\nvectors = ${paths.vectors}",

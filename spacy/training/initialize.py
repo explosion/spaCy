@@ -80,7 +80,7 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     nlp._link_components()
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         init_max_examples = T.get("init_max_examples")
-        if init_max_examples is None and "initialize" in config:
+        if not init_max_examples and "initialize" in config:
             init_max_examples = config.get("initialize", {}).get("init_max_examples")
         if T["max_epochs"] == -1:
             sample_size = (
