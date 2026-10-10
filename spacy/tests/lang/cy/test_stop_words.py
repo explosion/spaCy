@@ -19,8 +19,16 @@ def test_cy_stop_words_exclude_content_words(word):
     assert word not in STOP_WORDS
 
 
-def test_cy_tokenizer_marks_stop_words(cy_tokenizer):
-    tokens = cy_tokenizer("Mae'r gath yn cysgu ar y mat")
+@pytest.mark.parametrize("word", ["'r", "'n", "’r", "’n"])
+def test_cy_stop_words_cover_apostrophe_variants(word):
+    assert word in STOP_WORDS
+
+
+@pytest.mark.parametrize(
+    "text", ["Mae'r gath yn cysgu ar y mat", "Mae’r gath yn cysgu ar y mat"]
+)
+def test_cy_tokenizer_marks_stop_words(cy_tokenizer, text):
+    tokens = cy_tokenizer(text)
     assert [t.is_stop for t in tokens] == [
         True,
         True,

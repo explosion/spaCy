@@ -98,3 +98,7 @@ PRONS = {
 }
 
 STOP_WORDS = set(ADPS | ADVS | AUXS | AMBIGS | CONJS | DETS | NOUNS | PARTS | PRONS)
+
+# The tokenizer splits clitics written with a curly apostrophe like the
+# straight forms, so both spellings are stop words.
+STOP_WORDS.update({word.replace("'", "’") for word in STOP_WORDS if "'" in word})
