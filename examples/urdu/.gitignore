@@ -1,0 +1,10 @@
+# Generated experiment artefacts. Keep licensed corpora and weights out of git.
+/assets/
+/corpus/
+/training/
+/packages/
+/metrics/
+*.spacy
+*.whl
+*.tar.gz
+__pycache__/

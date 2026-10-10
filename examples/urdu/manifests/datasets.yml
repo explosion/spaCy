@@ -1,0 +1,47 @@
+datasets:
+  - name: UD Urdu-UDTB
+    tasks: [syntax, pos, morph, lemma, dependencies]
+    script: Arabic (Urdu)
+    url: https://github.com/UniversalDependencies/UD_Urdu-UDTB
+    docs: https://universaldependencies.org/treebanks/ur_udtb/index.html
+    version: "UD v2.x current master; pin a release tag before training"
+    license: CC BY-NC-SA 4.0
+    attribution: >
+      Riyaz Ahmad Bhat, Daniel Zeman, and the Hindi/Urdu Treebank Project
+      (IIIT-H). Cite Bhat et al., The Hindi/Urdu Treebank Project, and
+      Palmer et al. 2009 as required by the treebank README.
+    splits: "publisher train/dev/test files; 5130 sentences / 138077 tokens reported on the UD page"
+    domain: news
+    ner_labels: false
+    checksum: "not fetched in this checkout; record sha256 of the exact CoNLL-U files before a real run"
+    limitations:
+      - Non-commercial ShareAlike terms. Restricted research track unless additional rights are obtained.
+      - Compound forms such as بات_چیت use underscores; converted text is reconstructed, not raw offsets.
+      - No NER annotation. Do not treat syntax documents as all-O NER examples.
+      - XPOS is native/manual; UPOS/FEATS/deps/lemmas are converted from the original scheme.
+
+  - name: WikiANN (ur)
+    tasks: [ner]
+    script: Arabic (Urdu)
+    url: https://huggingface.co/datasets/unimelb-nlp/wikiann
+    version: verify the Hub revision before download
+    license: >
+      Dataset card must be re-checked. A repository license is not evidence
+      for Wikipedia dump rights or silver annotation quality.
+    attribution: Rahimi, Li, and Cohn; Pan et al. WikiANN / WikiNER
+    splits: train/dev/test as published on the Hub
+    domain: Wikipedia
+    labels: [PER, ORG, LOC]
+    checksum: not fetched
+    limitations:
+      - Automatically derived (silver) spans. Keep a separately human-reviewed Urdu test set.
+      - Not a substitute for licensed, reviewed NER annotation.
+      - Download and quality were not verified in this checkout.
+
+  - name: project miniature fixtures
+    tasks: [converter-tests, smoke-training]
+    path: fixtures/
+    license: composed examples in this repository; not a corpus release
+    limitations:
+      - Tiny synthetic/example sentences only.
+      - Do not report fixture scores as Urdu model quality.

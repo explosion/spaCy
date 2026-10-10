@@ -511,3 +511,18 @@ STOP_WORDS = set(
 ضت
 """.split()
 )
+
+# Correctly spelled high-frequency function words missing from the historical
+# list. Provenance: closed-class items in UD Urdu-UDTB
+# (https://universaldependencies.org/treebanks/ur_udtb/index.html) and
+# standard pedagogical inventories of postpositions and pronouns.
+# token.is_stop does not remove words from documents.
+STOP_WORDS.update(
+    """
+کا کی کے کو سے میں نے پر تک بھی نہیں نہ ہی
+وہ اس ان یہ جو ہم آپ تم میرا ہمارا
+اور یا لیکن اگر کہ پھر
+ہے ہیں تھا تھی تھے ہوں ہو
+کوئی کچھ سب ہر خود
+""".split()
+)
