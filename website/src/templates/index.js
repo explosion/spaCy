@@ -58,8 +58,8 @@ const AlertSpace = ({ nightly, legacy }) => {
 }
 
 const navAlert = (
-    <Link to="https://beta.ellf.ai" noLinkLayout>
-        💥 Beta test our new tool for <strong>agentic NLP development</strong>!
+    <Link to="https://ellf.ai" noLinkLayout>
+        💥 Try our new tool for <strong>agentic NLP development</strong>!
     </Link>
 )
 
