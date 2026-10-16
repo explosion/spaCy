@@ -1036,6 +1036,38 @@ class Language:
             keyword arguments for specific components.
         RETURNS (Doc): A container for accessing the annotations.
 
+        EXAMPLES
+        --------
+        Process a simple text:
+        >>> nlp = spacy.load("en_core_web_sm")
+        >>> doc = nlp("This is a sentence.")
+        >>> print(doc.text)
+        This is a sentence.
+
+        Process text with multiple sentences:
+        >>> text = "Apple Inc. is a great company. It was founded in 1976."
+        >>> doc = nlp(text)
+        >>> len(doc.sents)
+        2
+        >>> for sent in doc.sents:
+        ...     print(sent.text)
+        Apple Inc. is a great company.
+        It was founded in 1976.
+
+        Access named entities:
+        >>> doc = nlp("Apple Inc. was founded in Cupertino.")
+        >>> for ent in doc.ents:
+        ...     print(f"{ent.text} ({ent.label_})")
+        Apple Inc. (ORG)
+        Cupertino (GPE)
+
+        Disable specific components for faster processing:
+        >>> doc = nlp(text, disable=["ner"])
+        >>> assert len(doc.ents) == 0
+
+        Disable multiple components:
+        >>> doc = nlp(text, disable=["tagger", "lemmatizer", "ner"])
+
         DOCS: https://spacy.io/api/language#call
         """
         doc = self._ensure_doc(text)
@@ -1558,6 +1590,39 @@ class Language:
             arguments for specific components.
         n_process (int): Number of processors to process texts. If -1, set `multiprocessing.cpu_count()`.
         YIELDS (Doc): Documents in the order of the original text.
+
+        EXAMPLES
+        --------
+        Process a list of texts:
+        >>> nlp = spacy.load("en_core_web_sm")
+        >>> texts = ["This is a sentence.", "Here is another."]
+        >>> docs = list(nlp.pipe(texts))
+        >>> len(docs)
+        2
+
+        Process texts with context data using `as_tuples`:
+        >>> texts_with_ids = [("This is a sentence.", 1), ("Here is another.", 2)]
+        >>> for doc, doc_id in nlp.pipe(texts_with_ids, as_tuples=True):
+        ...     print(f"Doc {doc_id}: {doc.text}")
+        Doc 1: This is a sentence.
+        Doc 2: Here is another.
+
+        Process from a large dataset with custom batch size:
+        >>> from pathlib import Path
+        >>> data = ["Text 1", "Text 2", "Text 3", "Text 4", "Text 5"]
+        >>> docs = nlp.pipe(data, batch_size=2)
+        >>> for doc in docs:
+        ...     print(f"Processed: {len(doc)} tokens")
+
+        Disable specific components for faster processing:
+        >>> docs = nlp.pipe(texts, disable=["ner", "lemmatizer"])
+        >>> for doc in docs:
+        ...     assert doc.ents == []
+
+        Use multiprocessing for faster batch processing:
+        >>> import multiprocessing
+        >>> n_cores = multiprocessing.cpu_count()
+        >>> docs = nlp.pipe(texts, n_process=n_cores, batch_size=50)
 
         DOCS: https://spacy.io/api/language#pipe
         """
