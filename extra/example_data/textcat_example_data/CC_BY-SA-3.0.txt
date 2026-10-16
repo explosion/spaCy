@@ -34,7 +34,7 @@ CONDITIONS.
     Collection will not be considered an Adaptation for the purpose of
     this License. For the avoidance of doubt, where the Work is a musical
     work, performance or phonogram, the synchronization of the Work in
-    timed-relation with a moving image ("synching") will be considered an
+    timed-relation with a moving image ("syncing") will be considered an
     Adaptation for the purpose of this License.
  b. "Collection" means a collection of literary or artistic works, such as
     encyclopedias and anthologies, or performances, phonograms or
@@ -264,7 +264,7 @@ subject to and limited by the following restrictions:
 UNLESS OTHERWISE MUTUALLY AGREED TO BY THE PARTIES IN WRITING, LICENSOR
 OFFERS THE WORK AS-IS AND MAKES NO REPRESENTATIONS OR WARRANTIES OF ANY
 KIND CONCERNING THE WORK, EXPRESS, IMPLIED, STATUTORY OR OTHERWISE,
-INCLUDING, WITHOUT LIMITATION, WARRANTIES OF TITLE, MERCHANTIBILITY,
+INCLUDING, WITHOUT LIMITATION, WARRANTIES OF TITLE, MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE, NONINFRINGEMENT, OR THE ABSENCE OF
 LATENT OR OTHER DEFECTS, ACCURACY, OR THE PRESENCE OF ABSENCE OF ERRORS,
 WHETHER OR NOT DISCOVERABLE. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION
