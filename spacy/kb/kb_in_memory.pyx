@@ -421,6 +421,21 @@ cdef class InMemoryLookupKB(KnowledgeBase):
         util.from_bytes(bytes_data, setters, exclude)
         return self
 
+    def __reduce__(self):
+        # The default pickling that Cython generates tries to pickle the C-level
+        # members (e.g. the PreshMaps), which is not possible. Instead, recreate
+        # the KB through its constructor and restore the contents from bytes.
+        # Subclasses whose constructor takes other arguments need to override
+        # this.
+        return (
+            type(self),
+            (self.vocab, self.entity_vector_length),
+            self.to_bytes()
+        )
+
+    def __setstate__(self, state):
+        self.from_bytes(state)
+
     def to_disk(self, path, exclude: Iterable[str] = SimpleFrozenList()):
         path = ensure_path(path)
         if not path.exists():
