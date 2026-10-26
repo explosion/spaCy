@@ -401,6 +401,14 @@ def sl_tokenizer():
 def sr_tokenizer():
     return get_lang_class("sr")().tokenizer
 
+@pytest.fixture(scope="session")
+def si_tokenizer():
+    return get_lang_class("si")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def si_vocab():
+    return get_lang_class("si")().vocab
 
 @pytest.fixture(scope="session")
 def sq_tokenizer():
