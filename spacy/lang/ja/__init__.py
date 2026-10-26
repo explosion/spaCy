@@ -129,13 +129,13 @@ class JapaneseTokenizer(DummyTokenizer):
 
         sub_tokens_list = []  # list of (list of list of DetailedToken | None)
         for token in sudachipy_tokens:
-            sub_a = token.split(self.tokenizer.SplitMode.A)
+            sub_a = self._split(token, self.tokenizer.SplitMode.A)
             if len(sub_a) == 1:  # no sub tokens
                 sub_tokens_list.append(None)
             elif self.split_mode == "B":
                 sub_tokens_list.append([self._get_dtokens(sub_a, False)])
             else:  # "C"
-                sub_b = token.split(self.tokenizer.SplitMode.B)
+                sub_b = self._split(token, self.tokenizer.SplitMode.B)
                 if len(sub_a) == len(sub_b):
                     dtokens = self._get_dtokens(sub_a, False)
                     sub_tokens_list.append([dtokens, dtokens])
@@ -147,6 +147,13 @@ class JapaneseTokenizer(DummyTokenizer):
                         ]
                     )
         return sub_tokens_list
+
+    @staticmethod
+    def _split(token, mode):
+        # SudachiPy 0.7+ returns an empty list for a morpheme that doesn't
+        # split further, where earlier versions return the morpheme itself
+        sub_tokens = token.split(mode)
+        return sub_tokens if len(sub_tokens) > 0 else [token]
 
     def score(self, examples):
         validate_examples(examples, "JapaneseTokenizer.score")
@@ -227,7 +234,7 @@ DetailedToken = namedtuple(
 )
 
 
-def try_sudachi_import(split_mode="A"):
+def try_sudachi_import(split_mode: Optional[str] = "A"):
     """SudachiPy is required for Japanese support, so check for it.
     It it's not available blow up and explain how to fix it.
     split_mode should be one of these values: "A", "B", "C", None->"A"."""
@@ -240,8 +247,12 @@ def try_sudachi_import(split_mode="A"):
             "B": tokenizer.Tokenizer.SplitMode.B,
             "C": tokenizer.Tokenizer.SplitMode.C,
         }[split_mode]
-        tok = dictionary.Dictionary().create(mode=split_mode)
-        return tok
+        dic = dictionary.Dictionary()
+        # Dictionary.create() is deprecated in SudachiPy 0.7 in favour of
+        # Dictionary.tokenizer(), which older versions don't have
+        if hasattr(dic, "tokenizer"):
+            return dic.tokenizer(mode=split_mode)
+        return dic.create(mode=split_mode)
     except ImportError:
         raise ImportError(
             "Japanese support requires SudachiPy and SudachiDict-core "

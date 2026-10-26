@@ -1679,7 +1679,7 @@ class DummyTokenizer:
 
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
     # allow serialization (see #1557)
-    def to_bytes(self, **kwargs):
+    def to_bytes(self, **kwargs) -> bytes:
         return b""
 
     def from_bytes(self, data: bytes, **kwargs) -> "DummyTokenizer":
