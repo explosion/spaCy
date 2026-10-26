@@ -52,3 +52,13 @@ def test_registry_entries(reference_registry):
         assert not missing_entries, (
             f"Registry '{registry_name}' missing entries: {', '.join(missing_entries)}"
         )
+
+
+def test_registry_char_embed_layer():
+    """spacy.CharEmbed.v1 is the character embedding layer, not the
+    spacy.CharacterEmbed.v2 architecture that shares its function name."""
+    from spacy.ml._character_embed import CharacterEmbed
+
+    assert registry.get("layers", "spacy.CharEmbed.v1") is CharacterEmbed
+    model = registry.get("layers", "spacy.CharEmbed.v1")(nM=8, nC=4)
+    assert model.name == "charembed"

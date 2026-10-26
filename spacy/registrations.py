@@ -94,6 +94,7 @@ def populate_registry() -> None:
 
     # Import ML components that use registry
     from .language import create_tokenizer
+    from .ml._character_embed import CharacterEmbed as CharEmbed
     from .ml._precomputable_affine import PrecomputableAffine
     from .ml.callbacks import (
         create_models_and_pipes_with_nvtx_range,
@@ -218,7 +219,7 @@ def populate_registry() -> None:
     registry.layers("spacy.mean_max_reducer.v1")(build_mean_max_reducer)
     registry.layers("spacy.StaticVectors.v2")(StaticVectors)
     registry.layers("spacy.PrecomputableAffine.v1")(PrecomputableAffine)
-    registry.layers("spacy.CharEmbed.v1")(CharacterEmbed)
+    registry.layers("spacy.CharEmbed.v1")(CharEmbed)
     registry.layers("spacy.TransitionModel.v1")(TransitionModel)
 
     # Register callbacks
