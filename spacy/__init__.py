@@ -19,7 +19,8 @@ from .cli.info import info  # noqa: F401
 from .errors import Errors
 from .glossary import explain  # noqa: F401
 from .language import Language
-from .registrations import REGISTRY_POPULATED, populate_registry
+from .pipeline.factories import register_factories
+from .registrations import populate_registry
 
 # Rebuild pydantic v2 schemas that use forward references to Language/Vocab
 from .schemas import (  # noqa: F401
@@ -45,6 +46,12 @@ for _schema in (
 
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)
+
+# Registrations are made lazily so that spaCy's own modules can import each
+# other without cycles. Once everything is imported, populate the registries
+# and factories so that registry.<name>.get_all() lists spaCy's functions.
+populate_registry()
+register_factories()
 
 
 def load(
