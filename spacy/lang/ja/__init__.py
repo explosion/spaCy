@@ -17,6 +17,7 @@ from ...tokens import Doc, MorphAnalysis
 from ...training import validate_examples
 from ...util import DummyTokenizer, load_config_from_str, registry
 from ...vocab import Vocab
+from ..tokenizer_exceptions import URL_MATCH
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .tag_bigram_map import TAG_BIGRAM_MAP
@@ -31,6 +32,10 @@ DEFAULT_CONFIG = """
 split_mode = null
 """
 
+URL_START_RE = re.compile(r"(?u)(?:[A-Za-z][A-Za-z0-9+\-.]{1,}://|www\.|mailto:)")
+URL_TOKEN_TAG = "名詞-普通名詞-一般"
+URL_TRAILING_PUNCT = """.,;:!?)]}>"'、。！？）］｝〉》」』】"""
+
 
 def create_tokenizer(split_mode: Optional[str] = None):
     def japanese_tokenizer_factory(nlp):
@@ -44,6 +49,7 @@ class JapaneseTokenizer(DummyTokenizer):
         self.vocab = vocab
         self.split_mode = split_mode
         self.tokenizer = try_sudachi_import(self.split_mode)
+        self.url_match = URL_MATCH
         # if we're using split mode A we don't need subtokens
         self.need_subtokens = not (split_mode is None or split_mode == "A")
 
@@ -52,8 +58,7 @@ class JapaneseTokenizer(DummyTokenizer):
 
     def __call__(self, text: str) -> Doc:
         # convert sudachipy.morpheme.Morpheme to DetailedToken and merge continuous spaces
-        sudachipy_tokens = self.tokenizer.tokenize(text)
-        dtokens = self._get_dtokens(sudachipy_tokens)
+        dtokens = self._get_dtokens_for_text(text)
         dtokens, spaces = get_dtokens_and_spaces(dtokens, text)
 
         # create Doc with tag bi-gram based part-of-speech identification rules
@@ -89,6 +94,25 @@ class JapaneseTokenizer(DummyTokenizer):
         if self.need_subtokens:
             doc.user_data["sub_tokens"] = sub_tokens_list
         return doc
+
+    def _get_dtokens_for_text(self, text: str):
+        url_spans = list(find_url_spans(text, self.url_match))
+        if not url_spans:
+            return self._get_dtokens(self.tokenizer.tokenize(text))
+
+        dtokens = []
+        text_pos = 0
+        for start, end in url_spans:
+            if start > text_pos:
+                dtokens.extend(
+                    self._get_dtokens(self.tokenizer.tokenize(text[text_pos:start]))
+                )
+            url = text[start:end]
+            dtokens.append(DetailedToken(url, URL_TOKEN_TAG, "", url, url, None, None))
+            text_pos = end
+        if text_pos < len(text):
+            dtokens.extend(self._get_dtokens(self.tokenizer.tokenize(text[text_pos:])))
+        return dtokens
 
     def _get_dtokens(self, sudachipy_tokens, need_sub_tokens: bool = True):
         sub_tokens_list = (
@@ -225,6 +249,27 @@ def make_morphologizer(
 DetailedToken = namedtuple(
     "DetailedToken", ["surface", "tag", "inf", "lemma", "norm", "reading", "sub_tokens"]
 )
+
+
+def find_url_spans(text: str, url_match: Optional[Callable]):
+    if url_match is None:
+        return
+    last_end = 0
+    for match in URL_START_RE.finditer(text):
+        start = match.start()
+        if start < last_end:
+            continue
+        end = get_url_candidate_end(text, start)
+        while end > match.end() and text[end - 1] in URL_TRAILING_PUNCT:
+            end -= 1
+        if end > start and url_match(text[start:end]):
+            yield start, end
+            last_end = end
+
+
+def get_url_candidate_end(text: str, start: int) -> int:
+    match = re.match(r"\S+", text[start:])
+    return start + match.end() if match else start
 
 
 def try_sudachi_import(split_mode="A"):
