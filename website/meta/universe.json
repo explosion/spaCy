@@ -1,6 +1,40 @@
 {
     "resources": [
         {
+            "id": "rumorph",
+            "title": "ruMorph",
+            "slogan": "Fast Russian morphology for spaCy: UD part of speech, features and lemma in context",
+            "description": "ruMorph is a Russian morphological analyzer with a Rust core and a Python API. Its spaCy component replaces the tagger, morphologizer and lemmatizer: it analyzes each sentence with a context model and sets `token.pos_`, `token.morph` and `token.lemma_` in Universal Dependencies conventions. With `ru_core_news_sm`, the share of words with the right part of speech, lemma and features on the UD SynTagRus test set goes from 82.0% to 93.7%, and the pipeline gets faster. `token._.rumorph` gives the ruMorph analysis with the forms of the word.",
+            "github": "SergeyShk/ruMorph",
+            "pip": "rumorph[spacy]",
+            "code_example": [
+                "import spacy",
+                "",
+                "nlp = spacy.load(\"ru_core_news_sm\", exclude=[\"morphologizer\", \"lemmatizer\"])",
+                "nlp.add_pipe(\"rumorph\", after=\"parser\")",
+                "",
+                "doc = nlp(\"Мост сделан из стали.\")",
+                "for token in doc:",
+                "    print(token.text, token.lemma_, token.pos_, token.morph)",
+                "print(doc[3]._.rumorph.inflect(Case=\"Dat\"))"
+            ],
+            "code_language": "python",
+            "url": "https://sergeyshk.github.io/ruMorph/en/spacy/",
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "russian",
+                "lemmatizer",
+                "morphology",
+                "pos"
+            ],
+            "author": "Sergey Shkarin",
+            "author_links": {
+                "github": "SergeyShk"
+            }
+        },
+        {
             "id": "TeNs",
             "title": "Temporal Expressions Normalization spaCy",
             "thumb": "https://github-production-user-asset-6210df.s3.amazonaws.com/40547052/433595900-fae3c9d9-7181-4d8b-8b49-e6dc4fca930b.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250414%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250414T235545Z&X-Amz-Expires=300&X-Amz-Signature=e21d3c06300ceb15fa1dadd7cb60081cc9f1b35e5a7bfd07f6e8b90dd7fad9d0&X-Amz-SignedHeaders=host",
