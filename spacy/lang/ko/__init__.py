@@ -42,7 +42,13 @@ class KoreanTokenizer(DummyTokenizer):
         # to be imported and there's no way to pass a custom config to
         # `init vectors`.
         if self._mecab_tokenizer is None:
-            self._mecab_tokenizer = self._mecab("-F%f[0],%f[7]")
+            from natto import MeCabError
+
+            try:
+                self._mecab_tokenizer = self._mecab("-F%f[0],%f[7]")
+            except MeCabError as e:
+                # natto-py is installed but can't load mecab-ko or mecab-ko-dic
+                raise ImportError(f"{MECAB_REQUIRED} ({e})") from e
         return self._mecab_tokenizer
 
     def __reduce__(self):
@@ -95,18 +101,21 @@ class Korean(Language):
     Defaults = KoreanDefaults
 
 
+MECAB_REQUIRED = (
+    'The Korean tokenizer ("spacy.ko.KoreanTokenizer") requires '
+    "[mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
+    "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
+    "and [natto-py](https://github.com/buruzaemon/natto-py)"
+)
+
+
 def try_mecab_import() -> None:
     try:
         from natto import MeCab
 
         return MeCab
     except ImportError:
-        raise ImportError(
-            'The Korean tokenizer ("spacy.ko.KoreanTokenizer") requires '
-            "[mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
-            "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
-            "and [natto-py](https://github.com/buruzaemon/natto-py)"
-        ) from None
+        raise ImportError(MECAB_REQUIRED) from None
 
 
 def check_spaces(text, tokens):
