@@ -3,7 +3,7 @@ import pickle
 import re
 
 import pytest
-from mock import Mock
+from unittest.mock import Mock
 
 from spacy.matcher import DependencyMatcher
 from spacy.tokens import Doc, Token
