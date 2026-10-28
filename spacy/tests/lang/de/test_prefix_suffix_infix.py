@@ -106,3 +106,18 @@ def test_de_tokenizer_splits_double_hyphen_infix(de_tokenizer):
     assert tokens[6].text == "--"
     assert tokens[7].text == "sind"
     assert tokens[8].text == "kompliziert"
+
+
+@pytest.mark.parametrize(
+    "text", ["Kund:innen", "Mitarbeiter:innen", "eine:n", "Ärzt:in"]
+)
+def test_de_tokenizer_keeps_gender_colon(de_tokenizer, text):
+    tokens = de_tokenizer(text)
+    assert len(tokens) == 1
+    assert tokens[0].text == text
+
+
+@pytest.mark.parametrize("text", ["x<y", "a>b", "n=m"])
+def test_de_tokenizer_still_splits_comparison_infix(de_tokenizer, text):
+    tokens = de_tokenizer(text)
+    assert len(tokens) == 3
