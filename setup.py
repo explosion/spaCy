@@ -158,10 +158,10 @@ GIT_VERSION = "%(git_version)s"
 
 
 def clean(path):
-    for path in path.glob("**/*"):
-        if path.is_file() and path.suffix in (".so", ".cpp", ".html"):
-            print(f"Deleting {path.name}")
-            path.unlink()
+    for child in path.glob("**/*"):
+        if child.is_file() and child.suffix in (".so", ".cpp", ".html"):
+            print(f"Deleting {child.name}")
+            child.unlink()
 
 
 def setup_package():
@@ -213,7 +213,7 @@ def setup_package():
         version=about["__version__"],
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext_subclass},
-        package_data={"": ["*.pyx", "*.pxd", "*.pxi"]},
+        package_data={"": ["*.pyx", "*.pxd", "*.pxi"], "spacy_cli": ["*.json"]},
     )
 
 
