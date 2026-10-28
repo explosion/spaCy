@@ -7,8 +7,8 @@ from ..punctuation import (
 _prefixes = [r"\w{1,3}\$"] + BASE_TOKENIZER_PREFIXES
 
 _suffixes = BASE_TOKENIZER_SUFFIXES
-
-_infixes = [r"(\w+-\w+(-\w+)*)"] + BASE_TOKENIZER_INFIXES
+# Only up to 64 to prevent quadratic backtracking
+_infixes = [r"(\w{1,64}-\w{1,64}(-\w{1,64})*)"] + BASE_TOKENIZER_INFIXES
 
 TOKENIZER_PREFIXES = _prefixes
 TOKENIZER_SUFFIXES = _suffixes
