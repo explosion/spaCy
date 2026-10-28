@@ -1,0 +1,13 @@
+# sent_id = syntax-train-001
+# text = یہ ایک جملہ ہے۔
+1	یہ	یہ	PRON	PRP	Case=Nom|Number=Sing|Person=3	4	nsubj	_	_
+2	ایک	ایک	NUM	QC	NumType=Card	3	nummod	_	_
+3	جملہ	جملہ	NOUN	NN	Case=Nom|Gender=Masc|Number=Sing	4	obj	_	_
+4	ہے	ہے	AUX	VAUX	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	SpaceAfter=No
+5	۔	۔	PUNCT	SYM	_	4	punct	_	_
+
+# sent_id = syntax-train-002
+# text = بات_چیت ہوئی۔
+1	بات_چیت	بات_چیت	NOUN	NN	Case=Nom|Gender=Fem|Number=Sing	2	nsubj	_	_
+2	ہوئی	ہونا	VERB	VM	Aspect=Perf|Gender=Fem|Number=Sing|Person=3|VerbForm=Part	0	root	_	SpaceAfter=No
+3	۔	۔	PUNCT	SYM	_	2	punct	_	_

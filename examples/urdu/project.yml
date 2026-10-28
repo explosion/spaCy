@@ -1,0 +1,110 @@
+title: "Urdu community training example"
+description: >
+  Reproducible Urdu (`ur`) training project. Blank `spacy.blank("ur")` is the
+  rule-based tokenizer and lexical attributes only. Trained weights are not
+  included and are not official Explosion models. Miniature fixtures are for
+  conversion and smoke tests, not model-quality claims.
+  UD Urdu-UDTB is a restricted CC BY-NC-SA 4.0 research track for syntax.
+  Do not treat it as an unrestricted commercial NER corpus; it has no NER labels.
+
+vars:
+  lang: "ur"
+  seed: 0
+  ner_name: "ur_community_ner_sm"
+  syntax_name: "ur_community_syntax_sm"
+  version: "0.0.0"
+  gpu_id: -1
+  smoke_max_steps: 30
+  smoke_eval_frequency: 10
+  overfit_max_steps: 40
+  train_max_steps: 20000
+  trf_name: "FacebookAI/xlm-roberta-base"
+  trf_revision: "e73636d4f797dec63c3081bb6ed5c7b0bb3f2089"
+
+directories:
+  ["assets", "corpus", "configs", "training", "scripts", "packages", "metrics", "fixtures"]
+
+assets: []
+
+workflows:
+  smoke:
+    - convert-ner-fixtures
+    - debug-ner
+    - train-ner-smoke
+    - evaluate-ner-smoke
+  prepare-syntax-fixtures:
+    - convert-syntax-fixtures
+    - debug-syntax
+  overfit:
+    - overfit-ner
+
+commands:
+  - name: convert-ner-fixtures
+    help: "Convert miniature NER JSONL fixtures to DocBin (not a production corpus)"
+    script:
+      - "python scripts/convert_ner.py fixtures/ner_train.jsonl corpus/ner_train.spacy --lang ${vars.lang}"
+      - "python scripts/convert_ner.py fixtures/ner_dev.jsonl corpus/ner_dev.spacy --lang ${vars.lang}"
+
+  - name: convert-syntax-fixtures
+    help: "Convert miniature CoNLL-U fixtures; surface is reconstructed treebank text"
+    script:
+      - "python scripts/convert_conllu.py fixtures/syntax_train.conllu corpus/syntax_train.spacy --n-sents 1"
+      - "python scripts/convert_conllu.py fixtures/syntax_dev.conllu corpus/syntax_dev.spacy --n-sents 1"
+
+  - name: overfit-ner
+    help: "CPU overfit diagnostic on the training fixture only. Not held-out evaluation."
+    script:
+      - "python scripts/overfit_ner.py fixtures/ner_overfit.jsonl --max-steps ${vars.overfit_max_steps} --seed ${vars.seed}"
+
+  - name: debug-ner
+    help: "Validate NER config and fixture data"
+    script:
+      - "python -m spacy debug config configs/ner.cfg --paths.train corpus/ner_train.spacy --paths.dev corpus/ner_dev.spacy"
+      - "python -m spacy debug data configs/ner.cfg --paths.train corpus/ner_train.spacy --paths.dev corpus/ner_dev.spacy"
+
+  - name: debug-syntax
+    help: "Validate syntax config and fixture data"
+    script:
+      - "python -m spacy debug config configs/syntax.cfg --paths.train corpus/syntax_train.spacy --paths.dev corpus/syntax_dev.spacy"
+      - "python -m spacy debug data configs/syntax.cfg --paths.train corpus/syntax_train.spacy --paths.dev corpus/syntax_dev.spacy"
+
+  - name: train-ner-smoke
+    help: "Short CPU NER run to prove train/save/load. Metrics are not model quality."
+    script:
+      - "python -m spacy train configs/ner.cfg --output training/ner-smoke --paths.train corpus/ner_train.spacy --paths.dev corpus/ner_dev.spacy --training.max_steps ${vars.smoke_max_steps} --training.eval_frequency ${vars.smoke_eval_frequency} --training.seed ${vars.seed} --gpu-id ${vars.gpu_id}"
+
+  - name: evaluate-ner-smoke
+    help: "Evaluate the NER smoke model on the miniature dev set"
+    script:
+      - "python -m spacy evaluate training/ner-smoke/model-best corpus/ner_dev.spacy --output metrics/ner_smoke.json --gpu-id ${vars.gpu_id}"
+
+  - name: train-ner
+    help: "CPU NER baseline. Replace fixture DocBins with a licensed corpus first."
+    script:
+      - "python -m spacy train configs/ner.cfg --output training/ner --paths.train corpus/ner_train.spacy --paths.dev corpus/ner_dev.spacy --training.max_steps ${vars.train_max_steps} --training.seed ${vars.seed} --gpu-id ${vars.gpu_id}"
+
+  - name: train-syntax
+    help: "CPU syntax baseline on reconstructed CoNLL-U. UD Urdu-UDTB is CC BY-NC-SA 4.0."
+    script:
+      - "python -m spacy train configs/syntax.cfg --output training/syntax --paths.train corpus/syntax_train.spacy --paths.dev corpus/syntax_dev.spacy --training.max_steps ${vars.train_max_steps} --training.seed ${vars.seed} --gpu-id ${vars.gpu_id}"
+
+  - name: train-syntax-smoke
+    help: "Short syntax run on fixtures. min_action_freq is lowered only because the fixture is tiny."
+    script:
+      - "python -m spacy train configs/syntax.cfg --output training/syntax-smoke --paths.train corpus/syntax_train.spacy --paths.dev corpus/syntax_dev.spacy --training.max_steps ${vars.smoke_max_steps} --training.eval_frequency ${vars.smoke_eval_frequency} --training.seed ${vars.seed} --gpu-id ${vars.gpu_id} --components.parser.min_action_freq 1"
+
+  - name: train-ner-trf
+    help: "Optional XLM-R NER experiment. Needs spacy-transformers, torch, and the model revision."
+    script:
+      - "python -m spacy debug config configs/ner_trf.cfg --paths.train corpus/ner_train.spacy --paths.dev corpus/ner_dev.spacy"
+      - "python -m spacy train configs/ner_trf.cfg --output training/ner-trf --paths.train corpus/ner_train.spacy --paths.dev corpus/ner_dev.spacy --training.max_steps ${vars.train_max_steps} --training.seed ${vars.seed} --gpu-id 0"
+
+  - name: package-ner
+    help: "Package a trained NER pipeline. Not an official Explosion model; not installed by spacy download."
+    script:
+      - "python -m spacy package training/ner/model-best packages --name ${vars.ner_name} --version ${vars.version} --force"
+
+  - name: split-ner
+    help: "Document-level split of a full NER JSONL export"
+    script:
+      - "python scripts/split.py ${args.jsonl} corpus/splits --seed ${vars.seed}"

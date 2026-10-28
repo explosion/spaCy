@@ -34,6 +34,15 @@ Check out the [projects documentation](https://spacy.io/usage/projects) and
 browse through the [available
 projects](https://github.com/explosion/projects/)!
 
+## Urdu training example (this repository)
+
+[`examples/urdu`](urdu) is a community training project for language code `ur`.
+It is not an official Explosion pipeline. `spacy.blank("ur")` is the tokenizer
+and lexical attributes only; trained weights are produced with the spaCy CLI
+after you supply a licensed corpus. See that README for the license constraints
+on UD Urdu-UDTB (CC BY-NC-SA 4.0 research track) and for smoke-training
+commands.
+
 ## 🚀 Get started with a demo project
 
 The

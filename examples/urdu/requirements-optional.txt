@@ -1,0 +1,5 @@
+# Optional extras for the transformer experiment. Not required for spaCy core
+# or for the CPU NER/syntax smoke path.
+# spacy-transformers>=1.1.2,<1.4.0
+# torch
+# transformers

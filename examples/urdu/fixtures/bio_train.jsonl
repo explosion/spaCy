@@ -1,0 +1,2 @@
+{"id": "bio-001", "source_id": "bio", "tokens": ["عمران", "خان", "کراچی", "گئے", "۔"], "tags": ["B-PER", "I-PER", "B-LOC", "O", "O"]}
+{"id": "bio-002", "source_id": "bio", "tokens": ["آج", "موسم", "اچھا", "ہے", "۔"], "tags": ["O", "O", "O", "O", "O"]}
