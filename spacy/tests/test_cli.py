@@ -15,6 +15,7 @@ from spacy import about
 from spacy.cli import download_module, info
 from spacy.cli._util import parse_config_overrides, string_to_list, walk_directory
 from spacy.cli.apply import apply
+from spacy.cli.convert import autodetect_ner_format
 from spacy.cli.debug_data import (
     _compile_gold,
     _get_distribution,
@@ -1237,3 +1238,40 @@ def test_download_rejects_relative_urls(monkeypatch):
     download_module.download("en_core_web_sm-3.7.1", direct=True)
     with pytest.raises(SystemExit):
         download_module.download("../en_core_web_sm-3.7.1", direct=True)
+
+
+@pytest.mark.parametrize(
+    "input_data,expected",
+    [
+        ("I-PER|O word|B-LOC", "iob"),
+        ("word\tB-PER", "ner"),
+        ("word B-PER", "ner"),
+        ("nothing to detect here", None),
+        # A pipe with nothing before it is not an IOB token
+        ("|O", None),
+        # `ner_re` is anchored at the end of the line, a trailing token disqualifies.
+        ("word B-PER extra", None),
+        # Both formats detected -> ambiguous, no guess.
+        ("word|B-PER\nword B-PER", None),
+    ],
+)
+def test_autodetect_ner_format(input_data, expected):
+    assert autodetect_ner_format(input_data) == expected
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        # long whitespace-free run: worst case for the `\S+\s+` (ner) regex
+        "a" * 200000,
+        # pipe-rich but never followed by a valid tag: worst case for the
+        # `\S+\|` (iob) regex
+        "x|" * 100000,
+    ],
+    ids=["whitespace-free-run", "pipe-runs"],
+)
+def test_autodetect_ner_format_no_catastrophic_backtracking(line):
+    # If this test hangs, check the regexes in autodetect_ner_format for a
+    # repeated prefix in front of the delimiter. The 20-line cap in that
+    # function does not bound line length.
+    assert autodetect_ner_format(line) is None
