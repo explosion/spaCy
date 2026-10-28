@@ -3,13 +3,13 @@ from ...attrs import LIKE_NUM
 _num_words = [
     "không",  # Zero
     "một",  # One
-    "mốt",  # Also one, irreplacable in niché cases for unit digit such as "51"="năm mươi mốt"
+    "mốt",  # Also one, irreplaceable in niché cases for unit digit such as "51"="năm mươi mốt"
     "hai",  # Two
     "ba",  # Three
     "bốn",  # Four
     "tư",  # Also four, used in certain cases for unit digit such as "54"="năm mươi tư"
     "năm",  # Five
-    "lăm",  # Also five, irreplacable in niché cases for unit digit such as "55"="năm mươi lăm"
+    "lăm",  # Also five, irreplaceable in niché cases for unit digit such as "55"="năm mươi lăm"
     "sáu",  # Six
     "bảy",  # Seven
     "bẩy",  # Also seven, old fashioned
