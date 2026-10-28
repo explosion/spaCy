@@ -531,7 +531,7 @@ class Scorer:
                     f_per_type[gold_label].fn += 1
                     f_per_type[pred_label].fp += 1
             elif gold_cats:
-                gold_label, gold_score = max(gold_cats, key=lambda it: it[1])
+                gold_label, gold_score = max(gold_cats.items(), key=lambda it: it[1])
                 if gold_score > 0:
                     f_per_type[gold_label].fn += 1
             elif pred_cats:
