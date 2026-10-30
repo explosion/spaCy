@@ -545,31 +545,27 @@ meta data and turn it into a loadable package.
 
 ### Caching pipeline packages in CI {id="models-caching"}
 
-Continuous integration (CI) jobs often start in a fresh environment. A cache
-lets later jobs reuse downloaded packages instead of downloading the same
-pipeline on every run. Cache the package files, and **install them on every
-run**, including when the cache is restored. Restoring downloaded files does not
-install them into the job's Python environment.
+Continuous integration (CI) jobs often start in a fresh environment and download
+the same pipeline packages on every run. You can cache the downloaded files to
+reuse them in later runs. You still need to **install the packages on every
+run**, since restoring a cache doesn't install them into Python.
 
-For example, you can use
-[`pip download`](https://pip.pypa.io/en/stable/cli/pip_download/) to collect the
-pipeline, spaCy and their dependencies in a directory of wheels (`.whl` package
-files). Save that directory with
-[`actions/cache`](https://github.com/actions/cache), then install from those
-local files. This also avoids requesting the pipeline's download URL on a cache
-hit.
+The example below uses
+[`pip download`](https://pip.pypa.io/en/stable/cli/pip_download/) to save spaCy,
+the pipeline and their dependencies as wheels (`.whl` package files).
+[`actions/cache`](https://github.com/actions/cache) saves this directory between
+runs. When the cache is available, installation uses only the saved files.
 
-First, add a requirements file to the root of your repository. Use compatible,
-pinned versions of spaCy and your pipeline packages:
+Add a requirements file to the root of your repository, with compatible versions
+of spaCy and the pipeline:
 
 ```text {title="requirements-ci.txt"}
 spacy==3.8.18
 en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
 ```
 
-Then add this GitHub Actions workflow. It downloads wheels on a cache miss,
-installs them on every run, checks package dependencies, and loads the pipeline
-to process a sentence:
+Then add this workflow to download and cache the wheels, install them, and check
+that the pipeline can process a sentence:
 
 ```yaml {title=".github/workflows/test-pipeline.yml"}
 name: Test pipeline
@@ -621,26 +617,23 @@ jobs:
           PY
 ```
 
-The install step uses local wheel paths instead of `-r requirements-ci.txt`
-because the requirements file contains a remote pipeline URL. `--no-index`
-disables package-index lookups; it does not disable direct URL requirements.
-`--only-binary=:all:` requires wheels for every dependency, so this example
-fails at the download step if a package has no wheel for the selected platform
-and Python version.
+The install step uses wheel paths because `requirements-ci.txt` contains a
+download URL. Passing that file to `pip install` can request the URL again, even
+with `--no-index`, which only disables package-index lookups. The download step
+uses `--only-binary=:all:`, so every dependency must have a wheel for your
+platform and Python version.
 
-The cache key includes the runner image, architecture, Python version and a hash
-of the requirements file. Update both the runner label and its value in the key
-if you change the operating system. Changing the requirements creates a new
-cache. Avoid partial matches with `restore-keys`, which could mix older wheels
-with newly downloaded versions. To refresh dependencies without changing the
-requirements, increment `v1` in the key. For fully reproducible dependencies,
-also pin the transitive dependencies in your requirements file.
+The cache key separates wheels by runner image, architecture, Python version and
+requirements. If you change `runs-on`, update the image name in the key too.
+Changing the requirements creates a new cache; incrementing `v1` also forces a
+refresh. Avoid `restore-keys` here, since a partial match could mix old and new
+package versions. Pin the dependencies of spaCy and the pipeline as well if you
+need fully reproducible installs.
 
-After a successful run saves the cache, repeat the workflow without changing the
-requirements. Check that the restore step reports a cache hit and the download
-step is skipped. The install and pipeline checks should still run and pass. If
-the cache is missing or has been evicted, the workflow downloads the packages
-again. Cache availability is an optimization, not a requirement for the build.
+To check that caching works, repeat a successful run without changing the
+requirements. The restore step should report a cache hit and the download step
+should be skipped. Installation and pipeline checks should still run and pass.
+If the cache is missing or has been evicted, the download step runs again.
 
 ### Loading and testing pipeline packages {id="models-loading"}
 
