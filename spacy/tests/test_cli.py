@@ -1,5 +1,6 @@
 import math
 import os
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -1237,3 +1238,18 @@ def test_download_rejects_relative_urls(monkeypatch):
     download_module.download("en_core_web_sm-3.7.1", direct=True)
     with pytest.raises(SystemExit):
         download_module.download("../en_core_web_sm-3.7.1", direct=True)
+
+
+def test_download_uv_install_targets_running_interpreter(monkeypatch):
+    """Test that the uv fallback installs into the interpreter running spaCy,
+    so it works when the venv isn't activated."""
+
+    monkeypatch.setattr(download_module.importlib.util, "find_spec", lambda name: None)
+    monkeypatch.setattr(download_module.shutil, "which", lambda name: "uv")
+    assert download_module._get_pip_install_cmd() == [
+        "uv",
+        "pip",
+        "install",
+        "--python",
+        sys.executable,
+    ]
