@@ -990,8 +990,7 @@ class Language:
         if name in self._config["initialize"]["components"]:
             self._config["initialize"]["components"].pop(name)
         # Make sure the name is also removed from the set of disabled components
-        if name in self.disabled:
-            self._disabled.remove(name)
+        self._disabled.discard(name)
         self._link_components()
         return removed
 
