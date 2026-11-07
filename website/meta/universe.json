@@ -1,6 +1,42 @@
 {
     "resources": [
         {
+            "id": "anyseg",
+            "title": "anySeg",
+            "slogan": "Fast tokenizer and sentence segmenter written in Rust, with the conventions of Universal Dependencies",
+            "description": "anySeg segments text into tokens, words and sentences with their positions in the source text, following the conventions of Universal Dependencies; the core is written in Rust and the text is never changed. Its spaCy integration adds the tokenizer `anyseg.Tokenizer.v1` and the component `anyseg_sentencizer`, registered through entry points: they are used by name in a config, and a saved pipeline loads with them. The component sets the sentence starts before the parser, which keeps them. With `ru_core_news_sm` on the UD Russian test sets, sentence F1 goes from 95.4% to 98.9% on SynTagRus and from 80.4% to 89.9% on Taiga, LAS from raw text rises by 1 to 3.5 points, and the tokenizer is about ten times faster than the one of spaCy. With `es_core_news_sm` on the UD Spanish test sets, sentence F1 goes from 97.7% to 98.7% on AnCora and from 88.1% to 91.0% on GSD, and LAS rises by 1.2 to 1.7 points. The words of a multiword token, such as Spanish `del`, are in `token._.anyseg_words`. `anyseg.spacy.to_doc` and `from_doc` convert between a `Doc` and a document with the columns of CoNLL-U. Russian and Spanish are supported.",
+            "github": "SergeyShk/anySeg",
+            "pip": "anyseg[spacy]",
+            "code_example": [
+                "import spacy",
+                "",
+                "tokenizer = {\"@tokenizers\": \"anyseg.Tokenizer.v1\"}",
+                "nlp = spacy.load(\"ru_core_news_sm\", config={\"nlp\": {\"tokenizer\": tokenizer}})",
+                "nlp.add_pipe(\"anyseg_sentencizer\", before=\"parser\")",
+                "",
+                "doc = nlp(\"В 1914 г. цена была 3 000 руб. Затем выросла\")",
+                "print([token.text for token in doc])",
+                "print([sentence.text for sentence in doc.sents])"
+            ],
+            "code_language": "python",
+            "url": "https://sergeyshk.github.io/anySeg/spacy/",
+            "category": [
+                "pipeline",
+                "standalone"
+            ],
+            "tags": [
+                "russian",
+                "spanish",
+                "tokenizer",
+                "sentence segmentation",
+                "universal dependencies"
+            ],
+            "author": "Sergey Shkarin",
+            "author_links": {
+                "github": "SergeyShk"
+            }
+        },
+        {
             "id": "TeNs",
             "title": "Temporal Expressions Normalization spaCy",
             "thumb": "https://github-production-user-asset-6210df.s3.amazonaws.com/40547052/433595900-fae3c9d9-7181-4d8b-8b49-e6dc4fca930b.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250414%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250414T235545Z&X-Amz-Expires=300&X-Amz-Signature=e21d3c06300ceb15fa1dadd7cb60081cc9f1b35e5a7bfd07f6e8b90dd7fad9d0&X-Amz-SignedHeaders=host",
