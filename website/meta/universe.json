@@ -4,7 +4,7 @@
             "id": "anyseg",
             "title": "anySeg",
             "slogan": "Fast tokenizer and sentence segmenter written in Rust, with the conventions of Universal Dependencies",
-            "description": "anySeg segments text into tokens and sentences with their positions in the source text, following the conventions of Universal Dependencies; the core is written in Rust and the text is never changed. Its spaCy integration adds the tokenizer `anyseg.Tokenizer.v1` and the component `anyseg_sentencizer`, registered through entry points: they are used by name in a config, and a saved pipeline loads with them. The component sets the sentence starts before the parser, which keeps them. With `ru_core_news_sm` on the UD Russian test sets, sentence F1 goes from 95.4% to 98.5% on SynTagRus and from 80.4% to 89.9% on Taiga, LAS from raw text rises by 1 to 3.5 points, and the tokenizer is about ten times faster than the one of spaCy. `anyseg.spacy.to_doc` and `from_doc` convert between a `Doc` and a document with the columns of CoNLL-U. Russian is supported.",
+            "description": "anySeg segments text into tokens, words and sentences with their positions in the source text, following the conventions of Universal Dependencies; the core is written in Rust and the text is never changed. Its spaCy integration adds the tokenizer `anyseg.Tokenizer.v1` and the component `anyseg_sentencizer`, registered through entry points: they are used by name in a config, and a saved pipeline loads with them. The component sets the sentence starts before the parser, which keeps them. With `ru_core_news_sm` on the UD Russian test sets, sentence F1 goes from 95.4% to 98.9% on SynTagRus and from 80.4% to 89.9% on Taiga, LAS from raw text rises by 1 to 3.5 points, and the tokenizer is about ten times faster than the one of spaCy. With `es_core_news_sm` on the UD Spanish test sets, sentence F1 goes from 97.7% to 98.7% on AnCora and from 88.1% to 91.0% on GSD, and LAS rises by 1.2 to 1.7 points. The words of a multiword token, such as Spanish `del`, are in `token._.anyseg_words`. `anyseg.spacy.to_doc` and `from_doc` convert between a `Doc` and a document with the columns of CoNLL-U. Russian and Spanish are supported.",
             "github": "SergeyShk/anySeg",
             "pip": "anyseg[spacy]",
             "code_example": [
@@ -26,6 +26,7 @@
             ],
             "tags": [
                 "russian",
+                "spanish",
                 "tokenizer",
                 "sentence segmentation",
                 "universal dependencies"
