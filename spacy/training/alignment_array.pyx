@@ -9,7 +9,7 @@ from libc.stdint cimport int32_t
 
 
 cdef class AlignmentArray:
-    """AlignmentArray is similar to Thinc's Ragged with two simplfications:
+    """AlignmentArray is similar to Thinc's Ragged with two simplifications:
     indexing returns numpy arrays and this type can only be used for CPU arrays.
     However, these changes make AlignmentArray more efficient for indexing in a
     tight loop."""

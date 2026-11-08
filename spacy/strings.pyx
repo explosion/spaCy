@@ -51,7 +51,7 @@ def get_string_id(key):
         # Coerce the integral key to the expected primitive hash type.
         # This ensures that custom/overloaded "primitive" data types
         # such as those implemented by numpy are not inadvertently used
-        # downsteam (as these are internally implemented as custom PyObjects
+        # downstream (as these are internally implemented as custom PyObjects
         # whose comparison operators can incur a significant overhead).
         return str_hash
     else:

@@ -106,7 +106,7 @@ class BaseDefaults:
 
 def create_tokenizer() -> Callable[["Language"], Tokenizer]:
     """Registered function to create a tokenizer. Returns a factory that takes
-    the nlp object and returns a Tokenizer instance using the language detaults.
+    the nlp object and returns a Tokenizer instance using the language defaults.
     """
 
     def tokenizer_factory(nlp: "Language") -> Tokenizer:
@@ -2450,7 +2450,7 @@ class _Sender:
             q.put(item)
 
     def step(self) -> None:
-        """Tell sender that comsumed one item. Data is sent to the workers after
+        """Tell sender that consumed one item. Data is sent to the workers after
         every chunk_size calls.
         """
         self.count += 1

@@ -153,7 +153,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
 
     def add_alias(self, str alias, entities, probabilities):
         """
-        For a given alias, add its potential entities and prior probabilies to the KB.
+        For a given alias, add its potential entities and prior probabilities to the KB.
         Return the alias_hash at the end
         """
         if alias is None or len(alias) == 0:

@@ -57,7 +57,7 @@ cdef class DependencyMatcher:
         self._root = defaultdict(list)
 
         # Associates each key to a list of dicts where each dict describes all
-        # branches from a token (identifed by its position) to other tokens as
+        # branches from a token (identified by its position) to other tokens as
         # a list of tuples: ('REL_OP', 'LEFT_ID')
         # e.g. {'key': [{2: [('<', 'left_id'), ...] ...}, ... ], ...}
         self._tree = defaultdict(list)
