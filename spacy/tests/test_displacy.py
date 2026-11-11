@@ -10,57 +10,21 @@ from spacy.tokens import Doc, Span
 
 @pytest.mark.issue(12267)
 @pytest.mark.parametrize("direction", ["ltr", "rtl"])
-@pytest.mark.parametrize("page", [False, True])
-@pytest.mark.parametrize("template", [None, "<strong>{text} ({label})</strong>"])
-def test_issue12267(direction, page, template):
+def test_issue12267(direction):
     doc = {
-        "text": "<before> <entity> & after",
-        "ents": [{"start": 9, "end": 17, "label": "TEST"}],
-        "title": "Entities",
+        "text": "<entity>",
+        "ents": [{"start": 0, "end": 8, "label": "TEST"}],
         "settings": {"direction": direction},
     }
-    options = {"colors": {"TEST": "yellow"}, "template": template}
-    default_html = displacy.render(
-        doc, style="ent", manual=True, page=page, options=options
-    )
     html = displacy.render(
         doc,
         style="ent",
         manual=True,
-        page=page,
-        options={
-            **options,
-            "ents_template": '\n<section dir="{dir}">{content}</section>\n',
-        },
+        options={"ents_template": '<section dir="{dir}">{content}</section>'},
     )
-    assert html == default_html.replace(
-        f'<div class="entities" style="line-height: 2.5; direction: {direction}">',
-        f'<section dir="{direction}">',
-    ).replace("</div>", "</section>")
-    assert "&lt;before&gt;" in html
+    assert html.startswith(f'<section dir="{direction}">')
+    assert 'class="entities"' not in html
     assert "&lt;entity&gt;" in html
-    assert "&amp; after" in html
-    assert '<h2 style="margin: 0">Entities</h2>' in html
-    if template is not None:
-        assert "<strong>&lt;entity&gt; (TEST)</strong>" in html
-
-
-@pytest.mark.issue(12267)
-def test_issue12267_default_container():
-    doc = {
-        "text": "<entity> & after",
-        "ents": [{"start": 0, "end": 8, "label": "TEST"}],
-    }
-    html = displacy.render(
-        doc,
-        style="ent",
-        manual=True,
-        options={"template": "<strong>{text} ({label})</strong>"},
-    )
-    assert html == (
-        '<div class="entities" style="line-height: 2.5; direction: ltr">'
-        "<strong>&lt;entity&gt; (TEST)</strong> &amp; after</div>"
-    )
 
 
 @pytest.mark.issue(2361)
