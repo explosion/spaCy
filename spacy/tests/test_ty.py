@@ -1,5 +1,39 @@
+import pytest
+
 import spacy
 from spacy import ty
+
+
+@pytest.mark.issue(13246)
+def test_issue13246(tmp_path):
+    mypy = pytest.importorskip("mypy.api")
+    config = tmp_path / "mypy.ini"
+    config.write_text("[mypy]\nfollow_imports_for_stubs = True\n", encoding="utf8")
+    consumer = tmp_path / "consumer.py"
+    consumer.write_text(
+        "import spacy\n"
+        "from spacy import Config, explain, info, prefer_gpu, registry, require_cpu, require_gpu\n"
+        "config: Config = spacy.Config()\n"
+        "using_gpu: bool = spacy.prefer_gpu()\n"
+        "using_cpu: bool = spacy.require_cpu()\n"
+        "gpu_required: bool = spacy.require_gpu()\n"
+        "spacy.info(silent=True)\n"
+        "spacy.explain\n"
+        "spacy.registry.languages.get_all()\n",
+        encoding="utf8",
+    )
+    stdout, stderr, status = mypy.run(
+        [
+            "--strict",
+            "--no-implicit-reexport",
+            "--follow-imports=silent",
+            "--ignore-missing-imports",
+            "--config-file",
+            str(config),
+            str(consumer),
+        ]
+    )
+    assert status == 0, stdout + stderr
 
 
 def test_component_types():
