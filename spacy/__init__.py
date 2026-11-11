@@ -8,16 +8,21 @@ from .errors import setup_default_warnings
 setup_default_warnings()  # noqa: E402
 
 # These are imported as part of the API
-from thinc.api import Config, prefer_gpu, require_cpu, require_gpu  # noqa: F401
+from thinc.api import (
+    Config as Config,
+    prefer_gpu as prefer_gpu,
+    require_cpu as require_cpu,
+    require_gpu as require_gpu,
+)
 
 from . import (
     pipeline,  # noqa: F401
     util,
 )
 from .about import __version__  # noqa: F401
-from .cli.info import info  # noqa: F401
+from .cli.info import info as info
 from .errors import Errors
-from .glossary import explain  # noqa: F401
+from .glossary import explain as explain
 from .language import Language
 from .pipeline.factories import register_factories
 from .registrations import populate_registry
@@ -31,7 +36,10 @@ from .schemas import (  # noqa: F401
     ConfigSchemaTraining,
 )
 from .training import Example  # noqa: F401
-from .util import logger, registry  # noqa: F401
+from .util import (
+    logger,  # noqa: F401
+    registry as registry,
+)
 from .vocab import Vocab
 
 _rebuild_ns = {"Language": Language, "Vocab": Vocab, "Example": Example}
