@@ -7,12 +7,13 @@ from spacy import ty
 @pytest.mark.issue(13246)
 def test_issue13246(tmp_path):
     mypy = pytest.importorskip("mypy.api")
+    # Apply silent import following to stubs too, so only consumer errors are reported.
     config = tmp_path / "mypy.ini"
     config.write_text("[mypy]\nfollow_imports_for_stubs = True\n", encoding="utf8")
     consumer = tmp_path / "consumer.py"
     consumer.write_text(
         "import spacy\n"
-        "from spacy import Config, explain, info, prefer_gpu, registry, require_cpu, require_gpu\n"
+        "from spacy import Config, Language, explain, info, prefer_gpu, registry, require_cpu, require_gpu\n"
         "config: Config = spacy.Config()\n"
         "using_gpu: bool = spacy.prefer_gpu()\n"
         "using_cpu: bool = spacy.require_cpu()\n"
@@ -30,6 +31,8 @@ def test_issue13246(tmp_path):
             "--ignore-missing-imports",
             "--config-file",
             str(config),
+            "--cache-dir",
+            str(tmp_path / ".mypy_cache"),
             str(consumer),
         ]
     )

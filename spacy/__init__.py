@@ -23,7 +23,7 @@ from .about import __version__  # noqa: F401
 from .cli.info import info as info
 from .errors import Errors
 from .glossary import explain as explain
-from .language import Language
+from .language import Language as Language
 from .pipeline.factories import register_factories
 from .registrations import populate_registry
 
