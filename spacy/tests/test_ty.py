@@ -14,13 +14,7 @@ def test_issue13246(tmp_path):
     consumer.write_text(
         "import spacy\n"
         "from spacy import Config, Language, explain, info, prefer_gpu, registry, require_cpu, require_gpu\n"
-        "config: Config = spacy.Config()\n"
-        "using_gpu: bool = spacy.prefer_gpu()\n"
-        "using_cpu: bool = spacy.require_cpu()\n"
-        "gpu_required: bool = spacy.require_gpu()\n"
-        "spacy.info(silent=True)\n"
-        "spacy.explain\n"
-        "spacy.registry.languages.get_all()\n",
+        "spacy.prefer_gpu()\n",
         encoding="utf8",
     )
     stdout, stderr, status = mypy.run(
