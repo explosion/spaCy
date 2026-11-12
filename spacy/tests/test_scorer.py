@@ -535,3 +535,22 @@ def test_score_cats(en_tokenizer):
         threshold=0.1,
     )
     assert scores["cats_macro_f"] == 0.5
+
+
+def test_score_cats_missing_predicted_cats(en_tokenizer):
+    """Test that labels missing from the predicted doc are counted as false negatives."""
+    text = "some text"
+    gold_doc = en_tokenizer(text)
+    gold_doc.cats = {"POSITIVE": 1.0, "NEGATIVE": 0.0}
+    labels = list(gold_doc.cats.keys())
+
+    pred_doc = en_tokenizer(text)
+    pred_doc.cats = {}
+    scores = Scorer.score_cats(
+        [Example(pred_doc, gold_doc)], "cats", labels=labels, multi_label=False
+    )
+
+    # the highest-scoring gold label was not predicted at all, so it counts as a false negative
+    assert scores["cats_f_per_type"]["POSITIVE"] == {"p": 0.0, "r": 0.0, "f": 0.0}
+    assert scores["cats_f_per_type"]["NEGATIVE"] == {"p": 0.0, "r": 0.0, "f": 0.0}
+    assert scores["cats_macro_f"] == 0.0
