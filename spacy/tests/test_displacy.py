@@ -8,6 +8,25 @@ from spacy.lang.fa import Persian
 from spacy.tokens import Doc, Span
 
 
+@pytest.mark.issue(12267)
+@pytest.mark.parametrize("direction", ["ltr", "rtl"])
+def test_issue12267(direction):
+    doc = {
+        "text": "<entity>",
+        "ents": [{"start": 0, "end": 8, "label": "TEST"}],
+        "settings": {"direction": direction},
+    }
+    html = displacy.render(
+        doc,
+        style="ent",
+        manual=True,
+        options={"ents_template": '<section dir="{dir}">{content}</section>'},
+    )
+    assert html.startswith(f'<section dir="{direction}">')
+    assert 'class="entities"' not in html
+    assert "&lt;entity&gt;" in html
+
+
 @pytest.mark.issue(2361)
 def test_issue2361(de_vocab):
     """Test if < is escaped when rendering"""

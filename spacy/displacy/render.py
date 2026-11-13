@@ -529,6 +529,7 @@ class EntityRenderer:
             self.ents = [ent.upper() for ent in self.ents]
         self.direction = DEFAULT_DIR
         self.lang = DEFAULT_LANG
+        self.ents_template = options.get("ents_template") or TPL_ENTS
         template = options.get("template")
         if template:
             self.ent_template = template
@@ -607,7 +608,7 @@ class EntityRenderer:
             markup += escape_html(fragment)
             if len(fragments) > 1 and i != len(fragments) - 1:
                 markup += "<br>"
-        markup = TPL_ENTS.format(content=markup, dir=self.direction)
+        markup = self.ents_template.format(content=markup, dir=self.direction)
         if title:
             markup = TPL_TITLE.format(title=title) + markup
         return markup
