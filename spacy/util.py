@@ -1511,7 +1511,7 @@ def get_words_and_spaces(
     # align words with text
     for word in norm_words:
         try:
-            word_start = text[text_pos:].index(word)
+            word_start = text.index(word, text_pos) - text_pos
         except ValueError:
             raise ValueError(Errors.E194.format(text=text, words=words)) from None
         if word_start > 0:

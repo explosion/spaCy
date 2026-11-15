@@ -659,7 +659,7 @@ def _guess_spaces(text, words):
     # align words with text
     for word in words:
         try:
-            word_start = text[text_pos:].index(word)
+            word_start = text.index(word, text_pos) - text_pos
         except ValueError:
             spaces.append(True)
             continue
