@@ -408,13 +408,21 @@ def test_doc_retokenize_merge_extension_attrs(en_vocab):
 
 @pytest.mark.parametrize("underscore_attrs", [{"a": "x"}, {"b": "x"}, {"c": "x"}, [1]])
 def test_doc_retokenize_merge_extension_attrs_invalid(en_vocab, underscore_attrs):
+    # These extensions are global. The assertion raises, so unregister them or later
+    # tests see the getter/method left behind. See #14081.
     Token.set_extension("a", getter=lambda x: x, force=True)
     Token.set_extension("b", method=lambda x: x, force=True)
-    doc = Doc(en_vocab, words=["hello", "world", "!"])
-    attrs = {"_": underscore_attrs}
-    with pytest.raises(ValueError):
-        with doc.retokenize() as retokenizer:
-            retokenizer.merge(doc[0:2], attrs=attrs)
+    try:
+        doc = Doc(en_vocab, words=["hello", "world", "!"])
+        attrs = {"_": underscore_attrs}
+        with pytest.raises(ValueError):
+            with doc.retokenize() as retokenizer:
+                retokenizer.merge(doc[0:2], attrs=attrs)
+    finally:
+        Token.remove_extension("a")
+        Token.remove_extension("b")
+    assert not Token.has_extension("a")
+    assert not Token.has_extension("b")
 
 
 def test_doc_retokenizer_merge_lex_attrs(en_vocab):
