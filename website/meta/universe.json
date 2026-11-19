@@ -1,6 +1,43 @@
 {
     "resources": [
         {
+            "id": "spacy-redefiner",
+            "title": "spacy-redefiner",
+            "slogan": "Extract the entities you describe in a plain-English rulebook",
+            "description": "Pipeline component for [ReDefiNER](https://github.com/jungroo-ai/redefiner), an open 0.8B model (Apache 2.0) that extracts the entity types described in a rulebook: a one-line description per type, plus optional rules. To change what is extracted, edit the rulebook; no training data needed. Results go to `doc.ents` or a span group, with a confidence per span. English only; runs on CPU or GPU.",
+            "github": "Jungroo-AI/spacy-redefiner",
+            "pip": "spacy-redefiner",
+            "code_example": [
+                "import spacy",
+                "",
+                "rulebook = '''[TYPE] PERSON",
+                "[DESCRIPTION] A person's name.",
+                "",
+                "[TYPE] ORGANIZATION",
+                "[DESCRIPTION] A company, institution or society.'''",
+                "",
+                "nlp = spacy.blank('en')",
+                "nlp.add_pipe('redefiner', config={'rulebook': rulebook})",
+                "doc = nlp('Ada Lovelace corresponded with the Royal Society.')",
+                "print([(ent.text, ent.label_) for ent in doc.ents])",
+                "# [('Ada Lovelace', 'PERSON'), ('Royal Society', 'ORGANIZATION')]"
+            ],
+            "code_language": "python",
+            "url": "https://github.com/jungroo-ai/redefiner",
+            "author": "Jungroo AI Labs",
+            "author_links": {
+                "github": "Jungroo-AI",
+                "website": "https://jungroo.com"
+            },
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "NER",
+                "entity-extraction"
+            ]
+        },
+        {
             "id": "TeNs",
             "title": "Temporal Expressions Normalization spaCy",
             "thumb": "https://github-production-user-asset-6210df.s3.amazonaws.com/40547052/433595900-fae3c9d9-7181-4d8b-8b49-e6dc4fca930b.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250414%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250414T235545Z&X-Amz-Expires=300&X-Amz-Signature=e21d3c06300ceb15fa1dadd7cb60081cc9f1b35e5a7bfd07f6e8b90dd7fad9d0&X-Amz-SignedHeaders=host",
