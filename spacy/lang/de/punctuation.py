@@ -35,13 +35,20 @@ _suffixes = (
 
 _quotes = CONCAT_QUOTES.replace("'", "")
 
+_gender_endings = "|".join(
+    ["innen", "in", "en", "er", "em", "es", "n", "r", "e", "m", "s"]
+)
+
 _infixes = (
     LIST_ELLIPSES
     + LIST_ICONS
     + [
         r"(?<=[{al}])\.(?=[{au}])".format(al=ALPHA_LOWER, au=ALPHA_UPPER),
         r"(?<=[{a}])[,!?](?=[{a}])".format(a=ALPHA),
-        r"(?<=[{a}])[:<>=](?=[{a}])".format(a=ALPHA),
+        r"(?<=[{a}])[<>=](?=[{a}])".format(a=ALPHA),
+        # Split a colon between letters, except in gender-inclusive forms
+        # like "Kund:innen", "Ärzt:in", "eine:n" or "jede:r"
+        r"(?<=[{a}]):(?!(?:{g})\b)(?=[{a}])".format(a=ALPHA, g=_gender_endings),
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
         r"(?<=[0-9{a}])\/(?=[0-9{a}])".format(a=ALPHA),
         r"(?<=[{a}])([{q}\)\]\(\[])(?=[{a}])".format(a=ALPHA, q=_quotes),

@@ -106,3 +106,42 @@ def test_de_tokenizer_splits_double_hyphen_infix(de_tokenizer):
     assert tokens[6].text == "--"
     assert tokens[7].text == "sind"
     assert tokens[8].text == "kompliziert"
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["Kund:innen", "Mitarbeiter:innen", "Ärzt:in", "eine:n", "jede:r", "ein:e", "einem:r"],
+)
+def test_de_tokenizer_keeps_gender_colon(de_tokenizer, text):
+    tokens = de_tokenizer(text)
+    assert len(tokens) == 1
+    assert tokens[0].text == text
+
+
+def test_de_tokenizer_keeps_gender_colon_in_sentence(de_tokenizer):
+    tokens = de_tokenizer("Wir suchen eine:n Ärzt:in für unsere Kund:innen.")
+    assert [t.text for t in tokens] == [
+        "Wir",
+        "suchen",
+        "eine:n",
+        "Ärzt:in",
+        "für",
+        "unsere",
+        "Kund:innen",
+        ".",
+    ]
+
+
+@pytest.mark.parametrize(
+    "text", ["Achtung:Bitte", "Ort:Berlin", "Ergebnis:nicht", "Bayern:Dortmund"]
+)
+def test_de_tokenizer_splits_colon_infix(de_tokenizer, text):
+    tokens = de_tokenizer(text)
+    assert len(tokens) == 3
+    assert tokens[1].text == ":"
+
+
+@pytest.mark.parametrize("text", ["a<b", "a>b", "a=b"])
+def test_de_tokenizer_splits_comparison_infix(de_tokenizer, text):
+    tokens = de_tokenizer(text)
+    assert len(tokens) == 3
