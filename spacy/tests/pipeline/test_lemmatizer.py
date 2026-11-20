@@ -5,6 +5,7 @@ import pytest
 from spacy import registry, util
 from spacy.lang.en import English
 from spacy.lookups import Lookups
+from spacy.tokens import Doc
 
 from ..util import make_tempdir
 
@@ -79,6 +80,44 @@ def test_lemmatizer_config(nlp):
     doc = lemmatizer(doc)
     assert doc[0].text == "coping"
     assert doc[0].lemma_ == "cope"
+
+
+@pytest.mark.parametrize(
+    "text,lemma",
+    [
+        ("rides", "ride"),
+        ("riding", "ride"),
+        ("uses", "use"),
+        ("co-authored", "co-author"),
+    ],
+)
+def test_lemmatizer_rule_order(text, lemma):
+    """Forms found in the index are preferred in the order of the rules, so
+    "rides" is "ride" (rule "es" -> "e") rather than "rid" (rule "es" -> "")."""
+    lookups = Lookups()
+    lookups.add_table("lemma_index", {"verb": ("ride", "rid", "use", "co-author")})
+    lookups.add_table("lemma_exc", {"verb": {}})
+    lookups.add_table(
+        "lemma_rules",
+        {
+            "verb": [
+                ["s", ""],
+                ["ies", "y"],
+                ["es", "e"],
+                ["es", ""],
+                ["ed", "e"],
+                ["ed", ""],
+                ["ing", "e"],
+                ["ing", ""],
+            ]
+        },
+    )
+    nlp = English()
+    lemmatizer = nlp.add_pipe("lemmatizer", config={"mode": "rule"})
+    lemmatizer.initialize(lookups=lookups)
+    doc = Doc(nlp.vocab, words=[text], pos=["VERB"])
+    doc = lemmatizer(doc)
+    assert doc[0].lemma_ == lemma
 
 
 def test_lemmatizer_serialize(nlp):

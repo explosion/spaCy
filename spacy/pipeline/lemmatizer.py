@@ -209,22 +209,24 @@ class Lemmatizer(Pipe):
         rules = rules_table.get(univ_pos, {})
         orig = string
         string = string.lower()
-        forms = []  # type: ignore
+        index_forms = []
+        non_alpha_forms = []
         oov_forms = []
         for old, new in rules:
             if string.endswith(old):
                 form = string[: len(string) - len(old)] + new
                 if not form:
                     pass
-                elif form in index or not form.isalpha():
-                    if form in index:
-                        forms.insert(0, form)
-                    else:
-                        forms.append(form)
+                elif form in index:
+                    index_forms.append(form)
+                elif not form.isalpha():
+                    non_alpha_forms.append(form)
                 else:
                     oov_forms.append(form)
-        # Remove duplicates but preserve the ordering of applied "rules"
-        forms = list(dict.fromkeys(forms))
+        # Forms found in the index take priority over non-alphabetic forms
+        # (e.g. hyphenated words). Within each group, keep the order of the
+        # applied rules, and remove duplicates.
+        forms = list(dict.fromkeys(index_forms + non_alpha_forms))
         # Put exceptions at the front of the list, so they get priority.
         # This is a dodgy heuristic -- but it's the best we can do until we get
         # frequencies on this. We can at least prune out problematic exceptions,
