@@ -110,7 +110,15 @@ def test_de_tokenizer_splits_double_hyphen_infix(de_tokenizer):
 
 @pytest.mark.parametrize(
     "text",
-    ["Kund:innen", "Mitarbeiter:innen", "Ärzt:in", "eine:n", "jede:r", "ein:e", "einem:r"],
+    [
+        "Kund:innen",
+        "Mitarbeiter:innen",
+        "Ärzt:in",
+        "eine:n",
+        "jede:r",
+        "ein:e",
+        "einem:r",
+    ],
 )
 def test_de_tokenizer_keeps_gender_colon(de_tokenizer, text):
     tokens = de_tokenizer(text)
