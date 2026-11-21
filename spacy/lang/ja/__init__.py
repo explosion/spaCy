@@ -1,6 +1,7 @@
 import re
 from collections import namedtuple
 from pathlib import Path
+from threading import Lock
 from typing import Any, Callable, Dict, Optional, Union
 
 import srsly
@@ -44,6 +45,7 @@ class JapaneseTokenizer(DummyTokenizer):
         self.vocab = vocab
         self.split_mode = split_mode
         self.tokenizer = try_sudachi_import(self.split_mode)
+        self._tokenizer_lock = Lock()
         # if we're using split mode A we don't need subtokens
         self.need_subtokens = not (split_mode is None or split_mode == "A")
 
@@ -51,8 +53,10 @@ class JapaneseTokenizer(DummyTokenizer):
         return JapaneseTokenizer, (self.vocab, self.split_mode)
 
     def __call__(self, text: str) -> Doc:
+        # SudachiPy releases the GIL and permits one call per tokenizer at a time.
+        with self._tokenizer_lock:
+            sudachipy_tokens = self.tokenizer.tokenize(text)
         # convert sudachipy.morpheme.Morpheme to DetailedToken and merge continuous spaces
-        sudachipy_tokens = self.tokenizer.tokenize(text)
         dtokens = self._get_dtokens(sudachipy_tokens)
         dtokens, spaces = get_dtokens_and_spaces(dtokens, text)
 

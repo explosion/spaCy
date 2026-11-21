@@ -1,3 +1,6 @@
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+
 import pytest
 
 from spacy.lang.ja import DetailedToken, Japanese
@@ -71,6 +74,20 @@ def test_issue2901():
 def test_ja_tokenizer(ja_tokenizer, text, expected_tokens):
     tokens = [token.text for token in ja_tokenizer(text)]
     assert tokens == expected_tokens
+
+
+@pytest.mark.issue(13733)
+def test_ja_tokenizer_multiple_threads(ja_tokenizer):
+    texts = [text * 32 for text, _ in TOKENIZER_TESTS]
+    expected = [[token.text for token in ja_tokenizer(text)] for text in texts]
+    barrier = Barrier(len(texts))
+
+    def tokenize(text):
+        barrier.wait()
+        return [token.text for token in ja_tokenizer(text)]
+
+    with ThreadPoolExecutor(max_workers=len(texts)) as pool:
+        assert list(pool.map(tokenize, texts)) == expected
 
 
 @pytest.mark.parametrize("text,expected_tags", TAG_TESTS)
