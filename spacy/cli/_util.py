@@ -206,7 +206,7 @@ def get_git_version(
     """
     try:
         ret = run_command("git --version", capture=True)
-    except:
+    except Exception:
         raise RuntimeError(error)
     stdout = ret.stdout.strip()
     if not stdout or not stdout.startswith("git version"):
