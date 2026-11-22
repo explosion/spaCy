@@ -3804,6 +3804,46 @@
             }
         },
         {
+            "id": "coreferee-ru",
+            "title": "Coreferee-ru",
+            "slogan": "Russian-language coreference resolution",
+            "github": "posavinova/coreferee-ru",
+            "url": "https://github.com/posavinova/coreferee-ru",
+            "description": "Coreferee-ru is a Russian-language adaptation of the Coreferee pipeline plugin that performs coreference resolution. It uses a mixture of neural networks and programmed rules. Please note you will need to [install models](https://github.com/posavinova/coreferee-ru#installation) before running the code example.",
+            "pip": "coreferee-ru",
+            "category": [
+                "pipeline",
+                "models",
+                "standalone"
+            ],
+            "tags": [
+                "coreference-resolution",
+                "anaphora"
+            ],
+            "code_example": [
+                "import spacy",
+                "import coreferee_ru",
+                "",
+                "nlp = spacy.load(\"ru_core_news_lg\")",
+                "nlp.add_pipe(\"coreferee-ru\")",
+                "doc = nlp(\"Хотя они добрались до их дома, Петр и Анна грустили. Он ушел спать. Она взяла свою любимую книгу, которую купила давно.\")",
+                "doc._.coref_chains.print()",
+                "# Output:",
+                "# 0: они(1), их(4), [Петр(7); Анна(9)]",
+                "# 1: Петр(7), Он(12)",
+                "# 2: Анна(9), Она(16), свою(18)",
+                "# 3: книгу(20), которую(22)",
+                "#",
+                "print(doc._.coref_chains.resolve(doc[1]))",
+                "# Output:",
+                "# [Петр, Анна]"
+            ],
+            "author": "Polina Savinova",
+            "author_links": {
+                "github": "posavinova"
+            }
+        },
+        {
             "id": "spacy-transformers",
             "title": "spacy-transformers",
             "slogan": "spaCy pipelines for pretrained BERT, XLNet and GPT-2",
