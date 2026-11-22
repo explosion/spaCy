@@ -26,8 +26,9 @@ TPL_DEP_WORDS_LEMMA = """
 TPL_DEP_ARCS = """
 <g class="displacy-arrow">
     <path class="displacy-arc" id="arrow-{id}-{i}" stroke-width="{stroke}px" d="{arc}" fill="none" stroke="currentColor"/>
+    <path class="displacy-label-arc" id="label-{id}-{i}" d="{label_arc}" fill="none" stroke="none"/>
     <text dy="1.25em" style="font-size: 0.8em; letter-spacing: 1px">
-        <textPath xlink:href="#arrow-{id}-{i}" class="displacy-label" startOffset="50%" side="{label_side}" fill="currentColor" text-anchor="middle">{label}</textPath>
+        <textPath xlink:href="#label-{id}-{i}" class="displacy-label" startOffset="50%" fill="currentColor" text-anchor="middle">{label}</textPath>
     </text>
     <path class="displacy-arrowhead" d="{head}" fill="currentColor"/>
 </g>
