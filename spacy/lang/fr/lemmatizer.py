@@ -14,6 +14,14 @@ class FrenchLemmatizer(Lemmatizer):
     the lookup table.
     """
 
+    def is_base_form(self, token: Token) -> bool:
+        """Check whether the token is already in base form so that suffix
+        rules are skipped. French infinitives (VerbForm=Inf) are already in
+        base form; applying further suffix rules to them produces incorrect
+        results (e.g. "descendre" → "descendrer").
+        """
+        return token.morph.to_dict().get("VerbForm") == "Inf"
+
     @classmethod
     def get_lookups_config(cls, mode: str) -> Tuple[List[str], List[str]]:
         if mode == "rule":
@@ -29,6 +37,8 @@ class FrenchLemmatizer(Lemmatizer):
         string = token.text
         univ_pos = token.pos_.lower()
         if univ_pos in ("", "eol", "space"):
+            return [string.lower()]
+        if self.is_base_form(token):
             return [string.lower()]
         elif "lemma_rules" not in self.lookups or univ_pos not in (
             "noun",
