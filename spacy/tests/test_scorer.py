@@ -535,3 +535,25 @@ def test_score_cats(en_tokenizer):
         threshold=0.1,
     )
     assert scores["cats_macro_f"] == 0.5
+
+
+def test_score_cats_exclusive_missing_pred_cats(en_tokenizer):
+    text = "some text"
+    labels = ["POSITIVE", "NEGATIVE"]
+    gold_doc = en_tokenizer(text)
+    gold_doc.cats = {"POSITIVE": 1.0, "NEGATIVE": 0.0}
+    pred_doc = en_tokenizer(text)
+    pred_doc.cats = {"POSITIVE": 0.75, "NEGATIVE": 0.25}
+    # a predicted doc without any cats counts as a false negative
+    pred_doc_no_cats = en_tokenizer(text)
+    examples = [Example(pred_doc, gold_doc), Example(pred_doc_no_cats, gold_doc)]
+    scores = Scorer.score_cats(
+        examples,
+        "cats",
+        labels=labels,
+        multi_label=False,
+        positive_label="POSITIVE",
+    )
+    assert scores["cats_f_per_type"]["POSITIVE"]["p"] == 1.0
+    assert scores["cats_f_per_type"]["POSITIVE"]["r"] == approx(0.5)
+    assert scores["cats_score"] == approx(2 / 3)
