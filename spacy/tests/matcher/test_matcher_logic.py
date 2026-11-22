@@ -670,7 +670,7 @@ def test_matcher_remove():
     # removing once should work
     matcher.remove("Rule")
 
-    # should not return any maches anymore
+    # should not return any matches anymore
     results2 = matcher(nlp(text))
     assert len(results2) == 0
 

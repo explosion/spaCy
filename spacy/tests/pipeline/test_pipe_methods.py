@@ -47,7 +47,7 @@ def test_issue1506():
     nlp = English()
     for i, d in enumerate(nlp.pipe(string_generator())):
         # We should run cleanup more than one time to actually cleanup data.
-        # In first run — clean up only mark strings as «not hitted».
+        # In first run — clean up only mark strings as «not hit».
         if i == 10000 or i == 20000 or i == 30000:
             gc.collect()
         for t in d:
