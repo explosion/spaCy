@@ -1,4 +1,5 @@
 from .attributeruler import AttributeRuler
+from .coordinationruler import CoordinationSplitter
 from .dep_parser import DependencyParser
 from .edit_tree_lemmatizer import EditTreeLemmatizer
 from .entity_linker import EntityLinker
@@ -21,6 +22,7 @@ from .trainable_pipe import TrainablePipe
 
 __all__ = [
     "AttributeRuler",
+    "CoordinationSplitter",
     "DependencyParser",
     "EditTreeLemmatizer",
     "EntityLinker",
