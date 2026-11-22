@@ -290,3 +290,6 @@ Alternatively, you can run `pytest` on the tests from within the installed
 pip install -r requirements.txt
 python -m pytest --pyargs spacy
 ```
+## Contribution
+
+This project was modified as part of a Git and GitHub fork-and-pull request experiment.
