@@ -372,6 +372,7 @@ class ConfigSchemaTraining(BaseModel):
     annotating_components: List[str] = Field(..., title="Pipeline components that should set annotations during training")
     before_to_disk: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after training, before it's saved to disk")
     before_update: Optional[Callable[["Language", Dict[str, Any]], None]] = Field(..., title="Optional callback that is invoked at the start of each training step")
+    init_max_examples: Optional[StrictInt] = Field(None, ge=0, title="Maximum number of training examples to sample for pipeline initialization")
     # fmt: on
 
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
@@ -424,6 +425,7 @@ class ConfigSchemaInit(BaseModel):
     components: Dict[StrictStr, Dict[StrictStr, Any]] = Field(..., title="Arguments for TrainablePipe.initialize methods of pipeline components, keyed by component")
     before_init: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object before initialization")
     after_init: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after initialization")
+    init_max_examples: Optional[StrictInt] = Field(None, ge=0, title="Maximum number of training examples to sample for pipeline initialization")
     # fmt: on
 
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
