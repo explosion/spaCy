@@ -97,6 +97,11 @@ def cs_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def cy_tokenizer():
+    return get_lang_class("cy")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def da_tokenizer():
     return get_lang_class("da")().tokenizer
 

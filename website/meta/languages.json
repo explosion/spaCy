@@ -50,6 +50,12 @@
             "has_examples": true
         },
         {
+            "code": "cy",
+            "name": "Welsh",
+            "example": "Dyma frawddeg.",
+            "has_examples": true
+        },
+        {
             "code": "da",
             "name": "Danish",
             "example": "Dette er en sætning.",
