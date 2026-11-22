@@ -633,8 +633,14 @@ def pickle_vocab(vocab):
 def unpickle_vocab(sstore, vectors, morphology, _unused_object,
                    lex_attr_getters, lookups, get_noun_chunks):
     cdef Vocab vocab = Vocab()
-    vocab.vectors = vectors
+    # Set strings before vectors: the vectors setter shares the vocab's
+    # StringStore with the vectors table. In the reverse order, the vectors
+    # kept a reference to the fresh Vocab's empty StringStore, so hashes
+    # interned after unpickling (e.g. by the tokenizer in a multiprocessing
+    # worker) were missing when floret-mode vectors looked up token strings,
+    # raising E018.
     vocab.strings = sstore
+    vocab.vectors = vectors
     vocab.morphology = morphology
     vocab._unused_object = _unused_object
     vocab.lex_attr_getters = srsly.pickle_loads(lex_attr_getters)

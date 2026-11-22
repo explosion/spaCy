@@ -193,3 +193,9 @@ def test_pickle_vocab(strings, lex_attr):
     vocab_unpickled = pickle.loads(vocab_pickled)
     assert vocab.to_bytes() == vocab_unpickled.to_bytes()
     assert vocab_unpickled.vectors.mode == "floret"
+    # The unpickled vectors must share the vocab's StringStore, so that
+    # strings interned after unpickling (e.g. by the tokenizer in a
+    # multiprocessing worker) resolve in floret-mode string lookups (#13993)
+    assert vocab_unpickled.vectors.strings is vocab_unpickled.strings
+    key = vocab_unpickled.strings.add("post-unpickle-string")
+    assert vocab_unpickled.vectors.strings.as_string(key) == "post-unpickle-string"
