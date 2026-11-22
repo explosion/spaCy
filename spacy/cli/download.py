@@ -193,7 +193,7 @@ def _get_pip_install_cmd() -> list:
     if importlib.util.find_spec("pip") is not None:
         return [sys.executable, "-m", "pip", "install"]
     elif shutil.which("uv"):
-        return ["uv", "pip", "install"]
+        return ["uv", "pip", "install", "--python", sys.executable]
     else:
         msg.fail(
             "No package installer found",

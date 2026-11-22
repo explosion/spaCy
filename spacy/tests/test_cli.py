@@ -1,5 +1,6 @@
 import math
 import os
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -1237,3 +1238,20 @@ def test_download_rejects_relative_urls(monkeypatch):
     download_module.download("en_core_web_sm-3.7.1", direct=True)
     with pytest.raises(SystemExit):
         download_module.download("../en_core_web_sm-3.7.1", direct=True)
+
+
+@pytest.mark.issue(14055)
+def test_get_pip_install_cmd_uv_uses_python_flag(monkeypatch):
+    """uv fallback must target the running interpreter in unactivated uv venvs."""
+    monkeypatch.setattr(
+        download_module.importlib.util,
+        "find_spec",
+        lambda name: None if name == "pip" else True,
+    )
+    monkeypatch.setattr(
+        download_module.shutil,
+        "which",
+        lambda name: "/usr/bin/uv" if name == "uv" else None,
+    )
+    cmd = download_module._get_pip_install_cmd()
+    assert cmd == ["uv", "pip", "install", "--python", sys.executable]
