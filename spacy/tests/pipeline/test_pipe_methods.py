@@ -252,6 +252,17 @@ def test_remove_pipe(nlp, name):
     assert removed_component == new_pipe
 
 
+@pytest.mark.issue(14069)
+def test_remove_disabled_pipe_then_readd(nlp):
+    nlp.add_pipe("sentencizer")
+    nlp.disable_pipe("sentencizer")
+    nlp.remove_pipe("sentencizer")
+    assert "sentencizer" not in nlp.disabled
+    nlp.add_pipe("sentencizer")
+    assert nlp.disabled == []
+    assert nlp.pipe_names == ["sentencizer"]
+
+
 @pytest.mark.parametrize("name", ["my_component"])
 def test_disable_pipes_method(nlp, name):
     nlp.add_pipe("new_pipe", name=name)
