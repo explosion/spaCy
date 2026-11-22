@@ -26,6 +26,18 @@ def test_issue4348():
         for batch in batches:
             nlp.update(batch, sgd=optimizer, losses=losses)
 
+def test_tagger_predict_empty_docs_shape():
+    nlp = English()
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("A")
+    nlp.initialize()
+
+    docs = [nlp.make_doc(""), nlp.make_doc("")]
+    guesses = tagger.predict(docs)
+
+    assert len(guesses) == len(docs)
+    for guess in guesses:
+        assert guess.shape == (0,)
 
 def test_label_types():
     nlp = Language()

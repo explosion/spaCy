@@ -107,8 +107,7 @@ class Tagger(TrainablePipe):
         """
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
-            n_labels = len(self.labels)
-            guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
+            guesses = [self.model.ops.alloc((0,)) for doc in docs]
             assert len(guesses) == len(docs)
             return guesses
         scores = self.model.predict(docs)
