@@ -1,0 +1,3 @@
+{"id": "news-001", "source_id": "article-a", "text": "عمران خان نے اسلام آباد میں خطاب کیا۔", "entities": [{"start": 0, "end": 9, "label": "PER"}, {"start": 13, "end": 23, "label": "LOC"}]}
+{"id": "news-002", "source_id": "article-b", "text": "پی ٹی آئی کراچی میں ریلی نکالے گی۔", "entities": [{"start": 0, "end": 9, "label": "ORG"}, {"start": 10, "end": 15, "label": "LOC"}]}
+{"id": "news-003", "source_id": "article-c", "text": "ڈاکٹر خان لاہور یونیورسٹی میں پڑھاتے ہیں۔", "entities": [{"start": 0, "end": 9, "label": "PER"}, {"start": 10, "end": 25, "label": "ORG"}]}
