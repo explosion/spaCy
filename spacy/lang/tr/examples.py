@@ -9,12 +9,12 @@ sentences = [
     "Neredesiniz?",
     "Bu bir cümledir.",
     "Sürücüsüz araçlar sigorta yükümlülüğünü üreticilere kaydırıyor.",
-    "San Francisco kaldırımda kurye robotları yasaklayabilir."
+    "San Francisco kaldırımda kurye robotları yasaklayabilir.",
     "Londra İngiltere'nin başkentidir.",
     "Türkiye'nin başkenti neresi?",
     "Bakanlar Kurulu 180 günlük eylem planını açıkladı.",
     "Merkez Bankası, beklentiler doğrultusunda faizlerde değişikliğe gitmedi.",
-    "Cemal Sureya kimdir?",
-    "Bunlari Biliyor muydunuz?",
-    "Altinoluk Turkiye haritasinin neresinde yer alir?",
+    "Cemal Süreya kimdir?",
+    "Bunları Biliyor muydunuz?",
+    "Altınoluk Türkiye haritasının neresinde yer alır?",
 ]
