@@ -13,7 +13,7 @@ URL_PATTERN = (
     # (see: https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml)
     r"(?:(?:[\w\+\-\.]{2,})://)?"
     # mailto:user or user:pass authentication
-    r"(?:\S+(?::\S*)?@)?"
+    r"(?:\S+@)?"
     r"(?:"
     # IP address exclusion
     # private & local networks
