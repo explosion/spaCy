@@ -937,7 +937,6 @@ def test_kb_serialization():
         assert "RandomWord" in nlp2.vocab.strings
 
 
-@pytest.mark.xfail(reason="Needs fixing")
 def test_kb_pickle():
     # Test that the KB can be pickled
     nlp = English()
@@ -951,7 +950,6 @@ def test_kb_pickle():
     assert kb_2.contains_alias("Russ Cochran")
 
 
-@pytest.mark.xfail(reason="Needs fixing")
 def test_nel_pickle():
     # Test that a pipeline with an EL component can be pickled
     def create_kb(vocab):
@@ -972,6 +970,49 @@ def test_nel_pickle():
     assert nlp_2.pipe_names == ["ner", "entity_linker"]
     entity_linker_2 = nlp_2.get_pipe("entity_linker")
     assert entity_linker_2.kb.contains_alias("Russ Cochran")
+
+
+def test_kb_pickle_roundtrip():
+    # Entities, vectors, aliases and prior probabilities survive pickling, and
+    # the entity strings are restored from the pickled vocab
+    kb_1 = InMemoryLookupKB(Vocab(), entity_vector_length=3)
+    kb_1.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
+    kb_1.add_entity(entity="Q66", freq=9, entity_vector=[1, 2, 3])
+    kb_1.add_alias(alias="Russ Cochran", entities=["Q2146908"], probabilities=[0.8])
+    kb_1.add_alias(
+        alias="Randomness", entities=["Q66", "Q2146908"], probabilities=[0.1, 0.2]
+    )
+    kb_2 = pickle.loads(pickle.dumps(kb_1))
+    assert isinstance(kb_2, InMemoryLookupKB)
+    assert kb_2.entity_vector_length == 3
+    assert kb_2.get_entity_strings() == kb_1.get_entity_strings()
+    assert kb_2.get_alias_strings() == kb_1.get_alias_strings()
+    assert kb_2.get_vector("Q66") == kb_1.get_vector("Q66")
+    assert kb_2.get_prior_prob("Q66", "Randomness") == pytest.approx(0.1)
+    candidates = kb_2.get_alias_candidates("Randomness")
+    assert [c.entity_ for c in candidates] == ["Q66", "Q2146908"]
+    # the unpickled KB is independent of the original one
+    kb_2.add_entity(entity="Q1", freq=1, entity_vector=[0, 0, 0])
+    assert kb_2.get_size_entities() == 3
+    assert kb_1.get_size_entities() == 2
+
+
+def test_kb_pickle_empty():
+    kb = pickle.loads(pickle.dumps(InMemoryLookupKB(Vocab(), entity_vector_length=5)))
+    assert kb.is_empty()
+    assert kb.entity_vector_length == 5
+
+
+def test_nel_pickle_scorer():
+    # The scorer of the entity linker must be picklable, and must keep working
+    # on the unpickled component
+    nlp = English()
+    entity_linker = nlp.add_pipe("entity_linker", config={"use_gold_ents": True})
+    entity_linker.set_kb(lambda vocab: InMemoryLookupKB(vocab, entity_vector_length=3))
+    entity_linker_2 = pickle.loads(pickle.dumps(entity_linker))
+    assert entity_linker_2.use_gold_ents
+    assert entity_linker_2.scorer.__self__ is entity_linker_2
+    assert entity_linker_2.kb.entity_vector_length == 3
 
 
 def test_kb_to_bytes():
