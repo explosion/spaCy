@@ -320,7 +320,7 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
         if word.isspace():
             continue
         try:
-            word_start = text[text_pos:].index(word)
+            word_start = text.index(word, text_pos) - text_pos
         except ValueError:
             raise ValueError(Errors.E194.format(text=text, words=words)) from None
 
