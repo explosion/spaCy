@@ -209,6 +209,19 @@ def test_is_compatible_version(version, constraint, compatible):
 
 
 @pytest.mark.parametrize(
+    "version,constraint,prereleases,compatible",
+    [
+        ("3.0.0.dev3", ">=1.2.3,<4.5.6", False, False),
+        ("3.0.0.dev3", ">=1.2.3,<4.5.6", True, True),
+    ],
+)
+def test_is_compatible_version_prereleases(
+    version, constraint, prereleases, compatible
+):
+    assert util.is_compatible_version(version, constraint, prereleases) is compatible
+
+
+@pytest.mark.parametrize(
     "constraint,expected",
     [
         ("3.0.0", False),
@@ -224,6 +237,10 @@ def test_is_compatible_version(version, constraint, compatible):
 )
 def test_is_unconstrained_version(constraint, expected):
     assert util.is_unconstrained_version(constraint) is expected
+
+
+def test_is_unconstrained_version_without_prereleases():
+    assert util.is_unconstrained_version(">=2.3.0", prereleases=False) is True
 
 
 @pytest.mark.parametrize(

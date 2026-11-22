@@ -835,8 +835,7 @@ def is_compatible_version(
         version = Version(version)  # type: ignore[assignment]
     except (InvalidSpecifier, InvalidVersion):
         return None
-    spec.prereleases = prereleases
-    return version in spec
+    return spec.contains(version, prereleases=prereleases)
 
 
 def is_unconstrained_version(
@@ -849,7 +848,6 @@ def is_unconstrained_version(
         spec = SpecifierSet(constraint)
     except InvalidSpecifier:
         return None
-    spec.prereleases = prereleases
     specs = [sp for sp in spec]
     # We only have one version spec and it defines > or >=
     if len(specs) == 1 and specs[0].operator in (">", ">="):
