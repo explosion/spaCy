@@ -543,6 +543,98 @@ each pipeline. If you've [trained](/usage/training) your own pipeline, you can
 use the [`spacy package`](/api/cli#package) command to generate the required
 meta data and turn it into a loadable package.
 
+### Caching pipeline packages in CI {id="models-caching"}
+
+Continuous integration (CI) jobs often start in a fresh environment and download
+the same pipeline packages on every run. You can cache the downloaded files to
+reuse them in later runs. You still need to **install the packages on every
+run**, since restoring a cache doesn't install them into Python.
+
+The example below uses
+[`pip download`](https://pip.pypa.io/en/stable/cli/pip_download/) to save spaCy,
+the pipeline and their dependencies as wheels (`.whl` package files).
+[`actions/cache`](https://github.com/actions/cache) saves this directory between
+runs. When the cache is available, installation uses only the saved files.
+
+Add a requirements file to the root of your repository, with compatible versions
+of spaCy and the pipeline:
+
+```text {title="requirements-ci.txt"}
+spacy==3.8.18
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+```
+
+Then add this workflow to download and cache the wheels, install them, and check
+that the pipeline can process a sentence:
+
+```yaml {title=".github/workflows/test-pipeline.yml"}
+name: Test pipeline
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        id: python
+        with:
+          python-version: '3.11'
+      - name: Restore downloaded wheels
+        uses: actions/cache@v6
+        id: wheels
+        with:
+          path: .cache/spacy-wheels
+          key: >-
+            spacy-wheels-v1-ubuntu-24.04-${{ runner.arch }}-${{
+            steps.python.outputs.python-version }}-${{
+            hashFiles('requirements-ci.txt') }}
+      - name: Download wheels on a cache miss
+        if: steps.wheels.outputs.cache-hit != 'true'
+        run: >-
+          python -m pip download --only-binary=:all: --dest .cache/spacy-wheels
+          -r requirements-ci.txt
+      - name: Install from downloaded wheels
+        run: >-
+          python -m pip install --no-index --find-links .cache/spacy-wheels
+          .cache/spacy-wheels/*.whl
+      - name: Check dependencies and load the pipeline
+        run: |
+          python -m pip check
+          python - <<'PY'
+          import spacy
+          import en_core_web_sm
+
+          nlp = en_core_web_sm.load()
+          doc = nlp("This is a sentence.")
+          assert [token.text for token in doc] == ["This", "is", "a", "sentence", "."]
+          assert doc.has_annotation("DEP")
+          assert doc.has_annotation("ENT_IOB")
+          print(f"Loaded en_core_web_sm {en_core_web_sm.__version__} with spaCy {spacy.__version__}")
+          PY
+```
+
+The install step uses wheel paths because `requirements-ci.txt` contains a
+download URL. Passing that file to `pip install` can request the URL again, even
+with `--no-index`, which only disables package-index lookups. The download step
+uses `--only-binary=:all:`, so every dependency must have a wheel for your
+platform and Python version.
+
+The cache key separates wheels by runner image, architecture, Python version and
+requirements. If you change `runs-on`, update the image name in the key too.
+Changing the requirements creates a new cache; incrementing `v1` also forces a
+refresh. Avoid `restore-keys` here, since a partial match could mix old and new
+package versions. Pin the dependencies of spaCy and the pipeline as well if you
+need fully reproducible installs.
+
+To check that caching works, repeat a successful run without changing the
+requirements. The restore step should report a cache hit and the download step
+should be skipped. Installation and pipeline checks should still run and pass.
+If the cache is missing or has been evicted, the download step runs again.
+
 ### Loading and testing pipeline packages {id="models-loading"}
 
 Pipeline packages are regular Python packages, so you can also import them as a
