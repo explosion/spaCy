@@ -11,6 +11,7 @@ from spacy.language import Language
 from spacy.pipeline import TrainablePipe
 from spacy.tokens import Doc
 from spacy.training import Example
+from spacy.training.loggers import console_logger
 from spacy.util import SimpleFrozenList, get_arg_names, make_tempdir
 from spacy.vocab import Vocab
 
@@ -238,6 +239,50 @@ def test_rename_pipe(nlp, old_name, new_name):
     nlp.add_pipe("new_pipe", name=old_name)
     nlp.rename_pipe(old_name, new_name)
     assert nlp.pipeline[0][0] == new_name
+
+
+@pytest.mark.issue(14061)
+@pytest.mark.parametrize("disabled", [False, True])
+def test_issue14061_rename_pipe_preserves_disabled_state(nlp, disabled):
+    nlp.add_pipe("sentencizer", name="old_pipe")
+    if disabled:
+        nlp.disable_pipe("old_pipe")
+
+    nlp.rename_pipe("old_pipe", "new_pipe")
+
+    assert nlp.disabled == (["new_pipe"] if disabled else [])
+    assert nlp.pipe_names == ([] if disabled else ["new_pipe"])
+    assert nlp.config["nlp"]["disabled"] == list(nlp.disabled)
+    assert nlp("One. Two.").has_annotation("SENT_START") == (not disabled)
+
+    nlp.add_pipe("sentencizer", name="old_pipe")
+    assert "old_pipe" in nlp.pipe_names
+
+
+@pytest.mark.issue(14061)
+@pytest.mark.parametrize("disabled", [False, True])
+def test_issue14061_renamed_trainable_pipe(nlp, disabled):
+    tagger = nlp.add_pipe("tagger", name="old_pipe")
+    example = Example.from_dict(nlp.make_doc("A word"), {"tags": ["DT", "NN"]})
+    nlp.initialize(lambda: [example])
+    if disabled:
+        nlp.disable_pipe("old_pipe")
+
+    nlp.rename_pipe("old_pipe", "new_pipe")
+    assert tagger.name == "new_pipe"
+    assert nlp.disabled == (["new_pipe"] if disabled else [])
+
+    nlp.enable_pipe("new_pipe")
+    losses = {}
+    nlp.update([example], losses=losses)
+    assert set(losses) == {"new_pipe"}
+    log_step, finalize = console_logger(console_output=False)(nlp)
+    try:
+        log_step(
+            {"losses": losses, "other_scores": {}, "epoch": 0, "step": 0, "score": 0.0}
+        )
+    finally:
+        finalize()
 
 
 @pytest.mark.parametrize("name", ["my_component"])

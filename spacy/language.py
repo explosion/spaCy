@@ -964,6 +964,12 @@ class Language:
         self._components[i] = (new_name, self._components[i][1])
         self._pipe_meta[new_name] = self._pipe_meta.pop(old_name)
         self._pipe_configs[new_name] = self._pipe_configs.pop(old_name)
+        if old_name in self._disabled:
+            self._disabled.remove(old_name)
+            self._disabled.add(new_name)
+            component = self._components[i][1]
+            if hasattr(component, "name"):
+                component.name = new_name
         # Make sure [initialize] config is adjusted
         if old_name in self._config["initialize"]["components"]:
             init_cfg = self._config["initialize"]["components"].pop(old_name)
