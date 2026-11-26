@@ -401,9 +401,10 @@ class DependencyRenderer:
         if self.direction == "rtl":
             x = self.width - x
         html_text = escape_html(text)
+        tag = escape_html(tag)
         if lemma is not None:
             return TPL_DEP_WORDS_LEMMA.format(
-                text=html_text, tag=tag, lemma=lemma, x=x, y=y
+                text=html_text, tag=tag, lemma=escape_html(lemma), x=x, y=y
             )
         return TPL_DEP_WORDS.format(text=html_text, tag=tag, x=x, y=y)
 
@@ -448,7 +449,7 @@ class DependencyRenderer:
             i=i,
             stroke=self.arrow_stroke,
             head=arrowhead,
-            label=label,
+            label=escape_html(label),
             label_side=label_side,
             arc=arc,
         )

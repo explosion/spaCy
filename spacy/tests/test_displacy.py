@@ -488,3 +488,25 @@ def test_displacy_span_stacking():
     assert per_token_info[1]["entities"][1]["render_slot"] == 2
     assert per_token_info[2]["entities"][0]["render_slot"] == 2
     assert per_token_info[2]["entities"][1]["render_slot"] == 3
+
+
+@pytest.mark.issue(14087)
+def test_displacy_dep_escapes_tags_lemmas_and_labels(en_vocab):
+    """Test that the dependency SVG escapes tags, lemmas and arc labels, so
+    a token such as "<" or "&" still gives well-formed markup."""
+    from xml.dom.minidom import parseString
+
+    words = ["if", "x", "<", "5", "&", "y"]
+    doc = Doc(
+        en_vocab,
+        words=words,
+        lemmas=words,
+        tags=["IN", "NN", "<", "CD", "&", "NN"],
+        heads=[0, 0, 0, 0, 0, 0],
+        deps=["ROOT", "dep", "<dep>", "dep", "dep", "a&b"],
+    )
+    for options in ({}, {"add_lemma": True}):
+        svg = displacy.render(doc, style="dep", options=options)
+        parseString(svg)
+        assert ">&lt;dep&gt;</textPath>" in svg
+        assert ">a&amp;b</textPath>" in svg
